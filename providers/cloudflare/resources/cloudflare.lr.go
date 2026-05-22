@@ -67,6 +67,9 @@ const (
 	ResourceCloudflareZoneLogpushJob              string = "cloudflare.zone.logpushJob"
 	ResourceCloudflareZoneBotManagement           string = "cloudflare.zone.botManagement"
 	ResourceCloudflareAccountRole                 string = "cloudflare.account.role"
+	ResourceCloudflareAccountMember               string = "cloudflare.account.member"
+	ResourceCloudflareAccountAuditLog             string = "cloudflare.account.auditLog"
+	ResourceCloudflareNotificationPolicy          string = "cloudflare.notificationPolicy"
 	ResourceCloudflareZoneDnssec                  string = "cloudflare.zone.dnssec"
 	ResourceCloudflareZoneRateLimitRule           string = "cloudflare.zone.rateLimitRule"
 	ResourceCloudflareZoneWafRule                 string = "cloudflare.zone.wafRule"
@@ -282,6 +285,18 @@ func init() {
 		"cloudflare.account.role": {
 			// to override args, implement: initCloudflareAccountRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareAccountRole,
+		},
+		"cloudflare.account.member": {
+			// to override args, implement: initCloudflareAccountMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareAccountMember,
+		},
+		"cloudflare.account.auditLog": {
+			// to override args, implement: initCloudflareAccountAuditLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareAccountAuditLog,
+		},
+		"cloudflare.notificationPolicy": {
+			// to override args, implement: initCloudflareNotificationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareNotificationPolicy,
 		},
 		"cloudflare.zone.dnssec": {
 			// to override args, implement: initCloudflareZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -722,6 +737,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.account.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetRoles()).ToDataRes(types.Array(types.Resource("cloudflare.account.role")))
+	},
+	"cloudflare.account.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetMembers()).ToDataRes(types.Array(types.Resource("cloudflare.account.member")))
+	},
+	"cloudflare.account.auditLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetAuditLogs()).ToDataRes(types.Array(types.Resource("cloudflare.account.auditLog")))
+	},
+	"cloudflare.account.notificationPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetNotificationPolicies()).ToDataRes(types.Array(types.Resource("cloudflare.notificationPolicy")))
 	},
 	"cloudflare.apiToken.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareApiToken).GetId()).ToDataRes(types.String)
@@ -1740,6 +1764,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.role.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccountRole).GetDescription()).ToDataRes(types.String)
 	},
+	"cloudflare.account.member.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetUserId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetEmail()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.firstName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetFirstName()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.lastName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetLastName()).ToDataRes(types.String)
+	},
+	"cloudflare.account.member.twoFactorAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetTwoFactorAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.account.member.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountMember).GetRoles()).ToDataRes(types.Array(types.Resource("cloudflare.account.role")))
+	},
+	"cloudflare.account.auditLog.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.when": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetWhen()).ToDataRes(types.Time)
+	},
+	"cloudflare.account.auditLog.actorEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActorEmail()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.actorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActorId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.actorIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActorIp()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.actorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActorType()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.actionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActionType()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.actionResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetActionResult()).ToDataRes(types.Bool)
+	},
+	"cloudflare.account.auditLog.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetResourceId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetResourceType()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetOwnerId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.auditLog.oldValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetOldValue()).ToDataRes(types.Dict)
+	},
+	"cloudflare.account.auditLog.newValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountAuditLog).GetNewValue()).ToDataRes(types.Dict)
+	},
+	"cloudflare.notificationPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.notificationPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.notificationPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudflare.notificationPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.notificationPolicy.alertType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetAlertType()).ToDataRes(types.String)
+	},
+	"cloudflare.notificationPolicy.mechanisms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetMechanisms()).ToDataRes(types.Dict)
+	},
+	"cloudflare.notificationPolicy.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetConditions()).ToDataRes(types.Dict)
+	},
+	"cloudflare.notificationPolicy.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetFilters()).ToDataRes(types.Dict)
+	},
+	"cloudflare.notificationPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"cloudflare.notificationPolicy.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareNotificationPolicy).GetModified()).ToDataRes(types.Time)
+	},
 	"cloudflare.zone.dnssec.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneDnssec).GetStatus()).ToDataRes(types.String)
 	},
@@ -2404,6 +2521,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.account.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccount).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).AuditLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.notificationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).NotificationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.apiToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3920,6 +4049,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.account.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccountRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.account.member.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.firstName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).FirstName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.lastName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).LastName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.twoFactorAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).TwoFactorAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.member.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountMember).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.account.auditLog.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.when": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).When, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actorEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActorEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actorIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActorIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.actionResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ActionResult, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.oldValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).OldValue, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.auditLog.newValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountAuditLog).NewValue, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.notificationPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.alertType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).AlertType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.mechanisms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Mechanisms, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Filters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.notificationPolicy.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareNotificationPolicy).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.dnssec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5488,14 +5753,17 @@ type mqlCloudflareAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareAccountInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Settings   plugin.TValue[*mqlCloudflareAccountSettings]
-	CreatedOn  plugin.TValue[*time.Time]
-	LiveInputs plugin.TValue[[]any]
-	Videos     plugin.TValue[[]any]
-	Roles      plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Type                 plugin.TValue[string]
+	Settings             plugin.TValue[*mqlCloudflareAccountSettings]
+	CreatedOn            plugin.TValue[*time.Time]
+	LiveInputs           plugin.TValue[[]any]
+	Videos               plugin.TValue[[]any]
+	Roles                plugin.TValue[[]any]
+	Members              plugin.TValue[[]any]
+	AuditLogs            plugin.TValue[[]any]
+	NotificationPolicies plugin.TValue[[]any]
 }
 
 // createCloudflareAccount creates a new instance of this resource
@@ -5600,6 +5868,54 @@ func (c *mqlCloudflareAccount) GetRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetAuditLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditLogs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "auditLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.auditLogs()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetNotificationPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotificationPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "notificationPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notificationPolicies()
 	})
 }
 
@@ -9291,6 +9607,293 @@ func (c *mqlCloudflareAccountRole) GetName() *plugin.TValue[string] {
 
 func (c *mqlCloudflareAccountRole) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlCloudflareAccountMember for the cloudflare.account.member resource
+type mqlCloudflareAccountMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareAccountMemberInternal it will be used here
+	Id                             plugin.TValue[string]
+	Status                         plugin.TValue[string]
+	UserId                         plugin.TValue[string]
+	Email                          plugin.TValue[string]
+	FirstName                      plugin.TValue[string]
+	LastName                       plugin.TValue[string]
+	TwoFactorAuthenticationEnabled plugin.TValue[bool]
+	Roles                          plugin.TValue[[]any]
+}
+
+// createCloudflareAccountMember creates a new instance of this resource
+func createCloudflareAccountMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareAccountMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.account.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareAccountMember) MqlName() string {
+	return "cloudflare.account.member"
+}
+
+func (c *mqlCloudflareAccountMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareAccountMember) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareAccountMember) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlCloudflareAccountMember) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlCloudflareAccountMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlCloudflareAccountMember) GetFirstName() *plugin.TValue[string] {
+	return &c.FirstName
+}
+
+func (c *mqlCloudflareAccountMember) GetLastName() *plugin.TValue[string] {
+	return &c.LastName
+}
+
+func (c *mqlCloudflareAccountMember) GetTwoFactorAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.TwoFactorAuthenticationEnabled
+}
+
+func (c *mqlCloudflareAccountMember) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+// mqlCloudflareAccountAuditLog for the cloudflare.account.auditLog resource
+type mqlCloudflareAccountAuditLog struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareAccountAuditLogInternal it will be used here
+	Id           plugin.TValue[string]
+	When         plugin.TValue[*time.Time]
+	ActorEmail   plugin.TValue[string]
+	ActorId      plugin.TValue[string]
+	ActorIp      plugin.TValue[string]
+	ActorType    plugin.TValue[string]
+	ActionType   plugin.TValue[string]
+	ActionResult plugin.TValue[bool]
+	ResourceId   plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	OwnerId      plugin.TValue[string]
+	OldValue     plugin.TValue[any]
+	NewValue     plugin.TValue[any]
+}
+
+// createCloudflareAccountAuditLog creates a new instance of this resource
+func createCloudflareAccountAuditLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareAccountAuditLog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.account.auditLog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareAccountAuditLog) MqlName() string {
+	return "cloudflare.account.auditLog"
+}
+
+func (c *mqlCloudflareAccountAuditLog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetWhen() *plugin.TValue[*time.Time] {
+	return &c.When
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActorEmail() *plugin.TValue[string] {
+	return &c.ActorEmail
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActorId() *plugin.TValue[string] {
+	return &c.ActorId
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActorIp() *plugin.TValue[string] {
+	return &c.ActorIp
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActorType() *plugin.TValue[string] {
+	return &c.ActorType
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActionType() *plugin.TValue[string] {
+	return &c.ActionType
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetActionResult() *plugin.TValue[bool] {
+	return &c.ActionResult
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetOldValue() *plugin.TValue[any] {
+	return &c.OldValue
+}
+
+func (c *mqlCloudflareAccountAuditLog) GetNewValue() *plugin.TValue[any] {
+	return &c.NewValue
+}
+
+// mqlCloudflareNotificationPolicy for the cloudflare.notificationPolicy resource
+type mqlCloudflareNotificationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareNotificationPolicyInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	AlertType   plugin.TValue[string]
+	Mechanisms  plugin.TValue[any]
+	Conditions  plugin.TValue[any]
+	Filters     plugin.TValue[any]
+	Created     plugin.TValue[*time.Time]
+	Modified    plugin.TValue[*time.Time]
+}
+
+// createCloudflareNotificationPolicy creates a new instance of this resource
+func createCloudflareNotificationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareNotificationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.notificationPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareNotificationPolicy) MqlName() string {
+	return "cloudflare.notificationPolicy"
+}
+
+func (c *mqlCloudflareNotificationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetAlertType() *plugin.TValue[string] {
+	return &c.AlertType
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetMechanisms() *plugin.TValue[any] {
+	return &c.Mechanisms
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetConditions() *plugin.TValue[any] {
+	return &c.Conditions
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetFilters() *plugin.TValue[any] {
+	return &c.Filters
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlCloudflareNotificationPolicy) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
 }
 
 // mqlCloudflareZoneDnssec for the cloudflare.zone.dnssec resource

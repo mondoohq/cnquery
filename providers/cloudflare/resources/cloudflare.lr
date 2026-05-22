@@ -330,6 +330,17 @@ private cloudflare.account @defaults("name") {
 
 	// Account roles
 	roles() []cloudflare.account.role
+
+	// Members (users) of the account, with their assigned roles and 2FA status
+	members() []cloudflare.account.member
+
+	// Recent audit log entries for the account (most recent first; first page only)
+	//
+	// Returns the first page of account audit log entries. The Cloudflare API caps a page at 100 entries; for older history, narrow with a `.where(when > ...)` filter or paginate at the API level outside MQL. Use this to verify a change actor, spot unauthorized configuration changes, or feed an access review.
+	auditLogs() []cloudflare.account.auditLog
+
+	// Notification policies (alert subscriptions) configured for the account
+	notificationPolicies() []cloudflare.notificationPolicy
 }
 
 // Cloudflare API Token
@@ -1262,6 +1273,105 @@ private cloudflare.account.role @defaults("name") {
 	name string
 	// Role description
 	description string
+}
+
+// Cloudflare account member
+//
+// Examine a user (member) of a Cloudflare account: their identity (`email`,
+// `firstName`, `lastName`), enrollment `status` (`accepted`, `pending`,
+// `rejected`), whether `twoFactorAuthenticationEnabled` is on, and the
+// `roles` they hold. Use for access reviews ("who can administer this
+// account?"), 2FA enforcement audits, and stale-invite cleanup.
+private cloudflare.account.member @defaults("email status twoFactorAuthenticationEnabled") {
+	// Membership identifier
+	id string
+	// Member status (`accepted`, `pending`, `rejected`)
+	status string
+	// Member's Cloudflare user identifier
+	userId string
+	// Member's email address
+	email string
+	// Member's first name
+	firstName string
+	// Member's last name
+	lastName string
+	// Whether the member has two-factor authentication enabled on their Cloudflare account
+	twoFactorAuthenticationEnabled bool
+	// Roles assigned to this member
+	roles []cloudflare.account.role
+}
+
+// Cloudflare audit log entry
+//
+// Examine a single change recorded in the Cloudflare account audit log:
+// when it happened, who performed it (`actorEmail`, `actorId`, `actorIp`,
+// `actorType` — `user` / `cloudflare_admin` / `account` etc.), what
+// resource it affected (`resourceType`, `resourceId`), and the action's
+// outcome (`actionType`, `actionResult`). `oldValue` and `newValue`
+// hold structured before/after data when the API returns it. Use for
+// change-detection assertions and to confirm sensitive actions are
+// performed by expected actors.
+private cloudflare.account.auditLog @defaults("when actorEmail actionType resourceType") {
+	// Audit log entry identifier
+	id string
+	// Time the action was performed
+	when time
+	// Email of the actor that performed the action
+	actorEmail string
+	// Identifier of the actor that performed the action
+	actorId string
+	// IP address the action was performed from
+	actorIp string
+	// Actor classification (`user`, `cloudflare_admin`, `account`, etc.)
+	actorType string
+	// Action name (for example `tls.certificate.add`)
+	actionType string
+	// Whether the action succeeded
+	actionResult bool
+	// Identifier of the resource the action was performed on
+	resourceId string
+	// Type of the resource the action was performed on (for example `zone`, `account_member`, `dns_record`)
+	resourceType string
+	// Identifier of the account that owns the audit log entry
+	ownerId string
+	// Structured before-state of the affected resource (empty when the API does not return it)
+	oldValue dict
+	// Structured after-state of the affected resource (empty when the API does not return it)
+	newValue dict
+}
+
+// Cloudflare notification policy
+//
+// Examine a single notification (alert) policy configured on a Cloudflare
+// account: which `alertType` it subscribes to (for example
+// `dedicated_ssl_certificate_expiration_type`,
+// `universal_ssl_event_type`, `web_analytics_metrics_update`, `dos_attack_l7`),
+// whether it is `enabled`, how alerts are delivered via `mechanisms`
+// (email, PagerDuty, webhook integrations), and any `conditions` /
+// `filters` that narrow the firing criteria. Use to assert that critical
+// alerts (TLS expiry, DDoS, mTLS revocation, configuration changes) are
+// wired up to an active destination.
+private cloudflare.notificationPolicy @defaults("name alertType enabled") {
+	// Policy identifier
+	id string
+	// Policy display name
+	name string
+	// Policy description
+	description string
+	// Whether the policy is currently active
+	enabled bool
+	// Alert type the policy subscribes to (see the Cloudflare Notifications API for the full enum)
+	alertType string
+	// Delivery destinations grouped by mechanism (`email`, `pagerduty`, `webhooks`) — each value is the list of configured integrations for that mechanism
+	mechanisms dict
+	// Conditions further narrowing when the alert fires (shape depends on `alertType`)
+	conditions dict
+	// Filters further scoping which entities the alert applies to (shape depends on `alertType`)
+	filters dict
+	// Time the policy was created
+	created time
+	// Time the policy was last modified
+	modified time
 }
 
 // Cloudflare zone DNSSEC configuration
