@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus"
@@ -17,6 +18,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceInternal struct {
+	networkRuleSetFetched bool
+	networkRuleSetProps   *armservicebus.NetworkRuleSetProperties
+	networkRuleSetLock    sync.Mutex
+}
 
 func (a *mqlAzureSubscriptionServiceBusService) id() (string, error) {
 	return "azure.subscription.serviceBus/" + a.SubscriptionId.Data, nil
@@ -500,6 +507,15 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 }
 
 func (a *mqlAzureSubscriptionServiceBusServiceNamespace) fetchNetworkRuleSetProperties() (*armservicebus.NetworkRuleSetProperties, error) {
+	if a.networkRuleSetFetched {
+		return a.networkRuleSetProps, nil
+	}
+	a.networkRuleSetLock.Lock()
+	defer a.networkRuleSetLock.Unlock()
+	if a.networkRuleSetFetched {
+		return a.networkRuleSetProps, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	resourceID, err := ParseResourceID(a.Id.Data)
@@ -520,7 +536,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) fetchNetworkRuleSetProp
 	if err != nil {
 		return nil, err
 	}
-	return resp.NetworkRuleSet.Properties, nil
+	a.networkRuleSetProps = resp.NetworkRuleSet.Properties
+	a.networkRuleSetFetched = true
+	return a.networkRuleSetProps, nil
 }
 
 type mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRuleInternal struct {

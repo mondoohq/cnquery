@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub"
@@ -17,6 +18,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionEventHubServiceNamespaceInternal struct {
+	networkRuleSetFetched bool
+	networkRuleSetProps   *armeventhub.NetworkRuleSetProperties
+	networkRuleSetLock    sync.Mutex
+}
 
 func (a *mqlAzureSubscriptionEventHubService) id() (string, error) {
 	return "azure.subscription.eventHub/" + a.SubscriptionId.Data, nil
@@ -374,6 +381,15 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) fetchNetworkRuleSetProperties() (*armeventhub.NetworkRuleSetProperties, error) {
+	if a.networkRuleSetFetched {
+		return a.networkRuleSetProps, nil
+	}
+	a.networkRuleSetLock.Lock()
+	defer a.networkRuleSetLock.Unlock()
+	if a.networkRuleSetFetched {
+		return a.networkRuleSetProps, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	resourceID, err := ParseResourceID(a.Id.Data)
@@ -394,7 +410,9 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) fetchNetworkRuleSetProper
 	if err != nil {
 		return nil, err
 	}
-	return resp.NetworkRuleSet.Properties, nil
+	a.networkRuleSetProps = resp.NetworkRuleSet.Properties
+	a.networkRuleSetFetched = true
+	return a.networkRuleSetProps, nil
 }
 
 type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRuleInternal struct {

@@ -7764,9 +7764,9 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   requireInfrastructureEncryption bool
   // Customer-managed encryption keys (Key Vault references) configured for this namespace
   cmkKeys []dict
-  // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, and trusted-service access
-  networkRuleSet() dict
-  // Typed namespace network rules (default action, IP / VNet rules, trusted-service access)
+  // DEPRECATED: use networkRules instead
+  networkRuleSet() @maturity("deprecated") dict
+  // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.serviceBusService.namespace.networkRules
   // Queues in this namespace
   queues() []azure.subscription.serviceBusService.namespace.queue
@@ -7936,9 +7936,9 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   requireInfrastructureEncryption bool
   // Customer-managed encryption keys (Key Vault references) configured for this namespace
   cmkKeys []dict
-  // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, trusted-service access
-  networkRuleSet() dict
-  // Typed namespace network rules (default action, IP / VNet rules, trusted-service access)
+  // DEPRECATED: use networkRules instead
+  networkRuleSet() @maturity("deprecated") dict
+  // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub

@@ -60839,7 +60839,7 @@ func (c *mqlAzureSubscriptionServiceBusService) GetNamespaces() *plugin.TValue[[
 type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionServiceBusServiceNamespaceInternal it will be used here
+	mqlAzureSubscriptionServiceBusServiceNamespaceInternal
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Location                        plugin.TValue[string]
@@ -61496,7 +61496,7 @@ func (c *mqlAzureSubscriptionEventHubService) GetNamespaces() *plugin.TValue[[]a
 type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionEventHubServiceNamespaceInternal it will be used here
+	mqlAzureSubscriptionEventHubServiceNamespaceInternal
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Location                        plugin.TValue[string]
