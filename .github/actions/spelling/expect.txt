@@ -29,6 +29,7 @@ PAYG
 PVEAPI
 QAwr
 QGA
+Rollups
 Stus
 TValue
 Twt
@@ -206,6 +207,8 @@ vllm
 wordpress
 worktree
 wrkspc
+wsus
+wuauserv
 xxxxx
 yara
 zerolog

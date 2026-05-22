@@ -204,8 +204,10 @@ func (c *mqlWindowsUpdateConfig) service() (*mqlService, error) {
 		"name": llx.StringData("wuauserv"),
 	})
 	if err != nil {
+		// the wuauserv service can't be resolved (e.g. it doesn't exist):
+		// mark the field null rather than surfacing the error.
 		c.Service.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, err
+		return nil, nil
 	}
 	return o.(*mqlService), nil
 }

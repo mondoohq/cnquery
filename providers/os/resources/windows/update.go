@@ -120,11 +120,7 @@ func ParseWindowsUpdateHistory(input io.Reader) ([]WindowsUpdateHistoryEntry, er
 		return []WindowsUpdateHistoryEntry{}, nil
 	}
 
-	var entries []WindowsUpdateHistoryEntry
-	if err := json.Unmarshal(data, &entries); err != nil {
-		return nil, err
-	}
-	return entries, nil
+	return unmarshalJSONArrayOrObject[WindowsUpdateHistoryEntry](data)
 }
 
 func ParseWindowsAvailableUpdates(input io.Reader) ([]WindowsAvailableUpdate, error) {
@@ -136,11 +132,25 @@ func ParseWindowsAvailableUpdates(input io.Reader) ([]WindowsAvailableUpdate, er
 		return []WindowsAvailableUpdate{}, nil
 	}
 
-	var updates []WindowsAvailableUpdate
-	if err := json.Unmarshal(data, &updates); err != nil {
-		return nil, err
+	return unmarshalJSONArrayOrObject[WindowsAvailableUpdate](data)
+}
+
+// unmarshalJSONArrayOrObject decodes a JSON array of T, tolerating PowerShell's
+// ConvertTo-Json behavior of emitting a bare object (not a single-element
+// array) when the source collection has exactly one element.
+func unmarshalJSONArrayOrObject[T any](data []byte) ([]T, error) {
+	var arr []T
+	arrErr := json.Unmarshal(data, &arr)
+	if arrErr == nil {
+		return arr, nil
 	}
-	return updates, nil
+
+	var single T
+	if err := json.Unmarshal(data, &single); err != nil {
+		// report the array error, which is the expected shape
+		return nil, arrErr
+	}
+	return []T{single}, nil
 }
 
 // FilterInstalledHistory returns the succeeded installation entries from a

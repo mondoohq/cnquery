@@ -62,6 +62,24 @@ func TestFilterInstalledHistory(t *testing.T) {
 	}
 }
 
+func TestParseWindowsUpdateHistory_SingleObject(t *testing.T) {
+	// PowerShell ConvertTo-Json emits a bare object (not an array) when the
+	// collection has exactly one element.
+	single := `{"Title":"2024-01 Cumulative Update (KB5034441)","Date":"/Date(1705334400000)/","Operation":1,"ResultCode":2,"UpdateID":"11111111-1111-1111-1111-111111111111","Categories":["Security Updates"]}`
+	entries, err := ParseWindowsUpdateHistory(strings.NewReader(single))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, "KB5034441", ParseKBID(entries[0].Title))
+}
+
+func TestParseWindowsAvailableUpdates_SingleObject(t *testing.T) {
+	single := `{"UpdateID":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","Title":"Update (KB5035857)","MsrcSeverity":"Critical","KBArticleIDs":["5035857"],"CveIDs":["CVE-2024-21334"]}`
+	updates, err := ParseWindowsAvailableUpdates(strings.NewReader(single))
+	require.NoError(t, err)
+	require.Len(t, updates, 1)
+	assert.Equal(t, "Critical", updates[0].MsrcSeverity)
+}
+
 func TestParseWindowsAvailableUpdates(t *testing.T) {
 	r, err := os.Open("./testdata/update_available.json")
 	require.NoError(t, err)
