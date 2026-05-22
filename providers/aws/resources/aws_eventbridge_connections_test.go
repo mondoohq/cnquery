@@ -43,3 +43,17 @@ func TestReplayEventSourceNullWhenArnEmpty(t *testing.T) {
 	assert.True(t, r.EventSource.IsNull())
 	assert.True(t, r.EventSource.IsSet())
 }
+
+func TestReplayDestinationNullWhenArnEmpty(t *testing.T) {
+	r := &mqlAwsEventbridgeReplay{}
+	// destination() reads destinationArn from a DescribeReplay response rather
+	// than a direct struct field. Pre-mark the description fetch as done with
+	// a nil result so destinationArn() returns ("", nil) without touching the
+	// SDK — that exercises the null-arn branch without needing a runtime.
+	r.fetched = true
+	got, err := r.destination()
+	require.NoError(t, err)
+	assert.Nil(t, got)
+	assert.True(t, r.Destination.IsNull())
+	assert.True(t, r.Destination.IsSet())
+}

@@ -449,31 +449,49 @@ func (a *mqlAwsEventbridgeApiDestination) description() (string, error) {
 	return *resp.Description, nil
 }
 
-func (a *mqlAwsEventbridgeApiDestination) connection() (*mqlAwsEventbridgeConnection, error) {
-	arn := a.ConnectionArn.Data
+// findEventbridgeArnMatch materializes the parent aws.eventbridge resource
+// and scans `listFn`'s returned slice for the first item whose `arnOf` returns
+// the target `arn`. Returns (nil, nil) when arn is empty or no match is found,
+// so each typed-ref accessor just has to fold the result into its own
+// IsSet|IsNull contract. Keeps cross-reference resolution behavior identical
+// across connection / eventSource / destination so future fixes are single-site.
+func findEventbridgeArnMatch(
+	runtime *plugin.Runtime,
+	arn string,
+	listFn func(*mqlAwsEventbridge) *plugin.TValue[[]any],
+	arnOf func(any) string,
+) (any, error) {
 	if arn == "" {
-		a.Connection.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	// Materialize the parent service's connections so NewResource finds the
-	// fully-populated entry in cache. Without this the cache misses, the
-	// connection init is a no-op, and field reads return husks.
-	parent, err := CreateResource(a.MqlRuntime, "aws.eventbridge", map[string]*llx.RawData{})
+	parent, err := CreateResource(runtime, "aws.eventbridge", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-	conns := parent.(*mqlAwsEventbridge).GetConnections()
-	if conns.Error != nil {
-		return nil, conns.Error
+	coll := listFn(parent.(*mqlAwsEventbridge))
+	if coll.Error != nil {
+		return nil, coll.Error
 	}
-	for _, c := range conns.Data {
-		conn := c.(*mqlAwsEventbridgeConnection)
-		if conn.Arn.Data == arn {
-			return conn, nil
+	for _, item := range coll.Data {
+		if arnOf(item) == arn {
+			return item, nil
 		}
 	}
-	a.Connection.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
+}
+
+func (a *mqlAwsEventbridgeApiDestination) connection() (*mqlAwsEventbridgeConnection, error) {
+	res, err := findEventbridgeArnMatch(a.MqlRuntime, a.ConnectionArn.Data,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetConnections() },
+		func(item any) string { return item.(*mqlAwsEventbridgeConnection).Arn.Data })
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Connection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res.(*mqlAwsEventbridgeConnection), nil
 }
 
 func initAwsEventbridgeApiDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -640,27 +658,17 @@ func (a *mqlAwsEventbridgeArchive) eventPattern() (string, error) {
 }
 
 func (a *mqlAwsEventbridgeArchive) eventSource() (*mqlAwsEventbridgeEventBus, error) {
-	arn := a.EventSourceArn.Data
-	if arn == "" {
-		a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	parent, err := CreateResource(a.MqlRuntime, "aws.eventbridge", map[string]*llx.RawData{})
+	res, err := findEventbridgeArnMatch(a.MqlRuntime, a.EventSourceArn.Data,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetEventBuses() },
+		func(item any) string { return item.(*mqlAwsEventbridgeEventBus).Arn.Data })
 	if err != nil {
 		return nil, err
 	}
-	buses := parent.(*mqlAwsEventbridge).GetEventBuses()
-	if buses.Error != nil {
-		return nil, buses.Error
+	if res == nil {
+		a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	for _, b := range buses.Data {
-		bus := b.(*mqlAwsEventbridgeEventBus)
-		if bus.Arn.Data == arn {
-			return bus, nil
-		}
-	}
-	a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	return res.(*mqlAwsEventbridgeEventBus), nil
 }
 
 func initAwsEventbridgeArchive(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -837,27 +845,17 @@ func (a *mqlAwsEventbridgeReplay) filterArns() ([]any, error) {
 }
 
 func (a *mqlAwsEventbridgeReplay) eventSource() (*mqlAwsEventbridgeArchive, error) {
-	arn := a.EventSourceArn.Data
-	if arn == "" {
-		a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	parent, err := CreateResource(a.MqlRuntime, "aws.eventbridge", map[string]*llx.RawData{})
+	res, err := findEventbridgeArnMatch(a.MqlRuntime, a.EventSourceArn.Data,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetArchives() },
+		func(item any) string { return item.(*mqlAwsEventbridgeArchive).Arn.Data })
 	if err != nil {
 		return nil, err
 	}
-	archives := parent.(*mqlAwsEventbridge).GetArchives()
-	if archives.Error != nil {
-		return nil, archives.Error
+	if res == nil {
+		a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	for _, ar := range archives.Data {
-		archive := ar.(*mqlAwsEventbridgeArchive)
-		if archive.Arn.Data == arn {
-			return archive, nil
-		}
-	}
-	a.EventSource.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	return res.(*mqlAwsEventbridgeArchive), nil
 }
 
 func (a *mqlAwsEventbridgeReplay) destination() (*mqlAwsEventbridgeEventBus, error) {
@@ -865,26 +863,17 @@ func (a *mqlAwsEventbridgeReplay) destination() (*mqlAwsEventbridgeEventBus, err
 	if err != nil {
 		return nil, err
 	}
-	if arn == "" {
-		a.Destination.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	parent, err := CreateResource(a.MqlRuntime, "aws.eventbridge", map[string]*llx.RawData{})
+	res, err := findEventbridgeArnMatch(a.MqlRuntime, arn,
+		func(eb *mqlAwsEventbridge) *plugin.TValue[[]any] { return eb.GetEventBuses() },
+		func(item any) string { return item.(*mqlAwsEventbridgeEventBus).Arn.Data })
 	if err != nil {
 		return nil, err
 	}
-	buses := parent.(*mqlAwsEventbridge).GetEventBuses()
-	if buses.Error != nil {
-		return nil, buses.Error
+	if res == nil {
+		a.Destination.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	for _, b := range buses.Data {
-		bus := b.(*mqlAwsEventbridgeEventBus)
-		if bus.Arn.Data == arn {
-			return bus, nil
-		}
-	}
-	a.Destination.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	return res.(*mqlAwsEventbridgeEventBus), nil
 }
 
 func initAwsEventbridgeReplay(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
