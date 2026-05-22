@@ -604,6 +604,7 @@ tanium
 targetgroup
 tcpip
 tde
+TDX
 temurin
 tensorboard
 testutils
@@ -621,7 +622,6 @@ trainingjob
 transitgateway
 transitives
 truststore
-TDX
 TValue
 Twt
 uami
