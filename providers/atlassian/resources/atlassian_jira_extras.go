@@ -9,6 +9,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/jira"
 )
@@ -219,6 +220,12 @@ func (a *mqlAtlassianJiraProject) roles() ([]any, error) {
 	}
 	jiraClient := conn.Client()
 
+	if a.Key.Error != nil {
+		return nil, a.Key.Error
+	}
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
 	projectKey := a.Key.Data
 	if projectKey == "" {
 		projectKey = a.Id.Data
@@ -237,10 +244,12 @@ func (a *mqlAtlassianJiraProject) roles() ([]any, error) {
 		if d == nil {
 			continue
 		}
-		// Fetch the full role to get actor assignments
+		// Fetch the full role to get actor assignments. A single role
+		// failing (rate-limit, transient 5xx, permission edge case) shouldn't
+		// fail the whole project — log and skip.
 		role, _, err := jiraClient.Project.Role.Get(context.Background(), projectKey, d.ID)
 		if err != nil {
-			// Skip a single role rather than failing the whole project
+			log.Warn().Err(err).Str("project", projectKey).Int("roleId", d.ID).Msg("failed to fetch project role details")
 			continue
 		}
 		actors := []any{}
