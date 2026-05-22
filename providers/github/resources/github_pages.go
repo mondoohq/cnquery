@@ -14,6 +14,9 @@ import (
 )
 
 func (g *mqlGithubRepositoryPages) id() (string, error) {
+	if g.__id == "" {
+		return "", errors.New("github.repository.pages requires __id set by the creator")
+	}
 	return g.__id, nil
 }
 
@@ -86,20 +89,17 @@ func (g *mqlGithubRepository) pages() (*mqlGithubRepositoryPages, error) {
 		args["httpsCertificateDescription"] = llx.StringDataPtr(cert.Description)
 		args["httpsCertificateDomains"] = llx.ArrayData(convert.SliceAnyToInterface[string](cert.Domains), types.String)
 		args["httpsCertificateExpiresAt"] = llx.StringDataPtr(cert.ExpiresAt)
-	} else {
-		args["httpsCertificateState"] = llx.StringData("")
-		args["httpsCertificateDescription"] = llx.StringData("")
-		args["httpsCertificateDomains"] = llx.ArrayData([]any{}, types.String)
-		args["httpsCertificateExpiresAt"] = llx.StringData("")
 	}
+	// When HTTPSCertificate is nil the API has not provisioned one yet; leave
+	// the four fields unset so they read as null rather than empty strings.
 
 	if src := pages.Source; src != nil {
 		args["sourceBranch"] = llx.StringDataPtr(src.Branch)
 		args["sourcePath"] = llx.StringDataPtr(src.Path)
-	} else {
-		args["sourceBranch"] = llx.StringData("")
-		args["sourcePath"] = llx.StringData("")
 	}
+	// Source is nil for workflow-built sites; leave sourceBranch/sourcePath
+	// unset so consumers can distinguish "legacy build with no branch" from
+	// "workflow build" via null rather than empty string.
 
 	res, err := CreateResource(g.MqlRuntime, "github.repository.pages", args)
 	if err != nil {
