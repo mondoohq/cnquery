@@ -12,7 +12,8 @@ import (
 )
 
 type mqlHetznerNetworkInternal struct {
-	cacheServers []*hcloud.Server
+	cacheServers       []*hcloud.Server
+	cacheLoadBalancers []*hcloud.LoadBalancer
 }
 
 func (r *mqlHetznerNetwork) id() (string, error) {
@@ -73,6 +74,7 @@ func newMqlHetznerNetwork(runtime *plugin.Runtime, n *hcloud.Network) (*mqlHetzn
 	}
 	m := res.(*mqlHetznerNetwork)
 	m.cacheServers = n.Servers
+	m.cacheLoadBalancers = n.LoadBalancers
 	return m, nil
 }
 
@@ -99,6 +101,20 @@ func (m *mqlHetznerNetwork) servers() ([]any, error) {
 		// Use NewResource so an init-by-id can fully resolve them on demand.
 		ref, err := NewResource(m.MqlRuntime, "hetzner.server", map[string]*llx.RawData{
 			"id": llx.IntData(s.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
+}
+
+func (m *mqlHetznerNetwork) loadBalancers() ([]any, error) {
+	out := make([]any, 0, len(m.cacheLoadBalancers))
+	for _, lb := range m.cacheLoadBalancers {
+		ref, err := NewResource(m.MqlRuntime, "hetzner.loadBalancer", map[string]*llx.RawData{
+			"id": llx.IntData(lb.ID),
 		})
 		if err != nil {
 			return nil, err

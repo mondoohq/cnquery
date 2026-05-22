@@ -64,6 +64,7 @@ func newMqlHetznerCertificate(runtime *plugin.Runtime, cert *hcloud.Certificate)
 		"name":           llx.StringData(cert.Name),
 		"type":           llx.StringData(string(cert.Type)),
 		"fingerprint":    llx.StringData(cert.Fingerprint),
+		"certificate":    llx.StringData(cert.Certificate),
 		"notValidBefore": llx.TimeDataPtr(timePtr(cert.NotValidBefore)),
 		"notValidAfter":  llx.TimeDataPtr(timePtr(cert.NotValidAfter)),
 		"domainNames":    stringArrayData(cert.DomainNames),

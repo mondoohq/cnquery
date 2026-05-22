@@ -95,6 +95,8 @@ private hetzner.server @defaults("id name status") {
   publicIpv6DnsPtr []dict
   // Firewalls applied to the server
   firewalls() []hetzner.firewall
+  // Firewalls applied to the server, with per-binding application status (applied, pending)
+  firewallBindings() []hetzner.server.firewallBinding
   // Load balancers attached to the server
   loadBalancers() []hetzner.loadBalancer
   // Backup window (e.g., "22-02"); empty if backups disabled
@@ -133,6 +135,18 @@ private hetzner.server.privateNet @defaults("ip macAddress") {
   aliasIps []string
   // MAC address of the network interface
   macAddress string
+}
+
+// Hetzner Cloud server firewall binding
+private hetzner.server.firewallBinding @defaults("status") {
+  // Parent server ID (composite key with firewallId)
+  serverId int
+  // Bound firewall ID (composite key)
+  firewallId int
+  // Hetzner Cloud firewall bound to the server
+  firewall() hetzner.firewall
+  // Application status (applied, pending)
+  status string
 }
 
 // Hetzner Cloud server type (VM size)
@@ -201,12 +215,16 @@ private hetzner.image @defaults("id name type") {
   osFlavor string
   // OS version
   osVersion string
+  // Architecture (x86, arm)
+  architecture string
   // Whether rapid deploy is supported
   rapidDeploy bool
   // Resource protection (delete)
   protection dict
   // Deprecation timestamp (nullable)
   deprecated time
+  // Deletion timestamp (nullable)
+  deleted time
   // User-defined labels for organizing the resource
   labels map[string]string
   // Bound server (nullable, for snapshots/backups)
@@ -276,6 +294,8 @@ private hetzner.network @defaults("id name ipRange") {
   routes []dict
   // Servers attached to this network
   servers() []hetzner.server
+  // Load balancers attached to this network
+  loadBalancers() []hetzner.loadBalancer
   // Whether routes are exposed to vSwitch
   exposeRoutesToVswitch bool
   // Resource protection (delete)
@@ -334,6 +354,8 @@ private hetzner.primaryIp @defaults("id ip type") {
   blocked bool
   // Datacenter the IP belongs to
   datacenter() hetzner.datacenter
+  // Location the IP belongs to
+  location() hetzner.location
   // Server the IP is assigned to (nullable)
   server() hetzner.server
   // Reverse DNS entries [{ip, dnsPtr}]
@@ -482,6 +504,8 @@ private hetzner.certificate @defaults("id name type") {
   type string
   // SHA256 fingerprint
   fingerprint string
+  // PEM-encoded certificate body
+  certificate string
   // Validity start
   notValidBefore time
   // Validity end

@@ -19,6 +19,7 @@ const (
 	ResourceHetzner                       string = "hetzner"
 	ResourceHetznerServer                 string = "hetzner.server"
 	ResourceHetznerServerPrivateNet       string = "hetzner.server.privateNet"
+	ResourceHetznerServerFirewallBinding  string = "hetzner.server.firewallBinding"
 	ResourceHetznerServerType             string = "hetzner.serverType"
 	ResourceHetznerServerTypeLocation     string = "hetzner.serverType.location"
 	ResourceHetznerImage                  string = "hetzner.image"
@@ -55,6 +56,10 @@ func init() {
 		"hetzner.server.privateNet": {
 			// to override args, implement: initHetznerServerPrivateNet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHetznerServerPrivateNet,
+		},
+		"hetzner.server.firewallBinding": {
+			// to override args, implement: initHetznerServerFirewallBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerServerFirewallBinding,
 		},
 		"hetzner.serverType": {
 			Init:   initHetznerServerType,
@@ -311,6 +316,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.server.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetFirewalls()).ToDataRes(types.Array(types.Resource("hetzner.firewall")))
 	},
+	"hetzner.server.firewallBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetFirewallBindings()).ToDataRes(types.Array(types.Resource("hetzner.server.firewallBinding")))
+	},
 	"hetzner.server.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer")))
 	},
@@ -361,6 +369,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.server.privateNet.macAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerPrivateNet).GetMacAddress()).ToDataRes(types.String)
+	},
+	"hetzner.server.firewallBinding.serverId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerFirewallBinding).GetServerId()).ToDataRes(types.Int)
+	},
+	"hetzner.server.firewallBinding.firewallId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerFirewallBinding).GetFirewallId()).ToDataRes(types.Int)
+	},
+	"hetzner.server.firewallBinding.firewall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerFirewallBinding).GetFirewall()).ToDataRes(types.Resource("hetzner.firewall"))
+	},
+	"hetzner.server.firewallBinding.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerFirewallBinding).GetStatus()).ToDataRes(types.String)
 	},
 	"hetzner.serverType.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetId()).ToDataRes(types.Int)
@@ -443,6 +463,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.image.osVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerImage).GetOsVersion()).ToDataRes(types.String)
 	},
+	"hetzner.image.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerImage).GetArchitecture()).ToDataRes(types.String)
+	},
 	"hetzner.image.rapidDeploy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerImage).GetRapidDeploy()).ToDataRes(types.Bool)
 	},
@@ -451,6 +474,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.image.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerImage).GetDeprecated()).ToDataRes(types.Time)
+	},
+	"hetzner.image.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerImage).GetDeleted()).ToDataRes(types.Time)
 	},
 	"hetzner.image.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerImage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -533,6 +559,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.network.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerNetwork).GetServers()).ToDataRes(types.Array(types.Resource("hetzner.server")))
 	},
+	"hetzner.network.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetwork).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer")))
+	},
 	"hetzner.network.exposeRoutesToVswitch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerNetwork).GetExposeRoutesToVswitch()).ToDataRes(types.Bool)
 	},
@@ -604,6 +633,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.primaryIp.datacenter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerPrimaryIp).GetDatacenter()).ToDataRes(types.Resource("hetzner.datacenter"))
+	},
+	"hetzner.primaryIp.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerPrimaryIp).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
 	},
 	"hetzner.primaryIp.server": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerPrimaryIp).GetServer()).ToDataRes(types.Resource("hetzner.server"))
@@ -778,6 +810,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.certificate.fingerprint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerCertificate).GetFingerprint()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetCertificate()).ToDataRes(types.String)
 	},
 	"hetzner.certificate.notValidBefore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerCertificate).GetNotValidBefore()).ToDataRes(types.Time)
@@ -1048,6 +1083,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerServer).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.server.firewallBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).FirewallBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.server.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1118,6 +1157,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.server.privateNet.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServerPrivateNet).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.firewallBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerFirewallBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.server.firewallBinding.serverId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerFirewallBinding).ServerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.firewallBinding.firewallId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerFirewallBinding).FirewallId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.firewallBinding.firewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerFirewallBinding).Firewall, ok = plugin.RawToTValue[*mqlHetznerFirewall](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.firewallBinding.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerFirewallBinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.serverType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1240,6 +1299,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerImage).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"hetzner.image.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerImage).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"hetzner.image.rapidDeploy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerImage).RapidDeploy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1250,6 +1313,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.image.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerImage).Deprecated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.image.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerImage).Deleted, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"hetzner.image.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1372,6 +1439,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerNetwork).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.network.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetwork).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.network.exposeRoutesToVswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerNetwork).ExposeRoutesToVswitch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1474,6 +1545,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.primaryIp.datacenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerPrimaryIp).Datacenter, ok = plugin.RawToTValue[*mqlHetznerDatacenter](v.Value, v.Error)
+		return
+	},
+	"hetzner.primaryIp.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerPrimaryIp).Location, ok = plugin.RawToTValue[*mqlHetznerLocation](v.Value, v.Error)
 		return
 	},
 	"hetzner.primaryIp.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1734,6 +1809,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.certificate.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerCertificate).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.certificate.notValidBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2257,6 +2336,7 @@ type mqlHetznerServer struct {
 	PublicIpv6Blocked plugin.TValue[bool]
 	PublicIpv6DnsPtr  plugin.TValue[[]any]
 	Firewalls         plugin.TValue[[]any]
+	FirewallBindings  plugin.TValue[[]any]
 	LoadBalancers     plugin.TValue[[]any]
 	BackupWindow      plugin.TValue[string]
 	RescueEnabled     plugin.TValue[bool]
@@ -2507,6 +2587,22 @@ func (c *mqlHetznerServer) GetFirewalls() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlHetznerServer) GetFirewallBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.server", c.__id, "firewallBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallBindings()
+	})
+}
+
 func (c *mqlHetznerServer) GetLoadBalancers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -2671,6 +2767,82 @@ func (c *mqlHetznerServerPrivateNet) GetAliasIps() *plugin.TValue[[]any] {
 
 func (c *mqlHetznerServerPrivateNet) GetMacAddress() *plugin.TValue[string] {
 	return &c.MacAddress
+}
+
+// mqlHetznerServerFirewallBinding for the hetzner.server.firewallBinding resource
+type mqlHetznerServerFirewallBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerServerFirewallBindingInternal it will be used here
+	ServerId   plugin.TValue[int64]
+	FirewallId plugin.TValue[int64]
+	Firewall   plugin.TValue[*mqlHetznerFirewall]
+	Status     plugin.TValue[string]
+}
+
+// createHetznerServerFirewallBinding creates a new instance of this resource
+func createHetznerServerFirewallBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerServerFirewallBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.server.firewallBinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerServerFirewallBinding) MqlName() string {
+	return "hetzner.server.firewallBinding"
+}
+
+func (c *mqlHetznerServerFirewallBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerServerFirewallBinding) GetServerId() *plugin.TValue[int64] {
+	return &c.ServerId
+}
+
+func (c *mqlHetznerServerFirewallBinding) GetFirewallId() *plugin.TValue[int64] {
+	return &c.FirewallId
+}
+
+func (c *mqlHetznerServerFirewallBinding) GetFirewall() *plugin.TValue[*mqlHetznerFirewall] {
+	return plugin.GetOrCompute[*mqlHetznerFirewall](&c.Firewall, func() (*mqlHetznerFirewall, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.server.firewallBinding", c.__id, "firewall")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerFirewall), nil
+			}
+		}
+
+		return c.firewall()
+	})
+}
+
+func (c *mqlHetznerServerFirewallBinding) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlHetznerServerType for the hetzner.serverType resource
@@ -2875,22 +3047,24 @@ type mqlHetznerImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerImageInternal
-	Id          plugin.TValue[int64]
-	Type        plugin.TValue[string]
-	Status      plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	ImageSize   plugin.TValue[float64]
-	DiskSize    plugin.TValue[float64]
-	Created     plugin.TValue[*time.Time]
-	OsFlavor    plugin.TValue[string]
-	OsVersion   plugin.TValue[string]
-	RapidDeploy plugin.TValue[bool]
-	Protection  plugin.TValue[any]
-	Deprecated  plugin.TValue[*time.Time]
-	Labels      plugin.TValue[map[string]any]
-	BoundServer plugin.TValue[*mqlHetznerServer]
-	CreatedFrom plugin.TValue[*mqlHetznerServer]
+	Id           plugin.TValue[int64]
+	Type         plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	ImageSize    plugin.TValue[float64]
+	DiskSize     plugin.TValue[float64]
+	Created      plugin.TValue[*time.Time]
+	OsFlavor     plugin.TValue[string]
+	OsVersion    plugin.TValue[string]
+	Architecture plugin.TValue[string]
+	RapidDeploy  plugin.TValue[bool]
+	Protection   plugin.TValue[any]
+	Deprecated   plugin.TValue[*time.Time]
+	Deleted      plugin.TValue[*time.Time]
+	Labels       plugin.TValue[map[string]any]
+	BoundServer  plugin.TValue[*mqlHetznerServer]
+	CreatedFrom  plugin.TValue[*mqlHetznerServer]
 }
 
 // createHetznerImage creates a new instance of this resource
@@ -2970,6 +3144,10 @@ func (c *mqlHetznerImage) GetOsVersion() *plugin.TValue[string] {
 	return &c.OsVersion
 }
 
+func (c *mqlHetznerImage) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
 func (c *mqlHetznerImage) GetRapidDeploy() *plugin.TValue[bool] {
 	return &c.RapidDeploy
 }
@@ -2980,6 +3158,10 @@ func (c *mqlHetznerImage) GetProtection() *plugin.TValue[any] {
 
 func (c *mqlHetznerImage) GetDeprecated() *plugin.TValue[*time.Time] {
 	return &c.Deprecated
+}
+
+func (c *mqlHetznerImage) GetDeleted() *plugin.TValue[*time.Time] {
+	return &c.Deleted
 }
 
 func (c *mqlHetznerImage) GetLabels() *plugin.TValue[map[string]any] {
@@ -3227,6 +3409,7 @@ type mqlHetznerNetwork struct {
 	Subnets               plugin.TValue[[]any]
 	Routes                plugin.TValue[[]any]
 	Servers               plugin.TValue[[]any]
+	LoadBalancers         plugin.TValue[[]any]
 	ExposeRoutesToVswitch plugin.TValue[bool]
 	Protection            plugin.TValue[any]
 	Labels                plugin.TValue[map[string]any]
@@ -3306,6 +3489,22 @@ func (c *mqlHetznerNetwork) GetServers() *plugin.TValue[[]any] {
 		}
 
 		return c.servers()
+	})
+}
+
+func (c *mqlHetznerNetwork) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.network", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
 	})
 }
 
@@ -3463,6 +3662,7 @@ type mqlHetznerPrimaryIp struct {
 	AutoDelete   plugin.TValue[bool]
 	Blocked      plugin.TValue[bool]
 	Datacenter   plugin.TValue[*mqlHetznerDatacenter]
+	Location     plugin.TValue[*mqlHetznerLocation]
 	Server       plugin.TValue[*mqlHetznerServer]
 	DnsPtr       plugin.TValue[[]any]
 	Protection   plugin.TValue[any]
@@ -3552,6 +3752,22 @@ func (c *mqlHetznerPrimaryIp) GetDatacenter() *plugin.TValue[*mqlHetznerDatacent
 		}
 
 		return c.datacenter()
+	})
+}
+
+func (c *mqlHetznerPrimaryIp) GetLocation() *plugin.TValue[*mqlHetznerLocation] {
+	return plugin.GetOrCompute[*mqlHetznerLocation](&c.Location, func() (*mqlHetznerLocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.primaryIp", c.__id, "location")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerLocation), nil
+			}
+		}
+
+		return c.location()
 	})
 }
 
@@ -4213,6 +4429,7 @@ type mqlHetznerCertificate struct {
 	Name           plugin.TValue[string]
 	Type           plugin.TValue[string]
 	Fingerprint    plugin.TValue[string]
+	Certificate    plugin.TValue[string]
 	NotValidBefore plugin.TValue[*time.Time]
 	NotValidAfter  plugin.TValue[*time.Time]
 	DomainNames    plugin.TValue[[]any]
@@ -4274,6 +4491,10 @@ func (c *mqlHetznerCertificate) GetType() *plugin.TValue[string] {
 
 func (c *mqlHetznerCertificate) GetFingerprint() *plugin.TValue[string] {
 	return &c.Fingerprint
+}
+
+func (c *mqlHetznerCertificate) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
 }
 
 func (c *mqlHetznerCertificate) GetNotValidBefore() *plugin.TValue[*time.Time] {

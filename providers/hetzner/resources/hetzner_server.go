@@ -24,7 +24,7 @@ type mqlHetznerServerInternal struct {
 	cachePlacementGroup *hcloud.PlacementGroup
 	cacheISO            *hcloud.ISO
 	cachePrivateNet     []hcloud.ServerPrivateNet
-	cacheFirewallIDs    []int64
+	cacheFirewalls      []*hcloud.ServerFirewallStatus
 	cacheLoadBalancers  []*hcloud.LoadBalancer
 }
 
@@ -94,9 +94,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 	m.cachePlacementGroup = s.PlacementGroup
 	m.cacheISO = s.ISO
 	m.cachePrivateNet = s.PrivateNet
-	for _, fw := range s.PublicNet.Firewalls {
-		m.cacheFirewallIDs = append(m.cacheFirewallIDs, fw.Firewall.ID)
-	}
+	m.cacheFirewalls = s.PublicNet.Firewalls
 	m.cacheLoadBalancers = s.LoadBalancers
 	return m, nil
 }
@@ -175,15 +173,27 @@ func (m *mqlHetznerServer) floatingIps() ([]any, error) {
 }
 
 func (m *mqlHetznerServer) firewalls() ([]any, error) {
-	out := make([]any, 0, len(m.cacheFirewallIDs))
-	for _, id := range m.cacheFirewallIDs {
+	out := make([]any, 0, len(m.cacheFirewalls))
+	for _, fw := range m.cacheFirewalls {
 		ref, err := NewResource(m.MqlRuntime, "hetzner.firewall", map[string]*llx.RawData{
-			"id": llx.IntData(id),
+			"id": llx.IntData(fw.Firewall.ID),
 		})
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, ref)
+	}
+	return out, nil
+}
+
+func (m *mqlHetznerServer) firewallBindings() ([]any, error) {
+	out := make([]any, 0, len(m.cacheFirewalls))
+	for _, fw := range m.cacheFirewalls {
+		res, err := newMqlHetznerServerFirewallBinding(m.MqlRuntime, m.Id.Data, fw)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
 	}
 	return out, nil
 }
@@ -289,4 +299,37 @@ func (m *mqlHetznerServerPrivateNet) network() (*mqlHetznerNetwork, error) {
 		return nil, err
 	}
 	return ref.(*mqlHetznerNetwork), nil
+}
+
+// --- server.firewallBinding sub-resource ---
+
+func (r *mqlHetznerServerFirewallBinding) id() (string, error) {
+	return fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", r.ServerId.Data, r.FirewallId.Data), nil
+}
+
+func newMqlHetznerServerFirewallBinding(runtime *plugin.Runtime, serverID int64, fw *hcloud.ServerFirewallStatus) (*mqlHetznerServerFirewallBinding, error) {
+	res, err := CreateResource(runtime, "hetzner.server.firewallBinding", map[string]*llx.RawData{
+		"__id":       llx.StringData(fmt.Sprintf("hetzner.server.firewallBinding/%d/%d", serverID, fw.Firewall.ID)),
+		"serverId":   llx.IntData(serverID),
+		"firewallId": llx.IntData(fw.Firewall.ID),
+		"status":     llx.StringData(string(fw.Status)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHetznerServerFirewallBinding), nil
+}
+
+func (m *mqlHetznerServerFirewallBinding) firewall() (*mqlHetznerFirewall, error) {
+	if m.FirewallId.Data == 0 {
+		m.Firewall.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(m.MqlRuntime, "hetzner.firewall", map[string]*llx.RawData{
+		"id": llx.IntData(m.FirewallId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerFirewall), nil
 }

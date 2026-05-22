@@ -3,6 +3,7 @@
 
 hetzner 13.0.1
 hetzner.certificate 13.0.1
+hetzner.certificate.certificate 13.1.2
 hetzner.certificate.created 13.0.1
 hetzner.certificate.domainNames 13.0.1
 hetzner.certificate.fingerprint 13.0.1
@@ -49,9 +50,11 @@ hetzner.floatingIp.server 13.0.1
 hetzner.floatingIp.type 13.0.1
 hetzner.floatingIps 13.0.1
 hetzner.image 13.0.1
+hetzner.image.architecture 13.1.2
 hetzner.image.boundServer 13.0.1
 hetzner.image.created 13.0.1
 hetzner.image.createdFrom 13.0.1
+hetzner.image.deleted 13.1.2
 hetzner.image.deprecated 13.0.1
 hetzner.image.description 13.0.1
 hetzner.image.diskSize 13.0.1
@@ -138,6 +141,7 @@ hetzner.network.exposeRoutesToVswitch 13.0.1
 hetzner.network.id 13.0.1
 hetzner.network.ipRange 13.0.1
 hetzner.network.labels 13.0.1
+hetzner.network.loadBalancers 13.1.2
 hetzner.network.name 13.0.1
 hetzner.network.protection 13.0.1
 hetzner.network.routes 13.0.1
@@ -163,6 +167,7 @@ hetzner.primaryIp.dnsPtr 13.0.1
 hetzner.primaryIp.id 13.0.1
 hetzner.primaryIp.ip 13.0.1
 hetzner.primaryIp.labels 13.0.1
+hetzner.primaryIp.location 13.1.2
 hetzner.primaryIp.name 13.0.1
 hetzner.primaryIp.protection 13.0.1
 hetzner.primaryIp.server 13.0.1
@@ -172,6 +177,12 @@ hetzner.server 13.0.1
 hetzner.server.backupWindow 13.0.1
 hetzner.server.created 13.0.1
 hetzner.server.datacenter 13.0.1
+hetzner.server.firewallBinding 13.1.2
+hetzner.server.firewallBinding.firewall 13.1.2
+hetzner.server.firewallBinding.firewallId 13.1.2
+hetzner.server.firewallBinding.serverId 13.1.2
+hetzner.server.firewallBinding.status 13.1.2
+hetzner.server.firewallBindings 13.1.2
 hetzner.server.firewalls 13.0.1
 hetzner.server.floatingIps 13.0.1
 hetzner.server.id 13.0.1

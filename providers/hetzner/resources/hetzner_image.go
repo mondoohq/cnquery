@@ -41,21 +41,23 @@ func (h *mqlHetzner) images() ([]any, error) {
 
 func newMqlHetznerImage(runtime *plugin.Runtime, img *hcloud.Image) (*mqlHetznerImage, error) {
 	res, err := CreateResource(runtime, "hetzner.image", map[string]*llx.RawData{
-		"__id":        llx.StringData(fmt.Sprintf("hetzner.image/%d", img.ID)),
-		"id":          llx.IntData(img.ID),
-		"type":        llx.StringData(string(img.Type)),
-		"status":      llx.StringData(string(img.Status)),
-		"name":        llx.StringData(img.Name),
-		"description": llx.StringData(img.Description),
-		"imageSize":   llx.FloatData(float64(img.ImageSize)),
-		"diskSize":    llx.FloatData(float64(img.DiskSize)),
-		"created":     llx.TimeDataPtr(timePtr(img.Created)),
-		"osFlavor":    llx.StringData(img.OSFlavor),
-		"osVersion":   llx.StringData(img.OSVersion),
-		"rapidDeploy": llx.BoolData(img.RapidDeploy),
-		"protection":  llx.DictData(protectionDict(img.Protection.Delete)),
-		"deprecated":  llx.TimeDataPtr(timePtr(img.Deprecated)),
-		"labels":      labelData(img.Labels),
+		"__id":         llx.StringData(fmt.Sprintf("hetzner.image/%d", img.ID)),
+		"id":           llx.IntData(img.ID),
+		"type":         llx.StringData(string(img.Type)),
+		"status":       llx.StringData(string(img.Status)),
+		"name":         llx.StringData(img.Name),
+		"description":  llx.StringData(img.Description),
+		"imageSize":    llx.FloatData(float64(img.ImageSize)),
+		"diskSize":     llx.FloatData(float64(img.DiskSize)),
+		"created":      llx.TimeDataPtr(timePtr(img.Created)),
+		"osFlavor":     llx.StringData(img.OSFlavor),
+		"osVersion":    llx.StringData(img.OSVersion),
+		"architecture": llx.StringData(string(img.Architecture)),
+		"rapidDeploy":  llx.BoolData(img.RapidDeploy),
+		"protection":   llx.DictData(protectionDict(img.Protection.Delete)),
+		"deprecated":   llx.TimeDataPtr(timePtr(img.Deprecated)),
+		"deleted":      llx.TimeDataPtr(timePtr(img.Deleted)),
+		"labels":       labelData(img.Labels),
 	})
 	if err != nil {
 		return nil, err
