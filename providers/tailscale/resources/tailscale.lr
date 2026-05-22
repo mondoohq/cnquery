@@ -11,7 +11,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/tailscale/resources"
 // policy, and the tailnet-wide hardening flags — device-approval and
 // user-approval requirements, automatic-update enrollment, the auth-key
 // expiration window, network-flow logging, posture identity collection,
-// and which user role is allowed to join external tailnets.
+// and which user role is allowed to join external tailnets. Also exposes
+// `authKeys` (pre-auth keys issued to onboard devices), `webhooks`
+// (event subscription endpoints), and `logstreams` (audit and
+// network-flow log export destinations).
 tailscale {
   // Tailnet organization name
   tailnet string
@@ -37,6 +40,14 @@ tailscale {
   usersRoleAllowedToJoinExternalTailnets() string
   // Tailnet ACL (access control list) policy
   aclPolicy() tailscale.aclPolicy
+  // Authentication keys (pre-auth keys) issued for the tailnet
+  authKeys() []tailscale.authKey
+  // Webhook endpoints subscribed to tailnet events
+  webhooks() []tailscale.webhook
+  // Configured log stream destinations for the tailnet (configuration audit logs, network flow logs)
+  //
+  // Returns at most two entries — one with `logType == "configuration"` and one with `logType == "network"`. Entries are omitted when no destination is configured for that log type. Use this resource to assert that an organization is exporting tailnet audit and flow logs to a SIEM or object store.
+  logstreams() []tailscale.logstream
 }
 
 // Tailscale device (also called a node or machine)
@@ -190,4 +201,110 @@ tailscale.aclPolicy @defaults("tailnet") {
   etag string
   // Raw HuJSON representation of the policy
   raw() string
+}
+
+// Tailscale pre-authentication key
+//
+// Examine a single auth key (pre-auth key) issued for the tailnet,
+// identified by `id`. Auth keys onboard devices into the tailnet without
+// interactive sign-in and are long-lived credentials, so the `expires`
+// and `revoked` timestamps, the `invalid` flag, and the `reusable` /
+// `ephemeral` / `preauthorized` capability flags are the primary audit
+// signals. `tags` lists the ACL tags any device enrolled with this key
+// will receive — over-broad tagging is a common finding. The key
+// material itself is never exposed; only the metadata is.
+private tailscale.authKey @defaults("id description expires revoked") {
+  init(id? string)
+  // Identifier of the key
+  id string
+  // Human-readable description set when the key was created
+  description string
+  // ID of the user that owns the key
+  userId string
+  // Time the key was created
+  created time
+  // Time the key expires; the zero value means the key never expires
+  expires time
+  // Time the key was revoked; the zero value means the key has not been revoked
+  revoked time
+  // Whether the key has been marked invalid (revoked or its tailnet was deleted)
+  invalid bool
+  // Whether the key can be used to authenticate more than one device
+  reusable bool
+  // Whether devices created with the key are ephemeral (auto-removed when offline)
+  ephemeral bool
+  // Whether devices created with the key are pre-approved into a tailnet that requires device approval
+  preauthorized bool
+  // ACL tags applied to devices that authenticate using this key
+  tags []string
+}
+
+// Tailscale webhook endpoint
+//
+// Examine a single webhook endpoint subscribed to tailnet events,
+// identified by `endpointId`. `providerType` distinguishes the receiver
+// shape — `slack`, `mattermost`, `googlechat`, `discord`, or empty for
+// a generic Tailscale-formatted POST. `subscriptions` lists the events
+// the endpoint receives (for example `nodeNeedsApproval`,
+// `userSuspended`, `policyUpdate`, or the umbrella
+// `categoryTailnetManagement` / `categoryDeviceMisconfigurations`).
+// `creatorLoginName` is the user that registered the endpoint. The
+// shared HMAC secret is never exposed.
+private tailscale.webhook @defaults("endpointId providerType endpointUrl") {
+  init(endpointId? string)
+  // Identifier of the webhook endpoint
+  endpointId string
+  // URL events are POSTed to
+  endpointUrl string
+  // Receiver shape (`slack`, `mattermost`, `googlechat`, `discord`, or empty for the generic Tailscale format)
+  providerType string
+  // Login name of the user that registered the endpoint
+  creatorLoginName string
+  // Time the endpoint was registered
+  created time
+  // Time the endpoint subscription was last modified
+  lastModified time
+  // Events the endpoint is subscribed to
+  //
+  // Individual events such as `nodeCreated`, `nodeNeedsApproval`, `nodeApproved`, `nodeKeyExpiringInOneDay`, `nodeKeyExpired`, `nodeDeleted`, `policyUpdate`, `userCreated`, `userNeedsApproval`, `userSuspended`, `userRestored`, `userDeleted`, `userApproved`, `userRoleUpdated`, `subnetIPForwardingNotEnabled`, `exitNodeIPForwardingNotEnabled`. Umbrella categories `categoryTailnetManagement` and `categoryDeviceMisconfigurations` subscribe to every event in their group, including future additions.
+  subscriptions []string
+}
+
+// Tailscale log stream destination
+//
+// Examine a configured log stream that forwards tailnet logs to an
+// external destination. `logType` is `configuration` (admin audit log)
+// or `network` (flow log). `destinationType` is one of `splunk`,
+// `elastic`, `panther`, `cribl`, `datadog`, `axiom`, or `s3`. For HTTP
+// sinks `url` and `user` carry the connection details; for S3 sinks
+// `s3Bucket`, `s3Region`, `s3KeyPrefix`, and `s3AuthenticationType`
+// (`accesskey` or `rolearn`) define the bucket and authentication mode,
+// with `s3AccessKeyId` or `s3RoleArn` and `s3ExternalId` filled in
+// accordingly. Tokens and S3 secret access keys are never returned by
+// the Tailscale API and are not exposed here.
+private tailscale.logstream @defaults("logType destinationType") {
+  // Log feed this stream carries — `configuration` (audit log) or `network` (flow log)
+  logType string
+  // Destination service receiving the stream
+  //
+  // One of `splunk`, `elastic`, `panther`, `cribl`, `datadog`, `axiom`, or `s3`.
+  destinationType string
+  // Endpoint URL for HTTP destinations
+  url string
+  // Username for HTTP destinations that authenticate with basic credentials
+  user string
+  // S3 bucket name when `destinationType == "s3"`
+  s3Bucket string
+  // S3 region when `destinationType == "s3"`
+  s3Region string
+  // S3 key prefix prepended to written objects when `destinationType == "s3"`
+  s3KeyPrefix string
+  // S3 authentication mode (`accesskey` or `rolearn`)
+  s3AuthenticationType string
+  // Access key ID used when `s3AuthenticationType == "accesskey"`
+  s3AccessKeyId string
+  // ARN of the IAM role Tailscale assumes when `s3AuthenticationType == "rolearn"`
+  s3RoleArn string
+  // External ID Tailscale must include when assuming the role
+  s3ExternalId string
 }

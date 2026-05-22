@@ -1,0 +1,60 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+
+	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/tailscale/connection"
+)
+
+func createTailscaleLogstreamResource(runtime *plugin.Runtime, tailnet string, logType tsclient.LogType, cfg *tsclient.LogstreamConfiguration) (plugin.Resource, error) {
+	return CreateResource(runtime, "tailscale.logstream", map[string]*llx.RawData{
+		"__id":                 llx.StringData(tailnet + "/logstream/" + string(logType)),
+		"logType":              llx.StringData(string(logType)),
+		"destinationType":      llx.StringData(string(cfg.DestinationType)),
+		"url":                  llx.StringData(cfg.URL),
+		"user":                 llx.StringData(cfg.User),
+		"s3Bucket":             llx.StringData(cfg.S3Bucket),
+		"s3Region":             llx.StringData(cfg.S3Region),
+		"s3KeyPrefix":          llx.StringData(cfg.S3KeyPrefix),
+		"s3AuthenticationType": llx.StringData(string(cfg.S3AuthenticationType)),
+		"s3AccessKeyId":        llx.StringData(cfg.S3AccessKeyID),
+		"s3RoleArn":            llx.StringData(cfg.S3RoleARN),
+		"s3ExternalId":         llx.StringData(cfg.S3ExternalID),
+	})
+}
+
+// logstreams returns the configured log streams for the tailnet. There are at
+// most two — one for configuration audit logs and one for network flow logs.
+// A 404 from the Tailscale API means no destination is configured for that
+// log type; the API returning an empty struct (DestinationType == "") means
+// the same. Either case is skipped.
+func (t *mqlTailscale) logstreams() ([]any, error) {
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	ctx := context.Background()
+
+	resources := []any{}
+	for _, logType := range []tsclient.LogType{tsclient.LogTypeConfig, tsclient.LogTypeNetwork} {
+		cfg, err := conn.Client().Logging().LogstreamConfiguration(ctx, logType)
+		if err != nil {
+			if tsclient.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		if cfg == nil || cfg.DestinationType == "" {
+			continue
+		}
+		resource, err := createTailscaleLogstreamResource(t.MqlRuntime, t.Tailnet.Data, logType, cfg)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}

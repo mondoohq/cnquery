@@ -20,6 +20,9 @@ const (
 	ResourceTailscaleDevice    string = "tailscale.device"
 	ResourceTailscaleUser      string = "tailscale.user"
 	ResourceTailscaleAclPolicy string = "tailscale.aclPolicy"
+	ResourceTailscaleAuthKey   string = "tailscale.authKey"
+	ResourceTailscaleWebhook   string = "tailscale.webhook"
+	ResourceTailscaleLogstream string = "tailscale.logstream"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -41,6 +44,18 @@ func init() {
 		"tailscale.aclPolicy": {
 			// to override args, implement: initTailscaleAclPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTailscaleAclPolicy,
+		},
+		"tailscale.authKey": {
+			Init:   initTailscaleAuthKey,
+			Create: createTailscaleAuthKey,
+		},
+		"tailscale.webhook": {
+			Init:   initTailscaleWebhook,
+			Create: createTailscaleWebhook,
+		},
+		"tailscale.logstream": {
+			// to override args, implement: initTailscaleLogstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTailscaleLogstream,
 		},
 	}
 }
@@ -148,6 +163,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"tailscale.aclPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscale).GetAclPolicy()).ToDataRes(types.Resource("tailscale.aclPolicy"))
+	},
+	"tailscale.authKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetAuthKeys()).ToDataRes(types.Array(types.Resource("tailscale.authKey")))
+	},
+	"tailscale.webhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetWebhooks()).ToDataRes(types.Array(types.Resource("tailscale.webhook")))
+	},
+	"tailscale.logstreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscale).GetLogstreams()).ToDataRes(types.Array(types.Resource("tailscale.logstream")))
 	},
 	"tailscale.device.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleDevice).GetId()).ToDataRes(types.String)
@@ -302,6 +326,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.aclPolicy.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAclPolicy).GetRaw()).ToDataRes(types.String)
 	},
+	"tailscale.authKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetId()).ToDataRes(types.String)
+	},
+	"tailscale.authKey.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetDescription()).ToDataRes(types.String)
+	},
+	"tailscale.authKey.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetUserId()).ToDataRes(types.String)
+	},
+	"tailscale.authKey.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetCreated()).ToDataRes(types.Time)
+	},
+	"tailscale.authKey.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetExpires()).ToDataRes(types.Time)
+	},
+	"tailscale.authKey.revoked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetRevoked()).ToDataRes(types.Time)
+	},
+	"tailscale.authKey.invalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetInvalid()).ToDataRes(types.Bool)
+	},
+	"tailscale.authKey.reusable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetReusable()).ToDataRes(types.Bool)
+	},
+	"tailscale.authKey.ephemeral": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetEphemeral()).ToDataRes(types.Bool)
+	},
+	"tailscale.authKey.preauthorized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetPreauthorized()).ToDataRes(types.Bool)
+	},
+	"tailscale.authKey.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"tailscale.webhook.endpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetEndpointId()).ToDataRes(types.String)
+	},
+	"tailscale.webhook.endpointUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetEndpointUrl()).ToDataRes(types.String)
+	},
+	"tailscale.webhook.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetProviderType()).ToDataRes(types.String)
+	},
+	"tailscale.webhook.creatorLoginName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetCreatorLoginName()).ToDataRes(types.String)
+	},
+	"tailscale.webhook.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetCreated()).ToDataRes(types.Time)
+	},
+	"tailscale.webhook.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetLastModified()).ToDataRes(types.Time)
+	},
+	"tailscale.webhook.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleWebhook).GetSubscriptions()).ToDataRes(types.Array(types.String))
+	},
+	"tailscale.logstream.logType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetLogType()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetDestinationType()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetUrl()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetUser()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3Bucket()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3Region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3Region()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3AuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3AuthenticationType()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3AccessKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3AccessKeyId()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3RoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3RoleArn()).ToDataRes(types.String)
+	},
+	"tailscale.logstream.s3ExternalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleLogstream).GetS3ExternalId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -364,6 +475,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tailscale.aclPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscale).AclPolicy, ok = plugin.RawToTValue[*mqlTailscaleAclPolicy](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).AuthKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscale).Logstreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -582,6 +705,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTailscaleAclPolicy).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"tailscale.authKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).__id, ok = v.Value.(string)
+		return
+	},
+	"tailscale.authKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.revoked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Revoked, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.invalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Invalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.reusable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Reusable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.ephemeral": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Ephemeral, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.preauthorized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Preauthorized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).__id, ok = v.Value.(string)
+		return
+	},
+	"tailscale.webhook.endpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).EndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.endpointUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).EndpointUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.creatorLoginName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).CreatorLoginName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.webhook.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleWebhook).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).__id, ok = v.Value.(string)
+		return
+	},
+	"tailscale.logstream.logType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).LogType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3Region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3AuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3AccessKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3AccessKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3RoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tailscale.logstream.s3ExternalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleLogstream).S3ExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -623,6 +874,9 @@ type mqlTailscale struct {
 	PostureIdentityCollectionEnabled       plugin.TValue[bool]
 	UsersRoleAllowedToJoinExternalTailnets plugin.TValue[string]
 	AclPolicy                              plugin.TValue[*mqlTailscaleAclPolicy]
+	AuthKeys                               plugin.TValue[[]any]
+	Webhooks                               plugin.TValue[[]any]
+	Logstreams                             plugin.TValue[[]any]
 }
 
 // createTailscale creates a new instance of this resource
@@ -759,6 +1013,54 @@ func (c *mqlTailscale) GetAclPolicy() *plugin.TValue[*mqlTailscaleAclPolicy] {
 		}
 
 		return c.aclPolicy()
+	})
+}
+
+func (c *mqlTailscale) GetAuthKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "authKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authKeys()
+	})
+}
+
+func (c *mqlTailscale) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "webhooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webhooks()
+	})
+}
+
+func (c *mqlTailscale) GetLogstreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Logstreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tailscale", c.__id, "logstreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logstreams()
 	})
 }
 
@@ -1153,4 +1455,276 @@ func (c *mqlTailscaleAclPolicy) GetRaw() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Raw, func() (string, error) {
 		return c.raw()
 	})
+}
+
+// mqlTailscaleAuthKey for the tailscale.authKey resource
+type mqlTailscaleAuthKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTailscaleAuthKeyInternal it will be used here
+	Id            plugin.TValue[string]
+	Description   plugin.TValue[string]
+	UserId        plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	Expires       plugin.TValue[*time.Time]
+	Revoked       plugin.TValue[*time.Time]
+	Invalid       plugin.TValue[bool]
+	Reusable      plugin.TValue[bool]
+	Ephemeral     plugin.TValue[bool]
+	Preauthorized plugin.TValue[bool]
+	Tags          plugin.TValue[[]any]
+}
+
+// createTailscaleAuthKey creates a new instance of this resource
+func createTailscaleAuthKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTailscaleAuthKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tailscale.authKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTailscaleAuthKey) MqlName() string {
+	return "tailscale.authKey"
+}
+
+func (c *mqlTailscaleAuthKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTailscaleAuthKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlTailscaleAuthKey) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlTailscaleAuthKey) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlTailscaleAuthKey) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlTailscaleAuthKey) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
+}
+
+func (c *mqlTailscaleAuthKey) GetRevoked() *plugin.TValue[*time.Time] {
+	return &c.Revoked
+}
+
+func (c *mqlTailscaleAuthKey) GetInvalid() *plugin.TValue[bool] {
+	return &c.Invalid
+}
+
+func (c *mqlTailscaleAuthKey) GetReusable() *plugin.TValue[bool] {
+	return &c.Reusable
+}
+
+func (c *mqlTailscaleAuthKey) GetEphemeral() *plugin.TValue[bool] {
+	return &c.Ephemeral
+}
+
+func (c *mqlTailscaleAuthKey) GetPreauthorized() *plugin.TValue[bool] {
+	return &c.Preauthorized
+}
+
+func (c *mqlTailscaleAuthKey) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+// mqlTailscaleWebhook for the tailscale.webhook resource
+type mqlTailscaleWebhook struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTailscaleWebhookInternal it will be used here
+	EndpointId       plugin.TValue[string]
+	EndpointUrl      plugin.TValue[string]
+	ProviderType     plugin.TValue[string]
+	CreatorLoginName plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	LastModified     plugin.TValue[*time.Time]
+	Subscriptions    plugin.TValue[[]any]
+}
+
+// createTailscaleWebhook creates a new instance of this resource
+func createTailscaleWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTailscaleWebhook{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tailscale.webhook", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTailscaleWebhook) MqlName() string {
+	return "tailscale.webhook"
+}
+
+func (c *mqlTailscaleWebhook) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTailscaleWebhook) GetEndpointId() *plugin.TValue[string] {
+	return &c.EndpointId
+}
+
+func (c *mqlTailscaleWebhook) GetEndpointUrl() *plugin.TValue[string] {
+	return &c.EndpointUrl
+}
+
+func (c *mqlTailscaleWebhook) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlTailscaleWebhook) GetCreatorLoginName() *plugin.TValue[string] {
+	return &c.CreatorLoginName
+}
+
+func (c *mqlTailscaleWebhook) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlTailscaleWebhook) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
+}
+
+func (c *mqlTailscaleWebhook) GetSubscriptions() *plugin.TValue[[]any] {
+	return &c.Subscriptions
+}
+
+// mqlTailscaleLogstream for the tailscale.logstream resource
+type mqlTailscaleLogstream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTailscaleLogstreamInternal it will be used here
+	LogType              plugin.TValue[string]
+	DestinationType      plugin.TValue[string]
+	Url                  plugin.TValue[string]
+	User                 plugin.TValue[string]
+	S3Bucket             plugin.TValue[string]
+	S3Region             plugin.TValue[string]
+	S3KeyPrefix          plugin.TValue[string]
+	S3AuthenticationType plugin.TValue[string]
+	S3AccessKeyId        plugin.TValue[string]
+	S3RoleArn            plugin.TValue[string]
+	S3ExternalId         plugin.TValue[string]
+}
+
+// createTailscaleLogstream creates a new instance of this resource
+func createTailscaleLogstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTailscaleLogstream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tailscale.logstream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTailscaleLogstream) MqlName() string {
+	return "tailscale.logstream"
+}
+
+func (c *mqlTailscaleLogstream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTailscaleLogstream) GetLogType() *plugin.TValue[string] {
+	return &c.LogType
+}
+
+func (c *mqlTailscaleLogstream) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlTailscaleLogstream) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlTailscaleLogstream) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlTailscaleLogstream) GetS3Bucket() *plugin.TValue[string] {
+	return &c.S3Bucket
+}
+
+func (c *mqlTailscaleLogstream) GetS3Region() *plugin.TValue[string] {
+	return &c.S3Region
+}
+
+func (c *mqlTailscaleLogstream) GetS3KeyPrefix() *plugin.TValue[string] {
+	return &c.S3KeyPrefix
+}
+
+func (c *mqlTailscaleLogstream) GetS3AuthenticationType() *plugin.TValue[string] {
+	return &c.S3AuthenticationType
+}
+
+func (c *mqlTailscaleLogstream) GetS3AccessKeyId() *plugin.TValue[string] {
+	return &c.S3AccessKeyId
+}
+
+func (c *mqlTailscaleLogstream) GetS3RoleArn() *plugin.TValue[string] {
+	return &c.S3RoleArn
+}
+
+func (c *mqlTailscaleLogstream) GetS3ExternalId() *plugin.TValue[string] {
+	return &c.S3ExternalId
 }

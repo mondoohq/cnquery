@@ -1,0 +1,73 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"errors"
+
+	tsclient "github.com/tailscale/tailscale-client-go/v2"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/tailscale/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+func (r *mqlTailscaleWebhook) id() (string, error) {
+	return "tailscale/webhook/" + r.EndpointId.Data, nil
+}
+
+func initTailscaleWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := args["endpointId"]
+	if !ok {
+		return nil, nil, errors.New("missing required argument 'endpointId'")
+	}
+
+	conn := runtime.Connection.(*connection.TailscaleConnection)
+	wh, err := conn.Client().Webhooks().Get(context.Background(), id.Value.(string))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resource, err := createTailscaleWebhookResource(runtime, wh)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return args, resource, nil
+}
+
+func createTailscaleWebhookResource(runtime *plugin.Runtime, wh *tsclient.Webhook) (plugin.Resource, error) {
+	subs := make([]any, 0, len(wh.Subscriptions))
+	for _, s := range wh.Subscriptions {
+		subs = append(subs, string(s))
+	}
+	return CreateResource(runtime, "tailscale.webhook", map[string]*llx.RawData{
+		"endpointId":       llx.StringData(wh.EndpointID),
+		"endpointUrl":      llx.StringData(wh.EndpointURL),
+		"providerType":     llx.StringData(string(wh.ProviderType)),
+		"creatorLoginName": llx.StringData(wh.CreatorLoginName),
+		"created":          llx.TimeData(wh.Created),
+		"lastModified":     llx.TimeData(wh.LastModified),
+		"subscriptions":    llx.ArrayData(subs, types.String),
+	})
+}
+
+func (t *mqlTailscale) webhooks() ([]any, error) {
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	hooks, err := conn.Client().Webhooks().List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	resources := []any{}
+	for i := range hooks {
+		resource, err := createTailscaleWebhookResource(t.MqlRuntime, &hooks[i])
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
