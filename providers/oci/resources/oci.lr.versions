@@ -64,6 +64,7 @@ oci.bastion 13.0.6
 oci.bastion.bastions 13.0.6
 oci.bastion.instance 13.0.6
 oci.bastion.instance.bastionType 13.0.6
+oci.bastion.instance.compartment 13.6.2
 oci.bastion.instance.compartmentID 13.0.6
 oci.bastion.instance.created 13.0.6
 oci.bastion.instance.dnsProxyStatus 13.0.6
@@ -189,6 +190,7 @@ oci.compartments 9.0.0
 oci.compute 9.0.0
 oci.compute.blockVolume 13.0.6
 oci.compute.blockVolume.availabilityDomain 13.0.6
+oci.compute.blockVolume.compartment 13.6.2
 oci.compute.blockVolume.compartmentID 13.0.6
 oci.compute.blockVolume.created 13.0.6
 oci.compute.blockVolume.id 13.0.6
@@ -202,9 +204,11 @@ oci.compute.blockVolume.vpusPerGB 13.0.6
 oci.compute.blockVolumes 13.0.6
 oci.compute.bootVolume 13.0.6
 oci.compute.bootVolume.availabilityDomain 13.0.6
+oci.compute.bootVolume.compartment 13.6.2
 oci.compute.bootVolume.compartmentID 13.0.6
 oci.compute.bootVolume.created 13.0.6
 oci.compute.bootVolume.id 13.0.6
+oci.compute.bootVolume.image 13.6.2
 oci.compute.bootVolume.imageId 13.0.6
 oci.compute.bootVolume.kmsKey 13.0.6
 oci.compute.bootVolume.name 13.0.6
@@ -233,6 +237,7 @@ oci.compute.instance.definedTags 11.1.0
 oci.compute.instance.faultDomain 11.1.0
 oci.compute.instance.freeformTags 11.1.0
 oci.compute.instance.id 9.0.0
+oci.compute.instance.image 13.6.2
 oci.compute.instance.imageId 11.1.0
 oci.compute.instance.instanceOptions 13.0.6
 oci.compute.instance.launchOptions 13.0.6
@@ -248,6 +253,7 @@ oci.compute.instance.timeMaintenanceRebootDue 13.0.6
 oci.compute.instance.vnics 13.1.1
 oci.compute.instances 9.0.0
 oci.compute.vnic 13.1.1
+oci.compute.vnic.compartment 13.6.2
 oci.compute.vnic.compartmentID 13.1.1
 oci.compute.vnic.created 13.1.1
 oci.compute.vnic.definedTags 13.1.1
@@ -260,6 +266,7 @@ oci.compute.vnic.name 13.1.1
 oci.compute.vnic.nsgIds 13.1.1
 oci.compute.vnic.privateIp 13.1.1
 oci.compute.vnic.publicIp 13.1.1
+oci.compute.vnic.securityGroups 13.6.2
 oci.compute.vnic.skipSourceDestCheck 13.1.1
 oci.compute.vnic.state 13.1.1
 oci.compute.vnic.subnet 13.1.1
@@ -399,6 +406,7 @@ oci.dataSafe.userAssessments 13.5.5
 oci.database 13.1.1
 oci.database.autonomousDatabase 13.1.1
 oci.database.autonomousDatabase.backups 13.4.1
+oci.database.autonomousDatabase.compartment 13.6.2
 oci.database.autonomousDatabase.compartmentID 13.1.1
 oci.database.autonomousDatabase.connectionUrls 13.3.1
 oci.database.autonomousDatabase.cpuCoreCount 13.1.1
@@ -426,6 +434,7 @@ oci.database.autonomousDatabase.openMode 13.1.1
 oci.database.autonomousDatabase.permissionLevel 13.1.1
 oci.database.autonomousDatabase.privateEndpointIp 13.1.1
 oci.database.autonomousDatabase.privateEndpointLabel 13.1.1
+oci.database.autonomousDatabase.securityGroups 13.6.2
 oci.database.autonomousDatabase.state 13.1.1
 oci.database.autonomousDatabase.subnet 13.1.1
 oci.database.autonomousDatabase.whitelistedIps 13.1.1
@@ -475,6 +484,7 @@ oci.database.backups 13.4.1
 oci.database.dbSystem 13.1.1
 oci.database.dbSystem.availabilityDomain 13.1.1
 oci.database.dbSystem.backupNetworkNsgIds 13.1.1
+oci.database.dbSystem.backupSecurityGroups 13.6.2
 oci.database.dbSystem.compartmentID 13.1.1
 oci.database.dbSystem.cpuCoreCount 13.1.1
 oci.database.dbSystem.created 13.1.1
@@ -491,6 +501,7 @@ oci.database.dbSystem.licenseModel 13.1.1
 oci.database.dbSystem.name 13.1.1
 oci.database.dbSystem.nodeCount 13.1.1
 oci.database.dbSystem.nsgIds 13.1.1
+oci.database.dbSystem.securityGroups 13.6.2
 oci.database.dbSystem.shape 13.1.1
 oci.database.dbSystem.state 13.1.1
 oci.database.dbSystem.subnet 13.1.1
@@ -499,6 +510,7 @@ oci.database.dbSystems 13.1.1
 oci.events 13.0.6
 oci.events.rule 13.0.6
 oci.events.rule.actions 13.0.6
+oci.events.rule.compartment 13.6.2
 oci.events.rule.compartmentID 13.0.6
 oci.events.rule.condition 13.0.6
 oci.events.rule.created 13.0.6
@@ -702,6 +714,7 @@ oci.identity.users 9.0.0
 oci.kms 13.0.6
 oci.kms.key 13.0.6
 oci.kms.key.algorithm 13.0.6
+oci.kms.key.compartment 13.6.2
 oci.kms.key.compartmentID 13.0.6
 oci.kms.key.created 13.0.6
 oci.kms.key.id 13.0.6
@@ -710,8 +723,10 @@ oci.kms.key.keyVersions 13.1.1
 oci.kms.key.name 13.0.6
 oci.kms.key.protectionMode 13.0.6
 oci.kms.key.state 13.0.6
+oci.kms.key.vault 13.6.2
 oci.kms.key.vaultId 13.0.6
 oci.kms.keyVersion 13.1.1
+oci.kms.keyVersion.compartment 13.6.2
 oci.kms.keyVersion.compartmentID 13.1.1
 oci.kms.keyVersion.created 13.1.1
 oci.kms.keyVersion.id 13.1.1
@@ -720,8 +735,10 @@ oci.kms.keyVersion.keyId 13.1.1
 oci.kms.keyVersion.origin 13.1.1
 oci.kms.keyVersion.state 13.1.1
 oci.kms.keyVersion.timeOfDeletion 13.1.1
+oci.kms.keyVersion.vault 13.6.2
 oci.kms.keyVersion.vaultId 13.1.1
 oci.kms.vault 13.0.6
+oci.kms.vault.compartment 13.6.2
 oci.kms.vault.compartmentID 13.0.6
 oci.kms.vault.created 13.0.6
 oci.kms.vault.id 13.0.6
@@ -783,6 +800,7 @@ oci.logging.logGroup.state 13.0.6
 oci.logging.logGroups 13.0.6
 oci.monitoring 13.0.6
 oci.monitoring.alarm 13.0.6
+oci.monitoring.alarm.compartment 13.6.2
 oci.monitoring.alarm.compartmentID 13.0.6
 oci.monitoring.alarm.destinations 13.0.6
 oci.monitoring.alarm.id 13.0.6
@@ -793,6 +811,7 @@ oci.monitoring.alarm.namespace 13.0.6
 oci.monitoring.alarm.query 13.0.6
 oci.monitoring.alarm.severity 13.0.6
 oci.monitoring.alarm.state 13.0.6
+oci.monitoring.alarm.topics 13.6.2
 oci.monitoring.alarms 13.0.6
 oci.network 9.0.0
 oci.network.internetGateway 13.1.1
@@ -990,6 +1009,7 @@ oci.ons.subscription.protocol 13.0.6
 oci.ons.subscription.state 13.0.6
 oci.ons.subscription.topic 13.0.6
 oci.ons.topic 13.0.6
+oci.ons.topic.compartment 13.6.2
 oci.ons.topic.compartmentID 13.0.6
 oci.ons.topic.created 13.0.6
 oci.ons.topic.description 13.0.6
@@ -1035,6 +1055,7 @@ oci.tenancy.name 9.0.0
 oci.tenancy.retentionPeriod 9.0.0
 oci.vault 13.0.6
 oci.vault.secret 13.0.6
+oci.vault.secret.compartment 13.6.2
 oci.vault.secret.compartmentID 13.0.6
 oci.vault.secret.created 13.0.6
 oci.vault.secret.description 13.0.6

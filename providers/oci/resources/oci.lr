@@ -435,8 +435,10 @@ private oci.compute.instance @defaults("name") {
   compartment oci.compartment
   // Fault domain for fault tolerance (e.g., FAULT-DOMAIN-1)
   faultDomain string
-  // Image OCID used to launch the instance
-  imageId string
+  // DEPRECATED: use image() instead
+  imageId @maturity("deprecated") string
+  // Image used to launch the instance
+  image() oci.compute.image
   // Dedicated VM host OCID if running on dedicated infrastructure
   dedicatedVmHostId string
   // Platform security configuration (Secure Boot, TPM, Measured Boot, memory encryption)
@@ -467,8 +469,10 @@ private oci.compute.vnic @defaults("name") {
   id string
   // VNIC display name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the VNIC
+  compartment() oci.compartment
   // Whether this is the primary VNIC
   isPrimary bool
   // Private IP address
@@ -481,8 +485,10 @@ private oci.compute.vnic @defaults("name") {
   hostnameLabel string
   // Subnet the VNIC is in
   subnet() oci.network.subnet
-  // Network Security Group OCIDs
-  nsgIds []string
+  // DEPRECATED: use securityGroups() instead
+  nsgIds @maturity("deprecated") []string
+  // Network Security Groups attached to the VNIC
+  securityGroups() []oci.network.networkSecurityGroup
   // Whether source/destination check is skipped
   skipSourceDestCheck bool
   // Lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
@@ -527,8 +533,10 @@ private oci.compute.blockVolume @defaults("name") {
   id string
   // Block volume display name
   name string
-  // Compartment OCID containing the block volume
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the block volume
+  compartment() oci.compartment
   // Availability domain where the block volume is located
   availabilityDomain string
   // Size of the block volume in GBs
@@ -553,14 +561,18 @@ private oci.compute.bootVolume @defaults("name") {
   id string
   // Boot volume display name
   name string
-  // Compartment OCID containing the boot volume
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the boot volume
+  compartment() oci.compartment
   // Availability domain where the boot volume is located
   availabilityDomain string
   // Size of the boot volume in GBs
   sizeInGBs int
-  // Image OCID used to create the boot volume
-  imageId string
+  // DEPRECATED: use image() instead
+  imageId @maturity("deprecated") string
+  // Image used to create the boot volume
+  image() oci.compute.image
   // Boot volume lifecycle state (e.g., PROVISIONING, RESTORING, AVAILABLE, TERMINATING, TERMINATED, FAULTY)
   state string
   // KMS key for volume encryption
@@ -876,8 +888,10 @@ private oci.kms.vault @defaults("name") {
   id string
   // Display name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the vault
+  compartment() oci.compartment
   // Vault type (DEFAULT, VIRTUAL_PRIVATE, EXTERNAL)
   vaultType string
   // Lifecycle state
@@ -898,10 +912,14 @@ private oci.kms.key @defaults("name") {
   id string
   // Display name
   name string
-  // Compartment OCID
-  compartmentID string
-  // Parent vault OCID
-  vaultId string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the key
+  compartment() oci.compartment
+  // DEPRECATED: use vault() instead
+  vaultId @maturity("deprecated") string
+  // Parent vault containing the key
+  vault() oci.kms.vault
   // Key algorithm (AES, RSA, ECDSA)
   algorithm string
   // Protection mode (HSM, SOFTWARE, EXTERNAL)
@@ -924,10 +942,14 @@ private oci.kms.keyVersion @defaults("id") {
   id string
   // Master encryption key OCID
   keyId string
-  // Vault OCID
-  vaultId string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use vault() instead
+  vaultId @maturity("deprecated") string
+  // Parent vault containing the key version
+  vault() oci.kms.vault
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the key version
+  compartment() oci.compartment
   // Origin of the key material (INTERNAL, EXTERNAL)
   origin string
   // Lifecycle state
@@ -1074,8 +1096,10 @@ private oci.events.rule @defaults("name") {
   name string
   // Rule description
   description string
-  // Compartment OCID containing the rule
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the rule
+  compartment() oci.compartment
   // Event matching condition (JSON)
   condition string
   // Whether the rule is enabled
@@ -1243,8 +1267,10 @@ private oci.ons.topic @defaults("name") {
   name string
   // Topic description
   description string
-  // Compartment OCID containing the topic
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the topic
+  compartment() oci.compartment
   // Topic lifecycle state (e.g., ACTIVE, DELETING, CREATING)
   state string
   // Topic creation time
@@ -1298,8 +1324,10 @@ private oci.bastion.instance @defaults("name") {
   id string
   // Bastion display name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the bastion
+  compartment() oci.compartment
   // Bastion type (e.g., standard)
   bastionType string
   // Target VCN
@@ -1334,8 +1362,10 @@ private oci.monitoring.alarm @defaults("name") {
   id string
   // Alarm display name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the alarm
+  compartment() oci.compartment
   // Metric compartment OCID being monitored
   metricCompartmentId string
   // Metric namespace (e.g., oci_computeagent, oci_vcn)
@@ -1344,8 +1374,10 @@ private oci.monitoring.alarm @defaults("name") {
   query string
   // Alarm severity (CRITICAL, ERROR, WARNING, INFO)
   severity string
-  // List of notification destination OCIDs (ONS topics)
-  destinations []string
+  // DEPRECATED: use topics() instead
+  destinations @maturity("deprecated") []string
+  // Notification topics the alarm publishes to (resolved from destinations OCIDs)
+  topics() []oci.ons.topic
   // Whether the alarm is enabled
   isEnabled bool
   // Lifecycle state (e.g., ACTIVE, DELETING, DELETED)
@@ -1370,8 +1402,10 @@ private oci.vault.secret @defaults("name") {
   id string
   // Secret name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the secret
+  compartment() oci.compartment
   // Vault containing this secret
   kmsVault() oci.kms.vault
   // KMS key used for encryption
@@ -1995,10 +2029,14 @@ private oci.database.dbSystem @defaults("name") {
   kmsKey() oci.kms.key
   // Subnet the DB system is in
   subnet() oci.network.subnet
-  // Network Security Group OCIDs
-  nsgIds []string
-  // Backup network NSG OCIDs
-  backupNetworkNsgIds []string
+  // DEPRECATED: use securityGroups() instead
+  nsgIds @maturity("deprecated") []string
+  // Network Security Groups attached to the DB system
+  securityGroups() []oci.network.networkSecurityGroup
+  // DEPRECATED: use backupSecurityGroups() instead
+  backupNetworkNsgIds @maturity("deprecated") []string
+  // Network Security Groups attached to the backup network
+  backupSecurityGroups() []oci.network.networkSecurityGroup
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING.
@@ -2017,8 +2055,10 @@ private oci.database.autonomousDatabase @defaults("name") {
   id string
   // Display name
   name string
-  // Compartment OCID
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the autonomous database
+  compartment() oci.compartment
   // Database name
   dbName string
   // Database version
@@ -2057,8 +2097,10 @@ private oci.database.autonomousDatabase @defaults("name") {
   kmsVault() oci.kms.vault
   // Subnet for private endpoint
   subnet() oci.network.subnet
-  // Network Security Group OCIDs
-  nsgIds []string
+  // DEPRECATED: use securityGroups() instead
+  nsgIds @maturity("deprecated") []string
+  // Network Security Groups attached to the autonomous database
+  securityGroups() []oci.network.networkSecurityGroup
   // Private endpoint IP address
   privateEndpointIp string
   // Private endpoint label
