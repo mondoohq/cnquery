@@ -99049,7 +99049,9 @@ func (c *mqlAwsEventbridgeReplay) GetEventSource() *plugin.TValue[*mqlAwsEventbr
 }
 
 func (c *mqlAwsEventbridgeReplay) GetDestinationArn() *plugin.TValue[string] {
-	return &c.DestinationArn
+	return plugin.GetOrCompute[string](&c.DestinationArn, func() (string, error) {
+		return c.destinationArn()
+	})
 }
 
 func (c *mqlAwsEventbridgeReplay) GetDestination() *plugin.TValue[*mqlAwsEventbridgeEventBus] {
@@ -99069,7 +99071,9 @@ func (c *mqlAwsEventbridgeReplay) GetDestination() *plugin.TValue[*mqlAwsEventbr
 }
 
 func (c *mqlAwsEventbridgeReplay) GetFilterArns() *plugin.TValue[[]any] {
-	return &c.FilterArns
+	return plugin.GetOrCompute[[]any](&c.FilterArns, func() ([]any, error) {
+		return c.filterArns()
+	})
 }
 
 func (c *mqlAwsEventbridgeReplay) GetState() *plugin.TValue[string] {

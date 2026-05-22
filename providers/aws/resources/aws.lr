@@ -7443,11 +7443,11 @@ private aws.eventbridge.replay @defaults("arn replayName state") {
   // Archive whose events are being replayed
   eventSource() aws.eventbridge.archive
   // ARN of the event bus that receives the replayed events
-  destinationArn string
+  destinationArn() string
   // Event bus that receives the replayed events
   destination() aws.eventbridge.eventBus
   // ARNs of the rules on the destination bus that scope which events are replayed
-  filterArns []string
+  filterArns() []string
   // Replay state
   //
   // One of STARTING, RUNNING, CANCELLING, COMPLETED, CANCELLED, or FAILED.
