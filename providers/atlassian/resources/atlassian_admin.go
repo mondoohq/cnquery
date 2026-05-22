@@ -207,14 +207,20 @@ func (a *mqlAtlassianAdminOrganizationManagedUser) apiTokens() ([]any, error) {
 		if t == nil {
 			continue
 		}
-		createdAt := t.CreatedAt
-		lastAccess := t.LastAccess
+		var createdAt *time.Time
+		if !t.CreatedAt.IsZero() {
+			createdAt = &t.CreatedAt
+		}
+		var lastAccess *time.Time
+		if !t.LastAccess.IsZero() {
+			lastAccess = &t.LastAccess
+		}
 		mqlToken, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser.apiToken",
 			map[string]*llx.RawData{
 				"id":         llx.StringData(t.ID),
 				"label":      llx.StringData(t.Label),
-				"createdAt":  llx.TimeDataPtr(&createdAt),
-				"lastAccess": llx.TimeDataPtr(&lastAccess),
+				"createdAt":  llx.TimeDataPtr(createdAt),
+				"lastAccess": llx.TimeDataPtr(lastAccess),
 			})
 		if err != nil {
 			return nil, err
