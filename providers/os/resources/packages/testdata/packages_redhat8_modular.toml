@@ -4,10 +4,10 @@ stdout="/usr/bin/rpm"
 [commands."rpm -E '%{_dbpath}'"]
 stdout="/var/lib/rpm"
 
-[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'"]
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'"]
 stdout="""
-tzdata 0:2021c-1.el8 noarch__Red Hat, Inc.__Timezone data__GPLv3+__1704067200__(none)
-bash 0:4.4.20-1.el8_4 x86_64__Red Hat, Inc.__The GNU Bourne Again shell__GPLv3+__1704067200__(none)
-php-common 0:7.4.33-3.module+el8.10.0+23902+d3c8dd8f aarch64__Red Hat, Inc.__Common files for PHP__GPLv3+__1704067200__php:7.4:8100020260119075152:f7998665
-php-cli 0:7.4.33-3.module+el8.10.0+23902+d3c8dd8f aarch64__Red Hat, Inc.__Command-line interface for PHP__GPLv3+__1704067200__php:7.4:8100020260119075152:f7998665
+tzdata 0:2021c-1.el8 noarch\u001ERed Hat, Inc.\u001ETimezone data\u001EGPLv3+\u001E1704067200\u001E(none)
+bash 0:4.4.20-1.el8_4 x86_64\u001ERed Hat, Inc.\u001EThe GNU Bourne Again shell\u001EGPLv3+\u001E1704067200\u001E(none)
+php-common 0:7.4.33-3.module+el8.10.0+23902+d3c8dd8f aarch64\u001ERed Hat, Inc.\u001ECommon files for PHP\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020260119075152:f7998665
+php-cli 0:7.4.33-3.module+el8.10.0+23902+d3c8dd8f aarch64\u001ERed Hat, Inc.\u001ECommand-line interface for PHP\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020260119075152:f7998665
 """

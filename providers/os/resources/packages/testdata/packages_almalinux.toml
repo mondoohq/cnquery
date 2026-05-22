@@ -4,12 +4,12 @@ stdout="/usr/bin/rpm"
 [commands."rpm -E '%{_dbpath}'"]
 stdout="/var/lib/rpm"
 
-[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'"]
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'"]
 stdout="""
-php-xml 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__A module for PHP applications which use XML__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
-php-mbstring 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__A module for PHP applications which need multi-byte string handling__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
-php-common 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__Common files for PHP__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
-php-cli 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__Command-line interface for PHP__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
-php-fpm 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__PHP FastCGI Process Manager__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
-php-json 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64__AlmaLinux__JavaScript Object Notation extension for PHP__GPLv3+__1704067200__php:7.4:8100020241212065510:eb0869e2
+php-xml 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001EA module for PHP applications which use XML\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
+php-mbstring 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001EA module for PHP applications which need multi-byte string handling\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
+php-common 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001ECommon files for PHP\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
+php-cli 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001ECommand-line interface for PHP\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
+php-fpm 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001EPHP FastCGI Process Manager\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
+php-json 0:7.4.33-2.module_el8.10.0+3935+28808425 aarch64\u001EAlmaLinux\u001EJavaScript Object Notation extension for PHP\u001EGPLv3+\u001E1704067200\u001Ephp:7.4:8100020241212065510:eb0869e2
 """
