@@ -603,6 +603,7 @@ subnetted
 subports
 subscriptionfilter
 superusers
+SVI
 swi
 SYMANTEC
 symfony
@@ -679,6 +680,7 @@ VNI
 vnic
 vpus
 vrf
+vrrp
 vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
@@ -702,8 +704,8 @@ workspacesweb
 worktree
 writeback
 Xff
-xlarge
 xks
+xlarge
 xssmatchstatement
 xts
 xxxxx
