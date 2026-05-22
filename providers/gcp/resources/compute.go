@@ -368,10 +368,6 @@ func (g *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) id() (string
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectComputeServiceInstanceConfidentialCompute) id() (string, error) {
-	return g.Id.Data, g.Id.Error
-}
-
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -634,7 +630,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 			return nil, err
 		}
 		mqlConfidentialCompute, err = CreateResource(runtime, "gcp.project.computeService.instance.confidentialCompute", map[string]*llx.RawData{
-			"id":           llx.StringData(fmt.Sprintf("%d/confidentialCompute", instance.Id)),
+			"__id":         llx.StringData(fmt.Sprintf("%d/confidentialCompute", instance.Id)),
 			"enabled":      llx.BoolData(instance.ConfidentialInstanceConfig.EnableConfidentialCompute),
 			"instanceType": llx.StringData(instance.ConfidentialInstanceConfig.ConfidentialInstanceType),
 		})

@@ -417,6 +417,25 @@ Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LL
 - Must be unique and stable (ARN, UUID, or composite key)
 - If `__id` is empty or duplicate, caching breaks and performance degrades
 
+**Hide synthetic `__id` values; don't expose them as `id` fields.** When a sub-resource's cache key is purely internal — a parent-qualified path like `<parentId>/confidentialCompute`, not something a user would ever query by — do NOT declare `id string` in the `.lr` block. Pass the cache key directly via the magic `"__id"` argument to `CreateResource`, and omit the `id()` Go method:
+
+```go
+// schema (.lr): no `id string` field declared
+private gcp.project.computeService.instance.confidentialCompute @defaults("enabled instanceType") {
+  enabled bool
+  instanceType string
+}
+
+// creator (.go): pass "__id" directly, no id() func needed
+mqlConfCompute, err := CreateResource(runtime, "gcp.project.computeService.instance.confidentialCompute", map[string]*llx.RawData{
+    "__id":         llx.StringData(fmt.Sprintf("%d/confidentialCompute", instance.Id)),
+    "enabled":      llx.BoolData(...),
+    "instanceType": llx.StringData(...),
+})
+```
+
+Reserve a public `id string` field for resources whose id carries user-meaningful information (an ARN, a GCP resource name, a stable cross-system key) — somewhere a user might write `.where(id == "...")`. Sub-resources whose id is `<parent>/<leaf>` synthetic should hide it. See `gcp.project.binaryAuthorizationControl.policy` for an existing example of this pattern.
+
 **Performance notes:**
 - Resource field access is lazy: fields are only fetched when needed
 - Cross-references should leverage caching to avoid redundant API calls

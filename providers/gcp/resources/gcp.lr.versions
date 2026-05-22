@@ -1167,7 +1167,6 @@ gcp.project.cloudRunService.services 9.0.0
 gcp.project.cloudRunService.vpcAccessConfig 13.16.3
 gcp.project.cloudRunService.vpcAccessConfig.connector 13.16.3
 gcp.project.cloudRunService.vpcAccessConfig.egress 13.16.3
-gcp.project.cloudRunService.vpcAccessConfig.id 13.16.3
 gcp.project.cloudRunService.vpcAccessConfig.networkInterfaces 13.16.3
 gcp.project.cloudScheduler 11.6.6
 gcp.project.cloudSchedulerService 11.6.6
@@ -1520,7 +1519,6 @@ gcp.project.computeService.instance.blockProjectSshKeysEnabled 13.12.2
 gcp.project.computeService.instance.canIpForward 9.0.0
 gcp.project.computeService.instance.confidentialCompute 13.16.3
 gcp.project.computeService.instance.confidentialCompute.enabled 13.16.3
-gcp.project.computeService.instance.confidentialCompute.id 13.16.3
 gcp.project.computeService.instance.confidentialCompute.instanceType 13.16.3
 gcp.project.computeService.instance.confidentialInstanceConfig 9.0.0
 gcp.project.computeService.instance.cpuPlatform 9.0.0
@@ -2837,7 +2835,6 @@ gcp.project.gkeService.cluster.nodepool.config.tags 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.taints 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.usesDefaultServiceAccount 13.12.2
 gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig 13.16.3
-gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.id 13.16.3
 gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.osVersion 13.16.3
 gcp.project.gkeService.cluster.nodepool.config.workloadMetadataMode 9.0.0
 gcp.project.gkeService.cluster.nodepool.etag 13.1.2
@@ -3982,7 +3979,6 @@ gcp.project.sqlService.instance.settings.activeDirectory 13.16.3
 gcp.project.sqlService.instance.settings.activeDirectory.adminCredentialSecretName 13.16.3
 gcp.project.sqlService.instance.settings.activeDirectory.dnsServers 13.16.3
 gcp.project.sqlService.instance.settings.activeDirectory.domain 13.16.3
-gcp.project.sqlService.instance.settings.activeDirectory.id 13.16.3
 gcp.project.sqlService.instance.settings.activeDirectory.mode 13.16.3
 gcp.project.sqlService.instance.settings.activeDirectoryConfig 9.0.0
 gcp.project.sqlService.instance.settings.availabilityType 9.0.0

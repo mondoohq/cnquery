@@ -551,6 +551,7 @@ serde
 serviceconnection
 servicedesk
 serviceprincipals
+SEV
 Sflags
 sfn
 signin
@@ -620,6 +621,7 @@ trainingjob
 transitgateway
 transitives
 truststore
+TDX
 TValue
 Twt
 uami

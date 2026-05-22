@@ -3587,9 +3587,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.vulnerabilityReport.updateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetUpdateTime()).ToDataRes(types.Time)
 	},
-	"gcp.project.computeService.instance.confidentialCompute.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).GetId()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.instance.confidentialCompute.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -4880,9 +4877,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.settings.userLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetUserLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"gcp.project.sqlService.instance.settings.activeDirectory.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).GetId()).ToDataRes(types.String)
-	},
 	"gcp.project.sqlService.instance.settings.activeDirectory.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).GetDomain()).ToDataRes(types.String)
 	},
@@ -6061,9 +6055,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.sysctls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).GetSysctls()).ToDataRes(types.Map(types.String, types.String))
-	},
-	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig).GetId()).ToDataRes(types.String)
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.osVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig).GetOsVersion()).ToDataRes(types.String)
@@ -7750,9 +7741,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudRunService.container.probe.tcpSocket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceContainerProbe).GetTcpSocket()).ToDataRes(types.Dict)
-	},
-	"gcp.project.cloudRunService.vpcAccessConfig.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCloudRunServiceVpcAccessConfig).GetId()).ToDataRes(types.String)
 	},
 	"gcp.project.cloudRunService.vpcAccessConfig.connector": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceVpcAccessConfig).GetConnector()).ToDataRes(types.String)
@@ -16442,10 +16430,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).__id, ok = v.Value.(string)
 		return
 	},
-	"gcp.project.computeService.instance.confidentialCompute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.computeService.instance.confidentialCompute.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -18278,10 +18262,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).__id, ok = v.Value.(string)
 		return
 	},
-	"gcp.project.sqlService.instance.settings.activeDirectory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.sqlService.instance.settings.activeDirectory.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -20012,10 +19992,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig).__id, ok = v.Value.(string)
-		return
-	},
-	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22536,10 +22512,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudRunService.vpcAccessConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceVpcAccessConfig).__id, ok = v.Value.(string)
-		return
-	},
-	"gcp.project.cloudRunService.vpcAccessConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCloudRunServiceVpcAccessConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudRunService.vpcAccessConfig.connector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37970,7 +37942,6 @@ type mqlGcpProjectComputeServiceInstanceConfidentialCompute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInstanceConfidentialComputeInternal it will be used here
-	Id           plugin.TValue[string]
 	Enabled      plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
 }
@@ -37986,12 +37957,7 @@ func createGcpProjectComputeServiceInstanceConfidentialCompute(runtime *plugin.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.confidentialCompute", res.__id)
@@ -38010,10 +37976,6 @@ func (c *mqlGcpProjectComputeServiceInstanceConfidentialCompute) MqlName() strin
 
 func (c *mqlGcpProjectComputeServiceInstanceConfidentialCompute) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlGcpProjectComputeServiceInstanceConfidentialCompute) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlGcpProjectComputeServiceInstanceConfidentialCompute) GetEnabled() *plugin.TValue[bool] {
@@ -41774,7 +41736,6 @@ type mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsActiveDirectoryInternal it will be used here
-	Id                        plugin.TValue[string]
 	Domain                    plugin.TValue[string]
 	Mode                      plugin.TValue[string]
 	DnsServers                plugin.TValue[[]any]
@@ -41792,12 +41753,7 @@ func createGcpProjectSqlServiceInstanceSettingsActiveDirectory(runtime *plugin.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.sqlService.instance.settings.activeDirectory", res.__id)
@@ -41816,10 +41772,6 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) MqlName() strin
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) GetDomain() *plugin.TValue[string] {
@@ -45786,7 +45738,6 @@ type mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfigInternal it will be used here
-	Id        plugin.TValue[string]
 	OsVersion plugin.TValue[string]
 }
 
@@ -45801,12 +45752,7 @@ func createGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig(runtime *p
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig", res.__id)
@@ -45825,10 +45771,6 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) MqlName(
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) GetOsVersion() *plugin.TValue[string] {
@@ -52163,7 +52105,6 @@ type mqlGcpProjectCloudRunServiceVpcAccessConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectCloudRunServiceVpcAccessConfigInternal it will be used here
-	Id                plugin.TValue[string]
 	Connector         plugin.TValue[string]
 	Egress            plugin.TValue[string]
 	NetworkInterfaces plugin.TValue[[]any]
@@ -52180,12 +52121,7 @@ func createGcpProjectCloudRunServiceVpcAccessConfig(runtime *plugin.Runtime, arg
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.cloudRunService.vpcAccessConfig", res.__id)
@@ -52204,10 +52140,6 @@ func (c *mqlGcpProjectCloudRunServiceVpcAccessConfig) MqlName() string {
 
 func (c *mqlGcpProjectCloudRunServiceVpcAccessConfig) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlGcpProjectCloudRunServiceVpcAccessConfig) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlGcpProjectCloudRunServiceVpcAccessConfig) GetConnector() *plugin.TValue[string] {

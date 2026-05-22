@@ -888,10 +888,6 @@ func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]any, error) {
 	})
 }
 
-func (g *mqlGcpProjectCloudRunServiceVpcAccessConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
-}
-
 // mqlVpcAccessConfig builds the typed gcp.project.cloudRunService.vpcAccessConfig
 // resource shared by Cloud Run service revisions and Cloud Run job task
 // templates. id should be a parent-qualified path so multiple instances of
@@ -913,7 +909,7 @@ func mqlVpcAccessConfig(runtime *plugin.Runtime, id string, vpcAccess *runpb.Vpc
 		})
 	}
 	return CreateResource(runtime, "gcp.project.cloudRunService.vpcAccessConfig", map[string]*llx.RawData{
-		"id":                llx.StringData(id),
+		"__id":              llx.StringData(id),
 		"connector":         llx.StringData(vpcAccess.Connector),
 		"egress":            llx.StringData(vpcAccess.Egress.String()),
 		"networkInterfaces": llx.ArrayData(interfaces, types.Dict),

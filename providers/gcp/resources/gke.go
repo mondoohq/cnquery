@@ -190,10 +190,6 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) id(
 	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
-}
-
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
@@ -971,7 +967,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	var mqlWindowsNodeCfg plugin.Resource
 	if cfg.WindowsNodeConfig != nil {
 		mqlWindowsNodeCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig", map[string]*llx.RawData{
-			"id":        llx.StringData(fmt.Sprintf("%s/windowsNodeConfig", nodePoolId)),
+			"__id":      llx.StringData(fmt.Sprintf("%s/windowsNodeConfig", nodePoolId)),
 			"osVersion": llx.StringData(cfg.WindowsNodeConfig.OsVersion.String()),
 		})
 		if err != nil {

@@ -240,7 +240,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					return err
 				}
 				mqlActiveDirectory, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.activeDirectory", map[string]*llx.RawData{
-					"id":                        llx.StringData(fmt.Sprintf("%s/settings/activeDirectory", instanceId)),
+					"__id":                      llx.StringData(fmt.Sprintf("%s/settings/activeDirectory", instanceId)),
 					"domain":                    llx.StringData(s.ActiveDirectoryConfig.Domain),
 					"mode":                      llx.StringData(s.ActiveDirectoryConfig.Mode),
 					"dnsServers":                llx.ArrayData(convert.SliceAnyToInterface(s.ActiveDirectoryConfig.DnsServers), types.String),
@@ -716,10 +716,6 @@ func (g *mqlGcpProjectSqlServiceInstanceSettings) id() (string, error) {
 }
 
 func (g *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) id() (string, error) {
-	return g.Id.Data, g.Id.Error
-}
-
-func (g *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 

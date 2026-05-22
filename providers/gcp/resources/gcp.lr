@@ -1361,8 +1361,6 @@ private gcp.project.computeService.instance.vulnerabilityReport @defaults("name 
 // VMs encrypt memory at the hardware level and are the GCP control
 // surface for workloads that require runtime memory isolation.
 private gcp.project.computeService.instance.confidentialCompute @defaults("enabled instanceType") {
-  // Internal ID for this resource
-  id string
   // Whether confidential compute is enabled on this instance
   enabled bool
   // Confidential VM technology
@@ -2507,8 +2505,6 @@ private gcp.project.sqlService.instance.settings {
 // used to bootstrap the join. A SQL Server instance with no AD binding
 // (or a binding to an unexpected domain) is the audit hot spot.
 private gcp.project.sqlService.instance.settings.activeDirectory @defaults("domain mode") {
-  // Internal ID for this resource
-  id string
   // Fully-qualified Active Directory / Entra ID domain (e.g., corp.example.com); empty when no binding is configured
   domain string
   // Active Directory mode
@@ -3595,8 +3591,6 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
 // GKE clusters need this to verify that Windows nodes are running an
 // approved OS baseline.
 private gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig @defaults("osVersion") {
-  // Internal ID for this resource
-  id string
   // Windows Server OS version pinned to this node pool
   //
   // One of OS_VERSION_UNSPECIFIED, OS_VERSION_LTSC2019, or OS_VERSION_LTSC2022.
@@ -5285,8 +5279,6 @@ private gcp.project.cloudRunService.container.probe {
 // `ALL_TRAFFIC` forces every egress packet through the VPC — the
 // stronger control for data-exfiltration audits.
 private gcp.project.cloudRunService.vpcAccessConfig @defaults("connector egress") {
-  // Internal ID for this resource
-  id string
   // Serverless VPC Access connector (full resource name `projects/{p}/locations/{l}/connectors/{c}`); empty when direct-VPC `networkInterfaces` is used
   connector string
   // Outbound traffic routing through the VPC
