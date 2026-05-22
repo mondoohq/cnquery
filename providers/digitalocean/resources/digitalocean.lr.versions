@@ -9,6 +9,8 @@ digitalocean.account.emailVerified 13.0.1
 digitalocean.account.floatingIpLimit 13.0.1
 digitalocean.account.status 13.0.1
 digitalocean.account.statusMessage 13.0.1
+digitalocean.account.teamName 13.3.1
+digitalocean.account.teamUuid 13.3.1
 digitalocean.account.uuid 13.0.1
 digitalocean.account.volumeLimit 13.0.1
 digitalocean.alertPolicies 13.0.1

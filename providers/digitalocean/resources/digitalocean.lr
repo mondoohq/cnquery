@@ -94,6 +94,10 @@ digitalocean.account @defaults("email status") {
   status string
   // Status message
   statusMessage string
+  // UUID of the team that owns this account; empty when the API token is not scoped to a team
+  teamUuid string
+  // Display name of the team that owns this account; empty when the API token is not scoped to a team
+  teamName string
 }
 
 // DigitalOcean Droplet

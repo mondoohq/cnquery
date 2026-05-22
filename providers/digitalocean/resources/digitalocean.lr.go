@@ -359,6 +359,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.account.statusMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAccount).GetStatusMessage()).ToDataRes(types.String)
 	},
+	"digitalocean.account.teamUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAccount).GetTeamUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.account.teamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAccount).GetTeamName()).ToDataRes(types.String)
+	},
 	"digitalocean.droplet.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetId()).ToDataRes(types.Int)
 	},
@@ -1390,6 +1396,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.account.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanAccount).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.account.teamUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAccount).TeamUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.account.teamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAccount).TeamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"digitalocean.droplet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3189,6 +3203,8 @@ type mqlDigitaloceanAccount struct {
 	EmailVerified   plugin.TValue[bool]
 	Status          plugin.TValue[string]
 	StatusMessage   plugin.TValue[string]
+	TeamUuid        plugin.TValue[string]
+	TeamName        plugin.TValue[string]
 }
 
 // createDigitaloceanAccount creates a new instance of this resource
@@ -3258,6 +3274,14 @@ func (c *mqlDigitaloceanAccount) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlDigitaloceanAccount) GetStatusMessage() *plugin.TValue[string] {
 	return &c.StatusMessage
+}
+
+func (c *mqlDigitaloceanAccount) GetTeamUuid() *plugin.TValue[string] {
+	return &c.TeamUuid
+}
+
+func (c *mqlDigitaloceanAccount) GetTeamName() *plugin.TValue[string] {
+	return &c.TeamName
 }
 
 // mqlDigitaloceanDroplet for the digitalocean.droplet resource

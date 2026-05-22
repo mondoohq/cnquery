@@ -36,6 +36,13 @@ func initDigitaloceanAccount(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["emailVerified"] = llx.BoolData(acct.EmailVerified)
 	args["status"] = llx.StringData(acct.Status)
 	args["statusMessage"] = llx.StringData(acct.StatusMessage)
+	teamUuid, teamName := "", ""
+	if acct.Team != nil {
+		teamUuid = acct.Team.UUID
+		teamName = acct.Team.Name
+	}
+	args["teamUuid"] = llx.StringData(teamUuid)
+	args["teamName"] = llx.StringData(teamName)
 	return args, nil, nil
 }
 
