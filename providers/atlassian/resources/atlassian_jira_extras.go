@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/jira"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // ---------- Custom fields ----------
@@ -306,4 +307,172 @@ func (r *mqlAtlassianJiraProjectRole) id() (string, error) {
 		return "", r.Id.Error
 	}
 	return "atlassian.jira.project.role/" + r.Id.Data, nil
+}
+
+// ---------- Filters ----------
+
+func (a *mqlAtlassianJira) filters() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	res := []any{}
+	startAt := 0
+	for {
+		page, _, err := jiraClient.Filter.Search(context.Background(),
+			&models.FilterSearchOptionScheme{
+				Expand: []string{"description", "owner", "jql", "viewUrl", "searchUrl", "sharePermissions", "favouritedCount", "subscriptions"},
+			},
+			startAt, JIRA_SEARCH_MAX_RESULTS)
+		if err != nil {
+			return nil, err
+		}
+		if page == nil || len(page.Values) == 0 {
+			break
+		}
+		for _, f := range page.Values {
+			if f == nil {
+				continue
+			}
+			owner, err := mqlJiraUser(a.MqlRuntime, f.Owner)
+			if err != nil {
+				return nil, err
+			}
+			mqlFilter, err := CreateResource(a.MqlRuntime, "atlassian.jira.filter",
+				map[string]*llx.RawData{
+					"id":               llx.StringData(f.ID),
+					"name":             llx.StringData(f.Name),
+					"jql":              llx.StringData(f.JQL),
+					"viewUrl":          llx.StringData(f.ViewURL),
+					"favouritedCount":  llx.IntData(int64(f.FavouritedCount)),
+					"owner":            owner,
+					"sharePermissions": llx.ArrayData(jiraSharePermissions(f.SharePermissions), types.Dict),
+					"subscriptions":    llx.ArrayData(jiraFilterSubscriptions(f.Subscriptions), types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFilter)
+		}
+		if page.IsLast || len(page.Values) < JIRA_SEARCH_MAX_RESULTS {
+			break
+		}
+		startAt += len(page.Values)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraFilter) id() (string, error) {
+	return "atlassian.jira.filter/" + a.Id.Data, nil
+}
+
+func jiraFilterSubscriptions(items []*models.FilterSubscriptionScheme) []any {
+	out := make([]any, 0, len(items))
+	for _, s := range items {
+		if s == nil {
+			continue
+		}
+		row := map[string]any{
+			"id": s.ID,
+		}
+		if s.User != nil {
+			row["userAccountId"] = s.User.AccountID
+			row["userName"] = s.User.DisplayName
+		}
+		if s.Group != nil {
+			row["groupName"] = s.Group.Name
+		}
+		out = append(out, row)
+	}
+	return out
+}
+
+// jiraSharePermissions flattens a []*SharePermissionScheme into []dict rows
+// shared by atlassian.jira.filter and atlassian.jira.dashboard. Each row has
+// the holder type plus whichever id / name fields the type carries; callers
+// can filter on `type` and inspect the appropriate fields without unwrapping
+// nested objects.
+func jiraSharePermissions(perms []*models.SharePermissionScheme) []any {
+	out := make([]any, 0, len(perms))
+	for _, p := range perms {
+		if p == nil {
+			continue
+		}
+		row := map[string]any{
+			"id":   p.ID,
+			"type": p.Type,
+		}
+		if p.Project != nil {
+			row["projectId"] = p.Project.ID
+			row["projectKey"] = p.Project.Key
+		}
+		if p.Role != nil {
+			row["projectRoleId"] = p.Role.ID
+			row["projectRoleName"] = p.Role.Name
+		}
+		if p.Group != nil {
+			row["groupName"] = p.Group.Name
+		}
+		if p.User != nil {
+			row["userAccountId"] = p.User.AccountID
+			row["userName"] = p.User.DisplayName
+		}
+		out = append(out, row)
+	}
+	return out
+}
+
+// ---------- Dashboards ----------
+
+func (a *mqlAtlassianJira) dashboards() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	res := []any{}
+	startAt := 0
+	total := JIRA_SEARCH_MAX_RESULTS
+	for startAt < total {
+		page, _, err := jiraClient.Dashboard.Gets(context.Background(), startAt, JIRA_SEARCH_MAX_RESULTS, "")
+		if err != nil {
+			return nil, err
+		}
+		if page == nil || len(page.Dashboards) == 0 {
+			break
+		}
+		for _, d := range page.Dashboards {
+			if d == nil {
+				continue
+			}
+			owner, err := mqlJiraUser(a.MqlRuntime, d.Owner)
+			if err != nil {
+				return nil, err
+			}
+			mqlDashboard, err := CreateResource(a.MqlRuntime, "atlassian.jira.dashboard",
+				map[string]*llx.RawData{
+					"id":               llx.StringData(d.ID),
+					"name":             llx.StringData(d.Name),
+					"viewUrl":          llx.StringData(d.View),
+					"popularity":       llx.IntData(int64(d.Popularity)),
+					"owner":            owner,
+					"sharePermissions": llx.ArrayData(jiraSharePermissions(d.SharePermissions), types.Dict),
+					"editPermissions":  llx.ArrayData(jiraSharePermissions(d.EditPermission), types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDashboard)
+		}
+		total = page.Total
+		startAt += len(page.Dashboards)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraDashboard) id() (string, error) {
+	return "atlassian.jira.dashboard/" + a.Id.Data, nil
 }

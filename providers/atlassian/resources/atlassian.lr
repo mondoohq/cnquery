@@ -115,11 +115,13 @@ private atlassian.admin.organization.managedUser.apiToken @defaults("label creat
 
 // Atlassian Admin organization policy
 //
-// Examine an organization-level policy (e.g., IP allowlist, data residency)
-// — its identity, type, and enabled / disabled status — to verify the
-// policies an organization is supposed to enforce are actually present and
-// enabled.
-atlassian.admin.organization.policy @defaults("name") {
+// Examine an organization-level policy (e.g., IP allowlist, data residency,
+// two-step verification, mobile-app management) — its identity, type,
+// enabled / disabled status, lifecycle timestamps, and the resources
+// (workspaces / managed accounts) the policy applies to. Used to verify
+// the policies an organization is supposed to enforce are present, enabled,
+// and scoped to the right resources.
+atlassian.admin.organization.policy @defaults("name policyType status") {
   // Policy ID
   id string
   // Object type (always "policy")
@@ -130,6 +132,16 @@ atlassian.admin.organization.policy @defaults("name") {
   policyType string
   // Policy status (enabled, disabled)
   status string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Resources this policy applies to
+  //
+  // Each entry has `id` (the resource ID, e.g., a workspace ID or product
+  // URL) and `applicationStatus` (typically `enabled` / `disabled` —
+  // indicates whether the policy is active for that specific resource).
+  resources []dict
 }
 
 // Atlassian Admin verified domain
@@ -170,6 +182,78 @@ atlassian.jira {
   customFields() []atlassian.jira.customField
   // Workflows defined on the Jira instance
   workflows() []atlassian.jira.workflow
+  // Saved JQL filters defined on the Jira instance
+  filters() []atlassian.jira.filter
+  // Dashboards defined on the Jira instance
+  dashboards() []atlassian.jira.dashboard
+}
+
+// Jira saved filter
+//
+// Examine a saved JQL filter: its identity, the JQL it runs, the owning
+// account, the view URL, the favourite count, the share-permission entries,
+// and any email subscriptions attached to it. Filters are a common
+// data-disclosure surface — a filter shared with `loggedin` or `global`
+// effectively exposes its results to every authenticated user, and
+// subscriptions email those results to whoever the owner enumerated.
+atlassian.jira.filter @defaults("name owner.name") {
+  // Filter ID
+  id string
+  // Filter display name
+  name string
+  // JQL query expression
+  jql string
+  // URL of the filter view in Jira
+  viewUrl string
+  // Number of users who have favourited the filter
+  favouritedCount int
+  // Account that owns the filter. Null when the filter is orphaned.
+  owner atlassian.jira.user
+  // Share-permission entries granting access to the filter
+  //
+  // Each entry has `id`, `type` (`global`, `loggedin`, `authenticated`,
+  // `project`, `projectRole`, `group`, `user`), and the resolved holder:
+  // `projectId`, `projectKey`, `projectRoleId`, `projectRoleName`,
+  // `groupName`, `userAccountId`. `global` and `loggedin` rows expose the
+  // filter beyond a single project / role / user.
+  sharePermissions []dict
+  // Email subscriptions attached to the filter
+  //
+  // Each entry has `id` and either `userAccountId` / `userName` or
+  // `groupName` — every entry receives a periodic email containing the
+  // filter results.
+  subscriptions []dict
+}
+
+// Jira dashboard
+//
+// Examine a Jira dashboard: identity, owning account, the popularity
+// counter, the view URL, and the share-permission and edit-permission
+// entries. Dashboards aggregate gadgets that query Jira data, so a
+// dashboard shared with `loggedin` or `global` can expose summarized data
+// from every project the viewer can access.
+atlassian.jira.dashboard @defaults("name owner.name") {
+  // Dashboard ID
+  id string
+  // Dashboard display name
+  name string
+  // URL of the dashboard view in Jira
+  viewUrl string
+  // Number of users who have favourited the dashboard
+  popularity int
+  // Account that owns the dashboard. Null when the dashboard is orphaned.
+  owner atlassian.jira.user
+  // Share-permission entries granting view access to the dashboard
+  //
+  // Same shape as atlassian.jira.filter.sharePermissions. `global` and
+  // `loggedin` rows expose the dashboard beyond a single project / role
+  // / user.
+  sharePermissions []dict
+  // Edit-permission entries granting modify access to the dashboard
+  //
+  // Same shape as `sharePermissions`. Edit permissions are typically more
+  // tightly scoped than view permissions.
+  editPermissions []dict
 }
 
 // Jira audit log record

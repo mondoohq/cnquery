@@ -25,6 +25,8 @@ const (
 	ResourceAtlassianAdminOrganizationPolicy              string = "atlassian.admin.organization.policy"
 	ResourceAtlassianAdminOrganizationDomain              string = "atlassian.admin.organization.domain"
 	ResourceAtlassianJira                                 string = "atlassian.jira"
+	ResourceAtlassianJiraFilter                           string = "atlassian.jira.filter"
+	ResourceAtlassianJiraDashboard                        string = "atlassian.jira.dashboard"
 	ResourceAtlassianJiraAuditRecord                      string = "atlassian.jira.auditRecord"
 	ResourceAtlassianJiraIssue                            string = "atlassian.jira.issue"
 	ResourceAtlassianJiraServerInfo                       string = "atlassian.jira.serverInfo"
@@ -87,6 +89,14 @@ func init() {
 		"atlassian.jira": {
 			// to override args, implement: initAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJira,
+		},
+		"atlassian.jira.filter": {
+			// to override args, implement: initAtlassianJiraFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraFilter,
+		},
+		"atlassian.jira.dashboard": {
+			// to override args, implement: initAtlassianJiraDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraDashboard,
 		},
 		"atlassian.jira.auditRecord": {
 			// to override args, implement: initAtlassianJiraAuditRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -342,6 +352,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.policy.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetStatus()).ToDataRes(types.String)
 	},
+	"atlassian.admin.organization.policy.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.admin.organization.policy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.admin.organization.policy.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
 	"atlassian.admin.organization.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationDomain).GetId()).ToDataRes(types.String)
 	},
@@ -374,6 +393,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.workflows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetWorkflows()).ToDataRes(types.Array(types.Resource("atlassian.jira.workflow")))
+	},
+	"atlassian.jira.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetFilters()).ToDataRes(types.Array(types.Resource("atlassian.jira.filter")))
+	},
+	"atlassian.jira.dashboards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetDashboards()).ToDataRes(types.Array(types.Resource("atlassian.jira.dashboard")))
+	},
+	"atlassian.jira.filter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.filter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.filter.jql": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetJql()).ToDataRes(types.String)
+	},
+	"atlassian.jira.filter.viewUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetViewUrl()).ToDataRes(types.String)
+	},
+	"atlassian.jira.filter.favouritedCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetFavouritedCount()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.filter.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetOwner()).ToDataRes(types.Resource("atlassian.jira.user"))
+	},
+	"atlassian.jira.filter.sharePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetSharePermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.jira.filter.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraFilter).GetSubscriptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.jira.dashboard.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.dashboard.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.dashboard.viewUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetViewUrl()).ToDataRes(types.String)
+	},
+	"atlassian.jira.dashboard.popularity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetPopularity()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.dashboard.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetOwner()).ToDataRes(types.Resource("atlassian.jira.user"))
+	},
+	"atlassian.jira.dashboard.sharePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetSharePermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.jira.dashboard.editPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraDashboard).GetEditPermissions()).ToDataRes(types.Array(types.Dict))
 	},
 	"atlassian.jira.auditRecord.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraAuditRecord).GetId()).ToDataRes(types.Int)
@@ -1039,6 +1109,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianAdminOrganizationPolicy).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.policy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationPolicy).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.policy.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.policy.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationPolicy).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationDomain).__id, ok = v.Value.(string)
 		return
@@ -1089,6 +1171,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJira).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).Dashboards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.filter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.jql": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).Jql, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.viewUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).ViewUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.favouritedCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).FavouritedCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).Owner, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.sharePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).SharePermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.filter.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraFilter).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.dashboard.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.viewUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).ViewUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.popularity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).Popularity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).Owner, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.sharePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).SharePermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.dashboard.editPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraDashboard).EditPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.auditRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2341,6 +2499,9 @@ type mqlAtlassianAdminOrganizationPolicy struct {
 	Name       plugin.TValue[string]
 	PolicyType plugin.TValue[string]
 	Status     plugin.TValue[string]
+	CreatedAt  plugin.TValue[*time.Time]
+	UpdatedAt  plugin.TValue[*time.Time]
+	Resources  plugin.TValue[[]any]
 }
 
 // createAtlassianAdminOrganizationPolicy creates a new instance of this resource
@@ -2398,6 +2559,18 @@ func (c *mqlAtlassianAdminOrganizationPolicy) GetPolicyType() *plugin.TValue[str
 
 func (c *mqlAtlassianAdminOrganizationPolicy) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlAtlassianAdminOrganizationPolicy) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianAdminOrganizationPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAtlassianAdminOrganizationPolicy) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
 }
 
 // mqlAtlassianAdminOrganizationDomain for the atlassian.admin.organization.domain resource
@@ -2472,6 +2645,8 @@ type mqlAtlassianJira struct {
 	AuditRecords plugin.TValue[[]any]
 	CustomFields plugin.TValue[[]any]
 	Workflows    plugin.TValue[[]any]
+	Filters      plugin.TValue[[]any]
+	Dashboards   plugin.TValue[[]any]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -2637,6 +2812,201 @@ func (c *mqlAtlassianJira) GetWorkflows() *plugin.TValue[[]any] {
 
 		return c.workflows()
 	})
+}
+
+func (c *mqlAtlassianJira) GetFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Filters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "filters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.filters()
+	})
+}
+
+func (c *mqlAtlassianJira) GetDashboards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dashboards, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "dashboards")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dashboards()
+	})
+}
+
+// mqlAtlassianJiraFilter for the atlassian.jira.filter resource
+type mqlAtlassianJiraFilter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraFilterInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Jql              plugin.TValue[string]
+	ViewUrl          plugin.TValue[string]
+	FavouritedCount  plugin.TValue[int64]
+	Owner            plugin.TValue[*mqlAtlassianJiraUser]
+	SharePermissions plugin.TValue[[]any]
+	Subscriptions    plugin.TValue[[]any]
+}
+
+// createAtlassianJiraFilter creates a new instance of this resource
+func createAtlassianJiraFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraFilter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.filter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraFilter) MqlName() string {
+	return "atlassian.jira.filter"
+}
+
+func (c *mqlAtlassianJiraFilter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraFilter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraFilter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraFilter) GetJql() *plugin.TValue[string] {
+	return &c.Jql
+}
+
+func (c *mqlAtlassianJiraFilter) GetViewUrl() *plugin.TValue[string] {
+	return &c.ViewUrl
+}
+
+func (c *mqlAtlassianJiraFilter) GetFavouritedCount() *plugin.TValue[int64] {
+	return &c.FavouritedCount
+}
+
+func (c *mqlAtlassianJiraFilter) GetOwner() *plugin.TValue[*mqlAtlassianJiraUser] {
+	return &c.Owner
+}
+
+func (c *mqlAtlassianJiraFilter) GetSharePermissions() *plugin.TValue[[]any] {
+	return &c.SharePermissions
+}
+
+func (c *mqlAtlassianJiraFilter) GetSubscriptions() *plugin.TValue[[]any] {
+	return &c.Subscriptions
+}
+
+// mqlAtlassianJiraDashboard for the atlassian.jira.dashboard resource
+type mqlAtlassianJiraDashboard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraDashboardInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	ViewUrl          plugin.TValue[string]
+	Popularity       plugin.TValue[int64]
+	Owner            plugin.TValue[*mqlAtlassianJiraUser]
+	SharePermissions plugin.TValue[[]any]
+	EditPermissions  plugin.TValue[[]any]
+}
+
+// createAtlassianJiraDashboard creates a new instance of this resource
+func createAtlassianJiraDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraDashboard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.dashboard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraDashboard) MqlName() string {
+	return "atlassian.jira.dashboard"
+}
+
+func (c *mqlAtlassianJiraDashboard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraDashboard) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraDashboard) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraDashboard) GetViewUrl() *plugin.TValue[string] {
+	return &c.ViewUrl
+}
+
+func (c *mqlAtlassianJiraDashboard) GetPopularity() *plugin.TValue[int64] {
+	return &c.Popularity
+}
+
+func (c *mqlAtlassianJiraDashboard) GetOwner() *plugin.TValue[*mqlAtlassianJiraUser] {
+	return &c.Owner
+}
+
+func (c *mqlAtlassianJiraDashboard) GetSharePermissions() *plugin.TValue[[]any] {
+	return &c.SharePermissions
+}
+
+func (c *mqlAtlassianJiraDashboard) GetEditPermissions() *plugin.TValue[[]any] {
+	return &c.EditPermissions
 }
 
 // mqlAtlassianJiraAuditRecord for the atlassian.jira.auditRecord resource

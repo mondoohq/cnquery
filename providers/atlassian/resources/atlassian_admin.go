@@ -126,6 +126,25 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]any, error) {
 	}
 	res := []any{}
 	for _, policy := range policies.Data {
+		var createdAt *time.Time
+		if !policy.Attributes.CreatedAt.IsZero() {
+			createdAt = &policy.Attributes.CreatedAt
+		}
+		var updatedAt *time.Time
+		if !policy.Attributes.UpdatedAt.IsZero() {
+			updatedAt = &policy.Attributes.UpdatedAt
+		}
+		resources := make([]any, 0, len(policy.Attributes.Resources))
+		for _, r := range policy.Attributes.Resources {
+			if r == nil {
+				continue
+			}
+			resources = append(resources, map[string]any{
+				"id":                r.ID,
+				"applicationStatus": r.ApplicationStatus,
+			})
+		}
+
 		mqlAtlassianAdminPolicy, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.policy",
 			map[string]*llx.RawData{
 				"id":         llx.StringData(policy.ID),
@@ -133,6 +152,9 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]any, error) {
 				"name":       llx.StringData(policy.Attributes.Name),
 				"status":     llx.StringData(policy.Attributes.Status),
 				"policyType": llx.StringData(policy.Attributes.Type),
+				"createdAt":  llx.TimeDataPtr(createdAt),
+				"updatedAt":  llx.TimeDataPtr(updatedAt),
+				"resources":  llx.ArrayData(resources, types.Dict),
 			})
 		if err != nil {
 			return nil, err
