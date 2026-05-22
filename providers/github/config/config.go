@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "github",
 	ID:              "go.mondoo.com/cnquery/v9/providers/github",
-	Version:         "13.3.2",
+	Version:         "13.4.0",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
