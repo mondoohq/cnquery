@@ -728,7 +728,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceVirtualWan,
 		},
 		"azure.subscription.networkService.virtualHub": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceVirtualHub,
 			Create: createAzureSubscriptionNetworkServiceVirtualHub,
 		},
 		"azure.subscription.networkService.virtualHub.routeTable": {
