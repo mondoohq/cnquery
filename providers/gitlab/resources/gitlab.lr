@@ -462,44 +462,49 @@ gitlab.project @defaults("fullName visibility webURL") {
 
 // GitLab project approval rule
 //
-// Examine a project merge-request approval rule. Surfaces the
-// `ruleType` ("regular", "code_owner", "report_approver",
-// "any_approver"), the `reportType` (scanner/report kind for
-// security-report rules: e.g. "license_scanning",
-// "code_coverage"), the `approvalsRequired` count, the resolved
-// approver surface (`eligibleApprovers`, `users`, `groups`), the
-// `protectedBranches` the rule scopes to (and the
-// `appliesToAllProtectedBranches` flag overriding that list), the
-// `containsHiddenGroups` flag (approvers from groups the caller
-// can't see — material for governance audit), and the `section` the
-// rule renders under in the UI.
-private gitlab.project.approvalRule @defaults("id name ruleType approvalsRequired") {
+// Examine a single approval rule that gates merging into the project.
+// The rule's `ruleType` distinguishes `any_approver` (any user with
+// write access can approve), `regular` (a defined list of users and/or
+// groups), `code_owner` (the relevant CODEOWNERS entries must approve),
+// and `report_approver` (a security or license-scanning report must
+// pass — `reportType` narrows this further to `license_scanning`,
+// `code_coverage`, or `scan_finding`). `approvalsRequired` is the
+// number of approvals the rule demands. The typed `users`,
+// `eligibleApprovers`, `groups`, and `protectedBranches` accessors
+// resolve the approvers and the branches the rule applies to.
+// `appliesToAllProtectedBranches` is true when the rule covers every
+// protected branch on the project rather than a named subset.
+// `containsHiddenGroups` flags rules that reference groups the
+// caller cannot see.
+private gitlab.project.approvalRule @defaults("name ruleType approvalsRequired") {
   // Rule ID
   id int
   // Rule name
   name string
   // Number of approvals required
   approvalsRequired int
-  // Rule type ("regular", "code_owner", "report_approver", "any_approver")
-  ruleType string
-  // Report type when `ruleType` is "report_approver"
+  // Rule type
   //
-  // Kind of scanner/report (e.g. "license_scanning", "code_coverage", "vulnerability_check"). Empty when the rule is not a report-approver rule.
+  // One of any_approver, regular, code_owner, or report_approver.
+  ruleType string
+  // Report type for report_approver rules
+  //
+  // One of license_scanning, code_coverage, or scan_finding. Empty for non-report rules.
   reportType string
-  // Whether the rule applies to every protected branch (overrides `protectedBranches`)
+  // Whether the rule applies to all protected branches
   appliesToAllProtectedBranches bool
-  // Whether one or more approver groups are not visible to the caller (governance signal — approval source is opaque)
+  // Whether the rule references groups the caller cannot see
   containsHiddenGroups bool
-  // Section the rule renders under in the UI (free-form label set by the rule author)
-  section string
-  // Usernames of users in the `eligibleApprovers` list, including those resolved through group membership
-  eligibleApprovers []string
-  // Usernames of users directly assigned to the rule
-  users []string
-  // Full paths of groups directly assigned to the rule (e.g. "acme-corp/security")
-  groups []string
-  // Names of the protected branches the rule scopes to; empty when `appliesToAllProtectedBranches` is true or the rule is unscoped
-  protectedBranches []string
+  // Named users explicitly designated as approvers
+  users []gitlab.user
+  // All eligible approvers (named users plus the members of each linked group)
+  eligibleApprovers []gitlab.user
+  // Groups whose members are eligible approvers
+  //
+  // Each entry exposes the group's `id`, `name`, `fullPath`, `visibility`, and `description`.
+  groups []dict
+  // Protected branches the rule applies to
+  protectedBranches []gitlab.project.protectedBranch
 }
 
 // GitLab project CODEOWNERS file

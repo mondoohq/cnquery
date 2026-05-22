@@ -817,20 +817,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.approvalRule.containsHiddenGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetContainsHiddenGroups()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.approvalRule.section": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectApprovalRule).GetSection()).ToDataRes(types.String)
+	"gitlab.project.approvalRule.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetUsers()).ToDataRes(types.Array(types.Resource("gitlab.user")))
 	},
 	"gitlab.project.approvalRule.eligibleApprovers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectApprovalRule).GetEligibleApprovers()).ToDataRes(types.Array(types.String))
-	},
-	"gitlab.project.approvalRule.users": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectApprovalRule).GetUsers()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlGitlabProjectApprovalRule).GetEligibleApprovers()).ToDataRes(types.Array(types.Resource("gitlab.user")))
 	},
 	"gitlab.project.approvalRule.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectApprovalRule).GetGroups()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlGitlabProjectApprovalRule).GetGroups()).ToDataRes(types.Array(types.Dict))
 	},
 	"gitlab.project.approvalRule.protectedBranches": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectApprovalRule).GetProtectedBranches()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlGitlabProjectApprovalRule).GetProtectedBranches()).ToDataRes(types.Array(types.Resource("gitlab.project.protectedBranch")))
 	},
 	"gitlab.project.codeowners.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectCodeowners).GetPresent()).ToDataRes(types.Bool)
@@ -2355,16 +2352,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectApprovalRule).ContainsHiddenGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.approvalRule.section": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectApprovalRule).Section, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"gitlab.project.approvalRule.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRule.eligibleApprovers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectApprovalRule).EligibleApprovers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.approvalRule.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectApprovalRule).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRule.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5303,9 +5296,8 @@ type mqlGitlabProjectApprovalRule struct {
 	ReportType                    plugin.TValue[string]
 	AppliesToAllProtectedBranches plugin.TValue[bool]
 	ContainsHiddenGroups          plugin.TValue[bool]
-	Section                       plugin.TValue[string]
-	EligibleApprovers             plugin.TValue[[]any]
 	Users                         plugin.TValue[[]any]
+	EligibleApprovers             plugin.TValue[[]any]
 	Groups                        plugin.TValue[[]any]
 	ProtectedBranches             plugin.TValue[[]any]
 }
@@ -5375,16 +5367,12 @@ func (c *mqlGitlabProjectApprovalRule) GetContainsHiddenGroups() *plugin.TValue[
 	return &c.ContainsHiddenGroups
 }
 
-func (c *mqlGitlabProjectApprovalRule) GetSection() *plugin.TValue[string] {
-	return &c.Section
+func (c *mqlGitlabProjectApprovalRule) GetUsers() *plugin.TValue[[]any] {
+	return &c.Users
 }
 
 func (c *mqlGitlabProjectApprovalRule) GetEligibleApprovers() *plugin.TValue[[]any] {
 	return &c.EligibleApprovers
-}
-
-func (c *mqlGitlabProjectApprovalRule) GetUsers() *plugin.TValue[[]any] {
-	return &c.Users
 }
 
 func (c *mqlGitlabProjectApprovalRule) GetGroups() *plugin.TValue[[]any] {
