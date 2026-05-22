@@ -26,8 +26,6 @@ func init() {
 	_ = DiscoverCmd.Flags().String("inventory-file", "", "Set the path to the inventory file")
 	_ = DiscoverCmd.Flags().StringP("output-full", "o", "", "Write every discovered asset to this path. When empty, only the per-platform count summary is printed.")
 	_ = DiscoverCmd.Flags().StringP("output-format", "f", string(export.FormatJSON), "Format for --output-full: json (default), jsonl, or yaml.")
-	_ = DiscoverCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
-	_ = DiscoverCmd.Flags().MarkHidden("annotations")
 }
 
 var DiscoverCmd = &cobra.Command{
@@ -36,7 +34,6 @@ var DiscoverCmd = &cobra.Command{
 	Long:  `Discover assets defined by an inventory file's discovery targets/filters or via CLI parameters. Prints a per-platform asset count to stdout. Pass --output-full <path> to additionally write every discovered asset to a file; pick the file format with --output-format json|jsonl|yaml (default json). No queries are executed.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		_ = viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
-		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
 	},
 	// initialized empty so cobra treats this as a runnable command in --help
 	Run: func(cmd *cobra.Command, args []string) {},
@@ -52,13 +49,7 @@ var DiscoverCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes
 		log.Fatal().Err(err).Msg("invalid --output-format")
 	}
 
-	annotations, _ := cmd.Flags().GetStringToString("annotations")
-	if annotations == nil {
-		annotations = map[string]string{}
-	}
-	cliRes.Asset.AddAnnotations(annotations)
-
-	in, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), annotations)
+	in, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), nil)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to resolve inventory")
 	}
