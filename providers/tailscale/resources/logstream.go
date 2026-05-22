@@ -38,6 +38,11 @@ func (t *mqlTailscale) logstreams() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
 	ctx := context.Background()
 
+	tailnet := t.GetTailnet()
+	if tailnet.Error != nil {
+		return nil, tailnet.Error
+	}
+
 	resources := []any{}
 	for _, logType := range []tsclient.LogType{tsclient.LogTypeConfig, tsclient.LogTypeNetwork} {
 		cfg, err := conn.Client().Logging().LogstreamConfiguration(ctx, logType)
@@ -50,7 +55,7 @@ func (t *mqlTailscale) logstreams() ([]any, error) {
 		if cfg == nil || cfg.DestinationType == "" {
 			continue
 		}
-		resource, err := createTailscaleLogstreamResource(t.MqlRuntime, t.Tailnet.Data, logType, cfg)
+		resource, err := createTailscaleLogstreamResource(t.MqlRuntime, tailnet.Data, logType, cfg)
 		if err != nil {
 			return nil, err
 		}

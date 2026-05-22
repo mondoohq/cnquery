@@ -10,7 +10,6 @@ import (
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -40,7 +39,14 @@ func initTailscaleAuthKey(runtime *plugin.Runtime, args map[string]*llx.RawData)
 }
 
 func createTailscaleAuthKeyResource(runtime *plugin.Runtime, key *tsclient.Key) (plugin.Resource, error) {
+	if key == nil {
+		return nil, errors.New("tailscale.authKey: nil key returned by API")
+	}
 	caps := key.Capabilities.Devices.Create
+	tags := make([]any, 0, len(caps.Tags))
+	for _, t := range caps.Tags {
+		tags = append(tags, t)
+	}
 	return CreateResource(runtime, "tailscale.authKey", map[string]*llx.RawData{
 		"id":            llx.StringData(key.ID),
 		"description":   llx.StringData(key.Description),
@@ -52,7 +58,7 @@ func createTailscaleAuthKeyResource(runtime *plugin.Runtime, key *tsclient.Key) 
 		"reusable":      llx.BoolData(caps.Reusable),
 		"ephemeral":     llx.BoolData(caps.Ephemeral),
 		"preauthorized": llx.BoolData(caps.Preauthorized),
-		"tags":          llx.ArrayData(convert.SliceAnyToInterface(caps.Tags), types.String),
+		"tags":          llx.ArrayData(tags, types.String),
 	})
 }
 
