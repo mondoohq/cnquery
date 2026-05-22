@@ -104,6 +104,7 @@ var validatedGCPPermissions = []string{
 	"compute.packetMirrorings.list",
 	"compute.projects.get",
 	"compute.publicAdvertisedPrefixes.list",
+	"compute.regions.get",
 	"compute.regions.list",
 	"compute.routers.list",
 	"compute.routes.list",

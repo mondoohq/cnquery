@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.16.2",
-  "generated_at": "2026-05-21T19:57:04-07:00",
+  "generated_at": "2026-05-22T08:27:51-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -90,6 +90,7 @@
     "compute.packetMirrorings.list",
     "compute.projects.get",
     "compute.publicAdvertisedPrefixes.list",
+    "compute.regions.get",
     "compute.regions.list",
     "compute.routers.list",
     "compute.routes.list",
@@ -757,6 +758,12 @@
       "source_file": "compute_networking.go"
     },
     {
+      "permission": "compute.regions.get",
+      "service": "compute",
+      "action": "Regions.Get",
+      "source_file": "compute.go"
+    },
+    {
       "permission": "compute.regions.list",
       "service": "compute",
       "action": "Regions.List",
@@ -886,6 +893,12 @@
       "permission": "compute.vpnTunnels.list",
       "service": "compute",
       "action": "VpnTunnels.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.zones.get",
+      "service": "compute",
+      "action": "Zones.Get",
       "source_file": "compute.go"
     },
     {
