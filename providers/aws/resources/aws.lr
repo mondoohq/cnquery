@@ -17063,6 +17063,253 @@ private aws.appsync.apiKey @defaults("id description expires") {
   deletes time
 }
 
+// AWS App Runner
+//
+// Use the App Runner namespace to enumerate the managed
+// container/source service in the account. Iterate `services()` for the
+// running services — each surfaces its source (container image or code
+// repository), instance CPU/memory, IAM instance role, network
+// connectivity (egress through a VPC connector, ingress publicly or via
+// a VPC endpoint), KMS encryption key, health check parameters, and the
+// associated observability and auto-scaling configurations. Iterate
+// `autoScalingConfigurations()` and `observabilityConfigurations()` for
+// the reusable revision sets that services bind to, `connections()` for
+// the source-provider (GitHub, Bitbucket) credentials registered for code
+// repositories, `vpcConnectors()` for the egress VPC attachments, and
+// `vpcIngressConnections()` for the PrivateLink ingress endpoints fronting
+// private services.
+aws.apprunner @defaults("services") {
+  // App Runner services across all enabled regions
+  services() []aws.apprunner.service
+  // App Runner auto scaling configurations across all enabled regions
+  autoScalingConfigurations() []aws.apprunner.autoScalingConfiguration
+  // App Runner source-provider connections across all enabled regions
+  connections() []aws.apprunner.connection
+  // App Runner VPC connectors across all enabled regions
+  vpcConnectors() []aws.apprunner.vpcConnector
+  // App Runner observability configurations across all enabled regions
+  observabilityConfigurations() []aws.apprunner.observabilityConfiguration
+  // App Runner VPC ingress connections across all enabled regions
+  vpcIngressConnections() []aws.apprunner.vpcIngressConnection
+}
+
+// AWS App Runner service
+//
+// Examine a managed container/source service: where its code or image
+// comes from, what IAM role the application runs as, whether traffic
+// reaches the public internet or is constrained to a VPC, whether the
+// service log/source copy is encrypted with a customer-managed KMS key,
+// and which observability and auto-scaling revisions are bound to it.
+// The `arn` field is the selection key — for example
+// `aws.apprunner.service(arn: "arn:aws:apprunner:us-east-1:123456789012:service/my-app/abc123")`.
+// The `sourceConfiguration` field is a dict because its shape depends on
+// whether the service deploys a container image or a source code
+// repository.
+private aws.apprunner.service @defaults("serviceName status region") {
+  // ARN of the service
+  arn string
+  // App Runner-generated service ID, unique within the region
+  serviceId string
+  // Customer-provided service name
+  serviceName string
+  // Subdomain URL App Runner generated for the service
+  serviceUrl string
+  // Current state of the service
+  //
+  // One of CREATE_FAILED, RUNNING, DELETED, DELETE_FAILED, PAUSED, OPERATION_IN_PROGRESS.
+  status string
+  // Time the service was created
+  createdAt time
+  // Time the service was last updated
+  updatedAt time
+  // Time the service was deleted (null when not deleted)
+  deletedAt time
+  // Region where the service exists
+  region string
+  // Source deployed to the service
+  //
+  // Shape varies by source type. Image sources carry `imageRepository: {imageIdentifier, imageRepositoryType: "ECR"|"ECR_PUBLIC", imageConfiguration: {port, runtimeEnvironmentVariables, runtimeEnvironmentSecrets, startCommand}}`. Code sources carry `codeRepository: {repositoryUrl, sourceCodeVersion: {type, value}, sourceDirectory, codeConfiguration}`. The top level also carries `authenticationConfiguration: {connectionArn, accessRoleArn}` and `autoDeploymentsEnabled`.
+  sourceConfiguration dict
+  // Number of CPU units reserved for each instance (e.g., "1024", "1 vCPU")
+  instanceCpu string
+  // Amount of memory reserved for each instance (e.g., "2048", "2 GB")
+  instanceMemory string
+  // IAM role the application code assumes when calling AWS APIs
+  instanceRole() aws.iam.role
+  // Health check configuration
+  //
+  // Shape: `{protocol: "TCP"|"HTTP", path, interval, timeout, healthyThreshold, unhealthyThreshold}`.
+  healthCheckConfiguration dict
+  // Egress type for outbound traffic: DEFAULT (public internet) or VPC (through a VPC connector)
+  egressType string
+  // VPC connector used for egress when egressType is VPC, null otherwise
+  vpcConnector() aws.apprunner.vpcConnector
+  // Whether the service is reachable from the public internet
+  isPubliclyAccessible bool
+  // IP address type of the service: IPV4 or DUAL_STACK
+  ipAddressType string
+  // Observability configuration bound to the service when observability is enabled, null otherwise
+  observabilityConfiguration() aws.apprunner.observabilityConfiguration
+  // Auto scaling configuration revision bound to the service
+  autoScalingConfiguration() aws.apprunner.autoScalingConfiguration
+  // KMS key used to encrypt service logs and the cached copy of the source repository, null when an AWS-managed key is used
+  kmsKey() aws.kms.key
+  // Tags applied to the service
+  tags() map[string]string
+}
+
+// AWS App Runner auto scaling configuration revision
+//
+// Examine a revision of an auto-scaling configuration — the bounds and
+// per-instance concurrency target that App Runner uses to scale services
+// bound to the revision. Multiple revisions share the same `name`; the
+// `latest` and `revision` fields select among them. Auto-scaling
+// configurations are referenced from `aws.apprunner.service` via
+// `autoScalingConfiguration()`. The `arn` field is the selection key.
+private aws.apprunner.autoScalingConfiguration @defaults("name revision status region") {
+  // ARN of the auto scaling configuration revision
+  arn string
+  // Customer-provided auto scaling configuration name (shared across revisions)
+  name string
+  // Revision number unique within the configuration name
+  revision int
+  // Whether this revision is the latest one for the configuration name
+  latest bool
+  // Current state of the revision: ACTIVE or INACTIVE
+  status string
+  // Time the revision was created
+  createdAt time
+  // Time the revision was deleted (null when not deleted)
+  deletedAt time
+  // Maximum number of concurrent requests an instance processes before App Runner scales out
+  maxConcurrency int
+  // Minimum number of instances kept provisioned for a service using this revision
+  minSize int
+  // Maximum number of instances a service using this revision scales up to
+  maxSize int
+  // Whether at least one App Runner service references this revision
+  hasAssociatedService bool
+  // Region where the revision exists
+  region string
+}
+
+// AWS App Runner source-provider connection
+//
+// Examine a stored connection to a source code provider (GitHub,
+// Bitbucket, etc.) that App Runner uses to pull code from private
+// repositories. Services with a code source reference a connection via
+// `sourceConfiguration.authenticationConfiguration.connectionArn`.
+private aws.apprunner.connection @defaults("name providerType status region") {
+  // ARN of the connection
+  arn string
+  // Customer-provided connection name
+  name string
+  // Source repository provider
+  //
+  // One of GITHUB or BITBUCKET (additional providers may be supported as the service evolves).
+  providerType string
+  // Current state of the connection
+  //
+  // One of PENDING_HANDSHAKE, AVAILABLE, ERROR, DELETED.
+  status string
+  // Time the connection was created
+  createdAt time
+  // Region where the connection exists
+  region string
+}
+
+// AWS App Runner VPC connector
+//
+// Examine a VPC connector used by App Runner services to route egress
+// traffic into a customer VPC — the subnets and security groups the
+// service ENI is attached to. Multiple revisions can share the same
+// `name`; the `revision` field selects among them. VPC connectors are
+// referenced from `aws.apprunner.service` via `vpcConnector()` when
+// `egressType` is VPC.
+private aws.apprunner.vpcConnector @defaults("name revision status region") {
+  // ARN of the VPC connector revision
+  arn string
+  // Customer-provided VPC connector name (shared across revisions)
+  name string
+  // Revision number unique within the connector name
+  revision int
+  // Current state of the connector: ACTIVE or INACTIVE
+  status string
+  // Time the connector was created
+  createdAt time
+  // Time the connector was deleted (null when not deleted)
+  deletedAt time
+  // Subnets the App Runner service ENI is attached to
+  subnets() []aws.vpc.subnet
+  // Security groups applied to the App Runner service ENI
+  securityGroups() []aws.ec2.securitygroup
+  // Region where the connector exists
+  region string
+}
+
+// AWS App Runner observability configuration revision
+//
+// Examine a revision of an observability configuration — currently the
+// tracing vendor used to publish traces from services bound to the
+// revision. Multiple revisions share the same `name`; the `latest` and
+// `revision` fields select among them. Observability configurations are
+// referenced from `aws.apprunner.service` via `observabilityConfiguration()`
+// when observability is enabled.
+private aws.apprunner.observabilityConfiguration @defaults("name revision status region") {
+  // ARN of the observability configuration revision
+  arn string
+  // Customer-provided observability configuration name (shared across revisions)
+  name string
+  // Revision number unique within the configuration name
+  revision int
+  // Whether this revision is the latest one for the configuration name
+  latest bool
+  // Current state of the revision: ACTIVE or INACTIVE
+  status string
+  // Time the revision was created
+  createdAt time
+  // Time the revision was deleted (null when not deleted)
+  deletedAt time
+  // Tracing implementation provider configured for the revision, empty when tracing is not enabled
+  //
+  // Currently the only supported value is AWSXRAY.
+  traceConfigurationVendor string
+  // Region where the revision exists
+  region string
+}
+
+// AWS App Runner VPC ingress connection
+//
+// Examine a PrivateLink ingress endpoint that fronts a privately
+// accessible App Runner service — the domain name customers resolve to,
+// the VPC endpoint that terminates the connection, and the service the
+// endpoint is bound to. VPC ingress connections only exist for services
+// with `isPubliclyAccessible = false`.
+private aws.apprunner.vpcIngressConnection @defaults("name status domainName region") {
+  // ARN of the VPC ingress connection
+  arn string
+  // Customer-provided VPC ingress connection name
+  name string
+  // Current state of the ingress connection
+  //
+  // One of AVAILABLE, PENDING_CREATION, PENDING_UPDATE, PENDING_DELETION, FAILED_CREATION, FAILED_UPDATE, FAILED_DELETION, DELETED.
+  status string
+  // Time the ingress connection was created
+  createdAt time
+  // Time the ingress connection was deleted (null when not deleted)
+  deletedAt time
+  // Domain name customers resolve to reach the service through the ingress endpoint
+  domainName string
+  // VPC endpoint configuration the ingress connection terminates on
+  //
+  // Shape: `{vpcId, vpcEndpointId}`.
+  ingressVpcConfiguration dict
+  // App Runner service the ingress connection fronts
+  service() aws.apprunner.service
+  // Region where the ingress connection exists
+  region string
+}
+
 // Amazon Athena
 //
 // Use the Athena namespace to enumerate the serverless interactive

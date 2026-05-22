@@ -649,6 +649,13 @@ const (
 	ResourceAwsAppsync                                                          string = "aws.appsync"
 	ResourceAwsAppsyncGraphqlApi                                                string = "aws.appsync.graphqlApi"
 	ResourceAwsAppsyncApiKey                                                    string = "aws.appsync.apiKey"
+	ResourceAwsApprunner                                                        string = "aws.apprunner"
+	ResourceAwsApprunnerService                                                 string = "aws.apprunner.service"
+	ResourceAwsApprunnerAutoScalingConfiguration                                string = "aws.apprunner.autoScalingConfiguration"
+	ResourceAwsApprunnerConnection                                              string = "aws.apprunner.connection"
+	ResourceAwsApprunnerVpcConnector                                            string = "aws.apprunner.vpcConnector"
+	ResourceAwsApprunnerObservabilityConfiguration                              string = "aws.apprunner.observabilityConfiguration"
+	ResourceAwsApprunnerVpcIngressConnection                                    string = "aws.apprunner.vpcIngressConnection"
 	ResourceAwsAthena                                                           string = "aws.athena"
 	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
 	ResourceAwsAthenaDataCatalog                                                string = "aws.athena.dataCatalog"
@@ -3391,6 +3398,34 @@ func init() {
 		"aws.appsync.apiKey": {
 			// to override args, implement: initAwsAppsyncApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppsyncApiKey,
+		},
+		"aws.apprunner": {
+			// to override args, implement: initAwsApprunner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApprunner,
+		},
+		"aws.apprunner.service": {
+			Init:   initAwsApprunnerService,
+			Create: createAwsApprunnerService,
+		},
+		"aws.apprunner.autoScalingConfiguration": {
+			Init:   initAwsApprunnerAutoScalingConfiguration,
+			Create: createAwsApprunnerAutoScalingConfiguration,
+		},
+		"aws.apprunner.connection": {
+			// to override args, implement: initAwsApprunnerConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApprunnerConnection,
+		},
+		"aws.apprunner.vpcConnector": {
+			Init:   initAwsApprunnerVpcConnector,
+			Create: createAwsApprunnerVpcConnector,
+		},
+		"aws.apprunner.observabilityConfiguration": {
+			Init:   initAwsApprunnerObservabilityConfiguration,
+			Create: createAwsApprunnerObservabilityConfiguration,
+		},
+		"aws.apprunner.vpcIngressConnection": {
+			Init:   initAwsApprunnerVpcIngressConnection,
+			Create: createAwsApprunnerVpcIngressConnection,
 		},
 		"aws.athena": {
 			// to override args, implement: initAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -23536,6 +23571,225 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appsync.apiKey.deletes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppsyncApiKey).GetDeletes()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetServices()).ToDataRes(types.Array(types.Resource("aws.apprunner.service")))
+	},
+	"aws.apprunner.autoScalingConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetAutoScalingConfigurations()).ToDataRes(types.Array(types.Resource("aws.apprunner.autoScalingConfiguration")))
+	},
+	"aws.apprunner.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetConnections()).ToDataRes(types.Array(types.Resource("aws.apprunner.connection")))
+	},
+	"aws.apprunner.vpcConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetVpcConnectors()).ToDataRes(types.Array(types.Resource("aws.apprunner.vpcConnector")))
+	},
+	"aws.apprunner.observabilityConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetObservabilityConfigurations()).ToDataRes(types.Array(types.Resource("aws.apprunner.observabilityConfiguration")))
+	},
+	"aws.apprunner.vpcIngressConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunner).GetVpcIngressConnections()).ToDataRes(types.Array(types.Resource("aws.apprunner.vpcIngressConnection")))
+	},
+	"aws.apprunner.service.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.serviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetServiceId()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetServiceName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.serviceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetServiceUrl()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.service.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.service.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.service.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.sourceConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetSourceConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.apprunner.service.instanceCpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetInstanceCpu()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.instanceMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetInstanceMemory()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.instanceRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetInstanceRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.apprunner.service.healthCheckConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetHealthCheckConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.apprunner.service.egressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetEgressType()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.vpcConnector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetVpcConnector()).ToDataRes(types.Resource("aws.apprunner.vpcConnector"))
+	},
+	"aws.apprunner.service.isPubliclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetIsPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.apprunner.service.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.apprunner.service.observabilityConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetObservabilityConfiguration()).ToDataRes(types.Resource("aws.apprunner.observabilityConfiguration"))
+	},
+	"aws.apprunner.service.autoScalingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetAutoScalingConfiguration()).ToDataRes(types.Resource("aws.apprunner.autoScalingConfiguration"))
+	},
+	"aws.apprunner.service.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.apprunner.service.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerService).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.apprunner.autoScalingConfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.autoScalingConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.autoScalingConfiguration.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetRevision()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.autoScalingConfiguration.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetLatest()).ToDataRes(types.Bool)
+	},
+	"aws.apprunner.autoScalingConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.autoScalingConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.autoScalingConfiguration.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.autoScalingConfiguration.maxConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetMaxConcurrency()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.autoScalingConfiguration.minSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetMinSize()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.autoScalingConfiguration.maxSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetMaxSize()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.autoScalingConfiguration.hasAssociatedService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetHasAssociatedService()).ToDataRes(types.Bool)
+	},
+	"aws.apprunner.autoScalingConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerAutoScalingConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apprunner.connection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.connection.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetProviderType()).ToDataRes(types.String)
+	},
+	"aws.apprunner.connection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.connection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.connection.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerConnection).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcConnector.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcConnector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcConnector.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetRevision()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.vpcConnector.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcConnector.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.vpcConnector.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.vpcConnector.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.apprunner.vpcConnector.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.apprunner.vpcConnector.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcConnector).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apprunner.observabilityConfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.observabilityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.observabilityConfiguration.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetRevision()).ToDataRes(types.Int)
+	},
+	"aws.apprunner.observabilityConfiguration.latest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetLatest()).ToDataRes(types.Bool)
+	},
+	"aws.apprunner.observabilityConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.observabilityConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.observabilityConfiguration.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.observabilityConfiguration.traceConfigurationVendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetTraceConfigurationVendor()).ToDataRes(types.String)
+	},
+	"aws.apprunner.observabilityConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerObservabilityConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcIngressConnection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcIngressConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcIngressConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcIngressConnection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.vpcIngressConnection.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"aws.apprunner.vpcIngressConnection.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.apprunner.vpcIngressConnection.ingressVpcConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetIngressVpcConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.apprunner.vpcIngressConnection.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetService()).ToDataRes(types.Resource("aws.apprunner.service"))
+	},
+	"aws.apprunner.vpcIngressConnection.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApprunnerVpcIngressConnection).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.athena.workgroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthena).GetWorkgroups()).ToDataRes(types.Array(types.Resource("aws.athena.workgroup")))
@@ -58156,6 +58410,326 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appsync.apiKey.deletes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppsyncApiKey).Deletes, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).AutoScalingConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).VpcConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).ObservabilityConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunner).VpcIngressConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.service.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).ServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.serviceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).ServiceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.sourceConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).SourceConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.instanceCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).InstanceCpu, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.instanceMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).InstanceMemory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.instanceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).InstanceRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.healthCheckConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).HealthCheckConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.egressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).EgressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.vpcConnector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).VpcConnector, ok = plugin.RawToTValue[*mqlAwsApprunnerVpcConnector](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.isPubliclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).IsPubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.observabilityConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).ObservabilityConfiguration, ok = plugin.RawToTValue[*mqlAwsApprunnerObservabilityConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.autoScalingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).AutoScalingConfiguration, ok = plugin.RawToTValue[*mqlAwsApprunnerAutoScalingConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.service.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerService).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Revision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.maxConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).MaxConcurrency, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.minSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).MinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.maxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).MaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.hasAssociatedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).HasAssociatedService, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.autoScalingConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerAutoScalingConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.connection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.connection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerConnection).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.vpcConnector.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Revision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcConnector.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcConnector).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Revision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.latest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Latest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.traceConfigurationVendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).TraceConfigurationVendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.observabilityConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerObservabilityConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.ingressVpcConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).IngressVpcConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).Service, ok = plugin.RawToTValue[*mqlAwsApprunnerService](v.Value, v.Error)
+		return
+	},
+	"aws.apprunner.vpcIngressConnection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApprunnerVpcIngressConnection).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.athena.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -140680,6 +141254,849 @@ func (c *mqlAwsAppsyncApiKey) GetExpires() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsAppsyncApiKey) GetDeletes() *plugin.TValue[*time.Time] {
 	return &c.Deletes
+}
+
+// mqlAwsApprunner for the aws.apprunner resource
+type mqlAwsApprunner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApprunnerInternal it will be used here
+	Services                    plugin.TValue[[]any]
+	AutoScalingConfigurations   plugin.TValue[[]any]
+	Connections                 plugin.TValue[[]any]
+	VpcConnectors               plugin.TValue[[]any]
+	ObservabilityConfigurations plugin.TValue[[]any]
+	VpcIngressConnections       plugin.TValue[[]any]
+}
+
+// createAwsApprunner creates a new instance of this resource
+func createAwsApprunner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunner) MqlName() string {
+	return "aws.apprunner"
+}
+
+func (c *mqlAwsApprunner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunner) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+func (c *mqlAwsApprunner) GetAutoScalingConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutoScalingConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "autoScalingConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.autoScalingConfigurations()
+	})
+}
+
+func (c *mqlAwsApprunner) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlAwsApprunner) GetVpcConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "vpcConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcConnectors()
+	})
+}
+
+func (c *mqlAwsApprunner) GetObservabilityConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ObservabilityConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "observabilityConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.observabilityConfigurations()
+	})
+}
+
+func (c *mqlAwsApprunner) GetVpcIngressConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcIngressConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner", c.__id, "vpcIngressConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcIngressConnections()
+	})
+}
+
+// mqlAwsApprunnerService for the aws.apprunner.service resource
+type mqlAwsApprunnerService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsApprunnerServiceInternal
+	Arn                        plugin.TValue[string]
+	ServiceId                  plugin.TValue[string]
+	ServiceName                plugin.TValue[string]
+	ServiceUrl                 plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
+	DeletedAt                  plugin.TValue[*time.Time]
+	Region                     plugin.TValue[string]
+	SourceConfiguration        plugin.TValue[any]
+	InstanceCpu                plugin.TValue[string]
+	InstanceMemory             plugin.TValue[string]
+	InstanceRole               plugin.TValue[*mqlAwsIamRole]
+	HealthCheckConfiguration   plugin.TValue[any]
+	EgressType                 plugin.TValue[string]
+	VpcConnector               plugin.TValue[*mqlAwsApprunnerVpcConnector]
+	IsPubliclyAccessible       plugin.TValue[bool]
+	IpAddressType              plugin.TValue[string]
+	ObservabilityConfiguration plugin.TValue[*mqlAwsApprunnerObservabilityConfiguration]
+	AutoScalingConfiguration   plugin.TValue[*mqlAwsApprunnerAutoScalingConfiguration]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsApprunnerService creates a new instance of this resource
+func createAwsApprunnerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerService) MqlName() string {
+	return "aws.apprunner.service"
+}
+
+func (c *mqlAwsApprunnerService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerService) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerService) GetServiceId() *plugin.TValue[string] {
+	return &c.ServiceId
+}
+
+func (c *mqlAwsApprunnerService) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlAwsApprunnerService) GetServiceUrl() *plugin.TValue[string] {
+	return &c.ServiceUrl
+}
+
+func (c *mqlAwsApprunnerService) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerService) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsApprunnerService) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlAwsApprunnerService) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsApprunnerService) GetSourceConfiguration() *plugin.TValue[any] {
+	return &c.SourceConfiguration
+}
+
+func (c *mqlAwsApprunnerService) GetInstanceCpu() *plugin.TValue[string] {
+	return &c.InstanceCpu
+}
+
+func (c *mqlAwsApprunnerService) GetInstanceMemory() *plugin.TValue[string] {
+	return &c.InstanceMemory
+}
+
+func (c *mqlAwsApprunnerService) GetInstanceRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.InstanceRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "instanceRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.instanceRole()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetHealthCheckConfiguration() *plugin.TValue[any] {
+	return &c.HealthCheckConfiguration
+}
+
+func (c *mqlAwsApprunnerService) GetEgressType() *plugin.TValue[string] {
+	return &c.EgressType
+}
+
+func (c *mqlAwsApprunnerService) GetVpcConnector() *plugin.TValue[*mqlAwsApprunnerVpcConnector] {
+	return plugin.GetOrCompute[*mqlAwsApprunnerVpcConnector](&c.VpcConnector, func() (*mqlAwsApprunnerVpcConnector, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "vpcConnector")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsApprunnerVpcConnector), nil
+			}
+		}
+
+		return c.vpcConnector()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetIsPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.IsPubliclyAccessible
+}
+
+func (c *mqlAwsApprunnerService) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsApprunnerService) GetObservabilityConfiguration() *plugin.TValue[*mqlAwsApprunnerObservabilityConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsApprunnerObservabilityConfiguration](&c.ObservabilityConfiguration, func() (*mqlAwsApprunnerObservabilityConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "observabilityConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsApprunnerObservabilityConfiguration), nil
+			}
+		}
+
+		return c.observabilityConfiguration()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetAutoScalingConfiguration() *plugin.TValue[*mqlAwsApprunnerAutoScalingConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsApprunnerAutoScalingConfiguration](&c.AutoScalingConfiguration, func() (*mqlAwsApprunnerAutoScalingConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "autoScalingConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsApprunnerAutoScalingConfiguration), nil
+			}
+		}
+
+		return c.autoScalingConfiguration()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.service", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsApprunnerService) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsApprunnerAutoScalingConfiguration for the aws.apprunner.autoScalingConfiguration resource
+type mqlAwsApprunnerAutoScalingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsApprunnerAutoScalingConfigurationInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Revision             plugin.TValue[int64]
+	Latest               plugin.TValue[bool]
+	Status               plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	DeletedAt            plugin.TValue[*time.Time]
+	MaxConcurrency       plugin.TValue[int64]
+	MinSize              plugin.TValue[int64]
+	MaxSize              plugin.TValue[int64]
+	HasAssociatedService plugin.TValue[bool]
+	Region               plugin.TValue[string]
+}
+
+// createAwsApprunnerAutoScalingConfiguration creates a new instance of this resource
+func createAwsApprunnerAutoScalingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerAutoScalingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.autoScalingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) MqlName() string {
+	return "aws.apprunner.autoScalingConfiguration"
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetRevision() *plugin.TValue[int64] {
+	return &c.Revision
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMaxConcurrency() *plugin.TValue[int64] {
+	return &c.MaxConcurrency
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMinSize() *plugin.TValue[int64] {
+	return &c.MinSize
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMaxSize() *plugin.TValue[int64] {
+	return &c.MaxSize
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetHasAssociatedService() *plugin.TValue[bool] {
+	return &c.HasAssociatedService
+}
+
+func (c *mqlAwsApprunnerAutoScalingConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApprunnerConnection for the aws.apprunner.connection resource
+type mqlAwsApprunnerConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApprunnerConnectionInternal it will be used here
+	Arn          plugin.TValue[string]
+	Name         plugin.TValue[string]
+	ProviderType plugin.TValue[string]
+	Status       plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	Region       plugin.TValue[string]
+}
+
+// createAwsApprunnerConnection creates a new instance of this resource
+func createAwsApprunnerConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerConnection) MqlName() string {
+	return "aws.apprunner.connection"
+}
+
+func (c *mqlAwsApprunnerConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerConnection) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApprunnerConnection) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlAwsApprunnerConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerConnection) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApprunnerVpcConnector for the aws.apprunner.vpcConnector resource
+type mqlAwsApprunnerVpcConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsApprunnerVpcConnectorInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Revision       plugin.TValue[int64]
+	Status         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	DeletedAt      plugin.TValue[*time.Time]
+	Subnets        plugin.TValue[[]any]
+	SecurityGroups plugin.TValue[[]any]
+	Region         plugin.TValue[string]
+}
+
+// createAwsApprunnerVpcConnector creates a new instance of this resource
+func createAwsApprunnerVpcConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerVpcConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.vpcConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerVpcConnector) MqlName() string {
+	return "aws.apprunner.vpcConnector"
+}
+
+func (c *mqlAwsApprunnerVpcConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetRevision() *plugin.TValue[int64] {
+	return &c.Revision
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.vpcConnector", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.vpcConnector", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsApprunnerVpcConnector) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApprunnerObservabilityConfiguration for the aws.apprunner.observabilityConfiguration resource
+type mqlAwsApprunnerObservabilityConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsApprunnerObservabilityConfigurationInternal
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Revision                 plugin.TValue[int64]
+	Latest                   plugin.TValue[bool]
+	Status                   plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	DeletedAt                plugin.TValue[*time.Time]
+	TraceConfigurationVendor plugin.TValue[string]
+	Region                   plugin.TValue[string]
+}
+
+// createAwsApprunnerObservabilityConfiguration creates a new instance of this resource
+func createAwsApprunnerObservabilityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerObservabilityConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.observabilityConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) MqlName() string {
+	return "aws.apprunner.observabilityConfiguration"
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetRevision() *plugin.TValue[int64] {
+	return &c.Revision
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetLatest() *plugin.TValue[bool] {
+	return &c.Latest
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetTraceConfigurationVendor() *plugin.TValue[string] {
+	return &c.TraceConfigurationVendor
+}
+
+func (c *mqlAwsApprunnerObservabilityConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApprunnerVpcIngressConnection for the aws.apprunner.vpcIngressConnection resource
+type mqlAwsApprunnerVpcIngressConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsApprunnerVpcIngressConnectionInternal
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	DeletedAt               plugin.TValue[*time.Time]
+	DomainName              plugin.TValue[string]
+	IngressVpcConfiguration plugin.TValue[any]
+	Service                 plugin.TValue[*mqlAwsApprunnerService]
+	Region                  plugin.TValue[string]
+}
+
+// createAwsApprunnerVpcIngressConnection creates a new instance of this resource
+func createAwsApprunnerVpcIngressConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApprunnerVpcIngressConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apprunner.vpcIngressConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) MqlName() string {
+	return "aws.apprunner.vpcIngressConnection"
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetIngressVpcConfiguration() *plugin.TValue[any] {
+	return &c.IngressVpcConfiguration
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetService() *plugin.TValue[*mqlAwsApprunnerService] {
+	return plugin.GetOrCompute[*mqlAwsApprunnerService](&c.Service, func() (*mqlAwsApprunnerService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apprunner.vpcIngressConnection", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsApprunnerService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlAwsApprunnerVpcIngressConnection) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsAthena for the aws.athena resource

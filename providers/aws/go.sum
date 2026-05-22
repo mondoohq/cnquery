@@ -179,6 +179,8 @@ github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16 h1:9ePxWacy
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16/go.mod h1:gR1tnThD1DBemyG1rmZ9U5+WbfGoiLUaZDvsQ6wbAjM=
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14 h1:31mnzduRd3FyuGCwgdMfPAu6MG1XnQf4zJrPjpZvnbM=
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14/go.mod h1:u/RTn1872BcpTxDnsQXi0AO8nxMch/46nlr3/loCpu8=
+github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.16 h1:fqfppotMvz3HCWi7vdL84uEk29lYeMqNwLH025r1k6A=
+github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.16/go.mod h1:QA5CUOg5mkS73RhLYCDPeFuCFxoeW2TPA6XRo4JL2Ek=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.59.0 h1:9EuZwqW8tDPZQwt2nGnXDBrcHY4CND/Fk7L50P6wV20=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.59.0/go.mod h1:E5vrX7/8w/HM5rhk2LQyuzF+PKECUmE44tp6xvuNYTc=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.53.7 h1:SjkXYNc15FoovS9k6ML7dO7pkXE3ns66RXwL+rfQVl8=

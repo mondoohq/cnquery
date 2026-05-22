@@ -33,6 +33,18 @@
     "appmesh:ListVirtualNodes",
     "appmesh:ListVirtualRouters",
     "appmesh:ListVirtualServices",
+    "apprunner:DescribeAutoScalingConfiguration",
+    "apprunner:DescribeObservabilityConfiguration",
+    "apprunner:DescribeService",
+    "apprunner:DescribeVpcConnector",
+    "apprunner:DescribeVpcIngressConnection",
+    "apprunner:ListAutoScalingConfigurations",
+    "apprunner:ListConnections",
+    "apprunner:ListObservabilityConfigurations",
+    "apprunner:ListServices",
+    "apprunner:ListTagsForResource",
+    "apprunner:ListVpcConnectors",
+    "apprunner:ListVpcIngressConnections",
     "appstream:DescribeApplications",
     "appstream:DescribeEntitlements",
     "appstream:DescribeFleets",
@@ -1046,6 +1058,78 @@
       "service": "appmesh",
       "action": "ListVirtualServices",
       "source_file": "aws_appmesh.go"
+    },
+    {
+      "permission": "apprunner:DescribeAutoScalingConfiguration",
+      "service": "apprunner",
+      "action": "DescribeAutoScalingConfiguration",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:DescribeObservabilityConfiguration",
+      "service": "apprunner",
+      "action": "DescribeObservabilityConfiguration",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:DescribeService",
+      "service": "apprunner",
+      "action": "DescribeService",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:DescribeVpcConnector",
+      "service": "apprunner",
+      "action": "DescribeVpcConnector",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:DescribeVpcIngressConnection",
+      "service": "apprunner",
+      "action": "DescribeVpcIngressConnection",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListAutoScalingConfigurations",
+      "service": "apprunner",
+      "action": "ListAutoScalingConfigurations",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListConnections",
+      "service": "apprunner",
+      "action": "ListConnections",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListObservabilityConfigurations",
+      "service": "apprunner",
+      "action": "ListObservabilityConfigurations",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListServices",
+      "service": "apprunner",
+      "action": "ListServices",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListTagsForResource",
+      "service": "apprunner",
+      "action": "ListTagsForResource",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListVpcConnectors",
+      "service": "apprunner",
+      "action": "ListVpcConnectors",
+      "source_file": "aws_apprunner.go"
+    },
+    {
+      "permission": "apprunner:ListVpcIngressConnections",
+      "service": "apprunner",
+      "action": "ListVpcIngressConnections",
+      "source_file": "aws_apprunner.go"
     },
     {
       "permission": "appstream:DescribeApplications",
