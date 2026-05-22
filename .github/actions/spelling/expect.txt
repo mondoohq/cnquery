@@ -21,6 +21,7 @@ alpn
 ams
 antispam
 aof
+APKINDEX
 apm
 apparmor
 appsettings
