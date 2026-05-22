@@ -88,6 +88,11 @@ var DiscoverCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes
 		return
 	}
 
+	if len(assets) == 0 {
+		log.Info().Msg("no assets were discovered")
+		return
+	}
+
 	f, err := os.Create(outPath)
 	if err != nil {
 		log.Fatal().Err(err).Str("path", outPath).Msg("failed to create output file")
@@ -97,8 +102,6 @@ var DiscoverCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes
 		_ = f.Close()
 		log.Fatal().Err(err).Msg("failed to write discovered assets")
 	}
-	// Explicit close so a late writeback failure (NFS, full disk) surfaces
-	// before we log success. defer wouldn't run on the log.Fatal path above.
 	if err := f.Close(); err != nil {
 		log.Fatal().Err(err).Str("path", outPath).Msg("failed to close output file")
 	}

@@ -77,8 +77,6 @@ func WriteAssets(w io.Writer, assets []*inventory.Asset, format Format) error {
 	if writeErr != nil {
 		return writeErr
 	}
-	// Flush explicitly so a buffered-write failure (disk full, broken
-	// pipe) surfaces as an error instead of a silently truncated file.
 	return bw.Flush()
 }
 
