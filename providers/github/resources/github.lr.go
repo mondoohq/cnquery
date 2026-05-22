@@ -30,6 +30,8 @@ const (
 	ResourceGithubOrganizationAuditLogStreamConfig string = "github.organization.auditLogStreamConfig"
 	ResourceGithubRepositoryFineGrainedPermission  string = "github.repositoryFineGrainedPermission"
 	ResourceGithubOrganizationCustomProperty       string = "github.organization.customProperty"
+	ResourceGithubOrganizationCopilot              string = "github.organization.copilot"
+	ResourceGithubOrganizationCopilotSeat          string = "github.organization.copilot.seat"
 	ResourceGithubUser                             string = "github.user"
 	ResourceGithubTeam                             string = "github.team"
 	ResourceGithubCollaborator                     string = "github.collaborator"
@@ -136,6 +138,14 @@ func init() {
 		"github.organization.customProperty": {
 			// to override args, implement: initGithubOrganizationCustomProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubOrganizationCustomProperty,
+		},
+		"github.organization.copilot": {
+			Init:   initGithubOrganizationCopilot,
+			Create: createGithubOrganizationCopilot,
+		},
+		"github.organization.copilot.seat": {
+			// to override args, implement: initGithubOrganizationCopilotSeat(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubOrganizationCopilotSeat,
 		},
 		"github.user": {
 			Init:   initGithubUser,
@@ -649,6 +659,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.variables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetVariables()).ToDataRes(types.Array(types.Resource("github.actionsVariable")))
 	},
+	"github.organization.copilot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetCopilot()).ToDataRes(types.Resource("github.organization.copilot"))
+	},
 	"github.organization.samlConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationSamlConfig).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -837,6 +850,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.organization.customProperty.valuesEditableBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationCustomProperty).GetValuesEditableBy()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seatManagementSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatManagementSetting()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.publicCodeSuggestions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetPublicCodeSuggestions()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.copilotChat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetCopilotChat()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seatsTotal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsTotal()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.seatsAddedThisCycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsAddedThisCycle()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.seatsPendingCancellation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsPendingCancellation()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.seatsPendingInvitation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsPendingInvitation()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.seatsActiveThisCycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsActiveThisCycle()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.seatsInactiveThisCycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeatsInactiveThisCycle()).ToDataRes(types.Int)
+	},
+	"github.organization.copilot.contentExclusion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetContentExclusion()).ToDataRes(types.Dict)
+	},
+	"github.organization.copilot.seats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilot).GetSeats()).ToDataRes(types.Array(types.Resource("github.organization.copilot.seat")))
+	},
+	"github.organization.copilot.seat.assigneeLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetAssigneeLogin()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seat.assigneeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetAssigneeType()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seat.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetUser()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.organization.copilot.seat.assigningTeamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetAssigningTeamName()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seat.pendingCancellationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetPendingCancellationDate()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seat.lastActivityAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetLastActivityAt()).ToDataRes(types.Time)
+	},
+	"github.organization.copilot.seat.lastActivityEditor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetLastActivityEditor()).ToDataRes(types.String)
+	},
+	"github.organization.copilot.seat.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.organization.copilot.seat.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.organization.copilot.seat.planType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationCopilotSeat).GetPlanType()).ToDataRes(types.String)
 	},
 	"github.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubUser).GetId()).ToDataRes(types.Int)
@@ -2724,6 +2800,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubOrganization).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"github.organization.copilot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).Copilot, ok = plugin.RawToTValue[*mqlGithubOrganizationCopilot](v.Value, v.Error)
+		return
+	},
 	"github.organization.samlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationSamlConfig).__id, ok = v.Value.(string)
 		return
@@ -3010,6 +3090,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.customProperty.valuesEditableBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationCustomProperty).ValuesEditableBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).__id, ok = v.Value.(string)
+		return
+	},
+	"github.organization.copilot.seatManagementSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatManagementSetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.publicCodeSuggestions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).PublicCodeSuggestions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.copilotChat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).CopilotChat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsTotal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsTotal, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsAddedThisCycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsAddedThisCycle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsPendingCancellation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsPendingCancellation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsPendingInvitation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsPendingInvitation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsActiveThisCycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsActiveThisCycle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seatsInactiveThisCycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).SeatsInactiveThisCycle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.contentExclusion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).ContentExclusion, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilot).Seats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).__id, ok = v.Value.(string)
+		return
+	},
+	"github.organization.copilot.seat.assigneeLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).AssigneeLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.assigneeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).AssigneeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).User, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.assigningTeamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).AssigningTeamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.pendingCancellationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).PendingCancellationDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.lastActivityAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).LastActivityAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.lastActivityEditor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).LastActivityEditor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.organization.copilot.seat.planType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationCopilotSeat).PlanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5543,6 +5715,7 @@ type mqlGithubOrganization struct {
 	AuditLogStreamConfig                           plugin.TValue[*mqlGithubOrganizationAuditLogStreamConfig]
 	Secrets                                        plugin.TValue[[]any]
 	Variables                                      plugin.TValue[[]any]
+	Copilot                                        plugin.TValue[*mqlGithubOrganizationCopilot]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -6123,6 +6296,22 @@ func (c *mqlGithubOrganization) GetVariables() *plugin.TValue[[]any] {
 		}
 
 		return c.variables()
+	})
+}
+
+func (c *mqlGithubOrganization) GetCopilot() *plugin.TValue[*mqlGithubOrganizationCopilot] {
+	return plugin.GetOrCompute[*mqlGithubOrganizationCopilot](&c.Copilot, func() (*mqlGithubOrganizationCopilot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "copilot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubOrganizationCopilot), nil
+			}
+		}
+
+		return c.copilot()
 	})
 }
 
@@ -6871,6 +7060,213 @@ func (c *mqlGithubOrganizationCustomProperty) GetAllowedValues() *plugin.TValue[
 
 func (c *mqlGithubOrganizationCustomProperty) GetValuesEditableBy() *plugin.TValue[string] {
 	return &c.ValuesEditableBy
+}
+
+// mqlGithubOrganizationCopilot for the github.organization.copilot resource
+type mqlGithubOrganizationCopilot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubOrganizationCopilotInternal it will be used here
+	SeatManagementSetting    plugin.TValue[string]
+	PublicCodeSuggestions    plugin.TValue[string]
+	CopilotChat              plugin.TValue[string]
+	SeatsTotal               plugin.TValue[int64]
+	SeatsAddedThisCycle      plugin.TValue[int64]
+	SeatsPendingCancellation plugin.TValue[int64]
+	SeatsPendingInvitation   plugin.TValue[int64]
+	SeatsActiveThisCycle     plugin.TValue[int64]
+	SeatsInactiveThisCycle   plugin.TValue[int64]
+	ContentExclusion         plugin.TValue[any]
+	Seats                    plugin.TValue[[]any]
+}
+
+// createGithubOrganizationCopilot creates a new instance of this resource
+func createGithubOrganizationCopilot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubOrganizationCopilot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.organization.copilot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubOrganizationCopilot) MqlName() string {
+	return "github.organization.copilot"
+}
+
+func (c *mqlGithubOrganizationCopilot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatManagementSetting() *plugin.TValue[string] {
+	return &c.SeatManagementSetting
+}
+
+func (c *mqlGithubOrganizationCopilot) GetPublicCodeSuggestions() *plugin.TValue[string] {
+	return &c.PublicCodeSuggestions
+}
+
+func (c *mqlGithubOrganizationCopilot) GetCopilotChat() *plugin.TValue[string] {
+	return &c.CopilotChat
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsTotal() *plugin.TValue[int64] {
+	return &c.SeatsTotal
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsAddedThisCycle() *plugin.TValue[int64] {
+	return &c.SeatsAddedThisCycle
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsPendingCancellation() *plugin.TValue[int64] {
+	return &c.SeatsPendingCancellation
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsPendingInvitation() *plugin.TValue[int64] {
+	return &c.SeatsPendingInvitation
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsActiveThisCycle() *plugin.TValue[int64] {
+	return &c.SeatsActiveThisCycle
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeatsInactiveThisCycle() *plugin.TValue[int64] {
+	return &c.SeatsInactiveThisCycle
+}
+
+func (c *mqlGithubOrganizationCopilot) GetContentExclusion() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ContentExclusion, func() (any, error) {
+		return c.contentExclusion()
+	})
+}
+
+func (c *mqlGithubOrganizationCopilot) GetSeats() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Seats, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization.copilot", c.__id, "seats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.seats()
+	})
+}
+
+// mqlGithubOrganizationCopilotSeat for the github.organization.copilot.seat resource
+type mqlGithubOrganizationCopilotSeat struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubOrganizationCopilotSeatInternal it will be used here
+	AssigneeLogin           plugin.TValue[string]
+	AssigneeType            plugin.TValue[string]
+	User                    plugin.TValue[*mqlGithubUser]
+	AssigningTeamName       plugin.TValue[string]
+	PendingCancellationDate plugin.TValue[string]
+	LastActivityAt          plugin.TValue[*time.Time]
+	LastActivityEditor      plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	PlanType                plugin.TValue[string]
+}
+
+// createGithubOrganizationCopilotSeat creates a new instance of this resource
+func createGithubOrganizationCopilotSeat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubOrganizationCopilotSeat{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.organization.copilot.seat", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) MqlName() string {
+	return "github.organization.copilot.seat"
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetAssigneeLogin() *plugin.TValue[string] {
+	return &c.AssigneeLogin
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetAssigneeType() *plugin.TValue[string] {
+	return &c.AssigneeType
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetUser() *plugin.TValue[*mqlGithubUser] {
+	return &c.User
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetAssigningTeamName() *plugin.TValue[string] {
+	return &c.AssigningTeamName
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetPendingCancellationDate() *plugin.TValue[string] {
+	return &c.PendingCancellationDate
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetLastActivityAt() *plugin.TValue[*time.Time] {
+	return &c.LastActivityAt
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetLastActivityEditor() *plugin.TValue[string] {
+	return &c.LastActivityEditor
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubOrganizationCopilotSeat) GetPlanType() *plugin.TValue[string] {
+	return &c.PlanType
 }
 
 // mqlGithubUser for the github.user resource
