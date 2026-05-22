@@ -33,6 +33,9 @@ const (
 	ResourceAtlassianJiraPermissionScheme         string = "atlassian.jira.permissionScheme"
 	ResourceAtlassianJiraPermissionSchemeGrant    string = "atlassian.jira.permissionScheme.grant"
 	ResourceAtlassianJiraProjectProperty          string = "atlassian.jira.project.property"
+	ResourceAtlassianJiraProjectRole              string = "atlassian.jira.project.role"
+	ResourceAtlassianJiraCustomField              string = "atlassian.jira.customField"
+	ResourceAtlassianJiraWorkflow                 string = "atlassian.jira.workflow"
 	ResourceAtlassianJiraGroup                    string = "atlassian.jira.group"
 	ResourceAtlassianConfluence                   string = "atlassian.confluence"
 	ResourceAtlassianConfluenceUser               string = "atlassian.confluence.user"
@@ -113,6 +116,18 @@ func init() {
 		"atlassian.jira.project.property": {
 			// to override args, implement: initAtlassianJiraProjectProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraProjectProperty,
+		},
+		"atlassian.jira.project.role": {
+			// to override args, implement: initAtlassianJiraProjectRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraProjectRole,
+		},
+		"atlassian.jira.customField": {
+			// to override args, implement: initAtlassianJiraCustomField(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraCustomField,
+		},
+		"atlassian.jira.workflow": {
+			// to override args, implement: initAtlassianJiraWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraWorkflow,
 		},
 		"atlassian.jira.group": {
 			// to override args, implement: initAtlassianJiraGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -321,6 +336,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.auditRecords": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetAuditRecords()).ToDataRes(types.Array(types.Resource("atlassian.jira.auditRecord")))
 	},
+	"atlassian.jira.customFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetCustomFields()).ToDataRes(types.Array(types.Resource("atlassian.jira.customField")))
+	},
+	"atlassian.jira.workflows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetWorkflows()).ToDataRes(types.Array(types.Resource("atlassian.jira.workflow")))
+	},
 	"atlassian.jira.auditRecord.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraAuditRecord).GetId()).ToDataRes(types.Int)
 	},
@@ -477,6 +498,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.project.permissionScheme": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetPermissionScheme()).ToDataRes(types.Resource("atlassian.jira.permissionScheme"))
 	},
+	"atlassian.jira.project.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetRoles()).ToDataRes(types.Array(types.Resource("atlassian.jira.project.role")))
+	},
 	"atlassian.jira.permissionScheme.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraPermissionScheme).GetId()).ToDataRes(types.Int)
 	},
@@ -503,6 +527,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.project.property.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProjectProperty).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.role.projectKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetProjectKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.role.roleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetRoleId()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.project.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetDescription()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.role.admin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetAdmin()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.role.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetDefault()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.role.roleConfigurable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetRoleConfigurable()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.role.actors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectRole).GetActors()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.jira.customField.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetDescription()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.searcherKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSearcherKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.searchable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSearchable()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.customField.navigable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetNavigable()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.customField.orderable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetOrderable()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.customField.isLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetIsLocked()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.customField.schemaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSchemaType()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.schemaItems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSchemaItems()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.schemaSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSchemaSystem()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.schemaCustom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSchemaCustom()).ToDataRes(types.String)
+	},
+	"atlassian.jira.customField.schemaCustomId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetSchemaCustomId()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.customField.screensCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetScreensCount()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.customField.contextsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraCustomField).GetContextsCount()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.workflow.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.workflow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.workflow.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetDescription()).ToDataRes(types.String)
+	},
+	"atlassian.jira.workflow.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.workflow.statuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetStatuses()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.jira.workflow.transitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraWorkflow).GetTransitions()).ToDataRes(types.Array(types.Dict))
 	},
 	"atlassian.jira.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraGroup).GetId()).ToDataRes(types.String)
@@ -791,6 +908,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJira).AuditRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.customFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).CustomFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.auditRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraAuditRecord).__id, ok = v.Value.(string)
 		return
@@ -1023,6 +1148,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraProject).PermissionScheme, ok = plugin.RawToTValue[*mqlAtlassianJiraPermissionScheme](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.project.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.permissionScheme.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraPermissionScheme).__id, ok = v.Value.(string)
 		return
@@ -1069,6 +1198,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.project.property.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProjectProperty).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.project.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.projectKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).ProjectKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.roleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).RoleId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.admin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Admin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Default, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.roleConfigurable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).RoleConfigurable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.role.actors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectRole).Actors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.customField.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.searcherKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SearcherKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.searchable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Searchable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.navigable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Navigable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.orderable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).Orderable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.isLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).IsLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.schemaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SchemaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.schemaItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SchemaItems, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.schemaSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SchemaSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.schemaCustom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SchemaCustom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.schemaCustomId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).SchemaCustomId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.screensCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).ScreensCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.customField.contextsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraCustomField).ContextsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.workflow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.statuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).Statuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.workflow.transitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraWorkflow).Transitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1784,6 +2049,8 @@ type mqlAtlassianJira struct {
 	Groups       plugin.TValue[[]any]
 	ServerInfos  plugin.TValue[*mqlAtlassianJiraServerInfo]
 	AuditRecords plugin.TValue[[]any]
+	CustomFields plugin.TValue[[]any]
+	Workflows    plugin.TValue[[]any]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -1916,6 +2183,38 @@ func (c *mqlAtlassianJira) GetAuditRecords() *plugin.TValue[[]any] {
 		}
 
 		return c.auditRecords()
+	})
+}
+
+func (c *mqlAtlassianJira) GetCustomFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "customFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customFields()
+	})
+}
+
+func (c *mqlAtlassianJira) GetWorkflows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workflows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "workflows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workflows()
 	})
 }
 
@@ -2374,6 +2673,7 @@ type mqlAtlassianJiraProject struct {
 	Archived         plugin.TValue[bool]
 	Properties       plugin.TValue[[]any]
 	PermissionScheme plugin.TValue[*mqlAtlassianJiraPermissionScheme]
+	Roles            plugin.TValue[[]any]
 }
 
 // createAtlassianJiraProject creates a new instance of this resource
@@ -2478,6 +2778,22 @@ func (c *mqlAtlassianJiraProject) GetPermissionScheme() *plugin.TValue[*mqlAtlas
 		}
 
 		return c.permissionScheme()
+	})
+}
+
+func (c *mqlAtlassianJiraProject) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.project", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
 	})
 }
 
@@ -2668,6 +2984,293 @@ func (c *mqlAtlassianJiraProjectProperty) MqlID() string {
 
 func (c *mqlAtlassianJiraProjectProperty) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+// mqlAtlassianJiraProjectRole for the atlassian.jira.project.role resource
+type mqlAtlassianJiraProjectRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraProjectRoleInternal it will be used here
+	Id               plugin.TValue[string]
+	ProjectKey       plugin.TValue[string]
+	RoleId           plugin.TValue[int64]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Admin            plugin.TValue[bool]
+	Default          plugin.TValue[bool]
+	RoleConfigurable plugin.TValue[bool]
+	Actors           plugin.TValue[[]any]
+}
+
+// createAtlassianJiraProjectRole creates a new instance of this resource
+func createAtlassianJiraProjectRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraProjectRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.project.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraProjectRole) MqlName() string {
+	return "atlassian.jira.project.role"
+}
+
+func (c *mqlAtlassianJiraProjectRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetProjectKey() *plugin.TValue[string] {
+	return &c.ProjectKey
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetRoleId() *plugin.TValue[int64] {
+	return &c.RoleId
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetAdmin() *plugin.TValue[bool] {
+	return &c.Admin
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetDefault() *plugin.TValue[bool] {
+	return &c.Default
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetRoleConfigurable() *plugin.TValue[bool] {
+	return &c.RoleConfigurable
+}
+
+func (c *mqlAtlassianJiraProjectRole) GetActors() *plugin.TValue[[]any] {
+	return &c.Actors
+}
+
+// mqlAtlassianJiraCustomField for the atlassian.jira.customField resource
+type mqlAtlassianJiraCustomField struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraCustomFieldInternal it will be used here
+	Id             plugin.TValue[string]
+	Key            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	SearcherKey    plugin.TValue[string]
+	Searchable     plugin.TValue[bool]
+	Navigable      plugin.TValue[bool]
+	Orderable      plugin.TValue[bool]
+	IsLocked       plugin.TValue[bool]
+	SchemaType     plugin.TValue[string]
+	SchemaItems    plugin.TValue[string]
+	SchemaSystem   plugin.TValue[string]
+	SchemaCustom   plugin.TValue[string]
+	SchemaCustomId plugin.TValue[int64]
+	ScreensCount   plugin.TValue[int64]
+	ContextsCount  plugin.TValue[int64]
+}
+
+// createAtlassianJiraCustomField creates a new instance of this resource
+func createAtlassianJiraCustomField(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraCustomField{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.customField", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraCustomField) MqlName() string {
+	return "atlassian.jira.customField"
+}
+
+func (c *mqlAtlassianJiraCustomField) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraCustomField) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraCustomField) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAtlassianJiraCustomField) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraCustomField) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSearcherKey() *plugin.TValue[string] {
+	return &c.SearcherKey
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSearchable() *plugin.TValue[bool] {
+	return &c.Searchable
+}
+
+func (c *mqlAtlassianJiraCustomField) GetNavigable() *plugin.TValue[bool] {
+	return &c.Navigable
+}
+
+func (c *mqlAtlassianJiraCustomField) GetOrderable() *plugin.TValue[bool] {
+	return &c.Orderable
+}
+
+func (c *mqlAtlassianJiraCustomField) GetIsLocked() *plugin.TValue[bool] {
+	return &c.IsLocked
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSchemaType() *plugin.TValue[string] {
+	return &c.SchemaType
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSchemaItems() *plugin.TValue[string] {
+	return &c.SchemaItems
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSchemaSystem() *plugin.TValue[string] {
+	return &c.SchemaSystem
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSchemaCustom() *plugin.TValue[string] {
+	return &c.SchemaCustom
+}
+
+func (c *mqlAtlassianJiraCustomField) GetSchemaCustomId() *plugin.TValue[int64] {
+	return &c.SchemaCustomId
+}
+
+func (c *mqlAtlassianJiraCustomField) GetScreensCount() *plugin.TValue[int64] {
+	return &c.ScreensCount
+}
+
+func (c *mqlAtlassianJiraCustomField) GetContextsCount() *plugin.TValue[int64] {
+	return &c.ContextsCount
+}
+
+// mqlAtlassianJiraWorkflow for the atlassian.jira.workflow resource
+type mqlAtlassianJiraWorkflow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraWorkflowInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsDefault   plugin.TValue[bool]
+	Statuses    plugin.TValue[[]any]
+	Transitions plugin.TValue[[]any]
+}
+
+// createAtlassianJiraWorkflow creates a new instance of this resource
+func createAtlassianJiraWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraWorkflow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.workflow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraWorkflow) MqlName() string {
+	return "atlassian.jira.workflow"
+}
+
+func (c *mqlAtlassianJiraWorkflow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetStatuses() *plugin.TValue[[]any] {
+	return &c.Statuses
+}
+
+func (c *mqlAtlassianJiraWorkflow) GetTransitions() *plugin.TValue[[]any] {
+	return &c.Transitions
 }
 
 // mqlAtlassianJiraGroup for the atlassian.jira.group resource

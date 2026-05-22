@@ -144,6 +144,10 @@ atlassian.jira {
   serverInfos() atlassian.jira.serverInfo
   // Recent audit log records (most recent first)
   auditRecords() []atlassian.jira.auditRecord
+  // Custom fields defined on the Jira instance
+  customFields() []atlassian.jira.customField
+  // Workflows defined on the Jira instance
+  workflows() []atlassian.jira.workflow
 }
 
 // Jira audit log record
@@ -299,6 +303,8 @@ atlassian.jira.project @defaults("name") {
   properties() []atlassian.jira.project.property
   // Permission scheme assigned to the project
   permissionScheme() atlassian.jira.permissionScheme
+  // Project roles and their actors (users/groups assigned to each role)
+  roles() []atlassian.jira.project.role
 }
 
 // Jira permission scheme
@@ -341,6 +347,120 @@ atlassian.jira.permissionScheme.grant @defaults("permission holderType") {
 atlassian.jira.project.property @defaults("id") {
   // Property key
   id string
+}
+
+// Jira project role
+//
+// Examine a role on a Jira project and the actors (users and groups)
+// assigned to it. Project roles are the unit of project-level RBAC:
+// permission scheme grants name a role (`Administrators`, `Developers`,
+// ...) and the role determines who can take which action on that
+// project. `actors` lists every assignment with its `type` (`atlassian-user-role-actor`
+// or `atlassian-group-role-actor`), `name`, `displayName`, and
+// `accountId` (for users) — the input audits use to verify least
+// privilege at the project level.
+private atlassian.jira.project.role @defaults("projectKey name") {
+  // Composite identifier (projectKey/roleId)
+  id string
+  // Parent project key (e.g., "PROJ")
+  projectKey string
+  // Role ID (stable across the instance)
+  roleId int
+  // Role name (e.g., "Administrators", "Developers")
+  name string
+  // Role description
+  description string
+  // Whether the role grants project-admin privileges
+  admin bool
+  // Whether the role is the default role assigned to new projects
+  default bool
+  // Whether the role membership is configurable on the project
+  roleConfigurable bool
+  // Users and groups assigned to this role on the project
+  //
+  // Each entry has `type` (`atlassian-user-role-actor` or
+  // `atlassian-group-role-actor`), `id`, `name`, `displayName`,
+  // `avatarUrl`, and for user actors an `accountId`.
+  actors []dict
+}
+
+// Jira custom field
+//
+// Examine a custom field defined on the Jira instance. Each field has an
+// `id` (`customfield_10001`-style key used in JQL and the REST API), a
+// `name` shown in the UI, the `schemaType` and `schemaCustom` that
+// determine its data shape and editor (e.g., `com.atlassian.jira.plugin.system.customfieldtypes:textarea`),
+// and counters for the `screensCount` and `contextsCount` the field is
+// attached to. Common audits look for fields whose `name` or
+// `description` suggests they store sensitive data (passwords, SSNs,
+// API tokens) that should not live in a ticketing system.
+private atlassian.jira.customField @defaults("id name schemaType") {
+  // Field ID (e.g., "customfield_10001")
+  id string
+  // Field key (often equal to `id`, can be an app-namespaced key for app-provided fields)
+  key string
+  // Field display name
+  name string
+  // Field description
+  description string
+  // Searcher used by JQL/UI to query this field, empty if not searchable
+  searcherKey string
+  // Whether the field is searchable via JQL
+  searchable bool
+  // Whether the field can be navigated to in the UI
+  navigable bool
+  // Whether the field can be ordered/sorted
+  orderable bool
+  // Whether the field is locked (system field that cannot be modified)
+  isLocked bool
+  // High-level data type
+  //
+  // For example `string`, `number`, `user`, `array`, `option`, `date`.
+  schemaType string
+  // For array-typed fields, the element type (e.g., `string`, `user`)
+  schemaItems string
+  // System field identifier when this is a built-in field (empty for custom)
+  schemaSystem string
+  // Custom field type URI (e.g., `com.atlassian.jira.plugin.system.customfieldtypes:textfield`)
+  schemaCustom string
+  // Numeric custom-field ID (0 for system fields)
+  schemaCustomId int
+  // Number of screens this field appears on
+  screensCount int
+  // Number of contexts this field is configured in
+  contextsCount int
+}
+
+// Jira workflow
+//
+// Examine a workflow defined on the Jira instance — the state machine
+// that issues move through. `name` and `id` (the entity ID) identify the
+// workflow; `isDefault` flags Jira's built-in default workflow.
+// `statuses` lists every status the workflow uses (initial state through
+// terminal Done), and `transitions` lists the allowed status changes
+// with their conditions, validators, and post-functions. Common
+// change-management audits assert that critical statuses can only be
+// reached via transitions with the required approver conditions.
+private atlassian.jira.workflow @defaults("name isDefault") {
+  // Stable entity ID (UUID for cloud workflows; name otherwise)
+  id string
+  // Workflow name
+  name string
+  // Workflow description
+  description string
+  // Whether this is the Jira-default workflow
+  isDefault bool
+  // Status names referenced by the workflow
+  statuses []string
+  // Allowed transitions between statuses
+  //
+  // Each entry has `id`, `name`, `type`, `description`, `from` (list of
+  // origin status names; empty for global transitions), `to` (destination
+  // status name), and the rule lists `conditions`, `validators`,
+  // `actions` (post-functions), and `triggers`. Use for change-management
+  // audits — e.g., asserting that a transition into `Done` requires a
+  // specific validator or approver condition.
+  transitions []dict
 }
 
 // Jira user group
