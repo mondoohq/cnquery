@@ -516,6 +516,7 @@ func awsConnectionMethodToService(method string) string {
 		"mq":                       "mq",
 		"fms":                      "fms",
 		"networkfirewall":          "networkfirewall",
+		"apprunner":                "apprunner",
 		"appstream":                "appstream",
 		"appsync":                  "appsync",
 		"applicationautoscaling":   "applicationautoscaling",

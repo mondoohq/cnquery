@@ -25,6 +25,7 @@ aof
 APKINDEX
 apm
 apparmor
+apprunner
 appsettings
 appslot
 ari
@@ -57,6 +58,7 @@ awslogs
 AWSPENDING
 AWSPREVIOUS
 awsvpc
+AWSXRAY
 azurestaticapps
 azurewebsites
 backref
