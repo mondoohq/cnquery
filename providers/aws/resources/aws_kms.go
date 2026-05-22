@@ -203,6 +203,7 @@ func (a *mqlAwsKms) grants() ([]any, error) {
 		return nil, rawKeys.Error
 	}
 
+	log.Info().Int("keys", len(rawKeys.Data)).Msg("aws.kms.grants: listing grants for every key in every region (use aws.kms.key.grants for targeted queries)")
 	res := []any{}
 	tasks := make([]*jobpool.Job, 0, len(rawKeys.Data))
 	for _, raw := range rawKeys.Data {
@@ -296,8 +297,16 @@ func (a *mqlAwsKms) getCustomKeyStoreTasks(conn *connection.AwsConnection) []*jo
 	return tasks
 }
 
+// kmsCustomKeyStoreID returns the `__id` shape used by every aws.kms.customKeyStore
+// instance. All callers that construct or look up a custom key store resource must
+// route through this helper so cache lookups in initAwsKmsCustomKeyStore stay in
+// sync with the IDs produced by newMqlAwsKmsCustomKeyStore and aws.kms.key.customKeyStore().
+func kmsCustomKeyStoreID(region, storeID string) string {
+	return region + "/" + storeID
+}
+
 func newMqlAwsKmsCustomKeyStore(runtime *plugin.Runtime, region string, entry types.CustomKeyStoresListEntry) (plugin.Resource, error) {
-	id := region + "/" + convert.ToValue(entry.CustomKeyStoreId)
+	id := kmsCustomKeyStoreID(region, convert.ToValue(entry.CustomKeyStoreId))
 	xksProxy, err := kmsXksProxyConfigToDict(entry.XksProxyConfiguration)
 	if err != nil {
 		return nil, err
@@ -682,7 +691,7 @@ func (a *mqlAwsKmsKey) customKeyStore() (*mqlAwsKmsCustomKeyStore, error) {
 
 	store, err := NewResource(a.MqlRuntime, "aws.kms.customKeyStore",
 		map[string]*llx.RawData{
-			"__id":             llx.StringData(a.Region.Data + "/" + *md.CustomKeyStoreId),
+			"__id":             llx.StringData(kmsCustomKeyStoreID(a.Region.Data, *md.CustomKeyStoreId)),
 			"customKeyStoreId": llx.StringDataPtr(md.CustomKeyStoreId),
 			"region":           llx.StringData(a.Region.Data),
 		})
@@ -1194,8 +1203,8 @@ func initAwsKmsCustomKeyStore(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 	// Skip the DescribeCustomKeyStores call when the store was already
 	// materialized via aws.kms.customKeyStores() — that path puts it in
-	// the runtime cache under the same `__id` shape (`<region>/<storeId>`).
-	cacheID := "aws.kms.customKeyStore\x00" + region + "/" + customKeyStoreId
+	// the runtime cache under the same `__id` shape.
+	cacheID := "aws.kms.customKeyStore\x00" + kmsCustomKeyStoreID(region, customKeyStoreId)
 	if cached, ok := runtime.Resources.Get(cacheID); ok {
 		return args, cached, nil
 	}
