@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -200,6 +201,12 @@ func glueRoleLookupArgs(role string) map[string]*llx.RawData {
 
 // findGlueSecurityConfiguration looks up a Glue security configuration in a
 // region by name via the singular GetSecurityConfiguration API.
+//
+// Returns (nil, nil) when the security configuration is inaccessible or
+// missing — specifically on access-denied, on EntityNotFoundException
+// (deleted or stale name referenced by a crawler/job), and on a nil API
+// response. Callers must set StateIsNull|StateIsSet on the surrounding
+// field when this returns nil.
 func findGlueSecurityConfiguration(runtime *plugin.Runtime, region, name string) (*mqlAwsGlueSecurityConfiguration, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Glue(region)
@@ -207,6 +214,10 @@ func findGlueSecurityConfiguration(runtime *plugin.Runtime, region, name string)
 		&glue.GetSecurityConfigurationInput{Name: &name})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		var notFoundErr *glue_types.EntityNotFoundException
+		if errors.As(err, &notFoundErr) {
 			return nil, nil
 		}
 		return nil, err
