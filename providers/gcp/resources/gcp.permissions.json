@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.16.2",
-  "generated_at": "2026-05-21T15:23:44-07:00",
+  "generated_at": "2026-05-21T19:57:04-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -1496,7 +1496,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },
