@@ -909,6 +909,15 @@ package @defaults("name version") {
 
   // Package vendor
   vendor string
+
+  // Package license
+  //
+  // SPDX license expression (or upstream-reported license string).
+  // Eagerly populated where the package manager has it inline (rpm
+  // %{LICENSE}, apk APKINDEX, pacman desc); fetched on demand for dpkg
+  // (parses /usr/share/doc/<pkg>/copyright). Empty when no source
+  // exists (e.g. Windows registry DisplayName).
+  license() string
 }
 
 // File installed by a package

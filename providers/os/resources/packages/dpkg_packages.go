@@ -101,6 +101,49 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 	return pkgs, nil
 }
 
+// ParseDpkgCopyrightLicense reads the per-package DEP-5 copyright file at
+// /usr/share/doc/<pkg>/copyright and returns the first top-level
+// `License:` value. Returns the empty string when the file is missing,
+// not DEP-5, or the License field is absent. Called lazily from the
+// `license()` method on the `package` resource — only when MQL actually
+// asks for the license, so we don't pay the per-package read cost on
+// every `packages` enumeration.
+//
+// DEP-5 reference: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+// In practice many older packages use free-form copyright files where
+// the License: field is absent; we return empty rather than guessing.
+func ParseDpkgCopyrightLicense(fs afero.Fs, pkgName string) string {
+	if fs == nil || pkgName == "" {
+		return ""
+	}
+	path := "/usr/share/doc/" + pkgName + "/copyright"
+	f, err := fs.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// We only care about the first top-level `License:` field — the
+		// summary one at file header. Per-paragraph `License:` lines
+		// (after a blank line) are file-specific and not the overall
+		// package license; bail at the first blank line.
+		if line == "" {
+			break
+		}
+		if strings.HasPrefix(line, "License:") {
+			val := strings.TrimSpace(strings.TrimPrefix(line, "License:"))
+			// DEP-5 allows multi-line license bodies indented under the
+			// short name; the short name is on the same line as
+			// `License:`. Return just that short name.
+			return val
+		}
+	}
+	return ""
+}
+
 var DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-Z0-9.\-\+]+)\]\s\(([a-zA-Z0-9.\-\+]+)\s*(.*)\)(.*)$`)
 
 func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {

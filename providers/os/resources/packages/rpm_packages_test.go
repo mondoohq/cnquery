@@ -31,7 +31,7 @@ func TestRedhat8Parser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,6 +43,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "ncurses-base",
 		Version:     "6.1-7.20180224.el8",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Arch:        "noarch",
 		Description: "Descriptions of common terminals",
 		PUrl:        "pkg:rpm/redhat/ncurses-base@6.1-7.20180224.el8?arch=noarch&distro=rhel-8.4",
@@ -59,6 +60,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "libstdc++",
 		Version:     "8.4.1-1.el8",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "GNU Standard C++ Library",
 		PUrl:        "pkg:rpm/redhat/libstdc%2B%2B@8.4.1-1.el8?arch=x86_64&distro=rhel-8.4",
@@ -75,6 +77,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "iptables-libs",
 		Version:     "1.8.4-17.el8_4.1",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "iptables libraries",
 		PUrl:        "pkg:rpm/redhat/iptables-libs@1.8.4-17.el8_4.1?arch=x86_64&distro=rhel-8.4",
@@ -91,6 +94,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "openssl-libs",
 		Version:     "1:1.1.1g-15.el8_3",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "A general purpose cryptography library with TLS implementation",
@@ -109,6 +113,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "dbus-libs",
 		Version:     "1:1.12.8-12.el8_4.2",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "Libraries for accessing D-BUS",
@@ -144,6 +149,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Name:        "which",
 		Version:     "2.21-12.el8",
 		Vendor:      "Red Hat, Inc.",
+		License:     "GPLv3+",
 		Epoch:       "",
 		Arch:        "x86_64",
 		Description: "Displays where a particular program in your path is located",
@@ -180,6 +186,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 			Release: "6.ph4",
 			Arch:    "x86_64",
 			Vendor:  "VMware, Inc.",
+			License: "GPLv3+",
 			Summary: "Ncurses Libraries",
 		},
 		{
@@ -189,6 +196,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 			Release: "4.ph4",
 			Arch:    "x86_64",
 			Vendor:  "VMware, Inc.",
+			License: "GPLv3+",
 			Summary: "Bourne-Again SHell",
 		},
 		{
@@ -198,13 +206,14 @@ func TestPhoton4ImageParser(t *testing.T) {
 			Release: "4.ph4",
 			Arch:    "x86_64",
 			Vendor:  "VMware, Inc.",
+			License: "GPLv3+",
 			Summary: "sqlite3 library",
 		},
 	}
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary)
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License)
 	}
 
 	pf := &inventory.Platform{
@@ -224,6 +233,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Name:        "ncurses-libs",
 		Version:     "6.2-6.ph4",
 		Vendor:      "VMware, Inc.",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "Ncurses Libraries",
 		PUrl:        "pkg:rpm/photon%20os/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-4.0",
@@ -240,6 +250,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Name:        "bash",
 		Version:     "5.0-4.ph4",
 		Vendor:      "VMware, Inc.",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "Bourne-Again SHell",
 		PUrl:        "pkg:rpm/photon%20os/bash@5.0-4.ph4?arch=x86_64&distro=photon-4.0",
@@ -256,6 +267,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Name:        "sqlite-libs",
 		Version:     "3.38.5-4.ph4",
 		Vendor:      "VMware, Inc.",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "sqlite3 library",
 		PUrl:        "pkg:rpm/photon%20os/sqlite-libs@3.38.5-4.ph4?arch=x86_64&distro=photon-4.0",
@@ -280,13 +292,14 @@ func TestSuSEParser(t *testing.T) {
 			Release: "150000.4.6.1",
 			Arch:    "x86_64",
 			Vendor:  "SUSE LLC <https://www.suse.com/>",
+			License: "GPLv3+",
 			Summary: "Print lines matching a pattern",
 		},
 	}
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary)
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s__%s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License)
 	}
 
 	pf := &inventory.Platform{
@@ -307,6 +320,7 @@ func TestSuSEParser(t *testing.T) {
 		Version: "3.1-150000.4.6.1",
 		// Note that the tag <https://suse.com/> has been removed.
 		Vendor:      "SUSE LLC",
+		License:     "GPLv3+",
 		Arch:        "x86_64",
 		Description: "Print lines matching a pattern",
 		PUrl:        "pkg:rpm/suse/grep@3.1-150000.4.6.1?arch=x86_64&distro=suse-15.6",
@@ -366,7 +380,7 @@ func TestOracleParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -405,7 +419,7 @@ func TestAlmaLinuxParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -437,7 +451,7 @@ func TestRedHatModularParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}

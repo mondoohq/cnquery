@@ -16,3 +16,6 @@ x86_64
 %DEPENDS%
 glibc
 zlib
+
+%LICENSE%
+Apache-2.0

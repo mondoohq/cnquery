@@ -121,6 +121,7 @@ func TestParsePacmanDB(t *testing.T) {
 	assert.Contains(t, zlib.Description, "Compression library")
 	assert.Equal(t, "pacman", zlib.Format)
 	assert.Contains(t, zlib.PUrl, "pkg:alpm/arch/zlib")
+	assert.Equal(t, "custom:Zlib", zlib.License)
 
 	var openssl *packages.Package
 	for i := range pkgs {
@@ -132,4 +133,5 @@ func TestParsePacmanDB(t *testing.T) {
 	require.NotNil(t, openssl)
 	assert.Equal(t, "3.2.1-1", openssl.Version)
 	assert.Contains(t, openssl.Description, "Open Source toolkit")
+	assert.Equal(t, "Apache-2.0", openssl.License)
 }

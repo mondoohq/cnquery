@@ -6,6 +6,7 @@ package packages
 import (
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -172,4 +173,32 @@ func TestDpkgUpdateParser(t *testing.T) {
 	assert.Equal(t, "ncurses-bin", update.Name, "pkg name detected")
 	assert.Equal(t, "6.1-1ubuntu1", update.Version, "pkg version detected")
 	assert.Equal(t, "6.1-1ubuntu1.18.04", update.Available, "pkg available version detected")
+}
+
+func TestParseDpkgCopyrightLicense(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	// DEP-5 copyright file with a top-level License: field.
+	const dep5 = `Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: bash
+Source: https://www.gnu.org/software/bash/
+License: GPL-3+
+
+Files: *
+Copyright: 1989-2022 Free Software Foundation, Inc.
+License: GPL-3+
+`
+	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/bash/copyright", []byte(dep5), 0o644))
+
+	// Free-form copyright file (older packages) with no top-level License: header.
+	const freeform = `This package was debianized by John Doe <john@example.org>.
+See /usr/share/common-licenses/GPL-2 for the full license text.
+`
+	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/legacy/copyright", []byte(freeform), 0o644))
+
+	assert.Equal(t, "GPL-3+", ParseDpkgCopyrightLicense(fs, "bash"))
+	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "legacy"))
+	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "missing"))
+	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, ""))
+	assert.Equal(t, "", ParseDpkgCopyrightLicense(nil, "bash"))
 }

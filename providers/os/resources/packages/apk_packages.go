@@ -105,6 +105,8 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg.Origin = m[2] // origin
 		case "T":
 			pkg.Description = m[2] // description
+		case "L":
+			pkg.License = m[2] // license (SPDX expression)
 		}
 	}
 

@@ -2471,6 +2471,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"package.vendor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetVendor()).ToDataRes(types.String)
 	},
+	"package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetLicense()).ToDataRes(types.String)
+	},
 	"pkgFileInfo.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkgFileInfo).GetPath()).ToDataRes(types.String)
 	},
@@ -8171,6 +8174,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"package.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackage).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"pkgFileInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19306,6 +19313,7 @@ type mqlPackage struct {
 	Outdated    plugin.TValue[bool]
 	Files       plugin.TValue[[]any]
 	Vendor      plugin.TValue[string]
+	License     plugin.TValue[string]
 }
 
 // createPackage creates a new instance of this resource
@@ -19421,6 +19429,12 @@ func (c *mqlPackage) GetFiles() *plugin.TValue[[]any] {
 
 func (c *mqlPackage) GetVendor() *plugin.TValue[string] {
 	return &c.Vendor
+}
+
+func (c *mqlPackage) GetLicense() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.License, func() (string, error) {
+		return c.license()
+	})
 }
 
 // mqlPkgFileInfo for the pkgFileInfo resource

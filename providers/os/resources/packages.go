@@ -77,6 +77,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Files.State = plugin.StateIsSet | plugin.StateIsNull
+	res.License.State = plugin.StateIsSet | plugin.StateIsNull
 	res.__id, _ = res.id()
 	return nil, res, nil
 }
@@ -94,6 +95,22 @@ func (p *mqlPackage) outdated() (bool, error) {
 
 func (p *mqlPackage) origin() (string, error) {
 	return "", nil
+}
+
+// license is the lazy fallback for package managers that don't surface
+// license inline. Used today for dpkg, which keeps license metadata in
+// the per-package copyright file rather than in /var/lib/dpkg/status.
+// Other managers populate License eagerly during list() and never reach
+// this method (see plugin.GetOrCompute wrapper in the generated code).
+func (p *mqlPackage) license() (string, error) {
+	if p.Format.Data != packages.DpkgPkgFormat || p.Name.Data == "" {
+		return "", nil
+	}
+	conn, ok := p.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return "", nil
+	}
+	return packages.ParseDpkgCopyrightLicense(conn.FileSystem(), p.Name.Data), nil
 }
 
 func (p *mqlPackage) files() ([]any, error) {
@@ -216,6 +233,7 @@ func (x *mqlPackages) list() ([]any, error) {
 			"purl":        llx.StringData(osPkg.PUrl),
 			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
 			"vendor":      llx.StringData(osPkg.Vendor),
+			"license":     llx.StringData(osPkg.License),
 		})
 		if err != nil {
 			return nil, err

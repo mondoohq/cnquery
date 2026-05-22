@@ -33,3 +33,6 @@ glibc
 
 %PROVIDES%
 libz.so=1-64
+
+%LICENSE%
+custom:Zlib

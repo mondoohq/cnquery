@@ -130,8 +130,14 @@ func parsePacmanDesc(pf *inventory.Platform, afs *afero.Afero, descPath string) 
 		Version:     version,
 		Arch:        fields["%ARCH%"],
 		Description: fields["%DESC%"],
-		Format:      PacmanPkgFormat,
-		PUrl:        purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
+		// Pacman desc files carry %LICENSE% as a multi-line block, one
+		// SPDX identifier per line; parsePacmanDescSections keeps only
+		// the first which is correct for most packages. The fast
+		// `pacman -Q` path doesn't surface license at all; that gap is
+		// expected and gets filled in only when the FS fallback runs.
+		License: fields["%LICENSE%"],
+		Format:  PacmanPkgFormat,
+		PUrl:    purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
 	}, nil
 }
 

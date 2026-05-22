@@ -48,6 +48,11 @@ type Package struct {
 
 	// This is used for the CPE generation and exposed via MQL
 	Vendor string `json:"vendor,omitempty"`
+
+	// SPDX license expression or upstream-reported license string.
+	// Empty when the backend has no source for it (e.g. Windows
+	// registry — DisplayName has no license field).
+	License string `json:"license,omitempty"`
 }
 
 type FileRecord struct {

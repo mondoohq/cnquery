@@ -41,6 +41,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Epoch:       "1510953106",
 		Arch:        "x86_64",
 		Description: "the musl c library (libc) implementation",
+		License:     "MIT",
 		Origin:      "musl",
 		PUrl:        "pkg:apk/alpine/musl@1510953106:1.1.18-r2?arch=x86_64&distro=alpine-3.7.0&epoch=1510953106",
 		CPEs: []string{
@@ -58,6 +59,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 
 	p = Package{
 		Name:        "libressl2.6-libcrypto",
+		License:     "custom",
 		Version:     "1510257703:2.6.3-r0",
 		Epoch:       "1510257703",
 		Arch:        "x86_64",
@@ -79,6 +81,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 
 	p = Package{
 		Name:        "libressl2.6-libssl",
+		License:     "custom",
 		Version:     "1510257703:2.6.3-r0",
 		Epoch:       "1510257703",
 		Arch:        "x86_64",
@@ -100,6 +103,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 
 	p = Package{
 		Name:        "apk-tools",
+		License:     "GPL2",
 		Version:     "1515485577:2.8.2-r0",
 		Epoch:       "1515485577",
 		Arch:        "x86_64",
@@ -121,6 +125,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 
 	p = Package{
 		Name:        "busybox",
+		License:     "GPL2",
 		Version:     "1513075346:1.27.2-r7",
 		Epoch:       "1513075346",
 		Arch:        "x86_64",
@@ -142,6 +147,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 
 	p = Package{
 		Name:        "alpine-baselayout",
+		License:     "GPL2",
 		Version:     "1510075862:3.0.5-r2",
 		Epoch:       "1510075862",
 		Arch:        "x86_64",

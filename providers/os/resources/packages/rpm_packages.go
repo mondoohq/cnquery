@@ -30,11 +30,11 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)(?:__(.+))?$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)(?:__(.+))?$`)
 
 // ParseRpmPackages parses output from:
 // %{MODULARITYLABEL} is only added on supported systems
-// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\n'
+// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
@@ -62,12 +62,19 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 
 			vendor := cleanupVendorName(m[5])
 
-			modularity := ""
-			if len(m) > 6 {
-				modularity = m[7]
+			license := m[7]
+			// "(none)" is the rpm-format sentinel for missing fields;
+			// surface it as empty so we never ship "(none)" as a license.
+			if license == "(none)" {
+				license = ""
 			}
 
-			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], modularity)
+			modularity := ""
+			if len(m) > 8 {
+				modularity = m[8]
+			}
+
+			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], license, modularity)
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -76,7 +83,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	return pkgs
 }
 
-func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, modularity string) Package {
+func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, license, modularity string) Package {
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
@@ -106,6 +113,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 		Format:      RpmPkgFormat,
 		CPEs:        cpes,
 		Vendor:      vendor,
+		License:     license,
 		PUrl: purl.NewPackageURL(pf, purl.TypeRPM, name, version,
 			purl.WithArch(arch),
 			purl.WithEpoch(epoch),
@@ -200,14 +208,14 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}" + modularity + "\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}" + modularity + "\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}" + modularity + "\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}" + modularity + "\\n"
 	}
 
 	return format
@@ -312,7 +320,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.Modularitylabel)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.License, pkg.Modularitylabel)
 
 		rpmPkg.FilesAvailable = PkgFilesIncluded
 		rpmPkg.Files = []FileRecord{
