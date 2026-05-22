@@ -15,7 +15,7 @@ func (c *mqlCloudflareAccountMember) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
-	return c.Id.Data, nil
+	return "cloudflare/account/member/" + c.Id.Data, nil
 }
 
 func (c *mqlCloudflareAccount) members() ([]any, error) {

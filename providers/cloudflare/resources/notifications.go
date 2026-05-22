@@ -5,6 +5,7 @@ package resources
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -22,6 +23,18 @@ func (c *mqlCloudflareAccount) notificationPolicies() ([]any, error) {
 	resp, err := conn.Cf.ListNotificationPolicies(context.TODO(), c.Id.Data)
 	if err != nil {
 		return nil, err
+	}
+
+	// The cloudflare-go v0.117.0 SDK does not expose pagination on
+	// ListNotificationPolicies, even though the underlying API does. If the
+	// response is truncated, warn so the operator knows the result set may
+	// be incomplete.
+	if resp.ResultInfo.HasMorePages() {
+		log.Warn().
+			Int("returned", len(resp.Result)).
+			Int("total", resp.ResultInfo.Total).
+			Str("account", c.Id.Data).
+			Msg("cloudflare> notification policies truncated; SDK does not support pagination on this endpoint")
 	}
 
 	results := []any{}

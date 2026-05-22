@@ -14,7 +14,7 @@ func (c *mqlCloudflareAccountAuditLog) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
-	return "cloudflare/account/" + c.OwnerId.Data + "/auditLog/" + c.Id.Data, nil
+	return "cloudflare/account/auditLog/" + c.Id.Data, nil
 }
 
 // auditLogs returns the first page of audit log entries for the account
