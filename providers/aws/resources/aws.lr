@@ -8283,8 +8283,16 @@ private aws.cloudwatch.logAnomalyDetector @defaults("detectorName anomalyDetecto
 // origins, default and ordered cache behaviors, viewer-protocol policy, WAF
 // and ACM associations, logging, and custom error responses), `functions()`
 // for the lightweight viewer-request/response functions, `anycastIpLists()`
-// for static-IP allocations, and `trustStores()` for the CA bundles used
-// for origin mTLS and Distribution Tenants.
+// for static-IP allocations, `trustStores()` for the CA bundles used for
+// origin mTLS and Distribution Tenants, `responseHeadersPolicies()`,
+// `cachePolicies()`, `originRequestPolicies()`, and
+// `continuousDeploymentPolicies()` for the reusable policy objects that
+// distributions reference, `originAccessControls()` for the OAC
+// configurations that govern signed origin access, `keyValueStores()` for
+// the data stores that CloudFront Functions read from, and `publicKeys()`,
+// `keyGroups()`, `fieldLevelEncryptionConfigs()`, and
+// `fieldLevelEncryptionProfiles()` for signed-URL and field-level
+// encryption material.
 aws.cloudfront @defaults("distributions functions") {
   // List of CloudFront distributions
   distributions() []aws.cloudfront.distribution
@@ -8294,6 +8302,26 @@ aws.cloudfront @defaults("distributions functions") {
   anycastIpLists() []aws.cloudfront.anycastIpList
   // List of CloudFront trust stores (used for origin mTLS and Distribution Tenants)
   trustStores() []aws.cloudfront.trustStore
+  // Response headers policies (managed and custom) defined in the account
+  responseHeadersPolicies() []aws.cloudfront.responseHeadersPolicy
+  // Origin access controls defined in the account
+  originAccessControls() []aws.cloudfront.originAccessControl
+  // Cache policies (managed and custom) defined in the account
+  cachePolicies() []aws.cloudfront.cachePolicy
+  // Origin request policies (managed and custom) defined in the account
+  originRequestPolicies() []aws.cloudfront.originRequestPolicy
+  // Continuous deployment policies defined in the account
+  continuousDeploymentPolicies() []aws.cloudfront.continuousDeploymentPolicy
+  // Key value stores defined in the account
+  keyValueStores() []aws.cloudfront.keyValueStore
+  // Public keys uploaded to CloudFront for signed URLs/cookies and field-level encryption
+  publicKeys() []aws.cloudfront.publicKey
+  // Key groups defined in the account
+  keyGroups() []aws.cloudfront.keyGroup
+  // Field-level encryption configurations defined in the account
+  fieldLevelEncryptionConfigs() []aws.cloudfront.fieldLevelEncryptionConfig
+  // Field-level encryption profiles defined in the account
+  fieldLevelEncryptionProfiles() []aws.cloudfront.fieldLevelEncryptionProfile
 }
 
 // Amazon CloudFront trust store (set of CA certificates for origin mTLS / Distribution Tenants)
@@ -8440,6 +8468,265 @@ private aws.cloudfront.function @defaults("name status") {
   runtime string
   // Tags applied to the function
   tags() map[string]string
+}
+
+// Amazon CloudFront response headers policy
+//
+// Examine the response headers CloudFront adds to or removes from
+// responses sent to viewers. The policy carries CORS settings,
+// security-header directives (HSTS, X-Frame-Options, Referrer-Policy,
+// Content-Security-Policy, X-Content-Type-Options, X-XSS-Protection),
+// custom headers, a server-timing configuration, and the list of headers
+// to remove. `type` is `managed` for AWS-managed policies and `custom`
+// for ones created in the account.
+private aws.cloudfront.responseHeadersPolicy @defaults("name type lastModifiedTime") {
+  // Unique identifier of the response headers policy
+  id string
+  // Policy type
+  //
+  // One of `managed` (created by AWS) or `custom` (created in this account).
+  type string
+  // Name of the policy
+  name string
+  // Comment describing the policy (empty when none was provided)
+  comment string
+  // When the policy was last modified
+  lastModifiedTime time
+  // CORS configuration for the policy
+  //
+  // Shape (when present): `{accessControlAllowOrigins: [...], accessControlAllowHeaders: [...], accessControlAllowMethods: [...], accessControlAllowCredentials: bool, accessControlExposeHeaders: [...], accessControlMaxAgeSec: int, originOverride: bool}`. Null when CORS is not configured on the policy.
+  corsConfig dict
+  // Security-related response headers configuration
+  //
+  // Shape (any subset may be present): `{xssProtection: {override, protection, modeBlock, reportUri}, frameOptions: {override, frameOption}, referrerPolicy: {override, referrerPolicy}, contentSecurityPolicy: {override, contentSecurityPolicy}, contentTypeOptions: {override}, strictTransportSecurity: {override, includeSubdomains, preload, accessControlMaxAgeSec}}`. Null when no security headers are configured.
+  securityHeadersConfig dict
+  // Server-timing header configuration
+  //
+  // Shape (when present): `{enabled: bool, samplingRate: float}`. Null when the server-timing header is not configured on the policy.
+  serverTimingHeadersConfig dict
+  // Custom HTTP response headers the policy adds
+  //
+  // Each item shape: `{header: "<name>", value: "<value>", override: bool}`.
+  customHeadersConfig []dict
+  // HTTP header names the policy removes from responses
+  removeHeadersConfig []string
+}
+
+// Amazon CloudFront origin access control (OAC)
+//
+// Examine the OAC configurations that authenticate CloudFront's
+// requests to private origins such as S3 buckets, MediaStore containers,
+// MediaPackage v2 channels, and Lambda Function URLs. The `signingBehavior`
+// field controls when CloudFront signs origin requests; the
+// `originAccessControlOriginType` distinguishes which origin family the
+// OAC targets.
+private aws.cloudfront.originAccessControl @defaults("name originAccessControlOriginType signingBehavior") {
+  // Unique identifier of the origin access control
+  id string
+  // Name of the origin access control
+  name string
+  // Description of the origin access control (empty when none was provided)
+  description string
+  // Signing protocol used to authenticate origin requests
+  //
+  // The only valid value is `sigv4`.
+  signingProtocol string
+  // When CloudFront signs requests sent to the origin
+  //
+  // One of `always`, `never`, or `no-override`.
+  signingBehavior string
+  // Type of origin the OAC targets
+  //
+  // One of `s3`, `mediastore`, `mediapackagev2`, or `lambda`.
+  originAccessControlOriginType string
+}
+
+// Amazon CloudFront cache policy
+//
+// Examine the values CloudFront includes in the cache key (and forwards
+// to the origin) for cache behaviors that reference this policy: the
+// HTTP headers, cookies, and query strings to include, whether to honor
+// gzip/Brotli accept-encoding, and the minimum, default, and maximum
+// time-to-live values applied to cached objects. `type` is `managed` for
+// AWS-managed policies and `custom` for ones created in the account.
+private aws.cloudfront.cachePolicy @defaults("name type defaultTtl maxTtl") {
+  // Unique identifier of the cache policy
+  id string
+  // Policy type
+  //
+  // One of `managed` (created by AWS) or `custom` (created in this account).
+  type string
+  // Name of the policy
+  name string
+  // Comment describing the policy (empty when none was provided)
+  comment string
+  // When the policy was last modified
+  lastModifiedTime time
+  // Default TTL (in seconds) applied when the origin does not return Cache-Control/Expires
+  defaultTtl int
+  // Maximum TTL (in seconds) CloudFront honors for objects matching the policy
+  maxTtl int
+  // Minimum TTL (in seconds) CloudFront enforces regardless of origin Cache-Control directives
+  minTtl int
+  // Parameters that determine the cache key and what is forwarded to the origin
+  //
+  // Shape: `{enableAcceptEncodingGzip: bool, enableAcceptEncodingBrotli: bool, headersConfig: {headerBehavior: "none"|"whitelist", headers: [...]}, cookiesConfig: {cookieBehavior: "none"|"whitelist"|"allExcept"|"all", cookies: [...]}, queryStringsConfig: {queryStringBehavior: "none"|"whitelist"|"allExcept"|"all", queryStrings: [...]}}`. Null when the policy does not specify cache-key parameters.
+  parametersInCacheKeyAndForwardedToOrigin dict
+}
+
+// Amazon CloudFront origin request policy
+//
+// Examine which values CloudFront forwards from viewer requests to the
+// origin without including them in the cache key. `type` is `managed` for
+// AWS-managed policies and `custom` for ones created in the account.
+private aws.cloudfront.originRequestPolicy @defaults("name type lastModifiedTime") {
+  // Unique identifier of the origin request policy
+  id string
+  // Policy type
+  //
+  // One of `managed` (created by AWS) or `custom` (created in this account).
+  type string
+  // Name of the policy
+  name string
+  // Comment describing the policy (empty when none was provided)
+  comment string
+  // When the policy was last modified
+  lastModifiedTime time
+  // HTTP headers forwarded to the origin
+  //
+  // Shape: `{headerBehavior: "none"|"whitelist"|"allViewer"|"allViewerAndWhitelistCloudFront"|"allExcept", headers: [...]}`.
+  headersConfig dict
+  // Cookies forwarded to the origin
+  //
+  // Shape: `{cookieBehavior: "none"|"whitelist"|"all"|"allExcept", cookies: [...]}`.
+  cookiesConfig dict
+  // Query strings forwarded to the origin
+  //
+  // Shape: `{queryStringBehavior: "none"|"whitelist"|"all"|"allExcept", queryStrings: [...]}`.
+  queryStringsConfig dict
+}
+
+// Amazon CloudFront continuous deployment policy
+//
+// Examine the configuration that routes a portion of viewer traffic from
+// a primary distribution to a staging distribution. The `trafficConfig`
+// field describes whether routing is based on a request header
+// (`SingleHeader`) or a traffic-weight split (`SingleWeight`).
+private aws.cloudfront.continuousDeploymentPolicy @defaults("id enabled lastModifiedTime") {
+  // Unique identifier of the continuous deployment policy
+  id string
+  // When the policy was last modified
+  lastModifiedTime time
+  // CloudFront domain names of the staging distributions associated with the policy
+  stagingDistributionDnsNames []string
+  // Whether the policy is enabled and routing traffic to the staging distribution
+  enabled bool
+  // Routing configuration that selects which viewer requests go to the staging distribution
+  //
+  // Shape: `{type: "SingleWeight"|"SingleHeader", singleWeightConfig: {weight: float, sessionStickinessConfig: {idleTtl, maximumTtl}}, singleHeaderConfig: {header, value}}`. Only the field matching `type` is populated.
+  trafficConfig dict
+}
+
+// Amazon CloudFront key value store
+//
+// Examine the key-value stores associated with CloudFront Functions. A
+// store keeps data separate from function code so values can change
+// without republishing a function.
+private aws.cloudfront.keyValueStore @defaults("name status lastModifiedTime") {
+  // Unique identifier of the key value store
+  id string
+  // Name of the key value store
+  name string
+  // Comment describing the key value store (empty when none was provided)
+  comment string
+  // Provisioning status of the key value store
+  status string
+  // ARN of the key value store
+  arn string
+  // When the key value store was last modified
+  lastModifiedTime time
+}
+
+// Amazon CloudFront public key
+//
+// Examine the public keys uploaded to CloudFront for use with signed
+// URLs/cookies and field-level encryption. The `encodedKey` field
+// returns the PEM-encoded public key material.
+private aws.cloudfront.publicKey @defaults("name createdTime") {
+  // Unique identifier of the public key
+  id string
+  // Name of the public key
+  name string
+  // Comment describing the public key (empty when none was provided)
+  comment string
+  // PEM-encoded public key material
+  encodedKey string
+  // When the public key was uploaded to CloudFront
+  createdTime time
+}
+
+// Amazon CloudFront key group
+//
+// Examine the groups of public keys CloudFront uses to verify the
+// signatures of signed URLs and signed cookies. The `items` field lists
+// the public key identifiers and `publicKeys()` returns the matching
+// `aws.cloudfront.publicKey` resources.
+private aws.cloudfront.keyGroup @defaults("name lastModifiedTime") {
+  // Unique identifier of the key group
+  id string
+  // Name of the key group
+  name string
+  // Comment describing the key group (empty when none was provided)
+  comment string
+  // When the key group was last modified
+  lastModifiedTime time
+  // Identifiers of the public keys included in the group
+  items []string
+  // Public keys included in the group
+  publicKeys() []aws.cloudfront.publicKey
+}
+
+// Amazon CloudFront field-level encryption configuration
+//
+// Examine the field-level encryption configurations the account can
+// attach to cache behaviors. The `queryArgProfileConfig` and
+// `contentTypeProfileConfig` fields describe how a request's query
+// argument or content type selects a field-level encryption profile.
+private aws.cloudfront.fieldLevelEncryptionConfig @defaults("id lastModifiedTime") {
+  // Unique identifier of the field-level encryption configuration
+  id string
+  // When the configuration was last modified
+  lastModifiedTime time
+  // Comment describing the configuration (empty when none was provided)
+  comment string
+  // Query-argument-based profile selection
+  //
+  // Shape: `{forwardWhenQueryArgProfileIsUnknown: bool, profiles: [{queryArg: "<name>", profileId: "<id>"}]}`. Null when query-argument profile selection is not configured.
+  queryArgProfileConfig dict
+  // Content-type-based profile selection
+  //
+  // Shape: `{forwardWhenContentTypeIsUnknown: bool, profiles: [{contentType: "<mime>", profileId: "<id>", format: "URLEncoded"}]}`. Null when content-type profile selection is not configured.
+  contentTypeProfileConfig dict
+}
+
+// Amazon CloudFront field-level encryption profile
+//
+// Examine the profiles that pair public keys with the request fields
+// they encrypt. `encryptionEntities` enumerates the (publicKeyId,
+// providerId, fieldPatterns) tuples that drive encryption.
+private aws.cloudfront.fieldLevelEncryptionProfile @defaults("name lastModifiedTime") {
+  // Unique identifier of the field-level encryption profile
+  id string
+  // Name of the profile
+  name string
+  // Comment describing the profile (empty when none was provided)
+  comment string
+  // When the profile was last modified
+  lastModifiedTime time
+  // Encryption entities defined for the profile
+  //
+  // Each item shape: `{publicKeyId: "<id>", providerId: "<provider>", fieldPatterns: ["<pattern>", ...]}`.
+  encryptionEntities []dict
 }
 
 // AWS CloudTrail

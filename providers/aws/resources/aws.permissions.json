@@ -103,8 +103,18 @@
     "cloudfront:GetDistribution",
     "cloudfront:GetTrustStore",
     "cloudfront:ListAnycastIpLists",
+    "cloudfront:ListCachePolicies",
+    "cloudfront:ListContinuousDeploymentPolicies",
     "cloudfront:ListDistributions",
+    "cloudfront:ListFieldLevelEncryptionConfigs",
+    "cloudfront:ListFieldLevelEncryptionProfiles",
     "cloudfront:ListFunctions",
+    "cloudfront:ListKeyGroups",
+    "cloudfront:ListKeyValueStores",
+    "cloudfront:ListOriginAccessControls",
+    "cloudfront:ListOriginRequestPolicies",
+    "cloudfront:ListPublicKeys",
+    "cloudfront:ListResponseHeadersPolicies",
     "cloudfront:ListTagsForResource",
     "cloudfront:ListTrustStores",
     "cloudtrail:DescribeTrails",
@@ -1430,16 +1440,76 @@
       "source_file": "aws_cloudfront.go"
     },
     {
+      "permission": "cloudfront:ListCachePolicies",
+      "service": "cloudfront",
+      "action": "ListCachePolicies",
+      "source_file": "aws_cloudfront_policies.go"
+    },
+    {
+      "permission": "cloudfront:ListContinuousDeploymentPolicies",
+      "service": "cloudfront",
+      "action": "ListContinuousDeploymentPolicies",
+      "source_file": "aws_cloudfront_policies.go"
+    },
+    {
       "permission": "cloudfront:ListDistributions",
       "service": "cloudfront",
       "action": "ListDistributions",
       "source_file": "aws_cloudfront.go"
     },
     {
+      "permission": "cloudfront:ListFieldLevelEncryptionConfigs",
+      "service": "cloudfront",
+      "action": "ListFieldLevelEncryptionConfigs",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
+      "permission": "cloudfront:ListFieldLevelEncryptionProfiles",
+      "service": "cloudfront",
+      "action": "ListFieldLevelEncryptionProfiles",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
       "permission": "cloudfront:ListFunctions",
       "service": "cloudfront",
       "action": "ListFunctions",
       "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:ListKeyGroups",
+      "service": "cloudfront",
+      "action": "ListKeyGroups",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
+      "permission": "cloudfront:ListKeyValueStores",
+      "service": "cloudfront",
+      "action": "ListKeyValueStores",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
+      "permission": "cloudfront:ListOriginAccessControls",
+      "service": "cloudfront",
+      "action": "ListOriginAccessControls",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
+      "permission": "cloudfront:ListOriginRequestPolicies",
+      "service": "cloudfront",
+      "action": "ListOriginRequestPolicies",
+      "source_file": "aws_cloudfront_policies.go"
+    },
+    {
+      "permission": "cloudfront:ListPublicKeys",
+      "service": "cloudfront",
+      "action": "ListPublicKeys",
+      "source_file": "aws_cloudfront_keys.go"
+    },
+    {
+      "permission": "cloudfront:ListResponseHeadersPolicies",
+      "service": "cloudfront",
+      "action": "ListResponseHeadersPolicies",
+      "source_file": "aws_cloudfront_policies.go"
     },
     {
       "permission": "cloudfront:ListTagsForResource",

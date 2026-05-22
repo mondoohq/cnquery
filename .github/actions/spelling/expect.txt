@@ -75,6 +75,7 @@ blackhole
 blr
 breakglass
 broadwell
+brotli
 bumpable
 bwawxf
 BXdl
@@ -370,6 +371,8 @@ mcp
 mcr
 mde
 mebibytes
+mediapackagev
+mediastore
 memorydb
 memorystore
 messagestoragepolicy
@@ -428,6 +431,7 @@ nokeys
 NONSHARDED
 noreply
 Noreuse
+nosniff
 notebookinstancedetails
 notif
 npmjs
@@ -581,6 +585,7 @@ sfo
 sgp
 signin
 Signout
+sigv
 singlequeryargument
 sizeconstraintstatement
 skaffold

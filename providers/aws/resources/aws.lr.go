@@ -367,6 +367,16 @@ const (
 	ResourceAwsCloudfrontDistributionLoggingConfig                              string = "aws.cloudfront.distribution.loggingConfig"
 	ResourceAwsCloudfrontDistributionOrigin                                     string = "aws.cloudfront.distribution.origin"
 	ResourceAwsCloudfrontFunction                                               string = "aws.cloudfront.function"
+	ResourceAwsCloudfrontResponseHeadersPolicy                                  string = "aws.cloudfront.responseHeadersPolicy"
+	ResourceAwsCloudfrontOriginAccessControl                                    string = "aws.cloudfront.originAccessControl"
+	ResourceAwsCloudfrontCachePolicy                                            string = "aws.cloudfront.cachePolicy"
+	ResourceAwsCloudfrontOriginRequestPolicy                                    string = "aws.cloudfront.originRequestPolicy"
+	ResourceAwsCloudfrontContinuousDeploymentPolicy                             string = "aws.cloudfront.continuousDeploymentPolicy"
+	ResourceAwsCloudfrontKeyValueStore                                          string = "aws.cloudfront.keyValueStore"
+	ResourceAwsCloudfrontPublicKey                                              string = "aws.cloudfront.publicKey"
+	ResourceAwsCloudfrontKeyGroup                                               string = "aws.cloudfront.keyGroup"
+	ResourceAwsCloudfrontFieldLevelEncryptionConfig                             string = "aws.cloudfront.fieldLevelEncryptionConfig"
+	ResourceAwsCloudfrontFieldLevelEncryptionProfile                            string = "aws.cloudfront.fieldLevelEncryptionProfile"
 	ResourceAwsCloudtrail                                                       string = "aws.cloudtrail"
 	ResourceAwsCloudtrailTrail                                                  string = "aws.cloudtrail.trail"
 	ResourceAwsCloudtrailTrailEventSelector                                     string = "aws.cloudtrail.trail.eventSelector"
@@ -2234,6 +2244,46 @@ func init() {
 		"aws.cloudfront.function": {
 			// to override args, implement: initAwsCloudfrontFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudfrontFunction,
+		},
+		"aws.cloudfront.responseHeadersPolicy": {
+			// to override args, implement: initAwsCloudfrontResponseHeadersPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontResponseHeadersPolicy,
+		},
+		"aws.cloudfront.originAccessControl": {
+			// to override args, implement: initAwsCloudfrontOriginAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontOriginAccessControl,
+		},
+		"aws.cloudfront.cachePolicy": {
+			// to override args, implement: initAwsCloudfrontCachePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontCachePolicy,
+		},
+		"aws.cloudfront.originRequestPolicy": {
+			// to override args, implement: initAwsCloudfrontOriginRequestPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontOriginRequestPolicy,
+		},
+		"aws.cloudfront.continuousDeploymentPolicy": {
+			// to override args, implement: initAwsCloudfrontContinuousDeploymentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontContinuousDeploymentPolicy,
+		},
+		"aws.cloudfront.keyValueStore": {
+			// to override args, implement: initAwsCloudfrontKeyValueStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontKeyValueStore,
+		},
+		"aws.cloudfront.publicKey": {
+			Init:   initAwsCloudfrontPublicKey,
+			Create: createAwsCloudfrontPublicKey,
+		},
+		"aws.cloudfront.keyGroup": {
+			// to override args, implement: initAwsCloudfrontKeyGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontKeyGroup,
+		},
+		"aws.cloudfront.fieldLevelEncryptionConfig": {
+			// to override args, implement: initAwsCloudfrontFieldLevelEncryptionConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontFieldLevelEncryptionConfig,
+		},
+		"aws.cloudfront.fieldLevelEncryptionProfile": {
+			// to override args, implement: initAwsCloudfrontFieldLevelEncryptionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontFieldLevelEncryptionProfile,
 		},
 		"aws.cloudtrail": {
 			// to override args, implement: initAwsCloudtrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13492,6 +13542,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.trustStores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfront).GetTrustStores()).ToDataRes(types.Array(types.Resource("aws.cloudfront.trustStore")))
 	},
+	"aws.cloudfront.responseHeadersPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetResponseHeadersPolicies()).ToDataRes(types.Array(types.Resource("aws.cloudfront.responseHeadersPolicy")))
+	},
+	"aws.cloudfront.originAccessControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetOriginAccessControls()).ToDataRes(types.Array(types.Resource("aws.cloudfront.originAccessControl")))
+	},
+	"aws.cloudfront.cachePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetCachePolicies()).ToDataRes(types.Array(types.Resource("aws.cloudfront.cachePolicy")))
+	},
+	"aws.cloudfront.originRequestPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetOriginRequestPolicies()).ToDataRes(types.Array(types.Resource("aws.cloudfront.originRequestPolicy")))
+	},
+	"aws.cloudfront.continuousDeploymentPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetContinuousDeploymentPolicies()).ToDataRes(types.Array(types.Resource("aws.cloudfront.continuousDeploymentPolicy")))
+	},
+	"aws.cloudfront.keyValueStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetKeyValueStores()).ToDataRes(types.Array(types.Resource("aws.cloudfront.keyValueStore")))
+	},
+	"aws.cloudfront.publicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetPublicKeys()).ToDataRes(types.Array(types.Resource("aws.cloudfront.publicKey")))
+	},
+	"aws.cloudfront.keyGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetKeyGroups()).ToDataRes(types.Array(types.Resource("aws.cloudfront.keyGroup")))
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetFieldLevelEncryptionConfigs()).ToDataRes(types.Array(types.Resource("aws.cloudfront.fieldLevelEncryptionConfig")))
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetFieldLevelEncryptionProfiles()).ToDataRes(types.Array(types.Resource("aws.cloudfront.fieldLevelEncryptionProfile")))
+	},
 	"aws.cloudfront.trustStore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontTrustStore).GetId()).ToDataRes(types.String)
 	},
@@ -13671,6 +13751,201 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.function.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFunction).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cloudfront.responseHeadersPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.responseHeadersPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.responseHeadersPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.responseHeadersPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.responseHeadersPolicy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.responseHeadersPolicy.corsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetCorsConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.responseHeadersPolicy.securityHeadersConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetSecurityHeadersConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.responseHeadersPolicy.serverTimingHeadersConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetServerTimingHeadersConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.responseHeadersPolicy.customHeadersConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetCustomHeadersConfig()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cloudfront.responseHeadersPolicy.removeHeadersConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontResponseHeadersPolicy).GetRemoveHeadersConfig()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudfront.originAccessControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originAccessControl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originAccessControl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originAccessControl.signingProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetSigningProtocol()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originAccessControl.signingBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetSigningBehavior()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originAccessControl.originAccessControlOriginType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginAccessControl).GetOriginAccessControlOriginType()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.cachePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.cachePolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.cachePolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.cachePolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.cachePolicy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.cachePolicy.defaultTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetDefaultTtl()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.cachePolicy.maxTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetMaxTtl()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.cachePolicy.minTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetMinTtl()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.cachePolicy.parametersInCacheKeyAndForwardedToOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontCachePolicy).GetParametersInCacheKeyAndForwardedToOrigin()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.originRequestPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originRequestPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originRequestPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originRequestPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.originRequestPolicy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.originRequestPolicy.headersConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetHeadersConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.originRequestPolicy.cookiesConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetCookiesConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.originRequestPolicy.queryStringsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontOriginRequestPolicy).GetQueryStringsConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.stagingDistributionDnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).GetStagingDistributionDnsNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.trafficConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).GetTrafficConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.keyValueStore.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyValueStore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyValueStore.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyValueStore.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyValueStore.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyValueStore.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyValueStore).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.publicKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontPublicKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.publicKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontPublicKey).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.publicKey.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontPublicKey).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.publicKey.encodedKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontPublicKey).GetEncodedKey()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.publicKey.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontPublicKey).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.keyGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyGroup.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.keyGroup.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.keyGroup.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetItems()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudfront.keyGroup.publicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontKeyGroup).GetPublicKeys()).ToDataRes(types.Array(types.Resource("aws.cloudfront.publicKey")))
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.queryArgProfileConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).GetQueryArgProfileConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.contentTypeProfileConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).GetContentTypeProfileConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.encryptionEntities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetEncryptionEntities()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.cloudtrail.trails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrail).GetTrails()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail")))
@@ -42749,6 +43024,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfront).TrustStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.responseHeadersPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).ResponseHeadersPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).OriginAccessControls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).CachePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).OriginRequestPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).ContinuousDeploymentPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).KeyValueStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).PublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).KeyGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).FieldLevelEncryptionConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).FieldLevelEncryptionProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.trustStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontTrustStore).__id, ok = v.Value.(string)
 		return
@@ -43011,6 +43326,306 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.function.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontFunction).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.corsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).CorsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.securityHeadersConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).SecurityHeadersConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.serverTimingHeadersConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).ServerTimingHeadersConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.customHeadersConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).CustomHeadersConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.responseHeadersPolicy.removeHeadersConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontResponseHeadersPolicy).RemoveHeadersConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.originAccessControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.signingProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).SigningProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.signingBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).SigningBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originAccessControl.originAccessControlOriginType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginAccessControl).OriginAccessControlOriginType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.cachePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.defaultTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).DefaultTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.maxTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).MaxTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.minTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).MinTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.cachePolicy.parametersInCacheKeyAndForwardedToOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontCachePolicy).ParametersInCacheKeyAndForwardedToOrigin, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.headersConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).HeadersConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.cookiesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).CookiesConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.originRequestPolicy.queryStringsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontOriginRequestPolicy).QueryStringsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.stagingDistributionDnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).StagingDistributionDnsNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.continuousDeploymentPolicy.trafficConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontContinuousDeploymentPolicy).TrafficConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.keyValueStore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyValueStore.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyValueStore).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.publicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKey.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKey.encodedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).EncodedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.publicKey.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontPublicKey).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.keyGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.keyGroup.publicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontKeyGroup).PublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.queryArgProfileConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).QueryArgProfileConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionConfig.contentTypeProfileConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionConfig).ContentTypeProfileConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.fieldLevelEncryptionProfile.encryptionEntities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).EncryptionEntities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -102892,10 +103507,20 @@ type mqlAwsCloudfront struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudfrontInternal it will be used here
-	Distributions  plugin.TValue[[]any]
-	Functions      plugin.TValue[[]any]
-	AnycastIpLists plugin.TValue[[]any]
-	TrustStores    plugin.TValue[[]any]
+	Distributions                plugin.TValue[[]any]
+	Functions                    plugin.TValue[[]any]
+	AnycastIpLists               plugin.TValue[[]any]
+	TrustStores                  plugin.TValue[[]any]
+	ResponseHeadersPolicies      plugin.TValue[[]any]
+	OriginAccessControls         plugin.TValue[[]any]
+	CachePolicies                plugin.TValue[[]any]
+	OriginRequestPolicies        plugin.TValue[[]any]
+	ContinuousDeploymentPolicies plugin.TValue[[]any]
+	KeyValueStores               plugin.TValue[[]any]
+	PublicKeys                   plugin.TValue[[]any]
+	KeyGroups                    plugin.TValue[[]any]
+	FieldLevelEncryptionConfigs  plugin.TValue[[]any]
+	FieldLevelEncryptionProfiles plugin.TValue[[]any]
 }
 
 // createAwsCloudfront creates a new instance of this resource
@@ -102996,6 +103621,166 @@ func (c *mqlAwsCloudfront) GetTrustStores() *plugin.TValue[[]any] {
 		}
 
 		return c.trustStores()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetResponseHeadersPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResponseHeadersPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "responseHeadersPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.responseHeadersPolicies()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetOriginAccessControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OriginAccessControls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "originAccessControls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.originAccessControls()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetCachePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CachePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "cachePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cachePolicies()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetOriginRequestPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OriginRequestPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "originRequestPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.originRequestPolicies()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetContinuousDeploymentPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContinuousDeploymentPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "continuousDeploymentPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.continuousDeploymentPolicies()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetKeyValueStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyValueStores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "keyValueStores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyValueStores()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetPublicKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "publicKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publicKeys()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetKeyGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "keyGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyGroups()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetFieldLevelEncryptionConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FieldLevelEncryptionConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "fieldLevelEncryptionConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fieldLevelEncryptionConfigs()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetFieldLevelEncryptionProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FieldLevelEncryptionProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "fieldLevelEncryptionProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fieldLevelEncryptionProfiles()
 	})
 }
 
@@ -103593,6 +104378,783 @@ func (c *mqlAwsCloudfrontFunction) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsCloudfrontResponseHeadersPolicy for the aws.cloudfront.responseHeadersPolicy resource
+type mqlAwsCloudfrontResponseHeadersPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontResponseHeadersPolicyInternal it will be used here
+	Id                        plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Comment                   plugin.TValue[string]
+	LastModifiedTime          plugin.TValue[*time.Time]
+	CorsConfig                plugin.TValue[any]
+	SecurityHeadersConfig     plugin.TValue[any]
+	ServerTimingHeadersConfig plugin.TValue[any]
+	CustomHeadersConfig       plugin.TValue[[]any]
+	RemoveHeadersConfig       plugin.TValue[[]any]
+}
+
+// createAwsCloudfrontResponseHeadersPolicy creates a new instance of this resource
+func createAwsCloudfrontResponseHeadersPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontResponseHeadersPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.responseHeadersPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) MqlName() string {
+	return "aws.cloudfront.responseHeadersPolicy"
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetCorsConfig() *plugin.TValue[any] {
+	return &c.CorsConfig
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetSecurityHeadersConfig() *plugin.TValue[any] {
+	return &c.SecurityHeadersConfig
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetServerTimingHeadersConfig() *plugin.TValue[any] {
+	return &c.ServerTimingHeadersConfig
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetCustomHeadersConfig() *plugin.TValue[[]any] {
+	return &c.CustomHeadersConfig
+}
+
+func (c *mqlAwsCloudfrontResponseHeadersPolicy) GetRemoveHeadersConfig() *plugin.TValue[[]any] {
+	return &c.RemoveHeadersConfig
+}
+
+// mqlAwsCloudfrontOriginAccessControl for the aws.cloudfront.originAccessControl resource
+type mqlAwsCloudfrontOriginAccessControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontOriginAccessControlInternal it will be used here
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	SigningProtocol               plugin.TValue[string]
+	SigningBehavior               plugin.TValue[string]
+	OriginAccessControlOriginType plugin.TValue[string]
+}
+
+// createAwsCloudfrontOriginAccessControl creates a new instance of this resource
+func createAwsCloudfrontOriginAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontOriginAccessControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.originAccessControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) MqlName() string {
+	return "aws.cloudfront.originAccessControl"
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetSigningProtocol() *plugin.TValue[string] {
+	return &c.SigningProtocol
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetSigningBehavior() *plugin.TValue[string] {
+	return &c.SigningBehavior
+}
+
+func (c *mqlAwsCloudfrontOriginAccessControl) GetOriginAccessControlOriginType() *plugin.TValue[string] {
+	return &c.OriginAccessControlOriginType
+}
+
+// mqlAwsCloudfrontCachePolicy for the aws.cloudfront.cachePolicy resource
+type mqlAwsCloudfrontCachePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontCachePolicyInternal it will be used here
+	Id                                       plugin.TValue[string]
+	Type                                     plugin.TValue[string]
+	Name                                     plugin.TValue[string]
+	Comment                                  plugin.TValue[string]
+	LastModifiedTime                         plugin.TValue[*time.Time]
+	DefaultTtl                               plugin.TValue[int64]
+	MaxTtl                                   plugin.TValue[int64]
+	MinTtl                                   plugin.TValue[int64]
+	ParametersInCacheKeyAndForwardedToOrigin plugin.TValue[any]
+}
+
+// createAwsCloudfrontCachePolicy creates a new instance of this resource
+func createAwsCloudfrontCachePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontCachePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.cachePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) MqlName() string {
+	return "aws.cloudfront.cachePolicy"
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetDefaultTtl() *plugin.TValue[int64] {
+	return &c.DefaultTtl
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetMaxTtl() *plugin.TValue[int64] {
+	return &c.MaxTtl
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetMinTtl() *plugin.TValue[int64] {
+	return &c.MinTtl
+}
+
+func (c *mqlAwsCloudfrontCachePolicy) GetParametersInCacheKeyAndForwardedToOrigin() *plugin.TValue[any] {
+	return &c.ParametersInCacheKeyAndForwardedToOrigin
+}
+
+// mqlAwsCloudfrontOriginRequestPolicy for the aws.cloudfront.originRequestPolicy resource
+type mqlAwsCloudfrontOriginRequestPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontOriginRequestPolicyInternal it will be used here
+	Id                 plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	LastModifiedTime   plugin.TValue[*time.Time]
+	HeadersConfig      plugin.TValue[any]
+	CookiesConfig      plugin.TValue[any]
+	QueryStringsConfig plugin.TValue[any]
+}
+
+// createAwsCloudfrontOriginRequestPolicy creates a new instance of this resource
+func createAwsCloudfrontOriginRequestPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontOriginRequestPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.originRequestPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) MqlName() string {
+	return "aws.cloudfront.originRequestPolicy"
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetHeadersConfig() *plugin.TValue[any] {
+	return &c.HeadersConfig
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetCookiesConfig() *plugin.TValue[any] {
+	return &c.CookiesConfig
+}
+
+func (c *mqlAwsCloudfrontOriginRequestPolicy) GetQueryStringsConfig() *plugin.TValue[any] {
+	return &c.QueryStringsConfig
+}
+
+// mqlAwsCloudfrontContinuousDeploymentPolicy for the aws.cloudfront.continuousDeploymentPolicy resource
+type mqlAwsCloudfrontContinuousDeploymentPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontContinuousDeploymentPolicyInternal it will be used here
+	Id                          plugin.TValue[string]
+	LastModifiedTime            plugin.TValue[*time.Time]
+	StagingDistributionDnsNames plugin.TValue[[]any]
+	Enabled                     plugin.TValue[bool]
+	TrafficConfig               plugin.TValue[any]
+}
+
+// createAwsCloudfrontContinuousDeploymentPolicy creates a new instance of this resource
+func createAwsCloudfrontContinuousDeploymentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontContinuousDeploymentPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.continuousDeploymentPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) MqlName() string {
+	return "aws.cloudfront.continuousDeploymentPolicy"
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) GetStagingDistributionDnsNames() *plugin.TValue[[]any] {
+	return &c.StagingDistributionDnsNames
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsCloudfrontContinuousDeploymentPolicy) GetTrafficConfig() *plugin.TValue[any] {
+	return &c.TrafficConfig
+}
+
+// mqlAwsCloudfrontKeyValueStore for the aws.cloudfront.keyValueStore resource
+type mqlAwsCloudfrontKeyValueStore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontKeyValueStoreInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Comment          plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	LastModifiedTime plugin.TValue[*time.Time]
+}
+
+// createAwsCloudfrontKeyValueStore creates a new instance of this resource
+func createAwsCloudfrontKeyValueStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontKeyValueStore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.keyValueStore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) MqlName() string {
+	return "aws.cloudfront.keyValueStore"
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudfrontKeyValueStore) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+// mqlAwsCloudfrontPublicKey for the aws.cloudfront.publicKey resource
+type mqlAwsCloudfrontPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontPublicKeyInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Comment     plugin.TValue[string]
+	EncodedKey  plugin.TValue[string]
+	CreatedTime plugin.TValue[*time.Time]
+}
+
+// createAwsCloudfrontPublicKey creates a new instance of this resource
+func createAwsCloudfrontPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.publicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontPublicKey) MqlName() string {
+	return "aws.cloudfront.publicKey"
+}
+
+func (c *mqlAwsCloudfrontPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontPublicKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontPublicKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontPublicKey) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontPublicKey) GetEncodedKey() *plugin.TValue[string] {
+	return &c.EncodedKey
+}
+
+func (c *mqlAwsCloudfrontPublicKey) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+// mqlAwsCloudfrontKeyGroup for the aws.cloudfront.keyGroup resource
+type mqlAwsCloudfrontKeyGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontKeyGroupInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Comment          plugin.TValue[string]
+	LastModifiedTime plugin.TValue[*time.Time]
+	Items            plugin.TValue[[]any]
+	PublicKeys       plugin.TValue[[]any]
+}
+
+// createAwsCloudfrontKeyGroup creates a new instance of this resource
+func createAwsCloudfrontKeyGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontKeyGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.keyGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) MqlName() string {
+	return "aws.cloudfront.keyGroup"
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetItems() *plugin.TValue[[]any] {
+	return &c.Items
+}
+
+func (c *mqlAwsCloudfrontKeyGroup) GetPublicKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront.keyGroup", c.__id, "publicKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publicKeys()
+	})
+}
+
+// mqlAwsCloudfrontFieldLevelEncryptionConfig for the aws.cloudfront.fieldLevelEncryptionConfig resource
+type mqlAwsCloudfrontFieldLevelEncryptionConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontFieldLevelEncryptionConfigInternal it will be used here
+	Id                       plugin.TValue[string]
+	LastModifiedTime         plugin.TValue[*time.Time]
+	Comment                  plugin.TValue[string]
+	QueryArgProfileConfig    plugin.TValue[any]
+	ContentTypeProfileConfig plugin.TValue[any]
+}
+
+// createAwsCloudfrontFieldLevelEncryptionConfig creates a new instance of this resource
+func createAwsCloudfrontFieldLevelEncryptionConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontFieldLevelEncryptionConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.fieldLevelEncryptionConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) MqlName() string {
+	return "aws.cloudfront.fieldLevelEncryptionConfig"
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) GetQueryArgProfileConfig() *plugin.TValue[any] {
+	return &c.QueryArgProfileConfig
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionConfig) GetContentTypeProfileConfig() *plugin.TValue[any] {
+	return &c.ContentTypeProfileConfig
+}
+
+// mqlAwsCloudfrontFieldLevelEncryptionProfile for the aws.cloudfront.fieldLevelEncryptionProfile resource
+type mqlAwsCloudfrontFieldLevelEncryptionProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontFieldLevelEncryptionProfileInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	LastModifiedTime   plugin.TValue[*time.Time]
+	EncryptionEntities plugin.TValue[[]any]
+}
+
+// createAwsCloudfrontFieldLevelEncryptionProfile creates a new instance of this resource
+func createAwsCloudfrontFieldLevelEncryptionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontFieldLevelEncryptionProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.fieldLevelEncryptionProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) MqlName() string {
+	return "aws.cloudfront.fieldLevelEncryptionProfile"
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetEncryptionEntities() *plugin.TValue[[]any] {
+	return &c.EncryptionEntities
 }
 
 // mqlAwsCloudtrail for the aws.cloudtrail resource
