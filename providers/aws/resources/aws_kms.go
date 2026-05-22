@@ -322,6 +322,9 @@ func kmsXksProxyConfigToDict(c *types.XksProxyConfigurationType) (any, error) {
 	if c == nil {
 		return nil, nil
 	}
+	// Surface only whether an access key id is configured, never the value
+	// itself — the access key id is a long-lived credential identifier and
+	// should not flow through audit output.
 	out := map[string]any{
 		"connectivity":            string(c.Connectivity),
 		"accessKeyIdPresent":      c.AccessKeyId != nil && *c.AccessKeyId != "",
@@ -1187,6 +1190,14 @@ func initAwsKmsCustomKeyStore(runtime *plugin.Runtime, args map[string]*llx.RawD
 	region := rawStringArg(args["region"])
 	if region == "" {
 		return args, nil, errors.New("region required to fetch aws kms custom key store")
+	}
+
+	// Skip the DescribeCustomKeyStores call when the store was already
+	// materialized via aws.kms.customKeyStores() — that path puts it in
+	// the runtime cache under the same `__id` shape (`<region>/<storeId>`).
+	cacheID := "aws.kms.customKeyStore\x00" + region + "/" + customKeyStoreId
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)

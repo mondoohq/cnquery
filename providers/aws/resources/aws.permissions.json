@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T20:01:11-07:00",
+  "generated_at": "2026-05-21T20:30:36-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -730,16 +730,21 @@
     "sqs:GetQueueAttributes",
     "sqs:ListQueueTags",
     "sqs:ListQueues",
+    "ssm:DescribeAssociation",
     "ssm:DescribeDocument",
     "ssm:DescribeDocumentPermission",
     "ssm:DescribeInstanceInformation",
     "ssm:DescribeInstancePatchStates",
+    "ssm:DescribeMaintenanceWindowTargets",
+    "ssm:DescribeMaintenanceWindowTasks",
     "ssm:DescribeMaintenanceWindows",
     "ssm:DescribeParameters",
     "ssm:DescribePatchBaselines",
+    "ssm:DescribePatchGroups",
     "ssm:GetDocument",
     "ssm:GetMaintenanceWindow",
     "ssm:GetPatchBaseline",
+    "ssm:GetServiceSetting",
     "ssm:ListAssociations",
     "ssm:ListDocuments",
     "ssm:ListResourceComplianceSummaries",
@@ -5313,6 +5318,12 @@
       "source_file": "aws_sqs.go"
     },
     {
+      "permission": "ssm:DescribeAssociation",
+      "service": "ssm",
+      "action": "DescribeAssociation",
+      "source_file": "aws_ssm_state.go"
+    },
+    {
       "permission": "ssm:DescribeDocument",
       "service": "ssm",
       "action": "DescribeDocument",
@@ -5343,6 +5354,18 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ssm:DescribeMaintenanceWindowTargets",
+      "service": "ssm",
+      "action": "DescribeMaintenanceWindowTargets",
+      "source_file": "aws_ssm_state.go"
+    },
+    {
+      "permission": "ssm:DescribeMaintenanceWindowTasks",
+      "service": "ssm",
+      "action": "DescribeMaintenanceWindowTasks",
+      "source_file": "aws_ssm_state.go"
+    },
+    {
       "permission": "ssm:DescribeMaintenanceWindows",
       "service": "ssm",
       "action": "DescribeMaintenanceWindows",
@@ -5361,22 +5384,40 @@
       "source_file": "aws_ssm_documents.go"
     },
     {
+      "permission": "ssm:DescribePatchGroups",
+      "service": "ssm",
+      "action": "DescribePatchGroups",
+      "source_file": "aws_ssm_state.go"
+    },
+    {
       "permission": "ssm:GetDocument",
       "service": "ssm",
       "action": "GetDocument",
       "source_file": "aws_ssm_documents.go"
     },
     {
+      "permission": "ssm:GetDocument",
+      "service": "ssm",
+      "action": "GetDocument",
+      "source_file": "aws_ssm_state.go"
+    },
+    {
       "permission": "ssm:GetMaintenanceWindow",
       "service": "ssm",
       "action": "GetMaintenanceWindow",
-      "source_file": "aws_ssm_documents.go"
+      "source_file": "aws_ssm_state.go"
     },
     {
       "permission": "ssm:GetPatchBaseline",
       "service": "ssm",
       "action": "GetPatchBaseline",
       "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:GetServiceSetting",
+      "service": "ssm",
+      "action": "GetServiceSetting",
+      "source_file": "aws_ssm_state.go"
     },
     {
       "permission": "ssm:ListAssociations",

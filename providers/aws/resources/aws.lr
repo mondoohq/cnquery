@@ -1692,7 +1692,7 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
 }
 
 // AWS KMS key grant
-private aws.kms.grant @defaults("grantId granteePrincipal") {
+private aws.kms.grant @defaults("grantId name granteePrincipal") {
   // Unique identifier for the grant
   grantId string
   // KMS key the grant applies to
