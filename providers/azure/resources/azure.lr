@@ -1278,6 +1278,16 @@ private azure.subscription.networkService {
   ddosProtectionPlans() []azure.subscription.networkService.ddosProtectionPlan
   // List of service endpoint policies
   serviceEndpointPolicies() []azure.subscription.networkService.serviceEndpointPolicy
+  // List of Traffic Manager profiles
+  trafficManagerProfiles() []azure.subscription.networkService.trafficManagerProfile
+  // List of Virtual WANs
+  virtualWans() []azure.subscription.networkService.virtualWan
+  // List of Virtual WAN virtual hubs
+  virtualHubs() []azure.subscription.networkService.virtualHub
+  // List of VPN sites (on-prem branch endpoints registered with Virtual WAN)
+  vpnSites() []azure.subscription.networkService.vpnSite
+  // List of ExpressRoute circuits
+  expressRouteCircuits() []azure.subscription.networkService.expressRouteCircuit
 }
 
 // Azure VPN/ExpressRoute gateway
@@ -2300,6 +2310,10 @@ private azure.subscription.networkService.watcher @defaults("name location") {
   properties dict
   // Network watcher flow logs
   flowLogs() []azure.subscription.networkService.watcher.flowlog
+  // Packet capture sessions on the watcher
+  packetCaptures() []azure.subscription.networkService.watcher.packetCapture
+  // Connection monitor instances on the watcher
+  connectionMonitors() []azure.subscription.networkService.watcher.connectionMonitor
   // Network watcher provisioning state
   provisioningState string
 }
@@ -2336,6 +2350,98 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
   retentionPolicy dict
   // Network watcher flow log analytics
   analytics dict
+}
+
+// Network Watcher packet capture session
+//
+// Examine a packet-capture session configured on a Network Watcher.
+// Surfaces the `target` resource being captured (a VM or VMSS, with
+// `targetType` distinguishing them), the `bytesToCapturePerPacket`
+// truncation, the `timeLimitInSeconds` and `totalBytesPerSession`
+// upper bounds, whether `continuousCapture` rotation is enabled,
+// per-flow `filters` (protocol, source/destination IP and port), the
+// `storageLocation` (storage account ID, blob path, on-VM file path),
+// and the `provisioningState` of the session. Use this to audit which
+// production workloads have ongoing packet capture and where the
+// captured traffic is being written.
+private azure.subscription.networkService.watcher.packetCapture @defaults("name target provisioningState") {
+  // Packet capture ID
+  id string
+  // Packet capture name
+  name string
+  // Packet capture etag
+  etag string
+  // Packet capture properties
+  properties dict
+  // Resource ID of the VM or VMSS being captured
+  target string
+  // Type of the captured resource ("AzureVM" or "AzureVMSS")
+  targetType string
+  // Number of bytes captured per packet; remaining bytes are truncated
+  bytesToCapturePerPacket int
+  // Maximum duration of the capture session in seconds
+  timeLimitInSeconds int
+  // Maximum size of the capture output in bytes
+  totalBytesPerSession int
+  // Whether rotating multi-file continuous capture is enabled
+  continuousCapture bool
+  // Per-flow capture filters (protocol, local/remote IP and port)
+  filters []dict
+  // Where the capture is written (storage account ID, blob path, VM local path)
+  storageLocation dict
+  // Provisioning state of the capture session
+  provisioningState string
+}
+
+// Network Watcher connection monitor
+//
+// Examine a connection-monitor instance — Network Watcher's
+// continuous reachability and latency check between source and
+// destination endpoints. Surfaces the `endpoints` (each carrying a
+// resource ID or address), the `testConfigurations` (protocol, port,
+// frequency, success thresholds, trace-route behavior), the
+// `testGroups` binding endpoint sets to configurations, and the
+// `outputs` describing where results are written (typically a Log
+// Analytics workspace). Also surfaces `monitoringIntervalInSeconds`,
+// `autoStart`, `monitoringStatus`, `connectionMonitorType`,
+// `provisioningState`, and free-form `notes`. Use this to audit which
+// production paths are continuously verified and where the telemetry
+// lands.
+private azure.subscription.networkService.watcher.connectionMonitor @defaults("name location monitoringStatus") {
+  // Connection monitor ID
+  id string
+  // Connection monitor name
+  name string
+  // Connection monitor location
+  location string
+  // Connection monitor tags
+  tags map[string]string
+  // Connection monitor type (resource type)
+  type string
+  // Connection monitor etag
+  etag string
+  // Connection monitor properties
+  properties dict
+  // Whether the monitor starts automatically once created
+  autoStart bool
+  // Monitoring interval in seconds
+  monitoringIntervalInSeconds int
+  // Free-form notes associated with the monitor
+  notes string
+  // Connection monitor type ("MultiEndpoint" or "SingleSourceDestination")
+  connectionMonitorType string
+  // Current monitoring status (e.g., "Running", "Stopped", "NotStarted")
+  monitoringStatus string
+  // Provisioning state of the monitor
+  provisioningState string
+  // Endpoints participating in the monitor (each with name, resource ID or address, type)
+  endpoints []dict
+  // Test configurations (protocol, TCP/HTTP/ICMP settings, frequency, thresholds)
+  testConfigurations []dict
+  // Test groups binding sources, destinations, and test configurations
+  testGroups []dict
+  // Destinations for monitor output (typically Log Analytics workspaces)
+  outputs []dict
 }
 
 // Azure Application Gateway
@@ -2632,6 +2738,485 @@ private azure.subscription.networkService.route @defaults("name addressPrefix ne
   // Whether this route overrides overlapping BGP routes
   hasBgpOverride bool
   // Provisioning state of the route
+  provisioningState string
+}
+
+// Azure Traffic Manager profile
+//
+// Examine a Traffic Manager profile — the DNS-level global load
+// balancer that resolves a single hostname to one of many backends
+// based on a routing method. Surfaces the `trafficRoutingMethod`
+// (Performance, Weighted, Priority, Geographic, MultiValue, Subnet),
+// the `profileStatus` (Enabled/Disabled), the `dnsConfig`
+// (relativeName, ttl, fqdn) that controls the resolver-facing record,
+// the `monitorConfig` (protocol, port, path, intervals, expected
+// status codes, custom headers) that governs endpoint probing, and
+// the per-endpoint configuration through
+// [[azure.subscription.networkService.trafficManagerProfile.endpoint]].
+azure.subscription.networkService.trafficManagerProfile @defaults("id name location trafficRoutingMethod profileStatus") {
+  // Traffic Manager profile ID
+  id string
+  // Traffic Manager profile name
+  name string
+  // Traffic Manager profile location ("global" for most profiles)
+  location string
+  // Traffic Manager profile tags
+  tags map[string]string
+  // Traffic Manager profile resource type
+  type string
+  // Traffic Manager profile properties
+  properties dict
+  // Profile status ("Enabled" or "Disabled")
+  profileStatus string
+  // Traffic routing method ("Performance", "Weighted", "Priority", "Geographic", "MultiValue", "Subnet")
+  trafficRoutingMethod string
+  // Traffic View enrollment status ("Enabled" or "Disabled")
+  trafficViewEnrollmentStatus string
+  // Maximum number of endpoints returned for MultiValue routing
+  maxReturn int
+  // Allowed endpoint record types (e.g., "DomainName", "IPv4Address", "IPv6Address")
+  allowedEndpointRecordTypes []string
+  // DNS settings: relativeName, ttl, fqdn
+  dnsConfig dict
+  // Endpoint health monitoring settings: protocol, port, path, intervals, expected status codes, custom headers
+  monitorConfig dict
+  // Endpoints configured on the profile
+  endpoints []azure.subscription.networkService.trafficManagerProfile.endpoint
+}
+
+// Traffic Manager endpoint
+//
+// Examine a single endpoint inside a Traffic Manager profile —
+// either an Azure resource (`AzureEndpoints`), an external FQDN/IP
+// (`ExternalEndpoints`), or a child profile (`NestedEndpoints`).
+// Surfaces the `target` or `targetResourceId`, `endpointStatus`
+// (Enabled/Disabled), `endpointMonitorStatus` (the most recent probe
+// result), `weight` (for Weighted routing), `priority` (for Priority
+// routing), `geoMapping` (for Geographic routing), `subnets` (for
+// Subnet routing), `customHeaders` overrides, `endpointLocation`
+// (for Performance routing), and child-profile thresholds
+// (`minChildEndpoints`, `minChildEndpointsIPv4`,
+// `minChildEndpointsIPv6`). The `alwaysServe` flag indicates that
+// the endpoint should remain in the routing decision even when
+// probes fail.
+private azure.subscription.networkService.trafficManagerProfile.endpoint @defaults("name type endpointStatus") {
+  // Endpoint ID
+  id string
+  // Endpoint name
+  name string
+  // Endpoint resource type (carries the endpoint kind, e.g., "Microsoft.Network/trafficManagerProfiles/azureEndpoints")
+  type string
+  // Endpoint properties
+  properties dict
+  // Endpoint status ("Enabled" or "Disabled")
+  endpointStatus string
+  // Most recent monitor probe result ("CheckingEndpoint", "Online", "Degraded", "Disabled", "Inactive", "Stopped")
+  endpointMonitorStatus string
+  // "Enabled" keeps the endpoint in the routing decision even when probes fail
+  alwaysServe string
+  // Fully-qualified DNS name or IP of the endpoint (returned in DNS responses)
+  target string
+  // Azure resource ID for endpoints of type AzureEndpoints or NestedEndpoints
+  targetResourceId string
+  // Geographic location of the endpoint (used by Performance routing)
+  endpointLocation string
+  // Endpoint weight (1-1000), used by Weighted routing
+  weight int
+  // Endpoint priority (1-1000, lower = higher priority), used by Priority routing
+  priority int
+  // Minimum healthy child endpoints required for a NestedEndpoints parent to be considered available
+  minChildEndpoints int
+  // Minimum healthy IPv4 (A-record) child endpoints required for a NestedEndpoints parent
+  minChildEndpointsIPv4 int
+  // Minimum healthy IPv6 (AAAA-record) child endpoints required for a NestedEndpoints parent
+  minChildEndpointsIPv6 int
+  // Countries/regions mapped to this endpoint (used by Geographic routing)
+  geoMapping []string
+  // Subnets mapped to this endpoint (used by Subnet routing); each entry has first, last, scope
+  subnets []dict
+  // Custom headers sent during health probes (each entry has name, value)
+  customHeaders []dict
+}
+
+// Azure Virtual WAN
+//
+// Examine a Virtual WAN — the global transit-network construct that
+// stitches together Virtual Hubs across regions, on-premises sites,
+// and ExpressRoute circuits. Surfaces the
+// `allowBranchToBranchTraffic` and `allowVnetToVnetTraffic`
+// permissions, the `disableVpnEncryption` flag, the
+// `office365LocalBreakoutCategory` for Office 365 traffic, the
+// `virtualWanType` ("Standard" or "Basic"), and the
+// `provisioningState`. The hubs that belong to the WAN are reachable
+// through [[azure.subscription.networkService.virtualHub]] filtered
+// by `virtualWan.id`.
+azure.subscription.networkService.virtualWan @defaults("id name location virtualWanType") {
+  // Virtual WAN ID
+  id string
+  // Virtual WAN name
+  name string
+  // Virtual WAN location
+  location string
+  // Virtual WAN tags
+  tags map[string]string
+  // Resource type
+  type string
+  // Virtual WAN etag
+  etag string
+  // Virtual WAN properties
+  properties dict
+  // Whether branch-to-branch traffic is allowed through the WAN
+  allowBranchToBranchTraffic bool
+  // Whether VNet-to-VNet traffic is allowed through the WAN
+  allowVnetToVnetTraffic bool
+  // Whether VPN encryption is disabled
+  disableVpnEncryption bool
+  // Office 365 local breakout category ("Optimize", "OptimizeAndAllow", "All", "None")
+  office365LocalBreakoutCategory string
+  // Virtual WAN type ("Standard" or "Basic")
+  virtualWanType string
+  // Provisioning state
+  provisioningState string
+  // VPN sites that belong to this Virtual WAN
+  vpnSites() []azure.subscription.networkService.vpnSite
+  // Virtual Hubs that belong to this Virtual WAN
+  virtualHubs() []azure.subscription.networkService.virtualHub
+}
+
+// Azure Virtual Hub
+//
+// Examine a Virtual Hub — the regional core of a Virtual WAN
+// deployment that provides routing, transit, and gateway hosting.
+// Surfaces the `addressPrefix` CIDR carved out for the hub, the
+// `sku` and `kind` (regular hub or Route Server), the
+// `allowBranchToBranchTraffic` policy, the `hubRoutingPreference`
+// (ExpressRoute / VPN / ASPath), the BGP-router parameters
+// (`virtualRouterAsn`, `virtualRouterIps`), the linked
+// `virtualWan()`, the linked `azureFirewall()` for Secure Virtual Hub
+// deployments, and the routing surfaces through
+// [[azure.subscription.networkService.virtualHub.routeTable]] and
+// [[azure.subscription.networkService.virtualHub.vnetConnection]].
+azure.subscription.networkService.virtualHub @defaults("id name location sku") {
+  // Virtual Hub ID
+  id string
+  // Virtual Hub name
+  name string
+  // Virtual Hub location
+  location string
+  // Virtual Hub tags
+  tags map[string]string
+  // Resource type
+  type string
+  // Virtual Hub etag
+  etag string
+  // Hub kind (set to "RouteServer" for Route Server deployments; empty for standard hubs)
+  kind string
+  // Virtual Hub properties
+  properties dict
+  // CIDR carved out for the hub itself
+  addressPrefix string
+  // Hub SKU ("Standard" or "Basic")
+  sku string
+  // Whether branch-to-branch transit is allowed for the underlying VirtualRouter hub
+  allowBranchToBranchTraffic bool
+  // Preferred gateway for on-prem traffic ("ExpressRoute", "VpnGateway", "None")
+  preferredRoutingGateway string
+  // Hub routing preference ("ExpressRoute", "VpnGateway", "ASPath")
+  hubRoutingPreference string
+  // ASN of the embedded VirtualRouter
+  virtualRouterAsn int
+  // VirtualRouter IP addresses
+  virtualRouterIps []string
+  // Provisioning state
+  provisioningState string
+  // Current routing state ("None", "Provisioning", "Provisioned", "Failed")
+  routingState string
+  // Security Provider name configured for Secure Virtual Hub deployments
+  securityProviderName string
+  // The Virtual WAN this hub belongs to
+  virtualWan() azure.subscription.networkService.virtualWan
+  // Azure Firewall attached to this hub for Secure Virtual Hub deployments
+  azureFirewall() azure.subscription.networkService.firewall
+  // Hub route tables defined inside this hub
+  routeTables() []azure.subscription.networkService.virtualHub.routeTable
+  // VNet connections attached to this hub
+  vnetConnections() []azure.subscription.networkService.virtualHub.vnetConnection
+}
+
+// Virtual Hub route table
+//
+// Examine a route table inside a Virtual Hub — the construct that
+// stores user-defined routes for connections that select this table.
+// Surfaces the `routes` (each with `destinationType`, `destinations`,
+// `nextHopType`, `nextHop`), the `labels` that connections use to
+// associate or propagate to this table, and the read-only
+// `associatedConnections` (connections whose traffic this table
+// routes) and `propagatingConnections` (connections that advertise
+// into this table). Use this to audit east-west and on-prem
+// reachability decisions inside a Secure Virtual Hub.
+private azure.subscription.networkService.virtualHub.routeTable @defaults("id name provisioningState") {
+  // Route table ID
+  id string
+  // Route table name
+  name string
+  // Route table resource type
+  type string
+  // Route table etag
+  etag string
+  // Labels used by connections to associate or propagate to this route table
+  labels []string
+  // Routes contained in the table (each entry has destinationType, destinations, nextHopType, nextHop)
+  routes []dict
+  // Resource IDs of connections whose traffic is routed by this table
+  associatedConnectionIds []string
+  // Resource IDs of connections that advertise into this table
+  propagatingConnectionIds []string
+  // Provisioning state of the route table
+  provisioningState string
+}
+
+// Virtual Hub VNet connection
+//
+// Examine a connection between a Virtual Hub and a spoke virtual
+// network. Surfaces the `enableInternetSecurity` flag (whether the
+// secured hub firewalls Internet egress for the spoke), the linked
+// `remoteVirtualNetwork()`, the `routingConfiguration` (associated
+// route table, propagated route tables and labels, static routes),
+// and the `provisioningState`. Use this to audit which spokes are
+// firewalled by the hub and which route tables govern their traffic.
+private azure.subscription.networkService.virtualHub.vnetConnection @defaults("id name provisioningState") {
+  // Connection ID
+  id string
+  // Connection name
+  name string
+  // Connection etag
+  etag string
+  // Whether secured-hub Internet-egress filtering is enabled for the spoke
+  enableInternetSecurity bool
+  // Provisioning state
+  provisioningState string
+  // Routing configuration (associated route table, propagated route tables/labels, static routes)
+  routingConfiguration dict
+  // The spoke virtual network this connection attaches to the hub
+  remoteVirtualNetwork() azure.subscription.networkService.virtualNetwork
+}
+
+// Azure Virtual WAN VPN site
+//
+// Examine a VPN site — the registered on-prem branch endpoint that
+// terminates a site-to-site IPsec tunnel into a Virtual WAN's VPN
+// gateway. Surfaces the `ipAddress` (the public IP the gateway peers
+// with), the `addressPrefixes` advertised by the branch, the BGP
+// settings (`bgpAsn`, `bgpPeeringAddress`, `bgpPeerWeight`), device
+// metadata (`deviceVendor`, `deviceModel`, `linkSpeedInMbps`), the
+// `isSecuritySite` flag identifying the site as a security-partner
+// site, the `o365Policy` controlling Office 365 traffic categories,
+// `siteKeySet` indicating whether a pre-shared key is configured
+// (the secret itself is not exposed), the typed `virtualWan()` ref
+// to the parent WAN, and the per-link detail in `vpnSiteLinks`
+// (each carrying its own IP, link connection speed, and BGP
+// properties).
+azure.subscription.networkService.vpnSite @defaults("id name location") {
+  // VPN site ID
+  id string
+  // VPN site name
+  name string
+  // VPN site location
+  location string
+  // VPN site tags
+  tags map[string]string
+  // Resource type
+  type string
+  // VPN site etag
+  etag string
+  // VPN site properties
+  properties dict
+  // Public IP the Virtual WAN VPN gateway peers with
+  ipAddress string
+  // CIDRs advertised by the branch
+  addressPrefixes []string
+  // Whether the site is registered as a security-partner site
+  isSecuritySite bool
+  // Whether a pre-shared key is configured for site-to-site authentication (the secret itself is not exposed)
+  siteKeySet bool
+  // Device vendor reported for the branch hardware
+  deviceVendor string
+  // Device model reported for the branch hardware
+  deviceModel string
+  // Link speed in Mbps reported for the branch
+  linkSpeedInMbps int
+  // BGP ASN announced by the branch
+  bgpAsn int
+  // BGP peering address used by the branch
+  bgpPeeringAddress string
+  // BGP peer weight applied to routes received from this branch
+  bgpPeerWeight int
+  // Office 365 traffic-category breakout policy applied to this site
+  o365Policy dict
+  // Per-link details (IP, FQDN, BGP properties, link-speed) for multi-link sites
+  vpnSiteLinks []dict
+  // Provisioning state of the site
+  provisioningState string
+  // The Virtual WAN this site is registered against
+  virtualWan() azure.subscription.networkService.virtualWan
+}
+
+// Azure ExpressRoute circuit
+//
+// Examine an ExpressRoute circuit — the dedicated private link
+// between an on-prem network and Microsoft's backbone, provisioned
+// either through a connectivity provider or on a customer-owned
+// ExpressRoute port. Surfaces the SKU triplet
+// (`skuName`/`skuTier`/`skuFamily`), the
+// `serviceProviderName`/`peeringLocation`/`bandwidthInMbps` of the
+// connectivity-provider plan (or `bandwidthInGbps` for ExpressRoute
+// Direct), the `serviceProviderProvisioningState` (the provider's
+// view), the `circuitProvisioningState` (Microsoft's view), the
+// `globalReachEnabled` flag, `allowClassicOperations`, the
+// `authorizationStatus`, and the `stag` (the outer QinQ tag).
+// Peerings, BGP configuration, and authorizations are reachable
+// through the typed sub-resources
+// [[azure.subscription.networkService.expressRouteCircuit.peering]]
+// and
+// [[azure.subscription.networkService.expressRouteCircuit.authorization]].
+azure.subscription.networkService.expressRouteCircuit @defaults("id name location skuTier serviceProviderName") {
+  // ExpressRoute circuit ID
+  id string
+  // ExpressRoute circuit name
+  name string
+  // ExpressRoute circuit location
+  location string
+  // ExpressRoute circuit tags
+  tags map[string]string
+  // Resource type
+  type string
+  // ExpressRoute circuit etag
+  etag string
+  // ExpressRoute circuit properties
+  properties dict
+  // SKU name (typically formatted as "<tier>_<family>")
+  skuName string
+  // SKU tier ("Standard", "Premium", "Local")
+  skuTier string
+  // SKU family ("MeteredData" or "UnlimitedData")
+  skuFamily string
+  // Whether classic-provisioning operations are allowed on the circuit
+  allowClassicOperations bool
+  // Whether ExpressRoute Global Reach is enabled
+  globalReachEnabled bool
+  // Bandwidth in Gbps when the circuit is provisioned on an ExpressRoute Direct port
+  bandwidthInGbps float
+  // Bandwidth in Mbps when the circuit is provisioned through a connectivity provider
+  bandwidthInMbps int
+  // Connectivity provider name (empty for ExpressRoute Direct circuits)
+  serviceProviderName string
+  // Peering location reported to the connectivity provider (e.g., "Amsterdam", "Washington DC")
+  peeringLocation string
+  // Free-form notes the provider attaches to the circuit
+  serviceProviderNotes string
+  // Microsoft's view of provisioning state ("Provisioning", "Provisioned", "NotProvisioned", "Deprovisioning")
+  circuitProvisioningState string
+  // Provider's view of provisioning state ("NotProvisioned", "Provisioning", "Provisioned", "Deprovisioning")
+  serviceProviderProvisioningState string
+  // Whether rate-limiting is enabled on an ExpressRoute Direct circuit
+  enableDirectPortRateLimit bool
+  // Resource ID of the ExpressRoute port (only set for ExpressRoute Direct circuits)
+  expressRoutePortId string
+  // Authorization status of the circuit
+  authorizationStatus string
+  // Provisioning state of the circuit resource
+  provisioningState string
+  // Outer QinQ tag identifying the circuit's traffic
+  stag int
+  // BGP peerings (private, microsoft, Azure private) configured on the circuit
+  peerings() []azure.subscription.networkService.expressRouteCircuit.peering
+  // Connection authorizations issued for the circuit
+  authorizations() []azure.subscription.networkService.expressRouteCircuit.authorization
+}
+
+// ExpressRoute circuit peering
+//
+// Examine a BGP peering inside an ExpressRoute circuit. The
+// `peeringType` field distinguishes the three peering kinds:
+// `AzurePrivatePeering` (traffic to Azure VNets), `AzurePublicPeering`
+// (deprecated — public Azure services), and `MicrosoftPeering`
+// (Microsoft 365 and Azure public services). Surfaces the BGP state
+// machine fields (`azureAsn`, `peerAsn`, `state`), the IPv4 BGP
+// substrate (`primaryPeerAddressPrefix`, `secondaryPeerAddressPrefix`,
+// `primaryAzurePort`, `secondaryAzurePort`, `vlanId`), `sharedKeySet`
+// (whether an MD5 shared key is configured — the key itself is not
+// exposed), the `microsoftPeeringConfig` (advertised public
+// prefixes, customer ASN, routing-registry name, IPv4 community
+// advertisement) when `peeringType` is `MicrosoftPeering`, the
+// `ipv6PeeringConfig` for dual-stack peerings, and
+// `gatewayManagerEtag` / `provisioningState`. Use this to audit
+// route advertisement and BGP-key rotation on hybrid connectivity.
+private azure.subscription.networkService.expressRouteCircuit.peering @defaults("name peeringType state vlanId") {
+  // Peering ID
+  id string
+  // Peering name
+  name string
+  // Peering resource type
+  type string
+  // Peering etag
+  etag string
+  // Peering properties
+  properties dict
+  // Peering type ("AzurePrivatePeering", "AzurePublicPeering", "MicrosoftPeering")
+  peeringType string
+  // Administrative state ("Enabled" or "Disabled")
+  state string
+  // Azure-side ASN
+  azureAsn int
+  // Peer (customer) ASN
+  peerAsn int
+  // Primary IPv4 BGP substrate prefix
+  primaryPeerAddressPrefix string
+  // Secondary IPv4 BGP substrate prefix
+  secondaryPeerAddressPrefix string
+  // Primary Azure-side BGP IP
+  primaryAzurePort string
+  // Secondary Azure-side BGP IP
+  secondaryAzurePort string
+  // Whether an MD5 shared key is configured to authenticate the BGP session (the secret itself is not exposed)
+  sharedKeySet bool
+  // VLAN ID for the BGP session
+  vlanId int
+  // GatewayManager etag
+  gatewayManagerEtag string
+  // Provisioning state of the peering
+  provisioningState string
+  // MicrosoftPeering configuration: advertised public prefixes, customerAsn, routingRegistryName, IPv4 community state
+  microsoftPeeringConfig dict
+  // IPv6 peering configuration (state, prefixes, MicrosoftPeering routes for IPv6)
+  ipv6PeeringConfig dict
+}
+
+// ExpressRoute circuit authorization
+//
+// Examine a connection authorization issued on an ExpressRoute
+// circuit. Each authorization carries a redeemable key that a
+// downstream subscription owner can use to attach a virtual network
+// gateway to this circuit. The key itself is not exposed; surfaces
+// `authorizationKeySet` (whether a key is currently provisioned),
+// `authorizationUseStatus` (whether the key has been consumed by a
+// gateway connection), and `provisioningState`. Use this to audit
+// cross-subscription circuit sharing and to detect stale or unused
+// authorizations.
+private azure.subscription.networkService.expressRouteCircuit.authorization @defaults("name authorizationUseStatus provisioningState") {
+  // Authorization ID
+  id string
+  // Authorization name
+  name string
+  // Authorization resource type
+  type string
+  // Authorization etag
+  etag string
+  // Whether a redeemable authorization key is provisioned (the key itself is not exposed)
+  authorizationKeySet bool
+  // Whether the key is currently in use ("Available" or "InUse")
+  authorizationUseStatus string
+  // Provisioning state of the authorization
   provisioningState string
 }
 

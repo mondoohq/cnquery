@@ -211,6 +211,7 @@ filevault
 fips
 firefox
 firestore
+firewalled
 firstname
 FLEXGROUP
 FLEXVOL
@@ -224,6 +225,7 @@ fsn
 ftps
 functionapp
 FWaa
+Gbps
 gcfs
 gclb
 GCMAES
@@ -514,6 +516,7 @@ pzs
 QAwr
 qcow
 QGA
+Qin
 qlist
 querypack
 quorate

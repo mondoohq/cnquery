@@ -85,6 +85,8 @@ const (
 	ResourceAzureSubscriptionNetworkServiceSecurityrule                                          string = "azure.subscription.networkService.securityrule"
 	ResourceAzureSubscriptionNetworkServiceWatcher                                               string = "azure.subscription.networkService.watcher"
 	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                        string = "azure.subscription.networkService.watcher.flowlog"
+	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                  string = "azure.subscription.networkService.watcher.packetCapture"
+	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                              string = "azure.subscription.networkService.watcher.connectionMonitor"
 	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                    string = "azure.subscription.networkService.applicationGateway"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                            string = "azure.subscription.networkService.applicationGateway.listener"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                      string = "azure.subscription.networkService.applicationGateway.sslCertificate"
@@ -96,6 +98,16 @@ const (
 	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection           string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
 	ResourceAzureSubscriptionNetworkServiceRouteTable                                            string = "azure.subscription.networkService.routeTable"
 	ResourceAzureSubscriptionNetworkServiceRoute                                                 string = "azure.subscription.networkService.route"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                 string = "azure.subscription.networkService.trafficManagerProfile"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                         string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
+	ResourceAzureSubscriptionNetworkServiceVirtualWan                                            string = "azure.subscription.networkService.virtualWan"
+	ResourceAzureSubscriptionNetworkServiceVirtualHub                                            string = "azure.subscription.networkService.virtualHub"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubRouteTable                                  string = "azure.subscription.networkService.virtualHub.routeTable"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubVnetConnection                              string = "azure.subscription.networkService.virtualHub.vnetConnection"
+	ResourceAzureSubscriptionNetworkServiceVpnSite                                               string = "azure.subscription.networkService.vpnSite"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                   string = "azure.subscription.networkService.expressRouteCircuit"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                            string = "azure.subscription.networkService.expressRouteCircuit.peering"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                      string = "azure.subscription.networkService.expressRouteCircuit.authorization"
 	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
 	ResourceAzureSubscriptionStorageServiceAccount                                               string = "azure.subscription.storageService.account"
 	ResourceAzureSubscriptionStorageServiceAccountQueue                                          string = "azure.subscription.storageService.account.queue"
@@ -500,7 +512,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceAppSecurityGroup,
 		},
 		"azure.subscription.networkService.firewall": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceFirewall,
 			Create: createAzureSubscriptionNetworkServiceFirewall,
 		},
 		"azure.subscription.networkService.firewall.ipConfig": {
@@ -651,6 +663,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceWatcherFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceWatcherFlowlog,
 		},
+		"azure.subscription.networkService.watcher.packetCapture": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceWatcherPacketCapture(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceWatcherPacketCapture,
+		},
+		"azure.subscription.networkService.watcher.connectionMonitor": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceWatcherConnectionMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceWatcherConnectionMonitor,
+		},
 		"azure.subscription.networkService.applicationGateway": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationGateway,
@@ -694,6 +714,46 @@ func init() {
 		"azure.subscription.networkService.route": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceRoute,
+		},
+		"azure.subscription.networkService.trafficManagerProfile": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceTrafficManagerProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceTrafficManagerProfile,
+		},
+		"azure.subscription.networkService.trafficManagerProfile.endpoint": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint,
+		},
+		"azure.subscription.networkService.virtualWan": {
+			Init:   initAzureSubscriptionNetworkServiceVirtualWan,
+			Create: createAzureSubscriptionNetworkServiceVirtualWan,
+		},
+		"azure.subscription.networkService.virtualHub": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceVirtualHub,
+		},
+		"azure.subscription.networkService.virtualHub.routeTable": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualHubRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceVirtualHubRouteTable,
+		},
+		"azure.subscription.networkService.virtualHub.vnetConnection": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualHubVnetConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceVirtualHubVnetConnection,
+		},
+		"azure.subscription.networkService.vpnSite": {
+			Init:   initAzureSubscriptionNetworkServiceVpnSite,
+			Create: createAzureSubscriptionNetworkServiceVpnSite,
+		},
+		"azure.subscription.networkService.expressRouteCircuit": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceExpressRouteCircuit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceExpressRouteCircuit,
+		},
+		"azure.subscription.networkService.expressRouteCircuit.peering": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceExpressRouteCircuitPeering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceExpressRouteCircuitPeering,
+		},
+		"azure.subscription.networkService.expressRouteCircuit.authorization": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization,
 		},
 		"azure.subscription.storageService": {
 			Init:   initAzureSubscriptionStorageService,
@@ -3331,6 +3391,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.serviceEndpointPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetServiceEndpointPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.serviceEndpointPolicy")))
 	},
+	"azure.subscription.networkService.trafficManagerProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetTrafficManagerProfiles()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.trafficManagerProfile")))
+	},
+	"azure.subscription.networkService.virtualWans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetVirtualWans()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualWan")))
+	},
+	"azure.subscription.networkService.virtualHubs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetVirtualHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualHub")))
+	},
+	"azure.subscription.networkService.vpnSites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetVpnSites()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.vpnSite")))
+	},
+	"azure.subscription.networkService.expressRouteCircuits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetExpressRouteCircuits()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.expressRouteCircuit")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetId()).ToDataRes(types.String)
 	},
@@ -4450,6 +4525,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.watcher.flowLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetFlowLogs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.watcher.flowlog")))
 	},
+	"azure.subscription.networkService.watcher.packetCaptures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetPacketCaptures()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.watcher.packetCapture")))
+	},
+	"azure.subscription.networkService.watcher.connectionMonitors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetConnectionMonitors()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.watcher.connectionMonitor")))
+	},
 	"azure.subscription.networkService.watcher.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetProvisioningState()).ToDataRes(types.String)
 	},
@@ -4497,6 +4578,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.watcher.flowlog.analytics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherFlowlog).GetAnalytics()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetTargetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.bytesToCapturePerPacket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetBytesToCapturePerPacket()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.timeLimitInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetTimeLimitInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.totalBytesPerSession": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetTotalBytesPerSession()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.continuousCapture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetContinuousCapture()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.watcher.packetCapture.storageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetStorageLocation()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.watcher.packetCapture.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.autoStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetAutoStart()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.monitoringIntervalInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetMonitoringIntervalInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetNotes()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.connectionMonitorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetConnectionMonitorType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.monitoringStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetMonitoringStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.testConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetTestConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.testGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetTestGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.outputs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).GetOutputs()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.applicationGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetId()).ToDataRes(types.String)
@@ -4815,6 +4986,480 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.route.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceRoute).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetProfileStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.trafficRoutingMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetTrafficRoutingMethod()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.trafficViewEnrollmentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetTrafficViewEnrollmentStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.maxReturn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetMaxReturn()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.allowedEndpointRecordTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetAllowedEndpointRecordTypes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetDnsConfig()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetMonitorConfig()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.trafficManagerProfile.endpoint")))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetEndpointStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointMonitorStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetEndpointMonitorStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.alwaysServe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetAlwaysServe()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.targetResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetTargetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetEndpointLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetWeight()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetMinChildEndpoints()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpointsIPv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetMinChildEndpointsIPv4()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpointsIPv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetMinChildEndpointsIPv6()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.geoMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetGeoMapping()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetSubnets()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.customHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetCustomHeaders()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.virtualWan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.virtualWan.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualWan.allowBranchToBranchTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetAllowBranchToBranchTraffic()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualWan.allowVnetToVnetTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetAllowVnetToVnetTraffic()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualWan.disableVpnEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetDisableVpnEncryption()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualWan.office365LocalBreakoutCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetOffice365LocalBreakoutCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.virtualWanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetVirtualWanType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualWan.vpnSites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetVpnSites()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.vpnSite")))
+	},
+	"azure.subscription.networkService.virtualWan.virtualHubs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).GetVirtualHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualHub")))
+	},
+	"azure.subscription.networkService.virtualHub.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.virtualHub.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualHub.addressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetSku()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.allowBranchToBranchTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetAllowBranchToBranchTraffic()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualHub.preferredRoutingGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetPreferredRoutingGateway()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.hubRoutingPreference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetHubRoutingPreference()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.virtualRouterAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetVirtualRouterAsn()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.virtualHub.virtualRouterIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetVirtualRouterIps()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.virtualHub.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.routingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetRoutingState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.securityProviderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetSecurityProviderName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.virtualWan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetVirtualWan()).ToDataRes(types.Resource("azure.subscription.networkService.virtualWan"))
+	},
+	"azure.subscription.networkService.virtualHub.azureFirewall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetAzureFirewall()).ToDataRes(types.Resource("azure.subscription.networkService.firewall"))
+	},
+	"azure.subscription.networkService.virtualHub.routeTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetRouteTables()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualHub.routeTable")))
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).GetVnetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualHub.vnetConnection")))
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetRoutes()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.associatedConnectionIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetAssociatedConnectionIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.propagatingConnectionIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetPropagatingConnectionIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.enableInternetSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetEnableInternetSecurity()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.routingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetRoutingConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.remoteVirtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).GetRemoteVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.networkService.virtualNetwork"))
+	},
+	"azure.subscription.networkService.vpnSite.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.vpnSite.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.vpnSite.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.addressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetAddressPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.vpnSite.isSecuritySite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetIsSecuritySite()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.vpnSite.siteKeySet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetSiteKeySet()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.vpnSite.deviceVendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetDeviceVendor()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.deviceModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetDeviceModel()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.linkSpeedInMbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetLinkSpeedInMbps()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.vpnSite.bgpAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetBgpAsn()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.vpnSite.bgpPeeringAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetBgpPeeringAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.bgpPeerWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetBgpPeerWeight()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.vpnSite.o365Policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetO365Policy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.vpnSite.vpnSiteLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetVpnSiteLinks()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.vpnSite.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.vpnSite.virtualWan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVpnSite).GetVirtualWan()).ToDataRes(types.Resource("azure.subscription.networkService.virtualWan"))
+	},
+	"azure.subscription.networkService.expressRouteCircuit.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.expressRouteCircuit.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetSkuFamily()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.allowClassicOperations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetAllowClassicOperations()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.globalReachEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetGlobalReachEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.bandwidthInGbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetBandwidthInGbps()).ToDataRes(types.Float)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.bandwidthInMbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetBandwidthInMbps()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetServiceProviderName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peeringLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetPeeringLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderNotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetServiceProviderNotes()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.circuitProvisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetCircuitProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderProvisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetServiceProviderProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.enableDirectPortRateLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetEnableDirectPortRateLimit()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.expressRoutePortId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetExpressRoutePortId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorizationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetAuthorizationStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.stag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetStag()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetPeerings()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.expressRouteCircuit.peering")))
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GetAuthorizations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.expressRouteCircuit.authorization")))
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.peeringType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetPeeringType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.azureAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetAzureAsn()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.peerAsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetPeerAsn()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.primaryPeerAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetPrimaryPeerAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.secondaryPeerAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetSecondaryPeerAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.primaryAzurePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetPrimaryAzurePort()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.secondaryAzurePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetSecondaryAzurePort()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.sharedKeySet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetSharedKeySet()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.vlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetVlanId()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.gatewayManagerEtag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetGatewayManagerEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.microsoftPeeringConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetMicrosoftPeeringConfig()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.ipv6PeeringConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GetIpv6PeeringConfig()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.authorizationKeySet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetAuthorizationKeySet()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.authorizationUseStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetAuthorizationUseStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.storageService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageService).GetSubscriptionId()).ToDataRes(types.String)
@@ -15002,6 +15647,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).ServiceEndpointPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.trafficManagerProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).TrafficManagerProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).VirtualWans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).VirtualHubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).VpnSites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).ExpressRouteCircuits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).__id, ok = v.Value.(string)
 		return
@@ -16650,6 +17315,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceWatcher).FlowLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.watcher.packetCaptures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcher).PacketCaptures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcher).ConnectionMonitors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.watcher.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceWatcher).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -16716,6 +17389,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.watcher.flowlog.analytics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceWatcherFlowlog).Analytics, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.bytesToCapturePerPacket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).BytesToCapturePerPacket, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.timeLimitInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).TimeLimitInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.totalBytesPerSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).TotalBytesPerSession, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.continuousCapture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).ContinuousCapture, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.storageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).StorageLocation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.packetCapture.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherPacketCapture).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.autoStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).AutoStart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.monitoringIntervalInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).MonitoringIntervalInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.connectionMonitorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).ConnectionMonitorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.monitoringStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).MonitoringStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.testConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).TestConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.testGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).TestGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.watcher.connectionMonitor.outputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor).Outputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.applicationGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17184,6 +17985,678 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.route.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceRoute).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).ProfileStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.trafficRoutingMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).TrafficRoutingMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.trafficViewEnrollmentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).TrafficViewEnrollmentStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.maxReturn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).MaxReturn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.allowedEndpointRecordTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).AllowedEndpointRecordTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).DnsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).MonitorConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).EndpointStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointMonitorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).EndpointMonitorStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.alwaysServe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).AlwaysServe, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.targetResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).TargetResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).EndpointLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).MinChildEndpoints, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpointsIPv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).MinChildEndpointsIPv4, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpointsIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).MinChildEndpointsIPv6, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.geoMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GeoMapping, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.customHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).CustomHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.allowBranchToBranchTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).AllowBranchToBranchTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.allowVnetToVnetTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).AllowVnetToVnetTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.disableVpnEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).DisableVpnEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.office365LocalBreakoutCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).Office365LocalBreakoutCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.virtualWanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).VirtualWanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.vpnSites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).VpnSites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualWan.virtualHubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualWan).VirtualHubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.addressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).AddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).Sku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.allowBranchToBranchTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).AllowBranchToBranchTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.preferredRoutingGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).PreferredRoutingGateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.hubRoutingPreference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).HubRoutingPreference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.virtualRouterAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).VirtualRouterAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.virtualRouterIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).VirtualRouterIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).RoutingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.securityProviderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).SecurityProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.virtualWan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).VirtualWan, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualWan](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.azureFirewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).AzureFirewall, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFirewall](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHub).VnetConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.associatedConnectionIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).AssociatedConnectionIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.propagatingConnectionIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).PropagatingConnectionIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.routeTable.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.enableInternetSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).EnableInternetSecurity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.routingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).RoutingConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualHub.vnetConnection.remoteVirtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection).RemoteVirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.addressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).AddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.isSecuritySite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).IsSecuritySite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.siteKeySet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).SiteKeySet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.deviceVendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).DeviceVendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.deviceModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).DeviceModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.linkSpeedInMbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).LinkSpeedInMbps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.bgpAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).BgpAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.bgpPeeringAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).BgpPeeringAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.bgpPeerWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).BgpPeerWeight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.o365Policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).O365Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.vpnSiteLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).VpnSiteLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.vpnSite.virtualWan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVpnSite).VirtualWan, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualWan](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.skuFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).SkuFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.allowClassicOperations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).AllowClassicOperations, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.globalReachEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).GlobalReachEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.bandwidthInGbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).BandwidthInGbps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.bandwidthInMbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).BandwidthInMbps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).ServiceProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peeringLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).PeeringLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderNotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).ServiceProviderNotes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.circuitProvisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).CircuitProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.serviceProviderProvisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).ServiceProviderProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.enableDirectPortRateLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).EnableDirectPortRateLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.expressRoutePortId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).ExpressRoutePortId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorizationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).AuthorizationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.stag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Stag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Peerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuit).Authorizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.peeringType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).PeeringType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.azureAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).AzureAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.peerAsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).PeerAsn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.primaryPeerAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).PrimaryPeerAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.secondaryPeerAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).SecondaryPeerAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.primaryAzurePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).PrimaryAzurePort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.secondaryAzurePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).SecondaryAzurePort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.sharedKeySet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).SharedKeySet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.vlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.gatewayManagerEtag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).GatewayManagerEtag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.microsoftPeeringConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).MicrosoftPeeringConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.peering.ipv6PeeringConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering).Ipv6PeeringConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.authorizationKeySet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).AuthorizationKeySet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.authorizationUseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).AuthorizationUseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.expressRouteCircuit.authorization.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33524,6 +34997,11 @@ type mqlAzureSubscriptionNetworkService struct {
 	RouteTables                 plugin.TValue[[]any]
 	DdosProtectionPlans         plugin.TValue[[]any]
 	ServiceEndpointPolicies     plugin.TValue[[]any]
+	TrafficManagerProfiles      plugin.TValue[[]any]
+	VirtualWans                 plugin.TValue[[]any]
+	VirtualHubs                 plugin.TValue[[]any]
+	VpnSites                    plugin.TValue[[]any]
+	ExpressRouteCircuits        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -33884,6 +35362,86 @@ func (c *mqlAzureSubscriptionNetworkService) GetServiceEndpointPolicies() *plugi
 		}
 
 		return c.serviceEndpointPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetTrafficManagerProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrafficManagerProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "trafficManagerProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trafficManagerProfiles()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetVirtualWans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualWans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "virtualWans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualWans()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetVirtualHubs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualHubs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "virtualHubs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualHubs()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetVpnSites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnSites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "vpnSites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnSites()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetExpressRouteCircuits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExpressRouteCircuits, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "expressRouteCircuits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.expressRouteCircuits()
 	})
 }
 
@@ -37941,15 +39499,17 @@ type mqlAzureSubscriptionNetworkServiceWatcher struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionNetworkServiceWatcherInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Location          plugin.TValue[string]
-	Tags              plugin.TValue[map[string]any]
-	Type              plugin.TValue[string]
-	Etag              plugin.TValue[string]
-	Properties        plugin.TValue[any]
-	FlowLogs          plugin.TValue[[]any]
-	ProvisioningState plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Location           plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	Type               plugin.TValue[string]
+	Etag               plugin.TValue[string]
+	Properties         plugin.TValue[any]
+	FlowLogs           plugin.TValue[[]any]
+	PacketCaptures     plugin.TValue[[]any]
+	ConnectionMonitors plugin.TValue[[]any]
+	ProvisioningState  plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServiceWatcher creates a new instance of this resource
@@ -38030,6 +39590,38 @@ func (c *mqlAzureSubscriptionNetworkServiceWatcher) GetFlowLogs() *plugin.TValue
 		}
 
 		return c.flowLogs()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcher) GetPacketCaptures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PacketCaptures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.watcher", c.__id, "packetCaptures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.packetCaptures()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcher) GetConnectionMonitors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectionMonitors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.watcher", c.__id, "connectionMonitors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectionMonitors()
 	})
 }
 
@@ -38154,6 +39746,244 @@ func (c *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) GetRetentionPolicy() 
 
 func (c *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) GetAnalytics() *plugin.TValue[any] {
 	return &c.Analytics
+}
+
+// mqlAzureSubscriptionNetworkServiceWatcherPacketCapture for the azure.subscription.networkService.watcher.packetCapture resource
+type mqlAzureSubscriptionNetworkServiceWatcherPacketCapture struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceWatcherPacketCaptureInternal it will be used here
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Etag                    plugin.TValue[string]
+	Properties              plugin.TValue[any]
+	Target                  plugin.TValue[string]
+	TargetType              plugin.TValue[string]
+	BytesToCapturePerPacket plugin.TValue[int64]
+	TimeLimitInSeconds      plugin.TValue[int64]
+	TotalBytesPerSession    plugin.TValue[int64]
+	ContinuousCapture       plugin.TValue[bool]
+	Filters                 plugin.TValue[[]any]
+	StorageLocation         plugin.TValue[any]
+	ProvisioningState       plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceWatcherPacketCapture creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceWatcherPacketCapture(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceWatcherPacketCapture{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.watcher.packetCapture", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) MqlName() string {
+	return "azure.subscription.networkService.watcher.packetCapture"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetBytesToCapturePerPacket() *plugin.TValue[int64] {
+	return &c.BytesToCapturePerPacket
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetTimeLimitInSeconds() *plugin.TValue[int64] {
+	return &c.TimeLimitInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetTotalBytesPerSession() *plugin.TValue[int64] {
+	return &c.TotalBytesPerSession
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetContinuousCapture() *plugin.TValue[bool] {
+	return &c.ContinuousCapture
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetFilters() *plugin.TValue[[]any] {
+	return &c.Filters
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetStorageLocation() *plugin.TValue[any] {
+	return &c.StorageLocation
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherPacketCapture) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor for the azure.subscription.networkService.watcher.connectionMonitor resource
+type mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitorInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Type                        plugin.TValue[string]
+	Etag                        plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	AutoStart                   plugin.TValue[bool]
+	MonitoringIntervalInSeconds plugin.TValue[int64]
+	Notes                       plugin.TValue[string]
+	ConnectionMonitorType       plugin.TValue[string]
+	MonitoringStatus            plugin.TValue[string]
+	ProvisioningState           plugin.TValue[string]
+	Endpoints                   plugin.TValue[[]any]
+	TestConfigurations          plugin.TValue[[]any]
+	TestGroups                  plugin.TValue[[]any]
+	Outputs                     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceWatcherConnectionMonitor creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceWatcherConnectionMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.watcher.connectionMonitor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) MqlName() string {
+	return "azure.subscription.networkService.watcher.connectionMonitor"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetAutoStart() *plugin.TValue[bool] {
+	return &c.AutoStart
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetMonitoringIntervalInSeconds() *plugin.TValue[int64] {
+	return &c.MonitoringIntervalInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetConnectionMonitorType() *plugin.TValue[string] {
+	return &c.ConnectionMonitorType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetMonitoringStatus() *plugin.TValue[string] {
+	return &c.MonitoringStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetTestConfigurations() *plugin.TValue[[]any] {
+	return &c.TestConfigurations
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetTestGroups() *plugin.TValue[[]any] {
+	return &c.TestGroups
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWatcherConnectionMonitor) GetOutputs() *plugin.TValue[[]any] {
+	return &c.Outputs
 }
 
 // mqlAzureSubscriptionNetworkServiceApplicationGateway for the azure.subscription.networkService.applicationGateway resource
@@ -39221,6 +41051,1356 @@ func (c *mqlAzureSubscriptionNetworkServiceRoute) GetHasBgpOverride() *plugin.TV
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceRoute) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceTrafficManagerProfile for the azure.subscription.networkService.trafficManagerProfile resource
+type mqlAzureSubscriptionNetworkServiceTrafficManagerProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceTrafficManagerProfileInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Type                        plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	ProfileStatus               plugin.TValue[string]
+	TrafficRoutingMethod        plugin.TValue[string]
+	TrafficViewEnrollmentStatus plugin.TValue[string]
+	MaxReturn                   plugin.TValue[int64]
+	AllowedEndpointRecordTypes  plugin.TValue[[]any]
+	DnsConfig                   plugin.TValue[any]
+	MonitorConfig               plugin.TValue[any]
+	Endpoints                   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceTrafficManagerProfile creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceTrafficManagerProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceTrafficManagerProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.trafficManagerProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) MqlName() string {
+	return "azure.subscription.networkService.trafficManagerProfile"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetProfileStatus() *plugin.TValue[string] {
+	return &c.ProfileStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetTrafficRoutingMethod() *plugin.TValue[string] {
+	return &c.TrafficRoutingMethod
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetTrafficViewEnrollmentStatus() *plugin.TValue[string] {
+	return &c.TrafficViewEnrollmentStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetMaxReturn() *plugin.TValue[int64] {
+	return &c.MaxReturn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetAllowedEndpointRecordTypes() *plugin.TValue[[]any] {
+	return &c.AllowedEndpointRecordTypes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetDnsConfig() *plugin.TValue[any] {
+	return &c.DnsConfig
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetMonitorConfig() *plugin.TValue[any] {
+	return &c.MonitorConfig
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+// mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint for the azure.subscription.networkService.trafficManagerProfile.endpoint resource
+type mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpointInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Properties            plugin.TValue[any]
+	EndpointStatus        plugin.TValue[string]
+	EndpointMonitorStatus plugin.TValue[string]
+	AlwaysServe           plugin.TValue[string]
+	Target                plugin.TValue[string]
+	TargetResourceId      plugin.TValue[string]
+	EndpointLocation      plugin.TValue[string]
+	Weight                plugin.TValue[int64]
+	Priority              plugin.TValue[int64]
+	MinChildEndpoints     plugin.TValue[int64]
+	MinChildEndpointsIPv4 plugin.TValue[int64]
+	MinChildEndpointsIPv6 plugin.TValue[int64]
+	GeoMapping            plugin.TValue[[]any]
+	Subnets               plugin.TValue[[]any]
+	CustomHeaders         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.trafficManagerProfile.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) MqlName() string {
+	return "azure.subscription.networkService.trafficManagerProfile.endpoint"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetEndpointStatus() *plugin.TValue[string] {
+	return &c.EndpointStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetEndpointMonitorStatus() *plugin.TValue[string] {
+	return &c.EndpointMonitorStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetAlwaysServe() *plugin.TValue[string] {
+	return &c.AlwaysServe
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetTargetResourceId() *plugin.TValue[string] {
+	return &c.TargetResourceId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetEndpointLocation() *plugin.TValue[string] {
+	return &c.EndpointLocation
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetMinChildEndpoints() *plugin.TValue[int64] {
+	return &c.MinChildEndpoints
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetMinChildEndpointsIPv4() *plugin.TValue[int64] {
+	return &c.MinChildEndpointsIPv4
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetMinChildEndpointsIPv6() *plugin.TValue[int64] {
+	return &c.MinChildEndpointsIPv6
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetGeoMapping() *plugin.TValue[[]any] {
+	return &c.GeoMapping
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetSubnets() *plugin.TValue[[]any] {
+	return &c.Subnets
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetCustomHeaders() *plugin.TValue[[]any] {
+	return &c.CustomHeaders
+}
+
+// mqlAzureSubscriptionNetworkServiceVirtualWan for the azure.subscription.networkService.virtualWan resource
+type mqlAzureSubscriptionNetworkServiceVirtualWan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceVirtualWanInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	Type                           plugin.TValue[string]
+	Etag                           plugin.TValue[string]
+	Properties                     plugin.TValue[any]
+	AllowBranchToBranchTraffic     plugin.TValue[bool]
+	AllowVnetToVnetTraffic         plugin.TValue[bool]
+	DisableVpnEncryption           plugin.TValue[bool]
+	Office365LocalBreakoutCategory plugin.TValue[string]
+	VirtualWanType                 plugin.TValue[string]
+	ProvisioningState              plugin.TValue[string]
+	VpnSites                       plugin.TValue[[]any]
+	VirtualHubs                    plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualWan creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualWan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualWan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualWan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) MqlName() string {
+	return "azure.subscription.networkService.virtualWan"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetAllowBranchToBranchTraffic() *plugin.TValue[bool] {
+	return &c.AllowBranchToBranchTraffic
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetAllowVnetToVnetTraffic() *plugin.TValue[bool] {
+	return &c.AllowVnetToVnetTraffic
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetDisableVpnEncryption() *plugin.TValue[bool] {
+	return &c.DisableVpnEncryption
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetOffice365LocalBreakoutCategory() *plugin.TValue[string] {
+	return &c.Office365LocalBreakoutCategory
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetVirtualWanType() *plugin.TValue[string] {
+	return &c.VirtualWanType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetVpnSites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnSites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualWan", c.__id, "vpnSites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnSites()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualWan) GetVirtualHubs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualHubs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualWan", c.__id, "virtualHubs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualHubs()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceVirtualHub for the azure.subscription.networkService.virtualHub resource
+type mqlAzureSubscriptionNetworkServiceVirtualHub struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceVirtualHubInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Type                       plugin.TValue[string]
+	Etag                       plugin.TValue[string]
+	Kind                       plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	AddressPrefix              plugin.TValue[string]
+	Sku                        plugin.TValue[string]
+	AllowBranchToBranchTraffic plugin.TValue[bool]
+	PreferredRoutingGateway    plugin.TValue[string]
+	HubRoutingPreference       plugin.TValue[string]
+	VirtualRouterAsn           plugin.TValue[int64]
+	VirtualRouterIps           plugin.TValue[[]any]
+	ProvisioningState          plugin.TValue[string]
+	RoutingState               plugin.TValue[string]
+	SecurityProviderName       plugin.TValue[string]
+	VirtualWan                 plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualWan]
+	AzureFirewall              plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewall]
+	RouteTables                plugin.TValue[[]any]
+	VnetConnections            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualHub creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualHub{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualHub", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) MqlName() string {
+	return "azure.subscription.networkService.virtualHub"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetAddressPrefix() *plugin.TValue[string] {
+	return &c.AddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetSku() *plugin.TValue[string] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetAllowBranchToBranchTraffic() *plugin.TValue[bool] {
+	return &c.AllowBranchToBranchTraffic
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetPreferredRoutingGateway() *plugin.TValue[string] {
+	return &c.PreferredRoutingGateway
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetHubRoutingPreference() *plugin.TValue[string] {
+	return &c.HubRoutingPreference
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetVirtualRouterAsn() *plugin.TValue[int64] {
+	return &c.VirtualRouterAsn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetVirtualRouterIps() *plugin.TValue[[]any] {
+	return &c.VirtualRouterIps
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetRoutingState() *plugin.TValue[string] {
+	return &c.RoutingState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetSecurityProviderName() *plugin.TValue[string] {
+	return &c.SecurityProviderName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetVirtualWan() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualWan] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualWan](&c.VirtualWan, func() (*mqlAzureSubscriptionNetworkServiceVirtualWan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualHub", c.__id, "virtualWan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualWan), nil
+			}
+		}
+
+		return c.virtualWan()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetAzureFirewall() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewall] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFirewall](&c.AzureFirewall, func() (*mqlAzureSubscriptionNetworkServiceFirewall, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualHub", c.__id, "azureFirewall")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFirewall), nil
+			}
+		}
+
+		return c.azureFirewall()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetRouteTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RouteTables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualHub", c.__id, "routeTables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routeTables()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHub) GetVnetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VnetConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualHub", c.__id, "vnetConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vnetConnections()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable for the azure.subscription.networkService.virtualHub.routeTable resource
+type mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceVirtualHubRouteTableInternal it will be used here
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	Etag                     plugin.TValue[string]
+	Labels                   plugin.TValue[[]any]
+	Routes                   plugin.TValue[[]any]
+	AssociatedConnectionIds  plugin.TValue[[]any]
+	PropagatingConnectionIds plugin.TValue[[]any]
+	ProvisioningState        plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualHubRouteTable creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualHubRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualHub.routeTable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) MqlName() string {
+	return "azure.subscription.networkService.virtualHub.routeTable"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetRoutes() *plugin.TValue[[]any] {
+	return &c.Routes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetAssociatedConnectionIds() *plugin.TValue[[]any] {
+	return &c.AssociatedConnectionIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetPropagatingConnectionIds() *plugin.TValue[[]any] {
+	return &c.PropagatingConnectionIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubRouteTable) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection for the azure.subscription.networkService.virtualHub.vnetConnection resource
+type mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnectionInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	EnableInternetSecurity plugin.TValue[bool]
+	ProvisioningState      plugin.TValue[string]
+	RoutingConfiguration   plugin.TValue[any]
+	RemoteVirtualNetwork   plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualHubVnetConnection creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualHubVnetConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualHub.vnetConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) MqlName() string {
+	return "azure.subscription.networkService.virtualHub.vnetConnection"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetEnableInternetSecurity() *plugin.TValue[bool] {
+	return &c.EnableInternetSecurity
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetRoutingConfiguration() *plugin.TValue[any] {
+	return &c.RoutingConfiguration
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) GetRemoteVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](&c.RemoteVirtualNetwork, func() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualHub.vnetConnection", c.__id, "remoteVirtualNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+			}
+		}
+
+		return c.remoteVirtualNetwork()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceVpnSite for the azure.subscription.networkService.vpnSite resource
+type mqlAzureSubscriptionNetworkServiceVpnSite struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceVpnSiteInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	IpAddress         plugin.TValue[string]
+	AddressPrefixes   plugin.TValue[[]any]
+	IsSecuritySite    plugin.TValue[bool]
+	SiteKeySet        plugin.TValue[bool]
+	DeviceVendor      plugin.TValue[string]
+	DeviceModel       plugin.TValue[string]
+	LinkSpeedInMbps   plugin.TValue[int64]
+	BgpAsn            plugin.TValue[int64]
+	BgpPeeringAddress plugin.TValue[string]
+	BgpPeerWeight     plugin.TValue[int64]
+	O365Policy        plugin.TValue[any]
+	VpnSiteLinks      plugin.TValue[[]any]
+	ProvisioningState plugin.TValue[string]
+	VirtualWan        plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualWan]
+}
+
+// createAzureSubscriptionNetworkServiceVpnSite creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVpnSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVpnSite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.vpnSite", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) MqlName() string {
+	return "azure.subscription.networkService.vpnSite"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.AddressPrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetIsSecuritySite() *plugin.TValue[bool] {
+	return &c.IsSecuritySite
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetSiteKeySet() *plugin.TValue[bool] {
+	return &c.SiteKeySet
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetDeviceVendor() *plugin.TValue[string] {
+	return &c.DeviceVendor
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetDeviceModel() *plugin.TValue[string] {
+	return &c.DeviceModel
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetLinkSpeedInMbps() *plugin.TValue[int64] {
+	return &c.LinkSpeedInMbps
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetBgpAsn() *plugin.TValue[int64] {
+	return &c.BgpAsn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetBgpPeeringAddress() *plugin.TValue[string] {
+	return &c.BgpPeeringAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetBgpPeerWeight() *plugin.TValue[int64] {
+	return &c.BgpPeerWeight
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetO365Policy() *plugin.TValue[any] {
+	return &c.O365Policy
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetVpnSiteLinks() *plugin.TValue[[]any] {
+	return &c.VpnSiteLinks
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVpnSite) GetVirtualWan() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualWan] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualWan](&c.VirtualWan, func() (*mqlAzureSubscriptionNetworkServiceVirtualWan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.vpnSite", c.__id, "virtualWan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualWan), nil
+			}
+		}
+
+		return c.virtualWan()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceExpressRouteCircuit for the azure.subscription.networkService.expressRouteCircuit resource
+type mqlAzureSubscriptionNetworkServiceExpressRouteCircuit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceExpressRouteCircuitInternal it will be used here
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Location                         plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	Type                             plugin.TValue[string]
+	Etag                             plugin.TValue[string]
+	Properties                       plugin.TValue[any]
+	SkuName                          plugin.TValue[string]
+	SkuTier                          plugin.TValue[string]
+	SkuFamily                        plugin.TValue[string]
+	AllowClassicOperations           plugin.TValue[bool]
+	GlobalReachEnabled               plugin.TValue[bool]
+	BandwidthInGbps                  plugin.TValue[float64]
+	BandwidthInMbps                  plugin.TValue[int64]
+	ServiceProviderName              plugin.TValue[string]
+	PeeringLocation                  plugin.TValue[string]
+	ServiceProviderNotes             plugin.TValue[string]
+	CircuitProvisioningState         plugin.TValue[string]
+	ServiceProviderProvisioningState plugin.TValue[string]
+	EnableDirectPortRateLimit        plugin.TValue[bool]
+	ExpressRoutePortId               plugin.TValue[string]
+	AuthorizationStatus              plugin.TValue[string]
+	ProvisioningState                plugin.TValue[string]
+	Stag                             plugin.TValue[int64]
+	Peerings                         plugin.TValue[[]any]
+	Authorizations                   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceExpressRouteCircuit creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceExpressRouteCircuit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceExpressRouteCircuit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.expressRouteCircuit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) MqlName() string {
+	return "azure.subscription.networkService.expressRouteCircuit"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetSkuFamily() *plugin.TValue[string] {
+	return &c.SkuFamily
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetAllowClassicOperations() *plugin.TValue[bool] {
+	return &c.AllowClassicOperations
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetGlobalReachEnabled() *plugin.TValue[bool] {
+	return &c.GlobalReachEnabled
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetBandwidthInGbps() *plugin.TValue[float64] {
+	return &c.BandwidthInGbps
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetBandwidthInMbps() *plugin.TValue[int64] {
+	return &c.BandwidthInMbps
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetServiceProviderName() *plugin.TValue[string] {
+	return &c.ServiceProviderName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetPeeringLocation() *plugin.TValue[string] {
+	return &c.PeeringLocation
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetServiceProviderNotes() *plugin.TValue[string] {
+	return &c.ServiceProviderNotes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetCircuitProvisioningState() *plugin.TValue[string] {
+	return &c.CircuitProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetServiceProviderProvisioningState() *plugin.TValue[string] {
+	return &c.ServiceProviderProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetEnableDirectPortRateLimit() *plugin.TValue[bool] {
+	return &c.EnableDirectPortRateLimit
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetExpressRoutePortId() *plugin.TValue[string] {
+	return &c.ExpressRoutePortId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetAuthorizationStatus() *plugin.TValue[string] {
+	return &c.AuthorizationStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetStag() *plugin.TValue[int64] {
+	return &c.Stag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetPeerings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Peerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.expressRouteCircuit", c.__id, "peerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.peerings()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuit) GetAuthorizations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Authorizations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.expressRouteCircuit", c.__id, "authorizations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizations()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering for the azure.subscription.networkService.expressRouteCircuit.peering resource
+type mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeeringInternal it will be used here
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	Etag                       plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	PeeringType                plugin.TValue[string]
+	State                      plugin.TValue[string]
+	AzureAsn                   plugin.TValue[int64]
+	PeerAsn                    plugin.TValue[int64]
+	PrimaryPeerAddressPrefix   plugin.TValue[string]
+	SecondaryPeerAddressPrefix plugin.TValue[string]
+	PrimaryAzurePort           plugin.TValue[string]
+	SecondaryAzurePort         plugin.TValue[string]
+	SharedKeySet               plugin.TValue[bool]
+	VlanId                     plugin.TValue[int64]
+	GatewayManagerEtag         plugin.TValue[string]
+	ProvisioningState          plugin.TValue[string]
+	MicrosoftPeeringConfig     plugin.TValue[any]
+	Ipv6PeeringConfig          plugin.TValue[any]
+}
+
+// createAzureSubscriptionNetworkServiceExpressRouteCircuitPeering creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceExpressRouteCircuitPeering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.expressRouteCircuit.peering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) MqlName() string {
+	return "azure.subscription.networkService.expressRouteCircuit.peering"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetPeeringType() *plugin.TValue[string] {
+	return &c.PeeringType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetAzureAsn() *plugin.TValue[int64] {
+	return &c.AzureAsn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetPeerAsn() *plugin.TValue[int64] {
+	return &c.PeerAsn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetPrimaryPeerAddressPrefix() *plugin.TValue[string] {
+	return &c.PrimaryPeerAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetSecondaryPeerAddressPrefix() *plugin.TValue[string] {
+	return &c.SecondaryPeerAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetPrimaryAzurePort() *plugin.TValue[string] {
+	return &c.PrimaryAzurePort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetSecondaryAzurePort() *plugin.TValue[string] {
+	return &c.SecondaryAzurePort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetSharedKeySet() *plugin.TValue[bool] {
+	return &c.SharedKeySet
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetVlanId() *plugin.TValue[int64] {
+	return &c.VlanId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetGatewayManagerEtag() *plugin.TValue[string] {
+	return &c.GatewayManagerEtag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetMicrosoftPeeringConfig() *plugin.TValue[any] {
+	return &c.MicrosoftPeeringConfig
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitPeering) GetIpv6PeeringConfig() *plugin.TValue[any] {
+	return &c.Ipv6PeeringConfig
+}
+
+// mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization for the azure.subscription.networkService.expressRouteCircuit.authorization resource
+type mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorizationInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	AuthorizationKeySet    plugin.TValue[bool]
+	AuthorizationUseStatus plugin.TValue[string]
+	ProvisioningState      plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.expressRouteCircuit.authorization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) MqlName() string {
+	return "azure.subscription.networkService.expressRouteCircuit.authorization"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetAuthorizationKeySet() *plugin.TValue[bool] {
+	return &c.AuthorizationKeySet
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetAuthorizationUseStatus() *plugin.TValue[string] {
+	return &c.AuthorizationUseStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
 }
 
