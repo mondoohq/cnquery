@@ -12,6 +12,7 @@ Usage:
 
 Available Commands:
   completion    Generate the autocompletion script for the specified shell
+  discover      Discover assets
   help          Help about any command
   login         Register with Mondoo Platform
   logout        Log out from Mondoo Platform

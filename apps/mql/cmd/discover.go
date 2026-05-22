@@ -32,8 +32,8 @@ func init() {
 
 var DiscoverCmd = &cobra.Command{
 	Use:   "discover",
-	Short: "Discover assets from an inventory file",
-	Long:  `Discover assets defined by an inventory file's discovery targets/filters. Prints a per-platform asset count to stdout. Pass --output-full <path> to additionally write every discovered asset to a file; pick the file format with --output-format json|jsonl|yaml (default json). No queries are executed.`,
+	Short: "Discover assets",
+	Long:  `Discover assets defined by an inventory file's discovery targets/filters or via CLI parameters. Prints a per-platform asset count to stdout. Pass --output-full <path> to additionally write every discovered asset to a file; pick the file format with --output-format json|jsonl|yaml (default json). No queries are executed.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		_ = viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
 		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
