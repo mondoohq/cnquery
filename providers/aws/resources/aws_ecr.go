@@ -159,11 +159,12 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			svc := conn.Ecr(region)
 			res := []any{}
 
-			paginator := ecr.NewDescribeRepositoriesPaginator(svc, &ecr.DescribeRepositoriesInput{
-				// AWS does not do partial results and returns an error if a single repository
-				// supplied in the filters is not found
-				RepositoryNames: conn.Filters.Ecr.PrivateRepositoryNames,
-			})
+			req := &ecr.DescribeRepositoriesInput{}
+			if len(conn.Filters.Ecr.PrivateRepositoryNames) > 0 {
+				req.RepositoryNames = conn.Filters.Ecr.PrivateRepositoryNames
+			}
+
+			paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
 			for paginator.HasMorePages() {
 				repoResp, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -522,12 +523,16 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []any{}
 
-	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, &ecrpublic.DescribeRepositoriesInput{
+	req := &ecrpublic.DescribeRepositoriesInput{
 		RegistryId: aws.String(conn.AccountId()),
+	}
+	if len(conn.Filters.Ecr.PublicRepositoryNames) > 0 {
 		// AWS does not do partial results and returns an error if a single repository
 		// supplied in the filters is not found
-		RepositoryNames: conn.Filters.Ecr.PublicRepositoryNames,
-	})
+		req.RepositoryNames = conn.Filters.Ecr.PublicRepositoryNames
+	}
+
+	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, req)
 	for paginator.HasMorePages() {
 		repoResp, err := paginator.NextPage(context.TODO())
 		if err != nil {
