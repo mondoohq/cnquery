@@ -456,7 +456,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   deployTokens() []gitlab.project.deployToken
   // Security settings for the project
   securitySettings() gitlab.project.securitySetting
-  // CODEOWNERS file resolved from the default branch (nil if the file is absent)
+  // CODEOWNERS file resolved from the default branch (use `present` to detect a missing file)
   codeowners() gitlab.project.codeowners
 }
 
@@ -927,7 +927,7 @@ private gitlab.project.runner @defaults("id description status runnerType") {
   maintenanceNote() string
   // Path-with-namespace of projects the runner is associated with (e.g. "acme/api")
   projects() []string
-  // Full paths of groups the runner is associated with (group-type runners)
+  // Web URLs of groups the runner is associated with (group-type runners) — the GitLab SDK exposes only the URL form for runner-detail groups
   groups() []string
 }
 
