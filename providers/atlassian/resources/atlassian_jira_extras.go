@@ -189,13 +189,23 @@ func ruleListToAny(rules []*models.WorkflowRuleConfigurationScheme) []any {
 	return out
 }
 
+// maxConditionGroupDepth caps recursion through nested workflow condition
+// groups. The Jira UI doesn't allow trees this deep in practice, so anything
+// beyond this is almost certainly a malformed payload — truncate rather than
+// risk an unbounded recursion.
+const maxConditionGroupDepth = 20
+
 func ruleConfigurationsToAny(cg *models.ConditionGroupConfigurationScheme) any {
-	if cg == nil {
+	return ruleConfigurationsToAnyDepth(cg, 0)
+}
+
+func ruleConfigurationsToAnyDepth(cg *models.ConditionGroupConfigurationScheme, depth int) any {
+	if cg == nil || depth >= maxConditionGroupDepth {
 		return nil
 	}
 	groups := make([]any, 0, len(cg.ConditionGroups))
 	for _, g := range cg.ConditionGroups {
-		groups = append(groups, ruleConfigurationsToAny(g))
+		groups = append(groups, ruleConfigurationsToAnyDepth(g, depth+1))
 	}
 	return map[string]any{
 		"operation":       cg.Operation,
