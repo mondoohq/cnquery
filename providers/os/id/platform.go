@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/id/ids"
 	"go.mondoo.com/mql/v13/providers/os/id/machineid"
 	"go.mondoo.com/mql/v13/providers/os/id/serialnumber"
+	"go.mondoo.com/mql/v13/providers/os/id/windowsadsid"
 )
 
 type PlatformFingerprint struct {
@@ -220,6 +221,17 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 		uuid, err := biosuuid.BiosUUID(conn, pf)
 		if err == nil && len(uuid) > 0 {
 			identifier = "//platformid.api.mondoo.app/bios-uuid/" + uuid
+			return &platformInfo{
+				IDs:                []string{identifier},
+				Name:               "",
+				RelatedPlatformIDs: []string{},
+			}, nil
+		}
+		return &platformInfo{}, nil
+	case ids.IdDetector_WindowsADSID:
+		sid, err := windowsadsid.WindowsADSID(conn, pf)
+		if err == nil && len(sid) > 0 {
+			identifier = "//platformid.api.mondoo.app/windows-ad-sid/" + sid
 			return &platformInfo{
 				IDs:                []string{identifier},
 				Name:               "",

@@ -10,6 +10,7 @@ const (
 	IdDetector_BiosUUID     = "bios-uuid"
 	IdDetector_CloudDetect  = "cloud-detect"
 	IdDetector_AwsEcs       = "aws-ecs"
+	IdDetector_WindowsADSID = "windows-ad-sid"
 
 	// IdDetector_PlatformID = "transport-platform-id" // TODO: how does this work?
 )
