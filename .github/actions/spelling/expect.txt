@@ -203,6 +203,7 @@ exadata
 exo
 faa
 fargate
+favourited
 fce
 fdfhash
 FEBLx
@@ -306,7 +307,7 @@ JFi
 jira
 jkl
 jpi
-JQL
+jql
 jre
 jsd
 jsonbody
@@ -346,6 +347,7 @@ linuxbrew
 linuxefi
 liveanalytics
 localos
+loggedin
 loggingservice
 logpull
 logpush
