@@ -840,7 +840,9 @@ digitalocean.spacesBucket @defaults("name region publicAccessBlocked encryptionE
   region string
   // Time the bucket was created
   createdAt time
-  // Whether DigitalOcean's account-wide Public Access Block is in effect for this bucket (the bucket is not publicly listable regardless of ACL or policy)
+  // Whether the bucket-level Public Access Block is fully in effect (all four block flags on)
+  //
+  // True when `BlockPublicAcls`, `BlockPublicPolicy`, `IgnorePublicAcls`, and `RestrictPublicBuckets` are all set on the bucket's `PublicAccessBlock` configuration. DigitalOcean's S3-compatible API exposes this at the bucket level only — there is no account-wide toggle. False can mean either an explicit weakening or no configuration at all.
   publicAccessBlocked bool
   // Whether the bucket ACL grants READ to the AllUsers group (anonymous read)
   publicReadAcl bool

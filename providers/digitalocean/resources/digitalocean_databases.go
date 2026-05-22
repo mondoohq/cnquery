@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/digitalocean/godo"
@@ -14,6 +15,9 @@ import (
 
 type mqlDigitaloceanDatabaseInternal struct {
 	cachedBackups []godo.DatabaseBackup
+	backupsErr    error
+	backupsLock   sync.Mutex
+	backupsDone   bool
 }
 
 func (r *mqlDigitaloceanDatabaseBackup) id() (string, error) {
@@ -21,13 +25,20 @@ func (r *mqlDigitaloceanDatabaseBackup) id() (string, error) {
 		r.CreatedAt.Data.UTC().Format(time.RFC3339Nano), nil
 }
 
-// listBackups fetches all retained backups for the cluster once and
-// caches them; the same call feeds backups(), latestBackupAt(), and
-// backupCount() so we don't hit the API three times.
+// fetchBackups returns the retained backups for the cluster, fetching once
+// and caching the result so backups(), latestBackupAt(), and backupCount()
+// share a single API round-trip. The double-check around `backupsDone`
+// keeps concurrent accessors from racing on the cache fields.
 func (r *mqlDigitaloceanDatabase) fetchBackups() ([]godo.DatabaseBackup, error) {
-	if r.cachedBackups != nil {
-		return r.cachedBackups, nil
+	if r.backupsDone {
+		return r.cachedBackups, r.backupsErr
 	}
+	r.backupsLock.Lock()
+	defer r.backupsLock.Unlock()
+	if r.backupsDone {
+		return r.cachedBackups, r.backupsErr
+	}
+
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
@@ -36,6 +47,8 @@ func (r *mqlDigitaloceanDatabase) fetchBackups() ([]godo.DatabaseBackup, error) 
 	for {
 		backups, resp, err := client.Databases.ListBackups(context.Background(), r.Id.Data, opt)
 		if err != nil {
+			r.backupsErr = err
+			r.backupsDone = true
 			return nil, err
 		}
 		all = append(all, backups...)
@@ -49,6 +62,7 @@ func (r *mqlDigitaloceanDatabase) fetchBackups() ([]godo.DatabaseBackup, error) 
 		opt.Page = page + 1
 	}
 	r.cachedBackups = all
+	r.backupsDone = true
 	return all, nil
 }
 

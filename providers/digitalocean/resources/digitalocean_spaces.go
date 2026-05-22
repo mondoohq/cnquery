@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
@@ -127,7 +128,9 @@ func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3t
 				}
 			}
 		}
-	} else if !isAccessDenied(err) {
+	} else if isAccessDenied(err) {
+		log.Warn().Err(err).Str("bucket", name).Msg("digitalocean> ACL access denied; bucket reported with no grants — audit results may be incomplete")
+	} else {
 		return nil, err
 	}
 
