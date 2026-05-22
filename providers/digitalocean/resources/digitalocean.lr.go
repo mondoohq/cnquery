@@ -16,40 +16,43 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceDigitalocean                   string = "digitalocean"
-	ResourceDigitaloceanAccount            string = "digitalocean.account"
-	ResourceDigitaloceanDroplet            string = "digitalocean.droplet"
-	ResourceDigitaloceanFirewall           string = "digitalocean.firewall"
-	ResourceDigitaloceanDatabase           string = "digitalocean.database"
-	ResourceDigitaloceanDatabaseBackup     string = "digitalocean.database.backup"
-	ResourceDigitaloceanDatabaseUser       string = "digitalocean.database.user"
-	ResourceDigitaloceanDatabaseReplica    string = "digitalocean.database.replica"
-	ResourceDigitaloceanDatabasePool       string = "digitalocean.database.pool"
-	ResourceDigitaloceanDomain             string = "digitalocean.domain"
-	ResourceDigitaloceanDomainRecord       string = "digitalocean.domain.record"
-	ResourceDigitaloceanVolume             string = "digitalocean.volume"
-	ResourceDigitaloceanLoadBalancer       string = "digitalocean.loadBalancer"
-	ResourceDigitaloceanVpc                string = "digitalocean.vpc"
-	ResourceDigitaloceanVpcPeering         string = "digitalocean.vpcPeering"
-	ResourceDigitaloceanKubernetesCluster  string = "digitalocean.kubernetes.cluster"
-	ResourceDigitaloceanKubernetesNodePool string = "digitalocean.kubernetes.nodePool"
-	ResourceDigitaloceanProject            string = "digitalocean.project"
-	ResourceDigitaloceanSshKey             string = "digitalocean.sshKey"
-	ResourceDigitaloceanCertificate        string = "digitalocean.certificate"
-	ResourceDigitaloceanRegistry           string = "digitalocean.registry"
-	ResourceDigitaloceanRegistryRepository string = "digitalocean.registry.repository"
-	ResourceDigitaloceanReservedIp         string = "digitalocean.reservedIp"
-	ResourceDigitaloceanApp                string = "digitalocean.app"
-	ResourceDigitaloceanAlertPolicy        string = "digitalocean.alertPolicy"
-	ResourceDigitaloceanUptimeCheck        string = "digitalocean.uptimeCheck"
-	ResourceDigitaloceanCdn                string = "digitalocean.cdn"
-	ResourceDigitaloceanTag                string = "digitalocean.tag"
-	ResourceDigitaloceanSpacesKey          string = "digitalocean.spacesKey"
-	ResourceDigitaloceanSpacesBucket       string = "digitalocean.spacesBucket"
-	ResourceDigitaloceanImage              string = "digitalocean.image"
-	ResourceDigitaloceanSnapshot           string = "digitalocean.snapshot"
-	ResourceDigitaloceanFunctionNamespace  string = "digitalocean.function.namespace"
-	ResourceDigitaloceanFunctionTrigger    string = "digitalocean.function.trigger"
+	ResourceDigitalocean                           string = "digitalocean"
+	ResourceDigitaloceanAccount                    string = "digitalocean.account"
+	ResourceDigitaloceanDroplet                    string = "digitalocean.droplet"
+	ResourceDigitaloceanFirewall                   string = "digitalocean.firewall"
+	ResourceDigitaloceanDatabase                   string = "digitalocean.database"
+	ResourceDigitaloceanDatabaseBackup             string = "digitalocean.database.backup"
+	ResourceDigitaloceanDatabaseUser               string = "digitalocean.database.user"
+	ResourceDigitaloceanDatabaseReplica            string = "digitalocean.database.replica"
+	ResourceDigitaloceanDatabasePool               string = "digitalocean.database.pool"
+	ResourceDigitaloceanDomain                     string = "digitalocean.domain"
+	ResourceDigitaloceanDomainRecord               string = "digitalocean.domain.record"
+	ResourceDigitaloceanVolume                     string = "digitalocean.volume"
+	ResourceDigitaloceanLoadBalancer               string = "digitalocean.loadBalancer"
+	ResourceDigitaloceanVpc                        string = "digitalocean.vpc"
+	ResourceDigitaloceanVpcPeering                 string = "digitalocean.vpcPeering"
+	ResourceDigitaloceanKubernetesCluster          string = "digitalocean.kubernetes.cluster"
+	ResourceDigitaloceanKubernetesNodePool         string = "digitalocean.kubernetes.nodePool"
+	ResourceDigitaloceanProject                    string = "digitalocean.project"
+	ResourceDigitaloceanSshKey                     string = "digitalocean.sshKey"
+	ResourceDigitaloceanCertificate                string = "digitalocean.certificate"
+	ResourceDigitaloceanRegistry                   string = "digitalocean.registry"
+	ResourceDigitaloceanRegistryRepository         string = "digitalocean.registry.repository"
+	ResourceDigitaloceanRegistryRepositoryTag      string = "digitalocean.registry.repository.tag"
+	ResourceDigitaloceanRegistryRepositoryManifest string = "digitalocean.registry.repository.manifest"
+	ResourceDigitaloceanRegistryGarbageCollection  string = "digitalocean.registry.garbageCollection"
+	ResourceDigitaloceanReservedIp                 string = "digitalocean.reservedIp"
+	ResourceDigitaloceanApp                        string = "digitalocean.app"
+	ResourceDigitaloceanAlertPolicy                string = "digitalocean.alertPolicy"
+	ResourceDigitaloceanUptimeCheck                string = "digitalocean.uptimeCheck"
+	ResourceDigitaloceanCdn                        string = "digitalocean.cdn"
+	ResourceDigitaloceanTag                        string = "digitalocean.tag"
+	ResourceDigitaloceanSpacesKey                  string = "digitalocean.spacesKey"
+	ResourceDigitaloceanSpacesBucket               string = "digitalocean.spacesBucket"
+	ResourceDigitaloceanImage                      string = "digitalocean.image"
+	ResourceDigitaloceanSnapshot                   string = "digitalocean.snapshot"
+	ResourceDigitaloceanFunctionNamespace          string = "digitalocean.function.namespace"
+	ResourceDigitaloceanFunctionTrigger            string = "digitalocean.function.trigger"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -143,6 +146,18 @@ func init() {
 		"digitalocean.registry.repository": {
 			// to override args, implement: initDigitaloceanRegistryRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanRegistryRepository,
+		},
+		"digitalocean.registry.repository.tag": {
+			// to override args, implement: initDigitaloceanRegistryRepositoryTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanRegistryRepositoryTag,
+		},
+		"digitalocean.registry.repository.manifest": {
+			// to override args, implement: initDigitaloceanRegistryRepositoryManifest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanRegistryRepositoryManifest,
+		},
+		"digitalocean.registry.garbageCollection": {
+			// to override args, implement: initDigitaloceanRegistryGarbageCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanRegistryGarbageCollection,
 		},
 		"digitalocean.reservedIp": {
 			// to override args, implement: initDigitaloceanReservedIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -935,6 +950,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.registry.subscriptionTier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanRegistry).GetSubscriptionTier()).ToDataRes(types.String)
 	},
+	"digitalocean.registry.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistry).GetRepositories()).ToDataRes(types.Array(types.Resource("digitalocean.registry.repository")))
+	},
+	"digitalocean.registry.garbageCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistry).GetGarbageCollections()).ToDataRes(types.Array(types.Resource("digitalocean.registry.garbageCollection")))
+	},
+	"digitalocean.registry.subscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistry).GetSubscription()).ToDataRes(types.Dict)
+	},
 	"digitalocean.registry.repository.registryName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanRegistryRepository).GetRegistryName()).ToDataRes(types.String)
 	},
@@ -946,6 +970,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.registry.repository.manifestCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanRegistryRepository).GetManifestCount()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.repository.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepository).GetTags()).ToDataRes(types.Array(types.Resource("digitalocean.registry.repository.tag")))
+	},
+	"digitalocean.registry.repository.manifests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepository).GetManifests()).ToDataRes(types.Array(types.Resource("digitalocean.registry.repository.manifest")))
+	},
+	"digitalocean.registry.repository.latestManifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepository).GetLatestManifest()).ToDataRes(types.Resource("digitalocean.registry.repository.manifest"))
+	},
+	"digitalocean.registry.repository.tag.registryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetRegistryName()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.tag.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetRepository()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.tag.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetTag()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.tag.manifestDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetManifestDigest()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.tag.compressedSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetCompressedSizeBytes()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.repository.tag.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.repository.tag.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryTag).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.registry.repository.manifest.registryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetRegistryName()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.manifest.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetRepository()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.manifest.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetDigest()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.repository.manifest.compressedSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetCompressedSizeBytes()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.repository.manifest.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.repository.manifest.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.registry.repository.manifest.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.registry.repository.manifest.blobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryRepositoryManifest).GetBlobs()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.registry.garbageCollection.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.garbageCollection.registryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetRegistryName()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.garbageCollection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.garbageCollection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.registry.garbageCollection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.registry.garbageCollection.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.registry.garbageCollection.blobsDeleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetBlobsDeleted()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.garbageCollection.freedBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistryGarbageCollection).GetFreedBytes()).ToDataRes(types.Int)
 	},
 	"digitalocean.reservedIp.ip": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanReservedIp).GetIp()).ToDataRes(types.String)
@@ -2236,6 +2338,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanRegistry).SubscriptionTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"digitalocean.registry.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistry).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistry).GarbageCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.subscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistry).Subscription, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.registry.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanRegistryRepository).__id, ok = v.Value.(string)
 		return
@@ -2254,6 +2368,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.registry.repository.manifestCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanRegistryRepository).ManifestCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepository).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepository).Manifests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.latestManifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepository).LatestManifest, ok = plugin.RawToTValue[*mqlDigitaloceanRegistryRepositoryManifest](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.registry.repository.tag.registryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).RegistryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.manifestDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).ManifestDigest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.compressedSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).CompressedSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.tag.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryTag).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.registry.repository.manifest.registryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).RegistryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.compressedSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).CompressedSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.repository.manifest.blobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryRepositoryManifest).Blobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.registry.garbageCollection.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.registryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).RegistryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.blobsDeleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).BlobsDeleted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.garbageCollection.freedBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistryGarbageCollection).FreedBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"digitalocean.reservedIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5184,11 +5414,14 @@ type mqlDigitaloceanRegistry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanRegistryInternal it will be used here
-	Name              plugin.TValue[string]
-	StorageUsageBytes plugin.TValue[int64]
-	Region            plugin.TValue[string]
-	CreatedAt         plugin.TValue[*time.Time]
-	SubscriptionTier  plugin.TValue[string]
+	Name               plugin.TValue[string]
+	StorageUsageBytes  plugin.TValue[int64]
+	Region             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	SubscriptionTier   plugin.TValue[string]
+	Repositories       plugin.TValue[[]any]
+	GarbageCollections plugin.TValue[[]any]
+	Subscription       plugin.TValue[any]
 }
 
 // createDigitaloceanRegistry creates a new instance of this resource
@@ -5248,15 +5481,54 @@ func (c *mqlDigitaloceanRegistry) GetSubscriptionTier() *plugin.TValue[string] {
 	return &c.SubscriptionTier
 }
 
+func (c *mqlDigitaloceanRegistry) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.registry", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+func (c *mqlDigitaloceanRegistry) GetGarbageCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GarbageCollections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.registry", c.__id, "garbageCollections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.garbageCollections()
+	})
+}
+
+func (c *mqlDigitaloceanRegistry) GetSubscription() *plugin.TValue[any] {
+	return &c.Subscription
+}
+
 // mqlDigitaloceanRegistryRepository for the digitalocean.registry.repository resource
 type mqlDigitaloceanRegistryRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDigitaloceanRegistryRepositoryInternal it will be used here
-	RegistryName  plugin.TValue[string]
-	Name          plugin.TValue[string]
-	TagCount      plugin.TValue[int64]
-	ManifestCount plugin.TValue[int64]
+	mqlDigitaloceanRegistryRepositoryInternal
+	RegistryName   plugin.TValue[string]
+	Name           plugin.TValue[string]
+	TagCount       plugin.TValue[int64]
+	ManifestCount  plugin.TValue[int64]
+	Tags           plugin.TValue[[]any]
+	Manifests      plugin.TValue[[]any]
+	LatestManifest plugin.TValue[*mqlDigitaloceanRegistryRepositoryManifest]
 }
 
 // createDigitaloceanRegistryRepository creates a new instance of this resource
@@ -5310,6 +5582,301 @@ func (c *mqlDigitaloceanRegistryRepository) GetTagCount() *plugin.TValue[int64] 
 
 func (c *mqlDigitaloceanRegistryRepository) GetManifestCount() *plugin.TValue[int64] {
 	return &c.ManifestCount
+}
+
+func (c *mqlDigitaloceanRegistryRepository) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.registry.repository", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
+}
+
+func (c *mqlDigitaloceanRegistryRepository) GetManifests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Manifests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.registry.repository", c.__id, "manifests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.manifests()
+	})
+}
+
+func (c *mqlDigitaloceanRegistryRepository) GetLatestManifest() *plugin.TValue[*mqlDigitaloceanRegistryRepositoryManifest] {
+	return plugin.GetOrCompute[*mqlDigitaloceanRegistryRepositoryManifest](&c.LatestManifest, func() (*mqlDigitaloceanRegistryRepositoryManifest, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.registry.repository", c.__id, "latestManifest")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanRegistryRepositoryManifest), nil
+			}
+		}
+
+		return c.latestManifest()
+	})
+}
+
+// mqlDigitaloceanRegistryRepositoryTag for the digitalocean.registry.repository.tag resource
+type mqlDigitaloceanRegistryRepositoryTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanRegistryRepositoryTagInternal it will be used here
+	RegistryName        plugin.TValue[string]
+	Repository          plugin.TValue[string]
+	Tag                 plugin.TValue[string]
+	ManifestDigest      plugin.TValue[string]
+	CompressedSizeBytes plugin.TValue[int64]
+	SizeBytes           plugin.TValue[int64]
+	UpdatedAt           plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanRegistryRepositoryTag creates a new instance of this resource
+func createDigitaloceanRegistryRepositoryTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanRegistryRepositoryTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.registry.repository.tag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) MqlName() string {
+	return "digitalocean.registry.repository.tag"
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetRegistryName() *plugin.TValue[string] {
+	return &c.RegistryName
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetManifestDigest() *plugin.TValue[string] {
+	return &c.ManifestDigest
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetCompressedSizeBytes() *plugin.TValue[int64] {
+	return &c.CompressedSizeBytes
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryTag) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanRegistryRepositoryManifest for the digitalocean.registry.repository.manifest resource
+type mqlDigitaloceanRegistryRepositoryManifest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanRegistryRepositoryManifestInternal it will be used here
+	RegistryName        plugin.TValue[string]
+	Repository          plugin.TValue[string]
+	Digest              plugin.TValue[string]
+	CompressedSizeBytes plugin.TValue[int64]
+	SizeBytes           plugin.TValue[int64]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Tags                plugin.TValue[[]any]
+	Blobs               plugin.TValue[[]any]
+}
+
+// createDigitaloceanRegistryRepositoryManifest creates a new instance of this resource
+func createDigitaloceanRegistryRepositoryManifest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanRegistryRepositoryManifest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.registry.repository.manifest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) MqlName() string {
+	return "digitalocean.registry.repository.manifest"
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetRegistryName() *plugin.TValue[string] {
+	return &c.RegistryName
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetCompressedSizeBytes() *plugin.TValue[int64] {
+	return &c.CompressedSizeBytes
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDigitaloceanRegistryRepositoryManifest) GetBlobs() *plugin.TValue[[]any] {
+	return &c.Blobs
+}
+
+// mqlDigitaloceanRegistryGarbageCollection for the digitalocean.registry.garbageCollection resource
+type mqlDigitaloceanRegistryGarbageCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanRegistryGarbageCollectionInternal it will be used here
+	Uuid         plugin.TValue[string]
+	RegistryName plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Type         plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	BlobsDeleted plugin.TValue[int64]
+	FreedBytes   plugin.TValue[int64]
+}
+
+// createDigitaloceanRegistryGarbageCollection creates a new instance of this resource
+func createDigitaloceanRegistryGarbageCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanRegistryGarbageCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.registry.garbageCollection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) MqlName() string {
+	return "digitalocean.registry.garbageCollection"
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetRegistryName() *plugin.TValue[string] {
+	return &c.RegistryName
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetBlobsDeleted() *plugin.TValue[int64] {
+	return &c.BlobsDeleted
+}
+
+func (c *mqlDigitaloceanRegistryGarbageCollection) GetFreedBytes() *plugin.TValue[int64] {
+	return &c.FreedBytes
 }
 
 // mqlDigitaloceanReservedIp for the digitalocean.reservedIp resource

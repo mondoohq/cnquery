@@ -638,9 +638,10 @@ digitalocean.certificate @defaults("id name state") {
 //
 // Examine the DigitalOcean Container Registry attached to the
 // account. Surfaces the registry name, region slug, subscription
-// tier, current storage usage in bytes, and creation timestamp. The
-// `digitalocean.registryRepositories()` collection enumerates the
-// repositories hosted in the registry.
+// tier, current storage usage in bytes, and creation timestamp.
+// Repositories hosted in the registry are reachable via
+// `repositories`; garbage collection history via
+// `garbageCollections`.
 digitalocean.registry @defaults("name region") {
   // Registry name
   name string
@@ -650,8 +651,16 @@ digitalocean.registry @defaults("name region") {
   region string
   // Time the resource was created
   createdAt time
-  // Subscription tier
+  // Subscription tier slug (e.g., "starter", "basic", "professional")
   subscriptionTier string
+  // Repositories hosted in this registry
+  repositories() []digitalocean.registry.repository
+  // Garbage collection history for this registry (most recent first)
+  garbageCollections() []digitalocean.registry.garbageCollection
+  // Subscription details
+  //
+  // Map with keys: tierName, tierSlug, includedRepositories, includedStorageBytes, includedBandwidthBytes, monthlyPriceInCents, allowStorageOverage, createdAt, updatedAt.
+  subscription dict
 }
 
 // DigitalOcean container registry repository
@@ -662,8 +671,92 @@ private digitalocean.registry.repository @defaults("name tagCount") {
   name string
   // Number of tags
   tagCount int
-  // Number of manifests
+  // Number of manifests, including untagged ones
   manifestCount int
+  // Tags currently published in this repository
+  tags() []digitalocean.registry.repository.tag
+  // Manifests stored in this repository, including untagged ones
+  manifests() []digitalocean.registry.repository.manifest
+  // Most recently pushed manifest; null when the repository has no manifests
+  latestManifest() digitalocean.registry.repository.manifest
+}
+
+// Tag in a DigitalOcean container registry repository
+//
+// Examine a single tag of a repository — what manifest it points to
+// and when it was last pushed. Use this to audit tag drift (e.g.,
+// floating `:latest`), tag age, or to correlate running images with
+// their underlying digests.
+private digitalocean.registry.repository.tag @defaults("repository tag updatedAt") {
+  // Registry name (parent)
+  registryName string
+  // Repository name (parent, without the registry prefix)
+  repository string
+  // Tag string (e.g., "v1.2.3", "latest")
+  tag string
+  // SHA-256 manifest digest the tag resolves to (e.g., "sha256:abc...")
+  manifestDigest string
+  // Compressed size in bytes
+  compressedSizeBytes int
+  // Uncompressed size in bytes
+  sizeBytes int
+  // Time the tag was last pushed
+  updatedAt time
+}
+
+// Manifest in a DigitalOcean container registry repository
+//
+// Examine a single manifest by digest. Enables audits like "no
+// untagged manifests older than N days" or "every running image is
+// pinned to a digest that still exists in the registry".
+private digitalocean.registry.repository.manifest @defaults("repository digest updatedAt") {
+  // Registry name (parent)
+  registryName string
+  // Repository name (parent, without the registry prefix)
+  repository string
+  // SHA-256 digest identifying this manifest (e.g., "sha256:abc...")
+  digest string
+  // Compressed size in bytes
+  compressedSizeBytes int
+  // Uncompressed size in bytes
+  sizeBytes int
+  // Time the manifest was last updated
+  updatedAt time
+  // Tag strings currently pointing at this manifest; empty when the manifest is untagged
+  tags []string
+  // Layer blobs referenced by this manifest
+  //
+  // Each entry is a map with keys: digest, compressedSizeBytes.
+  blobs []dict
+}
+
+// Garbage collection run for a DigitalOcean container registry
+//
+// Examine a single GC run — when it ran, what type, how much it
+// removed. Enables audits like "registry GC has run within the last
+// 30 days" so stale untagged manifests (and any vulnerable layers
+// they pin) don't accumulate indefinitely.
+private digitalocean.registry.garbageCollection @defaults("uuid status createdAt") {
+  // UUID identifying this garbage collection run
+  uuid string
+  // Registry name (parent)
+  registryName string
+  // Status
+  //
+  // One of: requested, waiting, running, cancelling, cancelled, succeeded, failed.
+  status string
+  // Garbage collection type
+  //
+  // One of: "untagged manifests only", "unreferenced blobs only", "untagged manifests and unreferenced blobs".
+  type string
+  // Time the run was created
+  createdAt time
+  // Time the run last changed state
+  updatedAt time
+  // Number of blobs deleted by this run
+  blobsDeleted int
+  // Total bytes freed by this run
+  freedBytes int
 }
 
 // DigitalOcean reserved IP

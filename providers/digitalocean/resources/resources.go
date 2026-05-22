@@ -259,15 +259,115 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 
 	sub, _, err := conn.Client().Registry.GetSubscription(context.Background())
 	tier := ""
-	if err == nil && sub.Tier != nil {
-		tier = sub.Tier.Slug
+	subDict := map[string]interface{}{}
+	if err == nil && sub != nil {
+		subDict["createdAt"] = sub.CreatedAt.Format(time.RFC3339)
+		subDict["updatedAt"] = sub.UpdatedAt.Format(time.RFC3339)
+		if sub.Tier != nil {
+			tier = sub.Tier.Slug
+			subDict["tierName"] = sub.Tier.Name
+			subDict["tierSlug"] = sub.Tier.Slug
+			subDict["includedRepositories"] = int64(sub.Tier.IncludedRepositories)
+			subDict["includedStorageBytes"] = int64(sub.Tier.IncludedStorageBytes)
+			subDict["includedBandwidthBytes"] = int64(sub.Tier.IncludedBandwidthBytes)
+			subDict["monthlyPriceInCents"] = int64(sub.Tier.MonthlyPriceInCents)
+			subDict["allowStorageOverage"] = sub.Tier.AllowStorageOverage
+		}
 	}
 	args["subscriptionTier"] = llx.StringData(tier)
+	args["subscription"] = llx.DictData(subDict)
 	return args, nil, nil
 }
 
 func (r *mqlDigitaloceanRegistry) id() (string, error) {
 	return "digitalocean.registry", nil
+}
+
+func (r *mqlDigitaloceanRegistry) repositories() ([]interface{}, error) {
+	if r.Name.Data == "" {
+		return []interface{}{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+	return listRegistryRepositories(r.MqlRuntime, client, r.Name.Data)
+}
+
+func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
+	if r.Name.Data == "" {
+		return []interface{}{}, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	var all []interface{}
+	opt := &godo.ListOptions{PerPage: 200}
+	for {
+		gcs, resp, err := client.Registry.ListGarbageCollections(context.Background(), r.Name.Data, opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, gc := range gcs {
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.garbageCollection", map[string]*llx.RawData{
+				"uuid":         llx.StringData(gc.UUID),
+				"registryName": llx.StringData(gc.RegistryName),
+				"status":       llx.StringData(gc.Status),
+				"type":         llx.StringData(string(gc.Type)),
+				"createdAt":    llx.TimeData(gc.CreatedAt),
+				"updatedAt":    llx.TimeData(gc.UpdatedAt),
+				"blobsDeleted": llx.IntData(int64(gc.BlobsDeleted)),
+				"freedBytes":   llx.IntData(int64(gc.FreedBytes)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, _ := resp.Links.CurrentPage()
+		opt.Page = page + 1
+	}
+	return all, nil
+}
+
+func (r *mqlDigitaloceanRegistryGarbageCollection) id() (string, error) {
+	return "digitalocean.registry.garbageCollection/" + r.Uuid.Data, nil
+}
+
+func listRegistryRepositories(runtime *plugin.Runtime, client *godo.Client, regName string) ([]interface{}, error) {
+	var all []interface{}
+	opt := &godo.TokenListOptions{PerPage: 200}
+	for {
+		repos, resp, err := client.Registry.ListRepositoriesV2(context.Background(), regName, opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, repo := range repos {
+			mqlRepo, err := CreateResource(runtime, "digitalocean.registry.repository", map[string]*llx.RawData{
+				"registryName":  llx.StringData(repo.RegistryName),
+				"name":          llx.StringData(repo.Name),
+				"tagCount":      llx.IntData(int64(repo.TagCount)),
+				"manifestCount": llx.IntData(int64(repo.ManifestCount)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			if repo.LatestManifest != nil {
+				mqlRepo.(*mqlDigitaloceanRegistryRepository).cacheLatestManifest = repo.LatestManifest
+			}
+			all = append(all, mqlRepo)
+		}
+		if resp == nil || resp.Links == nil {
+			break
+		}
+		nextPage, err := resp.Links.NextPageToken()
+		if err != nil || nextPage == "" {
+			break
+		}
+		opt.Token = nextPage
+	}
+	return all, nil
 }
 
 func (r *mqlDigitalocean) registryRepositories() ([]interface{}, error) {
@@ -278,30 +378,44 @@ func (r *mqlDigitalocean) registryRepositories() ([]interface{}, error) {
 	if err != nil {
 		return []interface{}{}, nil
 	}
+	return listRegistryRepositories(r.MqlRuntime, client, reg.Name)
+}
+
+func (r *mqlDigitaloceanRegistryRepository) id() (string, error) {
+	return "digitalocean.registry.repository/" + r.RegistryName.Data + "/" + r.Name.Data, nil
+}
+
+type mqlDigitaloceanRegistryRepositoryInternal struct {
+	cacheLatestManifest *godo.RepositoryManifest
+}
+
+func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
 
 	var all []interface{}
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
-		repos, resp, err := client.Registry.ListRepositoriesV2(context.Background(), reg.Name, &godo.TokenListOptions{
-			PerPage: opt.PerPage,
-			Page:    opt.Page,
-		})
+		tags, resp, err := client.Registry.ListRepositoryTags(context.Background(), r.RegistryName.Data, r.Name.Data, opt)
 		if err != nil {
 			return nil, err
 		}
-		for _, repo := range repos {
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.repository", map[string]*llx.RawData{
-				"registryName":  llx.StringData(repo.RegistryName),
-				"name":          llx.StringData(repo.Name),
-				"tagCount":      llx.IntData(int64(repo.TagCount)),
-				"manifestCount": llx.IntData(int64(repo.ManifestCount)),
+		for _, t := range tags {
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.registry.repository.tag", map[string]*llx.RawData{
+				"registryName":        llx.StringData(t.RegistryName),
+				"repository":          llx.StringData(t.Repository),
+				"tag":                 llx.StringData(t.Tag),
+				"manifestDigest":      llx.StringData(t.ManifestDigest),
+				"compressedSizeBytes": llx.IntData(int64(t.CompressedSizeBytes)),
+				"sizeBytes":           llx.IntData(int64(t.SizeBytes)),
+				"updatedAt":           llx.TimeData(t.UpdatedAt),
 			})
 			if err != nil {
 				return nil, err
 			}
 			all = append(all, res)
 		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
+		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
 		page, _ := resp.Links.CurrentPage()
@@ -310,8 +424,78 @@ func (r *mqlDigitalocean) registryRepositories() ([]interface{}, error) {
 	return all, nil
 }
 
-func (r *mqlDigitaloceanRegistryRepository) id() (string, error) {
-	return "digitalocean.registry.repository/" + r.RegistryName.Data + "/" + r.Name.Data, nil
+func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	var all []interface{}
+	opt := &godo.ListOptions{PerPage: 200}
+	for {
+		manifests, resp, err := client.Registry.ListRepositoryManifests(context.Background(), r.RegistryName.Data, r.Name.Data, opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range manifests {
+			res, err := newManifestResource(r.MqlRuntime, m)
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, _ := resp.Links.CurrentPage()
+		opt.Page = page + 1
+	}
+	return all, nil
+}
+
+func (r *mqlDigitaloceanRegistryRepository) latestManifest() (*mqlDigitaloceanRegistryRepositoryManifest, error) {
+	if r.cacheLatestManifest == nil {
+		r.LatestManifest.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := newManifestResource(r.MqlRuntime, r.cacheLatestManifest)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDigitaloceanRegistryRepositoryManifest), nil
+}
+
+func newManifestResource(runtime *plugin.Runtime, m *godo.RepositoryManifest) (plugin.Resource, error) {
+	blobs := make([]interface{}, 0, len(m.Blobs))
+	for _, b := range m.Blobs {
+		if b == nil {
+			continue
+		}
+		blobs = append(blobs, map[string]interface{}{
+			"digest":              b.Digest,
+			"compressedSizeBytes": int64(b.CompressedSizeBytes),
+		})
+	}
+	tags := make([]interface{}, 0, len(m.Tags))
+	for _, t := range m.Tags {
+		tags = append(tags, t)
+	}
+	return CreateResource(runtime, "digitalocean.registry.repository.manifest", map[string]*llx.RawData{
+		"registryName":        llx.StringData(m.RegistryName),
+		"repository":          llx.StringData(m.Repository),
+		"digest":              llx.StringData(m.Digest),
+		"compressedSizeBytes": llx.IntData(int64(m.CompressedSizeBytes)),
+		"sizeBytes":           llx.IntData(int64(m.SizeBytes)),
+		"updatedAt":           llx.TimeData(m.UpdatedAt),
+		"tags":                llx.ArrayData(tags, "string"),
+		"blobs":               llx.ArrayData(blobs, "dict"),
+	})
+}
+
+func (r *mqlDigitaloceanRegistryRepositoryTag) id() (string, error) {
+	return "digitalocean.registry.repository.tag/" + r.RegistryName.Data + "/" + r.Repository.Data + ":" + r.Tag.Data, nil
+}
+
+func (r *mqlDigitaloceanRegistryRepositoryManifest) id() (string, error) {
+	return "digitalocean.registry.repository.manifest/" + r.RegistryName.Data + "/" + r.Repository.Data + "@" + r.Digest.Data, nil
 }
 
 // --- Reserved IPs ---
