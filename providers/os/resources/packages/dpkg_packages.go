@@ -102,16 +102,24 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 }
 
 // ParseDpkgCopyrightLicense reads the per-package DEP-5 copyright file at
-// /usr/share/doc/<pkg>/copyright and returns the first top-level
-// `License:` value. Returns the empty string when the file is missing,
-// not DEP-5, or the License field is absent. Called lazily from the
-// `license()` method on the `package` resource — only when MQL actually
-// asks for the license, so we don't pay the per-package read cost on
-// every `packages` enumeration.
+// /usr/share/doc/<pkg>/copyright and returns the first `License:` value
+// found anywhere in the file. Returns the empty string when the file is
+// missing, not DEP-5, or no License field is present. Called lazily
+// from the `license()` method on the `package` resource — only when
+// MQL actually asks for the license, so we don't pay the per-package
+// read cost on every `packages` enumeration.
 //
 // DEP-5 reference: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-// In practice many older packages use free-form copyright files where
-// the License: field is absent; we return empty rather than guessing.
+// A top-level `License:` is rare in practice; most Ubuntu/Debian
+// packages carry their license expression in the first `Files: *`
+// paragraph (after the header's blank line). We scan the whole file
+// and take the first `License:` regardless of paragraph — that yields
+// the package's primary license for typical DEP-5 files and the only
+// license present for single-paragraph ones.
+//
+// Many older packages use free-form copyright files with no `License:`
+// field at all (just a `See /usr/share/common-licenses/X` pointer);
+// those return empty rather than us guessing.
 func ParseDpkgCopyrightLicense(fs afero.Fs, pkgName string) string {
 	if fs == nil || pkgName == "" {
 		return ""
@@ -126,19 +134,12 @@ func ParseDpkgCopyrightLicense(fs afero.Fs, pkgName string) string {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		// We only care about the first top-level `License:` field — the
-		// summary one at file header. Per-paragraph `License:` lines
-		// (after a blank line) are file-specific and not the overall
-		// package license; bail at the first blank line.
-		if line == "" {
-			break
-		}
+		// DEP-5 allows multi-line license bodies indented under the
+		// short name; the short name is on the same line as
+		// `License:`. We only return that short name. Lines beginning
+		// with whitespace are continuation/body and are skipped.
 		if strings.HasPrefix(line, "License:") {
-			val := strings.TrimSpace(strings.TrimPrefix(line, "License:"))
-			// DEP-5 allows multi-line license bodies indented under the
-			// short name; the short name is on the same line as
-			// `License:`. Return just that short name.
-			return val
+			return strings.TrimSpace(strings.TrimPrefix(line, "License:"))
 		}
 	}
 	return ""

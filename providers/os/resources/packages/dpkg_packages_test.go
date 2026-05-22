@@ -178,25 +178,38 @@ func TestDpkgUpdateParser(t *testing.T) {
 func TestParseDpkgCopyrightLicense(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
-	// DEP-5 copyright file with a top-level License: field.
-	const dep5 = `Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+	// DEP-5 copyright with header License: (rare but valid).
+	const headerOnly = `Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: bash
 Source: https://www.gnu.org/software/bash/
 License: GPL-3+
+`
+	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/bash/copyright", []byte(headerOnly), 0o644))
+
+	// DEP-5 with License: only in the first Files: paragraph — the
+	// common case for Debian/Ubuntu packages like apt and base-files.
+	const filesParagraph = `Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: apt
+Source: https://salsa.debian.org/apt-team/apt
 
 Files: *
-Copyright: 1989-2022 Free Software Foundation, Inc.
-License: GPL-3+
+Copyright: 1997, 1998, 1999, Jason Gilmore <jgg@debian.org>
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License...
 `
-	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/bash/copyright", []byte(dep5), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/apt/copyright", []byte(filesParagraph), 0o644))
 
-	// Free-form copyright file (older packages) with no top-level License: header.
+	// Free-form copyright (older packages) with no License: field at
+	// all — just a pointer to common-licenses.
 	const freeform = `This package was debianized by John Doe <john@example.org>.
 See /usr/share/common-licenses/GPL-2 for the full license text.
 `
 	require.NoError(t, afero.WriteFile(fs, "/usr/share/doc/legacy/copyright", []byte(freeform), 0o644))
 
 	assert.Equal(t, "GPL-3+", ParseDpkgCopyrightLicense(fs, "bash"))
+	assert.Equal(t, "GPL-2+", ParseDpkgCopyrightLicense(fs, "apt"),
+		"License: in the first Files: paragraph (typical Ubuntu/Debian shape) must be surfaced")
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "legacy"))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, "missing"))
 	assert.Equal(t, "", ParseDpkgCopyrightLicense(fs, ""))
