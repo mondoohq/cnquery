@@ -2917,6 +2917,53 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		}
 	}
 
+	// Build frontend-port lookup so listeners can resolve their bound port,
+	// and ssl-cert name lookup so listeners can resolve the cert reference.
+	frontendPorts := map[string]int64{}
+	sslCertNames := map[string]string{}
+	if ag.Properties != nil {
+		for _, fp := range ag.Properties.FrontendPorts {
+			if fp == nil || fp.ID == nil || fp.Properties == nil || fp.Properties.Port == nil {
+				continue
+			}
+			frontendPorts[*fp.ID] = int64(*fp.Properties.Port)
+		}
+		for _, c := range ag.Properties.SSLCertificates {
+			if c == nil || c.ID == nil || c.Name == nil {
+				continue
+			}
+			sslCertNames[*c.ID] = *c.Name
+		}
+	}
+
+	sslCertificates := []any{}
+	if ag.Properties != nil {
+		for _, c := range ag.Properties.SSLCertificates {
+			if c == nil {
+				continue
+			}
+			mqlCert, err := azureAppGatewaySSLCertToMql(runtime, c)
+			if err != nil {
+				return nil, err
+			}
+			sslCertificates = append(sslCertificates, mqlCert)
+		}
+	}
+
+	listeners := []any{}
+	if ag.Properties != nil {
+		for _, l := range ag.Properties.HTTPListeners {
+			if l == nil {
+				continue
+			}
+			mqlListener, err := azureAppGatewayListenerToMql(runtime, l, frontendPorts, sslCertNames)
+			if err != nil {
+				return nil, err
+			}
+			listeners = append(listeners, mqlListener)
+		}
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                    llx.StringDataPtr(ag.ID),
 		"name":                  llx.StringDataPtr(ag.Name),
@@ -2928,6 +2975,8 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		"sslPolicyType":         llx.StringData(sslPolicyType),
 		"sslMinProtocolVersion": llx.StringData(sslMinProtocolVersion),
 		"sslCipherSuites":       llx.ArrayData(sslCipherSuites, types.String),
+		"listeners":             llx.ArrayData(listeners, types.Resource("azure.subscription.networkService.applicationGateway.listener")),
+		"sslCertificates":       llx.ArrayData(sslCertificates, types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -2936,6 +2985,112 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	}
 
 	return mqlAg.(*mqlAzureSubscriptionNetworkServiceApplicationGateway), nil
+}
+
+func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.ApplicationGatewayHTTPListener, frontendPorts map[string]int64, sslCertNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener, error) {
+	id := ""
+	if l.ID != nil {
+		id = *l.ID
+	}
+	name := ""
+	if l.Name != nil {
+		name = *l.Name
+	}
+	protocol := ""
+	hostName := ""
+	hostNames := []any{}
+	requireSNI := false
+	var port int64
+	provisioningState := ""
+	sslCertID := ""
+	sslCertName := ""
+	if l.Properties != nil {
+		if l.Properties.Protocol != nil {
+			protocol = string(*l.Properties.Protocol)
+		}
+		if l.Properties.HostName != nil {
+			hostName = *l.Properties.HostName
+		}
+		for _, h := range l.Properties.HostNames {
+			if h != nil {
+				hostNames = append(hostNames, *h)
+			}
+		}
+		if l.Properties.RequireServerNameIndication != nil {
+			requireSNI = *l.Properties.RequireServerNameIndication
+		}
+		if l.Properties.FrontendPort != nil && l.Properties.FrontendPort.ID != nil {
+			port = frontendPorts[*l.Properties.FrontendPort.ID]
+		}
+		if l.Properties.ProvisioningState != nil {
+			provisioningState = string(*l.Properties.ProvisioningState)
+		}
+		if l.Properties.SSLCertificate != nil && l.Properties.SSLCertificate.ID != nil {
+			sslCertID = *l.Properties.SSLCertificate.ID
+			sslCertName = sslCertNames[sslCertID]
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.listener", map[string]*llx.RawData{
+		"id":                          llx.StringData(id),
+		"name":                        llx.StringData(name),
+		"protocol":                    llx.StringData(protocol),
+		"port":                        llx.IntData(port),
+		"hostName":                    llx.StringData(hostName),
+		"hostNames":                   llx.ArrayData(hostNames, types.String),
+		"requireServerNameIndication": llx.BoolData(requireSNI),
+		"sslCertificateId":            llx.StringData(sslCertID),
+		"sslCertificateName":          llx.StringData(sslCertName),
+		"provisioningState":           llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener), nil
+}
+
+func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.ApplicationGatewaySSLCertificate) (*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate, error) {
+	id := ""
+	if c.ID != nil {
+		id = *c.ID
+	}
+	name := ""
+	if c.Name != nil {
+		name = *c.Name
+	}
+	keyVaultSecretId := ""
+	publicCertData := ""
+	provisioningState := ""
+	if c.Properties != nil {
+		if c.Properties.KeyVaultSecretID != nil {
+			keyVaultSecretId = *c.Properties.KeyVaultSecretID
+		}
+		if c.Properties.PublicCertData != nil {
+			publicCertData = *c.Properties.PublicCertData
+		}
+		if c.Properties.ProvisioningState != nil {
+			provisioningState = string(*c.Properties.ProvisioningState)
+		}
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.sslCertificate", map[string]*llx.RawData{
+		"id":                llx.StringData(id),
+		"name":              llx.StringData(name),
+		"keyVaultSecretId":  llx.StringData(keyVaultSecretId),
+		"publicCertData":    llx.StringData(publicCertData),
+		"provisioningState": llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceFirewallInternal struct {

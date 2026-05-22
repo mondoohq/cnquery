@@ -2269,6 +2269,64 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   sslMinProtocolVersion string
   // SSL cipher suites enabled on the application gateway
   sslCipherSuites []string
+  // HTTP listeners configured on the application gateway
+  listeners []azure.subscription.networkService.applicationGateway.listener
+  // SSL certificates uploaded or referenced from Key Vault on the application gateway
+  sslCertificates []azure.subscription.networkService.applicationGateway.sslCertificate
+}
+
+// Azure Application Gateway HTTP listener
+//
+// Examine a single HTTP/HTTPS listener configured on an Application
+// Gateway. Surfaces the `protocol` (Http / Https) and `port` the
+// listener binds to, the `hostName` (or `hostNames` wildcard list),
+// whether SNI is required (`requireServerNameIndication`), and the
+// SSL certificate the listener presents (`sslCertificate()` resolves
+// to the typed [[azure.subscription.networkService.applicationGateway.sslCertificate]]
+// declared on the parent gateway). A listener bound to `Http` with no
+// `sslCertificate` indicates plaintext traffic acceptance.
+private azure.subscription.networkService.applicationGateway.listener @defaults("name protocol port hostName") {
+  // ARM resource ID
+  id string
+  // Listener name
+  name string
+  // Listener protocol ("Http" or "Https")
+  protocol string
+  // Port the listener binds to (resolved from the referenced frontendPort)
+  port int
+  // Primary host name the listener matches; empty when matching by IP only
+  hostName string
+  // Host names the listener matches (allows wildcard); empty when only `hostName` is set
+  hostNames []string
+  // Whether SNI is required (only meaningful for Https listeners)
+  requireServerNameIndication bool
+  // ARM resource ID of the SSL certificate the listener presents; empty for Http listeners
+  sslCertificateId string
+  // Name of the SSL certificate the listener presents (matches `name` of an entry in the parent gateway's `sslCertificates`); empty for Http listeners
+  sslCertificateName string
+  // Provisioning state of the listener
+  provisioningState string
+}
+
+// Azure Application Gateway SSL certificate
+//
+// Examine a single SSL certificate uploaded to or referenced from
+// Key Vault by an Application Gateway. Surfaces the source: when
+// `keyVaultSecretId` is non-empty, the certificate is referenced from
+// a Key Vault secret (the recommended path); when empty, the
+// certificate data was uploaded directly to the gateway. `publicCertData`
+// holds the base64-encoded public certificate (no private key).
+private azure.subscription.networkService.applicationGateway.sslCertificate @defaults("name keyVaultSecretId") {
+  // ARM resource ID
+  id string
+  // Certificate name
+  name string
+  // Key Vault secret URI when the certificate is referenced from Key Vault; empty when the cert was uploaded directly
+  keyVaultSecretId string
+  // Base64-encoded public certificate data
+  publicCertData string
+  // Provisioning state of the certificate resource
+  provisioningState string
 }
 
 // Azure Application Gateway WAF config
