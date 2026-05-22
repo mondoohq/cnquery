@@ -1610,6 +1610,8 @@ aws.kms @defaults("keys") {
   // List of all customer master keys (CMKs) in the caller's AWS account across all regions
   keys() []aws.kms.key
   // All grants attached to KMS keys in the account across all regions
+  //
+  // Iterates every key in every enabled region and lists its grants, which can be slow in accounts with many keys. For targeted queries against a specific key, prefer `aws.kms.key.grants` instead.
   grants() []aws.kms.grant
   // Custom key stores (CloudHSM-backed and External Key Store) registered with KMS in the account across all regions
   customKeyStores() []aws.kms.customKeyStore
