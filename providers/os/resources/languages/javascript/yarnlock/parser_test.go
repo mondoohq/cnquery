@@ -33,4 +33,14 @@ func TestParsePackagename(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "has", name)
 	assert.Equal(t, "^1.0.1", version)
+
+	// Non-package keys like __metadata in yarn berry lockfiles must not panic.
+	_, _, err = parseYarnPackageName("__metadata")
+	assert.NotNil(t, err)
+
+	_, _, err = parseYarnPackageName("no-at-sign")
+	assert.NotNil(t, err)
+
+	_, _, err = parseYarnPackageName("")
+	assert.NotNil(t, err)
 }
