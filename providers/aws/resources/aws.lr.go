@@ -215,6 +215,12 @@ const (
 	ResourceAwsCodebuild                                                        string = "aws.codebuild"
 	ResourceAwsCodebuildProject                                                 string = "aws.codebuild.project"
 	ResourceAwsCodebuildReportGroup                                             string = "aws.codebuild.reportGroup"
+	ResourceAwsCodepipeline                                                     string = "aws.codepipeline"
+	ResourceAwsCodepipelinePipeline                                             string = "aws.codepipeline.pipeline"
+	ResourceAwsCodepipelineWebhook                                              string = "aws.codepipeline.webhook"
+	ResourceAwsCodeartifact                                                     string = "aws.codeartifact"
+	ResourceAwsCodeartifactDomain                                               string = "aws.codeartifact.domain"
+	ResourceAwsCodeartifactRepository                                           string = "aws.codeartifact.repository"
 	ResourceAwsGuardduty                                                        string = "aws.guardduty"
 	ResourceAwsGuarddutyDetector                                                string = "aws.guardduty.detector"
 	ResourceAwsGuarddutyDetectorFeature                                         string = "aws.guardduty.detector.feature"
@@ -1620,6 +1626,30 @@ func init() {
 		"aws.codebuild.reportGroup": {
 			// to override args, implement: initAwsCodebuildReportGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCodebuildReportGroup,
+		},
+		"aws.codepipeline": {
+			// to override args, implement: initAwsCodepipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodepipeline,
+		},
+		"aws.codepipeline.pipeline": {
+			// to override args, implement: initAwsCodepipelinePipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodepipelinePipeline,
+		},
+		"aws.codepipeline.webhook": {
+			// to override args, implement: initAwsCodepipelineWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodepipelineWebhook,
+		},
+		"aws.codeartifact": {
+			// to override args, implement: initAwsCodeartifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodeartifact,
+		},
+		"aws.codeartifact.domain": {
+			Init:   initAwsCodeartifactDomain,
+			Create: createAwsCodeartifactDomain,
+		},
+		"aws.codeartifact.repository": {
+			Init:   initAwsCodeartifactRepository,
+			Create: createAwsCodeartifactRepository,
 		},
 		"aws.guardduty": {
 			// to override args, implement: initAwsGuardduty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10152,6 +10182,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.codebuild.reportGroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildReportGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codepipeline.pipelines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipeline).GetPipelines()).ToDataRes(types.Array(types.Resource("aws.codepipeline.pipeline")))
+	},
+	"aws.codepipeline.webhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipeline).GetWebhooks()).ToDataRes(types.Array(types.Resource("aws.codepipeline.webhook")))
+	},
+	"aws.codepipeline.pipeline.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetName()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.codepipeline.pipeline.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codepipeline.pipeline.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codepipeline.pipeline.pipelineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetPipelineType()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.executionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetExecutionMode()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.pipeline.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.codepipeline.pipeline.artifactStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetArtifactStore()).ToDataRes(types.Dict)
+	},
+	"aws.codepipeline.pipeline.artifactStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetArtifactStores()).ToDataRes(types.Dict)
+	},
+	"aws.codepipeline.pipeline.stages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetStages()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codepipeline.pipeline.triggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetTriggers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codepipeline.pipeline.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codepipeline.pipeline.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelinePipeline).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codepipeline.webhook.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetName()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.targetPipeline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetTargetPipeline()).ToDataRes(types.Resource("aws.codepipeline.pipeline"))
+	},
+	"aws.codepipeline.webhook.targetPipelineName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetTargetPipelineName()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.targetAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetTargetAction()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codepipeline.webhook.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetAuthentication()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.authenticationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetAuthenticationConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.codepipeline.webhook.secretTokenPresent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetSecretTokenPresent()).ToDataRes(types.Bool)
+	},
+	"aws.codepipeline.webhook.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetUrl()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.lastTriggered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetLastTriggered()).ToDataRes(types.Time)
+	},
+	"aws.codepipeline.webhook.errorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetErrorCode()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"aws.codepipeline.webhook.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodepipelineWebhook).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codeartifact.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifact).GetDomains()).ToDataRes(types.Array(types.Resource("aws.codeartifact.domain")))
+	},
+	"aws.codeartifact.repositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifact).GetRepositories()).ToDataRes(types.Array(types.Resource("aws.codeartifact.repository")))
+	},
+	"aws.codeartifact.domain.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetName()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.codeartifact.domain.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetEncryptionKey()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.codeartifact.domain.repositoryCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetRepositoryCount()).ToDataRes(types.Int)
+	},
+	"aws.codeartifact.domain.assetSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetAssetSizeBytes()).ToDataRes(types.Int)
+	},
+	"aws.codeartifact.domain.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetS3BucketArn()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.codeartifact.domain.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codeartifact.repository.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetName()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.administratorAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetAdministratorAccount()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.domainOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetDomainOwner()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetDomain()).ToDataRes(types.Resource("aws.codeartifact.domain"))
+	},
+	"aws.codeartifact.repository.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.repository.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.codeartifact.repository.upstreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetUpstreams()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codeartifact.repository.externalConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetExternalConnections()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codeartifact.repository.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.codeartifact.repository.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetEndpoints()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.codeartifact.repository.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactRepository).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.guardduty.findings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuardduty).GetFindings()).ToDataRes(types.Array(types.Resource("aws.guardduty.finding")))
@@ -37535,6 +37751,278 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.codebuild.reportGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodebuildReportGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipeline).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codepipeline.pipelines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipeline).Pipelines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipeline).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codepipeline.pipeline.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.pipelineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).PipelineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.executionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).ExecutionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Role, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.artifactStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).ArtifactStore, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.artifactStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).ArtifactStores, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Stages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.triggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Triggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.pipeline.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelinePipeline).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codepipeline.webhook.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.targetPipeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).TargetPipeline, ok = plugin.RawToTValue[*mqlAwsCodepipelinePipeline](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.targetPipelineName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).TargetPipelineName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.targetAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).TargetAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Authentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.authenticationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).AuthenticationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.secretTokenPresent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).SecretTokenPresent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.lastTriggered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).LastTriggered, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.errorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).ErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codepipeline.webhook.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodepipelineWebhook).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifact).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codeartifact.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifact).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifact).Repositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codeartifact.domain.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).EncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.repositoryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).RepositoryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.assetSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).AssetSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.s3BucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codeartifact.repository.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.administratorAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).AdministratorAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.domainOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).DomainOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Domain, ok = plugin.RawToTValue[*mqlAwsCodeartifactDomain](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.upstreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Upstreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.externalConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).ExternalConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Endpoints, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.repository.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactRepository).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -88109,6 +88597,682 @@ func (c *mqlAwsCodebuildReportGroup) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsCodebuildReportGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsCodepipeline for the aws.codepipeline resource
+type mqlAwsCodepipeline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCodepipelineInternal it will be used here
+	Pipelines plugin.TValue[[]any]
+	Webhooks  plugin.TValue[[]any]
+}
+
+// createAwsCodepipeline creates a new instance of this resource
+func createAwsCodepipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodepipeline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codepipeline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodepipeline) MqlName() string {
+	return "aws.codepipeline"
+}
+
+func (c *mqlAwsCodepipeline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodepipeline) GetPipelines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pipelines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codepipeline", c.__id, "pipelines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pipelines()
+	})
+}
+
+func (c *mqlAwsCodepipeline) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codepipeline", c.__id, "webhooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webhooks()
+	})
+}
+
+// mqlAwsCodepipelinePipeline for the aws.codepipeline.pipeline resource
+type mqlAwsCodepipelinePipeline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCodepipelinePipelineInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Version        plugin.TValue[int64]
+	Region         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+	PipelineType   plugin.TValue[string]
+	ExecutionMode  plugin.TValue[string]
+	RoleArn        plugin.TValue[string]
+	Role           plugin.TValue[*mqlAwsIamRole]
+	ArtifactStore  plugin.TValue[any]
+	ArtifactStores plugin.TValue[any]
+	Stages         plugin.TValue[[]any]
+	Triggers       plugin.TValue[[]any]
+	Variables      plugin.TValue[[]any]
+	Tags           plugin.TValue[map[string]any]
+}
+
+// createAwsCodepipelinePipeline creates a new instance of this resource
+func createAwsCodepipelinePipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodepipelinePipeline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codepipeline.pipeline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodepipelinePipeline) MqlName() string {
+	return "aws.codepipeline.pipeline"
+}
+
+func (c *mqlAwsCodepipelinePipeline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetPipelineType() *plugin.TValue[string] {
+	return &c.PipelineType
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetExecutionMode() *plugin.TValue[string] {
+	return &c.ExecutionMode
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.Role, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codepipeline.pipeline", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.role()
+	})
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetArtifactStore() *plugin.TValue[any] {
+	return &c.ArtifactStore
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetArtifactStores() *plugin.TValue[any] {
+	return &c.ArtifactStores
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetStages() *plugin.TValue[[]any] {
+	return &c.Stages
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetTriggers() *plugin.TValue[[]any] {
+	return &c.Triggers
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetVariables() *plugin.TValue[[]any] {
+	return &c.Variables
+}
+
+func (c *mqlAwsCodepipelinePipeline) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsCodepipelineWebhook for the aws.codepipeline.webhook resource
+type mqlAwsCodepipelineWebhook struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCodepipelineWebhookInternal
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	TargetPipeline              plugin.TValue[*mqlAwsCodepipelinePipeline]
+	TargetPipelineName          plugin.TValue[string]
+	TargetAction                plugin.TValue[string]
+	Filters                     plugin.TValue[[]any]
+	Authentication              plugin.TValue[string]
+	AuthenticationConfiguration plugin.TValue[any]
+	SecretTokenPresent          plugin.TValue[bool]
+	Url                         plugin.TValue[string]
+	LastTriggered               plugin.TValue[*time.Time]
+	ErrorCode                   plugin.TValue[string]
+	ErrorMessage                plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+}
+
+// createAwsCodepipelineWebhook creates a new instance of this resource
+func createAwsCodepipelineWebhook(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodepipelineWebhook{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codepipeline.webhook", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodepipelineWebhook) MqlName() string {
+	return "aws.codepipeline.webhook"
+}
+
+func (c *mqlAwsCodepipelineWebhook) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetTargetPipeline() *plugin.TValue[*mqlAwsCodepipelinePipeline] {
+	return plugin.GetOrCompute[*mqlAwsCodepipelinePipeline](&c.TargetPipeline, func() (*mqlAwsCodepipelinePipeline, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codepipeline.webhook", c.__id, "targetPipeline")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCodepipelinePipeline), nil
+			}
+		}
+
+		return c.targetPipeline()
+	})
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetTargetPipelineName() *plugin.TValue[string] {
+	return &c.TargetPipelineName
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetTargetAction() *plugin.TValue[string] {
+	return &c.TargetAction
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetFilters() *plugin.TValue[[]any] {
+	return &c.Filters
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetAuthentication() *plugin.TValue[string] {
+	return &c.Authentication
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetAuthenticationConfiguration() *plugin.TValue[any] {
+	return &c.AuthenticationConfiguration
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetSecretTokenPresent() *plugin.TValue[bool] {
+	return &c.SecretTokenPresent
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetLastTriggered() *plugin.TValue[*time.Time] {
+	return &c.LastTriggered
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetErrorCode() *plugin.TValue[string] {
+	return &c.ErrorCode
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlAwsCodepipelineWebhook) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsCodeartifact for the aws.codeartifact resource
+type mqlAwsCodeartifact struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCodeartifactInternal it will be used here
+	Domains      plugin.TValue[[]any]
+	Repositories plugin.TValue[[]any]
+}
+
+// createAwsCodeartifact creates a new instance of this resource
+func createAwsCodeartifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodeartifact{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codeartifact", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodeartifact) MqlName() string {
+	return "aws.codeartifact"
+}
+
+func (c *mqlAwsCodeartifact) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodeartifact) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codeartifact", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+func (c *mqlAwsCodeartifact) GetRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codeartifact", c.__id, "repositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repositories()
+	})
+}
+
+// mqlAwsCodeartifactDomain for the aws.codeartifact.domain resource
+type mqlAwsCodeartifactDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCodeartifactDomainInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Owner           plugin.TValue[string]
+	Region          plugin.TValue[string]
+	Status          plugin.TValue[string]
+	CreatedTime     plugin.TValue[*time.Time]
+	EncryptionKey   plugin.TValue[string]
+	KmsKey          plugin.TValue[*mqlAwsKmsKey]
+	RepositoryCount plugin.TValue[int64]
+	AssetSizeBytes  plugin.TValue[int64]
+	S3BucketArn     plugin.TValue[string]
+	Policy          plugin.TValue[any]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsCodeartifactDomain creates a new instance of this resource
+func createAwsCodeartifactDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodeartifactDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codeartifact.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodeartifactDomain) MqlName() string {
+	return "aws.codeartifact.domain"
+}
+
+func (c *mqlAwsCodeartifactDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodeartifactDomain) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodeartifactDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCodeartifactDomain) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsCodeartifactDomain) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodeartifactDomain) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCodeartifactDomain) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAwsCodeartifactDomain) GetEncryptionKey() *plugin.TValue[string] {
+	return &c.EncryptionKey
+}
+
+func (c *mqlAwsCodeartifactDomain) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codeartifact.domain", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsCodeartifactDomain) GetRepositoryCount() *plugin.TValue[int64] {
+	return &c.RepositoryCount
+}
+
+func (c *mqlAwsCodeartifactDomain) GetAssetSizeBytes() *plugin.TValue[int64] {
+	return &c.AssetSizeBytes
+}
+
+func (c *mqlAwsCodeartifactDomain) GetS3BucketArn() *plugin.TValue[string] {
+	return &c.S3BucketArn
+}
+
+func (c *mqlAwsCodeartifactDomain) GetPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
+		return c.policy()
+	})
+}
+
+func (c *mqlAwsCodeartifactDomain) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsCodeartifactRepository for the aws.codeartifact.repository resource
+type mqlAwsCodeartifactRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCodeartifactRepositoryInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	AdministratorAccount plugin.TValue[string]
+	DomainName           plugin.TValue[string]
+	DomainOwner          plugin.TValue[string]
+	Domain               plugin.TValue[*mqlAwsCodeartifactDomain]
+	Description          plugin.TValue[string]
+	CreatedTime          plugin.TValue[*time.Time]
+	Upstreams            plugin.TValue[[]any]
+	ExternalConnections  plugin.TValue[[]any]
+	Policy               plugin.TValue[any]
+	Endpoints            plugin.TValue[map[string]any]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsCodeartifactRepository creates a new instance of this resource
+func createAwsCodeartifactRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodeartifactRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codeartifact.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodeartifactRepository) MqlName() string {
+	return "aws.codeartifact.repository"
+}
+
+func (c *mqlAwsCodeartifactRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodeartifactRepository) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodeartifactRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCodeartifactRepository) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodeartifactRepository) GetAdministratorAccount() *plugin.TValue[string] {
+	return &c.AdministratorAccount
+}
+
+func (c *mqlAwsCodeartifactRepository) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsCodeartifactRepository) GetDomainOwner() *plugin.TValue[string] {
+	return &c.DomainOwner
+}
+
+func (c *mqlAwsCodeartifactRepository) GetDomain() *plugin.TValue[*mqlAwsCodeartifactDomain] {
+	return plugin.GetOrCompute[*mqlAwsCodeartifactDomain](&c.Domain, func() (*mqlAwsCodeartifactDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codeartifact.repository", c.__id, "domain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCodeartifactDomain), nil
+			}
+		}
+
+		return c.domain()
+	})
+}
+
+func (c *mqlAwsCodeartifactRepository) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsCodeartifactRepository) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAwsCodeartifactRepository) GetUpstreams() *plugin.TValue[[]any] {
+	return &c.Upstreams
+}
+
+func (c *mqlAwsCodeartifactRepository) GetExternalConnections() *plugin.TValue[[]any] {
+	return &c.ExternalConnections
+}
+
+func (c *mqlAwsCodeartifactRepository) GetPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
+		return c.policy()
+	})
+}
+
+func (c *mqlAwsCodeartifactRepository) GetEndpoints() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Endpoints, func() (map[string]any, error) {
+		return c.endpoints()
+	})
+}
+
+func (c *mqlAwsCodeartifactRepository) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 

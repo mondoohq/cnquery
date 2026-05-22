@@ -5149,6 +5149,236 @@ private aws.codebuild.reportGroup @defaults("arn name type status") {
   tags map[string]string
 }
 
+// AWS CodePipeline
+//
+// Use the CodePipeline namespace to enumerate continuous delivery
+// pipelines and the webhooks that trigger them. Iterate `pipelines()` for
+// every pipeline across enabled regions — each row carries the pipeline
+// type (V1 or V2), execution mode, IAM service role, single- and
+// cross-region artifact stores, stage and action declarations (including
+// per-action configuration, input/output artifacts, and run order), Git
+// trigger filters, and pipeline-level variables. Iterate `webhooks()` to
+// surface the inbound webhook definitions that start pipelines, their
+// JsonPath filter rules, authentication mode (GITHUB_HMAC, IP,
+// UNAUTHENTICATED), allowed IP range, and last-triggered timestamp.
+aws.codepipeline {
+  // List of CodePipeline pipelines across all enabled regions
+  pipelines() []aws.codepipeline.pipeline
+  // List of CodePipeline webhooks across all enabled regions
+  webhooks() []aws.codepipeline.webhook
+}
+
+// AWS CodePipeline pipeline
+//
+// Examine a single CodePipeline pipeline — its type and execution mode,
+// the IAM service role used to execute actions, the artifact store(s)
+// that hold stage outputs, and the ordered stages and actions that make
+// up the pipeline. For V2 pipelines, `triggers` carries the Git
+// repository event filters (push and pull-request) that start the
+// pipeline, and `variables` carries the pipeline-level variables
+// available to action configuration.
+private aws.codepipeline.pipeline @defaults("arn name pipelineType region") {
+  // ARN of the pipeline
+  arn string
+  // Name of the pipeline
+  name string
+  // Version number of the pipeline (incremented on update)
+  version int
+  // Region where the pipeline exists
+  region string
+  // Date the pipeline was created
+  createdAt time
+  // Date the pipeline was last updated
+  updatedAt time
+  // Pipeline type: V1 or V2
+  pipelineType string
+  // Execution mode: QUEUED, SUPERSEDED, or PARALLEL
+  executionMode string
+  // ARN of the IAM service role CodePipeline uses to execute actions
+  roleArn string
+  // IAM service role CodePipeline uses to execute actions
+  role() aws.iam.role
+  // Single-region artifact store
+  //
+  // Shape (when present): `{type: "S3", location: "bucket-name", encryptionKey: {id, type}}`. Null when the pipeline uses a multi-region `artifactStores` map.
+  artifactStore dict
+  // Multi-region artifact stores keyed by region
+  //
+  // Shape: `{"us-east-1": {type, location, encryptionKey}, "us-west-2": {...}}`. Null when the pipeline uses a single-region `artifactStore`.
+  artifactStores dict
+  // Ordered stages of the pipeline
+  //
+  // Shape: `[{name: "Source", actions: [{name, actionTypeId: {category, owner, provider, version}, configuration: {...}, inputArtifacts: [{name}], outputArtifacts: [{name}], runOrder, roleArn, region, namespace}, ...]}, ...]`.
+  stages []dict
+  // Trigger declarations that start the pipeline (V2 only)
+  //
+  // Shape: `[{providerType: "CodeStarSourceConnection", gitConfiguration: {sourceActionName, push: [{branches: {includes, excludes}, filePaths: {includes, excludes}, tags: {includes, excludes}}], pullRequest: [{branches, filePaths, events: ["OPEN","UPDATED","CLOSED"]}]}}, ...]`. Empty when default change detection is in use.
+  triggers []dict
+  // Pipeline-level variable declarations (V2 only)
+  //
+  // Shape: `[{name, defaultValue, description}, ...]`. Empty when the pipeline declares no variables.
+  variables []dict
+  // Tags for the pipeline
+  tags map[string]string
+}
+
+// AWS CodePipeline webhook
+//
+// Examine an inbound webhook that starts a CodePipeline pipeline. The
+// `authentication` field reports how incoming requests are validated
+// (GITHUB_HMAC, IP, or UNAUTHENTICATED). For security, the raw
+// GITHUB_HMAC secret token is not exposed; `secretTokenPresent` reports
+// only whether one is configured. For IP authentication,
+// `authenticationConfiguration` surfaces the `allowedIPRange` CIDR.
+private aws.codepipeline.webhook @defaults("name arn authentication region") {
+  // ARN of the webhook
+  arn string
+  // Name of the webhook
+  name string
+  // Region where the webhook exists
+  region string
+  // Pipeline the webhook starts
+  targetPipeline() aws.codepipeline.pipeline
+  // Name of the pipeline the webhook starts
+  targetPipelineName string
+  // Name of the source-stage action the webhook is connected to
+  targetAction string
+  // JsonPath filter rules applied to incoming webhook payloads
+  //
+  // Shape: `[{jsonPath: "$.ref", matchEquals: "refs/heads/{Branch}"}, ...]`. All rules must match for the pipeline to be started.
+  filters []dict
+  // Authentication mode used to validate incoming requests
+  //
+  // One of GITHUB_HMAC, IP, or UNAUTHENTICATED.
+  authentication string
+  // Non-sensitive authentication configuration
+  //
+  // Shape: `{allowedIPRange: "203.0.113.0/24"}` for IP authentication. The GITHUB_HMAC secret token is intentionally omitted; check `secretTokenPresent` instead.
+  authenticationConfiguration dict
+  // Whether a GITHUB_HMAC secret token is configured on the webhook
+  secretTokenPresent bool
+  // URL that callers POST to in order to trigger the pipeline
+  url string
+  // Date the webhook was last successfully triggered
+  lastTriggered time
+  // Error code from the most recent webhook trigger attempt
+  errorCode string
+  // Error message from the most recent webhook trigger attempt
+  errorMessage string
+  // Tags for the webhook
+  tags map[string]string
+}
+
+// AWS CodeArtifact
+//
+// Use the CodeArtifact namespace to enumerate package repositories and
+// the domains that group them. Iterate `domains()` for every CodeArtifact
+// domain across enabled regions — each row reports the domain's owning
+// account, status, KMS encryption key, repository count, total asset
+// size, the backing S3 bucket ARN, and the JSON resource policy that
+// governs cross-account access. Iterate `repositories()` for every
+// repository in every domain — each row carries the repository
+// description, configured upstream repositories, external connections
+// (npm, pypi, maven, nuget, generic, ruby, swift, cargo), package-format
+// endpoint URLs, and the JSON resource policy applied to the repository.
+aws.codeartifact {
+  // List of CodeArtifact domains across all enabled regions
+  domains() []aws.codeartifact.domain
+  // List of CodeArtifact repositories across all enabled regions and domains
+  repositories() []aws.codeartifact.repository
+}
+
+// AWS CodeArtifact domain
+//
+// Examine a CodeArtifact domain — the logical container for package
+// repositories. A domain is encrypted by a single KMS key and is backed
+// by an internal S3 bucket. The `policy()` accessor fetches the resource
+// policy attached to the domain via `GetDomainPermissionsPolicy`; it
+// returns null when no policy is set or the caller is denied access.
+private aws.codeartifact.domain @defaults("arn name owner status region") {
+  // ARN of the domain
+  arn string
+  // Name of the domain
+  name string
+  // 12-digit account ID that owns the domain
+  owner string
+  // Region where the domain exists
+  region string
+  // Current status of the domain: Active or Deleted
+  status string
+  // Date the domain was created
+  createdTime time
+  // ARN of the KMS key used to encrypt assets stored in the domain
+  encryptionKey string
+  // KMS key used to encrypt assets stored in the domain
+  kmsKey() aws.kms.key
+  // Number of repositories in the domain
+  repositoryCount int
+  // Total size in bytes of all package assets in the domain
+  assetSizeBytes int
+  // ARN of the S3 bucket that stores package assets for the domain
+  s3BucketArn string
+  // Resource policy attached to the domain
+  //
+  // Shape (when set): `{document: "<JSON policy>", resourceArn, revision}`. Null when no policy is attached or the caller is denied access.
+  policy() dict
+  // Tags for the domain
+  tags map[string]string
+}
+
+// AWS CodeArtifact repository
+//
+// Examine a CodeArtifact repository — a single package repository inside
+// a domain. The repository holds package assets in one or more package
+// formats (npm, pypi, maven, nuget, generic, ruby, swift, cargo) and can
+// be configured with `upstreams` (other CodeArtifact repositories in the
+// same domain that callers fall through to on a cache miss) and
+// `externalConnections` (public package registries such as
+// `public:npmjs` or `public:pypi` that the repository ingests packages
+// from). The `policy()` accessor fetches the resource policy attached to
+// the repository via `GetRepositoryPermissionsPolicy`; it returns null
+// when no policy is set or the caller is denied access. The `endpoints`
+// map carries the per-package-format URL clients use to interact with
+// the repository.
+private aws.codeartifact.repository @defaults("arn name domainName region") {
+  // ARN of the repository
+  arn string
+  // Name of the repository
+  name string
+  // Region where the repository exists
+  region string
+  // 12-digit account ID that manages the repository
+  administratorAccount string
+  // Name of the domain that contains the repository
+  domainName string
+  // 12-digit account ID that owns the domain
+  domainOwner string
+  // Domain that contains the repository
+  domain() aws.codeartifact.domain
+  // Description of the repository
+  description string
+  // Date the repository was created
+  createdTime time
+  // Upstream CodeArtifact repositories consulted on cache miss
+  //
+  // Shape: `[{repositoryName: "upstream-repo"}, ...]`. The order determines priority — upstreams earlier in the list are consulted first.
+  upstreams []dict
+  // External public-registry connections the repository ingests from
+  //
+  // Shape: `[{externalConnectionName: "public:npmjs", packageFormat: "npm", status: "Available"}, ...]`. Valid `packageFormat` values: npm, pypi, maven, nuget, generic, ruby, swift, cargo.
+  externalConnections []dict
+  // Resource policy attached to the repository
+  //
+  // Shape (when set): `{document: "<JSON policy>", resourceArn, revision}`. Null when no policy is attached or the caller is denied access.
+  policy() dict
+  // Per-package-format endpoint URLs that clients use to interact with the repository
+  //
+  // Keys are package format names (`npm`, `pypi`, `maven`, `nuget`, `generic`, `ruby`, `swift`, `cargo`); values are the corresponding repository endpoint URLs.
+  endpoints() map[string]string
+  // Tags for the repository
+  tags map[string]string
+}
+
 // Amazon GuardDuty
 //
 // Use the GuardDuty namespace to enumerate threat-detection coverage and

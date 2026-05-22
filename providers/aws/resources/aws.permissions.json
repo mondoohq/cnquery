@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T20:30:36-07:00",
+  "generated_at": "2026-05-21T20:50:50-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -120,6 +120,14 @@
     "cloudwatch:DescribeAlarmsForMetric",
     "cloudwatch:GetMetricStatistics",
     "cloudwatch:ListMetrics",
+    "codeartifact:DescribeDomain",
+    "codeartifact:DescribeRepository",
+    "codeartifact:GetDomainPermissionsPolicy",
+    "codeartifact:GetRepositoryEndpoint",
+    "codeartifact:GetRepositoryPermissionsPolicy",
+    "codeartifact:ListDomains",
+    "codeartifact:ListRepositories",
+    "codeartifact:ListTagsForResource",
     "codebuild:BatchGetProjects",
     "codebuild:BatchGetReportGroups",
     "codebuild:ListProjects",
@@ -132,6 +140,10 @@
     "codedeploy:ListDeploymentGroups",
     "codedeploy:ListDeployments",
     "codedeploy:ListTagsForResource",
+    "codepipeline:GetPipeline",
+    "codepipeline:ListPipelines",
+    "codepipeline:ListTagsForResource",
+    "codepipeline:ListWebhooks",
     "cognito-identity:DescribeIdentityPool",
     "cognito-identity:GetIdentityPoolRoles",
     "cognito-identity:ListIdentityPools",
@@ -1520,6 +1532,54 @@
       "source_file": "aws_cloudwatch.go"
     },
     {
+      "permission": "codeartifact:DescribeDomain",
+      "service": "codeartifact",
+      "action": "DescribeDomain",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:DescribeRepository",
+      "service": "codeartifact",
+      "action": "DescribeRepository",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:GetDomainPermissionsPolicy",
+      "service": "codeartifact",
+      "action": "GetDomainPermissionsPolicy",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:GetRepositoryEndpoint",
+      "service": "codeartifact",
+      "action": "GetRepositoryEndpoint",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:GetRepositoryPermissionsPolicy",
+      "service": "codeartifact",
+      "action": "GetRepositoryPermissionsPolicy",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:ListDomains",
+      "service": "codeartifact",
+      "action": "ListDomains",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:ListRepositories",
+      "service": "codeartifact",
+      "action": "ListRepositories",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
+      "permission": "codeartifact:ListTagsForResource",
+      "service": "codeartifact",
+      "action": "ListTagsForResource",
+      "source_file": "aws_codeartifact.go"
+    },
+    {
       "permission": "codebuild:BatchGetProjects",
       "service": "codebuild",
       "action": "BatchGetProjects",
@@ -1590,6 +1650,30 @@
       "service": "codedeploy",
       "action": "ListTagsForResource",
       "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codepipeline:GetPipeline",
+      "service": "codepipeline",
+      "action": "GetPipeline",
+      "source_file": "aws_codepipeline.go"
+    },
+    {
+      "permission": "codepipeline:ListPipelines",
+      "service": "codepipeline",
+      "action": "ListPipelines",
+      "source_file": "aws_codepipeline.go"
+    },
+    {
+      "permission": "codepipeline:ListTagsForResource",
+      "service": "codepipeline",
+      "action": "ListTagsForResource",
+      "source_file": "aws_codepipeline.go"
+    },
+    {
+      "permission": "codepipeline:ListWebhooks",
+      "service": "codepipeline",
+      "action": "ListWebhooks",
+      "source_file": "aws_codepipeline.go"
     },
     {
       "permission": "cognito-identity:DescribeIdentityPool",
