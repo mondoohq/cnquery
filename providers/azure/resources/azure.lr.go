@@ -4251,6 +4251,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.interface.networkSecurityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetNetworkSecurityGroupId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.interface.networkSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetNetworkSecurityGroup()).ToDataRes(types.Resource("azure.subscription.networkService.securityGroup"))
+	},
+	"azure.subscription.networkService.interface.dnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetDnsServers()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.appliedDnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetAppliedDnsServers()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.interface.internalDnsNameLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetInternalDnsNameLabel()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.interface.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetIpConfigurations()).ToDataRes(types.Array(types.Dict))
 	},
@@ -16303,6 +16315,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.interface.networkSecurityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceInterface).NetworkSecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.networkSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).NetworkSecurityGroup, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.dnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).DnsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.appliedDnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).AppliedDnsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.internalDnsNameLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).InternalDnsNameLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.interface.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37127,7 +37155,7 @@ func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetProperties() *plugin
 type mqlAzureSubscriptionNetworkServiceInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceInterfaceInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceInterfaceInternal
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
 	Location                    plugin.TValue[string]
@@ -37139,6 +37167,10 @@ type mqlAzureSubscriptionNetworkServiceInterface struct {
 	EnableAcceleratedNetworking plugin.TValue[bool]
 	Primary                     plugin.TValue[bool]
 	NetworkSecurityGroupId      plugin.TValue[string]
+	NetworkSecurityGroup        plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup]
+	DnsServers                  plugin.TValue[[]any]
+	AppliedDnsServers           plugin.TValue[[]any]
+	InternalDnsNameLabel        plugin.TValue[string]
 	IpConfigurations            plugin.TValue[[]any]
 	Vm                          plugin.TValue[*mqlAzureSubscriptionComputeServiceVm]
 	EffectiveSecurityRules      plugin.TValue[[]any]
@@ -37223,6 +37255,34 @@ func (c *mqlAzureSubscriptionNetworkServiceInterface) GetPrimary() *plugin.TValu
 
 func (c *mqlAzureSubscriptionNetworkServiceInterface) GetNetworkSecurityGroupId() *plugin.TValue[string] {
 	return &c.NetworkSecurityGroupId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetNetworkSecurityGroup() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSecurityGroup](&c.NetworkSecurityGroup, func() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.interface", c.__id, "networkSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
+			}
+		}
+
+		return c.networkSecurityGroup()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetDnsServers() *plugin.TValue[[]any] {
+	return &c.DnsServers
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetAppliedDnsServers() *plugin.TValue[[]any] {
+	return &c.AppliedDnsServers
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetInternalDnsNameLabel() *plugin.TValue[string] {
+	return &c.InternalDnsNameLabel
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceInterface) GetIpConfigurations() *plugin.TValue[[]any] {

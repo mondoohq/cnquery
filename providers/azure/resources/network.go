@@ -3449,7 +3449,9 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	}
 
 	var enableIPForwarding, enableAcceleratedNetworking, primary *llx.RawData
-	var networkSecurityGroupId string
+	var networkSecurityGroupId, internalDnsNameLabel string
+	dnsServers := []any{}
+	appliedDnsServers := []any{}
 	ipConfigs := []any{}
 	if iface.Properties != nil {
 		enableIPForwarding = llx.BoolDataPtr(iface.Properties.EnableIPForwarding)
@@ -3457,6 +3459,21 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 		primary = llx.BoolDataPtr(iface.Properties.Primary)
 		if iface.Properties.NetworkSecurityGroup != nil && iface.Properties.NetworkSecurityGroup.ID != nil {
 			networkSecurityGroupId = *iface.Properties.NetworkSecurityGroup.ID
+		}
+		if iface.Properties.DNSSettings != nil {
+			for _, s := range iface.Properties.DNSSettings.DNSServers {
+				if s != nil {
+					dnsServers = append(dnsServers, *s)
+				}
+			}
+			for _, s := range iface.Properties.DNSSettings.AppliedDNSServers {
+				if s != nil {
+					appliedDnsServers = append(appliedDnsServers, *s)
+				}
+			}
+			if iface.Properties.DNSSettings.InternalDNSNameLabel != nil {
+				internalDnsNameLabel = *iface.Properties.DNSSettings.InternalDNSNameLabel
+			}
 		}
 		for _, ipConfig := range iface.Properties.IPConfigurations {
 			if ipConfig == nil {
@@ -3507,12 +3524,34 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 			"enableAcceleratedNetworking": enableAcceleratedNetworking,
 			"primary":                     primary,
 			"networkSecurityGroupId":      llx.StringData(networkSecurityGroupId),
+			"dnsServers":                  llx.ArrayData(dnsServers, types.String),
+			"appliedDnsServers":           llx.ArrayData(appliedDnsServers, types.String),
+			"internalDnsNameLabel":        llx.StringData(internalDnsNameLabel),
 			"ipConfigurations":            llx.ArrayData(ipConfigs, types.Dict),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServiceInterface), nil
+	mqlIface := res.(*mqlAzureSubscriptionNetworkServiceInterface)
+	mqlIface.cacheNetworkSecurityGroupID = networkSecurityGroupId
+	return mqlIface, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
+	cacheNetworkSecurityGroupID string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
+	if a.cacheNetworkSecurityGroupID == "" {
+		a.NetworkSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.securityGroup",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheNetworkSecurityGroupID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224

@@ -2154,6 +2154,14 @@ azure.subscription.networkService.interface @defaults("name location properties.
   primary bool
   // Network security group associated with this interface
   networkSecurityGroupId string
+  // Network security group attached to the NIC; null when the NIC inherits NSG enforcement from its subnet only
+  networkSecurityGroup() azure.subscription.networkService.securityGroup
+  // Custom DNS servers configured on the network interface (overrides VNet-level DNS); empty when the NIC inherits VNet DNS
+  dnsServers []string
+  // Effective DNS servers applied to the NIC (custom servers when set, otherwise resolved from the VNet)
+  appliedDnsServers []string
+  // Internal DNS name label assigned to the NIC; empty when unset
+  internalDnsNameLabel string
   // IP configurations for the network interface
   ipConfigurations []dict
   // Network interface compute vm
