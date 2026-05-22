@@ -215,6 +215,7 @@ use (
    ./mql/providers/google-workspace
    ./mql/providers/grafana
    ./mql/providers/hetzner
+   ./mql/providers/huggingface
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/k8s

@@ -215,6 +215,7 @@ PROVIDERS := \
 	google-workspace \
 	helm \
 	hetzner \
+	huggingface \
 	ipinfo \
 	ipmi \
 	jamf \

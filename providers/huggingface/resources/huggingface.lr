@@ -1,0 +1,195 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/huggingface"
+option go_package = "go.mondoo.com/mql/v13/providers/huggingface/resources"
+
+// Hugging Face
+//
+// Use the `huggingface` resource to examine your Hugging Face account,
+// including models, datasets, spaces, webhooks, inference endpoints,
+// and organization memberships accessible through the configured API token.
+huggingface @defaults("user.name") {
+  // Authenticated user
+  user() huggingface.user
+  // Organizations the authenticated user belongs to
+  organizations() []huggingface.organization
+  // Models accessible to the authenticated user and their organizations
+  models() []huggingface.model
+  // Datasets accessible to the authenticated user and their organizations
+  datasets() []huggingface.dataset
+  // Spaces accessible to the authenticated user and their organizations
+  spaces() []huggingface.space
+  // Webhooks configured for the authenticated user
+  webhooks() []huggingface.webhook
+  // Inference endpoints for the authenticated user
+  inferenceEndpoints() []huggingface.inferenceEndpoint
+}
+
+// Hugging Face user account
+//
+// Examine properties of a Hugging Face user, including organization
+// memberships, pro status, and the permissions of the API token
+// used to authenticate.
+huggingface.user @defaults("name") {
+  id string
+  name string
+  fullname string
+  type string
+  isPro bool
+  avatarUrl string
+  // Access token used for authentication
+  accessToken() huggingface.accessToken
+}
+
+// Hugging Face organization
+//
+// Examine a Hugging Face organization including enterprise status,
+// billing capability, and the authenticated user's role within it.
+huggingface.organization @defaults("name") {
+  id string
+  name string
+  fullname string
+  email string
+  canPay bool
+  avatarUrl string
+  // Authenticated user's role in this organization
+  roleInOrg string
+  isEnterprise bool
+}
+
+// Hugging Face access token
+//
+// Examine the API access token used for authentication, including
+// its display name, role, and fine-grained permission scopes.
+huggingface.accessToken @defaults("displayName role") {
+  displayName string
+  // Token role
+  //
+  // One of read, write, or fineGrained.
+  role string
+  createdAt time
+  canReadGatedRepos bool
+  // Global permissions granted to the token
+  globalPermissions []string
+  // Scoped permissions granted to specific entities
+  scopedPermissions []huggingface.accessToken.scope
+}
+
+// Scoped permission grant on a Hugging Face access token
+//
+// Examine a single scoped permission entry that grants specific
+// permissions to an entity (user or organization). The `entityName`
+// field identifies the target, and `permissions` lists the granted
+// capabilities such as `repo.content.read` or `org.read`.
+private huggingface.accessToken.scope @defaults("entityName") {
+  entityId string
+  entityType string
+  entityName string
+  permissions []string
+}
+
+// Hugging Face model repository
+//
+// Examine a model hosted on the Hugging Face Hub, including its
+// visibility, access gating, license, pipeline tag, library,
+// and download/like counts. Use `cardData` and `config` for deep
+// metadata needed by AI Bill of Materials (AIBOM) generation.
+huggingface.model @defaults("id author") {
+  // Full model ID (e.g., "meta-llama/Llama-3.1-8B")
+  id string
+  // Internal model identifier
+  modelId string
+  author string
+  private bool
+  // ML pipeline tag
+  //
+  // Identifies the model's primary task such as text-generation,
+  // text-to-image, or feature-extraction.
+  pipelineTag string
+  // ML framework library name
+  //
+  // For example transformers, diffusers, or sentence-transformers.
+  libraryName string
+  tags []string
+  downloads int
+  likes int
+  // Git SHA of the current revision
+  sha string
+  createdAt() time
+  lastModified time
+  // Whether the model requires access approval
+  gated bool
+  disabled bool
+  license() string
+  // Parsed YAML frontmatter from the model card (datasets, language, metrics, base_model, etc.)
+  cardData() dict
+  // Raw model card content (README.md)
+  modelCard() string
+  // Parsed config.json (architecture, model_type, hidden_size, vocab_size, etc.)
+  config() dict
+  // File listing in the model repository
+  siblings() []dict
+}
+
+// Hugging Face dataset repository
+//
+// Examine a dataset hosted on the Hugging Face Hub, including its
+// visibility, description, and download/like counts.
+huggingface.dataset @defaults("id") {
+  id string
+  name string
+  description string
+  tags []string
+  author string
+  downloads int
+  likes int
+  private bool
+}
+
+// Hugging Face Space application
+//
+// Examine a Hugging Face Space (hosted app) including its visibility,
+// description, tags, and like count.
+huggingface.space @defaults("id") {
+  id string
+  name string
+  description string
+  tags []string
+  author string
+  likes int
+  private bool
+}
+
+// Hugging Face webhook
+//
+// Examine a configured webhook including its target URL, watched
+// repositories, event domains, and enabled/disabled state.
+huggingface.webhook @defaults("id webhookUrl") {
+  id string
+  // Target URL that receives webhook events
+  webhookUrl string
+  domains []string
+  disabled bool
+  // Watched entities that trigger this webhook
+  watched []dict
+}
+
+// Hugging Face inference endpoint
+//
+// Examine a deployed inference endpoint including the model it serves,
+// the ML framework, its operational status, and the endpoint URL.
+huggingface.inferenceEndpoint @defaults("name status") {
+  id string
+  name string
+  // Model ID deployed on this endpoint
+  model string
+  framework string
+  // Operational status
+  //
+  // For example running, pending, failed, or scaledToZero.
+  status string
+  endpointUrl string
+  createdAt time
+  updatedAt time
+}

@@ -12,6 +12,7 @@ advancedthreatprotection
 aeson
 afero
 AHB
+AIBOM
 AJD
 aki
 alamofire
@@ -221,6 +222,7 @@ freetier
 frontmatter
 fsn
 ftps
+fullname
 functionapp
 FWaa
 gcfs
@@ -267,6 +269,7 @@ hostkeyalgorithms
 hpi
 hsts
 Hudi
+huggingface
 hvm
 Iaa
 iana
