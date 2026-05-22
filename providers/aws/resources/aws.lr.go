@@ -148752,7 +148752,7 @@ func (c *mqlAwsSsmPatchBaseline) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsSsmMaintenanceWindow struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSsmMaintenanceWindowInternal it will be used here
+	mqlAwsSsmMaintenanceWindowInternal
 	Id                       plugin.TValue[string]
 	Arn                      plugin.TValue[string]
 	Name                     plugin.TValue[string]

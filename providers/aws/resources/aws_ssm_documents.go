@@ -537,18 +537,11 @@ func (a *mqlAwsSsmMaintenanceWindow) id() (string, error) {
 }
 
 func (a *mqlAwsSsmMaintenanceWindow) allowUnassociatedTargets() (bool, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	ssmsvc := conn.Ssm(a.Region.Data)
-	ctx := context.Background()
-
-	windowId := a.Id.Data
-	resp, err := ssmsvc.GetMaintenanceWindow(ctx, &ssm.GetMaintenanceWindowInput{
-		WindowId: &windowId,
-	})
+	detail, err := a.fetchDetail()
 	if err != nil {
 		return false, err
 	}
-	return resp.AllowUnassociatedTargets, nil
+	return detail.AllowUnassociatedTargets, nil
 }
 
 func (a *mqlAwsSsmMaintenanceWindow) tags() (map[string]any, error) {

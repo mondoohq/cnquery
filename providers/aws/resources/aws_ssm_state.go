@@ -123,19 +123,45 @@ func (a *mqlAwsSsmPatchGroup) baseline() (*mqlAwsSsmPatchBaseline, error) {
 
 // ---------------- Maintenance window tasks & targets ----------------
 
-func (a *mqlAwsSsmMaintenanceWindow) modifiedDate() (*time.Time, error) {
+type mqlAwsSsmMaintenanceWindowInternal struct {
+	detailFetched bool
+	detailErr     error
+	detail        *ssm.GetMaintenanceWindowOutput
+	detailLock    sync.Mutex
+}
+
+// fetchDetail loads the GetMaintenanceWindow response once per window and
+// caches it so callers like modifiedDate() and allowUnassociatedTargets()
+// share a single API call.
+func (a *mqlAwsSsmMaintenanceWindow) fetchDetail() (*ssm.GetMaintenanceWindowOutput, error) {
+	if a.detailFetched {
+		return a.detail, a.detailErr
+	}
+	a.detailLock.Lock()
+	defer a.detailLock.Unlock()
+	if a.detailFetched {
+		return a.detail, a.detailErr
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ssmsvc := conn.Ssm(a.Region.Data)
 	ctx := context.Background()
-
 	windowId := a.Id.Data
 	resp, err := ssmsvc.GetMaintenanceWindow(ctx, &ssm.GetMaintenanceWindowInput{
 		WindowId: &windowId,
 	})
+	a.detail = resp
+	a.detailErr = err
+	a.detailFetched = true
+	return a.detail, a.detailErr
+}
+
+func (a *mqlAwsSsmMaintenanceWindow) modifiedDate() (*time.Time, error) {
+	detail, err := a.fetchDetail()
 	if err != nil {
 		return nil, err
 	}
-	return resp.ModifiedDate, nil
+	return detail.ModifiedDate, nil
 }
 
 func (a *mqlAwsSsmMaintenanceWindow) tasks() ([]any, error) {
@@ -315,9 +341,9 @@ func (a *mqlAwsSsmAssociation) fetchDetail() error {
 func (a *mqlAwsSsmAssociation) populateEmptyDetail() {
 	a.Status = plugin.TValue[any]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	a.LastSuccessfulExecutionDate = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-	a.ComplianceSeverity = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
-	a.SyncCompliance = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
-	a.ApplyOnlyAtCronInterval = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	a.ComplianceSeverity = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
+	a.SyncCompliance = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
+	a.ApplyOnlyAtCronInterval = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet | plugin.StateIsNull}
 }
 
 func (a *mqlAwsSsmAssociation) status() (any, error) {
@@ -487,6 +513,7 @@ func (a *mqlAwsSsm) sessionManagerPreferences() (any, error) {
 			return nil, nil
 		}
 		if Is400AccessDeniedError(err) {
+			log.Warn().Str("region", region).Str("document", name).Msg("access denied reading SSM Session Manager preferences document")
 			return nil, nil
 		}
 		return nil, err
