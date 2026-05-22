@@ -37,6 +37,7 @@ const (
 	ResourceGithubPackageVersion                   string = "github.packageVersion"
 	ResourceGithubPackages                         string = "github.packages"
 	ResourceGithubRepository                       string = "github.repository"
+	ResourceGithubRepositoryPages                  string = "github.repository.pages"
 	ResourceGithubDeployKey                        string = "github.deployKey"
 	ResourceGithubPublicKey                        string = "github.publicKey"
 	ResourceGithubRepositoryCodeowners             string = "github.repository.codeowners"
@@ -164,6 +165,10 @@ func init() {
 		"github.repository": {
 			Init:   initGithubRepository,
 			Create: createGithubRepository,
+		},
+		"github.repository.pages": {
+			Init:   initGithubRepositoryPages,
+			Create: createGithubRepositoryPages,
 		},
 		"github.deployKey": {
 			// to override args, implement: initGithubDeployKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1242,6 +1247,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.variables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetVariables()).ToDataRes(types.Array(types.Resource("github.actionsVariable")))
+	},
+	"github.repository.pages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetPages()).ToDataRes(types.Resource("github.repository.pages"))
+	},
+	"github.repository.pages.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetUrl()).ToDataRes(types.String)
+	},
+	"github.repository.pages.htmlUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHtmlUrl()).ToDataRes(types.String)
+	},
+	"github.repository.pages.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetStatus()).ToDataRes(types.String)
+	},
+	"github.repository.pages.cname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetCname()).ToDataRes(types.String)
+	},
+	"github.repository.pages.custom404": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetCustom404()).ToDataRes(types.Bool)
+	},
+	"github.repository.pages.buildType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetBuildType()).ToDataRes(types.String)
+	},
+	"github.repository.pages.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetPublic()).ToDataRes(types.Bool)
+	},
+	"github.repository.pages.httpsEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHttpsEnforced()).ToDataRes(types.Bool)
+	},
+	"github.repository.pages.httpsCertificateState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHttpsCertificateState()).ToDataRes(types.String)
+	},
+	"github.repository.pages.httpsCertificateDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHttpsCertificateDescription()).ToDataRes(types.String)
+	},
+	"github.repository.pages.httpsCertificateDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHttpsCertificateDomains()).ToDataRes(types.Array(types.String))
+	},
+	"github.repository.pages.httpsCertificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetHttpsCertificateExpiresAt()).ToDataRes(types.String)
+	},
+	"github.repository.pages.sourceBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetSourceBranch()).ToDataRes(types.String)
+	},
+	"github.repository.pages.sourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryPages).GetSourcePath()).ToDataRes(types.String)
 	},
 	"github.deployKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployKey).GetId()).ToDataRes(types.Int)
@@ -3578,6 +3628,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Pages, ok = plugin.RawToTValue[*mqlGithubRepositoryPages](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.pages.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.htmlUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HtmlUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.cname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).Cname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.custom404": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).Custom404, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.buildType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).BuildType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.httpsEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HttpsEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.httpsCertificateState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HttpsCertificateState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.httpsCertificateDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HttpsCertificateDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.httpsCertificateDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HttpsCertificateDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.httpsCertificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).HttpsCertificateExpiresAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.sourceBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).SourceBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.repository.pages.sourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryPages).SourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.deployKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7629,6 +7743,7 @@ type mqlGithubRepository struct {
 	Codeowners                           plugin.TValue[*mqlGithubRepositoryCodeowners]
 	Secrets                              plugin.TValue[[]any]
 	Variables                            plugin.TValue[[]any]
+	Pages                                plugin.TValue[*mqlGithubRepositoryPages]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -8410,6 +8525,136 @@ func (c *mqlGithubRepository) GetVariables() *plugin.TValue[[]any] {
 
 		return c.variables()
 	})
+}
+
+func (c *mqlGithubRepository) GetPages() *plugin.TValue[*mqlGithubRepositoryPages] {
+	return plugin.GetOrCompute[*mqlGithubRepositoryPages](&c.Pages, func() (*mqlGithubRepositoryPages, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "pages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubRepositoryPages), nil
+			}
+		}
+
+		return c.pages()
+	})
+}
+
+// mqlGithubRepositoryPages for the github.repository.pages resource
+type mqlGithubRepositoryPages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubRepositoryPagesInternal it will be used here
+	Url                         plugin.TValue[string]
+	HtmlUrl                     plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	Cname                       plugin.TValue[string]
+	Custom404                   plugin.TValue[bool]
+	BuildType                   plugin.TValue[string]
+	Public                      plugin.TValue[bool]
+	HttpsEnforced               plugin.TValue[bool]
+	HttpsCertificateState       plugin.TValue[string]
+	HttpsCertificateDescription plugin.TValue[string]
+	HttpsCertificateDomains     plugin.TValue[[]any]
+	HttpsCertificateExpiresAt   plugin.TValue[string]
+	SourceBranch                plugin.TValue[string]
+	SourcePath                  plugin.TValue[string]
+}
+
+// createGithubRepositoryPages creates a new instance of this resource
+func createGithubRepositoryPages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositoryPages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.pages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositoryPages) MqlName() string {
+	return "github.repository.pages"
+}
+
+func (c *mqlGithubRepositoryPages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositoryPages) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGithubRepositoryPages) GetHtmlUrl() *plugin.TValue[string] {
+	return &c.HtmlUrl
+}
+
+func (c *mqlGithubRepositoryPages) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGithubRepositoryPages) GetCname() *plugin.TValue[string] {
+	return &c.Cname
+}
+
+func (c *mqlGithubRepositoryPages) GetCustom404() *plugin.TValue[bool] {
+	return &c.Custom404
+}
+
+func (c *mqlGithubRepositoryPages) GetBuildType() *plugin.TValue[string] {
+	return &c.BuildType
+}
+
+func (c *mqlGithubRepositoryPages) GetPublic() *plugin.TValue[bool] {
+	return &c.Public
+}
+
+func (c *mqlGithubRepositoryPages) GetHttpsEnforced() *plugin.TValue[bool] {
+	return &c.HttpsEnforced
+}
+
+func (c *mqlGithubRepositoryPages) GetHttpsCertificateState() *plugin.TValue[string] {
+	return &c.HttpsCertificateState
+}
+
+func (c *mqlGithubRepositoryPages) GetHttpsCertificateDescription() *plugin.TValue[string] {
+	return &c.HttpsCertificateDescription
+}
+
+func (c *mqlGithubRepositoryPages) GetHttpsCertificateDomains() *plugin.TValue[[]any] {
+	return &c.HttpsCertificateDomains
+}
+
+func (c *mqlGithubRepositoryPages) GetHttpsCertificateExpiresAt() *plugin.TValue[string] {
+	return &c.HttpsCertificateExpiresAt
+}
+
+func (c *mqlGithubRepositoryPages) GetSourceBranch() *plugin.TValue[string] {
+	return &c.SourceBranch
+}
+
+func (c *mqlGithubRepositoryPages) GetSourcePath() *plugin.TValue[string] {
+	return &c.SourcePath
 }
 
 // mqlGithubDeployKey for the github.deployKey resource

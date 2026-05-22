@@ -767,6 +767,66 @@ github.repository @defaults("fullName") {
   secrets() []github.actionsSecret
   // GitHub Actions variables configured at the repository level
   variables() []github.actionsVariable
+  // GitHub Pages site configuration (null when the repository does not have Pages enabled)
+  pages() github.repository.pages
+}
+
+// GitHub Pages site
+//
+// Examine the GitHub Pages configuration for a repository. Provides the published
+// `url` and `htmlUrl`, the build `status` (built, building, errored, or empty
+// when no build has happened), the `buildType` (legacy publishing from a branch
+// vs. workflow-based), the source `sourceBranch` and `sourcePath` (for legacy
+// builds), the `cname` custom domain and whether `httpsEnforced` is on, plus
+// the `httpsCertificateState`, `httpsCertificateDescription`,
+// `httpsCertificateDomains`, and `httpsCertificateExpiresAt` (YYYY-MM-DD) of the
+// auto-issued certificate. The `public` flag indicates whether the site is
+// publicly visible regardless of repository visibility, and `custom404` is true
+// when the site provides a custom 404 page.
+private github.repository.pages @defaults("status cname httpsEnforced") {
+  // The API URL of the Pages site
+  url string
+  // The public-facing URL of the Pages site
+  htmlUrl string
+  // Current build status
+  //
+  // One of `built`, `building`, `errored`, or empty when no build has happened.
+  status string
+  // Custom domain name (CNAME) configured for the site, empty if none
+  cname string
+  // Whether the site provides a custom 404 page
+  custom404 bool
+  // How the site is built
+  //
+  // One of `legacy` (built from a branch/path) or `workflow` (built by a custom
+  // GitHub Actions workflow).
+  buildType string
+  // Whether the site is publicly visible
+  //
+  // True if anyone can access the site, false if access is restricted (for
+  // example, when the repository is private and Pages access control is on).
+  public bool
+  // Whether HTTPS is enforced for the site
+  httpsEnforced bool
+  // State of the auto-issued HTTPS certificate
+  //
+  // Values include `new`, `authorization_created`, `authorization_pending`,
+  // `authorized`, `authorization_revoked`, `issued`, `uploaded`, `approved`,
+  // `errored`, `bad_authz`, `destroy_pending`, and `dns_changed`. Empty when no
+  // certificate is provisioned.
+  httpsCertificateState string
+  // Human-readable description of the HTTPS certificate state
+  httpsCertificateDescription string
+  // Domains covered by the HTTPS certificate
+  httpsCertificateDomains []string
+  // Date the HTTPS certificate expires (YYYY-MM-DD), empty if unknown
+  httpsCertificateExpiresAt string
+  // Branch the site is built from (legacy builds only)
+  sourceBranch string
+  // Path within the branch the site is built from
+  //
+  // One of `/` or `/docs` for legacy builds; empty for workflow builds.
+  sourcePath string
 }
 
 // GitHub repository deploy key
