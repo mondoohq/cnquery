@@ -219,7 +219,7 @@ func (x *mqlPackages) list() ([]any, error) {
 			cpes = append(cpes, cpe)
 		}
 
-		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]*llx.RawData{
+		pkgArgs := map[string]*llx.RawData{
 			"name":        llx.StringData(osPkg.Name),
 			"version":     llx.StringData(osPkg.Version),
 			"available":   llx.StringData(available),
@@ -233,8 +233,17 @@ func (x *mqlPackages) list() ([]any, error) {
 			"purl":        llx.StringData(osPkg.PUrl),
 			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
 			"vendor":      llx.StringData(osPkg.Vendor),
-			"license":     llx.StringData(osPkg.License),
-		})
+		}
+		// Only eagerly set license when the backend populated it (rpm,
+		// apk, pacman). dpkg leaves it empty here so the lazy `license()`
+		// method on mqlPackage can fire and read
+		// /usr/share/doc/<pkg>/copyright on demand. Setting "" here
+		// would short-circuit the GetOrCompute wrapper and the lazy
+		// fallback would never run.
+		if osPkg.License != "" {
+			pkgArgs["license"] = llx.StringData(osPkg.License)
+		}
+		pkg, err := CreateResource(x.MqlRuntime, "package", pkgArgs)
 		if err != nil {
 			return nil, err
 		}
