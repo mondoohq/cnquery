@@ -54,6 +54,7 @@ func newMqlAnsiblePlay(runtime *plugin.Runtime, play *play.Play) (*mqlAnsiblePla
 		"anyErrorsFatal":    llx.BoolData(play.AnyErrorsFatal),
 		"gatherFacts":       llx.StringData(play.GatherFacts),
 		"vars":              llx.DictData(varsDict),
+		"tags":              llx.ArrayData(convert.SliceAnyToInterface(play.Tags), types.String),
 		"roles":             llx.ArrayData(convert.SliceAnyToInterface(play.Roles), types.String),
 	})
 	if err != nil {
@@ -122,16 +123,24 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id string, task *play.Task) (*mq
 		return nil, err
 	}
 
+	loopControlDict, err := convert.JsonToDict(task.LoopControl)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := CreateResource(runtime, "ansible.task", map[string]*llx.RawData{
 		"__id":            llx.StringData(id),
 		"name":            llx.StringData(task.Name),
 		"action":          llx.DictData(actionDict),
 		"vars":            llx.DictData(varDict),
+		"tags":            llx.ArrayData(convert.SliceAnyToInterface(task.Tags), types.String),
 		"register":        llx.StringData(task.Register),
 		"when":            llx.StringData(task.When),
 		"failedWhen":      llx.StringData(task.FailedWhen),
 		"changedWhen":     llx.StringData(task.ChangedWhen),
 		"notify":          llx.ArrayData(convert.SliceAnyToInterface(task.Notify), types.String),
+		"loop":            llx.DictData(task.Loop),
+		"loopControl":     llx.DictData(loopControlDict),
 		"importPlaybook":  llx.StringData(task.ImportPlaybook),
 		"includePlaybook": llx.StringData(task.IncludePlaybook),
 		"importTasks":     llx.StringData(task.ImportTasks),
@@ -166,8 +175,16 @@ type mqlAnsibleTaskInternal struct {
 	task *play.Task
 }
 
+func (r *mqlAnsiblePlay) preTasks() ([]any, error) {
+	return newMqlAnsibleTasks(r.MqlRuntime, "preTasks", r.play.PreTasks)
+}
+
 func (r *mqlAnsiblePlay) tasks() ([]any, error) {
 	return newMqlAnsibleTasks(r.MqlRuntime, "tasks", r.play.Tasks)
+}
+
+func (r *mqlAnsiblePlay) postTasks() ([]any, error) {
+	return newMqlAnsibleTasks(r.MqlRuntime, "postTasks", r.play.PostTasks)
 }
 
 func (r *mqlAnsibleTask) block() ([]any, error) {
@@ -176,4 +193,8 @@ func (r *mqlAnsibleTask) block() ([]any, error) {
 
 func (r *mqlAnsibleTask) rescue() ([]any, error) {
 	return newMqlAnsibleTasks(r.MqlRuntime, "rescue", r.task.Rescue)
+}
+
+func (r *mqlAnsibleTask) always() ([]any, error) {
+	return newMqlAnsibleTasks(r.MqlRuntime, "always", r.task.Always)
 }

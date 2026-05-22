@@ -1,0 +1,50 @@
+---
+- name: Provision web tier
+  hosts: webservers
+  tags:
+    - web
+    - provisioning
+  pre_tasks:
+    - name: Wait for the host to come online
+      ansible.builtin.wait_for_connection:
+        timeout: 60
+      tags:
+        - bootstrap
+  roles:
+    - common
+    - webservers
+  tasks:
+    - name: Install packages
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - httpd
+        - memcached
+      loop_control:
+        loop_var: pkg
+        label: "{{ pkg }}"
+      tags:
+        - packages
+    - name: Configure with block / rescue / always
+      block:
+        - name: Render config
+          ansible.builtin.template:
+            src: templates/httpd.conf.j2
+            dest: /etc/httpd.conf
+      rescue:
+        - name: Log the failure
+          ansible.builtin.debug:
+            msg: "config render failed"
+      always:
+        - name: Reload firewalld
+          ansible.builtin.service:
+            name: firewalld
+            state: reloaded
+  post_tasks:
+    - name: Notify monitoring system
+      ansible.builtin.uri:
+        url: https://monitoring.example.com/hook
+        method: POST
+      tags:
+        - notify

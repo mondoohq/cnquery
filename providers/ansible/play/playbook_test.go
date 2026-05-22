@@ -98,6 +98,45 @@ func TestPlaybookDecoding(t *testing.T) {
 		play := playbook[0]
 		assert.Equal(t, "Accumulate failure", play.Tasks[0].Rescue[0].Name)
 		assert.Equal(t, 1, len(play.Tasks[0].Rescue))
+		// `always` on the outer block contains a single nested block task
+		require.Equal(t, 1, len(play.Tasks[0].Always))
+		assert.Equal(t, "Tasks that will always run after the main block", play.Tasks[0].Always[0].Name)
+		assert.Equal(t, 4, len(play.Tasks[0].Always[0].Block))
+	})
+
+	t.Run("load playbook with tags, pre/post_tasks, loop, and always", func(t *testing.T) {
+		data, err := os.ReadFile("./testdata/play_tags_loop.yml")
+		require.NoError(t, err)
+
+		playbook, err := DecodePlaybook(data)
+		require.NoError(t, err)
+		require.NotNil(t, playbook)
+
+		p := playbook[0]
+		assert.Equal(t, []string{"web", "provisioning"}, p.Tags)
+
+		require.Equal(t, 1, len(p.PreTasks))
+		assert.Equal(t, "Wait for the host to come online", p.PreTasks[0].Name)
+		assert.Equal(t, []string{"bootstrap"}, p.PreTasks[0].Tags)
+
+		require.Equal(t, 1, len(p.PostTasks))
+		assert.Equal(t, "Notify monitoring system", p.PostTasks[0].Name)
+		assert.Equal(t, []string{"notify"}, p.PostTasks[0].Tags)
+
+		require.GreaterOrEqual(t, len(p.Tasks), 2)
+
+		installTask := p.Tasks[0]
+		assert.Equal(t, "Install packages", installTask.Name)
+		assert.Equal(t, []string{"packages"}, installTask.Tags)
+		assert.Equal(t, []any{"httpd", "memcached"}, installTask.Loop)
+		assert.Equal(t, "pkg", installTask.LoopControl["loop_var"])
+		assert.Equal(t, "{{ pkg }}", installTask.LoopControl["label"])
+
+		blockTask := p.Tasks[1]
+		require.Equal(t, 1, len(blockTask.Block))
+		require.Equal(t, 1, len(blockTask.Rescue))
+		require.Equal(t, 1, len(blockTask.Always))
+		assert.Equal(t, "Reload firewalld", blockTask.Always[0].Name)
 	})
 }
 

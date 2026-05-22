@@ -49,10 +49,16 @@ ansible.play @defaults("name") {
   gatherFacts string
   // Play-level variables
   vars map[string]dict
+  // Tags used to select or skip the play with --tags / --skip-tags
+  tags []string
   // Roles to apply
   roles []string
+  // Tasks executed before roles
+  preTasks() []ansible.task
   // Tasks to execute
   tasks() []ansible.task
+  // Tasks executed after roles and tasks
+  postTasks() []ansible.task
   // Handlers triggered by notify
   handlers() []ansible.handler
 }
@@ -70,6 +76,8 @@ ansible.task @defaults("name"){
   action dict
   // Task-level variables
   vars map[string]dict
+  // Tags used to select or skip the task with --tags / --skip-tags
+  tags []string
   // Variable name to store task result
   register string
   // Jinja2 condition for task execution
@@ -80,6 +88,17 @@ ansible.task @defaults("name"){
   changedWhen string
   // Handlers to trigger on change
   notify []string
+  // Items the task iterates over
+  //
+  // The value supplied to the `loop:` keyword. Typically a list of items,
+  // a Jinja2 expression that evaluates to a list (for example
+  // `{{ groups['webservers'] }}`), or a string referencing a variable.
+  loop dict
+  // Loop iteration controls
+  //
+  // The value supplied to the `loop_control:` keyword, including settings
+  // such as `loop_var`, `label`, `index_var`, `pause`, and `extended`.
+  loopControl dict
   // Statically import playbook at parse time
   importPlaybook string
   // Dynamically include playbook at runtime
@@ -92,6 +111,8 @@ ansible.task @defaults("name"){
   block() []ansible.task
   // Tasks to run on block failure
   rescue() []ansible.task
+  // Tasks that run after the block regardless of success or failure
+  always() []ansible.task
 }
 
 // Ansible handler triggered by task notifications

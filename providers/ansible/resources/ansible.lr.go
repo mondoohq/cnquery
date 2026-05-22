@@ -154,11 +154,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.play.vars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetVars()).ToDataRes(types.Map(types.String, types.Dict))
 	},
+	"ansible.play.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetTags()).ToDataRes(types.Array(types.String))
+	},
 	"ansible.play.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetRoles()).ToDataRes(types.Array(types.String))
 	},
+	"ansible.play.preTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetPreTasks()).ToDataRes(types.Array(types.Resource("ansible.task")))
+	},
 	"ansible.play.tasks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetTasks()).ToDataRes(types.Array(types.Resource("ansible.task")))
+	},
+	"ansible.play.postTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetPostTasks()).ToDataRes(types.Array(types.Resource("ansible.task")))
 	},
 	"ansible.play.handlers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetHandlers()).ToDataRes(types.Array(types.Resource("ansible.handler")))
@@ -171,6 +180,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.task.vars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetVars()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"ansible.task.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetTags()).ToDataRes(types.Array(types.String))
 	},
 	"ansible.task.register": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetRegister()).ToDataRes(types.String)
@@ -186,6 +198,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.task.notify": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetNotify()).ToDataRes(types.Array(types.String))
+	},
+	"ansible.task.loop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetLoop()).ToDataRes(types.Dict)
+	},
+	"ansible.task.loopControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetLoopControl()).ToDataRes(types.Dict)
 	},
 	"ansible.task.importPlaybook": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetImportPlaybook()).ToDataRes(types.String)
@@ -204,6 +222,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.task.rescue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetRescue()).ToDataRes(types.Array(types.Resource("ansible.task")))
+	},
+	"ansible.task.always": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetAlways()).ToDataRes(types.Array(types.Resource("ansible.task")))
 	},
 	"ansible.handler.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleHandler).GetName()).ToDataRes(types.String)
@@ -287,12 +308,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAnsiblePlay).Vars, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"ansible.play.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ansible.play.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsiblePlay).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ansible.play.preTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).PreTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ansible.play.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsiblePlay).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.postTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).PostTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ansible.play.handlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -315,6 +348,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAnsibleTask).Vars, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"ansible.task.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ansible.task.register": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Register, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -333,6 +370,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.task.notify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Notify, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.loop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Loop, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.loopControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).LoopControl, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ansible.task.importPlaybook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -357,6 +402,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.task.rescue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Rescue, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.always": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Always, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ansible.handler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -474,8 +523,11 @@ type mqlAnsiblePlay struct {
 	AnyErrorsFatal    plugin.TValue[bool]
 	GatherFacts       plugin.TValue[string]
 	Vars              plugin.TValue[map[string]any]
+	Tags              plugin.TValue[[]any]
 	Roles             plugin.TValue[[]any]
+	PreTasks          plugin.TValue[[]any]
 	Tasks             plugin.TValue[[]any]
+	PostTasks         plugin.TValue[[]any]
 	Handlers          plugin.TValue[[]any]
 }
 
@@ -568,8 +620,28 @@ func (c *mqlAnsiblePlay) GetVars() *plugin.TValue[map[string]any] {
 	return &c.Vars
 }
 
+func (c *mqlAnsiblePlay) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
 func (c *mqlAnsiblePlay) GetRoles() *plugin.TValue[[]any] {
 	return &c.Roles
+}
+
+func (c *mqlAnsiblePlay) GetPreTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PreTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.play", c.__id, "preTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.preTasks()
+	})
 }
 
 func (c *mqlAnsiblePlay) GetTasks() *plugin.TValue[[]any] {
@@ -585,6 +657,22 @@ func (c *mqlAnsiblePlay) GetTasks() *plugin.TValue[[]any] {
 		}
 
 		return c.tasks()
+	})
+}
+
+func (c *mqlAnsiblePlay) GetPostTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PostTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.play", c.__id, "postTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.postTasks()
 	})
 }
 
@@ -612,17 +700,21 @@ type mqlAnsibleTask struct {
 	Name            plugin.TValue[string]
 	Action          plugin.TValue[any]
 	Vars            plugin.TValue[map[string]any]
+	Tags            plugin.TValue[[]any]
 	Register        plugin.TValue[string]
 	When            plugin.TValue[string]
 	FailedWhen      plugin.TValue[string]
 	ChangedWhen     plugin.TValue[string]
 	Notify          plugin.TValue[[]any]
+	Loop            plugin.TValue[any]
+	LoopControl     plugin.TValue[any]
 	ImportPlaybook  plugin.TValue[string]
 	IncludePlaybook plugin.TValue[string]
 	ImportTasks     plugin.TValue[string]
 	IncludeTasks    plugin.TValue[string]
 	Block           plugin.TValue[[]any]
 	Rescue          plugin.TValue[[]any]
+	Always          plugin.TValue[[]any]
 }
 
 // createAnsibleTask creates a new instance of this resource
@@ -669,6 +761,10 @@ func (c *mqlAnsibleTask) GetVars() *plugin.TValue[map[string]any] {
 	return &c.Vars
 }
 
+func (c *mqlAnsibleTask) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
 func (c *mqlAnsibleTask) GetRegister() *plugin.TValue[string] {
 	return &c.Register
 }
@@ -687,6 +783,14 @@ func (c *mqlAnsibleTask) GetChangedWhen() *plugin.TValue[string] {
 
 func (c *mqlAnsibleTask) GetNotify() *plugin.TValue[[]any] {
 	return &c.Notify
+}
+
+func (c *mqlAnsibleTask) GetLoop() *plugin.TValue[any] {
+	return &c.Loop
+}
+
+func (c *mqlAnsibleTask) GetLoopControl() *plugin.TValue[any] {
+	return &c.LoopControl
 }
 
 func (c *mqlAnsibleTask) GetImportPlaybook() *plugin.TValue[string] {
@@ -734,6 +838,22 @@ func (c *mqlAnsibleTask) GetRescue() *plugin.TValue[[]any] {
 		}
 
 		return c.rescue()
+	})
+}
+
+func (c *mqlAnsibleTask) GetAlways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Always, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.task", c.__id, "always")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.always()
 	})
 }
 

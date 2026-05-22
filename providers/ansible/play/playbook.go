@@ -64,13 +64,25 @@ type Play struct {
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html
 	Vars map[string]any `yaml:"vars,omitempty"`
 
+	// Tags scope which plays run with --tags / --skip-tags
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html
+	Tags []string `yaml:"tags,omitempty"`
+
 	// Roles are a list of roles to be applied to the play
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
 	Roles []string `yaml:"roles,omitempty"`
 
+	// PreTasks run before roles
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles
+	PreTasks []*Task `yaml:"pre_tasks,omitempty"`
+
 	// Tasks are a list of tasks to be executed
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id4
 	Tasks []*Task `yaml:"tasks"`
+
+	// PostTasks run after roles and tasks
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles
+	PostTasks []*Task `yaml:"post_tasks,omitempty"`
 
 	// Handlers are tasks that only run when notified
 	Handlers []*Handler `yaml:"handlers,omitempty"`
@@ -120,6 +132,14 @@ type Task struct {
 	// Notify is a list of handlers to notify
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html
 	Notify []string `yaml:"notify,omitempty"`
+
+	// Loop is the items the task iterates over
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html
+	Loop any `yaml:"loop,omitempty"`
+
+	// LoopControl tunes loop behavior (loop_var, label, index_var, pause, etc.)
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#limiting-loop-output-with-label
+	LoopControl map[string]any `yaml:"loop_control,omitempty"`
 
 	// Importing Playbooks
 	// see https://docs.ansible.com/ansible/2.9/user_guide/playbooks_reuse_includes.html
