@@ -2152,8 +2152,8 @@ azure.subscription.networkService.interface @defaults("name location properties.
   enableAcceleratedNetworking bool
   // Whether this is a primary network interface on a VM
   primary bool
-  // Network security group associated with this interface
-  networkSecurityGroupId string
+  // DEPRECATED: use networkSecurityGroup instead
+  networkSecurityGroupId @maturity("deprecated") string
   // Network security group attached to the NIC; null when the NIC inherits NSG enforcement from its subnet only
   networkSecurityGroup() azure.subscription.networkService.securityGroup
   // Custom DNS servers configured on the network interface (overrides VNet-level DNS); empty when the NIC inherits VNet DNS
