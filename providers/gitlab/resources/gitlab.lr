@@ -456,16 +456,105 @@ gitlab.project @defaults("fullName visibility webURL") {
   deployTokens() []gitlab.project.deployToken
   // Security settings for the project
   securitySettings() gitlab.project.securitySetting
+  // CODEOWNERS file resolved from the default branch (nil if the file is absent)
+  codeowners() gitlab.project.codeowners
 }
 
 // GitLab project approval rule
-private gitlab.project.approvalRule @defaults("id name approvalsRequired") {
+//
+// Examine a project merge-request approval rule. Surfaces the
+// `ruleType` ("regular", "code_owner", "report_approver",
+// "any_approver"), the `reportType` (scanner/report kind for
+// security-report rules: e.g. "license_scanning",
+// "code_coverage"), the `approvalsRequired` count, the resolved
+// approver surface (`eligibleApprovers`, `users`, `groups`), the
+// `protectedBranches` the rule scopes to (and the
+// `appliesToAllProtectedBranches` flag overriding that list), the
+// `containsHiddenGroups` flag (approvers from groups the caller
+// can't see — material for governance audit), and the `section` the
+// rule renders under in the UI.
+private gitlab.project.approvalRule @defaults("id name ruleType approvalsRequired") {
   // Rule ID
   id int
   // Rule name
   name string
   // Number of approvals required
   approvalsRequired int
+  // Rule type ("regular", "code_owner", "report_approver", "any_approver")
+  ruleType string
+  // Report type when `ruleType` is "report_approver"
+  //
+  // Kind of scanner/report (e.g. "license_scanning", "code_coverage", "vulnerability_check"). Empty when the rule is not a report-approver rule.
+  reportType string
+  // Whether the rule applies to every protected branch (overrides `protectedBranches`)
+  appliesToAllProtectedBranches bool
+  // Whether one or more approver groups are not visible to the caller (governance signal — approval source is opaque)
+  containsHiddenGroups bool
+  // Section the rule renders under in the UI (free-form label set by the rule author)
+  section string
+  // Usernames of users in the `eligibleApprovers` list, including those resolved through group membership
+  eligibleApprovers []string
+  // Usernames of users directly assigned to the rule
+  users []string
+  // Full paths of groups directly assigned to the rule (e.g. "acme-corp/security")
+  groups []string
+  // Names of the protected branches the rule scopes to; empty when `appliesToAllProtectedBranches` is true or the rule is unscoped
+  protectedBranches []string
+}
+
+// GitLab project CODEOWNERS file
+//
+// Examine the CODEOWNERS file for a project. The file is resolved
+// from the default branch in this order: `CODEOWNERS`,
+// `.gitlab/CODEOWNERS`, `docs/CODEOWNERS`. Surfaces the `path` the
+// file was found at, the raw `content`, the parsed `rules` (each
+// with `section`, `pattern`, `owners`, `required`, and
+// `approvalsRequired`), and the convenience flag `present`
+// indicating whether any CODEOWNERS file exists at all. Use this to
+// audit code-review coverage gaps (paths with no required owners),
+// the presence of section overrides (`[Section][Approvals=N]`), and
+// any `^` optional sections that weaken default required-review
+// enforcement.
+private gitlab.project.codeowners @defaults("path present") {
+  // Whether a CODEOWNERS file exists on the default branch
+  present bool
+  // Repository path the file was loaded from (e.g. "CODEOWNERS", ".gitlab/CODEOWNERS", "docs/CODEOWNERS"); empty when `present` is false
+  path string
+  // Raw file content (empty when `present` is false)
+  content string
+  // Parsed rules in the order they appear in the file
+  rules []gitlab.project.codeowners.rule
+}
+
+// GitLab CODEOWNERS rule
+//
+// Examine a single rule extracted from a CODEOWNERS file. The
+// `pattern` is the path glob the rule applies to; `owners` lists
+// the user/group identifiers (with the leading `@` preserved); the
+// `section` field carries the name of the `[Section]` header the
+// rule appears under (empty for rules outside any section);
+// `required` is true when the section was declared as
+// `[Section]` (without a leading `^`); `optional` is true when the
+// section was declared as `^[Section]`. The `approvalsRequired`
+// field captures the section-level override (e.g.
+// `[Section][2]`); it is 0 when no override is set. The
+// `lineNumber` is preserved so audit reports can cite the file
+// location.
+private gitlab.project.codeowners.rule @defaults("pattern owners section") {
+  // Line number of the rule within the file (1-indexed)
+  lineNumber int
+  // Section header the rule belongs to (empty for top-level rules)
+  section string
+  // Whether the parent section is `^[Section]` (optional review)
+  optional bool
+  // Whether the parent section enforces required review (the default — `[Section]`)
+  required bool
+  // Section-level override of the number of required approvals; 0 when no override is set
+  approvalsRequired int
+  // Path glob the rule applies to (e.g. "*", "/db/", "/frontend/**/*.tsx")
+  pattern string
+  // Owners listed for the pattern (usernames prefixed with `@`, group paths prefixed with `@@`, or email addresses)
+  owners []string
 }
 
 // GitLab project approval settings
@@ -791,7 +880,21 @@ private gitlab.project.pipeline @defaults("id status ref") {
 }
 
 // GitLab CI/CD runner
-private gitlab.project.runner @defaults("id description status") {
+//
+// Examine a runner registered for the project. Surfaces the basic
+// inventory fields (`id`, `name`, `description`, `runnerType`,
+// `paused`, `isShared`, `online`, `status`) and a set of
+// security-relevant fields fetched on demand via the runner-details
+// endpoint: `tagList` (job-scoping labels), `runUntagged` (whether
+// the runner accepts jobs without matching tags),
+// `lockedToProject`, `accessLevel` ("not_protected" /
+// "ref_protected" — whether the runner is allowed on non-protected
+// refs), `maximumTimeout`, `contactedAt` (last check-in),
+// `maintenanceNote`, and `projects` / `groups` listing the projects
+// and groups the runner is associated with. Use these to audit
+// untagged shared-runner exposure, runners pinned to protected
+// refs, and stale runners that have not contacted GitLab.
+private gitlab.project.runner @defaults("id description status runnerType") {
   // Runner ID
   id int
   // Runner description
@@ -808,6 +911,24 @@ private gitlab.project.runner @defaults("id description status") {
   online bool
   // Runner status (online, offline, stale, never_contacted, active, paused)
   status string
+  // Tags applied to the runner — jobs with matching `tags:` are routed here
+  tagList() []string
+  // Whether the runner picks up jobs that don't carry a `tags:` directive
+  runUntagged() bool
+  // Whether the runner is locked to the projects it is currently associated with (cannot be assigned to additional projects)
+  lockedToProject() bool
+  // Access level controlling which refs the runner may run jobs on ("not_protected" or "ref_protected")
+  accessLevel() string
+  // Maximum job timeout in seconds (0 means use the project default)
+  maximumTimeout() int
+  // Timestamp of the runner's most recent check-in with GitLab; nil when the runner has never connected
+  contactedAt() time
+  // Free-form note the runner administrator left explaining maintenance state
+  maintenanceNote() string
+  // Path-with-namespace of projects the runner is associated with (e.g. "acme/api")
+  projects() []string
+  // Full paths of groups the runner is associated with (group-type runners)
+  groups() []string
 }
 
 // GitLab project push rules

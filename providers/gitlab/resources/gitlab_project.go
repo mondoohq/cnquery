@@ -134,10 +134,43 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 
 	var approvalRules []any
 	for _, rule := range approvals {
+		eligible := make([]any, 0, len(rule.EligibleApprovers))
+		for _, u := range rule.EligibleApprovers {
+			if u != nil {
+				eligible = append(eligible, u.Username)
+			}
+		}
+		users := make([]any, 0, len(rule.Users))
+		for _, u := range rule.Users {
+			if u != nil {
+				users = append(users, u.Username)
+			}
+		}
+		groups := make([]any, 0, len(rule.Groups))
+		for _, g := range rule.Groups {
+			if g != nil {
+				groups = append(groups, g.FullPath)
+			}
+		}
+		branches := make([]any, 0, len(rule.ProtectedBranches))
+		for _, b := range rule.ProtectedBranches {
+			if b != nil {
+				branches = append(branches, b.Name)
+			}
+		}
 		approvalRule := map[string]*llx.RawData{
-			"id":                llx.IntData(int64(rule.ID)),
-			"name":              llx.StringData(rule.Name),
-			"approvalsRequired": llx.IntData(int64(rule.ApprovalsRequired)),
+			"id":                            llx.IntData(rule.ID),
+			"name":                          llx.StringData(rule.Name),
+			"approvalsRequired":             llx.IntData(rule.ApprovalsRequired),
+			"ruleType":                      llx.StringData(rule.RuleType),
+			"reportType":                    llx.StringData(rule.ReportType),
+			"appliesToAllProtectedBranches": llx.BoolData(rule.AppliesToAllProtectedBranches),
+			"containsHiddenGroups":          llx.BoolData(rule.ContainsHiddenGroups),
+			"section":                       llx.StringData(""),
+			"eligibleApprovers":             llx.ArrayData(eligible, types.String),
+			"users":                         llx.ArrayData(users, types.String),
+			"groups":                        llx.ArrayData(groups, types.String),
+			"protectedBranches":             llx.ArrayData(branches, types.String),
 		}
 		mqlApprovalRule, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalRule", approvalRule)
 		if err != nil {

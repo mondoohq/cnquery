@@ -27,6 +27,8 @@ const (
 	ResourceGitlabGroupAuditEvent        string = "gitlab.group.auditEvent"
 	ResourceGitlabProject                string = "gitlab.project"
 	ResourceGitlabProjectApprovalRule    string = "gitlab.project.approvalRule"
+	ResourceGitlabProjectCodeowners      string = "gitlab.project.codeowners"
+	ResourceGitlabProjectCodeownersRule  string = "gitlab.project.codeowners.rule"
 	ResourceGitlabProjectApprovalSetting string = "gitlab.project.approvalSetting"
 	ResourceGitlabProjectProtectedBranch string = "gitlab.project.protectedBranch"
 	ResourceGitlabProjectFile            string = "gitlab.project.file"
@@ -98,6 +100,14 @@ func init() {
 		"gitlab.project.approvalRule": {
 			// to override args, implement: initGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectApprovalRule,
+		},
+		"gitlab.project.codeowners": {
+			// to override args, implement: initGitlabProjectCodeowners(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectCodeowners,
+		},
+		"gitlab.project.codeowners.rule": {
+			// to override args, implement: initGitlabProjectCodeownersRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectCodeownersRule,
 		},
 		"gitlab.project.approvalSetting": {
 			// to override args, implement: initGitlabProjectApprovalSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -783,6 +793,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetSecuritySettings()).ToDataRes(types.Resource("gitlab.project.securitySetting"))
 	},
+	"gitlab.project.codeowners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetCodeowners()).ToDataRes(types.Resource("gitlab.project.codeowners"))
+	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
 	},
@@ -791,6 +804,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.approvalRule.approvalsRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetApprovalsRequired()).ToDataRes(types.Int)
+	},
+	"gitlab.project.approvalRule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"gitlab.project.approvalRule.reportType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetReportType()).ToDataRes(types.String)
+	},
+	"gitlab.project.approvalRule.appliesToAllProtectedBranches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetAppliesToAllProtectedBranches()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalRule.containsHiddenGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetContainsHiddenGroups()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.approvalRule.section": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetSection()).ToDataRes(types.String)
+	},
+	"gitlab.project.approvalRule.eligibleApprovers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetEligibleApprovers()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.approvalRule.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetUsers()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.approvalRule.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetGroups()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.approvalRule.protectedBranches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectApprovalRule).GetProtectedBranches()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.codeowners.present": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeowners).GetPresent()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.codeowners.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeowners).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.project.codeowners.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeowners).GetContent()).ToDataRes(types.String)
+	},
+	"gitlab.project.codeowners.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeowners).GetRules()).ToDataRes(types.Array(types.Resource("gitlab.project.codeowners.rule")))
+	},
+	"gitlab.project.codeowners.rule.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"gitlab.project.codeowners.rule.section": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetSection()).ToDataRes(types.String)
+	},
+	"gitlab.project.codeowners.rule.optional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetOptional()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.codeowners.rule.required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.codeowners.rule.approvalsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetApprovalsRequired()).ToDataRes(types.Int)
+	},
+	"gitlab.project.codeowners.rule.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetPattern()).ToDataRes(types.String)
+	},
+	"gitlab.project.codeowners.rule.owners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectCodeownersRule).GetOwners()).ToDataRes(types.Array(types.String))
 	},
 	"gitlab.project.approvalSetting.approvalsBeforeMerge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalSetting).GetApprovalsBeforeMerge()).ToDataRes(types.Int)
@@ -1217,6 +1290,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.runner.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectRunner).GetStatus()).ToDataRes(types.String)
+	},
+	"gitlab.project.runner.tagList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetTagList()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.runner.runUntagged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetRunUntagged()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.runner.lockedToProject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetLockedToProject()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.runner.accessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.project.runner.maximumTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetMaximumTimeout()).ToDataRes(types.Int)
+	},
+	"gitlab.project.runner.contactedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetContactedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.runner.maintenanceNote": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetMaintenanceNote()).ToDataRes(types.String)
+	},
+	"gitlab.project.runner.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetProjects()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.runner.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRunner).GetGroups()).ToDataRes(types.Array(types.String))
 	},
 	"gitlab.project.pushRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectPushRule).GetId()).ToDataRes(types.Int)
@@ -2219,6 +2319,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).SecuritySettings, ok = plugin.RawToTValue[*mqlGitlabProjectSecuritySetting](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.codeowners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Codeowners, ok = plugin.RawToTValue[*mqlGitlabProjectCodeowners](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectApprovalRule).__id, ok = v.Value.(string)
 		return
@@ -2233,6 +2337,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.approvalRule.approvalsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectApprovalRule).ApprovalsRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.reportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).ReportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.appliesToAllProtectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).AppliesToAllProtectedBranches, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.containsHiddenGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).ContainsHiddenGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.section": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Section, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.eligibleApprovers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).EligibleApprovers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.approvalRule.protectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectApprovalRule).ProtectedBranches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeowners).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.codeowners.present": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeowners).Present, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeowners).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeowners).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeowners).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.codeowners.rule.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.section": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).Section, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.optional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).Optional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.approvalsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).ApprovalsRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.codeowners.rule.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectCodeownersRule).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2853,6 +3045,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.runner.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectRunner).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.tagList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).TagList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.runUntagged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).RunUntagged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.lockedToProject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).LockedToProject, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.accessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).AccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.maximumTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).MaximumTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.contactedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).ContactedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.maintenanceNote": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).MaintenanceNote, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.runner.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRunner).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.pushRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4561,6 +4789,7 @@ type mqlGitlabProject struct {
 	DeployKeys                                plugin.TValue[[]any]
 	DeployTokens                              plugin.TValue[[]any]
 	SecuritySettings                          plugin.TValue[*mqlGitlabProjectSecuritySetting]
+	Codeowners                                plugin.TValue[*mqlGitlabProjectCodeowners]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -5046,14 +5275,39 @@ func (c *mqlGitlabProject) GetSecuritySettings() *plugin.TValue[*mqlGitlabProjec
 	})
 }
 
+func (c *mqlGitlabProject) GetCodeowners() *plugin.TValue[*mqlGitlabProjectCodeowners] {
+	return plugin.GetOrCompute[*mqlGitlabProjectCodeowners](&c.Codeowners, func() (*mqlGitlabProjectCodeowners, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "codeowners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectCodeowners), nil
+			}
+		}
+
+		return c.codeowners()
+	})
+}
+
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource
 type mqlGitlabProjectApprovalRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGitlabProjectApprovalRuleInternal it will be used here
-	Id                plugin.TValue[int64]
-	Name              plugin.TValue[string]
-	ApprovalsRequired plugin.TValue[int64]
+	Id                            plugin.TValue[int64]
+	Name                          plugin.TValue[string]
+	ApprovalsRequired             plugin.TValue[int64]
+	RuleType                      plugin.TValue[string]
+	ReportType                    plugin.TValue[string]
+	AppliesToAllProtectedBranches plugin.TValue[bool]
+	ContainsHiddenGroups          plugin.TValue[bool]
+	Section                       plugin.TValue[string]
+	EligibleApprovers             plugin.TValue[[]any]
+	Users                         plugin.TValue[[]any]
+	Groups                        plugin.TValue[[]any]
+	ProtectedBranches             plugin.TValue[[]any]
 }
 
 // createGitlabProjectApprovalRule creates a new instance of this resource
@@ -5067,7 +5321,12 @@ func createGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gitlab.project.approvalRule", res.__id)
@@ -5098,6 +5357,185 @@ func (c *mqlGitlabProjectApprovalRule) GetName() *plugin.TValue[string] {
 
 func (c *mqlGitlabProjectApprovalRule) GetApprovalsRequired() *plugin.TValue[int64] {
 	return &c.ApprovalsRequired
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetReportType() *plugin.TValue[string] {
+	return &c.ReportType
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetAppliesToAllProtectedBranches() *plugin.TValue[bool] {
+	return &c.AppliesToAllProtectedBranches
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetContainsHiddenGroups() *plugin.TValue[bool] {
+	return &c.ContainsHiddenGroups
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetSection() *plugin.TValue[string] {
+	return &c.Section
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetEligibleApprovers() *plugin.TValue[[]any] {
+	return &c.EligibleApprovers
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetUsers() *plugin.TValue[[]any] {
+	return &c.Users
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetGroups() *plugin.TValue[[]any] {
+	return &c.Groups
+}
+
+func (c *mqlGitlabProjectApprovalRule) GetProtectedBranches() *plugin.TValue[[]any] {
+	return &c.ProtectedBranches
+}
+
+// mqlGitlabProjectCodeowners for the gitlab.project.codeowners resource
+type mqlGitlabProjectCodeowners struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectCodeownersInternal it will be used here
+	Present plugin.TValue[bool]
+	Path    plugin.TValue[string]
+	Content plugin.TValue[string]
+	Rules   plugin.TValue[[]any]
+}
+
+// createGitlabProjectCodeowners creates a new instance of this resource
+func createGitlabProjectCodeowners(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectCodeowners{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.codeowners", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectCodeowners) MqlName() string {
+	return "gitlab.project.codeowners"
+}
+
+func (c *mqlGitlabProjectCodeowners) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectCodeowners) GetPresent() *plugin.TValue[bool] {
+	return &c.Present
+}
+
+func (c *mqlGitlabProjectCodeowners) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGitlabProjectCodeowners) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlGitlabProjectCodeowners) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlGitlabProjectCodeownersRule for the gitlab.project.codeowners.rule resource
+type mqlGitlabProjectCodeownersRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectCodeownersRuleInternal it will be used here
+	LineNumber        plugin.TValue[int64]
+	Section           plugin.TValue[string]
+	Optional          plugin.TValue[bool]
+	Required          plugin.TValue[bool]
+	ApprovalsRequired plugin.TValue[int64]
+	Pattern           plugin.TValue[string]
+	Owners            plugin.TValue[[]any]
+}
+
+// createGitlabProjectCodeownersRule creates a new instance of this resource
+func createGitlabProjectCodeownersRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectCodeownersRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.codeowners.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectCodeownersRule) MqlName() string {
+	return "gitlab.project.codeowners.rule"
+}
+
+func (c *mqlGitlabProjectCodeownersRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetSection() *plugin.TValue[string] {
+	return &c.Section
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetOptional() *plugin.TValue[bool] {
+	return &c.Optional
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetRequired() *plugin.TValue[bool] {
+	return &c.Required
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetApprovalsRequired() *plugin.TValue[int64] {
+	return &c.ApprovalsRequired
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlGitlabProjectCodeownersRule) GetOwners() *plugin.TValue[[]any] {
+	return &c.Owners
 }
 
 // mqlGitlabProjectApprovalSetting for the gitlab.project.approvalSetting resource
@@ -6333,15 +6771,24 @@ func (c *mqlGitlabProjectPipeline) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlGitlabProjectRunner struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabProjectRunnerInternal it will be used here
-	Id          plugin.TValue[int64]
-	Description plugin.TValue[string]
-	Name        plugin.TValue[string]
-	RunnerType  plugin.TValue[string]
-	Paused      plugin.TValue[bool]
-	IsShared    plugin.TValue[bool]
-	Online      plugin.TValue[bool]
-	Status      plugin.TValue[string]
+	mqlGitlabProjectRunnerInternal
+	Id              plugin.TValue[int64]
+	Description     plugin.TValue[string]
+	Name            plugin.TValue[string]
+	RunnerType      plugin.TValue[string]
+	Paused          plugin.TValue[bool]
+	IsShared        plugin.TValue[bool]
+	Online          plugin.TValue[bool]
+	Status          plugin.TValue[string]
+	TagList         plugin.TValue[[]any]
+	RunUntagged     plugin.TValue[bool]
+	LockedToProject plugin.TValue[bool]
+	AccessLevel     plugin.TValue[string]
+	MaximumTimeout  plugin.TValue[int64]
+	ContactedAt     plugin.TValue[*time.Time]
+	MaintenanceNote plugin.TValue[string]
+	Projects        plugin.TValue[[]any]
+	Groups          plugin.TValue[[]any]
 }
 
 // createGitlabProjectRunner creates a new instance of this resource
@@ -6411,6 +6858,60 @@ func (c *mqlGitlabProjectRunner) GetOnline() *plugin.TValue[bool] {
 
 func (c *mqlGitlabProjectRunner) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlGitlabProjectRunner) GetTagList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagList, func() ([]any, error) {
+		return c.tagList()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetRunUntagged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunUntagged, func() (bool, error) {
+		return c.runUntagged()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetLockedToProject() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LockedToProject, func() (bool, error) {
+		return c.lockedToProject()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetAccessLevel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessLevel, func() (string, error) {
+		return c.accessLevel()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetMaximumTimeout() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaximumTimeout, func() (int64, error) {
+		return c.maximumTimeout()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetContactedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ContactedAt, func() (*time.Time, error) {
+		return c.contactedAt()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetMaintenanceNote() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaintenanceNote, func() (string, error) {
+		return c.maintenanceNote()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		return c.projects()
+	})
+}
+
+func (c *mqlGitlabProjectRunner) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		return c.groups()
+	})
 }
 
 // mqlGitlabProjectPushRule for the gitlab.project.pushRule resource
