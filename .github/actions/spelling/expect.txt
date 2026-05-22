@@ -290,6 +290,7 @@ issuewild
 istio
 itunes
 ixgbe
+Jailbroken
 jamf
 JFi
 jira
@@ -437,6 +438,7 @@ Odr
 oem
 oid
 oidc
+OMA
 onboarded
 ondemand
 oneof
@@ -702,8 +704,8 @@ workspacesweb
 worktree
 writeback
 Xff
-xlarge
 xks
+xlarge
 xssmatchstatement
 xts
 xxxxx
