@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v87/github"
 	"github.com/rs/zerolog/log"
@@ -162,10 +164,8 @@ func (g *mqlGithubOrganizationCopilot) seats() ([]any, error) {
 
 func copilotOrgLogin(g *mqlGithubOrganizationCopilot) (string, error) {
 	// __id format: github.organization.copilot/<orgLogin>
-	id := g.__id
-	const prefix = "github.organization.copilot/"
-	if len(id) > len(prefix) && id[:len(prefix)] == prefix {
-		return id[len(prefix):], nil
+	if after, ok := strings.CutPrefix(g.__id, "github.organization.copilot/"); ok && after != "" {
+		return after, nil
 	}
 	return "", errors.New("github.organization.copilot has invalid id")
 }
