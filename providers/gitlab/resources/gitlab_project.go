@@ -132,32 +132,23 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 		return nil, err
 	}
 
-	var approvalRules []any
+	defaultBranchName := p.DefaultBranch.Data
+
+	approvalRules := make([]any, 0, len(approvals))
 	for _, rule := range approvals {
-		eligible := make([]any, 0, len(rule.EligibleApprovers))
-		for _, u := range rule.EligibleApprovers {
-			if u != nil {
-				eligible = append(eligible, u.Username)
-			}
+		users, err := basicUsersToMqlUsers(p.MqlRuntime, rule.Users)
+		if err != nil {
+			return nil, err
 		}
-		users := make([]any, 0, len(rule.Users))
-		for _, u := range rule.Users {
-			if u != nil {
-				users = append(users, u.Username)
-			}
+		eligible, err := basicUsersToMqlUsers(p.MqlRuntime, rule.EligibleApprovers)
+		if err != nil {
+			return nil, err
 		}
-		groups := make([]any, 0, len(rule.Groups))
-		for _, g := range rule.Groups {
-			if g != nil {
-				groups = append(groups, g.FullPath)
-			}
+		branches, err := approvalRuleProtectedBranches(p.MqlRuntime, rule.ProtectedBranches, defaultBranchName)
+		if err != nil {
+			return nil, err
 		}
-		branches := make([]any, 0, len(rule.ProtectedBranches))
-		for _, b := range rule.ProtectedBranches {
-			if b != nil {
-				branches = append(branches, b.Name)
-			}
-		}
+
 		approvalRule := map[string]*llx.RawData{
 			"id":                            llx.IntData(rule.ID),
 			"name":                          llx.StringData(rule.Name),
@@ -166,11 +157,10 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 			"reportType":                    llx.StringData(rule.ReportType),
 			"appliesToAllProtectedBranches": llx.BoolData(rule.AppliesToAllProtectedBranches),
 			"containsHiddenGroups":          llx.BoolData(rule.ContainsHiddenGroups),
-			"section":                       llx.StringData(""),
-			"eligibleApprovers":             llx.ArrayData(eligible, types.String),
-			"users":                         llx.ArrayData(users, types.String),
-			"groups":                        llx.ArrayData(groups, types.String),
-			"protectedBranches":             llx.ArrayData(branches, types.String),
+			"users":                         llx.ArrayData(users, types.Resource("gitlab.user")),
+			"eligibleApprovers":             llx.ArrayData(eligible, types.Resource("gitlab.user")),
+			"groups":                        llx.ArrayData(groupsToDicts(rule.Groups), types.Dict),
+			"protectedBranches":             llx.ArrayData(branches, types.Resource("gitlab.project.protectedBranch")),
 		}
 		mqlApprovalRule, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalRule", approvalRule)
 		if err != nil {
@@ -180,6 +170,81 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 	}
 
 	return approvalRules, nil
+}
+
+// basicUsersToMqlUsers converts SDK BasicUser entries into gitlab.user
+// resources via NewResource. BasicUser only carries a subset of the fields
+// gitlab.user declares (no email, 2FA, bot, job/org/location, etc.), so
+// instead of seeding the runtime cache with hardcoded zero values — which
+// would poison the cache for any later `gitlab.users` query that returns
+// real data on the same id — we hand only the id to NewResource and let
+// `initGitlabUser` lazily fetch the full record on first access.
+func basicUsersToMqlUsers(runtime *plugin.Runtime, users []*gitlab.BasicUser) ([]any, error) {
+	out := make([]any, 0, len(users))
+	for _, u := range users {
+		if u == nil {
+			continue
+		}
+		mqlUser, err := NewResource(runtime, "gitlab.user", map[string]*llx.RawData{
+			"id": llx.IntData(u.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlUser)
+	}
+	return out, nil
+}
+
+// groupsToDicts flattens the linked-group summaries the API returns alongside
+// an approval rule. A typed gitlab.group resource carries far more fields than
+// the approval-rule payload provides, so we expose the subset as a dict.
+func groupsToDicts(groups []*gitlab.Group) []any {
+	out := make([]any, 0, len(groups))
+	for _, g := range groups {
+		if g == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":          g.ID,
+			"name":        g.Name,
+			"fullPath":    g.FullPath,
+			"visibility":  string(g.Visibility),
+			"description": g.Description,
+		})
+	}
+	return out
+}
+
+// approvalRuleProtectedBranches constructs the per-branch sub-resources
+// associated with an approval rule. defaultBranchName comes from the parent
+// project so each branch's `defaultBranch` flag stays consistent with the
+// values surfaced by gitlab.project.protectedBranches().
+//
+// Both this path and gitlab.project.protectedBranches() populate the same four
+// fields (name, allowForcePush, defaultBranch, codeOwnerApproval) from the
+// same SDK type (*gitlab.ProtectedBranch). The GitLab `/approval_rules`
+// response embeds the full ProtectedBranch object — not a name-only summary —
+// so caching by name produces identical data regardless of which producer
+// touches the cache first.
+func approvalRuleProtectedBranches(runtime *plugin.Runtime, branches []*gitlab.ProtectedBranch, defaultBranchName string) ([]any, error) {
+	out := make([]any, 0, len(branches))
+	for _, b := range branches {
+		if b == nil {
+			continue
+		}
+		mqlBranch, err := CreateResource(runtime, "gitlab.project.protectedBranch", map[string]*llx.RawData{
+			"name":              llx.StringData(b.Name),
+			"allowForcePush":    llx.BoolData(b.AllowForcePush),
+			"defaultBranch":     llx.BoolData(b.Name == defaultBranchName),
+			"codeOwnerApproval": llx.BoolData(b.CodeOwnerApprovalRequired),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlBranch)
+	}
+	return out, nil
 }
 
 // mergeMethod fetches the project merge method

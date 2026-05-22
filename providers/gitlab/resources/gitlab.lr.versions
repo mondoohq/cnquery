@@ -153,7 +153,6 @@ gitlab.project.approvalRule.name 11.1.12
 gitlab.project.approvalRule.protectedBranches 13.2.3
 gitlab.project.approvalRule.reportType 13.2.3
 gitlab.project.approvalRule.ruleType 13.2.3
-gitlab.project.approvalRule.section 13.2.3
 gitlab.project.approvalRule.users 13.2.3
 gitlab.project.approvalRules 11.1.12
 gitlab.project.approvalSetting 11.1.15
