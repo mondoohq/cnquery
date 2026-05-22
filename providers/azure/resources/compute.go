@@ -208,6 +208,9 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 			if vm.ID != nil {
 				vmIDStr = *vm.ID
 			}
+			// vmImageReferenceToMql is nil-safe on vm.Properties — always returns a
+			// resource (fields default to empty strings when the VM has no storage
+			// profile / image reference).
 			mqlImageRef, err := vmImageReferenceToMql(a.MqlRuntime, vmIDStr, vm.Properties)
 			if err != nil {
 				return nil, err
@@ -245,7 +248,7 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
 					"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
 					"patchMode":                     llx.StringData(patchMode),
-					"imageReference":                llx.ResourceData(mqlImageRef, "imageReference"),
+					"imageReference":                llx.ResourceData(mqlImageRef, mqlImageRef.MqlName()),
 					"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
 					"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
 					"userData":                      llx.StringData(userData),
