@@ -2087,7 +2087,7 @@ microsoft.devicemanagement {
 }
 
 // Microsoft Device Enrollment Configuration
-private microsoft.devicemanagement.deviceEnrollmentConfiguration @defaults("id displayName") {
+private microsoft.devicemanagement.deviceEnrollmentConfiguration @defaults("id displayName configurationType") {
   // Unique identifier for the account
   id string
   // The display name of the device enrollment configuration
@@ -2102,6 +2102,16 @@ private microsoft.devicemanagement.deviceEnrollmentConfiguration @defaults("id d
   lastModifiedDateTime time
   // The version of the device enrollment configuration
   version int
+  // Kind of enrollment configuration this entry represents
+  //
+  // One of `limit`, `platformRestrictions`, `windowsHelloForBusiness`, or `unknown`. Derived from the configuration's `@odata.type`. `limit` caps the number of devices a user can enroll. `platformRestrictions` allows or blocks enrollment per platform (Android, iOS, macOS, Windows, Windows Mobile). `windowsHelloForBusiness` controls Windows Hello PIN, gesture, and biometric requirements.
+  configurationType string
+  // Subtype-specific settings, keyed by setting name
+  //
+  // `limit`-type entries populate `limit` (the device cap). `platformRestrictions`-type entries populate per-platform blocks under `iosRestriction`, `androidRestriction`, `macOSRestriction`, `windowsRestriction`, `windowsMobileRestriction`, each with `platformBlocked`, `personalDeviceEnrollmentBlocked`, `osMinimumVersion`, and `osMaximumVersion`. `windowsHelloForBusiness`-type entries populate `state`, `pinMinimumLength`, `pinMaximumLength`, `pinUppercaseCharactersUsage`, `pinLowercaseCharactersUsage`, `pinSpecialCharactersUsage`, `pinExpirationInDays`, `pinPreviousBlockCount`, `securityDeviceRequired`, `unlockWithBiometricsEnabled`, `enhancedBiometricsState`, and `remotePassportEnabled`.
+  settings dict
+  // Assignments targeting this enrollment configuration, with each target resolved to its kind, group, and any assignment filter
+  policyAssignments []microsoft.devicemanagement.policyAssignment
 }
 
 // Microsoft managed device
@@ -2222,10 +2232,18 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   properties @maturity("deprecated") dict
   // Assignments targeting this configuration profile, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment
+  // Platform this configuration profile targets
+  //
+  // One of `iOS`, `android`, `androidWorkProfile`, `windows10`, `macOS`, or `unknown`. Derived from the profile's `@odata.type`.
+  platformType string
+  // Configured profile settings, keyed by setting name
+  //
+  // Union of platform-specific configuration fields exposed by the profile's `@odata.type`. General-device-configuration profiles populate password/passcode requirements (`passwordRequired` / `passcodeRequired`, `passwordMinimumLength` / `passcodeMinimumLength`, `passwordRequiredType` / `passcodeRequiredType`, `passwordBlockSimple` / `passcodeBlockSimple`, `passwordExpirationDays` / `passcodeExpirationDays`, `passwordMinutesOfInactivityBeforeScreenTimeout` / `passcodeMinutesOfInactivityBeforeScreenTimeout`, `passcodeMinutesOfInactivityBeforeLock`, `passwordSignInFailureCountBeforeFactoryReset`, `passcodeSignInFailureCountBeforeWipe`). Android Work Profile adds work-profile-scoped variants (`workProfilePasswordRequiredType`, `workProfilePasswordMinutesOfInactivityBeforeScreenTimeout`). Windows 10 General Configuration also surfaces device-restriction flags. Profile types that are not "general device configuration" (Wi-Fi, VPN, certificates, custom OMA-URI, etc.) leave this empty — use `policyAssignments` and `displayName` to identify them.
+  settings dict
 }
 
 // Microsoft device compliance policy
-private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayName") {
+private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayName platformType") {
   // Device compliance policy ID
   id string
   // Device compliance policy creation date
@@ -2244,6 +2262,18 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   properties @maturity("deprecated") dict
   // Assignments targeting this compliance policy, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment
+  // Platform this compliance policy targets
+  //
+  // One of `iOS`, `android`, `androidWorkProfile`, `windows10`, `windows10Mobile`, `windows81`, `windowsPhone81`, `macOS`, or `unknown`. Derived from the policy's `@odata.type`.
+  platformType string
+  // Configured compliance rules, keyed by setting name
+  //
+  // Union of platform-specific rule fields exposed by the policy's `@odata.type`. Common keys include `passcodeRequired` / `passwordRequired`, `passcodeMinimumLength` / `passwordMinimumLength`, `passcodeRequiredType` / `passwordRequiredType`, `passcodeBlockSimple` / `passwordBlockSimple`, `passcodeExpirationDays` / `passwordExpirationDays`, `passcodeMinutesOfInactivityBeforeLock` / `passwordMinutesOfInactivityBeforeLock`, `storageRequireEncryption`, `osMinimumVersion`, `osMaximumVersion`, `securityBlockJailbrokenDevices`, `deviceThreatProtectionEnabled`, `deviceThreatProtectionRequiredSecurityLevel`, `managedEmailProfileRequired`. iOS-specific keys add `passcodeMinimumCharacterSetCount`, `passcodePreviousPasscodeBlockCount`. Android keys add `minAndroidSecurityPatchLevel`, `securityDisableUsbDebugging`, `securityPreventInstallAppsFromUnknownSources`, `securityRequireGooglePlayServices`, `securityRequireSafetyNetAttestationBasicIntegrity`, `securityRequireSafetyNetAttestationCertifiedDevice`, `securityRequireCompanyPortalAppIntegrity`, `securityRequireUpToDateSecurityProviders`, `securityRequireVerifyApps`. Windows 10 keys add `bitLockerEnabled`, `secureBootEnabled`, `codeIntegrityEnabled`, `earlyLaunchAntiMalwareDriverEnabled`, `requireHealthyDeviceReport`, `passwordRequiredToUnlockFromIdle`, `mobileOsMinimumVersion`, `mobileOsMaximumVersion`. macOS keys add `firewallEnabled`, `firewallBlockAllIncoming`, `firewallEnableStealthMode`, `systemIntegrityProtectionEnabled`.
+  settings dict
+  // Escalation actions evaluated when the policy is out of compliance
+  //
+  // Each entry has `ruleName` (e.g., `PasswordRequired`) and `scheduledActionConfigurations` — a list of action items with `actionType` (`notification`, `block`, `retire`, `wipe`, `removeResourceAccessProfiles`, `pushNotification`, `remoteLock`), `gracePeriodHours`, `notificationTemplateId`, and `notificationMessageCCList`.
+  scheduledActionsForRule []dict
 }
 
 // Assignment of an Intune device management policy

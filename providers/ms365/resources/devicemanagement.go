@@ -205,6 +205,8 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]any, error) {
 				"version":              llx.IntDataDefault(configuration.GetVersion(), 0),
 				"properties":           llx.DictData(properties),
 				"policyAssignments":    llx.ArrayData(policyAssignments, types.Resource("microsoft.devicemanagement.policyAssignment")),
+				"platformType":         llx.StringData(deviceConfigurationPlatform(configuration)),
+				"settings":             llx.DictData(deviceConfigurationSettings(configuration)),
 			})
 		if err != nil {
 			return nil, err
@@ -222,7 +224,11 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 	}
 
 	ctx := context.Background()
-	deviceEnrollmentConfigurations, err := graphClient.DeviceManagement().DeviceEnrollmentConfigurations().Get(ctx, nil)
+	deviceEnrollmentConfigurations, err := graphClient.DeviceManagement().DeviceEnrollmentConfigurations().Get(ctx, &devicemanagement.DeviceEnrollmentConfigurationsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &devicemanagement.DeviceEnrollmentConfigurationsRequestBuilderGetQueryParameters{
+			Expand: []string{"assignments"},
+		},
+	})
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -230,6 +236,18 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 	configs := deviceEnrollmentConfigurations.GetValue()
 	res := []any{}
 	for _, config := range configs {
+		policyAssignments := []any{}
+		for _, assignment := range config.GetAssignments() {
+			id := ""
+			if v := assignment.GetId(); v != nil {
+				id = *v
+			}
+			assignmentResource, err := newPolicyAssignmentResource(a.MqlRuntime, id, assignment.GetTarget())
+			if err != nil {
+				return nil, err
+			}
+			policyAssignments = append(policyAssignments, assignmentResource)
+		}
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceEnrollmentConfiguration",
 			map[string]*llx.RawData{
 				"__id":                 llx.StringDataPtr(config.GetId()),
@@ -240,6 +258,9 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 				"lastModifiedDateTime": llx.TimeDataPtr(config.GetLastModifiedDateTime()),
 				"priority":             llx.IntDataDefault(config.GetPriority(), 0),
 				"version":              llx.IntDataDefault(config.GetVersion(), 0),
+				"configurationType":    llx.StringData(enrollmentConfigurationKind(config)),
+				"settings":             llx.DictData(enrollmentConfigurationSettings(config)),
+				"policyAssignments":    llx.ArrayData(policyAssignments, types.Resource("microsoft.devicemanagement.policyAssignment")),
 			})
 		if err != nil {
 			return nil, err
@@ -260,7 +281,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 	ctx := context.Background()
 	requestConfig := &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
 		QueryParameters: &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
-			Expand: []string{"assignments"},
+			Expand: []string{"assignments", "scheduledActionsForRule($expand=scheduledActionConfigurations)"},
 		},
 	}
 	resp, err := graphClient.DeviceManagement().DeviceCompliancePolicies().Get(ctx, requestConfig)
@@ -290,15 +311,18 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 		properties := getComplianceProperties(compliancePolicy)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
 			map[string]*llx.RawData{
-				"id":                   llx.StringDataPtr(compliancePolicy.GetId()),
-				"createdDateTime":      llx.TimeDataPtr(compliancePolicy.GetCreatedDateTime()),
-				"description":          llx.StringDataPtr(compliancePolicy.GetDescription()),
-				"displayName":          llx.StringDataPtr(compliancePolicy.GetDisplayName()),
-				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
-				"version":              llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
-				"assignments":          llx.ArrayData(assignments, types.Any),
-				"policyAssignments":    llx.ArrayData(policyAssignments, types.Resource("microsoft.devicemanagement.policyAssignment")),
-				"properties":           llx.DictData(properties),
+				"id":                      llx.StringDataPtr(compliancePolicy.GetId()),
+				"createdDateTime":         llx.TimeDataPtr(compliancePolicy.GetCreatedDateTime()),
+				"description":             llx.StringDataPtr(compliancePolicy.GetDescription()),
+				"displayName":             llx.StringDataPtr(compliancePolicy.GetDisplayName()),
+				"lastModifiedDateTime":    llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
+				"version":                 llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
+				"assignments":             llx.ArrayData(assignments, types.Any),
+				"policyAssignments":       llx.ArrayData(policyAssignments, types.Resource("microsoft.devicemanagement.policyAssignment")),
+				"properties":              llx.DictData(properties),
+				"platformType":            llx.StringData(compliancePolicyPlatform(compliancePolicy)),
+				"settings":                llx.DictData(complianceSettings(compliancePolicy)),
+				"scheduledActionsForRule": llx.ArrayData(scheduledActionsForRule(compliancePolicy), types.Any),
 			})
 		if err != nil {
 			return nil, err

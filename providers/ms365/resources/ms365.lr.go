@@ -2913,6 +2913,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetVersion()).ToDataRes(types.Int)
 	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.configurationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetConfigurationType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
+	},
 	"microsoft.devicemanagement.manageddevice.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetId()).ToDataRes(types.String)
 	},
@@ -3072,6 +3081,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceconfiguration.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
 	},
+	"microsoft.devicemanagement.deviceconfiguration.platformType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetPlatformType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.deviceconfiguration.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetSettings()).ToDataRes(types.Dict)
+	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetId()).ToDataRes(types.String)
 	},
@@ -3098,6 +3113,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.platformType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetPlatformType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.scheduledActionsForRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetScheduledActionsForRule()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.devicemanagement.policyAssignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetId()).ToDataRes(types.String)
@@ -6961,6 +6985,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.configurationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).ConfigurationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceEnrollmentConfiguration.policyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.manageddevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementManageddevice).__id, ok = v.Value.(string)
 		return
@@ -7181,6 +7217,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.devicemanagement.deviceconfiguration.platformType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).PlatformType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceconfiguration.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).__id, ok = v.Value.(string)
 		return
@@ -7219,6 +7263,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.policyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.platformType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).PlatformType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.scheduledActionsForRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).ScheduledActionsForRule, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.policyAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17028,6 +17084,9 @@ type mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration struct {
 	CreatedDateTime      plugin.TValue[*time.Time]
 	LastModifiedDateTime plugin.TValue[*time.Time]
 	Version              plugin.TValue[int64]
+	ConfigurationType    plugin.TValue[string]
+	Settings             plugin.TValue[any]
+	PolicyAssignments    plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagementDeviceEnrollmentConfiguration creates a new instance of this resource
@@ -17088,6 +17147,18 @@ func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetLastModif
 
 func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetVersion() *plugin.TValue[int64] {
 	return &c.Version
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetConfigurationType() *plugin.TValue[string] {
+	return &c.ConfigurationType
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration) GetPolicyAssignments() *plugin.TValue[[]any] {
+	return &c.PolicyAssignments
 }
 
 // mqlMicrosoftDevicemanagementManageddevice for the microsoft.devicemanagement.manageddevice resource
@@ -17403,6 +17474,8 @@ type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	Version              plugin.TValue[int64]
 	Properties           plugin.TValue[any]
 	PolicyAssignments    plugin.TValue[[]any]
+	PlatformType         plugin.TValue[string]
+	Settings             plugin.TValue[any]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -17474,20 +17547,31 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetPolicyAssignments()
 	return &c.PolicyAssignments
 }
 
+func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetPlatformType() *plugin.TValue[string] {
+	return &c.PlatformType
+}
+
+func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementDevicecompliancepolicyInternal it will be used here
-	Id                   plugin.TValue[string]
-	CreatedDateTime      plugin.TValue[*time.Time]
-	Description          plugin.TValue[string]
-	DisplayName          plugin.TValue[string]
-	LastModifiedDateTime plugin.TValue[*time.Time]
-	Version              plugin.TValue[int64]
-	Assignments          plugin.TValue[[]any]
-	Properties           plugin.TValue[any]
-	PolicyAssignments    plugin.TValue[[]any]
+	Id                      plugin.TValue[string]
+	CreatedDateTime         plugin.TValue[*time.Time]
+	Description             plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	LastModifiedDateTime    plugin.TValue[*time.Time]
+	Version                 plugin.TValue[int64]
+	Assignments             plugin.TValue[[]any]
+	Properties              plugin.TValue[any]
+	PolicyAssignments       plugin.TValue[[]any]
+	PlatformType            plugin.TValue[string]
+	Settings                plugin.TValue[any]
+	ScheduledActionsForRule plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -17561,6 +17645,18 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *pl
 
 func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetPolicyAssignments() *plugin.TValue[[]any] {
 	return &c.PolicyAssignments
+}
+
+func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetPlatformType() *plugin.TValue[string] {
+	return &c.PlatformType
+}
+
+func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetScheduledActionsForRule() *plugin.TValue[[]any] {
+	return &c.ScheduledActionsForRule
 }
 
 // mqlMicrosoftDevicemanagementPolicyAssignment for the microsoft.devicemanagement.policyAssignment resource
