@@ -137,9 +137,14 @@ func Is400InstanceNotFoundError(err error) bool {
 // IsServiceNotAvailableInRegionError checks if the error indicates the service or API action
 // is not available in the region. This includes DNS lookup failures for regional services,
 // InvalidAction errors for EC2 actions not yet deployed to a region (e.g., Verified Access),
-// UnknownOperationException for services like Bedrock in unsupported regions, and SDK retry
-// exhaustion on endpoints that resolve in DNS but return non-recoverable errors (e.g.,
-// bedrock-agent.us-west-1 returning HTTP 500 because the service is not actually deployed there).
+// UnknownOperationException for services like Bedrock in unsupported regions, and the
+// "request send failed" + retry-exhaustion combination produced when an endpoint resolves
+// in DNS but every call fails to complete (e.g., bedrock-agent.us-west-1 returning HTTP 500
+// on every retry because the service is not actually deployed there).
+//
+// Note on the retry-exhaustion match: the predicate requires BOTH "exceeded maximum number
+// of attempts" AND "request send failed" so throttling/5xx responses that genuinely went
+// over the wire — which the caller should see — are not silently swallowed.
 func IsServiceNotAvailableInRegionError(err error) bool {
 	if err == nil {
 		return false
@@ -152,7 +157,8 @@ func IsServiceNotAvailableInRegionError(err error) bool {
 		strings.Contains(errStr, "UnknownOperationException") ||
 		strings.Contains(errStr, "Unknown operation") ||
 		strings.Contains(errStr, "Unknown Operation") ||
-		strings.Contains(errStr, "exceeded maximum number of attempts")
+		(strings.Contains(errStr, "exceeded maximum number of attempts") &&
+			strings.Contains(errStr, "request send failed"))
 }
 
 func toInterfaceMap(m map[string]string) map[string]any {

@@ -54,4 +54,26 @@ func TestIsServiceNotAvailableInRegionError(t *testing.T) {
 		err := fmt.Errorf("operation error Bedrock: ListCustomModels, https response error StatusCode: 400, ValidationException: Unknown Operation")
 		assert.True(t, IsServiceNotAvailableInRegionError(err))
 	})
+
+	t.Run("retry exhaustion with request send failure (bedrock-agent us-west-1 5xx)", func(t *testing.T) {
+		// us-west-1 returns HTTP 500 for ListFlows on every retry; after the
+		// SDK exhausts attempts the wrapped error contains both phrases.
+		err := fmt.Errorf("operation error Bedrock Agent: ListFlows, exceeded maximum number of attempts, 3, https response error StatusCode: 0, RequestID: , request send failed, Get \"https://bedrock-agent.us-west-1.amazonaws.com/flows/\": GET https://bedrock-agent.us-west-1.amazonaws.com/flows/ giving up after 3 attempt(s)")
+		assert.True(t, IsServiceNotAvailableInRegionError(err))
+	})
+
+	t.Run("retry exhaustion WITHOUT send failure is NOT swallowed (throttling, real 5xx)", func(t *testing.T) {
+		// Throttling/transient 5xx errors that successfully reach the server
+		// must propagate up to the caller — the helper should not match
+		// "exceeded maximum number of attempts" by itself.
+		err := fmt.Errorf("operation error S3: GetObject, exceeded maximum number of attempts, 3, https response error StatusCode: 503, RequestID: ABC, api error SlowDown: Please reduce your request rate.")
+		assert.False(t, IsServiceNotAvailableInRegionError(err))
+	})
+
+	t.Run("plain request send failed (no retry exhaustion) does NOT match", func(t *testing.T) {
+		// A single transient network error without retry exhaustion is also
+		// not enough — both phrases must be present together.
+		err := fmt.Errorf("operation error EC2: DescribeInstances, https response error StatusCode: 0, request send failed, Get \"https://ec2.amazonaws.com/\": net/http: TLS handshake timeout")
+		assert.False(t, IsServiceNotAvailableInRegionError(err))
+	})
 }
