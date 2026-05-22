@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -16,37 +17,52 @@ import (
 
 const (
 	WindowsUpdateFormat = "wsus"
+
+	// WindowsUpdateCriteriaSoftware selects installable software updates
+	// (drivers excluded). This is what os.update reports.
+	WindowsUpdateCriteriaSoftware = "IsInstalled=0 and Type='Software'"
+	// WindowsUpdateCriteriaAvailable selects every installable, non-hidden
+	// update (drivers included). This is what windows.update.available reports.
+	WindowsUpdateCriteriaAvailable = "IsInstalled=0 and IsHidden=0"
 )
 
-var WINDOWS_QUERY_WSUS_AVAILABLE = `
+// windowsUpdateSearchQuery builds a PowerShell snippet that searches the
+// Windows Update Agent with the given criteria and emits one rich JSON record
+// per update. It is the single source of the WUA "search" used by both
+// os.update (via WindowsUpdateManager) and windows.update.available.
+func windowsUpdateSearchQuery(criteria string) string {
+	return `
 $ProgressPreference='SilentlyContinue';
 $updateSession = new-object -com "Microsoft.Update.Session"
-$searcher=$updateSession.CreateupdateSearcher().Search(("IsInstalled=0 and Type='Software'"))
+$searcher = $updateSession.CreateupdateSearcher().Search("` + criteria + `")
 $updates = $searcher.Updates | ForEach-Object {
 	$update = $_
-	$value = New-Object psobject -Property @{
-		"UpdateID" =  $update.Identity.UpdateID;
+	New-Object psobject -Property @{
+		"UpdateID" = $update.Identity.UpdateID;
 		"Title" = $update.Title
 		"MsrcSeverity" = $update.MsrcSeverity
-		"RevisionNumber" =  $update.Identity.RevisionNumber;
-		"CategoryIDs" = @($update.Categories | % { $_.CategoryID })
-		"SecurityBulletinIDs" = $update.SecurityBulletinIDs
-		"RebootRequired" = $update.RebootRequired
-		"KBArticleIDs" = $update.KBArticleIDs
+		"SupportUrl" = $update.SupportUrl
+		"RebootRequired" = [bool]$update.RebootRequired
+		"KBArticleIDs" = @($update.KBArticleIDs)
 		"CveIDs" = @($update.CveIDs)
+		"Categories" = @($update.Categories | ForEach-Object { $_.Name })
 	}
-	$value
 }
-@($updates) | ConvertTo-Json`
+@($updates) | ConvertTo-Json -Depth 3`
+}
 
-type powershellWinUpdate struct {
+// WindowsUpdate is the rich representation of an update returned by a Windows
+// Update Agent search. It carries everything both consumers need; each maps it
+// to its own output type.
+type WindowsUpdate struct {
 	UpdateID       string   `json:"UpdateID"`
 	Title          string   `json:"Title"`
 	MsrcSeverity   string   `json:"MsrcSeverity"`
-	Revision       string   `json:"Revision"`
+	SupportUrl     string   `json:"SupportUrl"`
 	RebootRequired bool     `json:"RebootRequired"`
-	CategoryIDs    []string `json:"CategoryIDs"`
 	KBArticleIDs   []string `json:"KBArticleIDs"`
+	CveIDs         []string `json:"CveIDs"`
+	Categories     []string `json:"Categories"`
 }
 
 type WindowsUpdateManager struct {
@@ -62,10 +78,47 @@ func (um *WindowsUpdateManager) Format() string {
 }
 
 func (um *WindowsUpdateManager) List() ([]OperatingSystemUpdate, error) {
-	cmd := powershell.Encode(WINDOWS_QUERY_WSUS_AVAILABLE)
-	c, err := um.conn.RunCommand(cmd)
+	updates, err := SearchWindowsUpdates(um.conn, WindowsUpdateCriteriaSoftware)
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, err
+	}
+
+	res := make([]OperatingSystemUpdate, 0, len(updates))
+	for i := range updates {
+		osUpdate, ok := updates[i].toOperatingSystemUpdate()
+		if !ok {
+			log.Warn().Str("update", updates[i].UpdateID).Msg("ms update has no kb assigned")
+			continue
+		}
+		res = append(res, osUpdate)
+	}
+	return res, nil
+}
+
+// toOperatingSystemUpdate maps a WindowsUpdate to the cross-platform
+// OperatingSystemUpdate shape used by os.update. Updates without a KB article
+// (ok == false) are skipped, since the KB is the os.update identity.
+func (u WindowsUpdate) toOperatingSystemUpdate() (OperatingSystemUpdate, bool) {
+	if len(u.KBArticleIDs) == 0 {
+		return OperatingSystemUpdate{}, false
+	}
+	return OperatingSystemUpdate{
+		ID:          u.UpdateID,
+		Name:        u.KBArticleIDs[0],
+		Description: u.Title,
+		Severity:    u.MsrcSeverity,
+		Format:      "windows/updates",
+		Restart:     u.RebootRequired,
+	}, true
+}
+
+// SearchWindowsUpdates runs a Windows Update Agent search with the given
+// criteria and returns the parsed updates.
+func SearchWindowsUpdates(conn shared.Connection, criteria string) ([]WindowsUpdate, error) {
+	cmd := powershell.Encode(windowsUpdateSearchQuery(criteria))
+	c, err := conn.RunCommand(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("could not search for windows updates")
 	}
 	if c.ExitStatus != 0 {
 		stderr, err := io.ReadAll(c.Stderr)
@@ -77,50 +130,28 @@ func (um *WindowsUpdateManager) List() ([]OperatingSystemUpdate, error) {
 	return ParseWindowsUpdates(c.Stdout)
 }
 
-func ParseWindowsUpdates(input io.Reader) ([]OperatingSystemUpdate, error) {
+func ParseWindowsUpdates(input io.Reader) ([]WindowsUpdate, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}
 
-	// handle case where no packages are installed
-	if len(data) == 0 {
-		return []OperatingSystemUpdate{}, nil
+	// handle case where no updates are available
+	if len(strings.TrimSpace(string(data))) == 0 {
+		return []WindowsUpdate{}, nil
 	}
 
-	var powerShellUpdates []powershellWinUpdate
-	err = json.Unmarshal(data, &powerShellUpdates)
-	if err != nil {
-		return nil, err
+	// ConvertTo-Json emits a bare object (not a single-element array) when the
+	// search returns exactly one update.
+	var updates []WindowsUpdate
+	arrErr := json.Unmarshal(data, &updates)
+	if arrErr == nil {
+		return updates, nil
 	}
 
-	updates := make([]OperatingSystemUpdate, len(powerShellUpdates))
-	for i := range powerShellUpdates {
-		if len(powerShellUpdates[i].KBArticleIDs) == 0 {
-			log.Warn().Str("update", powerShellUpdates[i].UpdateID).Msg("ms update has no kb assigned")
-			continue
-		}
-
-		// todo: we may want to make that decision server-side, since it does not require us to update the agent
-		// therefore we need additional information to be transmitted via the packages eg. labels
-		// important := false
-		// for ci := range powerShellUpdates[i].CategoryIDs {
-		// 	id := powerShellUpdates[i].CategoryIDs[ci]
-		// 	classification := wsusClassificationGUID[strings.ToLower(id)]
-		// 	if classification == CriticalUpdates || classification == SecurityUpdates || classification == UpdateRollups {
-		// 		important = true
-		// 	}
-		// }
-
-		updates[i] = OperatingSystemUpdate{
-			ID:          powerShellUpdates[i].UpdateID,
-			Name:        powerShellUpdates[i].KBArticleIDs[0],
-			Description: powerShellUpdates[i].Title,
-			Version:     powerShellUpdates[i].Revision,
-			Severity:    powerShellUpdates[i].MsrcSeverity,
-			Format:      "windows/updates",
-			Restart:     powerShellUpdates[i].RebootRequired,
-		}
+	var single WindowsUpdate
+	if err := json.Unmarshal(data, &single); err != nil {
+		return nil, arrErr
 	}
-	return updates, nil
+	return []WindowsUpdate{single}, nil
 }

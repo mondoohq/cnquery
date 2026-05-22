@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/registry"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/resources/updates"
 	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -342,23 +343,16 @@ func (w *mqlWindowsUpdate) available() ([]any, error) {
 		return []any{}, nil
 	}
 
-	cmd, err := conn.RunCommand(powershell.Encode(windows.WINDOWS_QUERY_UPDATE_AVAILABLE))
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		stderr, _ := io.ReadAll(cmd.Stderr)
-		return nil, fmt.Errorf("failed to search for available updates: %s", string(stderr))
-	}
-
-	updates, err := windows.ParseWindowsAvailableUpdates(cmd.Stdout)
+	// reuse the shared Windows Update Agent search behind os.update, but with
+	// the broader "available" criteria (drivers included, hidden excluded).
+	wuUpdates, err := updates.SearchWindowsUpdates(conn, updates.WindowsUpdateCriteriaAvailable)
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]any, 0, len(updates))
-	for i := range updates {
-		u := updates[i]
+	res := make([]any, 0, len(wuUpdates))
+	for i := range wuUpdates {
+		u := wuUpdates[i]
 		kbID := ""
 		if len(u.KBArticleIDs) > 0 {
 			kbID = "KB" + strings.TrimPrefix(strings.ToUpper(u.KBArticleIDs[0]), "KB")

@@ -67,26 +67,6 @@ if ($count -gt 0) {
 }
 @($history) | ConvertTo-Json -Depth 3`
 
-// WINDOWS_QUERY_UPDATE_AVAILABLE enumerates updates the Windows Update Agent
-// has found but not yet installed (IsInstalled=0), excluding hidden updates.
-var WINDOWS_QUERY_UPDATE_AVAILABLE = `
-$ProgressPreference='SilentlyContinue';
-$session = New-Object -ComObject Microsoft.Update.Session
-$result = $session.CreateUpdateSearcher().Search("IsInstalled=0 and IsHidden=0")
-$updates = @($result.Updates) | ForEach-Object {
-  New-Object psobject -Property @{
-    "UpdateID" = $_.Identity.UpdateID
-    "Title" = $_.Title
-    "MsrcSeverity" = $_.MsrcSeverity
-    "SupportUrl" = $_.SupportUrl
-    "RebootRequired" = [bool]$_.RebootRequired
-    "KBArticleIDs" = @($_.KBArticleIDs)
-    "CveIDs" = @($_.CveIDs)
-    "Categories" = @($_.Categories | ForEach-Object { $_.Name })
-  }
-}
-@($updates) | ConvertTo-Json -Depth 3`
-
 // WindowsUpdateHistoryEntry is a single Windows Update Agent history record.
 type WindowsUpdateHistoryEntry struct {
 	Title       string   `json:"Title"`
@@ -99,18 +79,6 @@ type WindowsUpdateHistoryEntry struct {
 	Categories  []string `json:"Categories"`
 }
 
-// WindowsAvailableUpdate is a single update the agent reports as installable.
-type WindowsAvailableUpdate struct {
-	UpdateID       string   `json:"UpdateID"`
-	Title          string   `json:"Title"`
-	MsrcSeverity   string   `json:"MsrcSeverity"`
-	SupportUrl     string   `json:"SupportUrl"`
-	RebootRequired bool     `json:"RebootRequired"`
-	KBArticleIDs   []string `json:"KBArticleIDs"`
-	CveIDs         []string `json:"CveIDs"`
-	Categories     []string `json:"Categories"`
-}
-
 func ParseWindowsUpdateHistory(input io.Reader) ([]WindowsUpdateHistoryEntry, error) {
 	data, err := io.ReadAll(input)
 	if err != nil {
@@ -121,18 +89,6 @@ func ParseWindowsUpdateHistory(input io.Reader) ([]WindowsUpdateHistoryEntry, er
 	}
 
 	return unmarshalJSONArrayOrObject[WindowsUpdateHistoryEntry](data)
-}
-
-func ParseWindowsAvailableUpdates(input io.Reader) ([]WindowsAvailableUpdate, error) {
-	data, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-	if len(strings.TrimSpace(string(data))) == 0 {
-		return []WindowsAvailableUpdate{}, nil
-	}
-
-	return unmarshalJSONArrayOrObject[WindowsAvailableUpdate](data)
 }
 
 // unmarshalJSONArrayOrObject decodes a JSON array of T, tolerating PowerShell's

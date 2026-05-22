@@ -72,32 +72,6 @@ func TestParseWindowsUpdateHistory_SingleObject(t *testing.T) {
 	assert.Equal(t, "KB5034441", ParseKBID(entries[0].Title))
 }
 
-func TestParseWindowsAvailableUpdates_SingleObject(t *testing.T) {
-	single := `{"UpdateID":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","Title":"Update (KB5035857)","MsrcSeverity":"Critical","KBArticleIDs":["5035857"],"CveIDs":["CVE-2024-21334"]}`
-	updates, err := ParseWindowsAvailableUpdates(strings.NewReader(single))
-	require.NoError(t, err)
-	require.Len(t, updates, 1)
-	assert.Equal(t, "Critical", updates[0].MsrcSeverity)
-}
-
-func TestParseWindowsAvailableUpdates(t *testing.T) {
-	r, err := os.Open("./testdata/update_available.json")
-	require.NoError(t, err)
-	defer r.Close()
-
-	updates, err := ParseWindowsAvailableUpdates(r)
-	require.NoError(t, err)
-	require.Len(t, updates, 2)
-
-	assert.Equal(t, "Critical", updates[0].MsrcSeverity)
-	assert.True(t, updates[0].RebootRequired)
-	assert.Equal(t, []string{"5035857"}, updates[0].KBArticleIDs)
-	assert.Equal(t, []string{"CVE-2024-21334", "CVE-2024-21433"}, updates[0].CveIDs)
-
-	assert.Empty(t, updates[1].KBArticleIDs)
-	assert.Empty(t, updates[1].CveIDs)
-}
-
 func TestParseKBID(t *testing.T) {
 	tests := []struct {
 		input string

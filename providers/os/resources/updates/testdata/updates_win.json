@@ -1,0 +1,62 @@
+[
+    {
+        "UpdateID": "b8ea1a5b-3636-4905-ae4b-d171014df7a6",
+        "Title": "Update for Adobe Flash Player for Windows Server 2019 (1809) for x64-based Systems (KB4462930)",
+        "MsrcSeverity": null,
+        "SupportUrl": "https://support.microsoft.com/help/4462930",
+        "RebootRequired": false,
+        "KBArticleIDs": ["4462930"],
+        "CveIDs": [],
+        "Categories": ["Updates"]
+    },
+    {
+        "UpdateID": "0b669361-bcf2-4c1c-b4fb-e5629cfdc3c0",
+        "Title": "2020-02 Security Update for Adobe Flash Player for Windows Server 2019 for x64-based Systems (KB4537759)",
+        "MsrcSeverity": "Critical",
+        "SupportUrl": "https://support.microsoft.com/help/4537759",
+        "RebootRequired": false,
+        "KBArticleIDs": ["4537759"],
+        "CveIDs": ["CVE-2020-0001"],
+        "Categories": ["Security Updates"]
+    },
+    {
+        "UpdateID": "64397bd2-cf99-4002-bdc8-0af7e4605c2a",
+        "Title": "2020-02 Cumulative Update for .NET Framework 3.5, 4.7.2 and 4.8 for Windows Server 2019 for x64 (KB4538156)",
+        "MsrcSeverity": null,
+        "SupportUrl": "",
+        "RebootRequired": false,
+        "KBArticleIDs": ["4538156"],
+        "CveIDs": [],
+        "Categories": ["Updates"]
+    },
+    {
+        "UpdateID": "884a6101-3b1a-4b53-bede-2f8b6bf14772",
+        "Title": "2020-01 Update for Windows Server 2019 for x64-based Systems (KB4494174)",
+        "MsrcSeverity": null,
+        "SupportUrl": "",
+        "RebootRequired": false,
+        "KBArticleIDs": ["4494174"],
+        "CveIDs": [],
+        "Categories": ["Updates"]
+    },
+    {
+        "UpdateID": "0689e74b-54d1-4f55-a916-96e3c737db90",
+        "Title": "Windows Malicious Software Removal Tool x64 - March 2020 (KB890830)",
+        "MsrcSeverity": null,
+        "SupportUrl": "https://support.microsoft.com/help/890830",
+        "RebootRequired": false,
+        "KBArticleIDs": ["890830"],
+        "CveIDs": [],
+        "Categories": ["Update Rollups"]
+    },
+    {
+        "UpdateID": "6ecd5165-4ba0-4058-b0fd-8b8b6f914516",
+        "Title": "2020-03 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4538461)",
+        "MsrcSeverity": null,
+        "SupportUrl": "",
+        "RebootRequired": true,
+        "KBArticleIDs": ["4538461"],
+        "CveIDs": [],
+        "Categories": ["Security Updates"]
+    }
+]
