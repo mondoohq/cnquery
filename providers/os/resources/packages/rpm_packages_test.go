@@ -32,7 +32,7 @@ func TestRedhat8Parser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s__%s__%d\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License, pkg.InstallTime)
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s\x1e%s\x1e%s\x1e%s\x1e%d\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License, pkg.InstallTime)
 	}
 
 	pf := &inventory.Platform{
@@ -313,7 +313,7 @@ func TestSuSEParser(t *testing.T) {
 
 	var packageList bytes.Buffer
 	for _, pkg := range pkgList {
-		fmt.Fprintf(&packageList, "%s %d:%s-%s %s__%s__%s__%s__%d\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License, pkg.InstallTime)
+		fmt.Fprintf(&packageList, "%s %d:%s-%s %s\x1e%s\x1e%s\x1e%s\x1e%d\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Vendor, pkg.Summary, pkg.License, pkg.InstallTime)
 	}
 
 	pf := &inventory.Platform{
@@ -395,7 +395,7 @@ func TestOracleParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -434,7 +434,7 @@ func TestAlmaLinuxParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -466,7 +466,7 @@ func TestRedHatModularParser(t *testing.T) {
 		},
 	}
 
-	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'")
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
