@@ -6,10 +6,12 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -78,31 +80,31 @@ func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (
 	// well as a list, but list responses always return an array. Marshal once
 	// into the documented shape so we can construct typed sub-resources per
 	// entry.
-	sshKeys, err := buildUserSshPublicKeys(runtime, entry.SshPublicKeys)
+	sshKeys, err := buildUserSshPublicKeys(runtime, entry.Id, entry.SshPublicKeys)
 	if err != nil {
 		return nil, err
 	}
-	posix, err := buildUserPosixAccounts(runtime, entry.PosixAccounts)
+	posix, err := buildUserPosixAccounts(runtime, entry.Id, entry.PosixAccounts)
 	if err != nil {
 		return nil, err
 	}
-	emails, err := buildUserEmails(runtime, entry.Emails)
+	emails, err := buildUserEmails(runtime, entry.Id, entry.Emails)
 	if err != nil {
 		return nil, err
 	}
-	externalIds, err := buildUserExternalIds(runtime, entry.ExternalIds)
+	externalIds, err := buildUserExternalIds(runtime, entry.Id, entry.ExternalIds)
 	if err != nil {
 		return nil, err
 	}
-	phones, err := buildUserPhones(runtime, entry.Phones)
+	phones, err := buildUserPhones(runtime, entry.Id, entry.Phones)
 	if err != nil {
 		return nil, err
 	}
-	orgs, err := buildUserOrganizations(runtime, entry.Organizations)
+	orgs, err := buildUserOrganizations(runtime, entry.Id, entry.Organizations)
 	if err != nil {
 		return nil, err
 	}
-	addresses, err := buildUserAddresses(runtime, entry.Addresses)
+	addresses, err := buildUserAddresses(runtime, entry.Id, entry.Addresses)
 	if err != nil {
 		return nil, err
 	}
@@ -157,19 +159,21 @@ func (g *mqlGoogleworkspaceUser) id() (string, error) {
 // (`interface{}` on the SDK struct because the API accepts a single entry
 // or an array on create/update) into a typed slice. nil and non-array
 // payloads collapse to an empty slice — list responses always return an
-// array but we tolerate the create/update shape too. Unmarshal errors are
-// also swallowed: an unexpected wire-format change should leave the user
-// queryable, just with an empty multi-value slice for the field in question.
+// array but we tolerate the create/update shape too. Marshal/unmarshal
+// errors mean the SDK wire format has drifted; log so the divergence is
+// diagnosable, then collapse to empty so the user stays queryable.
 func unmarshalUserMultiValue[T any](v any) []T {
 	if v == nil {
 		return nil
 	}
 	data, err := json.Marshal(v)
 	if err != nil {
+		log.Warn().Err(err).Msg("googleworkspace> could not marshal user multi-value payload; sub-list will be empty")
 		return nil
 	}
 	var out []T
 	if err := json.Unmarshal(data, &out); err != nil {
+		log.Warn().Err(err).Msg("googleworkspace> could not unmarshal user multi-value payload into typed slice; sub-list will be empty")
 		return nil
 	}
 	return out
@@ -182,11 +186,12 @@ type userEmail struct {
 	Primary    bool   `json:"primary"`
 }
 
-func buildUserEmails(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserEmails(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userEmail](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.email", map[string]*llx.RawData{
+			"__id":       llx.StringData(fmt.Sprintf("googleworkspace.user/%s/email/%d/%s/%s", userID, i, e.Type, e.Address)),
 			"address":    llx.StringData(e.Address),
 			"type":       llx.StringData(e.Type),
 			"customType": llx.StringData(e.CustomType),
@@ -207,11 +212,12 @@ type userPhone struct {
 	Primary    bool   `json:"primary"`
 }
 
-func buildUserPhones(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserPhones(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userPhone](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.phone", map[string]*llx.RawData{
+			"__id":       llx.StringData(fmt.Sprintf("googleworkspace.user/%s/phone/%d/%s/%s", userID, i, e.Type, e.Value)),
 			"value":      llx.StringData(e.Value),
 			"type":       llx.StringData(e.Type),
 			"customType": llx.StringData(e.CustomType),
@@ -231,11 +237,12 @@ type userExternalId struct {
 	CustomType string `json:"customType"`
 }
 
-func buildUserExternalIds(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserExternalIds(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userExternalId](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.externalId", map[string]*llx.RawData{
+			"__id":       llx.StringData(fmt.Sprintf("googleworkspace.user/%s/externalId/%d/%s/%s", userID, i, e.Type, e.Value)),
 			"value":      llx.StringData(e.Value),
 			"type":       llx.StringData(e.Type),
 			"customType": llx.StringData(e.CustomType),
@@ -264,11 +271,12 @@ type userAddress struct {
 	Primary            bool   `json:"primary"`
 }
 
-func buildUserAddresses(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserAddresses(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userAddress](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.address", map[string]*llx.RawData{
+			"__id":               llx.StringData(fmt.Sprintf("googleworkspace.user/%s/address/%d/%s", userID, i, e.Type)),
 			"formatted":          llx.StringData(e.Formatted),
 			"type":               llx.StringData(e.Type),
 			"customType":         llx.StringData(e.CustomType),
@@ -306,11 +314,12 @@ type userOrganization struct {
 	Domain             string `json:"domain"`
 }
 
-func buildUserOrganizations(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserOrganizations(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userOrganization](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.organization", map[string]*llx.RawData{
+			"__id":               llx.StringData(fmt.Sprintf("googleworkspace.user/%s/organization/%d/%s/%s/%s", userID, i, e.Name, e.Department, e.Title)),
 			"name":               llx.StringData(e.Name),
 			"title":              llx.StringData(e.Title),
 			"primary":            llx.BoolData(e.Primary),
@@ -344,11 +353,12 @@ type userPosixAccount struct {
 	Primary             bool   `json:"primary"`
 }
 
-func buildUserPosixAccounts(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserPosixAccounts(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userPosixAccount](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
 		mql, err := CreateResource(runtime, "googleworkspace.user.posixAccount", map[string]*llx.RawData{
+			"__id":                llx.StringData(fmt.Sprintf("googleworkspace.user/%s/posixAccount/%d/%s/%s", userID, i, e.SystemId, e.Username)),
 			"username":            llx.StringData(e.Username),
 			"uid":                 llx.IntData(parseInt64(e.Uid)),
 			"gid":                 llx.IntData(parseInt64(e.Gid)),
@@ -373,11 +383,18 @@ type userSshPublicKey struct {
 	Fingerprint        string `json:"fingerprint"`
 }
 
-func buildUserSshPublicKeys(runtime *plugin.Runtime, v any) ([]any, error) {
+func buildUserSshPublicKeys(runtime *plugin.Runtime, userID string, v any) ([]any, error) {
 	entries := unmarshalUserMultiValue[userSshPublicKey](v)
 	out := make([]any, 0, len(entries))
-	for _, e := range entries {
+	for i, e := range entries {
+		// Prefer fingerprint (server-issued, stable) over key contents; fall
+		// back to index so two keys without a fingerprint still get distinct ids.
+		keyDisc := e.Fingerprint
+		if keyDisc == "" {
+			keyDisc = strconv.Itoa(i)
+		}
 		mql, err := CreateResource(runtime, "googleworkspace.user.sshPublicKey", map[string]*llx.RawData{
+			"__id":               llx.StringData(fmt.Sprintf("googleworkspace.user/%s/sshPublicKey/%s", userID, keyDisc)),
 			"key":                llx.StringData(e.Key),
 			"expirationTimeUsec": llx.StringData(e.ExpirationTimeUsec),
 			"fingerprint":        llx.StringData(e.Fingerprint),
@@ -421,41 +438,6 @@ func customSchemasToDict(schemas map[string]googleapi.RawMessage) map[string]any
 		out[name] = v
 	}
 	return out
-}
-
-// id() impls for the user multi-value sub-resources. The values come from
-// the Directory API as part of the user's payload, so a stable id needs to
-// be derived from the entry's content rather than a server-side handle.
-
-func (g *mqlGoogleworkspaceUserEmail) id() (string, error) {
-	return "googleworkspace.user.email/" + g.Address.Data + "/" + g.Type.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserPhone) id() (string, error) {
-	return "googleworkspace.user.phone/" + g.Value.Data + "/" + g.Type.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserExternalId) id() (string, error) {
-	return "googleworkspace.user.externalId/" + g.Type.Data + "/" + g.Value.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserAddress) id() (string, error) {
-	return "googleworkspace.user.address/" + g.Type.Data + "/" + g.Formatted.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserOrganization) id() (string, error) {
-	return "googleworkspace.user.organization/" + g.Name.Data + "/" + g.Department.Data + "/" + g.Title.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserPosixAccount) id() (string, error) {
-	return "googleworkspace.user.posixAccount/" + g.SystemId.Data + "/" + g.Username.Data, nil
-}
-
-func (g *mqlGoogleworkspaceUserSshPublicKey) id() (string, error) {
-	if g.Fingerprint.Data != "" {
-		return "googleworkspace.user.sshPublicKey/" + g.Fingerprint.Data, nil
-	}
-	return "googleworkspace.user.sshPublicKey/" + g.Key.Data, nil
 }
 
 func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, error) {
