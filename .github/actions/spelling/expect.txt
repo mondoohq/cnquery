@@ -259,7 +259,6 @@ horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
 hpi
-hsm
 hsts
 Hudi
 hvm
@@ -419,6 +418,7 @@ noreply
 Noreuse
 notebookinstancedetails
 notif
+npmjs
 nproc
 NRT
 nsg
