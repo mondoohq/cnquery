@@ -1413,6 +1413,43 @@ func (a *mqlAzureSubscriptionNetworkServiceVpnSite) virtualWan() (*mqlAzureSubsc
 	return res.(*mqlAzureSubscriptionNetworkServiceVirtualWan), nil
 }
 
+func initAzureSubscriptionNetworkServiceVirtualHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id := args["id"].Value.(string)
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("virtualHubs")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewVirtualHubsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureVirtualHubToMql(runtime, &resp.VirtualHub)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
+}
+
 func initAzureSubscriptionNetworkServiceVpnSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
