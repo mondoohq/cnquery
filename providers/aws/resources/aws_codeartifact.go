@@ -79,6 +79,10 @@ func (a *mqlAwsCodeartifact) getDomains(conn *connection.AwsConnection) []*jobpo
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("codeartifact is not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 				for i := range page.Domains {
@@ -282,6 +286,10 @@ func (a *mqlAwsCodeartifact) getRepositories(conn *connection.AwsConnection) []*
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("codeartifact is not available in region")
 						return res, nil
 					}
 					return nil, err

@@ -129,13 +129,21 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 		return args, nil, nil
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.iamService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	// Go through gcp.project so the iamService picks up its `serviceEnabled`
+	// flag — constructing the iamService directly leaves the flag at its
+	// zero value, which short-circuits serviceAccounts() to nil and makes the
+	// SA lookup miss every typed-ref query.
+	projObj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(args["projectId"].Value.(string)),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	iamSvc := obj.(*mqlGcpProjectIamService)
+	iamRes := projObj.(*mqlGcpProject).GetIam()
+	if iamRes.Error != nil {
+		return nil, nil, iamRes.Error
+	}
+	iamSvc := iamRes.Data
 	sas := iamSvc.GetServiceAccounts()
 	if sas.Error != nil {
 		return nil, nil, sas.Error

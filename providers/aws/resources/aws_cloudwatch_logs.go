@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cwltypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -193,7 +194,7 @@ func (a *mqlAwsCloudwatchLoggroup) dataProtectionPolicy() (any, error) {
 	svc := conn.CloudwatchLogs(region)
 	ctx := context.Background()
 
-	arnVal := a.Arn.Data
+	arnVal := strings.TrimSuffix(a.Arn.Data, ":*")
 	resp, err := svc.GetDataProtectionPolicy(ctx, &cloudwatchlogs.GetDataProtectionPolicyInput{
 		LogGroupIdentifier: &arnVal,
 	})
