@@ -4,200 +4,200 @@ stdout="/usr/bin/rpm"
 [commands."rpm -E '%{_dbpath}'"]
 stdout="/var/lib/rpm/rpmdb.sqlite"
 
-[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}\\n'"]
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}\\n'"]
 stdout="""
-tzdata 0:2021c-1.el8 noarch__Red Hat, Inc.__Timezone data__GPLv3+
-python3-pip-wheel 0:9.0.3-19.el8 noarch__Red Hat, Inc.__The pip wheel__GPLv3+
-redhat-release 0:8.4-0.6.el8 x86_64__Red Hat, Inc.__Red Hat Enterprise Linux release file__GPLv3+
-filesystem 0:3.8-3.el8 x86_64__Red Hat, Inc.__The basic directory layout for a Linux system__GPLv3+
-publicsuffix-list-dafsa 0:20180723-1.el8 noarch__Red Hat, Inc.__Cross-vendor public domain suffix database in DAFSA form__GPLv3+
-pcre2 0:10.32-2.el8 x86_64__Red Hat, Inc.__Perl-compatible regular expression library__GPLv3+
-ncurses-libs 0:6.1-7.20180224.el8 x86_64__Red Hat, Inc.__Ncurses libraries__GPLv3+
-glibc-common 0:2.28-151.el8 x86_64__Red Hat, Inc.__Common binaries and locale data for glibc__GPLv3+
-bash 0:4.4.20-1.el8_4 x86_64__Red Hat, Inc.__The GNU Bourne Again shell__GPLv3+
-zlib 0:1.2.11-17.el8 x86_64__Red Hat, Inc.__The compression and decompression library__GPLv3+
-bzip2-libs 0:1.0.6-26.el8 x86_64__Red Hat, Inc.__Libraries for applications using bzip2__GPLv3+
-libxml2 0:2.9.7-9.el8_4.2 x86_64__Red Hat, Inc.__Library providing XML and HTML support__GPLv3+
-libcap 0:2.26-4.el8 x86_64__Red Hat, Inc.__Library for getting and setting POSIX.1e capabilities__GPLv3+
-libzstd 0:1.4.4-1.el8 x86_64__Red Hat, Inc.__Zstd shared library__GPLv3+
-elfutils-libelf 0:0.182-3.el8 x86_64__Red Hat, Inc.__Library to read and write ELF files__GPLv3+
-expat 0:2.2.5-4.el8 x86_64__Red Hat, Inc.__An XML parser library__GPLv3+
-libcom_err 0:1.45.6-1.el8 x86_64__Red Hat, Inc.__Common error description library__GPLv3+
-libuuid 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Universally unique ID library__GPLv3+
-gmp 1:6.1.2-10.el8 x86_64__Red Hat, Inc.__A GNU arbitrary precision library__GPLv3+
-libacl 0:2.2.53-1.el8 x86_64__Red Hat, Inc.__Dynamic library for access control list support__GPLv3+
-libblkid 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Block device ID library__GPLv3+
-sed 0:4.5-2.el8 x86_64__Red Hat, Inc.__A GNU stream text editor__GPLv3+
-libstdc++ 0:8.4.1-1.el8 x86_64__Red Hat, Inc.__GNU Standard C++ Library__GPLv3+
-p11-kit 0:0.23.22-1.el8 x86_64__Red Hat, Inc.__Library for loading and sharing PKCS#11 modules__GPLv3+
-libunistring 0:0.9.9-3.el8 x86_64__Red Hat, Inc.__GNU Unicode string library__GPLv3+
-libgcrypt 0:1.8.5-4.el8 x86_64__Red Hat, Inc.__A general-purpose cryptography library__GPLv3+
-libcap-ng 0:0.7.9-5.el8 x86_64__Red Hat, Inc.__An alternate posix capabilities library__GPLv3+
-libnl3 0:3.5.0-1.el8 x86_64__Red Hat, Inc.__Convenience library for kernel netlink sockets__GPLv3+
-libassuan 0:2.5.1-3.el8 x86_64__Red Hat, Inc.__GnuPG IPC library__GPLv3+
-keyutils-libs 0:1.5.10-6.el8 x86_64__Red Hat, Inc.__Key utilities library__GPLv3+
-p11-kit-trust 0:0.23.22-1.el8 x86_64__Red Hat, Inc.__System trust module from p11-kit__GPLv3+
-grep 0:3.1-6.el8 x86_64__Red Hat, Inc.__Pattern matching utilities__GPLv3+
-dbus-libs 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__Libraries for accessing D-BUS__GPLv3+
-dbus-tools 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS Tools and Utilities__GPLv3+
-gdbm 1:1.18-1.el8 x86_64__Red Hat, Inc.__A GNU set of database routines which use extensible hashing__GPLv3+
-shadow-utils 2:4.6-12.el8 x86_64__Red Hat, Inc.__Utilities for managing accounts and shadow password files__GPLv3+
-libpsl 0:0.20.2-6.el8 x86_64__Red Hat, Inc.__C library for the Publix Suffix List__GPLv3+
-gzip 0:1.9-12.el8 x86_64__Red Hat, Inc.__The GNU data compression program__GPLv3+
-cracklib-dicts 0:2.9.6-15.el8 x86_64__Red Hat, Inc.__The standard CrackLib dictionaries__GPLv3+
-mpfr 0:3.1.6-1.el8 x86_64__Red Hat, Inc.__A C library for multiple-precision floating-point computations__GPLv3+
-libcomps 0:0.1.11-5.el8 x86_64__Red Hat, Inc.__Comps XML file manipulation library__GPLv3+
-brotli 0:1.0.6-3.el8 x86_64__Red Hat, Inc.__Lossless compression algorithm__GPLv3+
-libnghttp2 0:1.33.0-3.el8_2.1 x86_64__Red Hat, Inc.__A library implementing the HTTP/2 protocol__GPLv3+
-libsigsegv 0:2.11-5.el8 x86_64__Red Hat, Inc.__Library for handling page faults in user mode__GPLv3+
-libverto 0:0.3.0-5.el8 x86_64__Red Hat, Inc.__Main loop abstraction library__GPLv3+
-libtirpc 0:1.1.4-4.el8 x86_64__Red Hat, Inc.__Transport Independent RPC Library__GPLv3+
-openssl-libs 1:1.1.1g-15.el8_3 x86_64__Red Hat, Inc.__A general purpose cryptography library with TLS implementation__GPLv3+
-crypto-policies-scripts 0:20210209-1.gitbfb6bed.el8_3 noarch__Red Hat, Inc.__Tool to switch between crypto policies__GPLv3+
-platform-python 0:3.6.8-39.el8_4 x86_64__Red Hat, Inc.__Internal interpreter of the Python programming language__GPLv3+
-libdb 0:5.3.28-42.el8_4 x86_64__Red Hat, Inc.__The Berkeley DB database library for C__GPLv3+
-pam 0:1.3.1-14.el8 x86_64__Red Hat, Inc.__An extensible library which provides authentication for applications__GPLv3+
-util-linux 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__A collection of basic system utilities__GPLv3+
-gnutls 0:3.6.14-8.el8_3 x86_64__Red Hat, Inc.__A TLS protocol implementation__GPLv3+
-json-glib 0:1.4.4-1.el8 x86_64__Red Hat, Inc.__Library for JavaScript Object Notation format__GPLv3+
-python3-iniparse 0:0.4-31.el8 noarch__Red Hat, Inc.__Python Module for Accessing and Modifying Configuration Data in INI files__GPLv3+
-dbus-glib 0:0.110-2.el8 x86_64__Red Hat, Inc.__GLib bindings for D-Bus__GPLv3+
-gobject-introspection 0:1.56.1-1.el8 x86_64__Red Hat, Inc.__Introspection system for GObject-based libraries__GPLv3+
-cyrus-sasl-lib 0:2.1.27-5.el8 x86_64__Red Hat, Inc.__Shared libraries needed by applications which use Cyrus SASL__GPLv3+
-libuser 0:0.62-23.el8 x86_64__Red Hat, Inc.__A user and group account administration library__GPLv3+
-usermode 0:1.113-1.el8 x86_64__Red Hat, Inc.__Tools for certain user account management tasks__GPLv3+
-python3-ethtool 0:0.14-3.el8 x86_64__Red Hat, Inc.__Python module to interface with ethtool__GPLv3+
-python3-libxml2 0:2.9.7-9.el8_4.2 x86_64__Red Hat, Inc.__Python 3 bindings for the libxml2 library__GPLv3+
-python3-chardet 0:3.0.4-7.el8 noarch__Red Hat, Inc.__Character encoding auto-detection in Python 3__GPLv3+
-python3-idna 0:2.5-5.el8 noarch__Red Hat, Inc.__Internationalized Domain Names in Applications (IDNA)__GPLv3+
-python3-pysocks 0:1.6.8-3.el8 noarch__Red Hat, Inc.__A Python SOCKS client module__GPLv3+
-python3-requests 0:2.20.0-2.1.el8_1 noarch__Red Hat, Inc.__HTTP library, written in Python, for human beings__GPLv3+
-libarchive 0:3.3.3-1.el8 x86_64__Red Hat, Inc.__A library for handling streaming archive formats__GPLv3+
-ima-evm-utils 0:1.3.2-12.el8 x86_64__Red Hat, Inc.__IMA/EVM support utilities__GPLv3+
-npth 0:1.5-4.el8 x86_64__Red Hat, Inc.__The New GNU Portable Threads library__GPLv3+
-gpgme 0:1.13.1-7.el8 x86_64__Red Hat, Inc.__GnuPG Made Easy - high level crypto API__GPLv3+
-pciutils-libs 0:3.7.0-1.el8 x86_64__Red Hat, Inc.__Linux PCI library__GPLv3+
-virt-what 0:1.18-9.el8_4 x86_64__Red Hat, Inc.__Detect if we are running in a virtual machine__GPLv3+
-libssh 0:0.9.4-2.el8 x86_64__Red Hat, Inc.__A library implementing the SSH protocol__GPLv3+
-librepo 0:1.12.0-3.el8 x86_64__Red Hat, Inc.__Repodata downloading library__GPLv3+
-curl 0:7.61.1-18.el8_4.2 x86_64__Red Hat, Inc.__A utility for getting files from remote servers (FTP, HTTP, and others)__GPLv3+
-rpm-libs 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Libraries for manipulating RPM packages__GPLv3+
-libsolv 0:0.7.16-3.el8_4 x86_64__Red Hat, Inc.__Package dependency solver__GPLv3+
-python3-libdnf 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the libdnf library.__GPLv3+
-libreport-filesystem 0:2.9.5-15.el8 x86_64__Red Hat, Inc.__Filesystem layout for libreport__GPLv3+
-hwdata 0:0.314-8.8.el8 noarch__Red Hat, Inc.__Hardware identification and configuration data__GPLv3+
-rdma-core 0:32.0-4.el8 x86_64__Red Hat, Inc.__RDMA core userspace libraries and daemons__GPLv3+
-libpcap 14:1.9.1-5.el8 x86_64__Red Hat, Inc.__A system-independent interface for user-level packet capture__GPLv3+
-dbus-common 1:1.12.8-12.el8_4.2 noarch__Red Hat, Inc.__D-BUS message bus configuration__GPLv3+
-device-mapper 8:1.02.175-5.el8 x86_64__Red Hat, Inc.__Device mapper utility__GPLv3+
-cryptsetup-libs 0:2.3.3-4.el8 x86_64__Red Hat, Inc.__Cryptsetup shared library__GPLv3+
-elfutils-libs 0:0.182-3.el8 x86_64__Red Hat, Inc.__Libraries to handle compiled objects__GPLv3+
-systemd 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__System and Service Manager__GPLv3+
-rpm-build-libs 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Libraries for building and signing RPM packages__GPLv3+
-python3-dnf 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Python 3 interface to DNF__GPLv3+
-python3-dnf-plugins-core 0:4.0.18-4.el8 noarch__Red Hat, Inc.__Core Plugins for DNF__GPLv3+
-python3-subscription-manager-rhsm 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__A Python library to communicate with a Red Hat Unified Entitlement Platform__GPLv3+
-yum 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Package manager__GPLv3+
-tar 2:1.30-5.el8 x86_64__Red Hat, Inc.__A GNU file archiving program__GPLv3+
-findutils 1:4.6.0-20.el8 x86_64__Red Hat, Inc.__The GNU versions of find utilities (find and xargs)__GPLv3+
-rootfiles 0:8.1-22.el8 noarch__Red Hat, Inc.__The basic required files for the root user's directory__GPLv3+
-gpg-pubkey 0:d4082792-5b32db75 (none)__(none)__gpg(Red Hat, Inc. (auxiliary key) <security@redhat.com>)__(none)
-libgcc 0:8.4.1-1.el8 x86_64__Red Hat, Inc.__GCC version 8 shared support library__GPLv3+
-python3-setuptools-wheel 0:39.2.0-6.el8 noarch__Red Hat, Inc.__The setuptools wheel__GPLv3+
-subscription-manager-rhsm-certificates 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Certificates required to communicate with a Red Hat Unified Entitlement Platform__GPLv3+
-setup 0:2.12.2-6.el8 noarch__Red Hat, Inc.__A set of system configuration and setup files__GPLv3+
-basesystem 0:11-5.el8 noarch__Red Hat, Inc.__The skeleton package which defines a simple Red Hat Enterprise Linux system__GPLv3+
-ncurses-base 0:6.1-7.20180224.el8 noarch__Red Hat, Inc.__Descriptions of common terminals__GPLv3+
-libselinux 0:2.9-5.el8 x86_64__Red Hat, Inc.__SELinux library and simple utilities__GPLv3+
-glibc-minimal-langpack 0:2.28-151.el8 x86_64__Red Hat, Inc.__Minimal language packs for glibc.__GPLv3+
-glibc 0:2.28-151.el8 x86_64__Red Hat, Inc.__The GNU libc libraries__GPLv3+
-libsepol 0:2.9-2.el8 x86_64__Red Hat, Inc.__SELinux binary policy manipulation library__GPLv3+
-xz-libs 0:5.2.4-3.el8 x86_64__Red Hat, Inc.__Libraries for decoding LZMA compression__GPLv3+
-libgpg-error 0:1.31-1.el8 x86_64__Red Hat, Inc.__Library for error values used by GnuPG components__GPLv3+
-info 0:6.5-6.el8 x86_64__Red Hat, Inc.__A stand-alone TTY-based reader for GNU texinfo documentation__GPLv3+
-libxcrypt 0:4.1.1-4.el8 x86_64__Red Hat, Inc.__Extended crypt library for DES, MD5, Blowfish and others__GPLv3+
-popt 0:1.18-1.el8 x86_64__Red Hat, Inc.__C library for parsing command line parameters__GPLv3+
-sqlite-libs 0:3.26.0-13.el8 x86_64__Red Hat, Inc.__Shared library for the sqlite3 embeddable SQL database engine.__GPLv3+
-json-c 0:0.13.1-0.4.el8 x86_64__Red Hat, Inc.__JSON implementation in C__GPLv3+
-libffi 0:3.1-22.el8 x86_64__Red Hat, Inc.__A portable foreign function interface library__GPLv3+
-readline 0:7.0-10.el8 x86_64__Red Hat, Inc.__A library for editing typed command lines__GPLv3+
-libattr 0:2.4.48-3.el8 x86_64__Red Hat, Inc.__Dynamic library for extended attribute support__GPLv3+
-coreutils-single 0:8.30-8.el8 x86_64__Red Hat, Inc.__coreutils multicall binary__GPLv3+
-libmount 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Device mounting library__GPLv3+
-libsmartcols 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Formatting library for ls-like programs.__GPLv3+
-lua-libs 0:5.3.4-11.el8 x86_64__Red Hat, Inc.__Libraries for lua__GPLv3+
-chkconfig 0:1.13-2.el8 x86_64__Red Hat, Inc.__A system tool for maintaining the /etc/rc*.d hierarchy__GPLv3+
-libidn2 0:2.2.0-1.el8 x86_64__Red Hat, Inc.__Library to support IDNA2008 internationalized domain names__GPLv3+
-file-libs 0:5.33-16.el8_3.1 x86_64__Red Hat, Inc.__Libraries for applications using libmagic__GPLv3+
-audit-libs 0:3.0-0.17.20191104git1c2f876.el8 x86_64__Red Hat, Inc.__Dynamic library for libaudit__GPLv3+
-lz4-libs 0:1.8.3-3.el8_4 x86_64__Red Hat, Inc.__Libaries for lz4__GPLv3+
-gdbm-libs 1:1.18-1.el8 x86_64__Red Hat, Inc.__Libraries files for gdbm__GPLv3+
-libtasn1 0:4.13-3.el8 x86_64__Red Hat, Inc.__The ASN.1 library used in GNUTLS__GPLv3+
-pcre 0:8.42-4.el8 x86_64__Red Hat, Inc.__Perl-compatible regular expression library__GPLv3+
-systemd-libs 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__systemd libraries__GPLv3+
-ca-certificates 0:2021.2.50-80.0.el8_4 noarch__Red Hat, Inc.__The Mozilla CA root certificate bundle__GPLv3+
-libusbx 0:1.0.23-4.el8 x86_64__Red Hat, Inc.__Library for accessing USB devices__GPLv3+
-libsemanage 0:2.9-6.el8 x86_64__Red Hat, Inc.__SELinux binary policy manipulation library__GPLv3+
-libutempter 0:1.1.6-14.el8 x86_64__Red Hat, Inc.__A privileged helper for utmp/wtmp updates__GPLv3+
-libfdisk 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Partitioning library for fdisk-like programs.__GPLv3+
-cracklib 0:2.9.6-15.el8 x86_64__Red Hat, Inc.__A password-checking library__GPLv3+
-acl 0:2.2.53-1.el8 x86_64__Red Hat, Inc.__Access control list utilities__GPLv3+
-nettle 0:3.4.1-4.el8_3 x86_64__Red Hat, Inc.__A low-level cryptographic library__GPLv3+
-libksba 0:1.3.5-7.el8 x86_64__Red Hat, Inc.__CMS and X.509 library__GPLv3+
-dmidecode 1:3.2-8.el8 x86_64__Red Hat, Inc.__Tool to analyse BIOS DMI data__GPLv3+
-libseccomp 0:2.5.1-1.el8 x86_64__Red Hat, Inc.__Enhanced seccomp library__GPLv3+
-gawk 0:4.2.1-2.el8 x86_64__Red Hat, Inc.__The GNU version of the AWK text processing utility__GPLv3+
-libnsl2 0:1.2.0-2.20180605git4a062cf.el8 x86_64__Red Hat, Inc.__Public client interface library for NIS(YP) and NIS+__GPLv3+
-krb5-libs 0:1.18.2-8.3.el8_4 x86_64__Red Hat, Inc.__The non-admin shared libraries used by Kerberos 5__GPLv3+
-crypto-policies 0:20210209-1.gitbfb6bed.el8_3 noarch__Red Hat, Inc.__System-wide crypto policies__GPLv3+
-platform-python-setuptools 0:39.2.0-6.el8 noarch__Red Hat, Inc.__Easily build and distribute Python 3 packages__GPLv3+
-python3-libs 0:3.6.8-39.el8_4 x86_64__Red Hat, Inc.__Python runtime libraries__GPLv3+
-libpwquality 0:1.4.4-3.el8 x86_64__Red Hat, Inc.__A library for password generation and password quality checking__GPLv3+
-python3-six 0:1.11.0-8.el8 noarch__Red Hat, Inc.__Python 2 and 3 compatibility utilities__GPLv3+
-python3-dateutil 1:2.6.1-6.el8 noarch__Red Hat, Inc.__Powerful extensions to the standard datetime module__GPLv3+
-glib2 0:2.56.4-10.el8_4.1 x86_64__Red Hat, Inc.__A library of handy utility functions__GPLv3+
-librhsm 0:0.0.3-4.el8 x86_64__Red Hat, Inc.__Red Hat Subscription Manager library__GPLv3+
-kmod-libs 0:25-17.el8 x86_64__Red Hat, Inc.__Libraries to handle kernel module loading and unloading__GPLv3+
-python3-dbus 0:1.2.4-15.el8 x86_64__Red Hat, Inc.__D-Bus bindings for python3__GPLv3+
-python3-gobject-base 0:3.28.3-2.el8 x86_64__Red Hat, Inc.__Python 3 bindings for GObject Introspection base package__GPLv3+
-openldap 0:2.4.46-17.el8_4 x86_64__Red Hat, Inc.__LDAP support libraries__GPLv3+
-passwd 0:0.80-3.el8 x86_64__Red Hat, Inc.__An utility for setting or changing passwords using PAM__GPLv3+
-libdb-utils 0:5.3.28-42.el8_4 x86_64__Red Hat, Inc.__Command line tools for managing Berkeley DB databases__GPLv3+
-python3-libcomps 0:0.1.11-5.el8 x86_64__Red Hat, Inc.__Python 3 bindings for libcomps library__GPLv3+
-python3-dmidecode 0:3.12.2-15.el8 x86_64__Red Hat, Inc.__Python 3 module to access DMI data__GPLv3+
-python3-decorator 0:4.2.1-2.el8 noarch__Red Hat, Inc.__Module to simplify usage of decorators in python3__GPLv3+
-python3-inotify 0:0.9.6-13.el8 noarch__Red Hat, Inc.__Monitor filesystem events with Python under Linux__GPLv3+
-python3-urllib3 0:1.24.2-5.el8 noarch__Red Hat, Inc.__Python3 HTTP library with thread-safe connection pooling and file post__GPLv3+
-python3-syspurpose 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__A commandline utility for declaring system syspurpose__GPLv3+
-tpm2-tss 0:2.3.2-3.el8 x86_64__Red Hat, Inc.__TPM2.0 Software Stack__GPLv3+
-libyaml 0:0.1.7-5.el8 x86_64__Red Hat, Inc.__YAML 1.1 parser and emitter written in C__GPLv3+
-gnupg2 0:2.2.20-2.el8 x86_64__Red Hat, Inc.__Utility for secure communication and data storage__GPLv3+
-python3-gpg 0:1.13.1-7.el8 x86_64__Red Hat, Inc.__gpgme bindings for Python 3__GPLv3+
-which 0:2.21-12.el8 x86_64__Red Hat, Inc.__Displays where a particular program in your path is located__GPLv3+
-libssh-config 0:0.9.4-2.el8 noarch__Red Hat, Inc.__Configuration files for libssh__GPLv3+
-libcurl 0:7.61.1-18.el8_4.2 x86_64__Red Hat, Inc.__A library for getting files from web servers__GPLv3+
-python3-librepo 0:1.12.0-3.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the librepo library__GPLv3+
-rpm 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__The RPM package management system__GPLv3+
-libmodulemd 0:2.9.4-2.el8 x86_64__Red Hat, Inc.__Module metadata manipulation library__GPLv3+
-libdnf 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Library providing simplified C and Python API to libsolv__GPLv3+
-python3-hawkey 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the hawkey library__GPLv3+
-dnf-data 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Common data and configuration files for DNF__GPLv3+
-pciutils 0:3.7.0-1.el8 x86_64__Red Hat, Inc.__PCI bus related utilities__GPLv3+
-libibverbs 0:32.0-4.el8 x86_64__Red Hat, Inc.__A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware__GPLv3+
-iptables-libs 0:1.8.4-17.el8_4.1 x86_64__Red Hat, Inc.__iptables libraries__GPLv3+
-dbus-daemon 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS message bus__GPLv3+
-device-mapper-libs 8:1.02.175-5.el8 x86_64__Red Hat, Inc.__Device-mapper shared library__GPLv3+
-elfutils-default-yama-scope 0:0.182-3.el8 noarch__Red Hat, Inc.__Default yama attach scope sysctl setting__GPLv3+
-systemd-pam 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__systemd PAM module__GPLv3+
-dbus 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS message bus__GPLv3+
-python3-rpm 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Python 3 bindings for apps which will manipulate RPM packages__GPLv3+
-dnf 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Package manager__GPLv3+
-dnf-plugin-subscription-manager 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Subscription Manager plugins for DNF__GPLv3+
-subscription-manager 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Tools and libraries for subscription and repository management__GPLv3+
-gdb-gdbserver 0:8.2-15.el8 x86_64__Red Hat, Inc.__A standalone server for GDB (the GNU source-level debugger)__GPLv3+
-vim-minimal 2:8.0.1763-15.el8 x86_64__Red Hat, Inc.__A minimal version of the VIM editor__GPLv3+
-langpacks-en 0:1.0-12.el8 noarch__Red Hat, Inc.__English langpacks meta-package__GPLv3+
-gpg-pubkey 0:fd431d51-4ae0493b (none)__(none)__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)__(none)
+tzdata 0:2021c-1.el8 noarch__Red Hat, Inc.__Timezone data__GPLv3+__1704067200
+python3-pip-wheel 0:9.0.3-19.el8 noarch__Red Hat, Inc.__The pip wheel__GPLv3+__1704067200
+redhat-release 0:8.4-0.6.el8 x86_64__Red Hat, Inc.__Red Hat Enterprise Linux release file__GPLv3+__1704067200
+filesystem 0:3.8-3.el8 x86_64__Red Hat, Inc.__The basic directory layout for a Linux system__GPLv3+__1704067200
+publicsuffix-list-dafsa 0:20180723-1.el8 noarch__Red Hat, Inc.__Cross-vendor public domain suffix database in DAFSA form__GPLv3+__1704067200
+pcre2 0:10.32-2.el8 x86_64__Red Hat, Inc.__Perl-compatible regular expression library__GPLv3+__1704067200
+ncurses-libs 0:6.1-7.20180224.el8 x86_64__Red Hat, Inc.__Ncurses libraries__GPLv3+__1704067200
+glibc-common 0:2.28-151.el8 x86_64__Red Hat, Inc.__Common binaries and locale data for glibc__GPLv3+__1704067200
+bash 0:4.4.20-1.el8_4 x86_64__Red Hat, Inc.__The GNU Bourne Again shell__GPLv3+__1704067200
+zlib 0:1.2.11-17.el8 x86_64__Red Hat, Inc.__The compression and decompression library__GPLv3+__1704067200
+bzip2-libs 0:1.0.6-26.el8 x86_64__Red Hat, Inc.__Libraries for applications using bzip2__GPLv3+__1704067200
+libxml2 0:2.9.7-9.el8_4.2 x86_64__Red Hat, Inc.__Library providing XML and HTML support__GPLv3+__1704067200
+libcap 0:2.26-4.el8 x86_64__Red Hat, Inc.__Library for getting and setting POSIX.1e capabilities__GPLv3+__1704067200
+libzstd 0:1.4.4-1.el8 x86_64__Red Hat, Inc.__Zstd shared library__GPLv3+__1704067200
+elfutils-libelf 0:0.182-3.el8 x86_64__Red Hat, Inc.__Library to read and write ELF files__GPLv3+__1704067200
+expat 0:2.2.5-4.el8 x86_64__Red Hat, Inc.__An XML parser library__GPLv3+__1704067200
+libcom_err 0:1.45.6-1.el8 x86_64__Red Hat, Inc.__Common error description library__GPLv3+__1704067200
+libuuid 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Universally unique ID library__GPLv3+__1704067200
+gmp 1:6.1.2-10.el8 x86_64__Red Hat, Inc.__A GNU arbitrary precision library__GPLv3+__1704067200
+libacl 0:2.2.53-1.el8 x86_64__Red Hat, Inc.__Dynamic library for access control list support__GPLv3+__1704067200
+libblkid 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Block device ID library__GPLv3+__1704067200
+sed 0:4.5-2.el8 x86_64__Red Hat, Inc.__A GNU stream text editor__GPLv3+__1704067200
+libstdc++ 0:8.4.1-1.el8 x86_64__Red Hat, Inc.__GNU Standard C++ Library__GPLv3+__1704067200
+p11-kit 0:0.23.22-1.el8 x86_64__Red Hat, Inc.__Library for loading and sharing PKCS#11 modules__GPLv3+__1704067200
+libunistring 0:0.9.9-3.el8 x86_64__Red Hat, Inc.__GNU Unicode string library__GPLv3+__1704067200
+libgcrypt 0:1.8.5-4.el8 x86_64__Red Hat, Inc.__A general-purpose cryptography library__GPLv3+__1704067200
+libcap-ng 0:0.7.9-5.el8 x86_64__Red Hat, Inc.__An alternate posix capabilities library__GPLv3+__1704067200
+libnl3 0:3.5.0-1.el8 x86_64__Red Hat, Inc.__Convenience library for kernel netlink sockets__GPLv3+__1704067200
+libassuan 0:2.5.1-3.el8 x86_64__Red Hat, Inc.__GnuPG IPC library__GPLv3+__1704067200
+keyutils-libs 0:1.5.10-6.el8 x86_64__Red Hat, Inc.__Key utilities library__GPLv3+__1704067200
+p11-kit-trust 0:0.23.22-1.el8 x86_64__Red Hat, Inc.__System trust module from p11-kit__GPLv3+__1704067200
+grep 0:3.1-6.el8 x86_64__Red Hat, Inc.__Pattern matching utilities__GPLv3+__1704067200
+dbus-libs 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__Libraries for accessing D-BUS__GPLv3+__1704067200
+dbus-tools 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS Tools and Utilities__GPLv3+__1704067200
+gdbm 1:1.18-1.el8 x86_64__Red Hat, Inc.__A GNU set of database routines which use extensible hashing__GPLv3+__1704067200
+shadow-utils 2:4.6-12.el8 x86_64__Red Hat, Inc.__Utilities for managing accounts and shadow password files__GPLv3+__1704067200
+libpsl 0:0.20.2-6.el8 x86_64__Red Hat, Inc.__C library for the Publix Suffix List__GPLv3+__1704067200
+gzip 0:1.9-12.el8 x86_64__Red Hat, Inc.__The GNU data compression program__GPLv3+__1704067200
+cracklib-dicts 0:2.9.6-15.el8 x86_64__Red Hat, Inc.__The standard CrackLib dictionaries__GPLv3+__1704067200
+mpfr 0:3.1.6-1.el8 x86_64__Red Hat, Inc.__A C library for multiple-precision floating-point computations__GPLv3+__1704067200
+libcomps 0:0.1.11-5.el8 x86_64__Red Hat, Inc.__Comps XML file manipulation library__GPLv3+__1704067200
+brotli 0:1.0.6-3.el8 x86_64__Red Hat, Inc.__Lossless compression algorithm__GPLv3+__1704067200
+libnghttp2 0:1.33.0-3.el8_2.1 x86_64__Red Hat, Inc.__A library implementing the HTTP/2 protocol__GPLv3+__1704067200
+libsigsegv 0:2.11-5.el8 x86_64__Red Hat, Inc.__Library for handling page faults in user mode__GPLv3+__1704067200
+libverto 0:0.3.0-5.el8 x86_64__Red Hat, Inc.__Main loop abstraction library__GPLv3+__1704067200
+libtirpc 0:1.1.4-4.el8 x86_64__Red Hat, Inc.__Transport Independent RPC Library__GPLv3+__1704067200
+openssl-libs 1:1.1.1g-15.el8_3 x86_64__Red Hat, Inc.__A general purpose cryptography library with TLS implementation__GPLv3+__1704067200
+crypto-policies-scripts 0:20210209-1.gitbfb6bed.el8_3 noarch__Red Hat, Inc.__Tool to switch between crypto policies__GPLv3+__1704067200
+platform-python 0:3.6.8-39.el8_4 x86_64__Red Hat, Inc.__Internal interpreter of the Python programming language__GPLv3+__1704067200
+libdb 0:5.3.28-42.el8_4 x86_64__Red Hat, Inc.__The Berkeley DB database library for C__GPLv3+__1704067200
+pam 0:1.3.1-14.el8 x86_64__Red Hat, Inc.__An extensible library which provides authentication for applications__GPLv3+__1704067200
+util-linux 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__A collection of basic system utilities__GPLv3+__1704067200
+gnutls 0:3.6.14-8.el8_3 x86_64__Red Hat, Inc.__A TLS protocol implementation__GPLv3+__1704067200
+json-glib 0:1.4.4-1.el8 x86_64__Red Hat, Inc.__Library for JavaScript Object Notation format__GPLv3+__1704067200
+python3-iniparse 0:0.4-31.el8 noarch__Red Hat, Inc.__Python Module for Accessing and Modifying Configuration Data in INI files__GPLv3+__1704067200
+dbus-glib 0:0.110-2.el8 x86_64__Red Hat, Inc.__GLib bindings for D-Bus__GPLv3+__1704067200
+gobject-introspection 0:1.56.1-1.el8 x86_64__Red Hat, Inc.__Introspection system for GObject-based libraries__GPLv3+__1704067200
+cyrus-sasl-lib 0:2.1.27-5.el8 x86_64__Red Hat, Inc.__Shared libraries needed by applications which use Cyrus SASL__GPLv3+__1704067200
+libuser 0:0.62-23.el8 x86_64__Red Hat, Inc.__A user and group account administration library__GPLv3+__1704067200
+usermode 0:1.113-1.el8 x86_64__Red Hat, Inc.__Tools for certain user account management tasks__GPLv3+__1704067200
+python3-ethtool 0:0.14-3.el8 x86_64__Red Hat, Inc.__Python module to interface with ethtool__GPLv3+__1704067200
+python3-libxml2 0:2.9.7-9.el8_4.2 x86_64__Red Hat, Inc.__Python 3 bindings for the libxml2 library__GPLv3+__1704067200
+python3-chardet 0:3.0.4-7.el8 noarch__Red Hat, Inc.__Character encoding auto-detection in Python 3__GPLv3+__1704067200
+python3-idna 0:2.5-5.el8 noarch__Red Hat, Inc.__Internationalized Domain Names in Applications (IDNA)__GPLv3+__1704067200
+python3-pysocks 0:1.6.8-3.el8 noarch__Red Hat, Inc.__A Python SOCKS client module__GPLv3+__1704067200
+python3-requests 0:2.20.0-2.1.el8_1 noarch__Red Hat, Inc.__HTTP library, written in Python, for human beings__GPLv3+__1704067200
+libarchive 0:3.3.3-1.el8 x86_64__Red Hat, Inc.__A library for handling streaming archive formats__GPLv3+__1704067200
+ima-evm-utils 0:1.3.2-12.el8 x86_64__Red Hat, Inc.__IMA/EVM support utilities__GPLv3+__1704067200
+npth 0:1.5-4.el8 x86_64__Red Hat, Inc.__The New GNU Portable Threads library__GPLv3+__1704067200
+gpgme 0:1.13.1-7.el8 x86_64__Red Hat, Inc.__GnuPG Made Easy - high level crypto API__GPLv3+__1704067200
+pciutils-libs 0:3.7.0-1.el8 x86_64__Red Hat, Inc.__Linux PCI library__GPLv3+__1704067200
+virt-what 0:1.18-9.el8_4 x86_64__Red Hat, Inc.__Detect if we are running in a virtual machine__GPLv3+__1704067200
+libssh 0:0.9.4-2.el8 x86_64__Red Hat, Inc.__A library implementing the SSH protocol__GPLv3+__1704067200
+librepo 0:1.12.0-3.el8 x86_64__Red Hat, Inc.__Repodata downloading library__GPLv3+__1704067200
+curl 0:7.61.1-18.el8_4.2 x86_64__Red Hat, Inc.__A utility for getting files from remote servers (FTP, HTTP, and others)__GPLv3+__1704067200
+rpm-libs 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Libraries for manipulating RPM packages__GPLv3+__1704067200
+libsolv 0:0.7.16-3.el8_4 x86_64__Red Hat, Inc.__Package dependency solver__GPLv3+__1704067200
+python3-libdnf 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the libdnf library.__GPLv3+__1704067200
+libreport-filesystem 0:2.9.5-15.el8 x86_64__Red Hat, Inc.__Filesystem layout for libreport__GPLv3+__1704067200
+hwdata 0:0.314-8.8.el8 noarch__Red Hat, Inc.__Hardware identification and configuration data__GPLv3+__1704067200
+rdma-core 0:32.0-4.el8 x86_64__Red Hat, Inc.__RDMA core userspace libraries and daemons__GPLv3+__1704067200
+libpcap 14:1.9.1-5.el8 x86_64__Red Hat, Inc.__A system-independent interface for user-level packet capture__GPLv3+__1704067200
+dbus-common 1:1.12.8-12.el8_4.2 noarch__Red Hat, Inc.__D-BUS message bus configuration__GPLv3+__1704067200
+device-mapper 8:1.02.175-5.el8 x86_64__Red Hat, Inc.__Device mapper utility__GPLv3+__1704067200
+cryptsetup-libs 0:2.3.3-4.el8 x86_64__Red Hat, Inc.__Cryptsetup shared library__GPLv3+__1704067200
+elfutils-libs 0:0.182-3.el8 x86_64__Red Hat, Inc.__Libraries to handle compiled objects__GPLv3+__1704067200
+systemd 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__System and Service Manager__GPLv3+__1704067200
+rpm-build-libs 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Libraries for building and signing RPM packages__GPLv3+__1704067200
+python3-dnf 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Python 3 interface to DNF__GPLv3+__1704067200
+python3-dnf-plugins-core 0:4.0.18-4.el8 noarch__Red Hat, Inc.__Core Plugins for DNF__GPLv3+__1704067200
+python3-subscription-manager-rhsm 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__A Python library to communicate with a Red Hat Unified Entitlement Platform__GPLv3+__1704067200
+yum 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Package manager__GPLv3+__1704067200
+tar 2:1.30-5.el8 x86_64__Red Hat, Inc.__A GNU file archiving program__GPLv3+__1704067200
+findutils 1:4.6.0-20.el8 x86_64__Red Hat, Inc.__The GNU versions of find utilities (find and xargs)__GPLv3+__1704067200
+rootfiles 0:8.1-22.el8 noarch__Red Hat, Inc.__The basic required files for the root user's directory__GPLv3+__1704067200
+gpg-pubkey 0:d4082792-5b32db75 (none)__(none)__gpg(Red Hat, Inc. (auxiliary key) <security@redhat.com>)__(none)__(none)
+libgcc 0:8.4.1-1.el8 x86_64__Red Hat, Inc.__GCC version 8 shared support library__GPLv3+__1704067200
+python3-setuptools-wheel 0:39.2.0-6.el8 noarch__Red Hat, Inc.__The setuptools wheel__GPLv3+__1704067200
+subscription-manager-rhsm-certificates 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Certificates required to communicate with a Red Hat Unified Entitlement Platform__GPLv3+__1704067200
+setup 0:2.12.2-6.el8 noarch__Red Hat, Inc.__A set of system configuration and setup files__GPLv3+__1704067200
+basesystem 0:11-5.el8 noarch__Red Hat, Inc.__The skeleton package which defines a simple Red Hat Enterprise Linux system__GPLv3+__1704067200
+ncurses-base 0:6.1-7.20180224.el8 noarch__Red Hat, Inc.__Descriptions of common terminals__GPLv3+__1704067200
+libselinux 0:2.9-5.el8 x86_64__Red Hat, Inc.__SELinux library and simple utilities__GPLv3+__1704067200
+glibc-minimal-langpack 0:2.28-151.el8 x86_64__Red Hat, Inc.__Minimal language packs for glibc.__GPLv3+__1704067200
+glibc 0:2.28-151.el8 x86_64__Red Hat, Inc.__The GNU libc libraries__GPLv3+__1704067200
+libsepol 0:2.9-2.el8 x86_64__Red Hat, Inc.__SELinux binary policy manipulation library__GPLv3+__1704067200
+xz-libs 0:5.2.4-3.el8 x86_64__Red Hat, Inc.__Libraries for decoding LZMA compression__GPLv3+__1704067200
+libgpg-error 0:1.31-1.el8 x86_64__Red Hat, Inc.__Library for error values used by GnuPG components__GPLv3+__1704067200
+info 0:6.5-6.el8 x86_64__Red Hat, Inc.__A stand-alone TTY-based reader for GNU texinfo documentation__GPLv3+__1704067200
+libxcrypt 0:4.1.1-4.el8 x86_64__Red Hat, Inc.__Extended crypt library for DES, MD5, Blowfish and others__GPLv3+__1704067200
+popt 0:1.18-1.el8 x86_64__Red Hat, Inc.__C library for parsing command line parameters__GPLv3+__1704067200
+sqlite-libs 0:3.26.0-13.el8 x86_64__Red Hat, Inc.__Shared library for the sqlite3 embeddable SQL database engine.__GPLv3+__1704067200
+json-c 0:0.13.1-0.4.el8 x86_64__Red Hat, Inc.__JSON implementation in C__GPLv3+__1704067200
+libffi 0:3.1-22.el8 x86_64__Red Hat, Inc.__A portable foreign function interface library__GPLv3+__1704067200
+readline 0:7.0-10.el8 x86_64__Red Hat, Inc.__A library for editing typed command lines__GPLv3+__1704067200
+libattr 0:2.4.48-3.el8 x86_64__Red Hat, Inc.__Dynamic library for extended attribute support__GPLv3+__1704067200
+coreutils-single 0:8.30-8.el8 x86_64__Red Hat, Inc.__coreutils multicall binary__GPLv3+__1704067200
+libmount 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Device mounting library__GPLv3+__1704067200
+libsmartcols 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Formatting library for ls-like programs.__GPLv3+__1704067200
+lua-libs 0:5.3.4-11.el8 x86_64__Red Hat, Inc.__Libraries for lua__GPLv3+__1704067200
+chkconfig 0:1.13-2.el8 x86_64__Red Hat, Inc.__A system tool for maintaining the /etc/rc*.d hierarchy__GPLv3+__1704067200
+libidn2 0:2.2.0-1.el8 x86_64__Red Hat, Inc.__Library to support IDNA2008 internationalized domain names__GPLv3+__1704067200
+file-libs 0:5.33-16.el8_3.1 x86_64__Red Hat, Inc.__Libraries for applications using libmagic__GPLv3+__1704067200
+audit-libs 0:3.0-0.17.20191104git1c2f876.el8 x86_64__Red Hat, Inc.__Dynamic library for libaudit__GPLv3+__1704067200
+lz4-libs 0:1.8.3-3.el8_4 x86_64__Red Hat, Inc.__Libaries for lz4__GPLv3+__1704067200
+gdbm-libs 1:1.18-1.el8 x86_64__Red Hat, Inc.__Libraries files for gdbm__GPLv3+__1704067200
+libtasn1 0:4.13-3.el8 x86_64__Red Hat, Inc.__The ASN.1 library used in GNUTLS__GPLv3+__1704067200
+pcre 0:8.42-4.el8 x86_64__Red Hat, Inc.__Perl-compatible regular expression library__GPLv3+__1704067200
+systemd-libs 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__systemd libraries__GPLv3+__1704067200
+ca-certificates 0:2021.2.50-80.0.el8_4 noarch__Red Hat, Inc.__The Mozilla CA root certificate bundle__GPLv3+__1704067200
+libusbx 0:1.0.23-4.el8 x86_64__Red Hat, Inc.__Library for accessing USB devices__GPLv3+__1704067200
+libsemanage 0:2.9-6.el8 x86_64__Red Hat, Inc.__SELinux binary policy manipulation library__GPLv3+__1704067200
+libutempter 0:1.1.6-14.el8 x86_64__Red Hat, Inc.__A privileged helper for utmp/wtmp updates__GPLv3+__1704067200
+libfdisk 0:2.32.1-27.el8 x86_64__Red Hat, Inc.__Partitioning library for fdisk-like programs.__GPLv3+__1704067200
+cracklib 0:2.9.6-15.el8 x86_64__Red Hat, Inc.__A password-checking library__GPLv3+__1704067200
+acl 0:2.2.53-1.el8 x86_64__Red Hat, Inc.__Access control list utilities__GPLv3+__1704067200
+nettle 0:3.4.1-4.el8_3 x86_64__Red Hat, Inc.__A low-level cryptographic library__GPLv3+__1704067200
+libksba 0:1.3.5-7.el8 x86_64__Red Hat, Inc.__CMS and X.509 library__GPLv3+__1704067200
+dmidecode 1:3.2-8.el8 x86_64__Red Hat, Inc.__Tool to analyse BIOS DMI data__GPLv3+__1704067200
+libseccomp 0:2.5.1-1.el8 x86_64__Red Hat, Inc.__Enhanced seccomp library__GPLv3+__1704067200
+gawk 0:4.2.1-2.el8 x86_64__Red Hat, Inc.__The GNU version of the AWK text processing utility__GPLv3+__1704067200
+libnsl2 0:1.2.0-2.20180605git4a062cf.el8 x86_64__Red Hat, Inc.__Public client interface library for NIS(YP) and NIS+__GPLv3+__1704067200
+krb5-libs 0:1.18.2-8.3.el8_4 x86_64__Red Hat, Inc.__The non-admin shared libraries used by Kerberos 5__GPLv3+__1704067200
+crypto-policies 0:20210209-1.gitbfb6bed.el8_3 noarch__Red Hat, Inc.__System-wide crypto policies__GPLv3+__1704067200
+platform-python-setuptools 0:39.2.0-6.el8 noarch__Red Hat, Inc.__Easily build and distribute Python 3 packages__GPLv3+__1704067200
+python3-libs 0:3.6.8-39.el8_4 x86_64__Red Hat, Inc.__Python runtime libraries__GPLv3+__1704067200
+libpwquality 0:1.4.4-3.el8 x86_64__Red Hat, Inc.__A library for password generation and password quality checking__GPLv3+__1704067200
+python3-six 0:1.11.0-8.el8 noarch__Red Hat, Inc.__Python 2 and 3 compatibility utilities__GPLv3+__1704067200
+python3-dateutil 1:2.6.1-6.el8 noarch__Red Hat, Inc.__Powerful extensions to the standard datetime module__GPLv3+__1704067200
+glib2 0:2.56.4-10.el8_4.1 x86_64__Red Hat, Inc.__A library of handy utility functions__GPLv3+__1704067200
+librhsm 0:0.0.3-4.el8 x86_64__Red Hat, Inc.__Red Hat Subscription Manager library__GPLv3+__1704067200
+kmod-libs 0:25-17.el8 x86_64__Red Hat, Inc.__Libraries to handle kernel module loading and unloading__GPLv3+__1704067200
+python3-dbus 0:1.2.4-15.el8 x86_64__Red Hat, Inc.__D-Bus bindings for python3__GPLv3+__1704067200
+python3-gobject-base 0:3.28.3-2.el8 x86_64__Red Hat, Inc.__Python 3 bindings for GObject Introspection base package__GPLv3+__1704067200
+openldap 0:2.4.46-17.el8_4 x86_64__Red Hat, Inc.__LDAP support libraries__GPLv3+__1704067200
+passwd 0:0.80-3.el8 x86_64__Red Hat, Inc.__An utility for setting or changing passwords using PAM__GPLv3+__1704067200
+libdb-utils 0:5.3.28-42.el8_4 x86_64__Red Hat, Inc.__Command line tools for managing Berkeley DB databases__GPLv3+__1704067200
+python3-libcomps 0:0.1.11-5.el8 x86_64__Red Hat, Inc.__Python 3 bindings for libcomps library__GPLv3+__1704067200
+python3-dmidecode 0:3.12.2-15.el8 x86_64__Red Hat, Inc.__Python 3 module to access DMI data__GPLv3+__1704067200
+python3-decorator 0:4.2.1-2.el8 noarch__Red Hat, Inc.__Module to simplify usage of decorators in python3__GPLv3+__1704067200
+python3-inotify 0:0.9.6-13.el8 noarch__Red Hat, Inc.__Monitor filesystem events with Python under Linux__GPLv3+__1704067200
+python3-urllib3 0:1.24.2-5.el8 noarch__Red Hat, Inc.__Python3 HTTP library with thread-safe connection pooling and file post__GPLv3+__1704067200
+python3-syspurpose 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__A commandline utility for declaring system syspurpose__GPLv3+__1704067200
+tpm2-tss 0:2.3.2-3.el8 x86_64__Red Hat, Inc.__TPM2.0 Software Stack__GPLv3+__1704067200
+libyaml 0:0.1.7-5.el8 x86_64__Red Hat, Inc.__YAML 1.1 parser and emitter written in C__GPLv3+__1704067200
+gnupg2 0:2.2.20-2.el8 x86_64__Red Hat, Inc.__Utility for secure communication and data storage__GPLv3+__1704067200
+python3-gpg 0:1.13.1-7.el8 x86_64__Red Hat, Inc.__gpgme bindings for Python 3__GPLv3+__1704067200
+which 0:2.21-12.el8 x86_64__Red Hat, Inc.__Displays where a particular program in your path is located__GPLv3+__1704067200
+libssh-config 0:0.9.4-2.el8 noarch__Red Hat, Inc.__Configuration files for libssh__GPLv3+__1704067200
+libcurl 0:7.61.1-18.el8_4.2 x86_64__Red Hat, Inc.__A library for getting files from web servers__GPLv3+__1704067200
+python3-librepo 0:1.12.0-3.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the librepo library__GPLv3+__1704067200
+rpm 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__The RPM package management system__GPLv3+__1704067200
+libmodulemd 0:2.9.4-2.el8 x86_64__Red Hat, Inc.__Module metadata manipulation library__GPLv3+__1704067200
+libdnf 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Library providing simplified C and Python API to libsolv__GPLv3+__1704067200
+python3-hawkey 0:0.55.0-7.el8 x86_64__Red Hat, Inc.__Python 3 bindings for the hawkey library__GPLv3+__1704067200
+dnf-data 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Common data and configuration files for DNF__GPLv3+__1704067200
+pciutils 0:3.7.0-1.el8 x86_64__Red Hat, Inc.__PCI bus related utilities__GPLv3+__1704067200
+libibverbs 0:32.0-4.el8 x86_64__Red Hat, Inc.__A library and drivers for direct userspace use of RDMA (InfiniBand/iWARP/RoCE) hardware__GPLv3+__1704067200
+iptables-libs 0:1.8.4-17.el8_4.1 x86_64__Red Hat, Inc.__iptables libraries__GPLv3+__1704067200
+dbus-daemon 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS message bus__GPLv3+__1704067200
+device-mapper-libs 8:1.02.175-5.el8 x86_64__Red Hat, Inc.__Device-mapper shared library__GPLv3+__1704067200
+elfutils-default-yama-scope 0:0.182-3.el8 noarch__Red Hat, Inc.__Default yama attach scope sysctl setting__GPLv3+__1704067200
+systemd-pam 0:239-45.el8_4.3 x86_64__Red Hat, Inc.__systemd PAM module__GPLv3+__1704067200
+dbus 1:1.12.8-12.el8_4.2 x86_64__Red Hat, Inc.__D-BUS message bus__GPLv3+__1704067200
+python3-rpm 0:4.14.3-14.el8_4 x86_64__Red Hat, Inc.__Python 3 bindings for apps which will manipulate RPM packages__GPLv3+__1704067200
+dnf 0:4.4.2-11.el8 noarch__Red Hat, Inc.__Package manager__GPLv3+__1704067200
+dnf-plugin-subscription-manager 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Subscription Manager plugins for DNF__GPLv3+__1704067200
+subscription-manager 0:1.28.13-4.el8_4 x86_64__Red Hat, Inc.__Tools and libraries for subscription and repository management__GPLv3+__1704067200
+gdb-gdbserver 0:8.2-15.el8 x86_64__Red Hat, Inc.__A standalone server for GDB (the GNU source-level debugger)__GPLv3+__1704067200
+vim-minimal 2:8.0.1763-15.el8 x86_64__Red Hat, Inc.__A minimal version of the VIM editor__GPLv3+__1704067200
+langpacks-en 0:1.0-12.el8 noarch__Red Hat, Inc.__English langpacks meta-package__GPLv3+__1704067200
+gpg-pubkey 0:fd431d51-4ae0493b (none)__(none)__gpg(Red Hat, Inc. (release key 2) <security@redhat.com>)__(none)__(none)
 """
 
 [commands."rpm -ql which"]

@@ -105,7 +105,7 @@ Get-ItemProperty (@(
   'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
   'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
 ) | Where-Object { Test-Path $_ }) |
-Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation,PSPath | ConvertTo-Json -Compress
+Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation,InstallDate,PSPath | ConvertTo-Json -Compress
 `
 
 // We need to fill in the path collected from the registry
@@ -651,7 +651,12 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		EstimatedSize   int    `json:"EstimatedSize"`
 		UninstallString string `json:"UninstallString"`
 		InstallLocation string `json:"InstallLocation"`
-		PSPath          string `json:"PSPath"`
+		// InstallDate is the YYYYMMDD value set by most MSI installers.
+		// Many entries omit it (especially per-user installs and
+		// non-MSI publishers) — parseWinInstallDate returns the zero
+		// time in that case.
+		InstallDate string `json:"InstallDate"`
+		PSPath      string `json:"PSPath"`
 	}
 
 	var entries []powershellUninstallEntry
@@ -680,10 +685,27 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 			}
 		}
 		pkg := createPackage(entry.DisplayName, entry.DisplayVersion, "windows/app", arch, entry.Publisher, entry.InstallLocation, platform)
+		pkg.InstallDate = parseWinInstallDate(entry.InstallDate)
 		pkgs = append(pkgs, *pkg)
 	}
 
 	return pkgs, nil
+}
+
+// parseWinInstallDate converts the YYYYMMDD string set by most MSI
+// installers into a UTC time.Time at midnight. Returns the zero time on
+// empty input or any parse failure — typical registry entries from
+// per-user installs and many non-MSI publishers omit the field.
+func parseWinInstallDate(raw string) time.Time {
+	if raw == "" {
+		return time.Time{}
+	}
+	// Standard MSI format is YYYYMMDD (8 digits).
+	t, err := time.Parse("20060102", raw)
+	if err != nil {
+		return time.Time{}
+	}
+	return t
 }
 
 func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {

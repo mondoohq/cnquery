@@ -4,6 +4,8 @@
 package packages
 
 import (
+	"time"
+
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
@@ -53,6 +55,11 @@ type Package struct {
 	// Empty when the backend has no source for it (e.g. Windows
 	// registry — DisplayName has no license field).
 	License string `json:"license,omitempty"`
+
+	// Time the package was installed on this asset. Zero when the
+	// backend doesn't surface install time (dpkg-without-log, apk,
+	// pacman, macOS).
+	InstallDate time.Time `json:"install_date,omitempty"`
 }
 
 type FileRecord struct {

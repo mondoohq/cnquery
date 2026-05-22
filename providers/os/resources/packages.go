@@ -78,6 +78,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Files.State = plugin.StateIsSet | plugin.StateIsNull
 	res.License.State = plugin.StateIsSet | plugin.StateIsNull
+	res.InstallDate.State = plugin.StateIsSet | plugin.StateIsNull
 	res.__id, _ = res.id()
 	return nil, res, nil
 }
@@ -242,6 +243,20 @@ func (x *mqlPackages) list() ([]any, error) {
 		// fallback would never run.
 		if osPkg.License != "" {
 			pkgArgs["license"] = llx.StringData(osPkg.License)
+		}
+		// Install date: explicit null via llx.NilData when the backend
+		// didn't report one (dpkg / apk / pacman / macOS / rpm
+		// gpg-pubkey). The generated dispatcher routes Nil through
+		// RawToTValue[time.Time] which yields State=StateIsSet|
+		// StateIsNull — MQL surfaces that as a real null. Leaving the
+		// key absent from pkgArgs would leave the field in an entirely
+		// unset state and MQL fails with "no type information."
+		// Passing TimeData(zero) would surface the Go zero time
+		// (0001-01-01) as if it were a real install date.
+		if osPkg.InstallDate.IsZero() {
+			pkgArgs["installDate"] = llx.NilData
+		} else {
+			pkgArgs["installDate"] = llx.TimeData(osPkg.InstallDate)
 		}
 		pkg, err := CreateResource(x.MqlRuntime, "package", pkgArgs)
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -940,4 +941,43 @@ func TestFindAndUpdateMsExchangeSU_de(t *testing.T) {
 	require.NotNil(t, pkg)
 	require.Equal(t, "1.0.0", pkg.Version)
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestParseWinInstallDate(t *testing.T) {
+	// Happy path: YYYYMMDD as set by MSI installers.
+	got := parseWinInstallDate("20240315")
+	assert.Equal(t, time.Date(2024, time.March, 15, 0, 0, 0, 0, time.UTC), got)
+
+	// Empty input (most non-MSI publishers omit InstallDate).
+	assert.True(t, parseWinInstallDate("").IsZero())
+
+	// Garbage doesn't crash, just returns zero.
+	assert.True(t, parseWinInstallDate("not-a-date").IsZero())
+	assert.True(t, parseWinInstallDate("2024-03-15").IsZero()) // wrong format
+}
+
+func TestWindowsAppPackagesParserInstallDate(t *testing.T) {
+	// Two entries: one with InstallDate set, one missing it. Mirrors the
+	// real-world mix in the Uninstall registry.
+	jsonData := `[
+		{"DisplayName":"App With Date","DisplayVersion":"1.0","Publisher":"Acme","EstimatedSize":100,"InstallSource":null,"UninstallString":"uninstall","InstallLocation":"","InstallDate":"20240315","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{abc}"},
+		{"DisplayName":"App Without Date","DisplayVersion":"2.0","Publisher":"Acme","EstimatedSize":100,"InstallSource":null,"UninstallString":"uninstall","InstallLocation":"","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{def}"}
+	]`
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.17763",
+		Arch:    "amd64",
+		Family:  []string{"windows"},
+	}
+	pkgs, err := ParseWindowsAppPackages(pf, strings.NewReader(jsonData))
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pkgs))
+
+	withDate := findPkg(pkgs, "App With Date")
+	require.NotNil(t, withDate)
+	assert.Equal(t, time.Date(2024, time.March, 15, 0, 0, 0, 0, time.UTC), withDate.InstallDate)
+
+	withoutDate := findPkg(pkgs, "App Without Date")
+	require.NotNil(t, withoutDate)
+	assert.True(t, withoutDate.InstallDate.IsZero(), "missing InstallDate registry value yields zero time")
 }

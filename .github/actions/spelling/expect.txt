@@ -279,6 +279,7 @@ IMtn
 ingresstls
 initrdefi
 INPROGRESS
+INSTALLTIME
 iodef
 iotedge
 iothread

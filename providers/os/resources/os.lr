@@ -918,6 +918,15 @@ package @defaults("name version") {
   // (parses /usr/share/doc/<pkg>/copyright). Empty when no source
   // exists (e.g. Windows registry DisplayName).
   license() string
+
+  // Package install date
+  //
+  // Time the package was installed on this asset. Populated from
+  // %{INSTALLTIME} (rpm) and the InstallDate column of the Windows
+  // Uninstall registry. Returns the zero time on backends that have
+  // no install-time source (dpkg without log parsing, apk, pacman,
+  // macOS).
+  installDate time
 }
 
 // File installed by a package

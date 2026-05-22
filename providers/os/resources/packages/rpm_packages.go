@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
 	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
@@ -30,11 +31,11 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)(?:__(.+))?$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.+))?$`)
 
 // ParseRpmPackages parses output from:
 // %{MODULARITYLABEL} is only added on supported systems
-// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{MODULARITYLABEL}\n'
+// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
@@ -69,12 +70,22 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 				license = ""
 			}
 
-			modularity := ""
-			if len(m) > 8 {
-				modularity = m[8]
+			// %{INSTALLTIME} is an integer epoch in seconds; "(none)"
+			// only appears on packages that have never been recorded
+			// with a sane installtime (rare; gpg-pubkey is one such).
+			var installTime int64
+			if m[8] != "" && m[8] != "(none)" {
+				if v, err := strconv.ParseInt(m[8], 10, 64); err == nil {
+					installTime = v
+				}
 			}
 
-			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], license, modularity)
+			modularity := ""
+			if len(m) > 9 {
+				modularity = m[9]
+			}
+
+			pkg := newRpmPackage(pf, name, version, arch, epoch, vendor, m[6], license, modularity, installTime)
 			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
 			pkgs = append(pkgs, pkg)
 
@@ -83,7 +94,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	return pkgs
 }
 
-func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, license, modularity string) Package {
+func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, description, license, modularity string, installTime int64) Package {
 	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
 	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
 	// increase the binary.
@@ -104,7 +115,7 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 	if modularity != "" && modularity != "(none)" {
 		qualifiers["rpmmod"] = modularity
 	}
-	return Package{
+	pkg := Package{
 		Name:        name,
 		Version:     version,
 		Epoch:       epoch,
@@ -120,6 +131,10 @@ func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, vendor, d
 			purl.WithQualifiers(qualifiers),
 		).String(),
 	}
+	if installTime > 0 {
+		pkg.InstallDate = time.Unix(installTime, 0).UTC()
+	}
+	return pkg
 }
 
 // matches a closed pair of angle brackets with any number of characters inside.
@@ -208,14 +223,14 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}" + modularity + "\\n"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}" + modularity + "\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}" + modularity + "\\n"
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}" + modularity + "\\n"
 	}
 
 	return format
@@ -320,7 +335,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			version = version + "-" + pkg.Release
 		}
 
-		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.License, pkg.Modularitylabel)
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, version, pkg.Arch, epoch, cleanupVendorName(pkg.Vendor), pkg.Summary, pkg.License, pkg.Modularitylabel, int64(pkg.InstallTime))
 
 		rpmPkg.FilesAvailable = PkgFilesIncluded
 		rpmPkg.Files = []FileRecord{
