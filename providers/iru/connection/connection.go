@@ -165,7 +165,11 @@ func (c *IruConnection) ListBlueprints() ([]client.Blueprint, error) {
 		return c.blueprintsCached, c.blueprintsErr
 	}
 	c.blueprintsCached, c.blueprintsErr = c.Client.ListBlueprints()
-	c.blueprintsDone = true
+	// Only mark done on success so a transient network error doesn't poison
+	// the cache for the connection's lifetime; subsequent calls will retry.
+	if c.blueprintsErr == nil {
+		c.blueprintsDone = true
+	}
 	return c.blueprintsCached, c.blueprintsErr
 }
 
@@ -178,7 +182,9 @@ func (c *IruConnection) ListUsers() ([]client.User, error) {
 		return c.usersCached, c.usersErr
 	}
 	c.usersCached, c.usersErr = c.Client.ListUsers()
-	c.usersDone = true
+	if c.usersErr == nil {
+		c.usersDone = true
+	}
 	return c.usersCached, c.usersErr
 }
 
@@ -191,6 +197,8 @@ func (c *IruConnection) ListLibraryItems() ([]client.LibraryItem, error) {
 		return c.libraryItemsCached, c.libraryItemsErr
 	}
 	c.libraryItemsCached, c.libraryItemsErr = c.Client.ListLibraryItems()
-	c.libraryItemsDone = true
+	if c.libraryItemsErr == nil {
+		c.libraryItemsDone = true
+	}
 	return c.libraryItemsCached, c.libraryItemsErr
 }

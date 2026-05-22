@@ -5,6 +5,7 @@ package client
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 )
 
@@ -174,7 +175,7 @@ func (c *Client) ListDevices() ([]Device, error) {
 // GetDeviceDetails fetches /v1/devices/{id}/details.
 func (c *Client) GetDeviceDetails(id string) (*DeviceDetails, error) {
 	var out DeviceDetails
-	if err := c.do("/api/v1/devices/"+id+"/details", nil, &out); err != nil {
+	if err := c.do("/api/v1/devices/"+url.PathEscape(id)+"/details", nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -184,7 +185,7 @@ func (c *Client) GetDeviceDetails(id string) (*DeviceDetails, error) {
 // bare array of apps or an envelope with `apps`/`results`; we tolerate both.
 func (c *Client) GetDeviceApps(id string) ([]App, error) {
 	var raw json.RawMessage
-	if err := c.do("/api/v1/devices/"+id+"/apps", nil, &raw); err != nil {
+	if err := c.do("/api/v1/devices/"+url.PathEscape(id)+"/apps", nil, &raw); err != nil {
 		return nil, err
 	}
 	if len(raw) == 0 {
