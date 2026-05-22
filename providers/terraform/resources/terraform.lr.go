@@ -32,6 +32,14 @@ const (
 	ResourceTerraformPlanVariable             string = "terraform.plan.variable"
 	ResourceTerraformPlanResourceChange       string = "terraform.plan.resourceChange"
 	ResourceTerraformPlanProposedChange       string = "terraform.plan.proposedChange"
+	ResourceTerraformVariable                 string = "terraform.variable"
+	ResourceTerraformLocal                    string = "terraform.local"
+	ResourceTerraformOutput                   string = "terraform.output"
+	ResourceTerraformProviderConfig           string = "terraform.providerConfig"
+	ResourceTerraformDataSource               string = "terraform.dataSource"
+	ResourceTerraformResource                 string = "terraform.resource"
+	ResourceTerraformLifecycle                string = "terraform.lifecycle"
+	ResourceTerraformCondition                string = "terraform.condition"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -105,6 +113,38 @@ func init() {
 		"terraform.plan.proposedChange": {
 			// to override args, implement: initTerraformPlanProposedChange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformPlanProposedChange,
+		},
+		"terraform.variable": {
+			// to override args, implement: initTerraformVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformVariable,
+		},
+		"terraform.local": {
+			// to override args, implement: initTerraformLocal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformLocal,
+		},
+		"terraform.output": {
+			// to override args, implement: initTerraformOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformOutput,
+		},
+		"terraform.providerConfig": {
+			// to override args, implement: initTerraformProviderConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformProviderConfig,
+		},
+		"terraform.dataSource": {
+			// to override args, implement: initTerraformDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformDataSource,
+		},
+		"terraform.resource": {
+			// to override args, implement: initTerraformResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformResource,
+		},
+		"terraform.lifecycle": {
+			// to override args, implement: initTerraformLifecycle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformLifecycle,
+		},
+		"terraform.condition": {
+			// to override args, implement: initTerraformCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformCondition,
 		},
 	}
 }
@@ -200,6 +240,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"terraform.outputs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraform).GetOutputs()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.variableDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetVariableDecls()).ToDataRes(types.Array(types.Resource("terraform.variable")))
+	},
+	"terraform.localDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetLocalDecls()).ToDataRes(types.Array(types.Resource("terraform.local")))
+	},
+	"terraform.outputDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetOutputDecls()).ToDataRes(types.Array(types.Resource("terraform.output")))
+	},
+	"terraform.providerDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetProviderDecls()).ToDataRes(types.Array(types.Resource("terraform.providerConfig")))
+	},
+	"terraform.dataSourceDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetDataSourceDecls()).ToDataRes(types.Array(types.Resource("terraform.dataSource")))
+	},
+	"terraform.resourceDecls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetResourceDecls()).ToDataRes(types.Array(types.Resource("terraform.resource")))
 	},
 	"terraform.resources.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformResources).GetList()).ToDataRes(types.Array(types.Resource("terraform.block")))
@@ -438,6 +496,138 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.plan.proposedChange.replacePaths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPlanProposedChange).GetReplacePaths()).ToDataRes(types.Dict)
 	},
+	"terraform.variable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetName()).ToDataRes(types.String)
+	},
+	"terraform.variable.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetType()).ToDataRes(types.String)
+	},
+	"terraform.variable.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetDefault()).ToDataRes(types.Dict)
+	},
+	"terraform.variable.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetDescription()).ToDataRes(types.String)
+	},
+	"terraform.variable.sensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetSensitive()).ToDataRes(types.Bool)
+	},
+	"terraform.variable.nullable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetNullable()).ToDataRes(types.Bool)
+	},
+	"terraform.variable.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformVariable).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.local.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLocal).GetName()).ToDataRes(types.String)
+	},
+	"terraform.local.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLocal).GetValue()).ToDataRes(types.Dict)
+	},
+	"terraform.local.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLocal).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.output.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformOutput).GetName()).ToDataRes(types.String)
+	},
+	"terraform.output.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformOutput).GetValue()).ToDataRes(types.Dict)
+	},
+	"terraform.output.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformOutput).GetDescription()).ToDataRes(types.String)
+	},
+	"terraform.output.sensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformOutput).GetSensitive()).ToDataRes(types.Bool)
+	},
+	"terraform.output.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformOutput).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.providerConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformProviderConfig).GetName()).ToDataRes(types.String)
+	},
+	"terraform.providerConfig.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformProviderConfig).GetAlias()).ToDataRes(types.String)
+	},
+	"terraform.providerConfig.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformProviderConfig).GetVersion()).ToDataRes(types.String)
+	},
+	"terraform.providerConfig.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformProviderConfig).GetConfig()).ToDataRes(types.Dict)
+	},
+	"terraform.providerConfig.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformProviderConfig).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.dataSource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDataSource).GetType()).ToDataRes(types.String)
+	},
+	"terraform.dataSource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDataSource).GetName()).ToDataRes(types.String)
+	},
+	"terraform.dataSource.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDataSource).GetProvider()).ToDataRes(types.String)
+	},
+	"terraform.dataSource.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDataSource).GetArguments()).ToDataRes(types.Dict)
+	},
+	"terraform.dataSource.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDataSource).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.resource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetType()).ToDataRes(types.String)
+	},
+	"terraform.resource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetName()).ToDataRes(types.String)
+	},
+	"terraform.resource.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetProvider()).ToDataRes(types.String)
+	},
+	"terraform.resource.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetArguments()).ToDataRes(types.Dict)
+	},
+	"terraform.resource.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetCount()).ToDataRes(types.Dict)
+	},
+	"terraform.resource.forEach": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetForEach()).ToDataRes(types.Dict)
+	},
+	"terraform.resource.dependsOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetDependsOn()).ToDataRes(types.Array(types.String))
+	},
+	"terraform.resource.lifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetLifecycle()).ToDataRes(types.Resource("terraform.lifecycle"))
+	},
+	"terraform.resource.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.lifecycle.createBeforeDestroy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetCreateBeforeDestroy()).ToDataRes(types.Bool)
+	},
+	"terraform.lifecycle.preventDestroy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetPreventDestroy()).ToDataRes(types.Bool)
+	},
+	"terraform.lifecycle.ignoreChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetIgnoreChanges()).ToDataRes(types.Array(types.String))
+	},
+	"terraform.lifecycle.replaceTriggeredBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetReplaceTriggeredBy()).ToDataRes(types.Array(types.String))
+	},
+	"terraform.lifecycle.preconditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetPreconditions()).ToDataRes(types.Array(types.Resource("terraform.condition")))
+	},
+	"terraform.lifecycle.postconditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetPostconditions()).ToDataRes(types.Array(types.Resource("terraform.condition")))
+	},
+	"terraform.lifecycle.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformLifecycle).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.condition.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformCondition).GetCondition()).ToDataRes(types.String)
+	},
+	"terraform.condition.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformCondition).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"terraform.condition.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformCondition).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -484,6 +674,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.outputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraform).Outputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.variableDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).VariableDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.localDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).LocalDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.outputDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).OutputDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.providerDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).ProviderDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSourceDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).DataSourceDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.resourceDecls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).ResourceDecls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"terraform.resources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -866,6 +1080,214 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTerraformPlanProposedChange).ReplacePaths, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"terraform.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.variable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Default, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.sensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Sensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.nullable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Nullable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.variable.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformVariable).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.local.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLocal).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.local.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLocal).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.local.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLocal).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.local.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLocal).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.output.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.output.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.output.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.output.sensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).Sensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.output.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformOutput).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.providerConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.providerConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.providerConfig.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.providerConfig.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.providerConfig.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.providerConfig.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformProviderConfig).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.dataSource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSource.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSource.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).Arguments, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.dataSource.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDataSource).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.resource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Arguments, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Count, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.forEach": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).ForEach, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Lifecycle, ok = plugin.RawToTValue[*mqlTerraformLifecycle](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.lifecycle.createBeforeDestroy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).CreateBeforeDestroy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.preventDestroy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).PreventDestroy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.ignoreChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).IgnoreChanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.replaceTriggeredBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).ReplaceTriggeredBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.preconditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).Preconditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.postconditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).Postconditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.lifecycle.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformLifecycle).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.condition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.condition.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformCondition).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.condition.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformCondition).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.condition.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformCondition).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -895,14 +1317,20 @@ type mqlTerraform struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlTerraformInternal
-	Files       plugin.TValue[[]any]
-	Tfvars      plugin.TValue[any]
-	Modules     plugin.TValue[[]any]
-	Blocks      plugin.TValue[[]any]
-	Providers   plugin.TValue[[]any]
-	Datasources plugin.TValue[[]any]
-	Variables   plugin.TValue[[]any]
-	Outputs     plugin.TValue[[]any]
+	Files           plugin.TValue[[]any]
+	Tfvars          plugin.TValue[any]
+	Modules         plugin.TValue[[]any]
+	Blocks          plugin.TValue[[]any]
+	Providers       plugin.TValue[[]any]
+	Datasources     plugin.TValue[[]any]
+	Variables       plugin.TValue[[]any]
+	Outputs         plugin.TValue[[]any]
+	VariableDecls   plugin.TValue[[]any]
+	LocalDecls      plugin.TValue[[]any]
+	OutputDecls     plugin.TValue[[]any]
+	ProviderDecls   plugin.TValue[[]any]
+	DataSourceDecls plugin.TValue[[]any]
+	ResourceDecls   plugin.TValue[[]any]
 }
 
 // createTerraform creates a new instance of this resource
@@ -1052,6 +1480,102 @@ func (c *mqlTerraform) GetOutputs() *plugin.TValue[[]any] {
 		}
 
 		return c.outputs()
+	})
+}
+
+func (c *mqlTerraform) GetVariableDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VariableDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "variableDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variableDecls()
+	})
+}
+
+func (c *mqlTerraform) GetLocalDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LocalDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "localDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.localDecls()
+	})
+}
+
+func (c *mqlTerraform) GetOutputDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OutputDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "outputDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.outputDecls()
+	})
+}
+
+func (c *mqlTerraform) GetProviderDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProviderDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "providerDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.providerDecls()
+	})
+}
+
+func (c *mqlTerraform) GetDataSourceDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataSourceDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "dataSourceDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataSourceDecls()
+	})
+}
+
+func (c *mqlTerraform) GetResourceDecls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceDecls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "resourceDecls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceDecls()
 	})
 }
 
@@ -2300,4 +2824,608 @@ func (c *mqlTerraformPlanProposedChange) GetAfterSensitive() *plugin.TValue[any]
 
 func (c *mqlTerraformPlanProposedChange) GetReplacePaths() *plugin.TValue[any] {
 	return &c.ReplacePaths
+}
+
+// mqlTerraformVariable for the terraform.variable resource
+type mqlTerraformVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformVariableInternal
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Default     plugin.TValue[any]
+	Description plugin.TValue[string]
+	Sensitive   plugin.TValue[bool]
+	Nullable    plugin.TValue[bool]
+	Block       plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformVariable creates a new instance of this resource
+func createTerraformVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformVariable) MqlName() string {
+	return "terraform.variable"
+}
+
+func (c *mqlTerraformVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformVariable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformVariable) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlTerraformVariable) GetDefault() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Default, func() (any, error) {
+		return c.compute_default()
+	})
+}
+
+func (c *mqlTerraformVariable) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlTerraformVariable) GetSensitive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Sensitive, func() (bool, error) {
+		return c.sensitive()
+	})
+}
+
+func (c *mqlTerraformVariable) GetNullable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Nullable, func() (bool, error) {
+		return c.nullable()
+	})
+}
+
+func (c *mqlTerraformVariable) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformLocal for the terraform.local resource
+type mqlTerraformLocal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformLocalInternal
+	Name  plugin.TValue[string]
+	Value plugin.TValue[any]
+	Block plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformLocal creates a new instance of this resource
+func createTerraformLocal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformLocal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.local", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformLocal) MqlName() string {
+	return "terraform.local"
+}
+
+func (c *mqlTerraformLocal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformLocal) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformLocal) GetValue() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Value, func() (any, error) {
+		return c.value()
+	})
+}
+
+func (c *mqlTerraformLocal) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformOutput for the terraform.output resource
+type mqlTerraformOutput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformOutputInternal
+	Name        plugin.TValue[string]
+	Value       plugin.TValue[any]
+	Description plugin.TValue[string]
+	Sensitive   plugin.TValue[bool]
+	Block       plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformOutput creates a new instance of this resource
+func createTerraformOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformOutput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.output", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformOutput) MqlName() string {
+	return "terraform.output"
+}
+
+func (c *mqlTerraformOutput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformOutput) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformOutput) GetValue() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Value, func() (any, error) {
+		return c.value()
+	})
+}
+
+func (c *mqlTerraformOutput) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlTerraformOutput) GetSensitive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Sensitive, func() (bool, error) {
+		return c.sensitive()
+	})
+}
+
+func (c *mqlTerraformOutput) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformProviderConfig for the terraform.providerConfig resource
+type mqlTerraformProviderConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformProviderConfigInternal
+	Name    plugin.TValue[string]
+	Alias   plugin.TValue[string]
+	Version plugin.TValue[string]
+	Config  plugin.TValue[any]
+	Block   plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformProviderConfig creates a new instance of this resource
+func createTerraformProviderConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformProviderConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.providerConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformProviderConfig) MqlName() string {
+	return "terraform.providerConfig"
+}
+
+func (c *mqlTerraformProviderConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformProviderConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformProviderConfig) GetAlias() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Alias, func() (string, error) {
+		return c.alias()
+	})
+}
+
+func (c *mqlTerraformProviderConfig) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlTerraformProviderConfig) GetConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Config, func() (any, error) {
+		return c.config()
+	})
+}
+
+func (c *mqlTerraformProviderConfig) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformDataSource for the terraform.dataSource resource
+type mqlTerraformDataSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformDataSourceInternal
+	Type      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Provider  plugin.TValue[string]
+	Arguments plugin.TValue[any]
+	Block     plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformDataSource creates a new instance of this resource
+func createTerraformDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformDataSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.dataSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformDataSource) MqlName() string {
+	return "terraform.dataSource"
+}
+
+func (c *mqlTerraformDataSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformDataSource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlTerraformDataSource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformDataSource) GetProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Provider, func() (string, error) {
+		return c.provider()
+	})
+}
+
+func (c *mqlTerraformDataSource) GetArguments() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Arguments, func() (any, error) {
+		return c.arguments()
+	})
+}
+
+func (c *mqlTerraformDataSource) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformResource for the terraform.resource resource
+type mqlTerraformResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformResourceInternal
+	Type      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Provider  plugin.TValue[string]
+	Arguments plugin.TValue[any]
+	Count     plugin.TValue[any]
+	ForEach   plugin.TValue[any]
+	DependsOn plugin.TValue[[]any]
+	Lifecycle plugin.TValue[*mqlTerraformLifecycle]
+	Block     plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformResource creates a new instance of this resource
+func createTerraformResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformResource) MqlName() string {
+	return "terraform.resource"
+}
+
+func (c *mqlTerraformResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformResource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlTerraformResource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformResource) GetProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Provider, func() (string, error) {
+		return c.provider()
+	})
+}
+
+func (c *mqlTerraformResource) GetArguments() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Arguments, func() (any, error) {
+		return c.arguments()
+	})
+}
+
+func (c *mqlTerraformResource) GetCount() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Count, func() (any, error) {
+		return c.count()
+	})
+}
+
+func (c *mqlTerraformResource) GetForEach() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ForEach, func() (any, error) {
+		return c.forEach()
+	})
+}
+
+func (c *mqlTerraformResource) GetDependsOn() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DependsOn, func() ([]any, error) {
+		return c.dependsOn()
+	})
+}
+
+func (c *mqlTerraformResource) GetLifecycle() *plugin.TValue[*mqlTerraformLifecycle] {
+	return plugin.GetOrCompute[*mqlTerraformLifecycle](&c.Lifecycle, func() (*mqlTerraformLifecycle, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.resource", c.__id, "lifecycle")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformLifecycle), nil
+			}
+		}
+
+		return c.lifecycle()
+	})
+}
+
+func (c *mqlTerraformResource) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformLifecycle for the terraform.lifecycle resource
+type mqlTerraformLifecycle struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformLifecycleInternal
+	CreateBeforeDestroy plugin.TValue[bool]
+	PreventDestroy      plugin.TValue[bool]
+	IgnoreChanges       plugin.TValue[[]any]
+	ReplaceTriggeredBy  plugin.TValue[[]any]
+	Preconditions       plugin.TValue[[]any]
+	Postconditions      plugin.TValue[[]any]
+	Block               plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformLifecycle creates a new instance of this resource
+func createTerraformLifecycle(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformLifecycle{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.lifecycle", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformLifecycle) MqlName() string {
+	return "terraform.lifecycle"
+}
+
+func (c *mqlTerraformLifecycle) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformLifecycle) GetCreateBeforeDestroy() *plugin.TValue[bool] {
+	return &c.CreateBeforeDestroy
+}
+
+func (c *mqlTerraformLifecycle) GetPreventDestroy() *plugin.TValue[bool] {
+	return &c.PreventDestroy
+}
+
+func (c *mqlTerraformLifecycle) GetIgnoreChanges() *plugin.TValue[[]any] {
+	return &c.IgnoreChanges
+}
+
+func (c *mqlTerraformLifecycle) GetReplaceTriggeredBy() *plugin.TValue[[]any] {
+	return &c.ReplaceTriggeredBy
+}
+
+func (c *mqlTerraformLifecycle) GetPreconditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Preconditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.lifecycle", c.__id, "preconditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.preconditions()
+	})
+}
+
+func (c *mqlTerraformLifecycle) GetPostconditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Postconditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.lifecycle", c.__id, "postconditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.postconditions()
+	})
+}
+
+func (c *mqlTerraformLifecycle) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
+}
+
+// mqlTerraformCondition for the terraform.condition resource
+type mqlTerraformCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformConditionInternal
+	Condition    plugin.TValue[string]
+	ErrorMessage plugin.TValue[string]
+	Block        plugin.TValue[*mqlTerraformBlock]
+}
+
+// createTerraformCondition creates a new instance of this resource
+func createTerraformCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.condition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformCondition) MqlName() string {
+	return "terraform.condition"
+}
+
+func (c *mqlTerraformCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformCondition) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlTerraformCondition) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlTerraformCondition) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
+	return &c.Block
 }

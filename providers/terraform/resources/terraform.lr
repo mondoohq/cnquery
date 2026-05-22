@@ -21,14 +21,54 @@ terraform {
   modules() []terraform.module
   // Raw HCL blocks
   blocks() []terraform.block
-  // Provider blocks
-  providers() []terraform.block
-  // Data sources blocks
-  datasources() []terraform.block
-  // Variable blocks
-  variables() []terraform.block
-  // Output blocks
-  outputs() []terraform.block
+  // DEPRECATED: use providerDecls instead
+  providers() @maturity("deprecated") []terraform.block
+  // DEPRECATED: use dataSourceDecls instead
+  datasources() @maturity("deprecated") []terraform.block
+  // DEPRECATED: use variableDecls instead
+  variables() @maturity("deprecated") []terraform.block
+  // DEPRECATED: use outputDecls instead
+  outputs() @maturity("deprecated") []terraform.block
+  // Variable declarations
+  //
+  // Every `variable "name" { ... }` block declared in the parsed
+  // configuration, with each variable's declared type, default value,
+  // description, and sensitivity / nullability flags surfaced as typed
+  // fields.
+  variableDecls() []terraform.variable
+  // Local value declarations
+  //
+  // Every entry across all `locals { ... }` blocks, flattened into one
+  // record per local. Each record carries the local's name, value, and
+  // a reference to the surrounding `locals` block for source location.
+  localDecls() []terraform.local
+  // Output declarations
+  //
+  // Every `output "name" { ... }` block in the parsed configuration,
+  // with the declared value expression, description, and sensitive
+  // flag surfaced as typed fields.
+  outputDecls() []terraform.output
+  // Provider configuration blocks
+  //
+  // Every `provider "name" { ... }` configuration block in the parsed
+  // configuration, with alias, legacy version constraint, and the
+  // remaining provider configuration arguments surfaced as typed
+  // fields.
+  providerDecls() []terraform.providerConfig
+  // Data source declarations
+  //
+  // Every `data "type" "name" { ... }` block in the parsed
+  // configuration, with the data source type, local name, derived
+  // owning provider, and arguments surfaced as typed fields.
+  dataSourceDecls() []terraform.dataSource
+  // Managed resource declarations
+  //
+  // Every `resource "type" "name" { ... }` block in the parsed
+  // configuration, with the resource type, local name, derived owning
+  // provider, configuration arguments, meta-arguments (`count`,
+  // `for_each`, `depends_on`), and `lifecycle` sub-block surfaced as
+  // typed fields.
+  resourceDecls() []terraform.resource
 }
 
 // Terraform resource blocks
@@ -322,4 +362,203 @@ terraform.plan.proposedChange @defaults("actions after") {
   beforeSensitive dict
   afterSensitive dict
   replacePaths dict
+}
+
+// Terraform input variable declaration
+//
+// Examine a single `variable "name" { ... }` block: the variable's
+// local name, the raw text of its declared `type` constraint (e.g.
+// `string`, `list(string)`, `object({...})`), the `default` value as
+// a dict so any Terraform value shape is preserved, the human
+// description, and the `sensitive` / `nullable` flags. The underlying
+// HCL block is available through `block` for access to source
+// location and raw attributes.
+private terraform.variable @defaults("name type") {
+  // Variable name
+  name string
+  // Declared type constraint as the raw HCL expression source
+  type string
+  // Default value, or null if no default is declared
+  default() dict
+  // Description string
+  description() string
+  // Whether the variable is marked sensitive
+  sensitive() bool
+  // Whether the variable may take the null value
+  nullable() bool
+  // Underlying HCL block
+  block terraform.block
+}
+
+// Terraform local value declaration
+//
+// Examine a single named entry inside a `locals { ... }` block. One
+// `locals` block can declare many locals, so each attribute becomes
+// its own `terraform.local` record. The `block` field points back at
+// the enclosing `locals` block for source location and grouping.
+private terraform.local @defaults("name") {
+  // Local value name (attribute key inside `locals { ... }`)
+  name string
+  // Local value
+  value() dict
+  // Enclosing `locals { ... }` HCL block
+  block terraform.block
+}
+
+// Terraform output declaration
+//
+// Examine a single `output "name" { ... }` block: the output's local
+// name, the declared `value` expression resolved to a dict so any
+// Terraform value shape is preserved, the human description, and the
+// `sensitive` flag indicating whether Terraform should redact the
+// value.
+private terraform.output @defaults("name") {
+  // Output name
+  name string
+  // Output value expression
+  value() dict
+  // Description string
+  description() string
+  // Whether the output is marked sensitive
+  sensitive() bool
+  // Underlying HCL block
+  block terraform.block
+}
+
+// Terraform provider configuration block
+//
+// Examine a single `provider "name" { ... }` configuration block:
+// the provider's local name, the optional `alias` that selects a
+// non-default configuration, the legacy `version` constraint when
+// present (modern configurations use `required_providers` instead),
+// and the remaining provider configuration arguments collected into
+// a dict.
+private terraform.providerConfig @defaults("name alias") {
+  // Provider local name (e.g. "aws", "google")
+  name string
+  // Provider configuration alias
+  //
+  // Empty when the block defines the default configuration for this
+  // provider.
+  alias() string
+  // Legacy `version` constraint declared on this block
+  //
+  // Empty when not set; modern configurations declare version
+  // constraints in `terraform { required_providers { ... } }` instead.
+  version() string
+  // Remaining provider configuration arguments
+  //
+  // Includes region, profile, assume_role, and any other provider
+  // configuration attributes; alias and the legacy version constraint
+  // are surfaced as separate fields.
+  config() dict
+  // Underlying HCL block
+  block terraform.block
+}
+
+// Terraform data source declaration
+//
+// Examine a single `data "type" "name" { ... }` block: the data
+// source type, the local name, the derived owning provider (the
+// substring of the type before the first underscore — `aws` for
+// `aws_caller_identity`), and the block's configuration arguments
+// collected into a dict.
+private terraform.dataSource @defaults("type name") {
+  // Data source type (e.g. "aws_caller_identity")
+  type string
+  // Data source local name
+  name string
+  // Owning provider derived from the type prefix
+  //
+  // For example, "aws" for "aws_caller_identity". Empty when the type
+  // has no underscore.
+  provider() string
+  // Data source configuration arguments
+  arguments() dict
+  // Underlying HCL block
+  block terraform.block
+}
+
+// Terraform managed resource declaration
+//
+// Examine a single `resource "type" "name" { ... }` block: the
+// resource type, local name, derived owning provider, configuration
+// arguments, the `count` / `for_each` meta-argument expressions (or
+// null when not used), the static `depends_on` list, and the typed
+// `lifecycle` sub-block if one is declared.
+private terraform.resource @defaults("type name") {
+  // Resource type (e.g. "aws_s3_bucket")
+  type string
+  // Resource local name
+  name string
+  // Owning provider derived from the type prefix
+  //
+  // For example, "aws" for "aws_s3_bucket". Empty when the type has
+  // no underscore.
+  provider() string
+  // Resource configuration arguments
+  //
+  // The attribute map of the resource body, excluding meta-arguments
+  // (`count`, `for_each`, `depends_on`, `provider`) and the
+  // `lifecycle` sub-block, which are surfaced as their own fields.
+  arguments() dict
+  // `count` meta-argument expression, or null when not declared
+  count() dict
+  // `for_each` meta-argument expression, or null when not declared
+  forEach() dict
+  // `depends_on` reference list
+  //
+  // List of reference strings (e.g. "aws_s3_bucket.logs"); empty
+  // when not declared.
+  dependsOn() []string
+  // Typed view of the `lifecycle` sub-block
+  //
+  // Null when no `lifecycle { ... }` block is declared on this
+  // resource.
+  lifecycle() terraform.lifecycle
+  // Underlying HCL block
+  block terraform.block
+}
+
+// Terraform resource lifecycle block
+//
+// Examine the `lifecycle { ... }` sub-block of a resource: the
+// `create_before_destroy` / `prevent_destroy` flags, the
+// `ignore_changes` attribute list (the literal "all" sentinel is
+// preserved as a single-element list), the `replace_triggered_by`
+// reference list, and the typed `precondition` / `postcondition`
+// custom-condition blocks.
+private terraform.lifecycle @defaults("preventDestroy createBeforeDestroy") {
+  // Whether `create_before_destroy` is set; false when omitted
+  createBeforeDestroy bool
+  // Whether `prevent_destroy` is set; false when omitted
+  preventDestroy bool
+  // Attribute paths listed in `ignore_changes`
+  //
+  // A bare `all` token is preserved as the single element "all".
+  ignoreChanges []string
+  // Reference strings listed in `replace_triggered_by`
+  //
+  // Empty when not declared.
+  replaceTriggeredBy []string
+  // `precondition` custom-condition blocks
+  preconditions() []terraform.condition
+  // `postcondition` custom-condition blocks
+  postconditions() []terraform.condition
+  // Underlying HCL `lifecycle` block
+  block terraform.block
+}
+
+// Terraform custom-condition block
+//
+// Examine a single `precondition` or `postcondition` sub-block:
+// the raw `condition` expression source, and the
+// `error_message` string emitted when the condition does not hold.
+private terraform.condition @defaults("errorMessage") {
+  // Raw `condition` expression source
+  condition string
+  // `error_message` value
+  errorMessage string
+  // Underlying HCL `precondition` / `postcondition` block
+  block terraform.block
 }

@@ -32,6 +32,7 @@ type mqlTerraformInternal struct {
 	terraformBlocks []*mqlTerraformBlock
 	lock            sync.Mutex
 	resources       []*mqlTerraformBlock
+	localsBlocks    []*mqlTerraformBlock
 }
 
 func (t *mqlTerraform) files() ([]any, error) {
@@ -130,6 +131,7 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 	t.Outputs.State = plugin.StateIsSet
 	t.Outputs.Data = []any{}
 	t.terraformBlocks = []*mqlTerraformBlock{}
+	t.mqlTerraformInternal.localsBlocks = []*mqlTerraformBlock{}
 
 	for i := range blocks {
 		block := blocks[i].(*mqlTerraformBlock)
@@ -148,6 +150,8 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 			t.Variables.Data = append(t.Variables.Data, block)
 		case "output":
 			t.Outputs.Data = append(t.Outputs.Data, block)
+		case "locals":
+			t.mqlTerraformInternal.localsBlocks = append(t.mqlTerraformInternal.localsBlocks, block)
 		case "terraform":
 			t.terraformBlocks = append(t.terraformBlocks, block)
 		default:
