@@ -66,6 +66,8 @@ digitalocean {
   tags() []digitalocean.tag
   // Spaces access keys
   spacesKeys() []digitalocean.spacesKey
+  // Spaces (S3-compatible object storage) buckets — requires Spaces credentials (DIGITALOCEAN_SPACES_KEY / _SECRET)
+  spacesBuckets() []digitalocean.spacesBucket
 }
 
 // DigitalOcean account
@@ -191,8 +193,11 @@ digitalocean.firewall @defaults("id name status") {
 // `projectId`, the `privateNetworkUuid` and resolved `vpc()`, the
 // public and private connection host and port, the `firewallRules()`
 // controlling trusted sources, the `evictionPolicy()` (Redis/Valkey),
-// the maintenance window, and the typed children `users()`,
-// `replicas()`, and `pools()`.
+// the maintenance window, the typed children `users()`, `replicas()`,
+// and `pools()`, the rolling list of automated `backups()` plus the
+// derived `latestBackupAt` / `backupCount`, and the
+// `caCertificate()` clients use to verify the cluster's TLS
+// endpoint.
 digitalocean.database @defaults("id name engine") {
   // Database cluster ID
   id string
@@ -246,6 +251,30 @@ digitalocean.database @defaults("id name engine") {
   replicas() []digitalocean.database.replica
   // Connection pools
   pools() []digitalocean.database.pool
+  // Automated backups currently retained for the cluster
+  backups() []digitalocean.database.backup
+  // Timestamp of the most recent automated backup; zero when no backups are retained
+  latestBackupAt() time
+  // Number of automated backups currently retained
+  backupCount() int
+  // PEM-encoded X.509 CA certificate that signs the cluster's TLS endpoint (clients use this to verify connections)
+  caCertificate() string
+}
+
+// DigitalOcean database automated backup
+//
+// Examine a single automated backup retained for the parent cluster.
+// Surfaces the `createdAt` time and the on-disk `sizeGigabytes`. Use
+// these to verify that backups are being taken on the expected
+// cadence (no large gap in `createdAt`) and that backup size growth
+// is tracking actual data growth.
+private digitalocean.database.backup @defaults("databaseId createdAt sizeGigabytes") {
+  // ID of the parent database cluster
+  databaseId string
+  // Time the backup was created
+  createdAt time
+  // Backup size in gigabytes
+  sizeGigabytes float
 }
 
 // DigitalOcean database user
@@ -785,6 +814,62 @@ digitalocean.spacesKey @defaults("name accessKey") {
   grants []dict
   // Time the resource was created
   createdAt time
+}
+
+// DigitalOcean Spaces bucket
+//
+// Examine a Spaces bucket — DigitalOcean's S3-compatible object
+// storage. Auditing requires Spaces credentials supplied via
+// `DIGITALOCEAN_SPACES_KEY` and `DIGITALOCEAN_SPACES_SECRET`
+// environment variables (an optional `DIGITALOCEAN_SPACES_REGION`
+// scopes the listing to one region; otherwise the provider iterates
+// the known Spaces regions). Surfaces the bucket `region` and
+// `createdAt`, the resolved access posture
+// (`publicAccessBlocked`, `publicReadAcl`, `publicWriteAcl`,
+// `authenticatedReadAcl`), the encryption settings
+// (`encryptionEnabled`, `encryptionAlgorithm`, `encryptionKmsKeyId`),
+// `versioningStatus` ("Enabled", "Suspended", or empty), the raw
+// `policy` document (nil when unset), `corsRules`, and the
+// `lifecycleRules` list. Use this to catch public buckets, missing
+// at-rest encryption, missing versioning, and overly permissive
+// CORS / lifecycle policies.
+digitalocean.spacesBucket @defaults("name region publicAccessBlocked encryptionEnabled versioningStatus") {
+  // Bucket name (globally unique within DigitalOcean Spaces)
+  name string
+  // Spaces region the bucket lives in (e.g., "nyc3", "sfo3", "ams3", "sgp1", "fra1", "syd1", "tor1", "blr1")
+  region string
+  // Time the bucket was created
+  createdAt time
+  // Whether DigitalOcean's account-wide Public Access Block is in effect for this bucket (the bucket is not publicly listable regardless of ACL or policy)
+  publicAccessBlocked bool
+  // Whether the bucket ACL grants READ to the AllUsers group (anonymous read)
+  publicReadAcl bool
+  // Whether the bucket ACL grants WRITE to the AllUsers group (anonymous write — should always be false)
+  publicWriteAcl bool
+  // Whether the bucket ACL grants READ to the AuthenticatedUsers group (any DO/AWS-compatible account can list)
+  authenticatedReadAcl bool
+  // Raw ACL grants (each entry: granteeType, granteeUri, granteeDisplayName, permission)
+  aclGrants []dict
+  // Whether server-side encryption is configured on the bucket
+  encryptionEnabled bool
+  // Default encryption algorithm ("AES256" or "aws:kms"); empty when encryption is not configured
+  encryptionAlgorithm string
+  // KMS key id used for default encryption when `encryptionAlgorithm` is "aws:kms"
+  encryptionKmsKeyId string
+  // Versioning state ("Enabled", "Suspended"); empty when versioning has never been configured
+  versioningStatus string
+  // Whether MFA delete is required for permanent version deletion
+  mfaDeleteEnabled bool
+  // Bucket policy JSON document; nil when no policy is set
+  policy dict
+  // CORS rules configured on the bucket
+  //
+  // Each entry: allowedHeaders, allowedMethods, allowedOrigins, exposeHeaders, maxAgeSeconds, id.
+  corsRules []dict
+  // Lifecycle rules configured on the bucket
+  //
+  // Each entry: id, status, prefix, expirationDays, noncurrentVersionExpirationDays, abortIncompleteMultipartUploadDays.
+  lifecycleRules []dict
 }
 
 // DigitalOcean image
