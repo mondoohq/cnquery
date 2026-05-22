@@ -75,7 +75,6 @@ blackhole
 blr
 breakglass
 broadwell
-brotli
 bumpable
 bwawxf
 BXdl
@@ -379,7 +378,6 @@ mcr
 mde
 mebibytes
 mediapackagev
-mediastore
 memorydb
 memorystore
 messagestoragepolicy
@@ -438,7 +436,6 @@ nokeys
 NONSHARDED
 noreply
 Noreuse
-nosniff
 notebookinstancedetails
 notif
 npmjs
@@ -724,7 +721,6 @@ Wasi
 webauthn
 webide
 webservers
-WEBSERVERS
 websockets
 Webstore
 wifi

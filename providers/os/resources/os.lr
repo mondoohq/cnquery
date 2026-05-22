@@ -1454,6 +1454,12 @@ docker.file @defaults("file.path instructions.length stages.length") {
   instructions(file) dict
   // All stages included in this Dockerfile
   stages(file) []docker.file.stage
+  // Parser directives declared at the top of the Dockerfile
+  //
+  // Keys include `syntax` (frontend image pin, e.g. `docker/dockerfile:1.7`),
+  // `escape` (line-continuation token, default `\`), and `check` (Buildkit
+  // build-check toggles).
+  directives(file) map[string]string
 }
 
 // Dockerfile stages
@@ -1490,6 +1496,13 @@ private docker.file.stage @defaults("from.name") {
   shell docker.file.shell
   // WORKDIR instructions in this Dockerfile
   workdir []docker.file.workdir
+  // STOPSIGNAL instruction in this Dockerfile
+  stopsignal docker.file.stopsignal
+  // ONBUILD instructions in this Dockerfile
+  //
+  // ONBUILD instructions are deferred and run when an image built from this
+  // Dockerfile is itself used as the base image of a downstream build.
+  onbuild []docker.file.onbuild
 }
 
 // Dockerfile ARG instructions
@@ -1540,6 +1553,61 @@ private docker.file.from @defaults("name image tag") {
 // Dockerfile RUN instructions
 private docker.file.run @defaults("script") {
   script string
+  // `--mount=...` flags applied to this RUN
+  //
+  // Each mount exposes a build-time secret, ssh agent socket, cache directory,
+  // tmpfs, or bind-mounted source.
+  mounts []docker.file.run.mount
+  // `--network=...` value
+  //
+  // One of `default`, `none`, or `host`. Empty when the flag is not set
+  // (BuildKit treats that as `default`).
+  network string
+  // `--security=...` value
+  //
+  // One of `sandbox` or `insecure`. Empty when the flag is not set.
+  // `insecure` runs the step with elevated privileges and is commonly
+  // flagged by security policies.
+  security string
+}
+
+// Dockerfile RUN --mount flag
+//
+// One entry per `--mount=...` flag on a `RUN` instruction.
+private docker.file.run.mount @defaults("type target") {
+  // Mount type
+  //
+  // One of `bind`, `cache`, `secret`, `ssh`, or `tmpfs`.
+  type string
+  // Mount destination inside the build container
+  target string
+  // Source path or context for `bind` and `cache` mounts
+  source string
+  // Stage or image to bind-mount from (`--from=<name>`)
+  from string
+  // Identifier
+  //
+  // For `cache` mounts this is the cache id; for `secret` and `ssh` mounts
+  // this is the secret/ssh id supplied via `id=...`.
+  id string
+  // Cache sharing mode
+  //
+  // For `cache` mounts: `shared`, `private`, or `locked`. Empty for other types.
+  sharing string
+  // Whether the mount is read-only
+  readOnly bool
+  // Whether the secret or ssh mount is required to exist at build time
+  required bool
+  // Tmpfs size limit in bytes
+  sizeLimit int
+  // File mode for secret / ssh mounts (octal)
+  mode int
+  // Owner UID for secret / ssh mounts
+  uid int
+  // Owner GID for secret / ssh mounts
+  gid int
+  // Environment variable that exposes the secret to the RUN command
+  env string
 }
 
 // Dockerfile ADD instructions
@@ -1548,6 +1616,15 @@ private docker.file.add @defaults("src dst") {
   dst string
   chown string
   chmod string
+  // Whether `--link` was set, enabling cache-friendly layered copies
+  link bool
+  // SHA256 digest the remote download must match (`--checksum=sha256:...`)
+  //
+  // Empty when the flag is not set. Frequently required by audit policies
+  // to prevent unverified remote tarballs from entering the image.
+  checksum string
+  // Patterns excluded from the copy (`--exclude=<pattern>`)
+  excludes []string
 }
 
 // Dockerfile COPY instructions
@@ -1560,6 +1637,17 @@ private docker.file.copy @defaults("src dst") {
   chown string
   // Octal permissions of the file(s)
   chmod string
+  // Stage or image to copy from (`--from=<name>`)
+  //
+  // Set when `COPY --from=<stage>` references the output of an earlier
+  // multi-stage build or an external image such as `nginx:1.27`.
+  from string
+  // Whether `--link` was set, enabling cache-friendly layered copies
+  link bool
+  // Patterns excluded from the copy (`--exclude=<pattern>`)
+  excludes []string
+  // Whether `--parents` was set to preserve source directory structure
+  parents bool
 }
 
 // Dockerfile HEALTHCHECK instruction
@@ -1596,6 +1684,20 @@ private docker.file.shell @defaults("command") {
 private docker.file.workdir @defaults("path") {
   // Working directory path
   path string
+}
+
+// Dockerfile STOPSIGNAL instruction
+private docker.file.stopsignal @defaults("signal") {
+  // Signal name or number sent to the container on stop (e.g., `SIGTERM`, `9`)
+  signal string
+}
+
+// Dockerfile ONBUILD instruction
+private docker.file.onbuild @defaults("expression") {
+  // The triggered instruction, exactly as written after `ONBUILD`
+  //
+  // For example `ONBUILD COPY . /app/src` yields `COPY . /app/src`.
+  expression string
 }
 
 // Single Docker image on the host

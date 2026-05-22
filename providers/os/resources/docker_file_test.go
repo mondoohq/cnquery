@@ -254,6 +254,7 @@ RUN echo hello | cat
 			}
 
 			require.NoError(t, dockerFile.parse(file))
+			require.NoError(t, dockerFile.Stages.Error, "stage parse error")
 
 			actualMqlDockerFileStage := dockerFile.Stages.Data[0].(*mqlDockerFileStage)
 
@@ -345,4 +346,138 @@ RUN echo hello | cat
 			}
 		})
 	}
+}
+
+func TestParseDockerfile_StopsignalAndOnbuild(t *testing.T) {
+	src := `
+FROM alpine
+STOPSIGNAL SIGTERM
+ONBUILD COPY . /app/src
+ONBUILD RUN make
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.NotNil(t, stage.Stopsignal.Data)
+	require.Equal(t, "SIGTERM", stage.Stopsignal.Data.Signal.Data)
+
+	require.Equal(t, 2, len(stage.Onbuild.Data))
+	first := stage.Onbuild.Data[0].(*mqlDockerFileOnbuild)
+	second := stage.Onbuild.Data[1].(*mqlDockerFileOnbuild)
+	require.Equal(t, "COPY . /app/src", first.Expression.Data)
+	require.Equal(t, "RUN make", second.Expression.Data)
+}
+
+func TestParseDockerfile_Directives(t *testing.T) {
+	src := `# syntax=docker/dockerfile:1.7
+# escape=` + "`" + `
+FROM alpine
+RUN echo hi
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	require.Equal(t, "docker/dockerfile:1.7", df.Directives.Data["syntax"])
+	require.Equal(t, "`", df.Directives.Data["escape"])
+}
+
+func TestParseDockerfile_RunFlagsAndMounts(t *testing.T) {
+	src := `
+FROM alpine
+RUN --network=none --security=insecure --mount=type=secret,id=npm_token,target=/run/secrets/npm,required=true --mount=type=cache,target=/root/.cache,sharing=locked echo build
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.Equal(t, 1, len(stage.Run.Data))
+	run := stage.Run.Data[0].(*mqlDockerFileRun)
+	require.Equal(t, "none", run.Network.Data)
+	require.Equal(t, "insecure", run.Security.Data)
+
+	require.Equal(t, 2, len(run.Mounts.Data))
+	mountTypes := map[string]*mqlDockerFileRunMount{}
+	for _, m := range run.Mounts.Data {
+		mm := m.(*mqlDockerFileRunMount)
+		mountTypes[mm.Type.Data] = mm
+	}
+
+	secret := mountTypes["secret"]
+	require.NotNil(t, secret)
+	require.Equal(t, "/run/secrets/npm", secret.Target.Data)
+	require.Equal(t, "npm_token", secret.Id.Data)
+	require.True(t, secret.Required.Data)
+
+	cache := mountTypes["cache"]
+	require.NotNil(t, cache)
+	require.Equal(t, "/root/.cache", cache.Target.Data)
+	require.Equal(t, "locked", cache.Sharing.Data)
+}
+
+func TestParseDockerfile_AddCopyFlags(t *testing.T) {
+	src := `
+FROM scratch AS base
+RUN echo build
+
+FROM alpine
+ADD --link --checksum=sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d https://example.com/blob.bin /blob.bin
+COPY --from=base --link --chown=1001:1001 /app /app
+COPY --parents --exclude=*.log src/ /dest/
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[1].(*mqlDockerFileStage)
+
+	require.Equal(t, 1, len(stage.Add.Data))
+	add := stage.Add.Data[0].(*mqlDockerFileAdd)
+	require.True(t, add.Link.Data)
+	require.Equal(t, "sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d", add.Checksum.Data)
+
+	require.Equal(t, 2, len(stage.Copy.Data))
+	cp0 := stage.Copy.Data[0].(*mqlDockerFileCopy)
+	require.Equal(t, "base", cp0.From.Data)
+	require.True(t, cp0.Link.Data)
+	require.Equal(t, "1001:1001", cp0.Chown.Data)
+
+	cp1 := stage.Copy.Data[1].(*mqlDockerFileCopy)
+	require.True(t, cp1.Parents.Data)
+	require.Equal(t, []any{"*.log"}, cp1.Excludes.Data)
 }

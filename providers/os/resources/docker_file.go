@@ -91,12 +91,26 @@ func (p *mqlDockerFile) parse(file *mqlFile) error {
 	setError := func(err error) error {
 		p.Instructions.Error = err
 		p.Stages.Error = err
+		p.Directives.Error = err
 		return err
 	}
 
 	content := file.GetContent()
 	if content.Error != nil {
 		return setError(content.Error)
+	}
+
+	directives := map[string]any{}
+	dp := parser.DirectiveParser{}
+	parsed, derr := dp.ParseAll([]byte(content.Data))
+	if derr == nil {
+		for _, d := range parsed {
+			directives[d.Name] = d.Value
+		}
+	}
+	p.Directives = plugin.TValue[map[string]any]{
+		Data:  directives,
+		State: plugin.StateIsSet,
 	}
 
 	reader := strings.NewReader(content.Data)
@@ -191,12 +205,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	var add []any
 	var volumes []any
 	var workdir []any
+	var onbuild []any
 	var unsupported []string
 	var entrypointRaw *instructions.EntrypointCommand
 	var cmdRaw *instructions.CmdCommand
 	var userRaw *instructions.UserCommand
 	var healthcheckRaw *instructions.HealthCheckCommand
 	var shellRaw *instructions.ShellCommand
+	var stopsignalRaw *instructions.StopSignalCommand
 	for i := range stage.Commands {
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
@@ -232,9 +248,16 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 
 		case *instructions.RunCommand:
 			script := strings.Join(v.CmdLine, "\n")
+			mounts, err := p.mountResources(v)
+			if err != nil {
+				return nil, err
+			}
 			runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
-				"__id":   llx.StringData(p.locationID(v.Location())),
-				"script": llx.StringData(script),
+				"__id":     llx.StringData(p.locationID(v.Location())),
+				"script":   llx.StringData(script),
+				"mounts":   llx.ArrayData(mounts, types.Resource(ResourceDockerFileRunMount)),
+				"network":  llx.StringData(runFlagValue(v, "network")),
+				"security": llx.StringData(runFlagValue(v, "security")),
 			})
 			if err != nil {
 				return nil, err
@@ -252,10 +275,17 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			for i := range v.SourcePaths {
 				src[i] = v.SourcePaths[i]
 			}
+			excludes := stringsToAny(v.ExcludePatterns)
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileCopy, map[string]*llx.RawData{
-				"__id": llx.StringData(p.locationID(v.Location())),
-				"src":  llx.ArrayData(src, types.String),
-				"dst":  llx.StringData(v.DestPath),
+				"__id":     llx.StringData(p.locationID(v.Location())),
+				"src":      llx.ArrayData(src, types.String),
+				"dst":      llx.StringData(v.DestPath),
+				"chown":    llx.StringData(v.Chown),
+				"chmod":    llx.StringData(v.Chmod),
+				"from":     llx.StringData(v.From),
+				"link":     llx.BoolData(v.Link),
+				"excludes": llx.ArrayData(excludes, types.String),
+				"parents":  llx.BoolData(v.Parents),
 			})
 			if err != nil {
 				return nil, err
@@ -267,12 +297,16 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			for i := range v.SourcePaths {
 				src[i] = v.SourcePaths[i]
 			}
+			excludes := stringsToAny(v.ExcludePatterns)
 			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileAdd, map[string]*llx.RawData{
-				"__id":  llx.StringData(p.locationID(v.Location())),
-				"src":   llx.ArrayData(src, types.String),
-				"dst":   llx.StringData(v.DestPath),
-				"chown": llx.StringData(v.Chown),
-				"chmod": llx.StringData(v.Chmod),
+				"__id":     llx.StringData(p.locationID(v.Location())),
+				"src":      llx.ArrayData(src, types.String),
+				"dst":      llx.StringData(v.DestPath),
+				"chown":    llx.StringData(v.Chown),
+				"chmod":    llx.StringData(v.Chmod),
+				"link":     llx.BoolData(v.Link),
+				"checksum": llx.StringData(v.Checksum),
+				"excludes": llx.ArrayData(excludes, types.String),
 			})
 			if err != nil {
 				return nil, err
@@ -331,6 +365,19 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			}
 			workdir = append(workdir, resource)
 
+		case *instructions.StopSignalCommand:
+			stopsignalRaw = v
+
+		case *instructions.OnbuildCommand:
+			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileOnbuild, map[string]*llx.RawData{
+				"__id":       llx.StringData(p.locationID(v.Location())),
+				"expression": llx.StringData(v.Expression),
+			})
+			if err != nil {
+				return nil, err
+			}
+			onbuild = append(onbuild, resource)
+
 		default:
 			cmd := stage.Commands[i]
 			unsupported = append(unsupported, cmd.Name())
@@ -355,6 +402,20 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		"expose":  llx.ArrayData(expose, types.Resource(ResourceDockerFileExpose)),
 		"volumes": llx.ArrayData(volumes, types.Resource(ResourceDockerFileVolume)),
 		"workdir": llx.ArrayData(workdir, types.Resource(ResourceDockerFileWorkdir)),
+		"onbuild": llx.ArrayData(onbuild, types.Resource(ResourceDockerFileOnbuild)),
+	}
+
+	if stopsignalRaw != nil {
+		stopResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileStopsignal, map[string]*llx.RawData{
+			"__id":   llx.StringData(p.locationID(stopsignalRaw.Location())),
+			"signal": llx.StringData(stopsignalRaw.Signal),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["stopsignal"] = llx.ResourceData(stopResource, ResourceDockerFileStopsignal)
+	} else {
+		args["stopsignal"] = llx.NilData
 	}
 
 	if entrypointRaw != nil {
@@ -475,4 +536,86 @@ func (p *mqlDockerFile) instructions(file *mqlFile) (any, error) {
 
 func (p *mqlDockerFile) stages(file *mqlFile) ([]any, error) {
 	return nil, p.parse(file)
+}
+
+func (p *mqlDockerFile) directives(file *mqlFile) (map[string]any, error) {
+	return nil, p.parse(file)
+}
+
+// runFlagValue returns the parsed BuildKit value for `--network=...` or
+// `--security=...`. Both default to a non-empty string when set explicitly;
+// we surface them as empty strings when the flag wasn't used so audits can
+// distinguish "default" (empty) from an explicit pin.
+func runFlagValue(cmd *instructions.RunCommand, name string) string {
+	for _, f := range cmd.FlagsUsed {
+		if f != name {
+			continue
+		}
+		switch name {
+		case "network":
+			return string(instructions.GetNetwork(cmd))
+		case "security":
+			return instructions.GetSecurity(cmd)
+		}
+	}
+	return ""
+}
+
+func (p *mqlDockerFile) mountResources(cmd *instructions.RunCommand) ([]any, error) {
+	hasMount := false
+	for _, f := range cmd.FlagsUsed {
+		if f == "mount" {
+			hasMount = true
+			break
+		}
+	}
+	if !hasMount {
+		return nil, nil
+	}
+	// instructions.Parse defers mount field resolution until a variable
+	// expander is supplied. We don't expand build args during static analysis,
+	// so feed an identity expander to populate Type/Target/Source/etc.
+	if err := cmd.Expand(func(s string) (string, error) { return s, nil }); err != nil {
+		return nil, err
+	}
+	mounts := instructions.GetMounts(cmd)
+	out := make([]any, 0, len(mounts))
+	for i, m := range mounts {
+		id := p.locationID(cmd.Location()) + "/mount/" + strconv.Itoa(i)
+		var mode, uid, gid int64
+		if m.Mode != nil {
+			mode = int64(*m.Mode)
+		}
+		if m.UID != nil {
+			uid = int64(*m.UID)
+		}
+		if m.GID != nil {
+			gid = int64(*m.GID)
+		}
+		var env string
+		if m.Env != nil {
+			env = *m.Env
+		}
+		resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRunMount, map[string]*llx.RawData{
+			"__id":      llx.StringData(id),
+			"type":      llx.StringData(string(m.Type)),
+			"target":    llx.StringData(m.Target),
+			"source":    llx.StringData(m.Source),
+			"from":      llx.StringData(m.From),
+			"id":        llx.StringData(m.CacheID),
+			"sharing":   llx.StringData(string(m.CacheSharing)),
+			"readOnly":  llx.BoolData(m.ReadOnly),
+			"required":  llx.BoolData(m.Required),
+			"sizeLimit": llx.IntData(m.SizeLimit),
+			"mode":      llx.IntData(mode),
+			"uid":       llx.IntData(uid),
+			"gid":       llx.IntData(gid),
+			"env":       llx.StringData(env),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resource)
+	}
+	return out, nil
 }
