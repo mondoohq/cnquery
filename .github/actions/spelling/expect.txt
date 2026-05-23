@@ -44,6 +44,7 @@ Auths
 autoaccept
 autoclass
 autoclose
+autocreate
 autoexpand
 automattic
 autoprovision
@@ -187,6 +188,7 @@ ekm
 eku
 elbv
 embeddings
+emerg
 encryptors
 endpointslice
 eni
@@ -224,6 +226,7 @@ fluentd
 fortios
 fqdns
 freetier
+fri
 frontmatter
 fsn
 ftps
@@ -297,8 +300,10 @@ iotedge
 iothread
 ipam
 ipc
+ipfilter
 ipsetforwardedipconfig
 ipsetreferencestatement
+ipsets
 isos
 issuewild
 istio
@@ -364,7 +369,10 @@ lsp
 lte
 lvm
 lvmthin
+LXC
+lzo
 lzpabcdef
+macfilter
 MACSEC
 manageddevice
 managedrulegroupstatement
@@ -413,6 +421,7 @@ myvendor
 naflags
 natgateway
 nativead
+ndp
 NEGs
 neq
 netbios
@@ -434,6 +443,8 @@ nodekey
 nodepool
 noeviction
 nokeys
+nolog
+nomatch
 NONSHARDED
 noreply
 Noreuse
@@ -460,6 +471,7 @@ oid
 oidc
 OMA
 onboarded
+onboot
 onbuild
 ondemand
 oneof
@@ -477,6 +489,7 @@ openzfs
 operationalinsights
 orstatement
 ospf
+ostype
 ovmf
 ovn
 owpjy
@@ -487,6 +500,7 @@ paginators
 panos
 parallelquery
 PAYG
+pbs
 pcnet
 pdp
 persistentvolume
@@ -531,9 +545,11 @@ querypack
 quorate
 qwen
 RABBITMQ
+radv
 rai
 raidz
 ratebasedstatement
+ratelimit
 rbcd
 rdm
 Rdp
@@ -581,6 +597,7 @@ SECRETVALUE
 secureboot
 Selfharm
 selfservice
+sendmail
 sentinelone
 serde
 serviceconnection
@@ -649,6 +666,7 @@ TDX
 temurin
 tensorboard
 testutils
+tfa
 tgw
 tokenauth
 tokenid
@@ -668,6 +686,7 @@ Twt
 uami
 udid
 uefi
+ugid
 UNAVAIL
 unifi
 Uocm
@@ -702,7 +721,7 @@ vmca
 vmdk
 vmfs
 vmhba
-VMID
+vmid
 vmotion
 vmstate
 VMX
@@ -718,6 +737,7 @@ vulnerabilityassessmentsettings
 vulnmgmt
 vulns
 vxlan
+vzdump
 vztmpl
 WAFV
 Wasi
@@ -742,6 +762,7 @@ xssmatchstatement
 xts
 xxxxx
 yara
+yubico
 zerolog
 zfs
 zfspool

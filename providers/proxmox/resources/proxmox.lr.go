@@ -5224,7 +5224,7 @@ func (c *mqlProxmoxGroup) GetMembers() *plugin.TValue[[]any] {
 type mqlProxmoxAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxAclInternal
+	// optional: if you define mqlProxmoxAclInternal it will be used here
 	Path      plugin.TValue[string]
 	Type      plugin.TValue[string]
 	Ugid      plugin.TValue[string]

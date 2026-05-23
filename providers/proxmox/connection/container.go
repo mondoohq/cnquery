@@ -47,16 +47,61 @@ func (c *PveConnection) GetAllContainers() ([]ContainerInfo, error) {
 	return containers, nil
 }
 
+// nodeLXCEntry is the shape returned by /nodes/<node>/lxc. It uses string
+// VMIDs (unlike /cluster/resources which uses ints), so we unmarshal into
+// this intermediate type and copy across.
+type nodeLXCEntry struct {
+	VMID      string  `json:"vmid"`
+	Name      string  `json:"name"`
+	Status    string  `json:"status"`
+	CPU       float64 `json:"cpu"`
+	MaxCPU    int     `json:"cpus"`
+	Mem       int64   `json:"mem"`
+	MaxMem    int64   `json:"maxmem"`
+	Disk      int64   `json:"disk"`
+	MaxDisk   int64   `json:"maxdisk"`
+	DiskRead  int64   `json:"diskread"`
+	DiskWrite int64   `json:"diskwrite"`
+	NetIn     int64   `json:"netin"`
+	NetOut    int64   `json:"netout"`
+	Uptime    int64   `json:"uptime"`
+	Template  int     `json:"template"`
+	Tags      string  `json:"tags"`
+}
+
+// GetNodeContainers hits the per-node /nodes/<node>/lxc endpoint directly so
+// that `proxmox.nodes { containers }` doesn't fan out into one full
+// cluster-resources fetch per node.
 func (c *PveConnection) GetNodeContainers(node string) ([]ContainerInfo, error) {
-	all, err := c.GetAllContainers()
-	if err != nil {
-		return nil, err
+	var entries []nodeLXCEntry
+	path := fmt.Sprintf("/nodes/%s/lxc", node)
+	if err := c.apiGet(path, &entries); err != nil {
+		return nil, fmt.Errorf("failed to list containers on node %s: %w", node, err)
 	}
-	var out []ContainerInfo
-	for _, ct := range all {
-		if ct.Node == node {
-			out = append(out, ct)
-		}
+	out := make([]ContainerInfo, 0, len(entries))
+	for _, e := range entries {
+		var vmid int
+		fmt.Sscanf(e.VMID, "%d", &vmid)
+		out = append(out, ContainerInfo{
+			VMID:      vmid,
+			Name:      e.Name,
+			Node:      node,
+			Status:    e.Status,
+			Type:      "lxc",
+			CPU:       e.CPU,
+			MaxCPU:    e.MaxCPU,
+			Mem:       e.Mem,
+			MaxMem:    e.MaxMem,
+			Disk:      e.Disk,
+			MaxDisk:   e.MaxDisk,
+			DiskRead:  e.DiskRead,
+			DiskWrite: e.DiskWrite,
+			NetIn:     e.NetIn,
+			NetOut:    e.NetOut,
+			Uptime:    e.Uptime,
+			Template:  e.Template,
+			Tags:      e.Tags,
+		})
 	}
 	return out, nil
 }

@@ -18,6 +18,33 @@ import (
 // ErrQGANotRunning is returned when the QEMU Guest Agent is not running.
 var ErrQGANotRunning = errors.New("QEMU guest agent is not running")
 
+// APIError surfaces the HTTP status code from a failed Proxmox API call so
+// callers can distinguish permission/not-found responses from real failures.
+type APIError struct {
+	StatusCode int
+	Path       string
+	Message    string
+}
+
+func (e *APIError) Error() string {
+	if e.Message != "" {
+		return fmt.Sprintf("proxmox API error %d for %s: %s", e.StatusCode, e.Path, e.Message)
+	}
+	return fmt.Sprintf("proxmox API error %d for %s", e.StatusCode, e.Path)
+}
+
+// IsAccessDeniedOrNotFound reports whether err is a Proxmox API error with
+// status 401, 403, or 404 — the cases where the caller is asking about a
+// resource the token can't see or that doesn't exist. Anything else (5xx,
+// network errors) should bubble up.
+func IsAccessDeniedOrNotFound(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	return apiErr.StatusCode == 401 || apiErr.StatusCode == 403 || apiErr.StatusCode == 404
+}
+
 // PveConnection holds connection details for the Proxmox REST API.
 type PveConnection struct {
 	id     uint32
@@ -90,7 +117,7 @@ func (c *PveConnection) apiGet(path string, result any) error {
 	}
 	if err := json.Unmarshal(body, &wrapper); err != nil {
 		if resp.StatusCode >= 400 {
-			return fmt.Errorf("proxmox API error %d for %s", resp.StatusCode, path)
+			return &APIError{StatusCode: resp.StatusCode, Path: path}
 		}
 		return fmt.Errorf("JSON parsing failed: %w", err)
 	}
@@ -102,7 +129,7 @@ func (c *PveConnection) apiGet(path string, result any) error {
 	}
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("proxmox API error %d: %s", resp.StatusCode, wrapper.Message)
+		return &APIError{StatusCode: resp.StatusCode, Path: path, Message: wrapper.Message}
 	}
 
 	return json.Unmarshal(wrapper.Data, result)

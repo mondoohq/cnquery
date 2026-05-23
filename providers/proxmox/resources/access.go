@@ -71,11 +71,6 @@ func (r *mqlProxmoxGroup) members() ([]any, error) {
 // ACL
 // ---------------------------------------------------------------------------
 
-type mqlProxmoxAclInternal struct {
-	// ugid resolves to one of these depending on Type; cache decisions
-	// so the typed accessors don't repeat the work.
-}
-
 func (r *mqlProxmox) acl() ([]any, error) {
 	conn := proxmoxConn(r)
 	entries, err := conn.GetACL()
@@ -235,10 +230,14 @@ func (r *mqlProxmoxUser) tfaFactors() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
 	entries, err := conn.GetUserTFA(r.Id.Data)
 	if err != nil {
-		// /access/tfa/<userid> 403s for non-admins and returns 404 when
-		// the user has nothing enrolled; treat both as "no factors" so
-		// audits over many users don't blow up on a single missing row.
-		return []any{}, nil
+		// /access/tfa/<userid> 403s for non-admins and 404s when the
+		// user has nothing enrolled; treat those as "no factors" so an
+		// audit over many users isn't blocked by one missing row. Real
+		// failures (timeout, 5xx) bubble up.
+		if connection.IsAccessDeniedOrNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	out := make([]any, 0, len(entries))
 	for _, e := range entries {
