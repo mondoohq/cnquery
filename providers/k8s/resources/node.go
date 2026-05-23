@@ -61,9 +61,14 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 }
 
 func (k *mqlK8s) nodes() ([]any, error) {
+	// Hold k.lock across the reset *and* the full population so a concurrent
+	// initK8sNode cannot observe a half-populated nodesByName map. The MQL
+	// runtime already deduplicates nodes() calls via the framework's TValue,
+	// so the only readers blocked behind this lock are the ones whose result
+	// depends on this evaluation finishing anyway.
 	k.lock.Lock()
+	defer k.lock.Unlock()
 	k.nodesByName = make(map[string]*mqlK8sNode)
-	k.lock.Unlock()
 	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
@@ -104,9 +109,8 @@ func (k *mqlK8s) nodes() ([]any, error) {
 		}
 
 		r.(*mqlK8sNode).obj = n
-		k.lock.Lock()
+		// k.lock is already held by the enclosing nodes() call.
 		k.nodesByName[obj.GetName()] = r.(*mqlK8sNode)
-		k.lock.Unlock()
 
 		return r, nil
 	})
