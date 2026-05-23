@@ -5227,11 +5227,15 @@ func (c *mqlSnowflakeResourceMonitor) GetNotifyAt() *plugin.TValue[[]any] {
 }
 
 func (c *mqlSnowflakeResourceMonitor) GetSuspendAt() *plugin.TValue[int64] {
-	return &c.SuspendAt
+	return plugin.GetOrCompute[int64](&c.SuspendAt, func() (int64, error) {
+		return c.suspendAt()
+	})
 }
 
 func (c *mqlSnowflakeResourceMonitor) GetSuspendImmediateAt() *plugin.TValue[int64] {
-	return &c.SuspendImmediateAt
+	return plugin.GetOrCompute[int64](&c.SuspendImmediateAt, func() (int64, error) {
+		return c.suspendImmediateAt()
+	})
 }
 
 func (c *mqlSnowflakeResourceMonitor) GetNotifyUsers() *plugin.TValue[[]any] {

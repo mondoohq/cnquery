@@ -775,9 +775,9 @@ snowflake.resourceMonitor @defaults("name creditQuota usedCredits level") {
   // Usage percentages at which Snowflake sends notifications
   notifyAt []int
   // Percentage at which the monitor suspends warehouses (allows running queries to finish); null if unset
-  suspendAt int
+  suspendAt() int
   // Percentage at which the monitor immediately suspends warehouses; null if unset
-  suspendImmediateAt int
+  suspendImmediateAt() int
   // Users notified when notification thresholds are crossed
   notifyUsers []string
   // When the resource monitor was created

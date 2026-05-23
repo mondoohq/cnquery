@@ -68,20 +68,35 @@ func newMqlSnowflakeResourceMonitor(runtime *plugin.Runtime, monitor sdk.Resourc
 		"createdAt":        llx.TimeData(monitor.CreatedOn),
 	}
 
-	if monitor.SuspendAt != nil {
-		args["suspendAt"] = llx.IntData(int64(*monitor.SuspendAt))
-	} else {
-		args["suspendAt"] = llx.NilData
-	}
-	if monitor.SuspendImmediateAt != nil {
-		args["suspendImmediateAt"] = llx.IntData(int64(*monitor.SuspendImmediateAt))
-	} else {
-		args["suspendImmediateAt"] = llx.NilData
-	}
-
-	r, err := CreateResource(runtime, "snowflake.resourceMonitor", args)
+	res, err := CreateResource(runtime, "snowflake.resourceMonitor", args)
 	if err != nil {
 		return nil, err
 	}
-	return r.(*mqlSnowflakeResourceMonitor), nil
+	mqlMonitor := res.(*mqlSnowflakeResourceMonitor)
+
+	// suspendAt and suspendImmediateAt are computed methods (nullable int) — set
+	// the TValue directly so the stub accessors don't trigger a recomputation.
+	if monitor.SuspendAt != nil {
+		mqlMonitor.SuspendAt = plugin.TValue[int64]{Data: int64(*monitor.SuspendAt), State: plugin.StateIsSet}
+	} else {
+		mqlMonitor.SuspendAt = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	if monitor.SuspendImmediateAt != nil {
+		mqlMonitor.SuspendImmediateAt = plugin.TValue[int64]{Data: int64(*monitor.SuspendImmediateAt), State: plugin.StateIsSet}
+	} else {
+		mqlMonitor.SuspendImmediateAt = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
+	return mqlMonitor, nil
+}
+
+// suspendAt and suspendImmediateAt are populated eagerly by
+// newMqlSnowflakeResourceMonitor; these stubs exist only to satisfy the
+// generator's computed-method dispatch and should never actually run.
+func (r *mqlSnowflakeResourceMonitor) suspendAt() (int64, error) {
+	return 0, nil
+}
+
+func (r *mqlSnowflakeResourceMonitor) suspendImmediateAt() (int64, error) {
+	return 0, nil
 }
