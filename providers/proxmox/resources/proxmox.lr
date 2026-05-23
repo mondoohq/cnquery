@@ -1194,7 +1194,7 @@ proxmox.node.disk.smart @defaults("health type") {
 // `name`. Reports the pool `size`, `alloc`ated and `free` bytes,
 // average `fragmentation` percentage, `dedupRatio`, and current
 // `health` (ONLINE, DEGRADED, FAULTED, etc.). The pool topology — the
-// tree of vdevs and the latest scrub status — is available through
+// vdev tree and the latest scrub status — is available through
 // `state`, `scan`, `errors`, and the `children` vdev tree.
 proxmox.zfs.pool @defaults("name health size") {
   // Pool name
@@ -1343,7 +1343,7 @@ proxmox.sdn.zone @defaults("zone type") {
 // whether the network is `vlanAware` (Linux 802.1Q tagging is
 // preserved on the bridge).
 proxmox.sdn.vnet @defaults("vnet zone tag") {
-  // Vnet identifier
+  // VNet identifier
   vnet string
   // Parent zone identifier
   zone string
@@ -1351,9 +1351,9 @@ proxmox.sdn.vnet @defaults("vnet zone tag") {
   alias string
   // VLAN/VXLAN tag identifier
   tag int
-  // Whether the vnet is VLAN-aware
+  // Whether the VNet is VLAN-aware
   vlanAware bool
-  // Vnet type
+  // VNet type
   type string
   // Resolved parent zone
   zoneRef() proxmox.sdn.zone

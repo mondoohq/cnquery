@@ -17,6 +17,7 @@ AJD
 aki
 alamofire
 allkeys
+alloc
 alloydb
 alpm
 alpn
@@ -258,6 +259,7 @@ GOSUMDB
 gotchas
 gpc
 gpo
+gpt
 gpu
 grafana
 groupname
@@ -268,6 +270,7 @@ gvnic
 hadoop
 HBFNV
 HCMCLOUD
+hdd
 headerorder
 hec
 hetzner
@@ -317,6 +320,7 @@ jamf
 JFi
 jira
 jkl
+jobnum
 jpi
 jql
 jre
@@ -446,7 +450,6 @@ nodegroup
 nodekey
 nodepool
 noeviction
-nofailback
 nokeys
 nolog
 nomatch
@@ -598,6 +601,7 @@ sbom
 scc
 scim
 scm
+sdn
 sdp
 seabios
 SECRETID
@@ -713,7 +717,6 @@ VCores
 vcpus
 vdcs
 vdev
-vdevs
 VDhir
 vdi
 vendored
@@ -765,6 +768,7 @@ WORKSPACESUSER
 workspacesweb
 worktree
 writeback
+wwn
 Xff
 xks
 xlarge
