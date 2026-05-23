@@ -818,6 +818,75 @@ func TestExtractCondition_BraceInsideStringLiteral(t *testing.T) {
 	assert.Equal(t, "contains(env, 'prod{1}')", result.resources[0].condition)
 }
 
+// Triple-quoted strings (`”'…”'`) are Bicep's multi-line string
+// syntax. The body can contain literal `{`/`[`/`}`/`]` that must not
+// touch the depth counter, so the scanner has to recognize the
+// opener as a single token rather than three single-quote flips.
+func TestParseBicep_TripleQuotedMultilineString(t *testing.T) {
+	t.Run("brackets inside triple-quoted var body don't break depth", func(t *testing.T) {
+		input := `var script = '''
+echo "{ not a real brace }"
+exit [0]
+'''
+
+resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'aftertripled'
+  location: 'eastus'
+}`
+		result := parseBicep(input)
+		require.Len(t, result.variables, 1)
+		assert.Equal(t, "script", result.variables[0].name)
+		// The trailing resource still has to be picked up — if the
+		// `'''` block's `{` leaked into the depth counter the rest of
+		// the file would have been swallowed. `name` keeps the
+		// quotes the source had — extractFieldValue returns the raw
+		// expression verbatim.
+		require.Len(t, result.resources, 1)
+		assert.Equal(t, "sa", result.resources[0].symbolicName)
+		assert.Equal(t, "'aftertripled'", result.resources[0].name)
+	})
+
+	t.Run("triple-quoted value in properties block parses cleanly", func(t *testing.T) {
+		body := `
+  script: '''
+hello { world }
+'''
+  enabled: true
+`
+		obj := parseBicepObject(body)
+		// We don't unquote `'''` strings (the surrounding quotes are
+		// part of the value form), but the scanner has to walk past
+		// them without splitting the entry — `enabled` must survive.
+		assert.Equal(t, "true", obj["enabled"])
+		_, present := obj["script"]
+		assert.True(t, present, "triple-quoted entry should still be captured")
+	})
+}
+
+// `extractDependsOn` previously walked raw bytes, so a `]` inside an
+// indexed expression or a string literal would drop the rest of the
+// list. Sharing the scanState lexer fixes both.
+func TestExtractDependsOn_BracketInsideStringAndIndex(t *testing.T) {
+	t.Run("indexed expression entry", func(t *testing.T) {
+		body := `{
+  dependsOn: [
+    storageAccounts['blobServices']
+    appPlan
+  ]
+}`
+		deps := extractDependsOn(body)
+		assert.Equal(t, []string{"storageAccounts['blobServices']", "appPlan"}, deps)
+	})
+
+	t.Run("string with closing bracket", func(t *testing.T) {
+		body := `{
+  dependsOn: [ 'literal]' , other ]
+}`
+		deps := extractDependsOn(body)
+		assert.Equal(t, []string{"'literal]'", "other"}, deps)
+	})
+}
+
 func TestParseParameterBounds(t *testing.T) {
 	t.Run("string length bounds", func(t *testing.T) {
 		input := `@minLength(8)

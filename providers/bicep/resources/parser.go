@@ -528,58 +528,87 @@ func extractFieldBlock(body string, fieldName string) string {
 
 // scanState is a tiny lexer state for tracking paren/bracket/brace
 // depth across one or more lines of Bicep source while respecting
-// string literals (single- and double-quoted, with `\<char>` escapes)
-// and `// ...` line comments. All of the bracket-balancing helpers
-// in this package share it so a brace inside `'closing brace }'`
-// can't sneak in as a real opener.
+// string literals (single- and double-quoted, with `\<char>` escapes),
+// triple-quoted multi-line strings (`”'…”'`), and `// ...` line
+// comments. All of the bracket-balancing helpers in this package
+// share it so brackets that live inside a string literal — including
+// a `”'…}…”'` block that straddles multiple lines — can't fool
+// the depth counter.
 type scanState struct {
 	paren   int
 	bracket int
 	brace   int
-	inStr   byte
+	inStr   byte // 0, '\'', or '"' — single-line string
+	inMulti bool // true while inside a `'''…'''` multi-line string
 }
 
 func (s *scanState) totalDepth() int { return s.paren + s.bracket + s.brace }
+
+// stepAt processes one position in `body` and returns the next index
+// to resume from. It handles the full set of Bicep token states
+// (single-line strings with `\<char>` escapes, triple-quoted
+// multi-line strings, `// …` line comments, and bracket nesting) so
+// every walker in this file can share the same lexer rules without
+// duplicating them.
+func (s *scanState) stepAt(body string, i int) int {
+	if s.inMulti {
+		if i+2 < len(body) && body[i] == '\'' && body[i+1] == '\'' && body[i+2] == '\'' {
+			s.inMulti = false
+			return i + 3
+		}
+		return i + 1
+	}
+	ch := body[i]
+	if s.inStr != 0 {
+		// Bicep string escapes: `\\`, `\'`, `\n`, `\$`, etc. The next
+		// byte is literal regardless of what it is, so just skip it.
+		if ch == '\\' && i+1 < len(body) {
+			return i + 2
+		}
+		if ch == s.inStr {
+			s.inStr = 0
+		}
+		return i + 1
+	}
+	// `// …` line comment — skip to end of line.
+	if ch == '/' && i+1 < len(body) && body[i+1] == '/' {
+		j := i
+		for j < len(body) && body[j] != '\n' {
+			j++
+		}
+		return j
+	}
+	// Triple-quoted multi-line string opener: enter `inMulti` and
+	// hand back the index just past the `'''`.
+	if ch == '\'' && i+2 < len(body) && body[i+1] == '\'' && body[i+2] == '\'' {
+		s.inMulti = true
+		return i + 3
+	}
+	switch ch {
+	case '\'', '"':
+		s.inStr = ch
+	case '(':
+		s.paren++
+	case ')':
+		s.paren--
+	case '[':
+		s.bracket++
+	case ']':
+		s.bracket--
+	case '{':
+		s.brace++
+	case '}':
+		s.brace--
+	}
+	return i + 1
+}
 
 // feed advances the state through one line of source, updating the
 // running depth counters. Characters inside a string literal or after
 // a top-level `//` comment marker do not affect depth.
 func (s *scanState) feed(line string) {
-	for i := 0; i < len(line); i++ {
-		ch := line[i]
-		if s.inStr != 0 {
-			// Bicep string escapes: `\\`, `\'`, `\n`, `\$`, etc. The
-			// next byte is literal regardless of what it is, so just
-			// skip it.
-			if ch == '\\' && i+1 < len(line) {
-				i++
-				continue
-			}
-			if ch == s.inStr {
-				s.inStr = 0
-			}
-			continue
-		}
-		// `// ...` line comment — everything to end of line is dead.
-		if ch == '/' && i+1 < len(line) && line[i+1] == '/' {
-			return
-		}
-		switch ch {
-		case '\'', '"':
-			s.inStr = ch
-		case '(':
-			s.paren++
-		case ')':
-			s.paren--
-		case '[':
-			s.bracket++
-		case ']':
-			s.bracket--
-		case '{':
-			s.brace++
-		case '}':
-			s.brace--
-		}
+	for i := 0; i < len(line); {
+		i = s.stepAt(line, i)
 	}
 }
 
@@ -589,40 +618,11 @@ func (s *scanState) feed(line string) {
 // Returns -1 if no such brace is on the line. The state still tracks
 // every other character so subsequent calls keep their depth context.
 func (s *scanState) scanForBodyBrace(line string) int {
-	for i := 0; i < len(line); i++ {
-		ch := line[i]
-		if s.inStr != 0 {
-			if ch == '\\' && i+1 < len(line) {
-				i++
-				continue
-			}
-			if ch == s.inStr {
-				s.inStr = 0
-			}
-			continue
+	for i := 0; i < len(line); {
+		if s.inStr == 0 && !s.inMulti && line[i] == '{' && s.paren == 0 && s.bracket == 0 {
+			return i
 		}
-		if ch == '/' && i+1 < len(line) && line[i+1] == '/' {
-			return -1
-		}
-		switch ch {
-		case '\'', '"':
-			s.inStr = ch
-		case '(':
-			s.paren++
-		case ')':
-			s.paren--
-		case '[':
-			s.bracket++
-		case ']':
-			s.bracket--
-		case '{':
-			if s.paren == 0 && s.bracket == 0 {
-				return i
-			}
-			s.brace++
-		case '}':
-			s.brace--
-		}
+		i = s.stepAt(line, i)
 	}
 	return -1
 }
@@ -681,38 +681,11 @@ func parseBicepArray(body string) []any {
 
 func splitFirstColon(s string) (string, string, bool) {
 	st := scanState{}
-	for i := 0; i < len(s); i++ {
-		ch := s[i]
-		if st.inStr != 0 {
-			if ch == '\\' && i+1 < len(s) {
-				i++
-				continue
-			}
-			if ch == st.inStr {
-				st.inStr = 0
-			}
-			continue
+	for i := 0; i < len(s); {
+		if st.inStr == 0 && !st.inMulti && s[i] == ':' && st.totalDepth() == 0 {
+			return s[:i], s[i+1:], true
 		}
-		switch ch {
-		case '\'', '"':
-			st.inStr = ch
-		case '{':
-			st.brace++
-		case '[':
-			st.bracket++
-		case '(':
-			st.paren++
-		case '}':
-			st.brace--
-		case ']':
-			st.bracket--
-		case ')':
-			st.paren--
-		case ':':
-			if st.totalDepth() == 0 {
-				return s[:i], s[i+1:], true
-			}
-		}
+		i = st.stepAt(s, i)
 	}
 	return "", "", false
 }
@@ -738,65 +711,35 @@ func splitTopLevelEntries(body string) []string {
 		}
 		current.Reset()
 	}
-	for i := 0; i < len(body); i++ {
-		ch := body[i]
-		if st.inStr != 0 {
-			current.WriteByte(ch)
-			if ch == '\\' && i+1 < len(body) {
-				// Preserve the escape sequence verbatim so the unquoted
-				// value the caller eventually sees still contains `\'`,
-				// `\\`, etc. exactly as the source had them.
-				current.WriteByte(body[i+1])
+	i := 0
+	for i < len(body) {
+		// Special cases only fire when we're not inside any string,
+		// and only at top-level depth so nested object/array entries
+		// preserve their commas and newlines.
+		if st.inStr == 0 && !st.inMulti && st.totalDepth() == 0 {
+			// Top-level newline/comma terminates the current entry.
+			if body[i] == '\n' || body[i] == ',' {
+				flush()
 				i++
 				continue
 			}
-			if ch == st.inStr {
-				st.inStr = 0
-			}
-			continue
-		}
-		// Skip `// ...` line comments at top level so they don't leak
-		// into the next entry's key or value.
-		if st.totalDepth() == 0 && ch == '/' && i+1 < len(body) && body[i+1] == '/' {
-			for i < len(body) && body[i] != '\n' {
+			// Drop `// …` line comments without copying them into the
+			// running entry — without this they'd leak into the next
+			// key or value.
+			if body[i] == '/' && i+1 < len(body) && body[i+1] == '/' {
+				for i+1 < len(body) && body[i+1] != '\n' {
+					i++
+				}
 				i++
+				continue
 			}
-			// Step back one so the outer loop's `i++` lands us on the
-			// `\n` that terminates the comment (or end of input).
-			i--
-			continue
 		}
-		switch ch {
-		case '\'', '"':
-			st.inStr = ch
-			current.WriteByte(ch)
-		case '{':
-			st.brace++
-			current.WriteByte(ch)
-		case '[':
-			st.bracket++
-			current.WriteByte(ch)
-		case '(':
-			st.paren++
-			current.WriteByte(ch)
-		case '}':
-			st.brace--
-			current.WriteByte(ch)
-		case ']':
-			st.bracket--
-			current.WriteByte(ch)
-		case ')':
-			st.paren--
-			current.WriteByte(ch)
-		case '\n', ',':
-			if st.totalDepth() == 0 {
-				flush()
-			} else {
-				current.WriteByte(ch)
-			}
-		default:
-			current.WriteByte(ch)
-		}
+		next := st.stepAt(body, i)
+		// Copy the bytes we just walked into the running entry —
+		// escape sequences (`\'`, `\\`, …) are preserved verbatim
+		// because stepAt walks the escape pair as a single step.
+		current.WriteString(body[i:next])
+		i = next
 	}
 	flush()
 	return entries
@@ -834,45 +777,38 @@ func extractTags(body string) map[string]string {
 var dependsOnHeaderRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[`)
 
 // extractDependsOn finds a `dependsOn: [ ... ]` block and returns the
-// raw entries. Bracket depth is tracked manually so the matcher survives
-// nested-bracket expressions like `dependsOn: [ foo[0], bar ]` that the
-// prior regex form (`\[([^\]]*)\]`) terminated on the first inner `]`.
+// raw entries. It walks the body via the shared `scanState` lexer so
+// brackets that live inside string literals (`'[indexed]'`) or
+// indexed expressions (`storageAccounts['blobServices']`) don't drop
+// the closing `]` early.
 func extractDependsOn(body string) []string {
 	loc := dependsOnHeaderRe.FindStringIndex(body)
 	if loc == nil {
 		return nil
 	}
-	// loc[1] points just past the opening `[`.
+	// loc[1] points just past the opening `[`. Seed the scanner with
+	// that opener already consumed.
 	start := loc[1]
-	depth := 1
+	st := scanState{bracket: 1}
 	end := -1
-	for i := start; i < len(body); i++ {
-		switch body[i] {
-		case '[':
-			depth++
-		case ']':
-			depth--
-			if depth == 0 {
-				end = i
-			}
-		}
-		if end >= 0 {
+	i := start
+	for i < len(body) {
+		prev := i
+		i = st.stepAt(body, i)
+		if st.bracket == 0 {
+			end = prev
 			break
 		}
 	}
 	if end < 0 {
 		return nil
 	}
-	inner := body[start:end]
-
-	var deps []string
-	for _, part := range strings.Split(inner, "\n") {
-		part = strings.TrimSpace(part)
-		part = strings.TrimSuffix(part, ",")
-		part = strings.TrimSpace(part)
-		if part != "" {
-			deps = append(deps, part)
-		}
+	// splitTopLevelEntries handles both newline- and comma-separated
+	// entries and shares the string-aware lexer, so a `]` inside a
+	// string literal or an indexed expression never splits the list.
+	deps := splitTopLevelEntries(body[start:end])
+	if len(deps) == 0 {
+		return nil
 	}
 	return deps
 }
