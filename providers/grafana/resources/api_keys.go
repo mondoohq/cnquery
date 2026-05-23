@@ -57,7 +57,7 @@ func (g *mqlGrafana) apiKeys() ([]any, error) {
 	list := make([]any, 0, len(raw))
 	for _, k := range raw {
 		expiration := parseGrafanaTime(k.Expiration)
-		hasExpiration := !expiration.IsZero() && k.Expiration != ""
+		hasExpiration := !expiration.IsZero()
 		isExpired := hasExpiration && expiration.Before(now)
 
 		res, err := CreateResource(g.MqlRuntime, "grafana.apiKey", map[string]*llx.RawData{

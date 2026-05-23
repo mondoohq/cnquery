@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
@@ -44,13 +46,20 @@ type grafanaTokenJSON struct {
 	IsRevoked             bool    `json:"isRevoked"`
 }
 
-const serviceAccountPageSize = 1000
+const (
+	serviceAccountPageSize = 1000
+	// pageFanout bounds how many pagination requests are issued concurrently
+	// across the service-account pages. Eight is enough to keep wall time
+	// dominated by the slowest page on large orgs without overwhelming the
+	// Grafana instance with bursty traffic.
+	pageFanout = 8
+)
 
 // fetchServiceAccountPage fetches a single page of service accounts and closes
 // the response body before returning, avoiding FD leaks in pagination loops.
-func fetchServiceAccountPage(conn *connection.GrafanaConnection, page int) (*grafanaServiceAccountsResponse, error) {
+func fetchServiceAccountPage(ctx context.Context, conn *connection.GrafanaConnection, page int) (*grafanaServiceAccountsResponse, error) {
 	path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", serviceAccountPageSize, page)
-	resp, err := conn.Get(context.Background(), path)
+	resp, err := conn.Get(ctx, path)
 	if err != nil {
 		return nil, err
 	}
@@ -73,21 +82,41 @@ func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// Paginate through all service accounts. The API returns at most perpage
-	// results per request; we stop when we've collected totalCount or the
-	// page returns fewer results than requested.
-	var allSAs []grafanaServiceAccountJSON
-	for page := 1; ; page++ {
-		result, err := fetchServiceAccountPage(conn, page)
-		if err != nil {
+	// Fetch page 1 first to learn totalCount, then fan out remaining pages
+	// concurrently. The previous sequential loop was O(N) round trips on the
+	// critical path; this is O(N/pageFanout) for the same byte volume.
+	first, err := fetchServiceAccountPage(context.Background(), conn, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	allSAs := first.ServiceAccounts
+	// Compute remaining pages from totalCount. Guard against a short first page
+	// (server returned all results in one call) before fanning out.
+	totalPages := 1
+	if first.TotalCount > serviceAccountPageSize && len(first.ServiceAccounts) >= serviceAccountPageSize {
+		totalPages = (first.TotalCount + serviceAccountPageSize - 1) / serviceAccountPageSize
+	}
+	if totalPages > 1 {
+		pages := make([][]grafanaServiceAccountJSON, totalPages-1)
+		grp, ctx := errgroup.WithContext(context.Background())
+		grp.SetLimit(pageFanout)
+		for i := range totalPages - 1 {
+			page := i + 2 // pages 2..totalPages
+			grp.Go(func() error {
+				result, err := fetchServiceAccountPage(ctx, conn, page)
+				if err != nil {
+					return err
+				}
+				pages[i] = result.ServiceAccounts
+				return nil
+			})
+		}
+		if err := grp.Wait(); err != nil {
 			return nil, err
 		}
-
-		allSAs = append(allSAs, result.ServiceAccounts...)
-
-		// Stop when we've fetched everything or the page was not full.
-		if len(allSAs) >= result.TotalCount || len(result.ServiceAccounts) < serviceAccountPageSize {
-			break
+		for _, p := range pages {
+			allSAs = append(allSAs, p...)
 		}
 	}
 
@@ -141,10 +170,9 @@ func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
 		created := parseGrafanaTime(tok.Created)
 		expiration := parseGrafanaTime(tok.Expiration)
 
-		// Grafana uses "0001-01-01T00:00:00Z" as a sentinel for "no expiration".
-		// Treat any zero-like expiration as no expiration.
-		zeroGrafana := parseGrafanaTime("0001-01-01T00:00:00Z")
-		hasExpiration := !expiration.IsZero() && !expiration.Equal(zeroGrafana)
+		// Grafana uses "0001-01-01T00:00:00Z" as a sentinel for "no expiration",
+		// which parses to time.Time{} — IsZero() catches both that and parse errors.
+		hasExpiration := !expiration.IsZero()
 		secondsUntilExp := tok.SecondsTillExpiration
 		if !hasExpiration {
 			secondsUntilExp = 0

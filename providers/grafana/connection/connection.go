@@ -67,11 +67,15 @@ func NewGrafanaConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	}
 
 	// Build a retryablehttp client that handles transient failures automatically.
+	// The timeout is set on the inner HTTPClient so it applies per attempt rather
+	// than to the whole RoundTrip — otherwise the retry budget is silently capped
+	// by the overall deadline (RetryMax retries with default backoff easily
+	// exceed 30s, and the standard client's Timeout would kill them mid-flight).
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
+	retryClient.RetryMax = 3
 	retryClient.Logger = zerologadapter.New(log.Logger)
+	retryClient.HTTPClient.Timeout = 30 * time.Second
 	httpClient := retryClient.StandardClient()
-	httpClient.Timeout = 30 * time.Second
 
 	conn.token = token
 	conn.baseURL = baseURL

@@ -12,24 +12,87 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
 
-// mqlGrafanaUserInternal holds cached fields populated lazily from
-// /api/users/{id}. The detail endpoint is only called once per user; subsequent
-// computed-field accesses reuse the cached response.
-type mqlGrafanaUserInternal struct {
-	detailFetched bool
-	detail        grafanaUserDetailJSON
-	detailErr     error
-	detailLock    sync.Mutex
+// userFanout bounds concurrent /api/users/{id} and permissions requests during
+// bulk pre-hydration. Eight in-flight requests is well below the connection
+// limits of typical Grafana deployments and saturates the JSON decode path.
+const userFanout = 8
 
-	permsFetched bool
-	perms        map[string]any
-	permsErr     error
-	permsLock    sync.Mutex
+// mqlGrafanaUserInternal holds cached fields populated from /api/users/{id} and
+// /api/access-control/users/{id}/permissions. Each cache is fronted by a
+// sync.Once so the bulk pre-hydration kicked off by users() and any lazy
+// per-user accessor converge on a single fetch.
+type mqlGrafanaUserInternal struct {
+	detailOnce sync.Once
+	detail     grafanaUserDetailJSON
+	detailErr  error
+
+	permsOnce sync.Once
+	perms     map[string]any
+	permsErr  error
+
+	// prefetch is the shared bulk-fetch coordinator across all users returned
+	// from a single grafana.users() call. nil when the user was created outside
+	// the bulk path; the lazy per-user fetch fallback still works in that case.
+	prefetch *userPrefetchGroup
+}
+
+// userPrefetchGroup coordinates one-shot, bounded-concurrency pre-hydration of
+// user detail and RBAC permissions across the full list returned by
+// grafana.users(). Without it, queries like `grafana.users { mfaEnabled }`
+// trigger N sequential /api/users/{id} round trips; with it, the first access
+// fans out all N in parallel and subsequent field accesses are cache hits.
+type userPrefetchGroup struct {
+	users []*mqlGrafanaUser
+	conn  *connection.GrafanaConnection
+
+	detailFanOnce sync.Once
+	permsFanOnce  sync.Once
+}
+
+// ensureDetailsFetched performs (at most once) a bounded-concurrency fan-out
+// over every user's /api/users/{id}. Each per-user request is guarded by the
+// user's own detailOnce so a lazy caller that races with the fan-out still
+// reuses the result.
+func (g *userPrefetchGroup) ensureDetailsFetched() {
+	g.detailFanOnce.Do(func() {
+		grp, ctx := errgroup.WithContext(context.Background())
+		grp.SetLimit(userFanout)
+		for _, u := range g.users {
+			grp.Go(func() error {
+				u.detailOnce.Do(func() {
+					u.detail, u.detailErr = fetchUserDetail(ctx, g.conn, u.UserId.Data)
+				})
+				return nil
+			})
+		}
+		_ = grp.Wait()
+	})
+}
+
+// ensurePermissionsFetched mirrors ensureDetailsFetched for the RBAC
+// permissions endpoint. Triggered the first time any user's permissions field
+// is read.
+func (g *userPrefetchGroup) ensurePermissionsFetched() {
+	g.permsFanOnce.Do(func() {
+		grp, ctx := errgroup.WithContext(context.Background())
+		grp.SetLimit(userFanout)
+		for _, u := range g.users {
+			grp.Go(func() error {
+				u.permsOnce.Do(func() {
+					u.perms, u.permsErr = fetchUserPermissions(ctx, g.conn, u.UserId.Data)
+				})
+				return nil
+			})
+		}
+		_ = grp.Wait()
+	})
 }
 
 // grafanaUserDetailJSON mirrors /api/users/{id}. Fields like isMFAEnabled may
@@ -155,6 +218,7 @@ func (g *mqlGrafana) users() ([]interface{}, error) {
 	}
 
 	list := make([]interface{}, 0, len(raw))
+	prefetch := &userPrefetchGroup{conn: conn, users: make([]*mqlGrafanaUser, 0, len(raw))}
 	for _, u := range raw {
 		res, err := CreateResource(g.MqlRuntime, "grafana.user", map[string]*llx.RawData{
 			"userId":        llx.IntData(int64(u.UserID)),
@@ -169,7 +233,16 @@ func (g *mqlGrafana) users() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, res)
+		mqlUser := res.(*mqlGrafanaUser)
+		// Only wire prefetch on first-write users — CreateResource may return a
+		// cached instance from a prior call with its own (possibly populated)
+		// caches; mutating that user's prefetch field would race with concurrent
+		// readers.
+		if mqlUser.prefetch == nil {
+			mqlUser.prefetch = prefetch
+		}
+		prefetch.users = append(prefetch.users, mqlUser)
+		list = append(list, mqlUser)
 	}
 	return list, nil
 }
@@ -182,52 +255,47 @@ func (u *mqlGrafanaUser) id() (string, error) {
 	return "grafana-user/" + strconv.FormatInt(u.UserId.Data, 10), nil
 }
 
-// fetchDetail loads the full /api/users/{id} response once and caches it on
-// the resource. All computed user-detail fields share this fetch.
+// fetchDetail loads the full /api/users/{id} response, returning the cached
+// result if already populated. When this user is part of a bulk users() call,
+// the first invocation kicks off a bounded-concurrency fan-out that pre-fills
+// every sibling user's cache in parallel — eliminating the sequential N+1.
 func (u *mqlGrafanaUser) fetchDetail() (grafanaUserDetailJSON, error) {
-	if u.detailFetched {
-		return u.detail, u.detailErr
+	if u.prefetch != nil {
+		u.prefetch.ensureDetailsFetched()
 	}
-	u.detailLock.Lock()
-	defer u.detailLock.Unlock()
-	if u.detailFetched {
-		return u.detail, u.detailErr
-	}
+	u.detailOnce.Do(func() {
+		conn, err := grafanaConnection(u.MqlRuntime)
+		if err != nil {
+			u.detailErr = err
+			return
+		}
+		u.detail, u.detailErr = fetchUserDetail(context.Background(), conn, u.UserId.Data)
+	})
+	return u.detail, u.detailErr
+}
 
-	conn, err := grafanaConnection(u.MqlRuntime)
+// fetchUserDetail issues a single /api/users/{id} request. 403 / 404 are
+// tolerated — the caller may be an org-admin without server-admin reach, or
+// the user may have been deleted. In those cases the zero-value detail is
+// returned without an error so org-admin queries still succeed.
+func fetchUserDetail(ctx context.Context, conn *connection.GrafanaConnection, userID int64) (grafanaUserDetailJSON, error) {
+	var detail grafanaUserDetailJSON
+	path := "/api/users/" + strconv.FormatInt(userID, 10)
+	resp, err := conn.Get(ctx, path)
 	if err != nil {
-		u.detailFetched = true
-		u.detailErr = err
-		return u.detail, err
-	}
-	path := "/api/users/" + strconv.FormatInt(u.UserId.Data, 10)
-	resp, err := conn.Get(context.Background(), path)
-	if err != nil {
-		u.detailFetched = true
-		u.detailErr = err
-		return u.detail, err
+		return detail, err
 	}
 	defer resp.Body.Close()
-	// 403/404 → caller lacks server-admin permissions or user is gone. Return
-	// the zero-value detail so org-admin queries don't fail outright.
 	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
-		u.detailFetched = true
-		return u.detail, nil
+		return detail, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("grafana: GET %s returned status %d", path, resp.StatusCode)
-		u.detailFetched = true
-		u.detailErr = err
-		return u.detail, err
+		return detail, fmt.Errorf("grafana: GET %s returned status %d", path, resp.StatusCode)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&u.detail); err != nil {
-		err = fmt.Errorf("grafana: decoding %s response: %w", path, err)
-		u.detailFetched = true
-		u.detailErr = err
-		return u.detail, err
+	if err := json.NewDecoder(resp.Body).Decode(&detail); err != nil {
+		return detail, fmt.Errorf("grafana: decoding %s response: %w", path, err)
 	}
-	u.detailFetched = true
-	return u.detail, nil
+	return detail, nil
 }
 
 func (u *mqlGrafanaUser) authModule() (string, error) {
@@ -297,55 +365,45 @@ func (u *mqlGrafanaUser) mfaEnabled() (bool, error) {
 }
 
 // permissions returns the RBAC permissions granted to this user as a map of
-// action -> []scope. Requires Grafana Enterprise/Cloud with RBAC enabled.
+// action -> []scope. Requires Grafana Enterprise/Cloud with RBAC enabled. When
+// this user is part of a bulk users() call, the first invocation fan-outs
+// permissions calls for every sibling so the second-pass N+1 is collapsed.
 func (u *mqlGrafanaUser) permissions() (map[string]any, error) {
-	if u.permsFetched {
-		return u.perms, u.permsErr
+	if u.prefetch != nil {
+		u.prefetch.ensurePermissionsFetched()
 	}
-	u.permsLock.Lock()
-	defer u.permsLock.Unlock()
-	if u.permsFetched {
-		return u.perms, u.permsErr
-	}
+	u.permsOnce.Do(func() {
+		conn, err := grafanaConnection(u.MqlRuntime)
+		if err != nil {
+			u.permsErr = err
+			return
+		}
+		u.perms, u.permsErr = fetchUserPermissions(context.Background(), conn, u.UserId.Data)
+	})
+	return u.perms, u.permsErr
+}
 
-	conn, err := grafanaConnection(u.MqlRuntime)
+// fetchUserPermissions issues a single permissions request. 403 / 404 are
+// tolerated — the endpoint may not exist (OSS), RBAC may be disabled, or the
+// caller may lack access — and return an empty (non-nil) map so MQL iteration
+// over the value is safe.
+func fetchUserPermissions(ctx context.Context, conn *connection.GrafanaConnection, userID int64) (map[string]any, error) {
+	path := "/api/access-control/users/" + strconv.FormatInt(userID, 10) + "/permissions"
+	resp, err := conn.Get(ctx, path)
 	if err != nil {
-		u.permsFetched = true
-		u.permsErr = err
-		return nil, err
-	}
-	path := "/api/access-control/users/" + strconv.FormatInt(u.UserId.Data, 10) + "/permissions"
-	resp, err := conn.Get(context.Background(), path)
-	if err != nil {
-		u.permsFetched = true
-		u.permsErr = err
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	// 403/404 → endpoint not available (OSS), RBAC disabled, or caller lacks
-	// access. Return empty map so org-admin queries don't fail.
 	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
-		u.permsFetched = true
-		u.perms = map[string]any{}
-		return u.perms, nil
+		return map[string]any{}, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("grafana: GET %s returned status %d", path, resp.StatusCode)
-		u.permsFetched = true
-		u.permsErr = err
-		return nil, err
+		return nil, fmt.Errorf("grafana: GET %s returned status %d", path, resp.StatusCode)
 	}
-
-	// Grafana returns permissions as a map of action -> []scope.
 	var raw map[string][]string
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		err = fmt.Errorf("grafana: decoding %s response: %w", path, err)
-		u.permsFetched = true
-		u.permsErr = err
-		return nil, err
+		return nil, fmt.Errorf("grafana: decoding %s response: %w", path, err)
 	}
-
 	out := make(map[string]any, len(raw))
 	for k, scopes := range raw {
 		anyScopes := make([]any, len(scopes))
@@ -354,7 +412,5 @@ func (u *mqlGrafanaUser) permissions() (map[string]any, error) {
 		}
 		out[k] = anyScopes
 	}
-	u.perms = out
-	u.permsFetched = true
 	return out, nil
 }
