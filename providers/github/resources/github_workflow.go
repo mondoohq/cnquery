@@ -65,11 +65,16 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 	ownerLogin := fullNameSplit[0]
 	repoName := fullNameSplit[1]
 
-	repo, _, err := conn.Client().Repositories.Get(conn.Context(), ownerLogin, repoName)
-	if err != nil {
-		return nil, err
+	// Prefer the default branch already known to the parent repository to
+	// avoid an extra Repositories.Get on every workflow access.
+	defaultBranch := g.defaultBranchName
+	if defaultBranch == "" {
+		repo, _, err := conn.Client().Repositories.Get(conn.Context(), ownerLogin, repoName)
+		if err != nil {
+			return nil, err
+		}
+		defaultBranch = repo.GetDefaultBranch()
 	}
-	defaultBranch := repo.GetDefaultBranch()
 	if defaultBranch == "" {
 		defaultBranch = "main"
 	}

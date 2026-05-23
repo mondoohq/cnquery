@@ -73,12 +73,19 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		id = *repo.ID
 	}
 
-	owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
-		"id":    llx.IntData(repo.GetOwner().GetID()),
-		"login": llx.StringData(repo.GetOwner().GetLogin()),
-	})
-	if err != nil {
-		return nil, err
+	// repo.Owner can be nil on fork entries and some list responses. Skip the
+	// owner resource in that case rather than constructing a degenerate
+	// `github.user/0` that every nil-owner repo would share.
+	var owner plugin.Resource
+	if repo.Owner != nil && repo.GetOwner().GetLogin() != "" {
+		var err error
+		owner, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntData(repo.GetOwner().GetID()),
+			"login": llx.StringData(repo.GetOwner().GetLogin()),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	res, err := CreateResource(runtime, "github.repository", map[string]*llx.RawData{
@@ -116,7 +123,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"defaultBranchName":                   llx.StringDataPtr(repo.DefaultBranch),
 		"cloneUrl":                            llx.StringData(repo.GetCloneURL()),
 		"sshUrl":                              llx.StringData(repo.GetSSHURL()),
-		"owner":                               llx.ResourceData(owner, owner.MqlName()),
+		"owner":                               llx.AnyData(owner),
 		"customProperties":                    llx.DictData(repo.CustomProperties),
 		"webCommitSignoffRequired":            llx.BoolDataPtr(repo.WebCommitSignoffRequired),
 		"advancedSecurityEnabled":             llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saAdvancedSecurity)),
@@ -368,12 +375,16 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		owner, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-			"id":    llx.IntDataPtr(pr.User.ID),
-			"login": llx.StringDataPtr(pr.User.Login),
-		})
-		if err != nil {
-			return nil, err
+		var owner plugin.Resource
+		if pr.User != nil {
+			ownerRes, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(pr.User.ID),
+				"login": llx.StringDataPtr(pr.User.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+			owner = ownerRes
 		}
 
 		assigneesRes := []any{}
@@ -423,14 +434,14 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 
 		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
 			"id":                 llx.IntDataPtr(pr.ID),
-			"number":             llx.IntData(int64(*pr.Number)),
+			"number":             llx.IntData(int64(pr.GetNumber())),
 			"state":              llx.StringDataPtr(pr.State),
 			"labels":             llx.ArrayData(labels, types.Any),
 			"createdAt":          llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
 			"updatedAt":          llx.TimeDataPtr(githubTimestamp(pr.UpdatedAt)),
 			"closedAt":           llx.TimeDataPtr(githubTimestamp(pr.ClosedAt)),
 			"title":              llx.StringDataPtr(pr.Title),
-			"owner":              llx.ResourceData(owner, owner.MqlName()),
+			"owner":              llx.AnyData(owner),
 			"assignees":          llx.ArrayData(assigneesRes, types.Any),
 			"requestedReviewers": llx.ArrayData(requestedReviewers, types.Resource("github.user")),
 			"repoName":           llx.StringData(repoName),
@@ -524,7 +535,7 @@ func (g *mqlGithubRepository) branches() ([]any, error) {
 		branch := allBranches[i]
 
 		defaultBranch := false
-		if repoDefaultBranchName == *branch.Name {
+		if repoDefaultBranchName == branch.GetName() {
 			defaultBranch = true
 		}
 
@@ -855,8 +866,8 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 		"repository":    llx.StringData(repo),
 		"commit":        llx.AnyData(mqlGitCommit),
 		"stats":         llx.MapData(stats, types.Any),
-		"authoredDate":  llx.TimeData(rc.Commit.Author.Date.Time),
-		"committedDate": llx.TimeData(rc.Commit.Committer.Date.Time),
+		"authoredDate":  llx.TimeData(rc.Commit.GetAuthor().GetDate().Time),
+		"committedDate": llx.TimeData(rc.Commit.GetCommitter().GetDate().Time),
 	})
 }
 
@@ -1359,6 +1370,7 @@ func (g *mqlGithubRepository) webhooks() ([]any, error) {
 
 type mqlGithubWorkflowInternal struct {
 	repositoryFullName string
+	defaultBranchName  string
 	parentResource     *mqlGithubRepository
 }
 
@@ -1382,6 +1394,11 @@ func (g *mqlGithubRepository) workflows() ([]any, error) {
 		return nil, g.FullName.Error
 	}
 	fullName := g.FullName.Data
+
+	defaultBranchName := ""
+	if g.DefaultBranchName.Error == nil {
+		defaultBranchName = g.DefaultBranchName.Data
+	}
 
 	listOpts := &github.ListOptions{
 		PerPage: paginationPerPage,
@@ -1420,6 +1437,7 @@ func (g *mqlGithubRepository) workflows() ([]any, error) {
 
 		gw := mqlWebhook.(*mqlGithubWorkflow)
 		gw.repositoryFullName = fullName
+		gw.defaultBranchName = defaultBranchName
 		res = append(res, gw)
 	}
 	return res, nil
@@ -1738,6 +1756,9 @@ func (g *mqlGithubRepository) stargazers() ([]any, error) {
 	res := []any{}
 	for i := range allStargazers {
 		stargazer := allStargazers[i]
+		if stargazer.User == nil {
+			continue
+		}
 		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(stargazer.User.ID),
 			"login": llx.StringDataPtr(stargazer.User.Login),
@@ -2447,6 +2468,7 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 		return nil, err
 	}
 	if result == nil || result.SBOM == nil {
+		g.SpdxSbom.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	info := result.SBOM

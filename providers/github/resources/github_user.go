@@ -97,7 +97,7 @@ func (g *mqlGithubCollaborator) id() (string, error) {
 		return "", g.Id.Error
 	}
 	id := g.Id.Data
-	return strconv.FormatInt(id, 10), nil
+	return "github.collaborator/" + strconv.FormatInt(id, 10), nil
 }
 
 func (g *mqlGithubInstallation) id() (string, error) {
@@ -105,7 +105,7 @@ func (g *mqlGithubInstallation) id() (string, error) {
 		return "", g.Id.Error
 	}
 	id := g.Id.Data
-	return strconv.FormatInt(id, 10), nil
+	return "github.installation/" + strconv.FormatInt(id, 10), nil
 }
 
 func (g *mqlGithubUser) repositories() ([]any, error) {

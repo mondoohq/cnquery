@@ -39,7 +39,7 @@ func (g *mqlGithubTeam) repositories() ([]any, error) {
 	}
 	orgID := org.Id.Data
 
-	listOpts := &github.ListOptions{}
+	listOpts := &github.ListOptions{PerPage: paginationPerPage}
 	var allRepos []*github.Repository
 	for {
 		repos, resp, err := conn.Client().Teams.ListTeamReposByID(conn.Context(), orgID, teamID, listOpts)

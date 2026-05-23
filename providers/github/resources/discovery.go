@@ -163,7 +163,6 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		}
 	}
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers) {
-		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
 			if user.Name.Data == "" {
@@ -257,7 +256,7 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 }
 
 func getMqlGithubUser(runtime *plugin.Runtime, userName string) (*mqlGithubUser, error) {
-	res, err := NewResource(runtime, "github.user", map[string]*llx.RawData{"name": llx.StringData(userName)})
+	res, err := NewResource(runtime, "github.user", map[string]*llx.RawData{"login": llx.StringData(userName)})
 	if err != nil {
 		return nil, err
 	}

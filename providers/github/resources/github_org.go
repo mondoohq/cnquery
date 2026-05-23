@@ -96,7 +96,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToValue(org.MembersCanCreateInternalRepos))
 	args["membersCanCreatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePages))
 	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePublicPages))
-	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivateRepos))
+	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToValue(org.MembersCanCreatePrivatePages))
 	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToValue(org.MembersCanForkPrivateRepos))
 
 	// Security settings for new repositories
@@ -618,6 +618,7 @@ func (g *mqlGithubOrganization) packages() ([]any, error) {
 				return nil, err
 			}
 			pkg := mqlGhPackage.(*mqlGithubPackage)
+			pkg.parentResource = g
 
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
@@ -639,6 +640,15 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	}
 
 	repoName := g.packageRepository
+
+	// When the package was discovered via an organization, the org's repo
+	// list is already cached. Reuse it before falling back to a per-package
+	// Repositories.Get call.
+	if g.parentResource != nil {
+		if cached, ok := g.parentResource.repoCacheMap[repoName]; ok && cached != nil {
+			return cached, nil
+		}
+	}
 
 	if g.Owner.Error != nil {
 		return nil, g.Owner.Error

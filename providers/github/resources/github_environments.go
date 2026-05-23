@@ -299,6 +299,7 @@ func (g *mqlGithubDeployment) latestStatus() (*mqlGithubDeploymentStatus, error)
 	repoName := g.repoName
 
 	if ownerLogin == "" || repoName == "" {
+		g.LatestStatus.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -306,16 +307,19 @@ func (g *mqlGithubDeployment) latestStatus() (*mqlGithubDeploymentStatus, error)
 	statuses, _, err := conn.Client().Repositories.ListDeploymentStatuses(conn.Context(), ownerLogin, repoName, deploymentID, opts)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
+			g.LatestStatus.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		if strings.Contains(err.Error(), "403") {
 			log.Debug().Msg("Deployment statuses are not accessible for this deployment")
+			g.LatestStatus.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
 	}
 
 	if len(statuses) == 0 {
+		g.LatestStatus.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
