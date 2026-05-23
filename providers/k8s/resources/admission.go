@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -34,6 +35,7 @@ func (k *mqlK8sAdmissionreview) request() (*mqlK8sAdmissionrequest, error) {
 		return nil, err
 	}
 	if len(result) == 0 {
+		k.Request.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 

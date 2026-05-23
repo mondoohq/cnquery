@@ -684,8 +684,7 @@ func (k *mqlK8sPod) deployment() (*mqlK8sDeployment, error) {
 	}
 	rsTyped, err := rs.getReplicaSet()
 	if err != nil {
-		k.Deployment.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+		return nil, err
 	}
 	for _, o := range rsTyped.OwnerReferences {
 		if o.Kind == "Deployment" {
