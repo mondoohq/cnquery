@@ -5475,7 +5475,7 @@ func (c *mqlGitlabGroupAuditEvent) GetEntityProject() *plugin.TValue[*mqlGitlabP
 type mqlGitlabProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabProjectInternal it will be used here
+	mqlGitlabProjectInternal
 	Id                                        plugin.TValue[int64]
 	Name                                      plugin.TValue[string]
 	FullName                                  plugin.TValue[string]
@@ -6530,7 +6530,7 @@ func (c *mqlGitlabProjectProtectedBranch) GetCodeOwnerApproval() *plugin.TValue[
 type mqlGitlabProjectFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabProjectFileInternal it will be used here
+	mqlGitlabProjectFileInternal
 	Path    plugin.TValue[string]
 	Type    plugin.TValue[string]
 	Name    plugin.TValue[string]
@@ -6587,7 +6587,9 @@ func (c *mqlGitlabProjectFile) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlGitlabProjectFile) GetContent() *plugin.TValue[string] {
-	return &c.Content
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
 }
 
 // mqlGitlabProjectWebhook for the gitlab.project.webhook resource

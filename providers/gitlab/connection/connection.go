@@ -212,16 +212,17 @@ func groupDescendantGroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, er
 	log.Debug().Msgf("calling list descendant groups with %v", gid)
 	perPage := int64(50)
 	page := int64(1)
-	total := int64(50)
 	groups := []*gitlab.Group{}
-	for page*perPage <= total {
+	for {
 		grps, resp, err := conn.Client().Groups.ListDescendantGroups(gid, &gitlab.ListDescendantGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
 		if err != nil {
 			return nil, err
 		}
 		groups = append(groups, grps...)
-		total = resp.TotalItems
-		page += 1
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	return groups, nil
@@ -231,16 +232,17 @@ func groupSubgroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	log.Debug().Msgf("calling list subgroups with %v", gid)
 	perPage := int64(50)
 	page := int64(1)
-	total := int64(50)
 	groups := []*gitlab.Group{}
-	for page*perPage <= total {
+	for {
 		grps, resp, err := conn.Client().Groups.ListSubGroups(gid, &gitlab.ListSubGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
 		if err != nil {
 			return nil, err
 		}
 		groups = append(groups, grps...)
-		total = resp.TotalItems
-		page += 1
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	return groups, nil

@@ -221,10 +221,9 @@ func (r *mqlGitlabProjectContainerRegistryRepository) project() (*mqlGitlabProje
 // (free instances or projects with the registry disabled).
 func (p *mqlGitlabProject) containerExpirationPolicy() (*mqlGitlabProjectContainerExpirationPolicy, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
-	projectID := int(p.Id.Data)
-	project, resp, err := conn.Client().Projects.GetProject(projectID, nil)
+	project, err := p.projectDetails(conn)
 	if err != nil {
-		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
 			p.ContainerExpirationPolicy.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}

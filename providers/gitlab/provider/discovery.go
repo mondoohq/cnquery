@@ -219,16 +219,17 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitla
 	log.Debug().Msgf("discover group projects for %v", gid)
 	perPage := int64(50)
 	page := int64(1)
-	total := int64(50)
 	projects := []*gitlab.Project{}
-	for page*perPage <= total {
+	for {
 		projs, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
 		if err != nil {
 			return nil, err
 		}
 		projects = append(projects, projs...)
-		total = resp.TotalItems
-		page += 1
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	return projects, nil
@@ -263,16 +264,17 @@ func listAllGroups(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
 	log.Debug().Msg("calling list all groups")
 	perPage := int64(50)
 	page := int64(1)
-	total := int64(50)
 	groups := []*gitlab.Group{}
-	for page*perPage <= total {
+	for {
 		grps, resp, err := conn.Client().Groups.ListGroups(&gitlab.ListGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
 		if err != nil {
 			return nil, err
 		}
 		groups = append(groups, grps...)
-		total = resp.TotalItems
-		page += 1
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	return groups, nil
@@ -350,7 +352,7 @@ func discoverRepoTypes(client *gitlab.Client, pid any) (*discoveredTypes, error)
 	nodes := []*gitlab.TreeNode{}
 	for {
 		data, resp, err := client.Repositories.ListTree(pid, opts)
-		if err != nil && resp.StatusCode == 404 {
+		if err != nil && resp != nil && resp.StatusCode == 404 {
 			// this case can happen when you have a new project with no commits / files
 			break
 		} else if err != nil {

@@ -625,7 +625,7 @@ private gitlab.project.file @defaults("path type") {
   // File name
   name string
   // File content
-  content string
+  content() string
 }
 
 // GitLab project webhook

@@ -5,10 +5,13 @@ package resources
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,6 +19,39 @@ import (
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// mqlGitlabProjectInternal caches the full project payload from
+// `GET /projects/:id` so multiple lazy fields (mergeMethod,
+// containerExpirationPolicy, …) share one API call rather than each issuing
+// its own GetProject for a different scalar.
+type mqlGitlabProjectInternal struct {
+	detailsOnce       sync.Once
+	details           *gitlab.Project
+	detailsErr        error
+	detailsStatusCode int
+}
+
+// projectDetails returns the full *gitlab.Project payload, fetching it on
+// first call and reusing it thereafter. Used by lazy accessors that need
+// fields not seeded by getGitlabProjectArgs (MergeMethod,
+// ContainerExpirationPolicy, etc.). detailsStatusCode is set whenever the
+// SDK gave us a response, so callers can distinguish access-denied/missing
+// (silent null) from real transport errors (propagate).
+func (p *mqlGitlabProject) projectDetails(conn *connection.GitLabConnection) (*gitlab.Project, error) {
+	p.detailsOnce.Do(func() {
+		projectID := int(p.Id.Data)
+		project, resp, err := conn.Client().Projects.GetProject(projectID, nil)
+		if resp != nil {
+			p.detailsStatusCode = resp.StatusCode
+		}
+		if err != nil {
+			p.detailsErr = err
+			return
+		}
+		p.details = project
+	})
+	return p.details, p.detailsErr
+}
 
 func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
@@ -128,9 +164,21 @@ func (p *mqlGitlabProject) approvalRules() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
-	approvals, _, err := conn.Client().Projects.GetProjectApprovalRules(projectID, nil, nil)
-	if err != nil {
-		return nil, err
+	perPage := int64(50)
+	page := int64(1)
+	var approvals []*gitlab.ProjectApprovalRule
+	for {
+		rules, resp, err := conn.Client().Projects.GetProjectApprovalRules(projectID, &gitlab.GetProjectApprovalRulesListsOptions{
+			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+		})
+		if err != nil {
+			return nil, err
+		}
+		approvals = append(approvals, rules...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	defaultBranchName := p.DefaultBranch.Data
@@ -252,8 +300,7 @@ func approvalRuleProtectedBranches(runtime *plugin.Runtime, branches []*gitlab.P
 func (p *mqlGitlabProject) mergeMethod() (string, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
-	projectID := int(p.Id.Data)
-	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
+	project, err := p.projectDetails(conn)
 	if err != nil {
 		return "", err
 	}
@@ -281,16 +328,21 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
-	project, _, err := conn.Client().Projects.GetProject(projectID, nil)
-	if err != nil {
-		return nil, err
-	}
+	defaultBranch := p.DefaultBranch.Data
 
-	defaultBranch := project.DefaultBranch
-
-	protectedBranches, _, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, nil)
-	if err != nil {
-		return nil, err
+	perPage := int64(50)
+	page := int64(1)
+	var protectedBranches []*gitlab.ProtectedBranch
+	for {
+		branches, resp, err := conn.Client().ProtectedBranches.ListProtectedBranches(projectID, &gitlab.ListProtectedBranchesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		protectedBranches = append(protectedBranches, branches...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	var mqlProtectedBranches []any
@@ -390,7 +442,39 @@ func (f *mqlGitlabProjectFile) id() (string, error) {
 	return f.Path.Data, nil
 }
 
-// projectFiles fetches the list of files in the project repository and their contents
+// mqlGitlabProjectFileInternal carries the parent project context needed to
+// lazily fetch file content. We don't expose these as schema fields because
+// they only exist to satisfy the per-file GetFile lookup and would clutter
+// the resource for users.
+type mqlGitlabProjectFileInternal struct {
+	projectID int
+	ref       string
+}
+
+// content lazily fetches the file's raw content via the repository files
+// endpoint. Eager fetching here would force an HTTP call per blob even for
+// queries that never read `content` (e.g. `projectFiles { path }`); doing
+// it on demand keeps the cost proportional to what the query asks for.
+func (f *mqlGitlabProjectFile) content() (string, error) {
+	if f.projectID == 0 || f.ref == "" || f.Path.Error != nil {
+		return "", errors.New("gitlab.project.file: missing project context for content fetch")
+	}
+	conn := f.MqlRuntime.Connection.(*connection.GitLabConnection)
+	fileContent, _, err := conn.Client().RepositoryFiles.GetFile(f.projectID, f.Path.Data, &gitlab.GetFileOptions{Ref: &f.ref})
+	if err != nil {
+		return "", err
+	}
+	contentBytes, err := base64.StdEncoding.DecodeString(fileContent.Content)
+	if err != nil {
+		return "", err
+	}
+	return string(contentBytes), nil
+}
+
+// projectFiles fetches the list of files in the project repository. File
+// content is fetched lazily on access (see gitlab.project.file.content) so
+// that queries reading only path/name/type don't pay for an HTTP round-trip
+// per blob.
 func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 	// Return empty array if repository is empty to avoid 404 errors
 	if p.EmptyRepo.Data {
@@ -406,44 +490,49 @@ func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 	recursive := true
 
 	listFilesOptions := &gitlab.ListTreeOptions{
-		Ref:       ref,
-		Recursive: &recursive,
+		ListOptions: gitlab.ListOptions{PerPage: 100},
+		Ref:         ref,
+		Recursive:   &recursive,
 	}
 
-	files, _, err := conn.Client().Repositories.ListTree(projectID, listFilesOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list files in repository: %w", err)
+	var files []*gitlab.TreeNode
+	for {
+		batch, resp, err := conn.Client().Repositories.ListTree(projectID, listFilesOptions)
+		if err != nil {
+			if resp != nil && resp.StatusCode == 404 {
+				// new project with no commits/files
+				break
+			}
+			return nil, fmt.Errorf("failed to list files in repository: %w", err)
+		}
+		files = append(files, batch...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listFilesOptions.Page = resp.NextPage
 	}
 
 	var mqlFiles []any
 	for _, file := range files {
-		// Only fetch file content for blobs (files) not directories
-		if file.Type == "blob" {
-			fileContent, _, err := conn.Client().RepositoryFiles.GetFile(projectID, file.Path, &gitlab.GetFileOptions{Ref: ref})
-			if err != nil {
-				return nil, err
-			}
-
-			// Decode base64 content
-			contentBytes, err := base64.StdEncoding.DecodeString(fileContent.Content)
-			if err != nil {
-				return nil, err
-			}
-
-			fileInfo := map[string]*llx.RawData{
-				"path":    llx.StringData(file.Path),
-				"type":    llx.StringData(file.Type),
-				"name":    llx.StringData(file.Name),
-				"content": llx.StringData(string(contentBytes)),
-			}
-
-			mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlFiles = append(mqlFiles, mqlFile)
+		if file.Type != "blob" {
+			continue
 		}
+		fileInfo := map[string]*llx.RawData{
+			"path": llx.StringData(file.Path),
+			"type": llx.StringData(file.Type),
+			"name": llx.StringData(file.Name),
+		}
+
+		mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
+		if err != nil {
+			log.Error().Err(err).Str("path", file.Path).Msg("failed to create gitlab.project.file resource")
+			continue
+		}
+		mf := mqlFile.(*mqlGitlabProjectFile)
+		mf.projectID = projectID
+		mf.ref = defaultBranch
+
+		mqlFiles = append(mqlFiles, mqlFile)
 	}
 
 	return mqlFiles, nil
