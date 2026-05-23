@@ -24,8 +24,8 @@ alpn
 ams
 antispam
 aof
-APKINDEX
 apiservice
+APKINDEX
 apm
 apparmor
 appsettings
@@ -186,6 +186,7 @@ dport
 dpu
 draid
 DRdf
+dri
 dscp
 dsse
 Duf
@@ -291,6 +292,7 @@ hookscript
 horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
+hostpci
 hpi
 hsts
 httproute
@@ -315,6 +317,7 @@ initrdefi
 INPROGRESS
 INSTALLTIME
 iodef
+iommu
 iotedge
 iothread
 ipam
@@ -405,6 +408,7 @@ maxmemory
 mcp
 mcr
 mde
+mdev
 mebibytes
 mediapackagev
 memorydb
@@ -524,6 +528,7 @@ panos
 parallelquery
 PAYG
 pbs
+pcie
 pcnet
 PDB
 pdp
@@ -684,6 +689,7 @@ subkeys
 subnetted
 subports
 subscriptionfilter
+subsystem
 superusers
 SVI
 swi
@@ -748,6 +754,7 @@ vertexai
 Veth
 vga
 VGeneration
+vGPU
 vhd
 virtio
 virtualmachine

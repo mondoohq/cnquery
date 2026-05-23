@@ -78,6 +78,12 @@ proxmox.cluster @defaults("name quorate") {
   ipsets() []proxmox.firewall.ipset
   // Cluster-level firewall aliases
   aliases() []proxmox.firewall.alias
+  // Cluster-level firewall security groups
+  //
+  // Each group is a named rule set that other rules reference with
+  // `type=group`. Auditing the group definitions lets policies verify
+  // that the referenced rules match their stated intent.
+  firewallGroups() []proxmox.firewall.group
   // Cluster-level options
   options() dict
   // Migration network policy
@@ -265,6 +271,17 @@ proxmox.node @defaults("name status") {
   // LVM-thin pools on this node
   thinPools() []proxmox.lvm.thinPool
 
+  // --- Hardware ---
+
+  // PCI devices visible to the host
+  //
+  // Lists everything `/nodes/<n>/hardware/pci` reports, regardless of
+  // whether the device is currently assigned to a guest. Pair with
+  // `proxmox.vm.pciDevices` to confirm what's actually passed through.
+  pciDevices() []proxmox.node.pciDevice
+  // USB devices visible to the host (pair with `proxmox.vm.usbDevices`)
+  usbDevices() []proxmox.node.usbDevice
+
   // --- Guests ---
 
   // VMs running on this node
@@ -387,6 +404,18 @@ proxmox.vm @defaults("id name status") {
   vga() string
   // Serial ports attached to the VM
   serialPorts() []proxmox.vm.serialPort
+  // PCI devices passed through to the VM
+  //
+  // Parsed from `hostpci0`..`hostpci15` config keys. Each entry grants
+  // the guest direct access to host PCIe hardware — an audit risk
+  // since it bypasses the virtualization boundary for that device.
+  pciDevices() []proxmox.vm.pciDevice
+  // USB devices passed through to the VM
+  //
+  // Parsed from `usb0`..`usb14`. Targets are either `host=vendor:product`
+  // vendor IDs, USB bus paths, the SPICE redirection sentinel, or host
+  // device paths — all of which surface direct host-USB access.
+  usbDevices() []proxmox.vm.usbDevice
 
   // --- Cloud-init ---
 
@@ -775,6 +804,12 @@ proxmox.firewall.rule @defaults("pos action") {
   source string
   // Source port
   sport string
+  // Security group referenced by this rule when `type == "group"`
+  //
+  // PVE rules of type `group` carry the group name in `action` rather
+  // than a verb like ACCEPT/DROP, and apply that named rule set in
+  // place. This resolves the reference; null for non-group rules.
+  group() proxmox.firewall.group
 }
 
 // Proxmox VE user
@@ -1115,6 +1150,13 @@ proxmox.container @defaults("id name status unprivileged") {
   // here is an explicit override of the PVE defaults and warrants an
   // audit review.
   rawLxc() []string
+  // Host devices passed through to the container
+  //
+  // Parsed from `dev0`..`dev255`. Each entry grants the container
+  // direct access to a host `/dev` node and is a host-pivot surface
+  // — a permissive `mode=` (e.g. `0666`) effectively shares the
+  // device with everyone inside the guest.
+  passthroughDevices() []proxmox.container.passthroughDevice
 
   // --- Devices ---
 
@@ -1552,4 +1594,167 @@ proxmox.vm.serialPort @defaults("id target") {
   id string
   // Target — `socket` or a host device path (e.g. `/dev/ttyS0`)
   target string
+}
+
+// Proxmox VE firewall security group
+//
+// Examine a named rule set defined under `/cluster/firewall/groups`.
+// Other firewall rules reference the group through `type=group,
+// action=<groupName>`; the rules `inside` the group then apply in
+// place. Auditing both the references and the group's own `rules`
+// is how policies confirm a `type=group` rule is actually doing what
+// it claims to.
+proxmox.firewall.group @defaults("name") {
+  // Group name
+  name string
+  // Group comment
+  comment string
+  // Rules contained in this group
+  rules() []proxmox.firewall.rule
+}
+
+// Proxmox VE node PCI device
+//
+// Examine a PCI device visible to a Proxmox node, identified by its
+// `id` (`<seg>:<bus>:<slot>.<func>`). Reports vendor and device IDs
+// alongside their human-readable names, the PCI `class` (eg `0x0300`
+// for VGA), the subsystem identifiers, `iommuGroup` (passthrough
+// granularity — devices in the same group must be passed through
+// together), and whether the device advertises mediated-device
+// support via `mdevSupported`.
+proxmox.node.pciDevice @defaults("id deviceName iommuGroup") {
+  // PCI address (e.g. 0000:01:00.0)
+  id string
+  // PCI class code (hex string, e.g. `0x0300` for VGA)
+  class string
+  // Human-readable PCI class name
+  className string
+  // Vendor ID (4-digit hex string)
+  vendor string
+  // Human-readable vendor name
+  vendorName string
+  // Device ID (4-digit hex string)
+  device string
+  // Human-readable device name
+  deviceName string
+  // Subsystem vendor ID
+  subsystemVendor string
+  // Human-readable subsystem vendor name
+  subsystemVendorName string
+  // Subsystem device ID
+  subsystemDevice string
+  // Human-readable subsystem device name
+  subsystemDeviceName string
+  // IOMMU group; devices that share a group must be passed through together
+  iommuGroup int
+  // Whether the device advertises mediated-device (vGPU) support
+  mdevSupported bool
+}
+
+// Proxmox VE node USB device
+//
+// Examine a USB device plugged into a Proxmox node. Reports the
+// `vendorId`/`productId` pair, manufacturer/product/serial strings
+// (when the device exposes them), the bus and device numbers
+// (`busNum`, `devNum`), the topology `port` / `level`, and the
+// negotiated `speed` and `usbPath` Proxmox uses when assigning the
+// device to a guest.
+proxmox.node.usbDevice @defaults("vendorId productId product") {
+  // Vendor ID (4-digit hex string)
+  vendorId string
+  // Product ID (4-digit hex string)
+  productId string
+  // Manufacturer string reported by the device
+  manufacturer string
+  // Product name reported by the device
+  product string
+  // Serial number reported by the device; empty when not provided
+  serial string
+  // Bus number
+  busNum string
+  // Device number on the bus
+  devNum string
+  // USB topology port
+  port string
+  // Hub depth (0 = root port)
+  level string
+  // USB class string (e.g. `Hub`, `Mass Storage`)
+  class string
+  // Negotiated speed (e.g. `12`, `480`, `5000` Mbit/s)
+  speed string
+  // USB path Proxmox uses to assign the device to a guest
+  usbPath string
+}
+
+// Proxmox VE VM PCI passthrough entry
+//
+// Examine a `hostpci<n>` configuration entry on a virtual machine.
+// PVE accepts two forms: a direct PCI address (`0000:01:00.0`, with
+// optional `.func` suffix for multi-function devices) or a named
+// `mapping=<name>` reference to a cluster-defined PCI mapping. The
+// extra knobs PVE exposes — PCIe vs legacy PCI, ROM-BAR visibility,
+// VGA tag, mdev type for vGPU, PCI-Express bus reset on detach —
+// are surfaced so audits can flag risky configurations
+// (e.g. `xVga = true` with no IOMMU isolation).
+proxmox.vm.pciDevice @defaults("slot address mapping") {
+  // Config slot (`hostpci0` through `hostpci15`)
+  slot string
+  // PCI address when configured directly; empty when `mapping` is used
+  address string
+  // Cluster-defined PCI mapping name when configured by reference; empty otherwise
+  mapping string
+  // Whether the device is exposed as PCIe (true) or legacy PCI (false)
+  pcie bool
+  // Whether the ROM BAR is visible to the guest
+  romBar bool
+  // Whether this device is the primary VGA for the guest
+  xVga bool
+  // Mediated-device type for vGPU passthrough; empty for direct passthrough
+  mdev string
+  // Whether PVE issues a bus reset when the device is detached
+  pciExpress bool
+  // Raw `hostpci<n>` config line for any options not surfaced above
+  raw string
+}
+
+// Proxmox VE VM USB passthrough entry
+//
+// Examine a `usb<n>` configuration entry on a virtual machine. PVE
+// supports four target forms: vendor:product IDs (`host=1234:5678`),
+// USB bus/port paths (`host=1-2.3`), host device paths (typically
+// `/dev/...`), and the SPICE redirection sentinel. The `usb3` flag
+// requests USB-3 emulation regardless of the underlying device class.
+proxmox.vm.usbDevice @defaults("slot target") {
+  // Config slot (`usb0` through `usb14`)
+  slot string
+  // Target as written in the config
+  //
+  // One of: vendor:product (e.g. `1234:5678`), USB bus path
+  // (e.g. `1-2.3`), host device path (`/dev/...`), or the literal
+  // `spice` sentinel for redirected USB.
+  target string
+  // Whether USB-3 emulation is forced
+  usb3 bool
+  // Raw `usb<n>` config line
+  raw string
+}
+
+// Proxmox VE container host-device passthrough entry
+//
+// Examine a `dev<n>` configuration entry on an LXC container. PVE
+// 7+ uses this format to expose a host `/dev` node into the guest;
+// the optional `uid=`, `gid=`, and `mode=` overrides control the
+// in-container permissions. A `mode=` of 0666 effectively grants the
+// device to every UID in the container.
+proxmox.container.passthroughDevice @defaults("slot path mode") {
+  // Config slot (`dev0` through `dev255`)
+  slot string
+  // Host path being exposed (e.g. `/dev/dri/card0`)
+  path string
+  // UID owner inside the container; 0 when not overridden
+  uid int
+  // GID owner inside the container; 0 when not overridden
+  gid int
+  // Mode (octal) applied to the in-container device node; empty when not set
+  mode string
 }

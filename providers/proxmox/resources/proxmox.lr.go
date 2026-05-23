@@ -16,50 +16,56 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceProxmox                    string = "proxmox"
-	ResourceProxmoxCluster             string = "proxmox.cluster"
-	ResourceProxmoxClusterHaResource   string = "proxmox.cluster.haResource"
-	ResourceProxmoxNode                string = "proxmox.node"
-	ResourceProxmoxNodeUpdate          string = "proxmox.node.update"
-	ResourceProxmoxVm                  string = "proxmox.vm"
-	ResourceProxmoxVmNetwork           string = "proxmox.vm.network"
-	ResourceProxmoxVmDisk              string = "proxmox.vm.disk"
-	ResourceProxmoxVmSnapshot          string = "proxmox.vm.snapshot"
-	ResourceProxmoxVmUpdate            string = "proxmox.vm.update"
-	ResourceProxmoxStorage             string = "proxmox.storage"
-	ResourceProxmoxPool                string = "proxmox.pool"
-	ResourceProxmoxNetwork             string = "proxmox.network"
-	ResourceProxmoxDns                 string = "proxmox.dns"
-	ResourceProxmoxService             string = "proxmox.service"
-	ResourceProxmoxCertificate         string = "proxmox.certificate"
-	ResourceProxmoxSubscription        string = "proxmox.subscription"
-	ResourceProxmoxRepository          string = "proxmox.repository"
-	ResourceProxmoxFirewallRule        string = "proxmox.firewall.rule"
-	ResourceProxmoxUser                string = "proxmox.user"
-	ResourceProxmoxToken               string = "proxmox.token"
-	ResourceProxmoxRole                string = "proxmox.role"
-	ResourceProxmoxGroup               string = "proxmox.group"
-	ResourceProxmoxAcl                 string = "proxmox.acl"
-	ResourceProxmoxRealm               string = "proxmox.realm"
-	ResourceProxmoxFirewallOptions     string = "proxmox.firewall.options"
-	ResourceProxmoxFirewallIpset       string = "proxmox.firewall.ipset"
-	ResourceProxmoxFirewallIpsetEntry  string = "proxmox.firewall.ipset.entry"
-	ResourceProxmoxFirewallAlias       string = "proxmox.firewall.alias"
-	ResourceProxmoxContainer           string = "proxmox.container"
-	ResourceProxmoxContainerNetwork    string = "proxmox.container.network"
-	ResourceProxmoxContainerMountPoint string = "proxmox.container.mountPoint"
-	ResourceProxmoxBackupJob           string = "proxmox.backup.job"
-	ResourceProxmoxClusterHaGroup      string = "proxmox.cluster.haGroup"
-	ResourceProxmoxNodeDisk            string = "proxmox.node.disk"
-	ResourceProxmoxNodeDiskSmart       string = "proxmox.node.disk.smart"
-	ResourceProxmoxZfsPool             string = "proxmox.zfs.pool"
-	ResourceProxmoxLvmVolumeGroup      string = "proxmox.lvm.volumeGroup"
-	ResourceProxmoxLvmThinPool         string = "proxmox.lvm.thinPool"
-	ResourceProxmoxReplicationJob      string = "proxmox.replication.job"
-	ResourceProxmoxSdnZone             string = "proxmox.sdn.zone"
-	ResourceProxmoxSdnVnet             string = "proxmox.sdn.vnet"
-	ResourceProxmoxSdnSubnet           string = "proxmox.sdn.subnet"
-	ResourceProxmoxVmSerialPort        string = "proxmox.vm.serialPort"
+	ResourceProxmox                           string = "proxmox"
+	ResourceProxmoxCluster                    string = "proxmox.cluster"
+	ResourceProxmoxClusterHaResource          string = "proxmox.cluster.haResource"
+	ResourceProxmoxNode                       string = "proxmox.node"
+	ResourceProxmoxNodeUpdate                 string = "proxmox.node.update"
+	ResourceProxmoxVm                         string = "proxmox.vm"
+	ResourceProxmoxVmNetwork                  string = "proxmox.vm.network"
+	ResourceProxmoxVmDisk                     string = "proxmox.vm.disk"
+	ResourceProxmoxVmSnapshot                 string = "proxmox.vm.snapshot"
+	ResourceProxmoxVmUpdate                   string = "proxmox.vm.update"
+	ResourceProxmoxStorage                    string = "proxmox.storage"
+	ResourceProxmoxPool                       string = "proxmox.pool"
+	ResourceProxmoxNetwork                    string = "proxmox.network"
+	ResourceProxmoxDns                        string = "proxmox.dns"
+	ResourceProxmoxService                    string = "proxmox.service"
+	ResourceProxmoxCertificate                string = "proxmox.certificate"
+	ResourceProxmoxSubscription               string = "proxmox.subscription"
+	ResourceProxmoxRepository                 string = "proxmox.repository"
+	ResourceProxmoxFirewallRule               string = "proxmox.firewall.rule"
+	ResourceProxmoxUser                       string = "proxmox.user"
+	ResourceProxmoxToken                      string = "proxmox.token"
+	ResourceProxmoxRole                       string = "proxmox.role"
+	ResourceProxmoxGroup                      string = "proxmox.group"
+	ResourceProxmoxAcl                        string = "proxmox.acl"
+	ResourceProxmoxRealm                      string = "proxmox.realm"
+	ResourceProxmoxFirewallOptions            string = "proxmox.firewall.options"
+	ResourceProxmoxFirewallIpset              string = "proxmox.firewall.ipset"
+	ResourceProxmoxFirewallIpsetEntry         string = "proxmox.firewall.ipset.entry"
+	ResourceProxmoxFirewallAlias              string = "proxmox.firewall.alias"
+	ResourceProxmoxContainer                  string = "proxmox.container"
+	ResourceProxmoxContainerNetwork           string = "proxmox.container.network"
+	ResourceProxmoxContainerMountPoint        string = "proxmox.container.mountPoint"
+	ResourceProxmoxBackupJob                  string = "proxmox.backup.job"
+	ResourceProxmoxClusterHaGroup             string = "proxmox.cluster.haGroup"
+	ResourceProxmoxNodeDisk                   string = "proxmox.node.disk"
+	ResourceProxmoxNodeDiskSmart              string = "proxmox.node.disk.smart"
+	ResourceProxmoxZfsPool                    string = "proxmox.zfs.pool"
+	ResourceProxmoxLvmVolumeGroup             string = "proxmox.lvm.volumeGroup"
+	ResourceProxmoxLvmThinPool                string = "proxmox.lvm.thinPool"
+	ResourceProxmoxReplicationJob             string = "proxmox.replication.job"
+	ResourceProxmoxSdnZone                    string = "proxmox.sdn.zone"
+	ResourceProxmoxSdnVnet                    string = "proxmox.sdn.vnet"
+	ResourceProxmoxSdnSubnet                  string = "proxmox.sdn.subnet"
+	ResourceProxmoxVmSerialPort               string = "proxmox.vm.serialPort"
+	ResourceProxmoxFirewallGroup              string = "proxmox.firewall.group"
+	ResourceProxmoxNodePciDevice              string = "proxmox.node.pciDevice"
+	ResourceProxmoxNodeUsbDevice              string = "proxmox.node.usbDevice"
+	ResourceProxmoxVmPciDevice                string = "proxmox.vm.pciDevice"
+	ResourceProxmoxVmUsbDevice                string = "proxmox.vm.usbDevice"
+	ResourceProxmoxContainerPassthroughDevice string = "proxmox.container.passthroughDevice"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -242,6 +248,30 @@ func init() {
 			// to override args, implement: initProxmoxVmSerialPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProxmoxVmSerialPort,
 		},
+		"proxmox.firewall.group": {
+			// to override args, implement: initProxmoxFirewallGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxFirewallGroup,
+		},
+		"proxmox.node.pciDevice": {
+			// to override args, implement: initProxmoxNodePciDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNodePciDevice,
+		},
+		"proxmox.node.usbDevice": {
+			// to override args, implement: initProxmoxNodeUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxNodeUsbDevice,
+		},
+		"proxmox.vm.pciDevice": {
+			// to override args, implement: initProxmoxVmPciDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxVmPciDevice,
+		},
+		"proxmox.vm.usbDevice": {
+			// to override args, implement: initProxmoxVmUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxVmUsbDevice,
+		},
+		"proxmox.container.passthroughDevice": {
+			// to override args, implement: initProxmoxContainerPassthroughDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxContainerPassthroughDevice,
+		},
 	}
 }
 
@@ -390,6 +420,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.cluster.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCluster).GetAliases()).ToDataRes(types.Array(types.Resource("proxmox.firewall.alias")))
+	},
+	"proxmox.cluster.firewallGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCluster).GetFirewallGroups()).ToDataRes(types.Array(types.Resource("proxmox.firewall.group")))
 	},
 	"proxmox.cluster.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCluster).GetOptions()).ToDataRes(types.Dict)
@@ -541,6 +574,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.node.thinPools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxNode).GetThinPools()).ToDataRes(types.Array(types.Resource("proxmox.lvm.thinPool")))
 	},
+	"proxmox.node.pciDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNode).GetPciDevices()).ToDataRes(types.Array(types.Resource("proxmox.node.pciDevice")))
+	},
+	"proxmox.node.usbDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNode).GetUsbDevices()).ToDataRes(types.Array(types.Resource("proxmox.node.usbDevice")))
+	},
 	"proxmox.node.vms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxNode).GetVms()).ToDataRes(types.Array(types.Resource("proxmox.vm")))
 	},
@@ -651,6 +690,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.vm.serialPorts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetSerialPorts()).ToDataRes(types.Array(types.Resource("proxmox.vm.serialPort")))
+	},
+	"proxmox.vm.pciDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetPciDevices()).ToDataRes(types.Array(types.Resource("proxmox.vm.pciDevice")))
+	},
+	"proxmox.vm.usbDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetUsbDevices()).ToDataRes(types.Array(types.Resource("proxmox.vm.usbDevice")))
 	},
 	"proxmox.vm.ciuser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetCiuser()).ToDataRes(types.String)
@@ -982,6 +1027,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.firewall.rule.sport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxFirewallRule).GetSport()).ToDataRes(types.String)
 	},
+	"proxmox.firewall.rule.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxFirewallRule).GetGroup()).ToDataRes(types.Resource("proxmox.firewall.group"))
+	},
 	"proxmox.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetId()).ToDataRes(types.String)
 	},
@@ -1272,6 +1320,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.container.rawLxc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetRawLxc()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.container.passthroughDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetPassthroughDevices()).ToDataRes(types.Array(types.Resource("proxmox.container.passthroughDevice")))
 	},
 	"proxmox.container.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetNetworks()).ToDataRes(types.Array(types.Resource("proxmox.container.network")))
@@ -1672,6 +1723,144 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.serialPort.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmSerialPort).GetTarget()).ToDataRes(types.String)
 	},
+	"proxmox.firewall.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxFirewallGroup).GetName()).ToDataRes(types.String)
+	},
+	"proxmox.firewall.group.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxFirewallGroup).GetComment()).ToDataRes(types.String)
+	},
+	"proxmox.firewall.group.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxFirewallGroup).GetRules()).ToDataRes(types.Array(types.Resource("proxmox.firewall.rule")))
+	},
+	"proxmox.node.pciDevice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetId()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetClass()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.className": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetClassName()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetVendor()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.vendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetVendorName()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetDevice()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.deviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetDeviceName()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.subsystemVendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemVendor()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.subsystemVendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemVendorName()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.subsystemDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemDevice()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.subsystemDeviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemDeviceName()).ToDataRes(types.String)
+	},
+	"proxmox.node.pciDevice.iommuGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetIommuGroup()).ToDataRes(types.Int)
+	},
+	"proxmox.node.pciDevice.mdevSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetMdevSupported()).ToDataRes(types.Bool)
+	},
+	"proxmox.node.usbDevice.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetVendorId()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.productId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetProductId()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetProduct()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetSerial()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.busNum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetBusNum()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.devNum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetDevNum()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetPort()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetLevel()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetClass()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.speed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetSpeed()).ToDataRes(types.String)
+	},
+	"proxmox.node.usbDevice.usbPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodeUsbDevice).GetUsbPath()).ToDataRes(types.String)
+	},
+	"proxmox.vm.pciDevice.slot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetSlot()).ToDataRes(types.String)
+	},
+	"proxmox.vm.pciDevice.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetAddress()).ToDataRes(types.String)
+	},
+	"proxmox.vm.pciDevice.mapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetMapping()).ToDataRes(types.String)
+	},
+	"proxmox.vm.pciDevice.pcie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetPcie()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.pciDevice.romBar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetRomBar()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.pciDevice.xVga": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetXVga()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.pciDevice.mdev": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetMdev()).ToDataRes(types.String)
+	},
+	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetPciExpress()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.pciDevice.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetRaw()).ToDataRes(types.String)
+	},
+	"proxmox.vm.usbDevice.slot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmUsbDevice).GetSlot()).ToDataRes(types.String)
+	},
+	"proxmox.vm.usbDevice.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmUsbDevice).GetTarget()).ToDataRes(types.String)
+	},
+	"proxmox.vm.usbDevice.usb3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmUsbDevice).GetUsb3()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.usbDevice.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmUsbDevice).GetRaw()).ToDataRes(types.String)
+	},
+	"proxmox.container.passthroughDevice.slot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerPassthroughDevice).GetSlot()).ToDataRes(types.String)
+	},
+	"proxmox.container.passthroughDevice.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerPassthroughDevice).GetPath()).ToDataRes(types.String)
+	},
+	"proxmox.container.passthroughDevice.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerPassthroughDevice).GetUid()).ToDataRes(types.Int)
+	},
+	"proxmox.container.passthroughDevice.gid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerPassthroughDevice).GetGid()).ToDataRes(types.Int)
+	},
+	"proxmox.container.passthroughDevice.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerPassthroughDevice).GetMode()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1794,6 +1983,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.cluster.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxCluster).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.cluster.firewallGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCluster).FirewallGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"proxmox.cluster.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2004,6 +2197,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxNode).ThinPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"proxmox.node.pciDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNode).PciDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNode).UsbDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"proxmox.node.vms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxNode).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2158,6 +2359,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.vm.serialPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVm).SerialPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).PciDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.usbDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).UsbDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"proxmox.vm.ciuser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2652,6 +2861,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxFirewallRule).Sport, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.firewall.rule.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallRule).Group, ok = plugin.RawToTValue[*mqlProxmoxFirewallGroup](v.Value, v.Error)
+		return
+	},
 	"proxmox.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxUser).__id, ok = v.Value.(string)
 		return
@@ -3082,6 +3295,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.container.rawLxc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainer).RawLxc, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).PassthroughDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"proxmox.container.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3672,6 +3889,214 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVmSerialPort).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"proxmox.firewall.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.firewall.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.firewall.group.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallGroup).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.firewall.group.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.node.pciDevice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.className": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).ClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.vendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.subsystemVendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubsystemVendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.subsystemVendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubsystemVendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.subsystemDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubsystemDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.subsystemDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubsystemDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.iommuGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).IommuGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.pciDevice.mdevSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).MdevSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.node.usbDevice.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.productId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).ProductId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.busNum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).BusNum, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.devNum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).DevNum, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.speed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).Speed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.node.usbDevice.usbPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodeUsbDevice).UsbPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.vm.pciDevice.slot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Slot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.mapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Mapping, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.pcie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Pcie, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.romBar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).RomBar, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.xVga": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).XVga, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.mdev": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Mdev, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).PciExpress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.pciDevice.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.usbDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmUsbDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.vm.usbDevice.slot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmUsbDevice).Slot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.usbDevice.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmUsbDevice).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.usbDevice.usb3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmUsbDevice).Usb3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.usbDevice.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmUsbDevice).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.container.passthroughDevice.slot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).Slot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevice.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevice.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevice.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.passthroughDevice.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerPassthroughDevice).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4017,6 +4442,7 @@ type mqlProxmoxCluster struct {
 	FirewallOptions  plugin.TValue[*mqlProxmoxFirewallOptions]
 	Ipsets           plugin.TValue[[]any]
 	Aliases          plugin.TValue[[]any]
+	FirewallGroups   plugin.TValue[[]any]
 	Options          plugin.TValue[any]
 	MigrationPolicy  plugin.TValue[string]
 	MigrationNetwork plugin.TValue[string]
@@ -4170,6 +4596,22 @@ func (c *mqlProxmoxCluster) GetAliases() *plugin.TValue[[]any] {
 		}
 
 		return c.aliases()
+	})
+}
+
+func (c *mqlProxmoxCluster) GetFirewallGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.cluster", c.__id, "firewallGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallGroups()
 	})
 }
 
@@ -4377,6 +4819,8 @@ type mqlProxmoxNode struct {
 	ZfsPools        plugin.TValue[[]any]
 	VolumeGroups    plugin.TValue[[]any]
 	ThinPools       plugin.TValue[[]any]
+	PciDevices      plugin.TValue[[]any]
+	UsbDevices      plugin.TValue[[]any]
 	Vms             plugin.TValue[[]any]
 	Containers      plugin.TValue[[]any]
 }
@@ -4730,6 +5174,38 @@ func (c *mqlProxmoxNode) GetThinPools() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlProxmoxNode) GetPciDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PciDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.node", c.__id, "pciDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pciDevices()
+	})
+}
+
+func (c *mqlProxmoxNode) GetUsbDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsbDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.node", c.__id, "usbDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usbDevices()
+	})
+}
+
 func (c *mqlProxmoxNode) GetVms() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Vms, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4857,6 +5333,8 @@ type mqlProxmoxVm struct {
 	Args            plugin.TValue[string]
 	Vga             plugin.TValue[string]
 	SerialPorts     plugin.TValue[[]any]
+	PciDevices      plugin.TValue[[]any]
+	UsbDevices      plugin.TValue[[]any]
 	Ciuser          plugin.TValue[string]
 	CipasswordSet   plugin.TValue[bool]
 	Sshkeys         plugin.TValue[string]
@@ -5081,6 +5559,38 @@ func (c *mqlProxmoxVm) GetSerialPorts() *plugin.TValue[[]any] {
 		}
 
 		return c.serialPorts()
+	})
+}
+
+func (c *mqlProxmoxVm) GetPciDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PciDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "pciDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pciDevices()
+	})
+}
+
+func (c *mqlProxmoxVm) GetUsbDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsbDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "usbDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usbDevices()
 	})
 }
 
@@ -6173,6 +6683,7 @@ type mqlProxmoxFirewallRule struct {
 	Proto   plugin.TValue[string]
 	Source  plugin.TValue[string]
 	Sport   plugin.TValue[string]
+	Group   plugin.TValue[*mqlProxmoxFirewallGroup]
 }
 
 // createProxmoxFirewallRule creates a new instance of this resource
@@ -6262,6 +6773,22 @@ func (c *mqlProxmoxFirewallRule) GetSource() *plugin.TValue[string] {
 
 func (c *mqlProxmoxFirewallRule) GetSport() *plugin.TValue[string] {
 	return &c.Sport
+}
+
+func (c *mqlProxmoxFirewallRule) GetGroup() *plugin.TValue[*mqlProxmoxFirewallGroup] {
+	return plugin.GetOrCompute[*mqlProxmoxFirewallGroup](&c.Group, func() (*mqlProxmoxFirewallGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.firewall.rule", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxFirewallGroup), nil
+			}
+		}
+
+		return c.group()
+	})
 }
 
 // mqlProxmoxUser for the proxmox.user resource
@@ -7121,46 +7648,47 @@ type mqlProxmoxContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlProxmoxContainerInternal
-	Id              plugin.TValue[int64]
-	Name            plugin.TValue[string]
-	Node            plugin.TValue[string]
-	Status          plugin.TValue[string]
-	Cpu             plugin.TValue[float64]
-	Maxcpu          plugin.TValue[int64]
-	Mem             plugin.TValue[int64]
-	Maxmem          plugin.TValue[int64]
-	Disk            plugin.TValue[int64]
-	Maxdisk         plugin.TValue[int64]
-	Diskread        plugin.TValue[int64]
-	Diskwrite       plugin.TValue[int64]
-	Netin           plugin.TValue[int64]
-	Netout          plugin.TValue[int64]
-	Uptime          plugin.TValue[int64]
-	Template        plugin.TValue[bool]
-	Config          plugin.TValue[any]
-	OsType          plugin.TValue[string]
-	Hostname        plugin.TValue[string]
-	Unprivileged    plugin.TValue[bool]
-	Features        plugin.TValue[[]any]
-	Protection      plugin.TValue[bool]
-	Onboot          plugin.TValue[bool]
-	Description     plugin.TValue[string]
-	Tags            plugin.TValue[[]any]
-	Pool            plugin.TValue[*mqlProxmoxPool]
-	Cmode           plugin.TValue[string]
-	Swap            plugin.TValue[int64]
-	CpuLimit        plugin.TValue[float64]
-	CpuUnits        plugin.TValue[int64]
-	SearchDomain    plugin.TValue[string]
-	Nameserver      plugin.TValue[string]
-	RawLxc          plugin.TValue[[]any]
-	Networks        plugin.TValue[[]any]
-	MountPoints     plugin.TValue[[]any]
-	Snapshots       plugin.TValue[[]any]
-	FirewallRules   plugin.TValue[[]any]
-	FirewallOptions plugin.TValue[*mqlProxmoxFirewallOptions]
-	Ipsets          plugin.TValue[[]any]
-	Aliases         plugin.TValue[[]any]
+	Id                 plugin.TValue[int64]
+	Name               plugin.TValue[string]
+	Node               plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Cpu                plugin.TValue[float64]
+	Maxcpu             plugin.TValue[int64]
+	Mem                plugin.TValue[int64]
+	Maxmem             plugin.TValue[int64]
+	Disk               plugin.TValue[int64]
+	Maxdisk            plugin.TValue[int64]
+	Diskread           plugin.TValue[int64]
+	Diskwrite          plugin.TValue[int64]
+	Netin              plugin.TValue[int64]
+	Netout             plugin.TValue[int64]
+	Uptime             plugin.TValue[int64]
+	Template           plugin.TValue[bool]
+	Config             plugin.TValue[any]
+	OsType             plugin.TValue[string]
+	Hostname           plugin.TValue[string]
+	Unprivileged       plugin.TValue[bool]
+	Features           plugin.TValue[[]any]
+	Protection         plugin.TValue[bool]
+	Onboot             plugin.TValue[bool]
+	Description        plugin.TValue[string]
+	Tags               plugin.TValue[[]any]
+	Pool               plugin.TValue[*mqlProxmoxPool]
+	Cmode              plugin.TValue[string]
+	Swap               plugin.TValue[int64]
+	CpuLimit           plugin.TValue[float64]
+	CpuUnits           plugin.TValue[int64]
+	SearchDomain       plugin.TValue[string]
+	Nameserver         plugin.TValue[string]
+	RawLxc             plugin.TValue[[]any]
+	PassthroughDevices plugin.TValue[[]any]
+	Networks           plugin.TValue[[]any]
+	MountPoints        plugin.TValue[[]any]
+	Snapshots          plugin.TValue[[]any]
+	FirewallRules      plugin.TValue[[]any]
+	FirewallOptions    plugin.TValue[*mqlProxmoxFirewallOptions]
+	Ipsets             plugin.TValue[[]any]
+	Aliases            plugin.TValue[[]any]
 }
 
 // createProxmoxContainer creates a new instance of this resource
@@ -7373,6 +7901,22 @@ func (c *mqlProxmoxContainer) GetNameserver() *plugin.TValue[string] {
 func (c *mqlProxmoxContainer) GetRawLxc() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.RawLxc, func() ([]any, error) {
 		return c.rawLxc()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetPassthroughDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PassthroughDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.container", c.__id, "passthroughDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.passthroughDevices()
 	})
 }
 
@@ -8846,4 +9390,485 @@ func (c *mqlProxmoxVmSerialPort) GetId() *plugin.TValue[string] {
 
 func (c *mqlProxmoxVmSerialPort) GetTarget() *plugin.TValue[string] {
 	return &c.Target
+}
+
+// mqlProxmoxFirewallGroup for the proxmox.firewall.group resource
+type mqlProxmoxFirewallGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxFirewallGroupInternal it will be used here
+	Name    plugin.TValue[string]
+	Comment plugin.TValue[string]
+	Rules   plugin.TValue[[]any]
+}
+
+// createProxmoxFirewallGroup creates a new instance of this resource
+func createProxmoxFirewallGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxFirewallGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.firewall.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxFirewallGroup) MqlName() string {
+	return "proxmox.firewall.group"
+}
+
+func (c *mqlProxmoxFirewallGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxFirewallGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlProxmoxFirewallGroup) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlProxmoxFirewallGroup) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.firewall.group", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlProxmoxNodePciDevice for the proxmox.node.pciDevice resource
+type mqlProxmoxNodePciDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNodePciDeviceInternal it will be used here
+	Id                  plugin.TValue[string]
+	Class               plugin.TValue[string]
+	ClassName           plugin.TValue[string]
+	Vendor              plugin.TValue[string]
+	VendorName          plugin.TValue[string]
+	Device              plugin.TValue[string]
+	DeviceName          plugin.TValue[string]
+	SubsystemVendor     plugin.TValue[string]
+	SubsystemVendorName plugin.TValue[string]
+	SubsystemDevice     plugin.TValue[string]
+	SubsystemDeviceName plugin.TValue[string]
+	IommuGroup          plugin.TValue[int64]
+	MdevSupported       plugin.TValue[bool]
+}
+
+// createProxmoxNodePciDevice creates a new instance of this resource
+func createProxmoxNodePciDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNodePciDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.node.pciDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNodePciDevice) MqlName() string {
+	return "proxmox.node.pciDevice"
+}
+
+func (c *mqlProxmoxNodePciDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNodePciDevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxNodePciDevice) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlProxmoxNodePciDevice) GetClassName() *plugin.TValue[string] {
+	return &c.ClassName
+}
+
+func (c *mqlProxmoxNodePciDevice) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlProxmoxNodePciDevice) GetVendorName() *plugin.TValue[string] {
+	return &c.VendorName
+}
+
+func (c *mqlProxmoxNodePciDevice) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlProxmoxNodePciDevice) GetDeviceName() *plugin.TValue[string] {
+	return &c.DeviceName
+}
+
+func (c *mqlProxmoxNodePciDevice) GetSubsystemVendor() *plugin.TValue[string] {
+	return &c.SubsystemVendor
+}
+
+func (c *mqlProxmoxNodePciDevice) GetSubsystemVendorName() *plugin.TValue[string] {
+	return &c.SubsystemVendorName
+}
+
+func (c *mqlProxmoxNodePciDevice) GetSubsystemDevice() *plugin.TValue[string] {
+	return &c.SubsystemDevice
+}
+
+func (c *mqlProxmoxNodePciDevice) GetSubsystemDeviceName() *plugin.TValue[string] {
+	return &c.SubsystemDeviceName
+}
+
+func (c *mqlProxmoxNodePciDevice) GetIommuGroup() *plugin.TValue[int64] {
+	return &c.IommuGroup
+}
+
+func (c *mqlProxmoxNodePciDevice) GetMdevSupported() *plugin.TValue[bool] {
+	return &c.MdevSupported
+}
+
+// mqlProxmoxNodeUsbDevice for the proxmox.node.usbDevice resource
+type mqlProxmoxNodeUsbDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxNodeUsbDeviceInternal it will be used here
+	VendorId     plugin.TValue[string]
+	ProductId    plugin.TValue[string]
+	Manufacturer plugin.TValue[string]
+	Product      plugin.TValue[string]
+	Serial       plugin.TValue[string]
+	BusNum       plugin.TValue[string]
+	DevNum       plugin.TValue[string]
+	Port         plugin.TValue[string]
+	Level        plugin.TValue[string]
+	Class        plugin.TValue[string]
+	Speed        plugin.TValue[string]
+	UsbPath      plugin.TValue[string]
+}
+
+// createProxmoxNodeUsbDevice creates a new instance of this resource
+func createProxmoxNodeUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxNodeUsbDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.node.usbDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxNodeUsbDevice) MqlName() string {
+	return "proxmox.node.usbDevice"
+}
+
+func (c *mqlProxmoxNodeUsbDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetProductId() *plugin.TValue[string] {
+	return &c.ProductId
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetBusNum() *plugin.TValue[string] {
+	return &c.BusNum
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetDevNum() *plugin.TValue[string] {
+	return &c.DevNum
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetSpeed() *plugin.TValue[string] {
+	return &c.Speed
+}
+
+func (c *mqlProxmoxNodeUsbDevice) GetUsbPath() *plugin.TValue[string] {
+	return &c.UsbPath
+}
+
+// mqlProxmoxVmPciDevice for the proxmox.vm.pciDevice resource
+type mqlProxmoxVmPciDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxVmPciDeviceInternal it will be used here
+	Slot       plugin.TValue[string]
+	Address    plugin.TValue[string]
+	Mapping    plugin.TValue[string]
+	Pcie       plugin.TValue[bool]
+	RomBar     plugin.TValue[bool]
+	XVga       plugin.TValue[bool]
+	Mdev       plugin.TValue[string]
+	PciExpress plugin.TValue[bool]
+	Raw        plugin.TValue[string]
+}
+
+// createProxmoxVmPciDevice creates a new instance of this resource
+func createProxmoxVmPciDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxVmPciDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.vm.pciDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxVmPciDevice) MqlName() string {
+	return "proxmox.vm.pciDevice"
+}
+
+func (c *mqlProxmoxVmPciDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxVmPciDevice) GetSlot() *plugin.TValue[string] {
+	return &c.Slot
+}
+
+func (c *mqlProxmoxVmPciDevice) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlProxmoxVmPciDevice) GetMapping() *plugin.TValue[string] {
+	return &c.Mapping
+}
+
+func (c *mqlProxmoxVmPciDevice) GetPcie() *plugin.TValue[bool] {
+	return &c.Pcie
+}
+
+func (c *mqlProxmoxVmPciDevice) GetRomBar() *plugin.TValue[bool] {
+	return &c.RomBar
+}
+
+func (c *mqlProxmoxVmPciDevice) GetXVga() *plugin.TValue[bool] {
+	return &c.XVga
+}
+
+func (c *mqlProxmoxVmPciDevice) GetMdev() *plugin.TValue[string] {
+	return &c.Mdev
+}
+
+func (c *mqlProxmoxVmPciDevice) GetPciExpress() *plugin.TValue[bool] {
+	return &c.PciExpress
+}
+
+func (c *mqlProxmoxVmPciDevice) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlProxmoxVmUsbDevice for the proxmox.vm.usbDevice resource
+type mqlProxmoxVmUsbDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxVmUsbDeviceInternal it will be used here
+	Slot   plugin.TValue[string]
+	Target plugin.TValue[string]
+	Usb3   plugin.TValue[bool]
+	Raw    plugin.TValue[string]
+}
+
+// createProxmoxVmUsbDevice creates a new instance of this resource
+func createProxmoxVmUsbDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxVmUsbDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.vm.usbDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxVmUsbDevice) MqlName() string {
+	return "proxmox.vm.usbDevice"
+}
+
+func (c *mqlProxmoxVmUsbDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxVmUsbDevice) GetSlot() *plugin.TValue[string] {
+	return &c.Slot
+}
+
+func (c *mqlProxmoxVmUsbDevice) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlProxmoxVmUsbDevice) GetUsb3() *plugin.TValue[bool] {
+	return &c.Usb3
+}
+
+func (c *mqlProxmoxVmUsbDevice) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlProxmoxContainerPassthroughDevice for the proxmox.container.passthroughDevice resource
+type mqlProxmoxContainerPassthroughDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlProxmoxContainerPassthroughDeviceInternal it will be used here
+	Slot plugin.TValue[string]
+	Path plugin.TValue[string]
+	Uid  plugin.TValue[int64]
+	Gid  plugin.TValue[int64]
+	Mode plugin.TValue[string]
+}
+
+// createProxmoxContainerPassthroughDevice creates a new instance of this resource
+func createProxmoxContainerPassthroughDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxContainerPassthroughDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.container.passthroughDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) MqlName() string {
+	return "proxmox.container.passthroughDevice"
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) GetSlot() *plugin.TValue[string] {
+	return &c.Slot
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) GetGid() *plugin.TValue[int64] {
+	return &c.Gid
+}
+
+func (c *mqlProxmoxContainerPassthroughDevice) GetMode() *plugin.TValue[string] {
+	return &c.Mode
 }
