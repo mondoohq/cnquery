@@ -4,8 +4,9 @@
 package resources
 
 import (
+	"errors"
+	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -27,8 +28,8 @@ func (r *mqlHelm) charts() ([]any, error) {
 	charts := conn.Charts()
 
 	var mqlCharts []any
-	for _, c := range charts {
-		mqlChart, err := newMqlHelmChart(r.MqlRuntime, c)
+	for _, lc := range charts {
+		mqlChart, err := newMqlHelmChart(r.MqlRuntime, lc.Chart, lc.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -38,21 +39,40 @@ func (r *mqlHelm) charts() ([]any, error) {
 }
 
 type mqlHelmChartInternal struct {
-	chartObj    *chart.Chart
-	rendered    map[string]string
-	renderedErr error
-	lock        sync.Mutex
-	fetched     atomic.Bool
+	chartObj           *chart.Chart
+	chartPath          string
+	renderedOnce       sync.Once
+	rendered           map[string]string
+	renderedErr        error
+	resourcesOnce      sync.Once
+	cachedResources    []any
+	cachedResourcesErr error
 }
 
-func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart) (*mqlHelmChart, error) {
+func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string) (*mqlHelmChart, error) {
+	// Guard against archives that load with a nil Metadata pointer.
+	// loader.LoadDir always populates Metadata for a valid chart, but
+	// loader.LoadFile (the .tgz path) can return a chart with nil
+	// Metadata on a truncated/malformed archive.
+	if c == nil || c.Metadata == nil {
+		return nil, errors.New("helm chart has no metadata")
+	}
 	meta := c.Metadata
 
 	keywords := convert.SliceAnyToInterface(meta.Keywords)
 	sources := convert.SliceAnyToInterface(meta.Sources)
 
+	// Include the chart's filesystem path in the cache key so two
+	// distinct charts that happen to share name + version (common for
+	// feature-branch forks in a multi-chart directory) don't collide
+	// on CreateResource's cache.
+	chartKey := meta.Name + ":" + meta.Version
+	if chartPath != "" {
+		chartKey += ":" + chartPath
+	}
+
 	args := map[string]*llx.RawData{
-		"__id":        llx.StringData("helm.chart:" + meta.Name + ":" + meta.Version),
+		"__id":        llx.StringData("helm.chart:" + chartKey),
 		"name":        llx.StringData(meta.Name),
 		"version":     llx.StringData(meta.Version),
 		"apiVersion":  llx.StringData(meta.APIVersion),
@@ -82,37 +102,33 @@ func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart) (*mqlHelmChart, er
 	}
 	mqlChart := res.(*mqlHelmChart)
 	mqlChart.chartObj = c
+	mqlChart.chartPath = chartPath
 	return mqlChart, nil
 }
 
 func (c *mqlHelmChart) id() (string, error) {
-	return "helm.chart:" + c.Name.Data + ":" + c.Version.Data, nil
+	key := c.Name.Data + ":" + c.Version.Data
+	if c.chartPath != "" {
+		key += ":" + c.chartPath
+	}
+	return "helm.chart:" + key, nil
 }
 
 func (c *mqlHelmChart) fetchRendered() (map[string]string, error) {
-	if c.fetched.Load() {
-		return c.rendered, c.renderedErr
-	}
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	if c.fetched.Load() {
-		return c.rendered, c.renderedErr
-	}
-
-	e := engine.Engine{Strict: false}
-	options := chartutil.ReleaseOptions{
-		Name:      c.chartObj.Name(),
-		Namespace: "default",
-		IsInstall: true,
-	}
-	vals, err := chartutil.ToRenderValues(c.chartObj, c.chartObj.Values, options, nil)
-	if err != nil {
-		c.renderedErr = err
-		c.fetched.Store(true)
-		return nil, err
-	}
-	c.rendered, c.renderedErr = e.Render(c.chartObj, vals)
-	c.fetched.Store(true)
+	c.renderedOnce.Do(func() {
+		e := engine.Engine{Strict: false}
+		options := chartutil.ReleaseOptions{
+			Name:      c.chartObj.Name(),
+			Namespace: "default",
+			IsInstall: true,
+		}
+		vals, err := chartutil.ToRenderValues(c.chartObj, c.chartObj.Values, options, nil)
+		if err != nil {
+			c.renderedErr = err
+			return
+		}
+		c.rendered, c.renderedErr = e.Render(c.chartObj, vals)
+	})
 	return c.rendered, c.renderedErr
 }
 
@@ -132,8 +148,8 @@ func (c *mqlHelmChart) dependencies() ([]any, error) {
 func (c *mqlHelmChart) maintainers() ([]any, error) {
 	maintainers := c.chartObj.Metadata.Maintainers
 	var mqlMaintainers []any
-	for _, m := range maintainers {
-		mqlM, err := newMqlHelmMaintainer(c.MqlRuntime, c.chartObj.Name(), m)
+	for i, m := range maintainers {
+		mqlM, err := newMqlHelmMaintainer(c.MqlRuntime, c.chartObj.Name(), i, m)
 		if err != nil {
 			return nil, err
 		}
@@ -143,9 +159,9 @@ func (c *mqlHelmChart) maintainers() ([]any, error) {
 }
 
 func (c *mqlHelmChart) templates() ([]any, error) {
-	rendered, err := c.fetchRendered()
-	if err != nil {
-		log.Warn().Err(err).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates")
+	rendered, renderErr := c.fetchRendered()
+	if renderErr != nil {
+		log.Warn().Err(renderErr).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates")
 	}
 
 	var mqlTemplates []any
@@ -155,7 +171,11 @@ func (c *mqlHelmChart) templates() ([]any, error) {
 			// Helm uses "chartName/templateName" as the key
 			renderedContent = rendered[c.chartObj.Name()+"/"+t.Name]
 		}
-		mqlT, err := newMqlHelmTemplate(c.MqlRuntime, c.chartObj.Name(), t, renderedContent)
+		// Pass renderErr through so the template's rendered() accessor
+		// can surface it instead of silently returning "" — that lets
+		// policy authors distinguish "rendered to empty output" from
+		// "rendering failed."
+		mqlT, err := newMqlHelmTemplate(c.MqlRuntime, c.chartObj.Name(), t, renderedContent, renderErr)
 		if err != nil {
 			return nil, err
 		}
@@ -173,21 +193,30 @@ func (c *mqlHelmChart) values() (any, error) {
 }
 
 func (c *mqlHelmChart) resources() ([]any, error) {
-	rendered, err := c.fetchRendered()
-	if err != nil {
-		log.Warn().Err(err).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates, returning empty resources")
-		return []any{}, nil
-	}
+	return c.fetchResources()
+}
 
-	var allResources []any
-	for templateKey, content := range rendered {
-		resources, err := parseK8sResources(c.MqlRuntime, templateKey, content)
+// fetchResources parses every rendered template into K8s resources and
+// caches the result on the chart. Used by both helm.chart.resources()
+// and helm.template.resources() so a query that touches both fields
+// doesn't unmarshal every YAML document twice.
+func (c *mqlHelmChart) fetchResources() ([]any, error) {
+	c.resourcesOnce.Do(func() {
+		rendered, err := c.fetchRendered()
 		if err != nil {
-			continue
+			log.Warn().Err(err).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates, returning empty resources")
+			c.cachedResources = []any{}
+			return
 		}
-		allResources = append(allResources, resources...)
-	}
-	return allResources, nil
+		for templateKey, content := range rendered {
+			resources, err := parseK8sResources(c.MqlRuntime, templateKey, content)
+			if err != nil {
+				continue
+			}
+			c.cachedResources = append(c.cachedResources, resources...)
+		}
+	})
+	return c.cachedResources, c.cachedResourcesErr
 }
 
 func (c *mqlHelmChart) files() ([]any, error) {
@@ -221,9 +250,13 @@ func newMqlHelmDependency(runtime *plugin.Runtime, chartName string, dep *chart.
 	return res.(*mqlHelmDependency), nil
 }
 
-func newMqlHelmMaintainer(runtime *plugin.Runtime, chartName string, m *chart.Maintainer) (*mqlHelmMaintainer, error) {
+func newMqlHelmMaintainer(runtime *plugin.Runtime, chartName string, idx int, m *chart.Maintainer) (*mqlHelmMaintainer, error) {
+	// Include the loop index so a chart that declares two maintainers
+	// with the same name doesn't silently dedupe through the resource
+	// cache. (The Helm spec permits duplicate maintainer names.)
+	id := "helm.maintainer:" + chartName + ":" + strconv.Itoa(idx) + ":" + m.Name
 	res, err := CreateResource(runtime, "helm.maintainer", map[string]*llx.RawData{
-		"__id":  llx.StringData("helm.maintainer:" + chartName + ":" + m.Name),
+		"__id":  llx.StringData(id),
 		"name":  llx.StringData(m.Name),
 		"email": llx.StringData(m.Email),
 		"url":   llx.StringData(m.URL),

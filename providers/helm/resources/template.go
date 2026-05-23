@@ -81,9 +81,15 @@ type mqlHelmTemplateInternal struct {
 	chartName       string
 	rawContent      string
 	renderedContent string
+	// renderErr carries the chart-level render failure when the chart's
+	// engine.Render() call failed. We attach it to every template the
+	// chart produced so a query like `helm.templates[0].rendered`
+	// surfaces the failure instead of looking like the template
+	// rendered to an empty string.
+	renderErr error
 }
 
-func newMqlHelmTemplate(runtime *plugin.Runtime, chartName string, t *chart.File, renderedContent string) (*mqlHelmTemplate, error) {
+func newMqlHelmTemplate(runtime *plugin.Runtime, chartName string, t *chart.File, renderedContent string, renderErr error) (*mqlHelmTemplate, error) {
 	rawContent := string(t.Data)
 
 	res, err := CreateResource(runtime, "helm.template", map[string]*llx.RawData{
@@ -98,14 +104,26 @@ func newMqlHelmTemplate(runtime *plugin.Runtime, chartName string, t *chart.File
 	mqlT.chartName = chartName
 	mqlT.rawContent = rawContent
 	mqlT.renderedContent = renderedContent
+	mqlT.renderErr = renderErr
 	return mqlT, nil
 }
 
 func (t *mqlHelmTemplate) rendered() (string, error) {
+	// Surface the chart-level render failure so callers can distinguish
+	// "this template legitimately renders to an empty string" from
+	// "the whole chart failed to render." The renderedContent is still
+	// "" in the failure case, but the error tells the policy author
+	// what's going on.
+	if t.renderErr != nil {
+		return "", t.renderErr
+	}
 	return t.renderedContent, nil
 }
 
 func (t *mqlHelmTemplate) resources() ([]any, error) {
+	if t.renderErr != nil {
+		return nil, t.renderErr
+	}
 	if t.renderedContent == "" {
 		return []any{}, nil
 	}
@@ -212,11 +230,15 @@ func extractDirectivesFallback(runtime *plugin.Runtime, templateName string, raw
 			if start == -1 {
 				break
 			}
-			end := strings.Index(trimmed[start:], "}}")
+			// findClosingDelim skips `}}` sequences that appear inside
+			// string literals (e.g. `{{ dict "k" "}}" }}`); naive
+			// strings.Index would terminate at the embedded `}}`,
+			// corrupt the expression, and desync the loop.
+			end := findClosingDelim(trimmed[start+2:])
 			if end == -1 {
 				break
 			}
-			expr := strings.TrimSpace(trimmed[start+2 : start+end])
+			expr := strings.TrimSpace(trimmed[start+2 : start+2+end])
 			expr = strings.TrimPrefix(expr, "-")
 			expr = strings.TrimSuffix(expr, "-")
 			expr = strings.TrimSpace(expr)
@@ -226,7 +248,7 @@ func extractDirectivesFallback(runtime *plugin.Runtime, templateName string, raw
 				addDirective(runtime, templateName, directiveType, expr, i+1, &mqlDirectives)
 			}
 
-			trimmed = trimmed[start+end+2:]
+			trimmed = trimmed[start+2+end+2:]
 		}
 	}
 
@@ -256,4 +278,48 @@ func classifyDirective(expr string) string {
 	default:
 		return ""
 	}
+}
+
+// findClosingDelim returns the offset of the `}}` that closes a `{{`
+// directive, skipping any `}}` that appears inside a `"..."` or
+// “ `...` “ string literal. The caller passes the slice that begins
+// just after `{{`. Returns -1 when no closing delimiter is found.
+func findClosingDelim(s string) int {
+	const (
+		modeNone = iota
+		modeDoubleQuote
+		modeBacktick
+	)
+	mode := modeNone
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+		switch mode {
+		case modeNone:
+			switch ch {
+			case '"':
+				mode = modeDoubleQuote
+			case '`':
+				mode = modeBacktick
+			case '}':
+				if i+1 < len(s) && s[i+1] == '}' {
+					return i
+				}
+			}
+		case modeDoubleQuote:
+			switch ch {
+			case '\\':
+				// Skip the escaped character.
+				i++
+			case '"':
+				mode = modeNone
+			}
+		case modeBacktick:
+			// Backtick-quoted strings in Go templates don't support
+			// escapes — a closing backtick always ends the literal.
+			if ch == '`' {
+				mode = modeNone
+			}
+		}
+	}
+	return -1
 }

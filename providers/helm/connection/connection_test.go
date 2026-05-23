@@ -30,7 +30,7 @@ func TestLoadSingleChart(t *testing.T) {
 	charts := conn.Charts()
 	require.Len(t, charts, 1)
 
-	c := charts[0]
+	c := charts[0].Chart
 	assert.Equal(t, "mychart", c.Name())
 	assert.Equal(t, "1.2.3", c.Metadata.Version)
 	assert.Equal(t, "4.5.6", c.Metadata.AppVersion)
@@ -66,8 +66,9 @@ func TestLoadMultiChartDirectory(t *testing.T) {
 	require.Len(t, charts, 2)
 
 	names := map[string]bool{}
-	for _, c := range charts {
-		names[c.Name()] = true
+	for _, lc := range charts {
+		names[lc.Chart.Name()] = true
+		assert.NotEmpty(t, lc.Path, "each LoadedChart should carry its filesystem path")
 	}
 	assert.True(t, names["chart-a"])
 	assert.True(t, names["chart-b"])
@@ -100,7 +101,7 @@ func TestLoadChartWithNoTemplates(t *testing.T) {
 	charts := conn.Charts()
 	require.Len(t, charts, 1)
 
-	c := charts[0]
+	c := charts[0].Chart
 	assert.Equal(t, "no-templates", c.Name())
 	assert.Empty(t, c.Templates, "chart with no templates directory should have no templates")
 }
@@ -112,7 +113,7 @@ func TestLoadChartWithNoValues(t *testing.T) {
 	charts := conn.Charts()
 	require.Len(t, charts, 1)
 
-	c := charts[0]
+	c := charts[0].Chart
 	assert.Equal(t, "no-values", c.Name())
 	// Values should be nil or empty when no values.yaml exists
 	assert.Empty(t, c.Values, "chart with no values.yaml should have empty values")

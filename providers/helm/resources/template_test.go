@@ -385,3 +385,64 @@ func TestClassifyDirectiveEdgeCases(t *testing.T) {
 		})
 	}
 }
+
+func TestFindClosingDelim(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want int
+	}{
+		{
+			name: "trivial",
+			in:   " .Values.name }} rest",
+			want: 14, // offset of `}}`
+		},
+		{
+			name: "no closing delim",
+			in:   " .Values.name",
+			want: -1,
+		},
+		{
+			name: "embedded }} inside double-quoted string is skipped",
+			// PVE-style embedded `}}` inside a quoted argument used to
+			// terminate the directive prematurely; findClosingDelim
+			// looks past it.
+			in:   ` dict "key" "}}" }} rest`,
+			want: 17,
+		},
+		{
+			name: "embedded }} inside backtick string is skipped",
+			in:   " printf `oops}}` }} rest",
+			want: 17,
+		},
+		{
+			name: "escaped quote inside double-quoted string doesn't end the literal",
+			in:   ` printf "with \"quote\" and }}" }} rest`,
+			want: 32,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := findClosingDelim(tt.in)
+			require.Equal(t, tt.want, got, "input: %q", tt.in)
+		})
+	}
+}
+
+// Exercise the full fallback path against an input shaped like the
+// edge case that motivated findClosingDelim. The naive `strings.Index`
+// version desynced the loop on the first directive; the fixed version
+// produces a single, well-formed directive.
+func TestExtractDirectivesFallback_HandlesEmbeddedDelimiter(t *testing.T) {
+	runtime := newTestRuntime()
+	content := `kind: ConfigMap
+data:
+  hello: {{ if and (eq .Values.kind "}}") (.Values.enabled) }}greeting{{ end }}
+`
+	dirs, err := extractDirectivesFallback(runtime, "configmap.yaml", content)
+	require.NoError(t, err)
+	// The opening `{{ if ... }}` should classify as `if` and the
+	// closing `{{ end }}` should not. Two callable lines, but only one
+	// directive recognized (end is filtered to "" by classifyDirective).
+	assert.Len(t, dirs, 1, "expected exactly one classified directive, got %d", len(dirs))
+}
