@@ -304,6 +304,27 @@ func TestCloudformationResources(t *testing.T) {
 		assert.Equal(t, "", port.ExportName.Data)
 	})
 
+	t.Run("cloudformation empty template guard", func(t *testing.T) {
+		// A file with only comments parses successfully but the cft library
+		// hands us a Template whose Node.Content is empty. Every lazy accessor
+		// (resources, outputs, parameterList, etc.) must short-circuit instead
+		// of dereferencing Content[0].
+		tpl, err := loadTemplate("../testdata/empty.yaml")
+		require.NoError(t, err)
+
+		res := tpl.GetResources()
+		require.NoError(t, res.Error)
+		assert.Empty(t, res.Data)
+
+		outs := tpl.GetOutputs()
+		require.NoError(t, outs.Error)
+		assert.Empty(t, outs.Data)
+
+		params := tpl.GetParameterList()
+		require.NoError(t, params.Error)
+		assert.Empty(t, params.Data)
+	})
+
 	t.Run("cloudformation typed parameters", func(t *testing.T) {
 		tpl, err := loadTemplate("../testdata/policies.yaml")
 		require.NoError(t, err)

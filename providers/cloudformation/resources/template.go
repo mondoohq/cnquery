@@ -27,6 +27,12 @@ func initCloudformationTemplate(runtime *plugin.Runtime, args map[string]*llx.Ra
 	args["description"] = llx.StringData("")
 	args["transform"] = llx.NilData
 
+	// cft.Template.GetSection dereferences Node.Content[0] without a guard, so
+	// short-circuit on a degenerate template (empty file, comments only).
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return args, nil, nil
+	}
+
 	version, err := template.GetSection(cft.AWSTemplateFormatVersion)
 	if err == nil {
 		args["version"] = llx.StringData(version.Value)
