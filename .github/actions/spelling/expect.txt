@@ -529,6 +529,7 @@ parallelquery
 PAYG
 pbs
 pcnet
+PDB
 pdp
 persistentvolume
 persistentvolumeclaim
