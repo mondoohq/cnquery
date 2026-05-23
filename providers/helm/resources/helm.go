@@ -39,14 +39,13 @@ func (r *mqlHelm) charts() ([]any, error) {
 }
 
 type mqlHelmChartInternal struct {
-	chartObj           *chart.Chart
-	chartPath          string
-	renderedOnce       sync.Once
-	rendered           map[string]string
-	renderedErr        error
-	resourcesOnce      sync.Once
-	cachedResources    []any
-	cachedResourcesErr error
+	chartObj        *chart.Chart
+	chartPath       string
+	renderedOnce    sync.Once
+	rendered        map[string]string
+	renderedErr     error
+	resourcesOnce   sync.Once
+	cachedResources []any
 }
 
 func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string) (*mqlHelmChart, error) {
@@ -196,10 +195,18 @@ func (c *mqlHelmChart) resources() ([]any, error) {
 	return c.fetchResources()
 }
 
-// fetchResources parses every rendered template into K8s resources and
-// caches the result on the chart. Used by both helm.chart.resources()
-// and helm.template.resources() so a query that touches both fields
-// doesn't unmarshal every YAML document twice.
+// fetchResources parses every rendered template into K8s resources
+// and caches the result on the chart's Internal struct so repeated
+// reads of helm.chart.resources don't reparse the same YAML on
+// every access. helm.template.resources parses its own rendered
+// string directly (scoped to a single template), so it doesn't go
+// through this cache.
+//
+// Chart-wide render failures are intentionally swallowed at this
+// level — see TestHelmRequiredValuesGraceful. A chart that uses
+// `required` with no values returns no resources but does not error
+// out the whole audit query. Per-template failures still surface
+// through helm.template.rendered() and helm.template.resources().
 func (c *mqlHelmChart) fetchResources() ([]any, error) {
 	c.resourcesOnce.Do(func() {
 		rendered, err := c.fetchRendered()
@@ -216,7 +223,7 @@ func (c *mqlHelmChart) fetchResources() ([]any, error) {
 			c.cachedResources = append(c.cachedResources, resources...)
 		}
 	})
-	return c.cachedResources, c.cachedResourcesErr
+	return c.cachedResources, nil
 }
 
 func (c *mqlHelmChart) files() ([]any, error) {
