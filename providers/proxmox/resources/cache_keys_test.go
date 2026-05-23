@@ -83,6 +83,26 @@ func lvmThinPoolKey(node, vg, lv string) string {
 	return "proxmox.lvm.thinPool/" + node + "/" + vg + "/" + lv
 }
 
+// Firewall resources are scoped by `scope` (cluster, node/<name>,
+// vm/<id>, ct/<id>) and need their own __id; the previous review of
+// this PR caught that the id() methods were removed without the
+// CreateResource sites being updated.
+func firewallOptionsKey(scope string) string {
+	return "proxmox.firewall.options/" + scope
+}
+
+func firewallIpsetKey(scope, name string) string {
+	return "proxmox.firewall.ipset/" + scope + "/" + name
+}
+
+func firewallIpsetEntryKey(entriesScope, cidr string) string {
+	return "proxmox.firewall.ipset.entry/" + entriesScope + "/" + cidr
+}
+
+func firewallAliasKey(scope, name string) string {
+	return "proxmox.firewall.alias/" + scope + "/" + name
+}
+
 // TestVMSnapshotAndContainerSnapshotKeysDoNotCollide guards the bug
 // motivating this refactor: VM and container snapshots share the
 // proxmox.vm.snapshot resource type, so without a scope prefix a VM
@@ -126,6 +146,15 @@ func TestCacheKeysIncludeParentContext(t *testing.T) {
 		{"zfs.pool", zfsPoolKey("pve1", "rpool"), "pve1"},
 		{"lvm.volumeGroup", lvmVolumeGroupKey("pve1", "vg0"), "pve1"},
 		{"lvm.thinPool", lvmThinPoolKey("pve1", "vg0", "data"), "pve1"},
+		{"firewall.options (cluster)", firewallOptionsKey("cluster"), "cluster"},
+		{"firewall.options (node)", firewallOptionsKey("node/pve1"), "pve1"},
+		{"firewall.options (vm)", firewallOptionsKey("vm/100"), "vm/100"},
+		{"firewall.options (ct)", firewallOptionsKey("ct/200"), "ct/200"},
+		{"firewall.ipset (cluster)", firewallIpsetKey("cluster", "blocklist"), "cluster"},
+		{"firewall.ipset (vm)", firewallIpsetKey("vm/100", "allow"), "vm/100"},
+		{"firewall.ipset.entry", firewallIpsetEntryKey("vm/100/allow", "10.0.0.0/24"), "vm/100/allow"},
+		{"firewall.alias (cluster)", firewallAliasKey("cluster", "office"), "cluster"},
+		{"firewall.alias (ct)", firewallAliasKey("ct/200", "internal"), "ct/200"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -154,6 +183,11 @@ func TestCacheKeysDistinctAcrossParents(t *testing.T) {
 		{"zfs.pool across nodes", zfsPoolKey("pve1", "rpool"), zfsPoolKey("pve2", "rpool")},
 		{"node.repository across nodes", nodeRepositoryKey("pve1", "f:0"), nodeRepositoryKey("pve2", "f:0")},
 		{"lvm.thinPool across nodes", lvmThinPoolKey("pve1", "vg0", "data"), lvmThinPoolKey("pve2", "vg0", "data")},
+		{"firewall.options across scopes", firewallOptionsKey("cluster"), firewallOptionsKey("vm/100")},
+		{"firewall.options across guest scopes", firewallOptionsKey("vm/100"), firewallOptionsKey("ct/100")},
+		{"firewall.ipset across scopes", firewallIpsetKey("cluster", "blocklist"), firewallIpsetKey("vm/100", "blocklist")},
+		{"firewall.ipset.entry across parent ipsets", firewallIpsetEntryKey("vm/100/allow", "10.0.0.0/24"), firewallIpsetEntryKey("vm/101/allow", "10.0.0.0/24")},
+		{"firewall.alias across scopes", firewallAliasKey("cluster", "office"), firewallAliasKey("vm/100", "office")},
 	}
 	for _, tt := range pairs {
 		t.Run(tt.name, func(t *testing.T) {
@@ -190,6 +224,17 @@ func TestCacheKeyHelpersMatchProductionFormat(t *testing.T) {
 	} {
 		if !containsSubstring(ctGo, expected) {
 			t.Errorf("container.go is missing the __id format %s", expected)
+		}
+	}
+	fwGo := mustReadFile(t, "firewall.go")
+	for _, expected := range []string{
+		`"proxmox.firewall.options/" + scope`,
+		`"proxmox.firewall.ipset/" + scope`,
+		`"proxmox.firewall.ipset.entry/" + r.entriesScope`,
+		`"proxmox.firewall.alias/" + scope`,
+	} {
+		if !containsSubstring(fwGo, expected) {
+			t.Errorf("firewall.go is missing the __id format %s", expected)
 		}
 	}
 }

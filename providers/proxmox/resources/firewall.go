@@ -35,6 +35,7 @@ func firewallOptionsToResource(runtime *plugin.Runtime, opts map[string]any, sco
 	}
 
 	res, err := CreateResource(runtime, "proxmox.firewall.options", map[string]*llx.RawData{
+		"__id":        llx.StringData("proxmox.firewall.options/" + scope),
 		"scope":       llx.StringData(scope),
 		"enable":      llx.BoolData(intOrBool(opts["enable"])),
 		"policyIn":    llx.StringData(str(opts["policy_in"])),
@@ -66,6 +67,7 @@ func ipSetsToResources(
 	list := make([]any, 0, len(sets))
 	for _, s := range sets {
 		res, err := CreateResource(runtime, "proxmox.firewall.ipset", map[string]*llx.RawData{
+			"__id":    llx.StringData("proxmox.firewall.ipset/" + scope + "/" + s.Name),
 			"scope":   llx.StringData(scope),
 			"name":    llx.StringData(s.Name),
 			"comment": llx.StringData(s.Comment),
@@ -91,6 +93,7 @@ func aliasesToResources(runtime *plugin.Runtime, aliases []connection.AliasInfo,
 			ipver = 4
 		}
 		res, err := CreateResource(runtime, "proxmox.firewall.alias", map[string]*llx.RawData{
+			"__id":      llx.StringData("proxmox.firewall.alias/" + scope + "/" + a.Name),
 			"scope":     llx.StringData(scope),
 			"name":      llx.StringData(a.Name),
 			"cidr":      llx.StringData(a.CIDR),
@@ -255,6 +258,7 @@ func (r *mqlProxmoxFirewallIpset) entries() ([]any, error) {
 	list := make([]any, len(entries))
 	for i, e := range entries {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.firewall.ipset.entry", map[string]*llx.RawData{
+			"__id":    llx.StringData("proxmox.firewall.ipset.entry/" + r.entriesScope + "/" + e.CIDR),
 			"cidr":    llx.StringData(e.CIDR),
 			"comment": llx.StringData(e.Comment),
 			"nomatch": llx.BoolData(e.NoMatch == 1),
@@ -262,6 +266,9 @@ func (r *mqlProxmoxFirewallIpset) entries() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// The fetcher closure and scope still need to be reachable from
+		// the parent for any further drill-down; the cache key is
+		// already correct via __id above.
 		mqlEntry := res.(*mqlProxmoxFirewallIpsetEntry)
 		mqlEntry.scope = r.entriesScope
 		mqlEntry.ipsetID = r.fetcherName
