@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"go.mondoo.com/mql/v13/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
@@ -14,6 +15,35 @@ import (
 	"google.golang.org/api/groupssettings/v1"
 	"google.golang.org/api/option"
 )
+
+type mqlGoogleworkspaceInternal struct {
+	usersByEmailOnce sync.Once
+	usersByEmail     map[string]*mqlGoogleworkspaceUser
+	usersByEmailErr  error
+}
+
+func (g *mqlGoogleworkspace) userByEmail(email string) (*mqlGoogleworkspaceUser, error) {
+	g.usersByEmailOnce.Do(func() {
+		if g.Users.Error != nil {
+			g.usersByEmailErr = g.Users.Error
+			return
+		}
+		m := make(map[string]*mqlGoogleworkspaceUser, len(g.Users.Data))
+		for _, u := range g.Users.Data {
+			user := u.(*mqlGoogleworkspaceUser)
+			if user.PrimaryEmail.Error != nil {
+				g.usersByEmailErr = user.PrimaryEmail.Error
+				return
+			}
+			m[user.PrimaryEmail.Data] = user
+		}
+		g.usersByEmail = m
+	})
+	if g.usersByEmailErr != nil {
+		return nil, g.usersByEmailErr
+	}
+	return g.usersByEmail[email], nil
+}
 
 func (r *mqlGoogleworkspace) id() (string, error) {
 	return "google-workspace", nil

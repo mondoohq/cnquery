@@ -27,7 +27,7 @@ func (g *mqlGoogleworkspace) groups() ([]any, error) {
 	}
 
 	res := []any{}
-	groups, err := directoryService.Groups.List().Customer(conn.CustomerID()).Do()
+	groups, err := directoryService.Groups.List().Customer(conn.CustomerID()).MaxResults(200).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (g *mqlGoogleworkspace) groups() ([]any, error) {
 			break
 		}
 
-		groups, err = directoryService.Groups.List().Customer(conn.CustomerID()).PageToken(groups.NextPageToken).Do()
+		groups, err = directoryService.Groups.List().Customer(conn.CustomerID()).MaxResults(200).PageToken(groups.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +90,7 @@ func (g *mqlGoogleworkspaceGroup) members() ([]any, error) {
 
 	res := []any{}
 
-	members, err := directoryService.Members.List(id).Do()
+	members, err := directoryService.Members.List(id).MaxResults(200).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (g *mqlGoogleworkspaceGroup) members() ([]any, error) {
 			break
 		}
 
-		members, err = directoryService.Members.List(id).PageToken(members.NextPageToken).Do()
+		members, err = directoryService.Members.List(id).MaxResults(200).PageToken(members.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}
@@ -143,6 +143,7 @@ func (g *mqlGoogleworkspaceMember) user() (*mqlGoogleworkspaceUser, error) {
 	typ := g.Type.Data
 
 	if strings.ToLower(typ) != "user" {
+		g.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -152,22 +153,15 @@ func (g *mqlGoogleworkspaceMember) user() (*mqlGoogleworkspaceUser, error) {
 	}
 	gws := obj.(*mqlGoogleworkspace)
 
-	if gws.Users.Error != nil {
-		return nil, gws.Users.Error
+	user, err := gws.userByEmail(email)
+	if err != nil {
+		return nil, err
 	}
-	users := gws.Users.Data
-
-	for i := range users {
-		user := users[i].(*mqlGoogleworkspaceUser)
-		if user.PrimaryEmail.Error != nil {
-			return nil, user.PrimaryEmail.Error
-		}
-		primaryEmail := user.PrimaryEmail.Data
-		if primaryEmail == email {
-			return user, nil
-		}
+	if user == nil {
+		g.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return nil, nil
+	return user, nil
 }
 
 func (g *mqlGoogleworkspaceGroup) settings() (any, error) {

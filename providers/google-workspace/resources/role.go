@@ -22,24 +22,24 @@ func (g *mqlGoogleworkspace) roles() ([]any, error) {
 	}
 
 	res := []any{}
-	groups, err := directoryService.Roles.List(conn.CustomerID()).Do()
+	roles, err := directoryService.Roles.List(conn.CustomerID()).MaxResults(100).Do()
 	if err != nil {
 		return nil, err
 	}
 	for {
-		for i := range groups.Items {
-			r, err := newMqlGoogleWorkspaceRole(g.MqlRuntime, groups.Items[i])
+		for i := range roles.Items {
+			r, err := newMqlGoogleWorkspaceRole(g.MqlRuntime, roles.Items[i])
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, r)
 		}
 
-		if groups.NextPageToken == "" {
+		if roles.NextPageToken == "" {
 			break
 		}
 
-		groups, err = directoryService.Roles.List(conn.CustomerID()).PageToken(groups.NextPageToken).Do()
+		roles, err = directoryService.Roles.List(conn.CustomerID()).MaxResults(100).PageToken(roles.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}

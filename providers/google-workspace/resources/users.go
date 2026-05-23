@@ -32,7 +32,7 @@ func (g *mqlGoogleworkspace) users() ([]any, error) {
 
 	res := []any{}
 
-	users, err := directoryService.Users.List().Customer(conn.CustomerID()).Do()
+	users, err := directoryService.Users.List().Customer(conn.CustomerID()).MaxResults(500).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (g *mqlGoogleworkspace) users() ([]any, error) {
 			break
 		}
 
-		users, err = directoryService.Users.List().Customer(conn.CustomerID()).PageToken(users.NextPageToken).Do()
+		users, err = directoryService.Users.List().Customer(conn.CustomerID()).MaxResults(500).PageToken(users.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}
@@ -110,11 +110,18 @@ func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (
 	}
 	customSchemas := customSchemasToDict(entry.CustomSchemas)
 
+	var familyName, givenName, fullName string
+	if entry.Name != nil {
+		familyName = entry.Name.FamilyName
+		givenName = entry.Name.GivenName
+		fullName = entry.Name.FullName
+	}
+
 	return CreateResource(runtime, "googleworkspace.user", map[string]*llx.RawData{
 		"id":                         llx.StringData(entry.Id),
-		"familyName":                 llx.StringData(entry.Name.FamilyName),
-		"givenName":                  llx.StringData(entry.Name.GivenName),
-		"fullName":                   llx.StringData(entry.Name.FullName),
+		"familyName":                 llx.StringData(familyName),
+		"givenName":                  llx.StringData(givenName),
+		"fullName":                   llx.StringData(fullName),
 		"primaryEmail":               llx.StringData(entry.PrimaryEmail),
 		"recoveryEmail":              llx.StringData(entry.RecoveryEmail),
 		"recoveryPhone":              llx.StringData(entry.RecoveryPhone),

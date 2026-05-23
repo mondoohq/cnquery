@@ -57,16 +57,13 @@ func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 			}
 			cApp.name = tk.DisplayText.Data
 
-			// merge scopes
+			// merge scopes (dedup once at the end to avoid O(n²) churn)
 			if tk.Scopes.Error != nil {
 				return nil, tk.Scopes.Error
 			}
-			scopes := tk.Scopes.Data
-			stringScopes := []string{}
-			for _, scope := range scopes {
-				stringScopes = append(stringScopes, scope.(string))
+			for _, scope := range tk.Scopes.Data {
+				cApp.scopes = append(cApp.scopes, scope.(string))
 			}
-			cApp.scopes = stringx.DedupStringArray(append(cApp.scopes, stringScopes...))
 
 			cApp.tokens = append(cApp.tokens, tk)
 			cApp.users = append(cApp.users, usr)
@@ -77,37 +74,29 @@ func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 
 	// group token by client id
 	runtime := g.MqlRuntime
-	res := make([]any, len(connectedApps))
-	i := 0
-	for k := range connectedApps {
-		connectedApp := connectedApps[k]
-
+	res := make([]any, 0, len(connectedApps))
+	for _, connectedApp := range connectedApps {
 		mqlUsers := make([]any, len(connectedApp.users))
-		if connectedApp.users != nil && len(connectedApp.users) > 0 {
-			for i := range connectedApp.users {
-				mqlUsers[i] = connectedApp.users[i]
-			}
+		for i := range connectedApp.users {
+			mqlUsers[i] = connectedApp.users[i]
 		}
 
 		mqlTokens := make([]any, len(connectedApp.tokens))
-		if connectedApp.tokens != nil && len(connectedApp.tokens) > 0 {
-			for i := range connectedApp.tokens {
-				mqlTokens[i] = connectedApp.tokens[i]
-			}
+		for i := range connectedApp.tokens {
+			mqlTokens[i] = connectedApp.tokens[i]
 		}
 
 		mqlApp, err := CreateResource(runtime, "googleworkspace.connectedApp", map[string]*llx.RawData{
 			"clientId": llx.StringData(connectedApp.clientID),
 			"name":     llx.StringData(connectedApp.name),
-			"scopes":   llx.ArrayData(convert.SliceAnyToInterface[string](connectedApp.scopes), types.Any),
+			"scopes":   llx.ArrayData(convert.SliceAnyToInterface[string](stringx.DedupStringArray(connectedApp.scopes)), types.Any),
 			"users":    llx.ArrayData(mqlUsers, types.Any),
 			"tokens":   llx.ArrayData(mqlTokens, types.Any),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res[i] = mqlApp
-		i++
+		res = append(res, mqlApp)
 	}
 
 	return res, nil

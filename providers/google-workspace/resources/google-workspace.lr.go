@@ -1942,7 +1942,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlGoogleworkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGoogleworkspaceInternal it will be used here
+	mqlGoogleworkspaceInternal
 	OrgUnits      plugin.TValue[[]any]
 	Users         plugin.TValue[[]any]
 	Domains       plugin.TValue[[]any]

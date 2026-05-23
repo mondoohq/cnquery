@@ -138,8 +138,13 @@ func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports
 		return nil, err
 	}
 
+	var uniqueQualifier int64
+	if entry.Id != nil {
+		uniqueQualifier = entry.Id.UniqueQualifier
+	}
+
 	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
-		"id":          llx.IntData(entry.Id.UniqueQualifier),
+		"id":          llx.IntData(uniqueQualifier),
 		"ipAddress":   llx.StringData(entry.IpAddress),
 		"ownerDomain": llx.StringData(entry.OwnerDomain),
 		"actor":       llx.MapData(actor, types.Any),
@@ -158,35 +163,33 @@ func (g *mqlGoogleworkspaceReportUsers) list() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
 	date := time.Now()
 	expectedErr := "googleapi: Error 400: Data for dates later than"
 
 	usageReports, err := fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
-	// we expect this error if there is no data for the current day, so we continue
+	// we expect this error if there is no data for the current day, so we fall through to past-day retries
 	if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
 		return nil, err
 	}
-
-	if len(usageReports) == 0 {
-		// try and fetch usage for each of the past 7 days
-		attempts := 7
-		for attempts > 0 {
-			date = date.Add(-24 * time.Hour)
-			reports, err := fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
-			// we expect this error if there is no data for the current day, so we continue
-			if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
-				return nil, err
-			}
-			if len(reports) > 0 {
-				res = append(res, reports...)
-				break
-			}
-			attempts--
-		}
+	if len(usageReports) > 0 {
+		return usageReports, nil
 	}
 
-	return res, nil
+	// try and fetch usage for each of the past 7 days
+	attempts := 7
+	for attempts > 0 {
+		date = date.Add(-24 * time.Hour)
+		usageReports, err = fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
+		if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
+			return nil, err
+		}
+		if len(usageReports) > 0 {
+			return usageReports, nil
+		}
+		attempts--
+	}
+
+	return []any{}, nil
 }
 
 func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, customerId, date string) ([]any, error) {
@@ -196,25 +199,22 @@ func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, custome
 	if err != nil {
 		return nil, err
 	}
-	for _, u := range usageReports.UsageReports {
-		r, err := newMqlGoogleWorkspaceUsageReport(runtime, u)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, r)
-	}
-
-	for usageReports != nil && usageReports.NextPageToken != "" {
-		usageReports, err := service.UserUsageReport.Get("all", date).CustomerId(customerId).PageToken(usageReports.NextPageToken).Do()
-		if err != nil {
-			return nil, err
-		}
+	for {
 		for _, u := range usageReports.UsageReports {
 			r, err := newMqlGoogleWorkspaceUsageReport(runtime, u)
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, r)
+		}
+
+		if usageReports.NextPageToken == "" {
+			break
+		}
+
+		usageReports, err = service.UserUsageReport.Get("all", date).CustomerId(customerId).PageToken(usageReports.NextPageToken).Do()
+		if err != nil {
+			return nil, err
 		}
 	}
 	return res, nil
@@ -249,12 +249,21 @@ func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.Us
 		return nil, err
 	}
 
+	var customerId, entityId, profileId, entityType, userEmail string
+	if entry.Entity != nil {
+		customerId = entry.Entity.CustomerId
+		entityId = entry.Entity.EntityId
+		profileId = entry.Entity.ProfileId
+		entityType = entry.Entity.Type
+		userEmail = entry.Entity.UserEmail
+	}
+
 	report, err := CreateResource(runtime, "googleworkspace.report.usage", map[string]*llx.RawData{
-		"customerId": llx.StringData(entry.Entity.CustomerId),
-		"entityId":   llx.StringData(entry.Entity.EntityId),
-		"profileId":  llx.StringData(entry.Entity.ProfileId),
-		"type":       llx.StringData(entry.Entity.Type),
-		"userEmail":  llx.StringData(entry.Entity.UserEmail),
+		"customerId": llx.StringData(customerId),
+		"entityId":   llx.StringData(entityId),
+		"profileId":  llx.StringData(profileId),
+		"type":       llx.StringData(entityType),
+		"userEmail":  llx.StringData(userEmail),
 		"date":       llx.TimeDataPtr(date),
 		"parameters": llx.ArrayData(parameters, types.Any),
 		"account":    llx.MapData(accountUsage, types.Any),
