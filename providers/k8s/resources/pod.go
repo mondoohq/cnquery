@@ -536,6 +536,7 @@ func (k *mqlK8sPod) startTime() (*time.Time, error) {
 		return nil, err
 	}
 	if pod.Status.StartTime == nil {
+		k.StartTime.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	t := pod.Status.StartTime.Time
