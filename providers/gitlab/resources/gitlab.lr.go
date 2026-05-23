@@ -16,41 +16,43 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceGitlabSettings               string = "gitlab.settings"
-	ResourceGitlabUser                   string = "gitlab.user"
-	ResourceGitlabUserExternalIdentity   string = "gitlab.user.externalIdentity"
-	ResourceGitlabUserSshKey             string = "gitlab.user.sshKey"
-	ResourceGitlabMember                 string = "gitlab.member"
-	ResourceGitlabNamespace              string = "gitlab.namespace"
-	ResourceGitlabGroup                  string = "gitlab.group"
-	ResourceGitlabGroupSamlGroupLink     string = "gitlab.group.samlGroupLink"
-	ResourceGitlabGroupAuditEvent        string = "gitlab.group.auditEvent"
-	ResourceGitlabProject                string = "gitlab.project"
-	ResourceGitlabProjectApprovalRule    string = "gitlab.project.approvalRule"
-	ResourceGitlabProjectCodeowners      string = "gitlab.project.codeowners"
-	ResourceGitlabProjectCodeownersRule  string = "gitlab.project.codeowners.rule"
-	ResourceGitlabProjectApprovalSetting string = "gitlab.project.approvalSetting"
-	ResourceGitlabProjectProtectedBranch string = "gitlab.project.protectedBranch"
-	ResourceGitlabProjectFile            string = "gitlab.project.file"
-	ResourceGitlabProjectWebhook         string = "gitlab.project.webhook"
-	ResourceGitlabProjectMergeRequest    string = "gitlab.project.mergeRequest"
-	ResourceGitlabProjectIssue           string = "gitlab.project.issue"
-	ResourceGitlabProjectRelease         string = "gitlab.project.release"
-	ResourceGitlabProjectVariable        string = "gitlab.project.variable"
-	ResourceGitlabProjectMilestone       string = "gitlab.project.milestone"
-	ResourceGitlabProjectLabel           string = "gitlab.project.label"
-	ResourceGitlabGroupLabel             string = "gitlab.group.label"
-	ResourceGitlabProjectPipeline        string = "gitlab.project.pipeline"
-	ResourceGitlabProjectRunner          string = "gitlab.project.runner"
-	ResourceGitlabProjectPushRule        string = "gitlab.project.pushRule"
-	ResourceGitlabGroupPushRule          string = "gitlab.group.pushRule"
-	ResourceGitlabProjectAccessToken     string = "gitlab.project.accessToken"
-	ResourceGitlabGroupAccessToken       string = "gitlab.group.accessToken"
-	ResourceGitlabProjectDeployKey       string = "gitlab.project.deployKey"
-	ResourceGitlabProjectDeployToken     string = "gitlab.project.deployToken"
-	ResourceGitlabGroupDeployToken       string = "gitlab.group.deployToken"
-	ResourceGitlabGroupProtectedBranch   string = "gitlab.group.protectedBranch"
-	ResourceGitlabProjectSecuritySetting string = "gitlab.project.securitySetting"
+	ResourceGitlabSettings                    string = "gitlab.settings"
+	ResourceGitlabUser                        string = "gitlab.user"
+	ResourceGitlabUserExternalIdentity        string = "gitlab.user.externalIdentity"
+	ResourceGitlabUserSshKey                  string = "gitlab.user.sshKey"
+	ResourceGitlabMember                      string = "gitlab.member"
+	ResourceGitlabNamespace                   string = "gitlab.namespace"
+	ResourceGitlabGroup                       string = "gitlab.group"
+	ResourceGitlabGroupSamlGroupLink          string = "gitlab.group.samlGroupLink"
+	ResourceGitlabGroupAuditEvent             string = "gitlab.group.auditEvent"
+	ResourceGitlabProject                     string = "gitlab.project"
+	ResourceGitlabProjectApprovalRule         string = "gitlab.project.approvalRule"
+	ResourceGitlabProjectCodeowners           string = "gitlab.project.codeowners"
+	ResourceGitlabProjectCodeownersRule       string = "gitlab.project.codeowners.rule"
+	ResourceGitlabProjectApprovalSetting      string = "gitlab.project.approvalSetting"
+	ResourceGitlabProjectProtectedBranch      string = "gitlab.project.protectedBranch"
+	ResourceGitlabProjectFile                 string = "gitlab.project.file"
+	ResourceGitlabProjectWebhook              string = "gitlab.project.webhook"
+	ResourceGitlabProjectMergeRequest         string = "gitlab.project.mergeRequest"
+	ResourceGitlabProjectIssue                string = "gitlab.project.issue"
+	ResourceGitlabProjectRelease              string = "gitlab.project.release"
+	ResourceGitlabProjectVariable             string = "gitlab.project.variable"
+	ResourceGitlabProjectMilestone            string = "gitlab.project.milestone"
+	ResourceGitlabProjectLabel                string = "gitlab.project.label"
+	ResourceGitlabGroupLabel                  string = "gitlab.group.label"
+	ResourceGitlabProjectPipeline             string = "gitlab.project.pipeline"
+	ResourceGitlabProjectRunner               string = "gitlab.project.runner"
+	ResourceGitlabProjectPushRule             string = "gitlab.project.pushRule"
+	ResourceGitlabGroupPushRule               string = "gitlab.group.pushRule"
+	ResourceGitlabProjectAccessToken          string = "gitlab.project.accessToken"
+	ResourceGitlabGroupAccessToken            string = "gitlab.group.accessToken"
+	ResourceGitlabProjectDeployKey            string = "gitlab.project.deployKey"
+	ResourceGitlabProjectDeployToken          string = "gitlab.project.deployToken"
+	ResourceGitlabGroupDeployToken            string = "gitlab.group.deployToken"
+	ResourceGitlabGroupProtectedBranch        string = "gitlab.group.protectedBranch"
+	ResourceGitlabProjectSecuritySetting      string = "gitlab.project.securitySetting"
+	ResourceGitlabProjectVulnerability        string = "gitlab.project.vulnerability"
+	ResourceGitlabProjectVulnerabilityScanner string = "gitlab.project.vulnerability.scanner"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -196,6 +198,14 @@ func init() {
 		"gitlab.project.securitySetting": {
 			// to override args, implement: initGitlabProjectSecuritySetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectSecuritySetting,
+		},
+		"gitlab.project.vulnerability": {
+			// to override args, implement: initGitlabProjectVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectVulnerability,
+		},
+		"gitlab.project.vulnerability.scanner": {
+			// to override args, implement: initGitlabProjectVulnerabilityScanner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectVulnerabilityScanner,
 		},
 	}
 }
@@ -559,6 +569,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.auditEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetAuditEvents()).ToDataRes(types.Array(types.Resource("gitlab.group.auditEvent")))
 	},
+	"gitlab.group.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("gitlab.project.vulnerability")))
+	},
 	"gitlab.group.samlGroupLink.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroupSamlGroupLink).GetName()).ToDataRes(types.String)
 	},
@@ -642,6 +655,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.project.fullPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetFullPath()).ToDataRes(types.String)
 	},
 	"gitlab.project.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetCreatedAt()).ToDataRes(types.Time)
@@ -795,6 +811,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.codeowners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetCodeowners()).ToDataRes(types.Resource("gitlab.project.codeowners"))
+	},
+	"gitlab.project.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("gitlab.project.vulnerability")))
+	},
+	"gitlab.project.vulnerabilityCountsBySeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetVulnerabilityCountsBySeverity()).ToDataRes(types.Map(types.String, types.Int))
 	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
@@ -1564,6 +1586,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.securitySetting.secretPushProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectSecuritySetting).GetSecretPushProtectionEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.vulnerability.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetId()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetTitle()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetDescription()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetSeverity()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetState()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.reportType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetReportType()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.detectedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetDetectedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.vulnerability.confirmedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetConfirmedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.vulnerability.resolvedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetResolvedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.vulnerability.dismissedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetDismissedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.vulnerability.dismissalReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetDismissalReason()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.resolvedOnDefaultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetResolvedOnDefaultBranch()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.vulnerability.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetLocation()).ToDataRes(types.Dict)
+	},
+	"gitlab.project.vulnerability.identifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetIdentifiers()).ToDataRes(types.Array(types.Dict))
+	},
+	"gitlab.project.vulnerability.scanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetScanner()).ToDataRes(types.Resource("gitlab.project.vulnerability.scanner"))
+	},
+	"gitlab.project.vulnerability.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetProject()).ToDataRes(types.Resource("gitlab.project"))
+	},
+	"gitlab.project.vulnerability.confirmedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetConfirmedBy()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.vulnerability.resolvedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetResolvedBy()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.vulnerability.dismissedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerability).GetDismissedBy()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.vulnerability.scanner.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerabilityScanner).GetId()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.scanner.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerabilityScanner).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.scanner.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerabilityScanner).GetVendor()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.scanner.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerabilityScanner).GetVersion()).ToDataRes(types.String)
+	},
+	"gitlab.project.vulnerability.scanner.externalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectVulnerabilityScanner).GetExternalId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1992,6 +2089,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabGroup).AuditEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gitlab.group.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.samlGroupLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroupSamlGroupLink).__id, ok = v.Value.(string)
 		return
@@ -2114,6 +2215,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.fullPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).FullPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2318,6 +2423,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.codeowners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Codeowners, ok = plugin.RawToTValue[*mqlGitlabProjectCodeowners](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerabilityCountsBySeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).VulnerabilityCountsBySeverity, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3444,6 +3557,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectSecuritySetting).SecretPushProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.vulnerability.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.reportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ReportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.detectedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).DetectedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.confirmedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ConfirmedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.resolvedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ResolvedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.dismissedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).DismissedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.dismissalReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).DismissalReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.resolvedOnDefaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ResolvedOnDefaultBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Location, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.identifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Identifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Scanner, ok = plugin.RawToTValue[*mqlGitlabProjectVulnerabilityScanner](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).Project, ok = plugin.RawToTValue[*mqlGitlabProject](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.confirmedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ConfirmedBy, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.resolvedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).ResolvedBy, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.dismissedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerability).DismissedBy, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.vulnerability.scanner.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectVulnerabilityScanner).ExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4176,6 +4397,7 @@ type mqlGitlabGroup struct {
 	ProtectedBranches              plugin.TValue[[]any]
 	SamlGroupLinks                 plugin.TValue[[]any]
 	AuditEvents                    plugin.TValue[[]any]
+	Vulnerabilities                plugin.TValue[[]any]
 }
 
 // createGitlabGroup creates a new instance of this resource
@@ -4467,6 +4689,22 @@ func (c *mqlGitlabGroup) GetAuditEvents() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGitlabGroup) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "vulnerabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilities()
+	})
+}
+
 // mqlGitlabGroupSamlGroupLink for the gitlab.group.samlGroupLink resource
 type mqlGitlabGroupSamlGroupLink struct {
 	MqlRuntime *plugin.Runtime
@@ -4732,6 +4970,7 @@ type mqlGitlabProject struct {
 	Name                                      plugin.TValue[string]
 	FullName                                  plugin.TValue[string]
 	Path                                      plugin.TValue[string]
+	FullPath                                  plugin.TValue[string]
 	CreatedAt                                 plugin.TValue[*time.Time]
 	Description                               plugin.TValue[string]
 	DefaultBranch                             plugin.TValue[string]
@@ -4783,6 +5022,8 @@ type mqlGitlabProject struct {
 	DeployTokens                              plugin.TValue[[]any]
 	SecuritySettings                          plugin.TValue[*mqlGitlabProjectSecuritySetting]
 	Codeowners                                plugin.TValue[*mqlGitlabProjectCodeowners]
+	Vulnerabilities                           plugin.TValue[[]any]
+	VulnerabilityCountsBySeverity             plugin.TValue[map[string]any]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -4836,6 +5077,10 @@ func (c *mqlGitlabProject) GetFullName() *plugin.TValue[string] {
 
 func (c *mqlGitlabProject) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlGitlabProject) GetFullPath() *plugin.TValue[string] {
+	return &c.FullPath
 }
 
 func (c *mqlGitlabProject) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -5281,6 +5526,28 @@ func (c *mqlGitlabProject) GetCodeowners() *plugin.TValue[*mqlGitlabProjectCodeo
 		}
 
 		return c.codeowners()
+	})
+}
+
+func (c *mqlGitlabProject) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "vulnerabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilities()
+	})
+}
+
+func (c *mqlGitlabProject) GetVulnerabilityCountsBySeverity() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.VulnerabilityCountsBySeverity, func() (map[string]any, error) {
+		return c.vulnerabilityCountsBySeverity()
 	})
 }
 
@@ -7720,4 +7987,277 @@ func (c *mqlGitlabProjectSecuritySetting) GetContainerScanningForRegistryEnabled
 
 func (c *mqlGitlabProjectSecuritySetting) GetSecretPushProtectionEnabled() *plugin.TValue[bool] {
 	return &c.SecretPushProtectionEnabled
+}
+
+// mqlGitlabProjectVulnerability for the gitlab.project.vulnerability resource
+type mqlGitlabProjectVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGitlabProjectVulnerabilityInternal
+	Id                      plugin.TValue[string]
+	Title                   plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Severity                plugin.TValue[string]
+	State                   plugin.TValue[string]
+	ReportType              plugin.TValue[string]
+	DetectedAt              plugin.TValue[*time.Time]
+	ConfirmedAt             plugin.TValue[*time.Time]
+	ResolvedAt              plugin.TValue[*time.Time]
+	DismissedAt             plugin.TValue[*time.Time]
+	DismissalReason         plugin.TValue[string]
+	ResolvedOnDefaultBranch plugin.TValue[bool]
+	WebURL                  plugin.TValue[string]
+	Location                plugin.TValue[any]
+	Identifiers             plugin.TValue[[]any]
+	Scanner                 plugin.TValue[*mqlGitlabProjectVulnerabilityScanner]
+	Project                 plugin.TValue[*mqlGitlabProject]
+	ConfirmedBy             plugin.TValue[*mqlGitlabUser]
+	ResolvedBy              plugin.TValue[*mqlGitlabUser]
+	DismissedBy             plugin.TValue[*mqlGitlabUser]
+}
+
+// createGitlabProjectVulnerability creates a new instance of this resource
+func createGitlabProjectVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectVulnerability) MqlName() string {
+	return "gitlab.project.vulnerability"
+}
+
+func (c *mqlGitlabProjectVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectVulnerability) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectVulnerability) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGitlabProjectVulnerability) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGitlabProjectVulnerability) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlGitlabProjectVulnerability) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGitlabProjectVulnerability) GetReportType() *plugin.TValue[string] {
+	return &c.ReportType
+}
+
+func (c *mqlGitlabProjectVulnerability) GetDetectedAt() *plugin.TValue[*time.Time] {
+	return &c.DetectedAt
+}
+
+func (c *mqlGitlabProjectVulnerability) GetConfirmedAt() *plugin.TValue[*time.Time] {
+	return &c.ConfirmedAt
+}
+
+func (c *mqlGitlabProjectVulnerability) GetResolvedAt() *plugin.TValue[*time.Time] {
+	return &c.ResolvedAt
+}
+
+func (c *mqlGitlabProjectVulnerability) GetDismissedAt() *plugin.TValue[*time.Time] {
+	return &c.DismissedAt
+}
+
+func (c *mqlGitlabProjectVulnerability) GetDismissalReason() *plugin.TValue[string] {
+	return &c.DismissalReason
+}
+
+func (c *mqlGitlabProjectVulnerability) GetResolvedOnDefaultBranch() *plugin.TValue[bool] {
+	return &c.ResolvedOnDefaultBranch
+}
+
+func (c *mqlGitlabProjectVulnerability) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabProjectVulnerability) GetLocation() *plugin.TValue[any] {
+	return &c.Location
+}
+
+func (c *mqlGitlabProjectVulnerability) GetIdentifiers() *plugin.TValue[[]any] {
+	return &c.Identifiers
+}
+
+func (c *mqlGitlabProjectVulnerability) GetScanner() *plugin.TValue[*mqlGitlabProjectVulnerabilityScanner] {
+	return plugin.GetOrCompute[*mqlGitlabProjectVulnerabilityScanner](&c.Scanner, func() (*mqlGitlabProjectVulnerabilityScanner, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.vulnerability", c.__id, "scanner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectVulnerabilityScanner), nil
+			}
+		}
+
+		return c.scanner()
+	})
+}
+
+func (c *mqlGitlabProjectVulnerability) GetProject() *plugin.TValue[*mqlGitlabProject] {
+	return plugin.GetOrCompute[*mqlGitlabProject](&c.Project, func() (*mqlGitlabProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.vulnerability", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlGitlabProjectVulnerability) GetConfirmedBy() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.ConfirmedBy, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.vulnerability", c.__id, "confirmedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.confirmedBy()
+	})
+}
+
+func (c *mqlGitlabProjectVulnerability) GetResolvedBy() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.ResolvedBy, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.vulnerability", c.__id, "resolvedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.resolvedBy()
+	})
+}
+
+func (c *mqlGitlabProjectVulnerability) GetDismissedBy() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.DismissedBy, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.vulnerability", c.__id, "dismissedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.dismissedBy()
+	})
+}
+
+// mqlGitlabProjectVulnerabilityScanner for the gitlab.project.vulnerability.scanner resource
+type mqlGitlabProjectVulnerabilityScanner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectVulnerabilityScannerInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Vendor     plugin.TValue[string]
+	Version    plugin.TValue[string]
+	ExternalId plugin.TValue[string]
+}
+
+// createGitlabProjectVulnerabilityScanner creates a new instance of this resource
+func createGitlabProjectVulnerabilityScanner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectVulnerabilityScanner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.vulnerability.scanner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) MqlName() string {
+	return "gitlab.project.vulnerability.scanner"
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlGitlabProjectVulnerabilityScanner) GetExternalId() *plugin.TValue[string] {
+	return &c.ExternalId
 }

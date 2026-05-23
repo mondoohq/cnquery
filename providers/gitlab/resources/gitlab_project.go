@@ -30,6 +30,7 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"emailsDisabled":              llx.BoolData(!prj.EmailsEnabled),
 		"emptyRepo":                   llx.BoolData(prj.EmptyRepo),
 		"fullName":                    llx.StringData(prj.NameWithNamespace),
+		"fullPath":                    llx.StringData(prj.PathWithNamespace),
 		"groupRunnersEnabled":         llx.BoolData(prj.GroupRunnersEnabled),
 		"id":                          llx.IntData(int64(prj.ID)),
 		"issuesEnabled":               llx.BoolData(prj.IssuesEnabled),

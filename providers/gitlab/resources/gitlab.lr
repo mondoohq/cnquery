@@ -268,6 +268,8 @@ gitlab.group @defaults("name visibility webURL") {
   samlGroupLinks() []gitlab.group.samlGroupLink
   // Audit events for the group (Premium/Ultimate)
   auditEvents() []gitlab.group.auditEvent
+  // Confirmed vulnerabilities across all projects in the group and its subgroups (Ultimate)
+  vulnerabilities() []gitlab.project.vulnerability
 }
 
 // GitLab SAML group link
@@ -356,6 +358,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   fullName string
   // Project path
   path string
+  // Path with namespace (e.g., `mondoohq/test-project`) — used as the project's stable identifier across GitLab APIs
+  fullPath string
   // Create date of the project
   createdAt time
   // Project description
@@ -458,6 +462,12 @@ gitlab.project @defaults("fullName visibility webURL") {
   securitySettings() gitlab.project.securitySetting
   // CODEOWNERS file resolved from the default branch (use `present` to detect a missing file)
   codeowners() gitlab.project.codeowners
+  // Confirmed vulnerabilities across all scanners (Ultimate)
+  vulnerabilities() []gitlab.project.vulnerability
+  // Counts of confirmed vulnerabilities by severity
+  //
+  // Keyed by CRITICAL, HIGH, MEDIUM, LOW, INFO, and UNKNOWN.
+  vulnerabilityCountsBySeverity() map[string]int
 }
 
 // GitLab project approval rule
@@ -1136,4 +1146,95 @@ private gitlab.project.securitySetting @defaults("secretPushProtectionEnabled co
   containerScanningForRegistryEnabled bool
   // Whether secret push protection is enabled
   secretPushProtectionEnabled bool
+}
+
+// Security scanner finding from a GitLab project
+//
+// Examine confirmed vulnerabilities surfaced by GitLab's built-in
+// security scanners — SAST, DAST, dependency scanning, secret
+// detection, and container scanning. Filter by `severity`, `state`,
+// or `reportType` to drive audit queries: open CRITICAL findings,
+// undismissed secrets in commits, or unresolved CVEs in
+// dependencies. Use `scanner` to attribute a finding to the tool
+// that produced it and `identifiers` to look up the corresponding
+// CVE, CWE, or OWASP entry.
+//
+// Requires GitLab Ultimate; on lower tiers the resource returns an
+// empty list.
+private gitlab.project.vulnerability @defaults("severity state reportType title") {
+  // Global vulnerability ID
+  id string
+  // Short summary of the finding
+  title string
+  // Detailed description of the finding
+  description string
+  // Severity
+  //
+  // One of INFO, UNKNOWN, LOW, MEDIUM, HIGH, or CRITICAL.
+  severity string
+  // Workflow state
+  //
+  // One of DETECTED, CONFIRMED, RESOLVED, or DISMISSED.
+  state string
+  // Scanner family that produced the finding
+  //
+  // One of SAST, DAST, DEPENDENCY_SCANNING, CONTAINER_SCANNING,
+  // SECRET_DETECTION, COVERAGE_FUZZING, API_FUZZING,
+  // CLUSTER_IMAGE_SCANNING, or GENERIC.
+  reportType string
+  // When the vulnerability was first detected
+  detectedAt time
+  // When the vulnerability was confirmed
+  confirmedAt time
+  // When the vulnerability was resolved
+  resolvedAt time
+  // When the vulnerability was dismissed
+  dismissedAt time
+  // Reason given when the vulnerability was dismissed
+  //
+  // One of ACCEPTABLE_RISK, FALSE_POSITIVE, MITIGATING_CONTROL,
+  // USED_IN_TESTS, or NOT_APPLICABLE.
+  dismissalReason string
+  // Whether the finding is still present on the project's default branch
+  resolvedOnDefaultBranch bool
+  // Web URL to the vulnerability detail page in GitLab
+  webURL string
+  // Where the finding occurs
+  //
+  // Shape varies by `reportType`. SAST → `file`, `startLine`,
+  // `endLine`, `blobPath`, `vulnerableClass`, `vulnerableMethod`.
+  // Dependency scanning → `dependency.package`, `dependency.version`,
+  // `file`. Container scanning → `image`, `operatingSystem`,
+  // `dependency`. DAST → `hostname`, `path`, `requestMethod`,
+  // `param`.
+  location dict
+  // External references attached to the finding
+  //
+  // Each entry has `externalType` (CVE, CWE, OWASP, vendor-specific),
+  // `externalId`, `name`, and `url`.
+  identifiers []dict
+  // Scanner that produced this finding
+  scanner() gitlab.project.vulnerability.scanner
+  // Project this finding belongs to
+  project() gitlab.project
+  // User who confirmed the vulnerability
+  confirmedBy() gitlab.user
+  // User who resolved the vulnerability
+  resolvedBy() gitlab.user
+  // User who dismissed the vulnerability
+  dismissedBy() gitlab.user
+}
+
+// Security scanner that produced a vulnerability finding
+private gitlab.project.vulnerability.scanner @defaults("name vendor") {
+  // Scanner global ID
+  id string
+  // Human-readable scanner name (e.g., "GitLab SAST", "Trivy", "Gemnasium")
+  name string
+  // Vendor that ships the scanner (e.g., "GitLab")
+  vendor string
+  // Scanner version
+  version string
+  // Scanner ID as referenced in the security report artifact
+  externalId string
 }
