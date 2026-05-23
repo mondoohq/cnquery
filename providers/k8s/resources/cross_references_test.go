@@ -761,3 +761,58 @@ func TestJobDefaults(t *testing.T) {
 	require.NoError(t, bl.Error)
 	assert.Equal(t, int64(6), bl.Data, "backoffLimit default must be the k8s API default of 6")
 }
+
+// -----------------------------------------------------------------------------
+// Webhook configuration singular-lookup regression.
+// Before the init functions were added, k8s.admission.{validating,mutating}-
+// webhookconfiguration(name: "X") returned a resource with obj=nil, so every
+// field that dereferenced k.obj panicked with nil pointer deref. This test
+// asserts the lookup actually populates obj and the fields are reachable.
+// -----------------------------------------------------------------------------
+
+func TestWebhookConfigurationSingularLookup(t *testing.T) {
+	runtime := loadCrossRefRuntime(t)
+
+	t.Run("ValidatingWebhookConfiguration", func(t *testing.T) {
+		obj, err := NewResource(runtime, "k8s.admission.validatingwebhookconfiguration", map[string]*llx.RawData{
+			"name": llx.StringData("regression-validator"),
+		})
+		require.NoError(t, err)
+		vwc := obj.(*mqlK8sAdmissionValidatingwebhookconfiguration)
+		require.NotNil(t, vwc, "lookup must return a populated resource, not nil")
+
+		// Each of these accessors used to panic when init was missing.
+		hooks := vwc.GetWebhooks()
+		require.NoError(t, hooks.Error)
+		assert.Len(t, hooks.Data, 1, "webhooks list must round-trip the single configured webhook")
+
+		labels := vwc.GetLabels()
+		require.NoError(t, labels.Error)
+		assert.Equal(t, "cross-references", labels.Data["test"])
+
+		manifest := vwc.GetManifest()
+		require.NoError(t, manifest.Error)
+		require.NotNil(t, manifest.Data)
+	})
+
+	t.Run("MutatingWebhookConfiguration", func(t *testing.T) {
+		obj, err := NewResource(runtime, "k8s.admission.mutatingwebhookconfiguration", map[string]*llx.RawData{
+			"name": llx.StringData("regression-mutator"),
+		})
+		require.NoError(t, err)
+		mwc := obj.(*mqlK8sAdmissionMutatingwebhookconfiguration)
+		require.NotNil(t, mwc)
+
+		hooks := mwc.GetWebhooks()
+		require.NoError(t, hooks.Error)
+		assert.Len(t, hooks.Data, 1)
+
+		labels := mwc.GetLabels()
+		require.NoError(t, labels.Error)
+		assert.Equal(t, "cross-references", labels.Data["test"])
+
+		manifest := mwc.GetManifest()
+		require.NoError(t, manifest.Error)
+		require.NotNil(t, manifest.Data)
+	})
+}

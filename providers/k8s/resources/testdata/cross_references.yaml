@@ -554,3 +554,46 @@ roleRef:
   kind: ClusterRole
   name: pod-reader
   apiGroup: rbac.authorization.k8s.io
+---
+# Webhook configurations — regression for the singular-lookup nil-pointer
+# panic. Looking these up via NewResource (the singular accessor) used to
+# skip the obj-populating list scan, so every field touching obj panicked.
+# Both resources now have init functions; the test asserts fields that
+# previously crashed (webhooks, manifest, labels) resolve cleanly.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: regression-validator
+  labels:
+    test: cross-references
+webhooks:
+  - name: validate.regression.test
+    clientConfig:
+      url: https://validator.regression.test/validate
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["configmaps"]
+    sideEffects: None
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Ignore
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: regression-mutator
+  labels:
+    test: cross-references
+webhooks:
+  - name: mutate.regression.test
+    clientConfig:
+      url: https://mutator.regression.test/mutate
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+    sideEffects: None
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Ignore
