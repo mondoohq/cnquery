@@ -118,9 +118,12 @@ func (r *mqlProxmoxFirewallGroup) id() (string, error) {
 	return "proxmox.firewall.group/" + r.Name.Data, nil
 }
 
+func firewallGroupConn(r *mqlProxmoxFirewallGroup) *connection.PveConnection {
+	return r.MqlRuntime.Connection.(*connection.PveConnection)
+}
+
 func (r *mqlProxmoxFirewallGroup) rules() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	rules, err := conn.GetClusterFirewallGroupRules(r.Name.Data)
+	rules, err := firewallGroupConn(r).GetClusterFirewallGroupRules(r.Name.Data)
 	if err != nil {
 		return nil, err
 	}

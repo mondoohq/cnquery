@@ -224,3 +224,34 @@ func TestLooksLikeMAC(t *testing.T) {
 		t.Error("expected false for empty string")
 	}
 }
+
+func TestIsNetSlotKey(t *testing.T) {
+	cases := map[string]bool{
+		// Valid slots — Proxmox accepts net0..net31 on VMs, fewer on
+		// containers, but the validator just checks the digit suffix.
+		"net0":  true,
+		"net1":  true,
+		"net12": true,
+		"net31": true,
+		// Critical regression cases: the listing endpoint exposes
+		// traffic counters with names that start with "net" but aren't
+		// configured interfaces.
+		"netin":  false,
+		"netout": false,
+		// Other near-matches that should not be treated as net slots.
+		"net":       false, // missing slot number
+		"netname":   false,
+		"network":   false,
+		"":          false,
+		"snet0":     false, // doesn't start with "net"
+		"netfoo":    false,
+		"net0extra": false,
+	}
+	for key, want := range cases {
+		t.Run(key, func(t *testing.T) {
+			if got := isNetSlotKey(key); got != want {
+				t.Errorf("isNetSlotKey(%q) = %v, want %v", key, got, want)
+			}
+		})
+	}
+}

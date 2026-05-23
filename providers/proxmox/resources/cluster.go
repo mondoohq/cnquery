@@ -15,10 +15,9 @@ import (
 )
 
 type mqlProxmoxClusterInternal struct {
-	optionsFetched bool
+	optionsOnce    sync.Once
 	clusterOptions map[string]any
 	optionsErr     error
-	optionsLock    sync.Mutex
 }
 
 func clusterConn(r *mqlProxmoxCluster) *connection.PveConnection {
@@ -26,16 +25,9 @@ func clusterConn(r *mqlProxmoxCluster) *connection.PveConnection {
 }
 
 func (r *mqlProxmoxCluster) ensureOptions() (map[string]any, error) {
-	if r.optionsFetched {
-		return r.clusterOptions, r.optionsErr
-	}
-	r.optionsLock.Lock()
-	defer r.optionsLock.Unlock()
-	if r.optionsFetched {
-		return r.clusterOptions, r.optionsErr
-	}
-	r.clusterOptions, r.optionsErr = clusterConn(r).GetClusterOptions()
-	r.optionsFetched = true
+	r.optionsOnce.Do(func() {
+		r.clusterOptions, r.optionsErr = clusterConn(r).GetClusterOptions()
+	})
 	return r.clusterOptions, r.optionsErr
 }
 

@@ -16,11 +16,10 @@ import (
 // ---------------------------------------------------------------------------
 
 type mqlProxmoxNodeDiskInternal struct {
-	parentNode   string
-	smartFetched bool
-	smartData    *connection.DiskSMART
-	smartErr     error
-	lock         sync.Mutex
+	parentNode string
+	smartOnce  sync.Once
+	smartData  *connection.DiskSMART
+	smartErr   error
 }
 
 func (r *mqlProxmoxNode) disks() ([]any, error) {
@@ -59,17 +58,10 @@ func (r *mqlProxmoxNode) disks() ([]any, error) {
 }
 
 func (r *mqlProxmoxNodeDisk) ensureSMART() {
-	if r.smartFetched {
-		return
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.smartFetched {
-		return
-	}
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	r.smartData, r.smartErr = conn.GetDiskSMART(r.parentNode, r.DevPath.Data)
-	r.smartFetched = true
+	r.smartOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+		r.smartData, r.smartErr = conn.GetDiskSMART(r.parentNode, r.DevPath.Data)
+	})
 }
 
 func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
@@ -128,11 +120,10 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 // ---------------------------------------------------------------------------
 
 type mqlProxmoxZfsPoolInternal struct {
-	parentNode    string
-	detailFetched bool
-	detail        *connection.ZFSPoolDetail
-	detailErr     error
-	lock          sync.Mutex
+	parentNode string
+	detailOnce sync.Once
+	detail     *connection.ZFSPoolDetail
+	detailErr  error
 }
 
 func (r *mqlProxmoxNode) zfsPools() ([]any, error) {
@@ -164,17 +155,10 @@ func (r *mqlProxmoxNode) zfsPools() ([]any, error) {
 }
 
 func (r *mqlProxmoxZfsPool) ensureDetail() {
-	if r.detailFetched {
-		return
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.detailFetched {
-		return
-	}
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	r.detail, r.detailErr = conn.GetZFSPoolDetail(r.parentNode, r.Name.Data)
-	r.detailFetched = true
+	r.detailOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+		r.detail, r.detailErr = conn.GetZFSPoolDetail(r.parentNode, r.Name.Data)
+	})
 }
 
 func (r *mqlProxmoxZfsPool) state() (string, error) {
@@ -246,14 +230,6 @@ func zfsChildToDict(c connection.ZFSPoolChild) map[string]any {
 // ---------------------------------------------------------------------------
 // LVM volume groups + thin pools
 // ---------------------------------------------------------------------------
-
-type mqlProxmoxLvmVolumeGroupInternal struct {
-	parentNode string
-}
-
-type mqlProxmoxLvmThinPoolInternal struct {
-	parentNode string
-}
 
 func (r *mqlProxmoxNode) volumeGroups() ([]any, error) {
 	conn := nodeConn(r)

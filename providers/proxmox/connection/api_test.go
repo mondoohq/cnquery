@@ -155,6 +155,56 @@ func TestGetNodeContainers_MalformedVMIDErrors(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// GetNodeVMs — symmetric per-node fetch. Regression test against the
+// N+1 GetNodeVMs behavior (which used to hit /cluster/resources and
+// filter in memory).
+// ---------------------------------------------------------------------------
+
+func TestGetNodeVMs_HitsPerNodeEndpoint(t *testing.T) {
+	f := newFakePVE(t)
+	// Crucially, /cluster/resources is NOT registered. If GetNodeVMs ever
+	// regresses back to using GetAllVMs internally the test fails with a
+	// 404 instead of silently passing on a stale endpoint.
+	f.route("/nodes/pve1/qemu", []map[string]any{
+		{"vmid": "100", "name": "web", "status": "running", "maxmem": 2_000_000_000},
+		{"vmid": "201", "name": "db", "status": "stopped"},
+	})
+
+	vms, err := f.conn().GetNodeVMs("pve1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(vms) != 2 {
+		t.Fatalf("expected 2 VMs, got %d", len(vms))
+	}
+	if vms[0].VMID != 100 || vms[0].Name != "web" || vms[0].Node != "pve1" {
+		t.Errorf("vm[0] = %+v, want VMID=100 Name=web Node=pve1", vms[0])
+	}
+	if vms[1].VMID != 201 {
+		t.Errorf("vm[1].VMID = %d, want 201", vms[1].VMID)
+	}
+	if vms[0].Type != "qemu" {
+		t.Errorf("vm[0].Type = %q, want qemu (filled in by helper)", vms[0].Type)
+	}
+}
+
+func TestGetNodeVMs_MalformedVMIDErrors(t *testing.T) {
+	f := newFakePVE(t)
+	f.route("/nodes/pve1/qemu", []map[string]any{
+		{"vmid": "garbage", "name": "broken"},
+	})
+
+	_, err := f.conn().GetNodeVMs("pve1")
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric VMID; got nil")
+	}
+	msg := err.Error()
+	if !contains(msg, `"garbage"`) || !contains(msg, "pve1") {
+		t.Errorf("error %q should mention the bad VMID and node name", msg)
+	}
+}
+
+// ---------------------------------------------------------------------------
 // GetClusterFirewallOptions — dict semantics for the typed-options layer
 // ---------------------------------------------------------------------------
 

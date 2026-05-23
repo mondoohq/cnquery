@@ -164,6 +164,26 @@ func (r *mqlProxmox) users() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// The user-listing endpoint already returned every token for
+		// this user; cache them so tokens() doesn't refetch one
+		// /access/users/<id>/token per user.
+		mqlUser := res.(*mqlProxmoxUser)
+		tokens := make([]any, 0, len(u.Tokens))
+		for _, t := range u.Tokens {
+			fullID := u.UserID + "!" + t.TokenID
+			tok, err := CreateResource(r.MqlRuntime, "proxmox.token", map[string]*llx.RawData{
+				"id":      llx.StringData(fullID),
+				"comment": llx.StringData(t.Comment),
+				"expire":  llx.IntData(t.Expire),
+				"privsep": llx.BoolData(t.Privsep == 1),
+			})
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, tok)
+		}
+		mqlUser.cachedTokens = tokens
+		mqlUser.cachedTokensSet = true
 		list[i] = res
 	}
 	return list, nil

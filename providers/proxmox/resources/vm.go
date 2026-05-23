@@ -15,13 +15,12 @@ import (
 )
 
 type mqlProxmoxVmInternal struct {
-	configFetched bool
-	vmConfig      map[string]interface{}
-	configErr     error
-	osInfoFetched bool
-	osInfo        *connection.OsInfo
-	osInfoErr     error
-	cfgLock       sync.Mutex
+	configOnce sync.Once
+	vmConfig   map[string]interface{}
+	configErr  error
+	osInfoOnce sync.Once
+	osInfo     *connection.OsInfo
+	osInfoErr  error
 }
 
 func vmConn(r *mqlProxmoxVm) *connection.PveConnection {
@@ -33,16 +32,9 @@ func (r *mqlProxmoxVm) id() (string, error) {
 }
 
 func (r *mqlProxmoxVm) ensureConfig() {
-	if r.configFetched {
-		return
-	}
-	r.cfgLock.Lock()
-	defer r.cfgLock.Unlock()
-	if r.configFetched {
-		return
-	}
-	r.vmConfig, r.configErr = vmConn(r).GetVMConfig(r.Node.Data, int(r.Id.Data))
-	r.configFetched = true
+	r.configOnce.Do(func() {
+		r.vmConfig, r.configErr = vmConn(r).GetVMConfig(r.Node.Data, int(r.Id.Data))
+	})
 }
 
 func (r *mqlProxmoxVm) cfgStr(key string) string {
@@ -221,7 +213,7 @@ func (r *mqlProxmoxVm) networks() ([]any, error) {
 	}
 	var list []any
 	for key, val := range r.vmConfig {
-		if !strings.HasPrefix(key, "net") {
+		if !isNetSlotKey(key) {
 			continue
 		}
 		valStr := fmt.Sprintf("%v", val)
@@ -308,14 +300,9 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 	}
 	conn := vmConn(r)
 	vmid := int(r.Id.Data)
-	if !r.osInfoFetched {
-		r.cfgLock.Lock()
-		defer r.cfgLock.Unlock()
-		if !r.osInfoFetched {
-			r.osInfo, r.osInfoErr = conn.GetOsInfo(r.Node.Data, vmid)
-			r.osInfoFetched = true
-		}
-	}
+	r.osInfoOnce.Do(func() {
+		r.osInfo, r.osInfoErr = conn.GetOsInfo(r.Node.Data, vmid)
+	})
 	if r.osInfoErr != nil {
 		if errors.Is(r.osInfoErr, connection.ErrQGANotRunning) {
 			return nil, fmt.Errorf("guest agent not reachable for VM %d", vmid)
@@ -345,7 +332,16 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 }
 
 // --- User tokens ---
+//
+// When the user came from the cluster-wide listing the tokens are
+// already populated in cachedTokens (see proxmox.users()), so we
+// short-circuit. The per-user /access/users/<id>/token fetch is
+// reserved for the init path that resolves a single user by id
+// (e.g. an ACL grant pointing at a user we haven't enumerated).
 func (r *mqlProxmoxUser) tokens() ([]any, error) {
+	if r.cachedTokensSet {
+		return r.cachedTokens, nil
+	}
 	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
 	tokens, err := conn.GetUserTokens(r.Id.Data)
 	if err != nil {

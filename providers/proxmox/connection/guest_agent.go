@@ -135,8 +135,11 @@ func (c *PveConnection) getAptUpdates(node string, vmid int) ([]UpdateInfo, erro
 }
 
 func (c *PveConnection) getDnfUpdates(node string, vmid int) ([]UpdateInfo, error) {
+	// `dnf check-update` exits 100 when updates are available, but
+	// QGAExec carries the exit code on the result struct rather than
+	// returning a Go error — so any non-nil err is a real failure.
 	result, err := c.QGAExec(node, vmid, []string{"dnf", "check-update", "--quiet"})
-	if err != nil && result == nil {
+	if err != nil {
 		return nil, fmt.Errorf("dnf check-update failed: %w", err)
 	}
 	return ParseDnfOutput(result.Stdout), nil

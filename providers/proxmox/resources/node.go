@@ -13,11 +13,10 @@ import (
 )
 
 type mqlProxmoxNodeInternal struct {
-	nodeName      string
-	statusFetched bool
-	nodeStatus    *connection.NodeStatus
-	statusErr     error
-	lock          sync.Mutex
+	nodeName   string
+	statusOnce sync.Once
+	nodeStatus *connection.NodeStatus
+	statusErr  error
 }
 
 func nodeConn(r *mqlProxmoxNode) *connection.PveConnection {
@@ -29,16 +28,9 @@ func (r *mqlProxmoxNode) id() (string, error) {
 }
 
 func (r *mqlProxmoxNode) ensureStatus() {
-	if r.statusFetched {
-		return
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.statusFetched {
-		return
-	}
-	r.nodeStatus, r.statusErr = nodeConn(r).GetNodeStatus(r.Name.Data)
-	r.statusFetched = true
+	r.statusOnce.Do(func() {
+		r.nodeStatus, r.statusErr = nodeConn(r).GetNodeStatus(r.Name.Data)
+	})
 }
 
 func (r *mqlProxmoxNode) cpuModel() (string, error) {
@@ -328,9 +320,10 @@ func (r *mqlProxmoxNode) repositories() ([]any, error) {
 		return nil, err
 	}
 	var list []any
-	idx := 0
 	for _, file := range repoInfo.Files {
-		for _, repo := range file.Repositories {
+		// idx is per-file so the resulting `<path>:<idx>` matches what
+		// the path string implies (the n-th entry inside that file).
+		for idx, repo := range file.Repositories {
 			repoID := fmt.Sprintf("%s:%d", file.Path, idx)
 			name := repo.Comment
 			if name == "" && len(repo.URIs) > 0 {
@@ -374,7 +367,6 @@ func (r *mqlProxmoxNode) repositories() ([]any, error) {
 				return nil, err
 			}
 			list = append(list, res)
-			idx++
 		}
 	}
 	return list, nil

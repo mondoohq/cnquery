@@ -6788,7 +6788,7 @@ func (c *mqlProxmoxFirewallRule) GetGroup() *plugin.TValue[*mqlProxmoxFirewallGr
 type mqlProxmoxUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProxmoxUserInternal it will be used here
+	mqlProxmoxUserInternal
 	Id             plugin.TValue[string]
 	Email          plugin.TValue[string]
 	Enable         plugin.TValue[bool]
@@ -8757,7 +8757,7 @@ func (c *mqlProxmoxZfsPool) GetChildren() *plugin.TValue[[]any] {
 type mqlProxmoxLvmVolumeGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxLvmVolumeGroupInternal
+	// optional: if you define mqlProxmoxLvmVolumeGroupInternal it will be used here
 	Name    plugin.TValue[string]
 	Size    plugin.TValue[int64]
 	Free    plugin.TValue[int64]
@@ -8816,7 +8816,7 @@ func (c *mqlProxmoxLvmVolumeGroup) GetLvCount() *plugin.TValue[int64] {
 type mqlProxmoxLvmThinPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxLvmThinPoolInternal
+	// optional: if you define mqlProxmoxLvmThinPoolInternal it will be used here
 	Name         plugin.TValue[string]
 	VolumeGroup  plugin.TValue[string]
 	Size         plugin.TValue[int64]

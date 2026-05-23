@@ -190,6 +190,26 @@ func looksLikeMAC(s string) bool {
 	return len(s) == 17 && strings.Count(s, ":") == 5
 }
 
+// isNetSlotKey reports whether a VM/CT config key is one of the
+// `netN` interface slots. A naive `HasPrefix("net")` match would
+// also catch the `netin`/`netout` traffic counters returned by the
+// listing endpoint, so insist on a non-empty all-digit suffix.
+func isNetSlotKey(key string) bool {
+	if !strings.HasPrefix(key, "net") {
+		return false
+	}
+	rest := key[len("net"):]
+	if rest == "" {
+		return false
+	}
+	for _, c := range rest {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // parseContainerNetworkConfig parses a Proxmox LXC network config value.
 // Format: name=eth0,bridge=vmbr0,firewall=1,gw=192.168.1.1,hwaddr=AA:..,
 //

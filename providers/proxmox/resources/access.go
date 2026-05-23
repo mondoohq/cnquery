@@ -12,6 +12,14 @@ import (
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
 )
 
+// mqlProxmoxUserInternal caches the inline token list from
+// /access/users?full=1 so `proxmox.users { tokens }` doesn't fan out
+// into a per-user /access/users/<id>/token fetch (N+1).
+type mqlProxmoxUserInternal struct {
+	cachedTokens    []any
+	cachedTokensSet bool
+}
+
 // ---------------------------------------------------------------------------
 // Groups
 // ---------------------------------------------------------------------------
@@ -158,10 +166,9 @@ func (r *mqlProxmoxAcl) token() (*mqlProxmoxToken, error) {
 // ---------------------------------------------------------------------------
 
 type mqlProxmoxRealmInternal struct {
-	configFetched bool
-	cfg           map[string]any
-	cfgErr        error
-	lock          sync.Mutex
+	configOnce sync.Once
+	cfg        map[string]any
+	cfgErr     error
 }
 
 func (r *mqlProxmox) realms() ([]any, error) {
@@ -207,17 +214,10 @@ func (r *mqlProxmoxRealm) id() (string, error) {
 }
 
 func (r *mqlProxmoxRealm) config() (any, error) {
-	if r.configFetched {
-		return r.cfg, r.cfgErr
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.configFetched {
-		return r.cfg, r.cfgErr
-	}
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	r.cfg, r.cfgErr = conn.GetRealmConfig(r.Realm.Data)
-	r.configFetched = true
+	r.configOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+		r.cfg, r.cfgErr = conn.GetRealmConfig(r.Realm.Data)
+	})
 	return r.cfg, r.cfgErr
 }
 

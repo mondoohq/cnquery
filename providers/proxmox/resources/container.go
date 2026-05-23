@@ -15,10 +15,9 @@ import (
 )
 
 type mqlProxmoxContainerInternal struct {
-	configFetched bool
-	ctConfig      map[string]any
-	configErr     error
-	lock          sync.Mutex
+	configOnce sync.Once
+	ctConfig   map[string]any
+	configErr  error
 }
 
 func ctConn(r *mqlProxmoxContainer) *connection.PveConnection {
@@ -77,16 +76,9 @@ func (r *mqlProxmoxNode) containers() ([]any, error) {
 }
 
 func (r *mqlProxmoxContainer) ensureConfig() {
-	if r.configFetched {
-		return
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.configFetched {
-		return
-	}
-	r.ctConfig, r.configErr = ctConn(r).GetContainerConfig(r.Node.Data, int(r.Id.Data))
-	r.configFetched = true
+	r.configOnce.Do(func() {
+		r.ctConfig, r.configErr = ctConn(r).GetContainerConfig(r.Node.Data, int(r.Id.Data))
+	})
 }
 
 func (r *mqlProxmoxContainer) cfgStr(key string) string {
@@ -268,7 +260,7 @@ func (r *mqlProxmoxContainer) networks() ([]any, error) {
 	}
 	var list []any
 	for key, val := range r.ctConfig {
-		if !strings.HasPrefix(key, "net") {
+		if !isNetSlotKey(key) {
 			continue
 		}
 		valStr := fmt.Sprintf("%v", val)

@@ -15,10 +15,9 @@ import (
 // container() can return null for the wrong type without each one paging
 // through /cluster/resources independently.
 type mqlProxmoxReplicationJobInternal struct {
-	kindFetched bool
-	guestKind   string // "qemu", "lxc", or "" when the vmid isn't found
-	kindErr     error
-	lock        sync.Mutex
+	kindOnce  sync.Once
+	guestKind string // "qemu", "lxc", or "" when the vmid isn't found
+	kindErr   error
 }
 
 func (r *mqlProxmox) replicationJobs() ([]any, error) {
@@ -76,46 +75,35 @@ func replicationNodeRef(runtime *plugin.Runtime, name string, slot *plugin.TValu
 // the result to return the right typed resource and null for the other —
 // matching the .lr contract that only one of vm()/container() is set.
 func (r *mqlProxmoxReplicationJob) ensureGuestKind() (string, error) {
-	if r.kindFetched {
-		return r.guestKind, r.kindErr
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.kindFetched {
-		return r.guestKind, r.kindErr
-	}
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	// Both /cluster/resources?type=vm and the dedicated GetAllContainers go
-	// through the same endpoint; one round-trip is enough.
-	vms, vmErr := conn.GetAllVMs()
-	if vmErr == nil {
-		for _, vm := range vms {
-			if int64(vm.VMID) == r.Vmid.Data {
-				r.guestKind = "qemu"
-				r.kindFetched = true
-				return r.guestKind, nil
+	r.kindOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+		vms, vmErr := conn.GetAllVMs()
+		if vmErr == nil {
+			for _, vm := range vms {
+				if int64(vm.VMID) == r.Vmid.Data {
+					r.guestKind = "qemu"
+					return
+				}
 			}
 		}
-	}
-	cts, ctErr := conn.GetAllContainers()
-	if ctErr == nil {
-		for _, ct := range cts {
-			if int64(ct.VMID) == r.Vmid.Data {
-				r.guestKind = "lxc"
-				r.kindFetched = true
-				return r.guestKind, nil
+		cts, ctErr := conn.GetAllContainers()
+		if ctErr == nil {
+			for _, ct := range cts {
+				if int64(ct.VMID) == r.Vmid.Data {
+					r.guestKind = "lxc"
+					return
+				}
 			}
 		}
-	}
-	// Both lookups returning empty is normal for a job pointing at a guest
-	// that's already been deleted — leave guestKind empty so both vm() and
-	// container() resolve to null.
-	if vmErr != nil {
-		r.kindErr = vmErr
-	} else if ctErr != nil {
-		r.kindErr = ctErr
-	}
-	r.kindFetched = true
+		// Treat "deleted guest" as the success path: only bubble the
+		// API errors up if BOTH lookups failed, because either listing
+		// returning cleanly is enough to authoritatively answer "not
+		// found." A transient VM-listing failure should not poison the
+		// answer when the container listing definitively said "not me."
+		if vmErr != nil && ctErr != nil {
+			r.kindErr = vmErr
+		}
+	})
 	return r.guestKind, r.kindErr
 }
 

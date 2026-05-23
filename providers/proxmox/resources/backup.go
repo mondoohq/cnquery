@@ -14,19 +14,17 @@ import (
 )
 
 type mqlProxmoxBackupJobInternal struct {
-	configFetched bool
-	cfg           map[string]any
-	cfgErr        error
-	lock          sync.Mutex
+	configOnce sync.Once
+	cfg        map[string]any
+	cfgErr     error
 
 	// Target resolution hits /cluster/resources for both VMs and
 	// containers; cache the result so a query that reads both
 	// targetVms and targetContainers only pays the cost once.
-	targetsFetched bool
-	cachedVms      []any
-	cachedCts      []any
-	targetsErr     error
-	targetsLock    sync.Mutex
+	targetsOnce sync.Once
+	cachedVms   []any
+	cachedCts   []any
+	targetsErr  error
 }
 
 func (r *mqlProxmox) backupJobs() ([]any, error) {
@@ -115,16 +113,9 @@ func parseBackupVMIDs(raw string) []int64 {
 // non-empty `vmids` list selects only the matching guests. Results
 // are cached on the resource so the two accessors share one fetch.
 func (r *mqlProxmoxBackupJob) resolveBackupTargets() (vms, containers []any, err error) {
-	if r.targetsFetched {
-		return r.cachedVms, r.cachedCts, r.targetsErr
-	}
-	r.targetsLock.Lock()
-	defer r.targetsLock.Unlock()
-	if r.targetsFetched {
-		return r.cachedVms, r.cachedCts, r.targetsErr
-	}
-	r.cachedVms, r.cachedCts, r.targetsErr = r.resolveBackupTargetsUncached()
-	r.targetsFetched = true
+	r.targetsOnce.Do(func() {
+		r.cachedVms, r.cachedCts, r.targetsErr = r.resolveBackupTargetsUncached()
+	})
 	return r.cachedVms, r.cachedCts, r.targetsErr
 }
 
@@ -207,16 +198,9 @@ func (r *mqlProxmoxBackupJob) targetContainers() ([]any, error) {
 }
 
 func (r *mqlProxmoxBackupJob) config() (any, error) {
-	if r.configFetched {
-		return r.cfg, r.cfgErr
-	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	if r.configFetched {
-		return r.cfg, r.cfgErr
-	}
-	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
-	r.cfg, r.cfgErr = conn.GetBackupJob(r.Id.Data)
-	r.configFetched = true
+	r.configOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+		r.cfg, r.cfgErr = conn.GetBackupJob(r.Id.Data)
+	})
 	return r.cfg, r.cfgErr
 }

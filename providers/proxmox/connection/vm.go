@@ -3,7 +3,11 @@
 
 package connection
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+	"strconv"
+)
 
 // ---------------------------------------------------------------------------
 // VM listing
@@ -44,19 +48,65 @@ func (c *PveConnection) GetAllVMs() ([]VMInfo, error) {
 	return vms, nil
 }
 
-// GetNodeVMs returns VMs on a specific node.
+// nodeQemuEntry mirrors a /nodes/<node>/qemu row. VMIDs come back as
+// strings on this endpoint (unlike /cluster/resources, which uses
+// ints), so we unmarshal into an intermediate type and convert.
+type nodeQemuEntry struct {
+	VMID      string  `json:"vmid"`
+	Name      string  `json:"name"`
+	Status    string  `json:"status"`
+	CPU       float64 `json:"cpu"`
+	MaxCPU    int     `json:"cpus"`
+	Mem       int64   `json:"mem"`
+	MaxMem    int64   `json:"maxmem"`
+	Disk      int64   `json:"disk"`
+	MaxDisk   int64   `json:"maxdisk"`
+	DiskRead  int64   `json:"diskread"`
+	DiskWrite int64   `json:"diskwrite"`
+	NetIn     int64   `json:"netin"`
+	NetOut    int64   `json:"netout"`
+	Uptime    int64   `json:"uptime"`
+	Template  int     `json:"template"`
+	Tags      string  `json:"tags"`
+}
+
+// GetNodeVMs hits the per-node /nodes/<node>/qemu endpoint directly so
+// `proxmox.nodes { vms }` doesn't fan out into one full
+// cluster-resources fetch per node.
 func (c *PveConnection) GetNodeVMs(node string) ([]VMInfo, error) {
-	allVMs, err := c.GetAllVMs()
-	if err != nil {
-		return nil, err
+	var entries []nodeQemuEntry
+	path := fmt.Sprintf("/nodes/%s/qemu", url.PathEscape(node))
+	if err := c.apiGet(path, &entries); err != nil {
+		return nil, fmt.Errorf("failed to list VMs on node %s: %w", node, err)
 	}
-	var vms []VMInfo
-	for _, vm := range allVMs {
-		if vm.Node == node {
-			vms = append(vms, vm)
+	out := make([]VMInfo, 0, len(entries))
+	for _, e := range entries {
+		vmid, err := strconv.Atoi(e.VMID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid VMID %q on node %s: %w", e.VMID, node, err)
 		}
+		out = append(out, VMInfo{
+			VMID:      vmid,
+			Name:      e.Name,
+			Node:      node,
+			Status:    e.Status,
+			Type:      "qemu",
+			CPU:       e.CPU,
+			MaxCPU:    e.MaxCPU,
+			Mem:       e.Mem,
+			MaxMem:    e.MaxMem,
+			Disk:      e.Disk,
+			MaxDisk:   e.MaxDisk,
+			DiskRead:  e.DiskRead,
+			DiskWrite: e.DiskWrite,
+			NetIn:     e.NetIn,
+			NetOut:    e.NetOut,
+			Uptime:    e.Uptime,
+			Template:  e.Template,
+			Tags:      e.Tags,
+		})
 	}
-	return vms, nil
+	return out, nil
 }
 
 // ---------------------------------------------------------------------------
