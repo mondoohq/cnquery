@@ -62,6 +62,25 @@ bicep.parameter @defaults("name type") {
   secure bool
   // Allowed values from @allowed decorator
   allowed []string
+  // `@minLength(n)` constraint
+  //
+  // Applies to `string` and array parameters. Zero when the decorator is
+  // not declared. Audits commonly require non-zero `minLength` on string
+  // parameters that hold passwords or other credential material.
+  minLength int
+  // `@maxLength(n)` constraint
+  //
+  // Applies to `string` and array parameters. Zero when the decorator is
+  // not declared.
+  maxLength int
+  // `@minValue(n)` constraint
+  //
+  // Applies to `int` parameters. Zero when the decorator is not declared.
+  minValue int
+  // `@maxValue(n)` constraint
+  //
+  // Applies to `int` parameters. Zero when the decorator is not declared.
+  maxValue int
   // All decorators as raw strings
   decorators []string
 }
@@ -106,6 +125,15 @@ bicep.resource @defaults("type symbolicName") {
   parent string
   // Resource body as dict
   properties dict
+  // Resource tags
+  //
+  // Key/value pairs from the `tags: { ... }` block in the resource body.
+  // Bicep expression-valued tags (`tags: tags`, `tags: { env: parameters('env') }`)
+  // are skipped — the map only contains entries whose value is a literal
+  // string. Empty when the resource has no static tags. Most Azure
+  // compliance frameworks require a baseline set of tags (owner,
+  // environment, cost-center) on every resource.
+  tags map[string]string
   // Dependencies (symbolic names from dependsOn)
   dependsOn []string
   // Decorators

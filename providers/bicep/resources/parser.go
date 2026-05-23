@@ -5,6 +5,7 @@ package resources
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -25,6 +26,10 @@ type parsedParameter struct {
 	description  string
 	secure       bool
 	allowed      []string
+	minLength    int64
+	maxLength    int64
+	minValue     int64
+	maxValue     int64
 	decorators   []string
 }
 
@@ -44,6 +49,7 @@ type parsedResource struct {
 	condition    string
 	parent       string
 	body         string
+	tags         map[string]string
 	dependsOn    []string
 	decorators   []string
 }
@@ -68,16 +74,20 @@ type parsedOutput struct {
 }
 
 var (
-	targetScopeRe = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
-	paramRe       = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
-	varRe         = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
-	resourceRe    = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
-	moduleRe      = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
-	outputRe      = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
-	decoratorRe   = regexp.MustCompile(`(?m)^@(\w+)\(([^)]*)\)`)
-	descDecRe     = regexp.MustCompile(`@description\('([^']*)'\)`)
-	secureDecRe   = regexp.MustCompile(`@secure\(\)`)
-	allowedDecRe  = regexp.MustCompile(`@allowed\(\[([^\]]*)\]\)`)
+	targetScopeRe  = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
+	paramRe        = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
+	varRe          = regexp.MustCompile(`(?m)^var\s+(\w+)\s*=\s*(.+)$`)
+	resourceRe     = regexp.MustCompile(`(?m)^(resource)\s+(\w+)\s+'([^']+)'(\s+existing)?\s*=`)
+	moduleRe       = regexp.MustCompile(`(?m)^module\s+(\w+)\s+'([^']+)'\s*=`)
+	outputRe       = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\w+)\s*=\s*(.+)$`)
+	decoratorRe    = regexp.MustCompile(`(?m)^@(\w+)\(([^)]*)\)`)
+	descDecRe      = regexp.MustCompile(`@description\('([^']*)'\)`)
+	secureDecRe    = regexp.MustCompile(`@secure\(\)`)
+	allowedDecRe   = regexp.MustCompile(`@allowed\(\[([^\]]*)\]\)`)
+	minLengthDecRe = regexp.MustCompile(`@minLength\(\s*(-?\d+)\s*\)`)
+	maxLengthDecRe = regexp.MustCompile(`@maxLength\(\s*(-?\d+)\s*\)`)
+	minValueDecRe  = regexp.MustCompile(`@minValue\(\s*(-?\d+)\s*\)`)
+	maxValueDecRe  = regexp.MustCompile(`@maxValue\(\s*(-?\d+)\s*\)`)
 )
 
 func parseBicep(content string) *parsedBicepFile {
@@ -186,8 +196,28 @@ func parseParameter(line string, decorators []string) parsedParameter {
 	if m := allowedDecRe.FindStringSubmatch(decText); len(m) > 1 {
 		p.allowed = parseAllowedValues(m[1])
 	}
+	p.minLength = parseIntDecorator(decText, minLengthDecRe)
+	p.maxLength = parseIntDecorator(decText, maxLengthDecRe)
+	p.minValue = parseIntDecorator(decText, minValueDecRe)
+	p.maxValue = parseIntDecorator(decText, maxValueDecRe)
 
 	return p
+}
+
+// parseIntDecorator matches a decorator like `@minLength(8)` and returns the
+// numeric argument. Returns 0 when the decorator is not present or its
+// argument is non-numeric; callers treat 0 as "unset" the same way the .lr
+// schema does.
+func parseIntDecorator(decText string, re *regexp.Regexp) int64 {
+	m := re.FindStringSubmatch(decText)
+	if len(m) < 2 {
+		return 0
+	}
+	n, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // allowedValueRe matches individual quoted values like 'foo' or "foo".
@@ -253,6 +283,7 @@ func parseResourceDecl(lines []string, startIdx int, decorators []string) (*pars
 	r.condition = extractCondition(line)
 	r.parent = extractFieldValue(body, "parent")
 	r.dependsOn = extractDependsOn(body)
+	r.tags = extractTags(body)
 
 	return r, endIdx
 }
@@ -422,6 +453,35 @@ func parenBracketDepth(s string) int {
 		}
 	}
 	return depth
+}
+
+// tagsEntryRe matches one `key: 'value'` line inside a `tags: { ... }` block.
+// Keys can be bare identifiers (`env`) or single-quoted strings (`'env-1'`);
+// only literal single-quoted values are captured — expression-valued tags
+// like `env: parameters('env')` are skipped because the dict shape on the
+// resource gives audits a way to reach them in raw form.
+var tagsEntryRe = regexp.MustCompile(`(?m)^\s*(?:'([^']+)'|(\w[\w-]*))\s*:\s*'([^']*)'\s*,?\s*$`)
+
+// extractTags pulls a `tags: { ... }` block out of a resource body and
+// returns the literal key/value pairs as a map. Expression-valued tags are
+// dropped; the resource's `properties` dict still surfaces the raw text.
+func extractTags(body string) map[string]string {
+	raw := extractFieldBlock(body, "tags")
+	if raw == "" {
+		return nil
+	}
+	tags := map[string]string{}
+	for _, m := range tagsEntryRe.FindAllStringSubmatch(raw, -1) {
+		key := m[1]
+		if key == "" {
+			key = m[2]
+		}
+		tags[key] = m[3]
+	}
+	if len(tags) == 0 {
+		return nil
+	}
+	return tags
 }
 
 var dependsOnRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[([^\]]*)\]`)

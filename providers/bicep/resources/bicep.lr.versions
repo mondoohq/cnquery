@@ -32,6 +32,10 @@ bicep.parameter.allowed 13.0.0
 bicep.parameter.decorators 13.0.0
 bicep.parameter.defaultValue 13.0.0
 bicep.parameter.description 13.0.0
+bicep.parameter.maxLength 13.0.9
+bicep.parameter.maxValue 13.0.9
+bicep.parameter.minLength 13.0.9
+bicep.parameter.minValue 13.0.9
 bicep.parameter.name 13.0.0
 bicep.parameter.secure 13.0.0
 bicep.parameter.type 13.0.0
@@ -46,6 +50,7 @@ bicep.resource.name 13.0.0
 bicep.resource.parent 13.0.0
 bicep.resource.properties 13.0.0
 bicep.resource.symbolicName 13.0.0
+bicep.resource.tags 13.0.9
 bicep.resource.type 13.0.0
 bicep.template 13.0.0
 bicep.template.contentVersion 13.0.0

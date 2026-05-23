@@ -24,6 +24,10 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 			"description":  llx.StringData(p.description),
 			"secure":       llx.BoolData(p.secure),
 			"allowed":      llx.ArrayData(allowed, types.String),
+			"minLength":    llx.IntData(p.minLength),
+			"maxLength":    llx.IntData(p.maxLength),
+			"minValue":     llx.IntData(p.minValue),
+			"maxValue":     llx.IntData(p.maxValue),
 			"decorators":   llx.ArrayData(decorators, types.String),
 		})
 		if err != nil {
@@ -66,6 +70,11 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 			}
 		}
 
+		tags := map[string]any{}
+		for k, v := range r.tags {
+			tags[k] = v
+		}
+
 		res, err := CreateResource(runtime, "bicep.resource", map[string]*llx.RawData{
 			"__id":         llx.StringData("bicep.resource:" + filePath + ":" + r.symbolicName),
 			"symbolicName": llx.StringData(r.symbolicName),
@@ -77,6 +86,7 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 			"condition":    llx.StringData(r.condition),
 			"parent":       llx.StringData(r.parent),
 			"properties":   llx.DictData(properties),
+			"tags":         llx.MapData(tags, types.String),
 			"dependsOn":    llx.ArrayData(dependsOn, types.String),
 			"decorators":   llx.ArrayData(decorators, types.String),
 		})

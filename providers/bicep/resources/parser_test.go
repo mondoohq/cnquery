@@ -609,3 +609,96 @@ func TestExtractDependsOn(t *testing.T) {
 func splitLines(s string) []string {
 	return strings.Split(s, "\n")
 }
+
+func TestParseParameterBounds(t *testing.T) {
+	t.Run("string length bounds", func(t *testing.T) {
+		input := `@minLength(8)
+@maxLength(64)
+param adminPassword string`
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
+		assert.Equal(t, "adminPassword", p.name)
+		assert.Equal(t, int64(8), p.minLength)
+		assert.Equal(t, int64(64), p.maxLength)
+		assert.Equal(t, int64(0), p.minValue)
+		assert.Equal(t, int64(0), p.maxValue)
+	})
+
+	t.Run("int value bounds", func(t *testing.T) {
+		input := `@minValue(1)
+@maxValue(1000)
+param replicaCount int`
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
+		assert.Equal(t, int64(1), p.minValue)
+		assert.Equal(t, int64(1000), p.maxValue)
+		assert.Equal(t, int64(0), p.minLength)
+		assert.Equal(t, int64(0), p.maxLength)
+	})
+
+	t.Run("no bounds decorators", func(t *testing.T) {
+		input := `param simple string`
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
+		assert.Equal(t, int64(0), p.minLength)
+		assert.Equal(t, int64(0), p.maxLength)
+		assert.Equal(t, int64(0), p.minValue)
+		assert.Equal(t, int64(0), p.maxValue)
+	})
+
+	t.Run("malformed argument is ignored", func(t *testing.T) {
+		input := `@minLength(abc)
+param thing string`
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		assert.Equal(t, int64(0), result.parameters[0].minLength)
+	})
+}
+
+func TestParseResourceTags(t *testing.T) {
+	t.Run("literal string tags", func(t *testing.T) {
+		input := `resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorage'
+  location: 'eastus'
+  tags: {
+    env: 'prod'
+    owner: 'platform-team'
+    'cost-center': '1234'
+  }
+}`
+		result := parseBicep(input)
+		require.Len(t, result.resources, 1)
+		assert.Equal(t, map[string]string{
+			"env":         "prod",
+			"owner":       "platform-team",
+			"cost-center": "1234",
+		}, result.resources[0].tags)
+	})
+
+	t.Run("expression-valued tags are skipped", func(t *testing.T) {
+		input := `resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorage'
+  tags: {
+    env: parameters('env')
+    owner: 'platform-team'
+  }
+}`
+		result := parseBicep(input)
+		require.Len(t, result.resources, 1)
+		// Only the literal entry is captured; the expression-valued one is
+		// dropped (audits can still reach it through `properties`).
+		assert.Equal(t, map[string]string{"owner": "platform-team"}, result.resources[0].tags)
+	})
+
+	t.Run("no tags block", func(t *testing.T) {
+		input := `resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorage'
+}`
+		result := parseBicep(input)
+		require.Len(t, result.resources, 1)
+		assert.Nil(t, result.resources[0].tags)
+	})
+}

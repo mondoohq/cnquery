@@ -185,6 +185,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.parameter.allowed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepParameter).GetAllowed()).ToDataRes(types.Array(types.String))
 	},
+	"bicep.parameter.minLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepParameter).GetMinLength()).ToDataRes(types.Int)
+	},
+	"bicep.parameter.maxLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepParameter).GetMaxLength()).ToDataRes(types.Int)
+	},
+	"bicep.parameter.minValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepParameter).GetMinValue()).ToDataRes(types.Int)
+	},
+	"bicep.parameter.maxValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepParameter).GetMaxValue()).ToDataRes(types.Int)
+	},
 	"bicep.parameter.decorators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepParameter).GetDecorators()).ToDataRes(types.Array(types.String))
 	},
@@ -223,6 +235,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bicep.resource.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetProperties()).ToDataRes(types.Dict)
+	},
+	"bicep.resource.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"bicep.resource.dependsOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetDependsOn()).ToDataRes(types.Array(types.String))
@@ -396,6 +411,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepParameter).Allowed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bicep.parameter.minLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepParameter).MinLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bicep.parameter.maxLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepParameter).MaxLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bicep.parameter.minValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepParameter).MinValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bicep.parameter.maxValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepParameter).MaxValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"bicep.parameter.decorators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepParameter).Decorators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -454,6 +485,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.resource.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"bicep.resource.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -841,6 +876,10 @@ type mqlBicepParameter struct {
 	Description  plugin.TValue[string]
 	Secure       plugin.TValue[bool]
 	Allowed      plugin.TValue[[]any]
+	MinLength    plugin.TValue[int64]
+	MaxLength    plugin.TValue[int64]
+	MinValue     plugin.TValue[int64]
+	MaxValue     plugin.TValue[int64]
 	Decorators   plugin.TValue[[]any]
 }
 
@@ -898,6 +937,22 @@ func (c *mqlBicepParameter) GetSecure() *plugin.TValue[bool] {
 
 func (c *mqlBicepParameter) GetAllowed() *plugin.TValue[[]any] {
 	return &c.Allowed
+}
+
+func (c *mqlBicepParameter) GetMinLength() *plugin.TValue[int64] {
+	return &c.MinLength
+}
+
+func (c *mqlBicepParameter) GetMaxLength() *plugin.TValue[int64] {
+	return &c.MaxLength
+}
+
+func (c *mqlBicepParameter) GetMinValue() *plugin.TValue[int64] {
+	return &c.MinValue
+}
+
+func (c *mqlBicepParameter) GetMaxValue() *plugin.TValue[int64] {
+	return &c.MaxValue
 }
 
 func (c *mqlBicepParameter) GetDecorators() *plugin.TValue[[]any] {
@@ -972,6 +1027,7 @@ type mqlBicepResource struct {
 	Condition    plugin.TValue[string]
 	Parent       plugin.TValue[string]
 	Properties   plugin.TValue[any]
+	Tags         plugin.TValue[map[string]any]
 	DependsOn    plugin.TValue[[]any]
 	Decorators   plugin.TValue[[]any]
 }
@@ -1042,6 +1098,10 @@ func (c *mqlBicepResource) GetParent() *plugin.TValue[string] {
 
 func (c *mqlBicepResource) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlBicepResource) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlBicepResource) GetDependsOn() *plugin.TValue[[]any] {
