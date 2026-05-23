@@ -20375,11 +20375,12 @@ private aws.lightsail.bucket @defaults("name arn") {
 // Use the CloudFormation namespace to enumerate infrastructure-as-code
 // deployments in the account. Iterate `stacks()` for every CloudFormation
 // stack across enabled regions (with its template-driven parameters,
-// outputs, capabilities, drift status, deletion-protection flag,
-// rollback configuration, and notification ARNs), and `stackSets()` for
-// stack sets that deploy a single template across multiple accounts and
-// regions in an organization (with their permission model, deployment
-// targets, and stack instances).
+// outputs, capabilities, drift status, deletion-protection flag, and
+// notification ARNs), and `stackSets()` for stack sets that deploy a
+// single template across multiple accounts and regions in an
+// organization (with their permission model, deployment targets, and
+// stack instances). Both ACTIVE and DELETED stack sets are returned;
+// filter with `where(status == "ACTIVE")` if you only want live ones.
 aws.cloudformation @defaults("stacks") {
   // List of CloudFormation stacks
   stacks() []aws.cloudformation.stack
@@ -20442,7 +20443,7 @@ private aws.cloudformation.stackSet @defaults("name status") {
   // Whether auto deployment is enabled
   autoDeploymentEnabled() bool
   // Tags for the stack set
-  tags() map[string]string
+  tags map[string]string
 }
 
 // Amazon Keyspaces (for Apache Cassandra)

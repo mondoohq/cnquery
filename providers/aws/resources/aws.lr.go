@@ -155239,9 +155239,7 @@ func (c *mqlAwsCloudformationStackSet) GetAutoDeploymentEnabled() *plugin.TValue
 }
 
 func (c *mqlAwsCloudformationStackSet) GetTags() *plugin.TValue[map[string]any] {
-	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
-		return c.tags()
-	})
+	return &c.Tags
 }
 
 // mqlAwsKeyspaces for the aws.keyspaces resource
