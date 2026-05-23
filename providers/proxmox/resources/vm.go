@@ -338,6 +338,12 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 // short-circuit. The per-user /access/users/<id>/token fetch is
 // reserved for the init path that resolves a single user by id
 // (e.g. an ACL grant pointing at a user we haven't enumerated).
+//
+// No sync.Once is needed for the cached-read path: cachedTokens and
+// cachedTokensSet are written synchronously inside proxmox.users()
+// before the resource is published to the runtime, so by the time
+// any caller can invoke tokens() the writes have happened-before in
+// the same goroutine that returned the resource list.
 func (r *mqlProxmoxUser) tokens() ([]any, error) {
 	if r.cachedTokensSet {
 		return r.cachedTokens, nil
