@@ -98,6 +98,7 @@ CCN
 cdc
 cdn
 cdroms
+CENTRIFY
 ceph
 certificatechains
 certificatesigningrequest
@@ -506,6 +507,7 @@ onboot
 onbuild
 ondemand
 oneof
+ONELOGIN
 ontap
 opcplc
 openai

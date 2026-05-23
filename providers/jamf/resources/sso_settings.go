@@ -57,15 +57,15 @@ func ssoSettingsArgs(info *jamfpro.ResourceSsoSettings) map[string]*llx.RawData 
 		args["groupAttributeName"] = llx.StringData(saml.GroupAttributeName)
 		args["entityId"] = llx.StringData(saml.EntityId)
 	} else {
-		args["sessionTimeout"] = llx.IntDataPtr[int64](nil)
-		args["tokenExpirationDisabled"] = llx.BoolDataPtr(nil)
-		args["userAttributeEnabled"] = llx.BoolDataPtr(nil)
-		args["userAttributeName"] = llx.StringDataPtr(nil)
-		args["userMapping"] = llx.StringDataPtr(nil)
-		args["idpUrl"] = llx.StringDataPtr(nil)
-		args["idpProviderType"] = llx.StringDataPtr(nil)
-		args["groupAttributeName"] = llx.StringDataPtr(nil)
-		args["entityId"] = llx.StringDataPtr(nil)
+		args["sessionTimeout"] = llx.NilData
+		args["tokenExpirationDisabled"] = llx.NilData
+		args["userAttributeEnabled"] = llx.NilData
+		args["userAttributeName"] = llx.NilData
+		args["userMapping"] = llx.NilData
+		args["idpUrl"] = llx.NilData
+		args["idpProviderType"] = llx.NilData
+		args["groupAttributeName"] = llx.NilData
+		args["entityId"] = llx.NilData
 	}
 
 	if oidc := info.OidcSettings; oidc != nil {
@@ -73,9 +73,9 @@ func ssoSettingsArgs(info *jamfpro.ResourceSsoSettings) map[string]*llx.RawData 
 		args["oidcJamfIdAuthenticationEnabled"] = llx.BoolDataPtr(oidc.JamfIdAuthenticationEnabled)
 		args["oidcUsernameAttributeClaimMapping"] = llx.StringData(oidc.UsernameAttributeClaimMapping)
 	} else {
-		args["oidcUserMapping"] = llx.StringDataPtr(nil)
-		args["oidcJamfIdAuthenticationEnabled"] = llx.BoolDataPtr(nil)
-		args["oidcUsernameAttributeClaimMapping"] = llx.StringDataPtr(nil)
+		args["oidcUserMapping"] = llx.NilData
+		args["oidcJamfIdAuthenticationEnabled"] = llx.NilData
+		args["oidcUsernameAttributeClaimMapping"] = llx.NilData
 	}
 
 	return args

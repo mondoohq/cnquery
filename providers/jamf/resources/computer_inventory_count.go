@@ -7,13 +7,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/jamf/connection"
 )
 
-// totalCountResponse decodes the first page of a Jamf paginated endpoint
-// when we only need the total. The Jamf Pro API returns `totalCount` in the
-// first response, so a single GET with page-size=1 is enough.
-type totalCountResponse struct {
-	TotalCount int `json:"totalCount"`
-}
-
 func (r *mqlJamf) computerInventoryCount() (int64, error) {
 	// If the full inventory was already fetched in this session, reuse it
 	// instead of issuing another HTTP call.
@@ -21,8 +14,14 @@ func (r *mqlJamf) computerInventoryCount() (int64, error) {
 		return int64(len(r.ComputerInventory.Data)), nil
 	}
 
+	// Bypass the SDK's GetComputersInventory because it always paginates
+	// through every record. We only want the total, which the Jamf Pro API
+	// reports in the first page. Endpoint:
+	// https://developer.jamf.com/jamf-pro/reference/get_v1-computers-inventory
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
-	var out totalCountResponse
+	var out struct {
+		TotalCount int `json:"totalCount"`
+	}
 	resp, err := conn.Client.HTTP.DoRequest("GET", "/api/v1/computers-inventory?page=0&page-size=1", nil, &out)
 	if err != nil {
 		return 0, err
