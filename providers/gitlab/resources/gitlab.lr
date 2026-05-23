@@ -270,6 +270,10 @@ gitlab.group @defaults("name visibility webURL") {
   auditEvents() []gitlab.group.auditEvent
   // Confirmed vulnerabilities across all projects in the group and its subgroups (Ultimate)
   vulnerabilities() []gitlab.project.vulnerability
+  // Container registry repositories across all projects in the group and its subgroups
+  containerRegistryRepositories() []gitlab.project.containerRegistryRepository
+  // Packages published across all projects in the group and its subgroups
+  packages() []gitlab.project.package
 }
 
 // GitLab SAML group link
@@ -468,6 +472,16 @@ gitlab.project @defaults("fullName visibility webURL") {
   //
   // Keyed by CRITICAL, HIGH, MEDIUM, LOW, INFO, and UNKNOWN.
   vulnerabilityCountsBySeverity() map[string]int
+  // Container registry repositories published from the project
+  containerRegistryRepositories() []gitlab.project.containerRegistryRepository
+  // Tag-retention policy for the project's container registry
+  containerExpirationPolicy() gitlab.project.containerExpirationPolicy
+  // Container registry protection rules gating who can push and delete repositories
+  containerRegistryProtectionRules() []gitlab.project.containerRegistryProtectionRule
+  // Packages published to the project's package registry
+  packages() []gitlab.project.package
+  // Package protection rules gating who can push and delete packages
+  packageProtectionRules() []gitlab.project.packageProtectionRule
 }
 
 // GitLab project approval rule
@@ -1237,4 +1251,217 @@ private gitlab.project.vulnerability.scanner @defaults("name vendor") {
   version string
   // Scanner ID as referenced in the security report artifact
   externalId string
+}
+
+// Container registry repository in a GitLab project
+//
+// Examine a Docker / OCI image repository published to the project's
+// container registry. Each repository carries `name`, `path` (the
+// pull path prefix), and `location` (the full pull URL).
+// `tagsCount` is a fast snapshot; iterate `tags` for the full list
+// of pushed tags with digests and sizes for tag-pinning and
+// vulnerability-correlation audits. `cleanupPolicyStartedAt` shows
+// when the project's `containerExpirationPolicy` last ran against
+// this repository. `status` is empty for healthy repositories or
+// one of `delete_scheduled`, `delete_ongoing`, or `delete_failed`
+// when a delete is in flight.
+private gitlab.project.containerRegistryRepository @defaults("path tagsCount status") {
+  // Repository ID
+  id int
+  // Repository name (last path segment)
+  name string
+  // Repository path (project_path/repository_name)
+  path string
+  // Full pull URL (registry host + path)
+  location string
+  // When the repository was created
+  createdAt time
+  // When the most recent cleanup policy run started for this repository
+  cleanupPolicyStartedAt time
+  // Tag count snapshot
+  tagsCount int
+  // Repository delete status
+  //
+  // Empty for healthy repositories, otherwise one of `delete_scheduled`,
+  // `delete_ongoing`, or `delete_failed`.
+  status string
+  // Tags pushed to the repository
+  tags() []gitlab.project.containerRegistryRepository.tag
+  // Project that owns the repository
+  project() gitlab.project
+}
+
+// Container registry repository tag
+//
+// A single tag in a container repository — what `docker pull` would
+// resolve. Use `digest` for tag-pinning audits (a moving tag like
+// `latest` can be re-pushed; the digest is immutable) and
+// `totalSize` to spot oversized images. `location` is the full
+// `registry/path:tag` pull string.
+private gitlab.project.containerRegistryRepository.tag @defaults("name digest totalSize") {
+  // Tag name
+  name string
+  // Path including tag
+  path string
+  // Full pull URL with tag
+  location string
+  // Image manifest digest (immutable identifier for the tag's content)
+  digest string
+  // Commit revision recorded in the image (when the image was built from a Git commit)
+  revision string
+  // Short commit revision
+  shortRevision string
+  // Total compressed size of the image in bytes
+  totalSize int
+  // When the tag was pushed
+  createdAt time
+}
+
+// Container registry expiration (cleanup) policy
+//
+// Defines how the project's container registry trims old tags. The
+// policy runs on a `cadence` and deletes tags older than
+// `olderThan` whose names match `nameRegexDelete`, keeping at most
+// `keepN` per repository and always preserving names matching
+// `nameRegexKeep`. `enabled` reflects whether the policy is active;
+// `nextRunAt` is the next scheduled run.
+private gitlab.project.containerExpirationPolicy @defaults("enabled cadence keepN olderThan") {
+  // Whether the policy is active
+  enabled bool
+  // How often the policy runs
+  //
+  // One of `1d`, `7d`, `14d`, `1month`, or `3month`.
+  cadence string
+  // Number of tags per repository to keep regardless of age
+  keepN int
+  // Minimum age before a tag becomes eligible for deletion
+  //
+  // One of `7d`, `14d`, `30d`, `60d`, or `90d`.
+  olderThan string
+  // Regex matching tag names eligible for deletion
+  nameRegexDelete string
+  // Regex matching tag names to always preserve
+  nameRegexKeep string
+  // Next scheduled run
+  nextRunAt time
+}
+
+// Container registry protection rule
+//
+// Gates pushes and deletes against container repositories whose path
+// matches `repositoryPathPattern`. The two minimum-access-level
+// fields enforce who in the project can perform each action — one of
+// `maintainer`, `owner`, or `admin`. An empty value means the action
+// is not protected.
+private gitlab.project.containerRegistryProtectionRule @defaults("repositoryPathPattern minimumAccessLevelForPush minimumAccessLevelForDelete") {
+  // Rule ID
+  id int
+  // Glob pattern matched against `<project_path>/<repository_name>`
+  repositoryPathPattern string
+  // Minimum project access level required to push matching repositories
+  //
+  // One of `maintainer`, `owner`, or `admin`; empty when push is unprotected.
+  minimumAccessLevelForPush string
+  // Minimum project access level required to delete matching repositories
+  //
+  // One of `maintainer`, `owner`, or `admin`; empty when delete is unprotected.
+  minimumAccessLevelForDelete string
+}
+
+// Package published to a GitLab project's package registry
+//
+// Examine a single package version in the project's package
+// registry. `packageType` distinguishes the package format
+// (`maven`, `npm`, `conan`, `nuget`, `pypi`, `composer`, `generic`,
+// `golang`, `debian`, `helm`, `terraform_module`, `rubygems`,
+// `ml_model`). `version` is the published version string; `tags`
+// lists distribution tags (e.g. npm `latest`). `status` is one of
+// `default`, `hidden`, `processing`, `error`, or `pending_destruction`.
+// `lastDownloadedAt` is null until the package is first pulled.
+// Iterate `files` for the package's contained artifacts with their
+// SHA-256/SHA-1/MD5 checksums.
+private gitlab.project.package @defaults("name version packageType status") {
+  // Package ID
+  id int
+  // Package name
+  name string
+  // Published version
+  version string
+  // Package format
+  //
+  // One of `maven`, `npm`, `conan`, `nuget`, `pypi`, `composer`,
+  // `generic`, `golang`, `debian`, `helm`, `terraform_module`,
+  // `rubygems`, or `ml_model`.
+  packageType string
+  // Lifecycle status
+  //
+  // One of `default`, `hidden`, `processing`, `error`, or
+  // `pending_destruction`.
+  status string
+  // When the package was published
+  createdAt time
+  // When the package was most recently downloaded; null if never
+  lastDownloadedAt time
+  // Distribution tags attached to this version (e.g. npm `latest`)
+  tags []string
+  // Web UI path for the package version
+  webPath string
+  // Project that owns the package
+  project() gitlab.project
+  // Files contained in the package
+  files() []gitlab.project.package.file
+}
+
+// File within a GitLab package
+//
+// One artifact inside a package — a `.jar`, `.tgz`, `.whl`, etc.
+// Use the SHA-256 checksum for tamper detection and SBOM
+// correlation; SHA-1 and MD5 are provided for legacy formats that
+// publish them.
+private gitlab.project.package.file @defaults("fileName size fileSHA256") {
+  // File ID
+  id int
+  // File name
+  fileName string
+  // File size in bytes
+  size int
+  // MD5 checksum (when provided by the package format)
+  fileMD5 string
+  // SHA-1 checksum (when provided by the package format)
+  fileSHA1 string
+  // SHA-256 checksum
+  fileSHA256 string
+  // When the file was uploaded
+  createdAt time
+}
+
+// Package protection rule
+//
+// Gates pushes and deletes against packages whose name matches
+// `packageNamePattern` (with the format restricted to
+// `packageType`). The two minimum-access-level fields enforce who
+// can perform each action — one of `developer`, `maintainer`,
+// `owner`, or `admin`. An empty value means the action is not
+// protected.
+private gitlab.project.packageProtectionRule @defaults("packageNamePattern packageType minimumAccessLevelForPush minimumAccessLevelForDelete") {
+  // Rule ID
+  id int
+  // Glob pattern matched against the package name
+  packageNamePattern string
+  // Package format the rule applies to
+  //
+  // One of `maven`, `npm`, `conan`, `nuget`, `pypi`, `composer`,
+  // `generic`, `golang`, `debian`, `helm`, `terraform_module`,
+  // `rubygems`, or `ml_model`.
+  packageType string
+  // Minimum project access level required to push matching packages
+  //
+  // One of `developer`, `maintainer`, `owner`, or `admin`; empty when
+  // push is unprotected.
+  minimumAccessLevelForPush string
+  // Minimum project access level required to delete matching packages
+  //
+  // One of `developer`, `maintainer`, `owner`, or `admin`; empty when
+  // delete is unprotected.
+  minimumAccessLevelForDelete string
 }
