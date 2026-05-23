@@ -506,7 +506,7 @@ func fetchVulnerabilities(conn *connection.GitLabConnection, scope, fullPath str
 		query := fmt.Sprintf(`query { %s(fullPath: %s) { vulnerabilities(first: 100%s) { pageInfo { hasNextPage endCursor } nodes { %s } } } }`,
 			scope, strconv.Quote(fullPath), afterClause, vulnerabilityFields)
 
-		var conn_ gqlVulnConnection
+		var page gqlVulnConnection
 		var errs []gqlGraphQLError
 		switch scope {
 		case "project":
@@ -516,7 +516,7 @@ func fetchVulnerabilities(conn *connection.GitLabConnection, scope, fullPath str
 			}
 			errs = resp.Errors
 			if resp.Data.Project != nil {
-				conn_ = resp.Data.Project.Vulnerabilities
+				page = resp.Data.Project.Vulnerabilities
 			}
 		case "group":
 			var resp gqlGroupVulnResponse
@@ -525,7 +525,7 @@ func fetchVulnerabilities(conn *connection.GitLabConnection, scope, fullPath str
 			}
 			errs = resp.Errors
 			if resp.Data.Group != nil {
-				conn_ = resp.Data.Group.Vulnerabilities
+				page = resp.Data.Group.Vulnerabilities
 			}
 		default:
 			return nil, fmt.Errorf("unsupported scope %q", scope)
@@ -536,11 +536,11 @@ func fetchVulnerabilities(conn *connection.GitLabConnection, scope, fullPath str
 			}
 			return nil, fmt.Errorf("gitlab vulnerabilities query failed: %s", errs[0].Message)
 		}
-		all = append(all, conn_.Nodes...)
-		if !conn_.PageInfo.HasNextPage {
+		all = append(all, page.Nodes...)
+		if !page.PageInfo.HasNextPage {
 			break
 		}
-		cursor = conn_.PageInfo.EndCursor
+		cursor = page.PageInfo.EndCursor
 	}
 	return all, nil
 }
