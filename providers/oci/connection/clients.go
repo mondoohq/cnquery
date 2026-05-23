@@ -31,6 +31,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/redis"
 	"github.com/oracle/oci-go-sdk/v65/vault"
+	"github.com/oracle/oci-go-sdk/v65/vulnerabilityscanning"
 	"github.com/oracle/oci-go-sdk/v65/waf"
 )
 
@@ -390,6 +391,15 @@ func (c *OciConnection) CertificatesManagementClient(region string) (*certificat
 
 func (c *OciConnection) RedisClusterClient(region string) (*redis.RedisClusterClient, error) {
 	client, err := redis.NewRedisClusterClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) VulnerabilityScanningClient(region string) (*vulnerabilityscanning.VulnerabilityScanningClient, error) {
+	client, err := vulnerabilityscanning.NewVulnerabilityScanningClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

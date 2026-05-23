@@ -461,6 +461,14 @@ private oci.compute.instance @defaults("name") {
   definedTags map[string]map[string]string
   // Virtual network interface cards attached to the instance
   vnics() []oci.compute.vnic
+  // Most recent agent-based vulnerability scan result for this instance
+  vulnerabilityScanResult() oci.vulnerabilityScanning.hostAgentScanResult
+  // Most recent open-port scan result for this instance
+  portScanResult() oci.vulnerabilityScanning.hostPortScanResult
+  // Most recent CIS benchmark scan result for this instance
+  cisBenchmarkScanResult() oci.vulnerabilityScanning.hostCisBenchmarkScanResult
+  // Most recent endpoint protection scan result for this instance
+  endpointProtectionScanResult() oci.vulnerabilityScanning.hostEndpointProtectionScanResult
 }
 
 // Oracle Cloud Infrastructure (OCI) virtual network interface card (VNIC)
@@ -2696,4 +2704,470 @@ private oci.dataSafe.maskingPolicy @defaults("displayName lifecycleState region"
   freeformTags map[string]string
   // Defined tags on the masking policy
   definedTags map[string]map[string]string
+}
+// Oracle Cloud Vulnerability Scanning Service
+//
+// Examine VSS configuration and findings — scan recipes that describe
+// what to scan, targets that pin recipes to compute instances or
+// container image repositories, and scan results recording per-host
+// vulnerabilities, open ports, CIS benchmark scores, endpoint
+// protection state, and per-image container vulnerabilities. Also
+// surfaces the CVE-deduplicated `vulnerabilities` rollup that
+// aggregates a single CVE's impact across every scanned host and
+// container in the tenancy.
+oci.vulnerabilityScanning {
+  // Host scan recipes describing what each agent scan covers
+  hostScanRecipes() []oci.vulnerabilityScanning.hostScanRecipe
+  // Host scan targets pinning a recipe to a set of compute instances
+  hostScanTargets() []oci.vulnerabilityScanning.hostScanTarget
+  // Container scan recipes describing what each container image scan covers
+  containerScanRecipes() []oci.vulnerabilityScanning.containerScanRecipe
+  // Container scan targets pinning a recipe to an OCIR registry
+  containerScanTargets() []oci.vulnerabilityScanning.containerScanTarget
+  // Per-instance agent vulnerability scan results
+  hostAgentScanResults() []oci.vulnerabilityScanning.hostAgentScanResult
+  // Per-instance open port scan results
+  hostPortScanResults() []oci.vulnerabilityScanning.hostPortScanResult
+  // Per-instance CIS benchmark scan results
+  hostCisBenchmarkScanResults() []oci.vulnerabilityScanning.hostCisBenchmarkScanResult
+  // Per-instance endpoint protection scan results
+  hostEndpointProtectionScanResults() []oci.vulnerabilityScanning.hostEndpointProtectionScanResult
+  // Per-image container scan results
+  containerScanResults() []oci.vulnerabilityScanning.containerScanResult
+  // CVE-deduplicated vulnerability rollup across all scanned hosts and containers
+  vulnerabilities() []oci.vulnerabilityScanning.vulnerability
+}
+
+// Host scan recipe
+//
+// Examine a host scan recipe — the policy object that defines what
+// the agent scans on each host. Surfaces the four sub-scanner
+// levels (port, agent CVE, CIS benchmark, endpoint protection), the
+// application scan settings (recurrence and the per-OS folder list),
+// and the scan schedule (daily or weekly with optional day-of-week).
+private oci.vulnerabilityScanning.hostScanRecipe @defaults("name compartmentId portScanLevel agentScanLevel cisBenchmarkScanLevel endpointProtectionScanLevel") {
+  // Recipe OCID
+  id string
+  // Recipe display name
+  name string
+  // Compartment OCID containing the recipe
+  compartmentId string
+  // Compartment containing the recipe
+  compartment() oci.compartment
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Port scan level (NONE, LIGHT, STANDARD)
+  portScanLevel string
+  // Agent CVE scan level (NONE, STANDARD)
+  agentScanLevel string
+  // CIS benchmark scan level (NONE, LIGHT, MEDIUM, STRICT)
+  cisBenchmarkScanLevel string
+  // Endpoint protection scan level (NONE, STANDARD)
+  endpointProtectionScanLevel string
+  // Whether application scanning is enabled
+  applicationScanEnabled bool
+  // Application scan recurrence as an ISO-8601 duration
+  applicationScanRecurrence string
+  // Per-OS folder list scanned for application vulnerabilities
+  //
+  // Each entry has `operatingSystem` (LINUX, WINDOWS) and `folder`
+  // (absolute path scanned on that OS).
+  applicationFoldersToScan []dict
+  // Scan schedule type (DAILY, WEEKLY)
+  scheduleType string
+  // Day of week for weekly schedules (MONDAY..SUNDAY)
+  scheduleDayOfWeek string
+  // Free-form tags on the recipe
+  freeformTags map[string]string
+}
+
+// Host scan target
+//
+// Examine a host scan target — pins a host scan recipe to a list of
+// compute instances within a compartment subtree. The target's
+// recipe determines what gets scanned; the target determines where.
+private oci.vulnerabilityScanning.hostScanTarget @defaults("name compartmentId state") {
+  // Target OCID
+  id string
+  // Target display name
+  name string
+  // Target description
+  description string
+  // Compartment OCID containing the target
+  compartmentId string
+  // Compartment containing the target
+  compartment() oci.compartment
+  // Compartment OCID whose instances this target scans
+  targetCompartmentId string
+  // Compartment whose instances this target scans
+  targetCompartment() oci.compartment
+  // Host scan recipe OCID applied by this target
+  hostScanRecipeId string
+  // Host scan recipe applied by this target
+  recipe() oci.vulnerabilityScanning.hostScanRecipe
+  // Compute instance OCIDs scanned by this target
+  instanceIds []string
+  // Compute instances scanned by this target
+  instances() []oci.compute.instance
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Free-form tags on the target
+  freeformTags map[string]string
+}
+
+// Container scan recipe
+//
+// Examine a container scan recipe — the policy object that defines
+// what each container image scan covers. Surfaces the scan level
+// (currently STANDARD only) and the number of images covered.
+private oci.vulnerabilityScanning.containerScanRecipe @defaults("name compartmentId scanLevel imageCount") {
+  // Recipe OCID
+  id string
+  // Recipe display name
+  name string
+  // Compartment OCID containing the recipe
+  compartmentId string
+  // Compartment containing the recipe
+  compartment() oci.compartment
+  // Lifecycle state
+  state string
+  // Container scan level (STANDARD)
+  scanLevel string
+  // Number of images covered by recipes referencing this scan recipe
+  imageCount int
+  // Free-form tags on the recipe
+  freeformTags map[string]string
+}
+
+// Container scan target
+//
+// Examine a container scan target — pins a container scan recipe to
+// a registry. Today only OCIR is supported; `registryUrl` and
+// `registryRepositories` describe the registry endpoint and the
+// repositories scanned.
+private oci.vulnerabilityScanning.containerScanTarget @defaults("name compartmentId registryUrl") {
+  // Target OCID
+  id string
+  // Target display name
+  name string
+  // Target description
+  description string
+  // Compartment OCID containing the target
+  compartmentId string
+  // Compartment containing the target
+  compartment() oci.compartment
+  // Container scan recipe OCID applied by this target
+  containerScanRecipeId string
+  // Container scan recipe applied by this target
+  recipe() oci.vulnerabilityScanning.containerScanRecipe
+  // Registry type (OCIR)
+  registryType string
+  // Registry URL
+  registryUrl string
+  // Repositories scanned within the registry
+  registryRepositories []string
+  // Lifecycle state
+  state string
+  // Free-form tags on the target
+  freeformTags map[string]string
+}
+
+// Host agent vulnerability scan result
+//
+// Examine the most recent agent vulnerability scan for a compute
+// instance. Surfaces the operating system and kernel version of the
+// scanned host, the highest finding severity, the total problem
+// count, and the per-CVE findings under `problems` (each with the
+// vulnerable package list and a navigable `vulnerability()` rollup).
+private oci.vulnerabilityScanning.hostAgentScanResult @defaults("name instanceId highestProblemSeverity problemCount") {
+  // Scan result OCID
+  id string
+  // Scan result display name
+  name string
+  // Scanned compute instance OCID
+  instanceId string
+  // Scanned compute instance
+  instance() oci.compute.instance
+  // Compartment OCID containing the scan result
+  compartmentId string
+  // Compartment containing the scan result
+  compartment() oci.compartment
+  // Highest finding severity (NONE, LOW, MEDIUM, HIGH, CRITICAL)
+  highestProblemSeverity string
+  // Operating system of the scanned host
+  operatingSystem string
+  // Kernel version of the scanned host
+  kernelVersion() string
+  // Scanner vendor (OCI, QUALYS)
+  vendor() string
+  // Total number of problems found
+  problemCount int
+  // Lifecycle state
+  state string
+  // Per-CVE findings from the scan
+  problems() []oci.vulnerabilityScanning.hostAgentScanResult.problem
+}
+
+// Host agent scan problem
+//
+// Examine a single CVE finding from a host agent scan — the CVE
+// reference, severity, remediation state, and the vulnerable
+// packages installed on the host. `vulnerability()` navigates to the
+// tenancy-wide rollup for the same CVE.
+private oci.vulnerabilityScanning.hostAgentScanResult.problem @defaults("name severity state cveReference") {
+  // Vulnerability name (typically the CVE id)
+  name string
+  // Finding severity (NONE, LOW, MEDIUM, HIGH, CRITICAL)
+  severity string
+  // Vulnerability state (OPEN, FIXED, NOT_APPLICABLE)
+  state string
+  // Long-form description of the finding
+  description string
+  // CVE reference (e.g., CVE-2023-1234)
+  cveReference string
+  // Internal issue identifier (scanner-specific)
+  issueId int
+  // Tenancy-wide rollup for the same vulnerability
+  vulnerability() oci.vulnerabilityScanning.vulnerability
+  // Installed packages affected by this vulnerability
+  //
+  // Each entry has `name`, `version`, `type` (RPM, DPKG, ...),
+  // `cveFixVersion` (empty when no fix is available), and
+  // `locations` (file paths where the package is installed).
+  vulnerablePackages []dict
+}
+
+// Host port scan result
+//
+// Examine the most recent open-port scan for a compute instance.
+// Surfaces the highest severity across open ports and the per-port
+// findings under `openPorts` (each pinned to the VNIC that exposes
+// the port).
+private oci.vulnerabilityScanning.hostPortScanResult @defaults("name instanceId openPortCount highestProblemSeverity") {
+  // Scan result OCID
+  id string
+  // Scan result display name
+  name string
+  // Scanned compute instance OCID
+  instanceId string
+  // Scanned compute instance
+  instance() oci.compute.instance
+  // Compartment OCID containing the scan result
+  compartmentId string
+  // Compartment containing the scan result
+  compartment() oci.compartment
+  // Highest severity across open ports
+  highestProblemSeverity string
+  // Total number of open ports detected
+  openPortCount int
+  // Lifecycle state
+  state string
+  // Per-port findings from the scan
+  openPorts() []oci.vulnerabilityScanning.hostPortScanResult.openPort
+}
+
+// Host port scan open port
+//
+// Examine a single open port detected on a compute instance —
+// the port number, protocol, IP address, and the VNIC that exposes
+// the port. `vnic()` navigates to the network interface and its
+// security groups.
+private oci.vulnerabilityScanning.hostPortScanResult.openPort @defaults("port protocol service severity") {
+  // Port number
+  port int
+  // Protocol (tcp, udp)
+  protocol string
+  // IP address the port is listening on
+  ipAddress string
+  // Detected service name (e.g., ssh, http) — empty when unknown
+  service string
+  // Finding severity for this open port
+  severity string
+  // VNIC OCID exposing the port
+  vnicId string
+  // VNIC exposing the port
+  vnic() oci.compute.vnic
+}
+
+// Host CIS benchmark scan result
+//
+// Examine the most recent CIS benchmark scan for a compute
+// instance. Surfaces the total issue count and the per-control
+// pass/fail scores under `scores`.
+private oci.vulnerabilityScanning.hostCisBenchmarkScanResult @defaults("name instanceId cisBenchmarkScanIssuesCount") {
+  // Scan result OCID
+  id string
+  // Scan result display name
+  name string
+  // Scanned compute instance OCID
+  instanceId string
+  // Scanned compute instance
+  instance() oci.compute.instance
+  // Compartment OCID containing the scan result
+  compartmentId string
+  // Compartment containing the scan result
+  compartment() oci.compartment
+  // Total number of CIS benchmark issues found
+  cisBenchmarkScanIssuesCount int
+  // Lifecycle state
+  state string
+  // Per-control benchmark scores
+  //
+  // Each entry has `benchmarkIdentifier` (e.g., "1.1.1"),
+  // `description` (the control statement), and `score` (PASS or
+  // FAIL).
+  scores []dict
+}
+
+// Host endpoint protection scan result
+//
+// Examine the most recent endpoint protection posture scan for a
+// compute instance. Surfaces the overall problem severity, the
+// number of endpoint protection services evaluated, and the
+// per-service findings.
+private oci.vulnerabilityScanning.hostEndpointProtectionScanResult @defaults("name instanceId problemSeverity endpointProtectionsCount") {
+  // Scan result OCID
+  id string
+  // Scan result display name
+  name string
+  // Scanned compute instance OCID
+  instanceId string
+  // Scanned compute instance
+  instance() oci.compute.instance
+  // Compartment OCID containing the scan result
+  compartmentId string
+  // Compartment containing the scan result
+  compartment() oci.compartment
+  // Overall endpoint protection problem severity
+  problemSeverity string
+  // Number of endpoint protection services evaluated
+  endpointProtectionsCount int
+  // Lifecycle state
+  state string
+  // Per-service endpoint protection findings
+  //
+  // Each entry has `service` (the endpoint protection product name),
+  // `configurationFinding` (the misconfiguration, if any), and
+  // `severity`.
+  endpointProtections []dict
+}
+
+// Container vulnerability scan result
+//
+// Examine the most recent container image scan. Surfaces the
+// repository, image tag, registry URL, and the per-CVE findings
+// under `problems`. `target()` navigates back to the container
+// scan target that produced the result.
+private oci.vulnerabilityScanning.containerScanResult @defaults("repository image highestProblemSeverity problemCount") {
+  // Scan result OCID
+  id string
+  // Container repository
+  repository string
+  // Image tag or digest
+  image string
+  // Registry URL the image was pulled from
+  registryUrl string
+  // Compartment OCID containing the scan result
+  compartmentId string
+  // Compartment containing the scan result
+  compartment() oci.compartment
+  // Target compartment OCID (where the source image lives)
+  targetCompartmentId string
+  // Container scan target OCID
+  containerScanTargetId string
+  // Container scan target that produced the result
+  target() oci.vulnerabilityScanning.containerScanTarget
+  // Highest finding severity across the image
+  highestProblemSeverity string
+  // Total number of problems found
+  problemCount int
+  // Per-CVE findings from the scan
+  problems() []oci.vulnerabilityScanning.containerScanResult.problem
+}
+
+// Container scan problem
+//
+// Examine a single CVE finding from a container image scan — the
+// CVE reference, severity, remediation state, and the vulnerable
+// packages baked into the image. `vulnerability()` navigates to the
+// tenancy-wide rollup for the same CVE.
+private oci.vulnerabilityScanning.containerScanResult.problem @defaults("name severity state cveReference") {
+  // Vulnerability name (typically the CVE id)
+  name string
+  // Finding severity
+  severity string
+  // Vulnerability state (OPEN, FIXED, NOT_APPLICABLE)
+  state string
+  // Long-form description of the finding
+  description string
+  // CVE reference
+  cveReference string
+  // Tenancy-wide rollup for the same vulnerability
+  vulnerability() oci.vulnerabilityScanning.vulnerability
+  // Image layer packages affected by this vulnerability
+  //
+  // Each entry has `name`, `version`, `type`, `cveFixVersion`, and
+  // `locations` (file paths inside the image where the package
+  // resides).
+  vulnerablePackages []dict
+}
+
+// Vulnerability rollup
+//
+// Examine a single vulnerability aggregated across every scanned
+// host and container in the tenancy. Each row collapses a single
+// CVE (or proprietary issue) into the highest observed severity,
+// the impacted-resource counts, and the CVE metadata (title,
+// impact, threat, solution, exploitability). `impactedHosts()`
+// returns the compute instances affected.
+private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnerabilityType state") {
+  // Vulnerability identifier (CVE id or proprietary issue id)
+  id string
+  // Vulnerability name (typically the CVE id)
+  name string
+  // Compartment OCID owning the rollup row
+  compartmentId string
+  // Compartment owning the rollup row
+  compartment() oci.compartment
+  // Highest observed severity
+  severity string
+  // Vulnerability type (CVE, PROBLEM)
+  vulnerabilityType string
+  // Remediation state (OPEN, FIXED, NOT_APPLICABLE)
+  state string
+  // Authentication requirement for exploitation
+  authentication string
+  // Upstream reference identifier
+  vulnerabilityReference string
+  // CVE description from the upstream reference
+  cveDescription string
+  // CVE title
+  cveTitle string
+  // CVE impact summary
+  cveImpact string
+  // CVE threat summary
+  cveThreat string
+  // CVE remediation guidance
+  cveSolution string
+  // Whether a patch is available (yes, no, unknown)
+  cvePatchable string
+  // Whether a public exploit is known (yes, no, unknown)
+  cveExploitable string
+  // Related CVE reference, when applicable
+  cveRelatedReference string
+  // Upstream URL with full vulnerability details
+  cveReferenceUrl string
+  // Number of compute instances affected
+  impactedHostsCount int
+  // Number of container images affected
+  impactedContainersCount int
+  // Lifecycle state
+  lifecycleState string
+  // Compute instances affected by this vulnerability
+  impactedHosts() []oci.compute.instance
+  // Container images affected by this vulnerability
+  //
+  // Each entry has `image`, `repository`, `registryUrl`, and
+  // `compartmentId`.
+  impactedContainerImages() []dict
 }

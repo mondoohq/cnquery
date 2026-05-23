@@ -16,112 +16,126 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceOci                                 string = "oci"
-	ResourceOciTenancy                          string = "oci.tenancy"
-	ResourceOciRegion                           string = "oci.region"
-	ResourceOciCompartment                      string = "oci.compartment"
-	ResourceOciIdentity                         string = "oci.identity"
-	ResourceOciIdentityUser                     string = "oci.identity.user"
-	ResourceOciIdentityMfaDevice                string = "oci.identity.mfaDevice"
-	ResourceOciIdentityApiKey                   string = "oci.identity.apiKey"
-	ResourceOciIdentityCustomerSecretKey        string = "oci.identity.customerSecretKey"
-	ResourceOciIdentityAuthToken                string = "oci.identity.authToken"
-	ResourceOciIdentityGroup                    string = "oci.identity.group"
-	ResourceOciIdentityPolicy                   string = "oci.identity.policy"
-	ResourceOciIdentityDbCredential             string = "oci.identity.dbCredential"
-	ResourceOciIdentitySmtpCredential           string = "oci.identity.smtpCredential"
-	ResourceOciIdentityOauth2ClientCredential   string = "oci.identity.oauth2ClientCredential"
-	ResourceOciIdentityDynamicGroup             string = "oci.identity.dynamicGroup"
-	ResourceOciIdentityIdentityProvider         string = "oci.identity.identityProvider"
-	ResourceOciIdentityNetworkSource            string = "oci.identity.networkSource"
-	ResourceOciIdentityAuthenticationPolicy     string = "oci.identity.authenticationPolicy"
-	ResourceOciCompute                          string = "oci.compute"
-	ResourceOciComputeInstance                  string = "oci.compute.instance"
-	ResourceOciComputeVnic                      string = "oci.compute.vnic"
-	ResourceOciComputeImage                     string = "oci.compute.image"
-	ResourceOciComputeBlockVolume               string = "oci.compute.blockVolume"
-	ResourceOciComputeBootVolume                string = "oci.compute.bootVolume"
-	ResourceOciNetwork                          string = "oci.network"
-	ResourceOciNetworkVcn                       string = "oci.network.vcn"
-	ResourceOciNetworkSubnet                    string = "oci.network.subnet"
-	ResourceOciNetworkSecurityList              string = "oci.network.securityList"
-	ResourceOciNetworkNetworkSecurityGroup      string = "oci.network.networkSecurityGroup"
-	ResourceOciNetworkInternetGateway           string = "oci.network.internetGateway"
-	ResourceOciNetworkNatGateway                string = "oci.network.natGateway"
-	ResourceOciNetworkRouteTable                string = "oci.network.routeTable"
-	ResourceOciLogging                          string = "oci.logging"
-	ResourceOciLoggingLogGroup                  string = "oci.logging.logGroup"
-	ResourceOciLoggingLog                       string = "oci.logging.log"
-	ResourceOciKms                              string = "oci.kms"
-	ResourceOciKmsVault                         string = "oci.kms.vault"
-	ResourceOciKmsKey                           string = "oci.kms.key"
-	ResourceOciKmsKeyVersion                    string = "oci.kms.keyVersion"
-	ResourceOciObjectStorage                    string = "oci.objectStorage"
-	ResourceOciObjectStorageBucket              string = "oci.objectStorage.bucket"
-	ResourceOciObjectStorageRetentionRule       string = "oci.objectStorage.retentionRule"
-	ResourceOciFileStorage                      string = "oci.fileStorage"
-	ResourceOciFileStorageFileSystem            string = "oci.fileStorage.fileSystem"
-	ResourceOciEvents                           string = "oci.events"
-	ResourceOciEventsRule                       string = "oci.events.rule"
-	ResourceOciCloudGuard                       string = "oci.cloudGuard"
-	ResourceOciCloudGuardTarget                 string = "oci.cloudGuard.target"
-	ResourceOciCloudGuardDetectorRecipe         string = "oci.cloudGuard.detectorRecipe"
-	ResourceOciCloudGuardSecurityZone           string = "oci.cloudGuard.securityZone"
-	ResourceOciCloudGuardSecurityZoneRecipe     string = "oci.cloudGuard.securityZoneRecipe"
-	ResourceOciCloudGuardSecurityPolicy         string = "oci.cloudGuard.securityPolicy"
-	ResourceOciOns                              string = "oci.ons"
-	ResourceOciOnsTopic                         string = "oci.ons.topic"
-	ResourceOciOnsSubscription                  string = "oci.ons.subscription"
-	ResourceOciAudit                            string = "oci.audit"
-	ResourceOciBastion                          string = "oci.bastion"
-	ResourceOciBastionInstance                  string = "oci.bastion.instance"
-	ResourceOciMonitoring                       string = "oci.monitoring"
-	ResourceOciMonitoringAlarm                  string = "oci.monitoring.alarm"
-	ResourceOciVault                            string = "oci.vault"
-	ResourceOciVaultSecret                      string = "oci.vault.secret"
-	ResourceOciVaultSecretVersion               string = "oci.vault.secretVersion"
-	ResourceOciLoadBalancer                     string = "oci.loadBalancer"
-	ResourceOciLoadBalancerLoadBalancer         string = "oci.loadBalancer.loadBalancer"
-	ResourceOciLoadBalancerListener             string = "oci.loadBalancer.listener"
-	ResourceOciLoadBalancerBackendSet           string = "oci.loadBalancer.backendSet"
-	ResourceOciNetworkFirewall                  string = "oci.networkFirewall"
-	ResourceOciNetworkFirewallFirewall          string = "oci.networkFirewall.firewall"
-	ResourceOciNetworkFirewallPolicy            string = "oci.networkFirewall.policy"
-	ResourceOciOke                              string = "oci.oke"
-	ResourceOciOkeCluster                       string = "oci.oke.cluster"
-	ResourceOciOkeNodePool                      string = "oci.oke.nodePool"
-	ResourceOciWaf                              string = "oci.waf"
-	ResourceOciWafFirewall                      string = "oci.waf.firewall"
-	ResourceOciWafPolicy                        string = "oci.waf.policy"
-	ResourceOciFunctions                        string = "oci.functions"
-	ResourceOciFunctionsApplication             string = "oci.functions.application"
-	ResourceOciFunctionsFunction                string = "oci.functions.function"
-	ResourceOciContainerInstances               string = "oci.containerInstances"
-	ResourceOciContainerInstancesInstance       string = "oci.containerInstances.instance"
-	ResourceOciContainerInstancesContainer      string = "oci.containerInstances.container"
-	ResourceOciDatabase                         string = "oci.database"
-	ResourceOciDatabaseBackup                   string = "oci.database.backup"
-	ResourceOciDatabaseAutonomousDatabaseBackup string = "oci.database.autonomousDatabaseBackup"
-	ResourceOciDatabaseDbSystem                 string = "oci.database.dbSystem"
-	ResourceOciDatabaseAutonomousDatabase       string = "oci.database.autonomousDatabase"
-	ResourceOciApigateway                       string = "oci.apigateway"
-	ResourceOciApigatewayGateway                string = "oci.apigateway.gateway"
-	ResourceOciApigatewayDeployment             string = "oci.apigateway.deployment"
-	ResourceOciApigatewayCertificate            string = "oci.apigateway.certificate"
-	ResourceOciCertificates                     string = "oci.certificates"
-	ResourceOciCertificatesCertificate          string = "oci.certificates.certificate"
-	ResourceOciCertificatesCertificateAuthority string = "oci.certificates.certificateAuthority"
-	ResourceOciCertificatesCaBundle             string = "oci.certificates.caBundle"
-	ResourceOciRedis                            string = "oci.redis"
-	ResourceOciRedisCluster                     string = "oci.redis.cluster"
-	ResourceOciDataSafe                         string = "oci.dataSafe"
-	ResourceOciDataSafeConfiguration            string = "oci.dataSafe.configuration"
-	ResourceOciDataSafeTargetDatabase           string = "oci.dataSafe.targetDatabase"
-	ResourceOciDataSafeSecurityAssessment       string = "oci.dataSafe.securityAssessment"
-	ResourceOciDataSafeUserAssessment           string = "oci.dataSafe.userAssessment"
-	ResourceOciDataSafeSensitiveDataModel       string = "oci.dataSafe.sensitiveDataModel"
-	ResourceOciDataSafeSensitiveType            string = "oci.dataSafe.sensitiveType"
-	ResourceOciDataSafeMaskingPolicy            string = "oci.dataSafe.maskingPolicy"
+	ResourceOci                                                      string = "oci"
+	ResourceOciTenancy                                               string = "oci.tenancy"
+	ResourceOciRegion                                                string = "oci.region"
+	ResourceOciCompartment                                           string = "oci.compartment"
+	ResourceOciIdentity                                              string = "oci.identity"
+	ResourceOciIdentityUser                                          string = "oci.identity.user"
+	ResourceOciIdentityMfaDevice                                     string = "oci.identity.mfaDevice"
+	ResourceOciIdentityApiKey                                        string = "oci.identity.apiKey"
+	ResourceOciIdentityCustomerSecretKey                             string = "oci.identity.customerSecretKey"
+	ResourceOciIdentityAuthToken                                     string = "oci.identity.authToken"
+	ResourceOciIdentityGroup                                         string = "oci.identity.group"
+	ResourceOciIdentityPolicy                                        string = "oci.identity.policy"
+	ResourceOciIdentityDbCredential                                  string = "oci.identity.dbCredential"
+	ResourceOciIdentitySmtpCredential                                string = "oci.identity.smtpCredential"
+	ResourceOciIdentityOauth2ClientCredential                        string = "oci.identity.oauth2ClientCredential"
+	ResourceOciIdentityDynamicGroup                                  string = "oci.identity.dynamicGroup"
+	ResourceOciIdentityIdentityProvider                              string = "oci.identity.identityProvider"
+	ResourceOciIdentityNetworkSource                                 string = "oci.identity.networkSource"
+	ResourceOciIdentityAuthenticationPolicy                          string = "oci.identity.authenticationPolicy"
+	ResourceOciCompute                                               string = "oci.compute"
+	ResourceOciComputeInstance                                       string = "oci.compute.instance"
+	ResourceOciComputeVnic                                           string = "oci.compute.vnic"
+	ResourceOciComputeImage                                          string = "oci.compute.image"
+	ResourceOciComputeBlockVolume                                    string = "oci.compute.blockVolume"
+	ResourceOciComputeBootVolume                                     string = "oci.compute.bootVolume"
+	ResourceOciNetwork                                               string = "oci.network"
+	ResourceOciNetworkVcn                                            string = "oci.network.vcn"
+	ResourceOciNetworkSubnet                                         string = "oci.network.subnet"
+	ResourceOciNetworkSecurityList                                   string = "oci.network.securityList"
+	ResourceOciNetworkNetworkSecurityGroup                           string = "oci.network.networkSecurityGroup"
+	ResourceOciNetworkInternetGateway                                string = "oci.network.internetGateway"
+	ResourceOciNetworkNatGateway                                     string = "oci.network.natGateway"
+	ResourceOciNetworkRouteTable                                     string = "oci.network.routeTable"
+	ResourceOciLogging                                               string = "oci.logging"
+	ResourceOciLoggingLogGroup                                       string = "oci.logging.logGroup"
+	ResourceOciLoggingLog                                            string = "oci.logging.log"
+	ResourceOciKms                                                   string = "oci.kms"
+	ResourceOciKmsVault                                              string = "oci.kms.vault"
+	ResourceOciKmsKey                                                string = "oci.kms.key"
+	ResourceOciKmsKeyVersion                                         string = "oci.kms.keyVersion"
+	ResourceOciObjectStorage                                         string = "oci.objectStorage"
+	ResourceOciObjectStorageBucket                                   string = "oci.objectStorage.bucket"
+	ResourceOciObjectStorageRetentionRule                            string = "oci.objectStorage.retentionRule"
+	ResourceOciFileStorage                                           string = "oci.fileStorage"
+	ResourceOciFileStorageFileSystem                                 string = "oci.fileStorage.fileSystem"
+	ResourceOciEvents                                                string = "oci.events"
+	ResourceOciEventsRule                                            string = "oci.events.rule"
+	ResourceOciCloudGuard                                            string = "oci.cloudGuard"
+	ResourceOciCloudGuardTarget                                      string = "oci.cloudGuard.target"
+	ResourceOciCloudGuardDetectorRecipe                              string = "oci.cloudGuard.detectorRecipe"
+	ResourceOciCloudGuardSecurityZone                                string = "oci.cloudGuard.securityZone"
+	ResourceOciCloudGuardSecurityZoneRecipe                          string = "oci.cloudGuard.securityZoneRecipe"
+	ResourceOciCloudGuardSecurityPolicy                              string = "oci.cloudGuard.securityPolicy"
+	ResourceOciOns                                                   string = "oci.ons"
+	ResourceOciOnsTopic                                              string = "oci.ons.topic"
+	ResourceOciOnsSubscription                                       string = "oci.ons.subscription"
+	ResourceOciAudit                                                 string = "oci.audit"
+	ResourceOciBastion                                               string = "oci.bastion"
+	ResourceOciBastionInstance                                       string = "oci.bastion.instance"
+	ResourceOciMonitoring                                            string = "oci.monitoring"
+	ResourceOciMonitoringAlarm                                       string = "oci.monitoring.alarm"
+	ResourceOciVault                                                 string = "oci.vault"
+	ResourceOciVaultSecret                                           string = "oci.vault.secret"
+	ResourceOciVaultSecretVersion                                    string = "oci.vault.secretVersion"
+	ResourceOciLoadBalancer                                          string = "oci.loadBalancer"
+	ResourceOciLoadBalancerLoadBalancer                              string = "oci.loadBalancer.loadBalancer"
+	ResourceOciLoadBalancerListener                                  string = "oci.loadBalancer.listener"
+	ResourceOciLoadBalancerBackendSet                                string = "oci.loadBalancer.backendSet"
+	ResourceOciNetworkFirewall                                       string = "oci.networkFirewall"
+	ResourceOciNetworkFirewallFirewall                               string = "oci.networkFirewall.firewall"
+	ResourceOciNetworkFirewallPolicy                                 string = "oci.networkFirewall.policy"
+	ResourceOciOke                                                   string = "oci.oke"
+	ResourceOciOkeCluster                                            string = "oci.oke.cluster"
+	ResourceOciOkeNodePool                                           string = "oci.oke.nodePool"
+	ResourceOciWaf                                                   string = "oci.waf"
+	ResourceOciWafFirewall                                           string = "oci.waf.firewall"
+	ResourceOciWafPolicy                                             string = "oci.waf.policy"
+	ResourceOciFunctions                                             string = "oci.functions"
+	ResourceOciFunctionsApplication                                  string = "oci.functions.application"
+	ResourceOciFunctionsFunction                                     string = "oci.functions.function"
+	ResourceOciContainerInstances                                    string = "oci.containerInstances"
+	ResourceOciContainerInstancesInstance                            string = "oci.containerInstances.instance"
+	ResourceOciContainerInstancesContainer                           string = "oci.containerInstances.container"
+	ResourceOciDatabase                                              string = "oci.database"
+	ResourceOciDatabaseBackup                                        string = "oci.database.backup"
+	ResourceOciDatabaseAutonomousDatabaseBackup                      string = "oci.database.autonomousDatabaseBackup"
+	ResourceOciDatabaseDbSystem                                      string = "oci.database.dbSystem"
+	ResourceOciDatabaseAutonomousDatabase                            string = "oci.database.autonomousDatabase"
+	ResourceOciApigateway                                            string = "oci.apigateway"
+	ResourceOciApigatewayGateway                                     string = "oci.apigateway.gateway"
+	ResourceOciApigatewayDeployment                                  string = "oci.apigateway.deployment"
+	ResourceOciApigatewayCertificate                                 string = "oci.apigateway.certificate"
+	ResourceOciCertificates                                          string = "oci.certificates"
+	ResourceOciCertificatesCertificate                               string = "oci.certificates.certificate"
+	ResourceOciCertificatesCertificateAuthority                      string = "oci.certificates.certificateAuthority"
+	ResourceOciCertificatesCaBundle                                  string = "oci.certificates.caBundle"
+	ResourceOciRedis                                                 string = "oci.redis"
+	ResourceOciRedisCluster                                          string = "oci.redis.cluster"
+	ResourceOciDataSafe                                              string = "oci.dataSafe"
+	ResourceOciDataSafeConfiguration                                 string = "oci.dataSafe.configuration"
+	ResourceOciDataSafeTargetDatabase                                string = "oci.dataSafe.targetDatabase"
+	ResourceOciDataSafeSecurityAssessment                            string = "oci.dataSafe.securityAssessment"
+	ResourceOciDataSafeUserAssessment                                string = "oci.dataSafe.userAssessment"
+	ResourceOciDataSafeSensitiveDataModel                            string = "oci.dataSafe.sensitiveDataModel"
+	ResourceOciDataSafeSensitiveType                                 string = "oci.dataSafe.sensitiveType"
+	ResourceOciDataSafeMaskingPolicy                                 string = "oci.dataSafe.maskingPolicy"
+	ResourceOciVulnerabilityScanning                                 string = "oci.vulnerabilityScanning"
+	ResourceOciVulnerabilityScanningHostScanRecipe                   string = "oci.vulnerabilityScanning.hostScanRecipe"
+	ResourceOciVulnerabilityScanningHostScanTarget                   string = "oci.vulnerabilityScanning.hostScanTarget"
+	ResourceOciVulnerabilityScanningContainerScanRecipe              string = "oci.vulnerabilityScanning.containerScanRecipe"
+	ResourceOciVulnerabilityScanningContainerScanTarget              string = "oci.vulnerabilityScanning.containerScanTarget"
+	ResourceOciVulnerabilityScanningHostAgentScanResult              string = "oci.vulnerabilityScanning.hostAgentScanResult"
+	ResourceOciVulnerabilityScanningHostAgentScanResultProblem       string = "oci.vulnerabilityScanning.hostAgentScanResult.problem"
+	ResourceOciVulnerabilityScanningHostPortScanResult               string = "oci.vulnerabilityScanning.hostPortScanResult"
+	ResourceOciVulnerabilityScanningHostPortScanResultOpenPort       string = "oci.vulnerabilityScanning.hostPortScanResult.openPort"
+	ResourceOciVulnerabilityScanningHostCisBenchmarkScanResult       string = "oci.vulnerabilityScanning.hostCisBenchmarkScanResult"
+	ResourceOciVulnerabilityScanningHostEndpointProtectionScanResult string = "oci.vulnerabilityScanning.hostEndpointProtectionScanResult"
+	ResourceOciVulnerabilityScanningContainerScanResult              string = "oci.vulnerabilityScanning.containerScanResult"
+	ResourceOciVulnerabilityScanningContainerScanResultProblem       string = "oci.vulnerabilityScanning.containerScanResult.problem"
+	ResourceOciVulnerabilityScanningVulnerability                    string = "oci.vulnerabilityScanning.vulnerability"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -551,6 +565,62 @@ func init() {
 		"oci.dataSafe.maskingPolicy": {
 			// to override args, implement: initOciDataSafeMaskingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciDataSafeMaskingPolicy,
+		},
+		"oci.vulnerabilityScanning": {
+			// to override args, implement: initOciVulnerabilityScanning(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanning,
+		},
+		"oci.vulnerabilityScanning.hostScanRecipe": {
+			Init:   initOciVulnerabilityScanningHostScanRecipe,
+			Create: createOciVulnerabilityScanningHostScanRecipe,
+		},
+		"oci.vulnerabilityScanning.hostScanTarget": {
+			// to override args, implement: initOciVulnerabilityScanningHostScanTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostScanTarget,
+		},
+		"oci.vulnerabilityScanning.containerScanRecipe": {
+			Init:   initOciVulnerabilityScanningContainerScanRecipe,
+			Create: createOciVulnerabilityScanningContainerScanRecipe,
+		},
+		"oci.vulnerabilityScanning.containerScanTarget": {
+			Init:   initOciVulnerabilityScanningContainerScanTarget,
+			Create: createOciVulnerabilityScanningContainerScanTarget,
+		},
+		"oci.vulnerabilityScanning.hostAgentScanResult": {
+			// to override args, implement: initOciVulnerabilityScanningHostAgentScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostAgentScanResult,
+		},
+		"oci.vulnerabilityScanning.hostAgentScanResult.problem": {
+			// to override args, implement: initOciVulnerabilityScanningHostAgentScanResultProblem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostAgentScanResultProblem,
+		},
+		"oci.vulnerabilityScanning.hostPortScanResult": {
+			// to override args, implement: initOciVulnerabilityScanningHostPortScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostPortScanResult,
+		},
+		"oci.vulnerabilityScanning.hostPortScanResult.openPort": {
+			// to override args, implement: initOciVulnerabilityScanningHostPortScanResultOpenPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostPortScanResultOpenPort,
+		},
+		"oci.vulnerabilityScanning.hostCisBenchmarkScanResult": {
+			// to override args, implement: initOciVulnerabilityScanningHostCisBenchmarkScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostCisBenchmarkScanResult,
+		},
+		"oci.vulnerabilityScanning.hostEndpointProtectionScanResult": {
+			// to override args, implement: initOciVulnerabilityScanningHostEndpointProtectionScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningHostEndpointProtectionScanResult,
+		},
+		"oci.vulnerabilityScanning.containerScanResult": {
+			// to override args, implement: initOciVulnerabilityScanningContainerScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningContainerScanResult,
+		},
+		"oci.vulnerabilityScanning.containerScanResult.problem": {
+			// to override args, implement: initOciVulnerabilityScanningContainerScanResultProblem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciVulnerabilityScanningContainerScanResultProblem,
+		},
+		"oci.vulnerabilityScanning.vulnerability": {
+			Init:   initOciVulnerabilityScanningVulnerability,
+			Create: createOciVulnerabilityScanningVulnerability,
 		},
 	}
 }
@@ -1132,6 +1202,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.instance.vnics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetVnics()).ToDataRes(types.Array(types.Resource("oci.compute.vnic")))
+	},
+	"oci.compute.instance.vulnerabilityScanResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetVulnerabilityScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostAgentScanResult"))
+	},
+	"oci.compute.instance.portScanResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetPortScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostPortScanResult"))
+	},
+	"oci.compute.instance.cisBenchmarkScanResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetCisBenchmarkScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostCisBenchmarkScanResult"))
+	},
+	"oci.compute.instance.endpointProtectionScanResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetEndpointProtectionScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostEndpointProtectionScanResult"))
 	},
 	"oci.compute.vnic.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetId()).ToDataRes(types.String)
@@ -3623,6 +3705,477 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.dataSafe.maskingPolicy.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDataSafeMaskingPolicy).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
+	"oci.vulnerabilityScanning.hostScanRecipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostScanRecipes()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostScanRecipe")))
+	},
+	"oci.vulnerabilityScanning.hostScanTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostScanTargets()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostScanTarget")))
+	},
+	"oci.vulnerabilityScanning.containerScanRecipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetContainerScanRecipes()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.containerScanRecipe")))
+	},
+	"oci.vulnerabilityScanning.containerScanTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetContainerScanTargets()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.containerScanTarget")))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostAgentScanResults()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostAgentScanResult")))
+	},
+	"oci.vulnerabilityScanning.hostPortScanResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostPortScanResults()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostPortScanResult")))
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostCisBenchmarkScanResults()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostCisBenchmarkScanResult")))
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetHostEndpointProtectionScanResults()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostEndpointProtectionScanResult")))
+	},
+	"oci.vulnerabilityScanning.containerScanResults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetContainerScanResults()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.containerScanResult")))
+	},
+	"oci.vulnerabilityScanning.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanning).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.vulnerability")))
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.portScanLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetPortScanLevel()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.agentScanLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetAgentScanLevel()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.cisBenchmarkScanLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetCisBenchmarkScanLevel()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.endpointProtectionScanLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetEndpointProtectionScanLevel()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationScanEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetApplicationScanEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationScanRecurrence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetApplicationScanRecurrence()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationFoldersToScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetApplicationFoldersToScan()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.scheduleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetScheduleType()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.scheduleDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetScheduleDayOfWeek()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.targetCompartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetTargetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.targetCompartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetTargetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.hostScanRecipeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetHostScanRecipeId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.recipe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetRecipe()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostScanRecipe"))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.instanceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetInstanceIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetInstances()).ToDataRes(types.Array(types.Resource("oci.compute.instance")))
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.scanLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetScanLevel()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.imageCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetImageCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.containerScanRecipeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetContainerScanRecipeId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.recipe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetRecipe()).ToDataRes(types.Resource("oci.vulnerabilityScanning.containerScanRecipe"))
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetRegistryType()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetRegistryUrl()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetRegistryRepositories()).ToDataRes(types.Array(types.String))
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetInstanceId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetInstance()).ToDataRes(types.Resource("oci.compute.instance"))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.highestProblemSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetHighestProblemSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.kernelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetKernelVersion()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetVendor()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problemCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetProblemCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResult).GetProblems()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostAgentScanResult.problem")))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.cveReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetCveReference()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.issueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetIssueId()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.vulnerability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetVulnerability()).ToDataRes(types.Resource("oci.vulnerabilityScanning.vulnerability"))
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.vulnerablePackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).GetVulnerablePackages()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetInstanceId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetInstance()).ToDataRes(types.Resource("oci.compute.instance"))
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.highestProblemSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetHighestProblemSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPortCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetOpenPortCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResult).GetOpenPorts()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.hostPortScanResult.openPort")))
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetPort()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetIpAddress()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetService()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.vnicId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetVnicId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.vnic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).GetVnic()).ToDataRes(types.Resource("oci.compute.vnic"))
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetInstanceId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetInstance()).ToDataRes(types.Resource("oci.compute.instance"))
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.cisBenchmarkScanIssuesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetCisBenchmarkScanIssuesCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.scores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).GetScores()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetInstanceId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetInstance()).ToDataRes(types.Resource("oci.compute.instance"))
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.problemSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetProblemSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.endpointProtectionsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetEndpointProtectionsCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.endpointProtections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).GetEndpointProtections()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.vulnerabilityScanning.containerScanResult.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetRepository()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetImage()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.registryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetRegistryUrl()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.containerScanResult.targetCompartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetTargetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.containerScanTargetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetContainerScanTargetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetTarget()).ToDataRes(types.Resource("oci.vulnerabilityScanning.containerScanTarget"))
+	},
+	"oci.vulnerabilityScanning.containerScanResult.highestProblemSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetHighestProblemSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problemCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetProblemCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResult).GetProblems()).ToDataRes(types.Array(types.Resource("oci.vulnerabilityScanning.containerScanResult.problem")))
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.cveReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetCveReference()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.vulnerability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetVulnerability()).ToDataRes(types.Resource("oci.vulnerabilityScanning.vulnerability"))
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.vulnerablePackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).GetVulnerablePackages()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.vulnerabilityScanning.vulnerability.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetName()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.vulnerabilityScanning.vulnerability.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetSeverity()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.vulnerabilityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetVulnerabilityType()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetAuthentication()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.vulnerabilityReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetVulnerabilityReference()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveDescription()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveTitle()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveImpact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveImpact()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveThreat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveThreat()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveSolution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveSolution()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cvePatchable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCvePatchable()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveExploitable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveExploitable()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveRelatedReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveRelatedReference()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveReferenceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetCveReferenceUrl()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedHostsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetImpactedHostsCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedContainersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetImpactedContainersCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.vulnerability.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetImpactedHosts()).ToDataRes(types.Array(types.Resource("oci.compute.instance")))
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedContainerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningVulnerability).GetImpactedContainerImages()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -4397,6 +4950,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.instance.vnics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).Vnics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.vulnerabilityScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).VulnerabilityScanResult, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostAgentScanResult](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.portScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).PortScanResult, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostPortScanResult](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.cisBenchmarkScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).CisBenchmarkScanResult, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.endpointProtectionScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).EndpointProtectionScanResult, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult](v.Value, v.Error)
 		return
 	},
 	"oci.compute.vnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8059,6 +8628,690 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDataSafeMaskingPolicy).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.vulnerabilityScanning.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostScanRecipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostScanTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).ContainerScanRecipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).ContainerScanTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostAgentScanResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostPortScanResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostCisBenchmarkScanResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).HostEndpointProtectionScanResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).ContainerScanResults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanning).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.portScanLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).PortScanLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.agentScanLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).AgentScanLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.cisBenchmarkScanLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).CisBenchmarkScanLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.endpointProtectionScanLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).EndpointProtectionScanLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationScanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ApplicationScanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationScanRecurrence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ApplicationScanRecurrence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.applicationFoldersToScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ApplicationFoldersToScan, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.scheduleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ScheduleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.scheduleDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ScheduleDayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanRecipe.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.targetCompartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).TargetCompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.targetCompartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).TargetCompartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.hostScanRecipeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).HostScanRecipeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.recipe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Recipe, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostScanRecipe](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.instanceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).InstanceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostScanTarget.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.scanLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).ScanLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.imageCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).ImageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.containerScanRecipeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).ContainerScanRecipeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.recipe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Recipe, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningContainerScanRecipe](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).RegistryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).RegistryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.registryRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).RegistryRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Instance, ok = plugin.RawToTValue[*mqlOciComputeInstance](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.highestProblemSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).HighestProblemSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.kernelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).KernelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problemCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).ProblemCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResult).Problems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.cveReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).CveReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.issueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).IssueId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.vulnerability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).Vulnerability, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningVulnerability](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostAgentScanResult.problem.vulnerablePackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostAgentScanResultProblem).VulnerablePackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).Instance, ok = plugin.RawToTValue[*mqlOciComputeInstance](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.highestProblemSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).HighestProblemSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPortCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).OpenPortCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResult).OpenPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.vnicId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).VnicId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostPortScanResult.openPort.vnic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostPortScanResultOpenPort).Vnic, ok = plugin.RawToTValue[*mqlOciComputeVnic](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).Instance, ok = plugin.RawToTValue[*mqlOciComputeInstance](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.cisBenchmarkScanIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).CisBenchmarkScanIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostCisBenchmarkScanResult.scores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult).Scores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).Instance, ok = plugin.RawToTValue[*mqlOciComputeInstance](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.problemSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).ProblemSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.endpointProtectionsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).EndpointProtectionsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.hostEndpointProtectionScanResult.endpointProtections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult).EndpointProtections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.registryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).RegistryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.targetCompartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).TargetCompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.containerScanTargetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).ContainerScanTargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Target, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningContainerScanTarget](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.highestProblemSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).HighestProblemSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problemCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).ProblemCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResult).Problems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.cveReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).CveReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.vulnerability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).Vulnerability, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningVulnerability](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanResult.problem.vulnerablePackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanResultProblem).VulnerablePackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.vulnerabilityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).VulnerabilityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).Authentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.vulnerabilityReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).VulnerabilityReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveImpact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveImpact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveThreat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveThreat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveSolution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveSolution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cvePatchable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CvePatchable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveExploitable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveExploitable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveRelatedReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveRelatedReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.cveReferenceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).CveReferenceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedHostsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).ImpactedHostsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedContainersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).ImpactedContainersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).ImpactedHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.vulnerability.impactedContainerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningVulnerability).ImpactedContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -9974,28 +11227,32 @@ type mqlOciComputeInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciComputeInstanceInternal
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Region                   plugin.TValue[*mqlOciRegion]
-	Created                  plugin.TValue[*time.Time]
-	State                    plugin.TValue[string]
-	Shape                    plugin.TValue[string]
-	AvailabilityDomain       plugin.TValue[string]
-	Compartment              plugin.TValue[*mqlOciCompartment]
-	FaultDomain              plugin.TValue[string]
-	ImageId                  plugin.TValue[string]
-	Image                    plugin.TValue[*mqlOciComputeImage]
-	DedicatedVmHostId        plugin.TValue[string]
-	PlatformConfig           plugin.TValue[any]
-	LaunchOptions            plugin.TValue[any]
-	InstanceOptions          plugin.TValue[any]
-	ShapeConfig              plugin.TValue[any]
-	SourceDetails            plugin.TValue[any]
-	Metadata                 plugin.TValue[map[string]any]
-	TimeMaintenanceRebootDue plugin.TValue[*time.Time]
-	FreeformTags             plugin.TValue[map[string]any]
-	DefinedTags              plugin.TValue[map[string]any]
-	Vnics                    plugin.TValue[[]any]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[*mqlOciRegion]
+	Created                      plugin.TValue[*time.Time]
+	State                        plugin.TValue[string]
+	Shape                        plugin.TValue[string]
+	AvailabilityDomain           plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	FaultDomain                  plugin.TValue[string]
+	ImageId                      plugin.TValue[string]
+	Image                        plugin.TValue[*mqlOciComputeImage]
+	DedicatedVmHostId            plugin.TValue[string]
+	PlatformConfig               plugin.TValue[any]
+	LaunchOptions                plugin.TValue[any]
+	InstanceOptions              plugin.TValue[any]
+	ShapeConfig                  plugin.TValue[any]
+	SourceDetails                plugin.TValue[any]
+	Metadata                     plugin.TValue[map[string]any]
+	TimeMaintenanceRebootDue     plugin.TValue[*time.Time]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+	Vnics                        plugin.TValue[[]any]
+	VulnerabilityScanResult      plugin.TValue[*mqlOciVulnerabilityScanningHostAgentScanResult]
+	PortScanResult               plugin.TValue[*mqlOciVulnerabilityScanningHostPortScanResult]
+	CisBenchmarkScanResult       plugin.TValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult]
+	EndpointProtectionScanResult plugin.TValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult]
 }
 
 // createOciComputeInstance creates a new instance of this resource
@@ -10144,6 +11401,70 @@ func (c *mqlOciComputeInstance) GetVnics() *plugin.TValue[[]any] {
 		}
 
 		return c.vnics()
+	})
+}
+
+func (c *mqlOciComputeInstance) GetVulnerabilityScanResult() *plugin.TValue[*mqlOciVulnerabilityScanningHostAgentScanResult] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningHostAgentScanResult](&c.VulnerabilityScanResult, func() (*mqlOciVulnerabilityScanningHostAgentScanResult, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "vulnerabilityScanResult")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningHostAgentScanResult), nil
+			}
+		}
+
+		return c.vulnerabilityScanResult()
+	})
+}
+
+func (c *mqlOciComputeInstance) GetPortScanResult() *plugin.TValue[*mqlOciVulnerabilityScanningHostPortScanResult] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningHostPortScanResult](&c.PortScanResult, func() (*mqlOciVulnerabilityScanningHostPortScanResult, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "portScanResult")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningHostPortScanResult), nil
+			}
+		}
+
+		return c.portScanResult()
+	})
+}
+
+func (c *mqlOciComputeInstance) GetCisBenchmarkScanResult() *plugin.TValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult](&c.CisBenchmarkScanResult, func() (*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "cisBenchmarkScanResult")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult), nil
+			}
+		}
+
+		return c.cisBenchmarkScanResult()
+	})
+}
+
+func (c *mqlOciComputeInstance) GetEndpointProtectionScanResult() *plugin.TValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult](&c.EndpointProtectionScanResult, func() (*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "endpointProtectionScanResult")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult), nil
+			}
+		}
+
+		return c.endpointProtectionScanResult()
 	})
 }
 
@@ -19705,4 +21026,1828 @@ func (c *mqlOciDataSafeMaskingPolicy) GetFreeformTags() *plugin.TValue[map[strin
 
 func (c *mqlOciDataSafeMaskingPolicy) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+// mqlOciVulnerabilityScanning for the oci.vulnerabilityScanning resource
+type mqlOciVulnerabilityScanning struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningInternal it will be used here
+	HostScanRecipes                   plugin.TValue[[]any]
+	HostScanTargets                   plugin.TValue[[]any]
+	ContainerScanRecipes              plugin.TValue[[]any]
+	ContainerScanTargets              plugin.TValue[[]any]
+	HostAgentScanResults              plugin.TValue[[]any]
+	HostPortScanResults               plugin.TValue[[]any]
+	HostCisBenchmarkScanResults       plugin.TValue[[]any]
+	HostEndpointProtectionScanResults plugin.TValue[[]any]
+	ContainerScanResults              plugin.TValue[[]any]
+	Vulnerabilities                   plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanning creates a new instance of this resource
+func createOciVulnerabilityScanning(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanning{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanning) MqlName() string {
+	return "oci.vulnerabilityScanning"
+}
+
+func (c *mqlOciVulnerabilityScanning) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostScanRecipes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostScanRecipes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostScanRecipes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostScanRecipes()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostScanTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostScanTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostScanTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostScanTargets()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetContainerScanRecipes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerScanRecipes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "containerScanRecipes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerScanRecipes()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetContainerScanTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerScanTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "containerScanTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerScanTargets()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostAgentScanResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostAgentScanResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostAgentScanResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostAgentScanResults()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostPortScanResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostPortScanResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostPortScanResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostPortScanResults()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostCisBenchmarkScanResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostCisBenchmarkScanResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostCisBenchmarkScanResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostCisBenchmarkScanResults()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetHostEndpointProtectionScanResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostEndpointProtectionScanResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "hostEndpointProtectionScanResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hostEndpointProtectionScanResults()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetContainerScanResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerScanResults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "containerScanResults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containerScanResults()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanning) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning", c.__id, "vulnerabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilities()
+	})
+}
+
+// mqlOciVulnerabilityScanningHostScanRecipe for the oci.vulnerabilityScanning.hostScanRecipe resource
+type mqlOciVulnerabilityScanningHostScanRecipe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningHostScanRecipeInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	CompartmentId               plugin.TValue[string]
+	Compartment                 plugin.TValue[*mqlOciCompartment]
+	State                       plugin.TValue[string]
+	PortScanLevel               plugin.TValue[string]
+	AgentScanLevel              plugin.TValue[string]
+	CisBenchmarkScanLevel       plugin.TValue[string]
+	EndpointProtectionScanLevel plugin.TValue[string]
+	ApplicationScanEnabled      plugin.TValue[bool]
+	ApplicationScanRecurrence   plugin.TValue[string]
+	ApplicationFoldersToScan    plugin.TValue[[]any]
+	ScheduleType                plugin.TValue[string]
+	ScheduleDayOfWeek           plugin.TValue[string]
+	FreeformTags                plugin.TValue[map[string]any]
+}
+
+// createOciVulnerabilityScanningHostScanRecipe creates a new instance of this resource
+func createOciVulnerabilityScanningHostScanRecipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostScanRecipe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostScanRecipe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) MqlName() string {
+	return "oci.vulnerabilityScanning.hostScanRecipe"
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostScanRecipe", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetPortScanLevel() *plugin.TValue[string] {
+	return &c.PortScanLevel
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetAgentScanLevel() *plugin.TValue[string] {
+	return &c.AgentScanLevel
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetCisBenchmarkScanLevel() *plugin.TValue[string] {
+	return &c.CisBenchmarkScanLevel
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetEndpointProtectionScanLevel() *plugin.TValue[string] {
+	return &c.EndpointProtectionScanLevel
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetApplicationScanEnabled() *plugin.TValue[bool] {
+	return &c.ApplicationScanEnabled
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetApplicationScanRecurrence() *plugin.TValue[string] {
+	return &c.ApplicationScanRecurrence
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetApplicationFoldersToScan() *plugin.TValue[[]any] {
+	return &c.ApplicationFoldersToScan
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetScheduleType() *plugin.TValue[string] {
+	return &c.ScheduleType
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetScheduleDayOfWeek() *plugin.TValue[string] {
+	return &c.ScheduleDayOfWeek
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+// mqlOciVulnerabilityScanningHostScanTarget for the oci.vulnerabilityScanning.hostScanTarget resource
+type mqlOciVulnerabilityScanningHostScanTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningHostScanTargetInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	CompartmentId       plugin.TValue[string]
+	Compartment         plugin.TValue[*mqlOciCompartment]
+	TargetCompartmentId plugin.TValue[string]
+	TargetCompartment   plugin.TValue[*mqlOciCompartment]
+	HostScanRecipeId    plugin.TValue[string]
+	Recipe              plugin.TValue[*mqlOciVulnerabilityScanningHostScanRecipe]
+	InstanceIds         plugin.TValue[[]any]
+	Instances           plugin.TValue[[]any]
+	State               plugin.TValue[string]
+	FreeformTags        plugin.TValue[map[string]any]
+}
+
+// createOciVulnerabilityScanningHostScanTarget creates a new instance of this resource
+func createOciVulnerabilityScanningHostScanTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostScanTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostScanTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) MqlName() string {
+	return "oci.vulnerabilityScanning.hostScanTarget"
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostScanTarget", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetTargetCompartmentId() *plugin.TValue[string] {
+	return &c.TargetCompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetTargetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.TargetCompartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostScanTarget", c.__id, "targetCompartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.targetCompartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetHostScanRecipeId() *plugin.TValue[string] {
+	return &c.HostScanRecipeId
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetRecipe() *plugin.TValue[*mqlOciVulnerabilityScanningHostScanRecipe] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningHostScanRecipe](&c.Recipe, func() (*mqlOciVulnerabilityScanningHostScanRecipe, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostScanTarget", c.__id, "recipe")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningHostScanRecipe), nil
+			}
+		}
+
+		return c.recipe()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetInstanceIds() *plugin.TValue[[]any] {
+	return &c.InstanceIds
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostScanTarget", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+// mqlOciVulnerabilityScanningContainerScanRecipe for the oci.vulnerabilityScanning.containerScanRecipe resource
+type mqlOciVulnerabilityScanningContainerScanRecipe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningContainerScanRecipeInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CompartmentId plugin.TValue[string]
+	Compartment   plugin.TValue[*mqlOciCompartment]
+	State         plugin.TValue[string]
+	ScanLevel     plugin.TValue[string]
+	ImageCount    plugin.TValue[int64]
+	FreeformTags  plugin.TValue[map[string]any]
+}
+
+// createOciVulnerabilityScanningContainerScanRecipe creates a new instance of this resource
+func createOciVulnerabilityScanningContainerScanRecipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningContainerScanRecipe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.containerScanRecipe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) MqlName() string {
+	return "oci.vulnerabilityScanning.containerScanRecipe"
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanRecipe", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetScanLevel() *plugin.TValue[string] {
+	return &c.ScanLevel
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetImageCount() *plugin.TValue[int64] {
+	return &c.ImageCount
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+// mqlOciVulnerabilityScanningContainerScanTarget for the oci.vulnerabilityScanning.containerScanTarget resource
+type mqlOciVulnerabilityScanningContainerScanTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningContainerScanTargetInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	CompartmentId         plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	ContainerScanRecipeId plugin.TValue[string]
+	Recipe                plugin.TValue[*mqlOciVulnerabilityScanningContainerScanRecipe]
+	RegistryType          plugin.TValue[string]
+	RegistryUrl           plugin.TValue[string]
+	RegistryRepositories  plugin.TValue[[]any]
+	State                 plugin.TValue[string]
+	FreeformTags          plugin.TValue[map[string]any]
+}
+
+// createOciVulnerabilityScanningContainerScanTarget creates a new instance of this resource
+func createOciVulnerabilityScanningContainerScanTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningContainerScanTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.containerScanTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) MqlName() string {
+	return "oci.vulnerabilityScanning.containerScanTarget"
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanTarget", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetContainerScanRecipeId() *plugin.TValue[string] {
+	return &c.ContainerScanRecipeId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetRecipe() *plugin.TValue[*mqlOciVulnerabilityScanningContainerScanRecipe] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningContainerScanRecipe](&c.Recipe, func() (*mqlOciVulnerabilityScanningContainerScanRecipe, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanTarget", c.__id, "recipe")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningContainerScanRecipe), nil
+			}
+		}
+
+		return c.recipe()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetRegistryType() *plugin.TValue[string] {
+	return &c.RegistryType
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetRegistryUrl() *plugin.TValue[string] {
+	return &c.RegistryUrl
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetRegistryRepositories() *plugin.TValue[[]any] {
+	return &c.RegistryRepositories
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+// mqlOciVulnerabilityScanningHostAgentScanResult for the oci.vulnerabilityScanning.hostAgentScanResult resource
+type mqlOciVulnerabilityScanningHostAgentScanResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningHostAgentScanResultInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	InstanceId             plugin.TValue[string]
+	Instance               plugin.TValue[*mqlOciComputeInstance]
+	CompartmentId          plugin.TValue[string]
+	Compartment            plugin.TValue[*mqlOciCompartment]
+	HighestProblemSeverity plugin.TValue[string]
+	OperatingSystem        plugin.TValue[string]
+	KernelVersion          plugin.TValue[string]
+	Vendor                 plugin.TValue[string]
+	ProblemCount           plugin.TValue[int64]
+	State                  plugin.TValue[string]
+	Problems               plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningHostAgentScanResult creates a new instance of this resource
+func createOciVulnerabilityScanningHostAgentScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostAgentScanResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) MqlName() string {
+	return "oci.vulnerabilityScanning.hostAgentScanResult"
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetInstance() *plugin.TValue[*mqlOciComputeInstance] {
+	return plugin.GetOrCompute[*mqlOciComputeInstance](&c.Instance, func() (*mqlOciComputeInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetHighestProblemSeverity() *plugin.TValue[string] {
+	return &c.HighestProblemSeverity
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetKernelVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KernelVersion, func() (string, error) {
+		return c.kernelVersion()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetVendor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Vendor, func() (string, error) {
+		return c.vendor()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetProblemCount() *plugin.TValue[int64] {
+	return &c.ProblemCount
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResult) GetProblems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Problems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult", c.__id, "problems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.problems()
+	})
+}
+
+// mqlOciVulnerabilityScanningHostAgentScanResultProblem for the oci.vulnerabilityScanning.hostAgentScanResult.problem resource
+type mqlOciVulnerabilityScanningHostAgentScanResultProblem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningHostAgentScanResultProblemInternal it will be used here
+	Name               plugin.TValue[string]
+	Severity           plugin.TValue[string]
+	State              plugin.TValue[string]
+	Description        plugin.TValue[string]
+	CveReference       plugin.TValue[string]
+	IssueId            plugin.TValue[int64]
+	Vulnerability      plugin.TValue[*mqlOciVulnerabilityScanningVulnerability]
+	VulnerablePackages plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningHostAgentScanResultProblem creates a new instance of this resource
+func createOciVulnerabilityScanningHostAgentScanResultProblem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostAgentScanResultProblem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult.problem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) MqlName() string {
+	return "oci.vulnerabilityScanning.hostAgentScanResult.problem"
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetCveReference() *plugin.TValue[string] {
+	return &c.CveReference
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetIssueId() *plugin.TValue[int64] {
+	return &c.IssueId
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetVulnerability() *plugin.TValue[*mqlOciVulnerabilityScanningVulnerability] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningVulnerability](&c.Vulnerability, func() (*mqlOciVulnerabilityScanningVulnerability, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostAgentScanResult.problem", c.__id, "vulnerability")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningVulnerability), nil
+			}
+		}
+
+		return c.vulnerability()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostAgentScanResultProblem) GetVulnerablePackages() *plugin.TValue[[]any] {
+	return &c.VulnerablePackages
+}
+
+// mqlOciVulnerabilityScanningHostPortScanResult for the oci.vulnerabilityScanning.hostPortScanResult resource
+type mqlOciVulnerabilityScanningHostPortScanResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningHostPortScanResultInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	InstanceId             plugin.TValue[string]
+	Instance               plugin.TValue[*mqlOciComputeInstance]
+	CompartmentId          plugin.TValue[string]
+	Compartment            plugin.TValue[*mqlOciCompartment]
+	HighestProblemSeverity plugin.TValue[string]
+	OpenPortCount          plugin.TValue[int64]
+	State                  plugin.TValue[string]
+	OpenPorts              plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningHostPortScanResult creates a new instance of this resource
+func createOciVulnerabilityScanningHostPortScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostPortScanResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) MqlName() string {
+	return "oci.vulnerabilityScanning.hostPortScanResult"
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetInstance() *plugin.TValue[*mqlOciComputeInstance] {
+	return plugin.GetOrCompute[*mqlOciComputeInstance](&c.Instance, func() (*mqlOciComputeInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetHighestProblemSeverity() *plugin.TValue[string] {
+	return &c.HighestProblemSeverity
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetOpenPortCount() *plugin.TValue[int64] {
+	return &c.OpenPortCount
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResult) GetOpenPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpenPorts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult", c.__id, "openPorts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.openPorts()
+	})
+}
+
+// mqlOciVulnerabilityScanningHostPortScanResultOpenPort for the oci.vulnerabilityScanning.hostPortScanResult.openPort resource
+type mqlOciVulnerabilityScanningHostPortScanResultOpenPort struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningHostPortScanResultOpenPortInternal it will be used here
+	Port      plugin.TValue[int64]
+	Protocol  plugin.TValue[string]
+	IpAddress plugin.TValue[string]
+	Service   plugin.TValue[string]
+	Severity  plugin.TValue[string]
+	VnicId    plugin.TValue[string]
+	Vnic      plugin.TValue[*mqlOciComputeVnic]
+}
+
+// createOciVulnerabilityScanningHostPortScanResultOpenPort creates a new instance of this resource
+func createOciVulnerabilityScanningHostPortScanResultOpenPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostPortScanResultOpenPort{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult.openPort", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) MqlName() string {
+	return "oci.vulnerabilityScanning.hostPortScanResult.openPort"
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetVnicId() *plugin.TValue[string] {
+	return &c.VnicId
+}
+
+func (c *mqlOciVulnerabilityScanningHostPortScanResultOpenPort) GetVnic() *plugin.TValue[*mqlOciComputeVnic] {
+	return plugin.GetOrCompute[*mqlOciComputeVnic](&c.Vnic, func() (*mqlOciComputeVnic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostPortScanResult.openPort", c.__id, "vnic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeVnic), nil
+			}
+		}
+
+		return c.vnic()
+	})
+}
+
+// mqlOciVulnerabilityScanningHostCisBenchmarkScanResult for the oci.vulnerabilityScanning.hostCisBenchmarkScanResult resource
+type mqlOciVulnerabilityScanningHostCisBenchmarkScanResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningHostCisBenchmarkScanResultInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	InstanceId                  plugin.TValue[string]
+	Instance                    plugin.TValue[*mqlOciComputeInstance]
+	CompartmentId               plugin.TValue[string]
+	Compartment                 plugin.TValue[*mqlOciCompartment]
+	CisBenchmarkScanIssuesCount plugin.TValue[int64]
+	State                       plugin.TValue[string]
+	Scores                      plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningHostCisBenchmarkScanResult creates a new instance of this resource
+func createOciVulnerabilityScanningHostCisBenchmarkScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostCisBenchmarkScanResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostCisBenchmarkScanResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) MqlName() string {
+	return "oci.vulnerabilityScanning.hostCisBenchmarkScanResult"
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetInstance() *plugin.TValue[*mqlOciComputeInstance] {
+	return plugin.GetOrCompute[*mqlOciComputeInstance](&c.Instance, func() (*mqlOciComputeInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostCisBenchmarkScanResult", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostCisBenchmarkScanResult", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetCisBenchmarkScanIssuesCount() *plugin.TValue[int64] {
+	return &c.CisBenchmarkScanIssuesCount
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostCisBenchmarkScanResult) GetScores() *plugin.TValue[[]any] {
+	return &c.Scores
+}
+
+// mqlOciVulnerabilityScanningHostEndpointProtectionScanResult for the oci.vulnerabilityScanning.hostEndpointProtectionScanResult resource
+type mqlOciVulnerabilityScanningHostEndpointProtectionScanResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningHostEndpointProtectionScanResultInternal
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	InstanceId               plugin.TValue[string]
+	Instance                 plugin.TValue[*mqlOciComputeInstance]
+	CompartmentId            plugin.TValue[string]
+	Compartment              plugin.TValue[*mqlOciCompartment]
+	ProblemSeverity          plugin.TValue[string]
+	EndpointProtectionsCount plugin.TValue[int64]
+	State                    plugin.TValue[string]
+	EndpointProtections      plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningHostEndpointProtectionScanResult creates a new instance of this resource
+func createOciVulnerabilityScanningHostEndpointProtectionScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningHostEndpointProtectionScanResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.hostEndpointProtectionScanResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) MqlName() string {
+	return "oci.vulnerabilityScanning.hostEndpointProtectionScanResult"
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetInstance() *plugin.TValue[*mqlOciComputeInstance] {
+	return plugin.GetOrCompute[*mqlOciComputeInstance](&c.Instance, func() (*mqlOciComputeInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostEndpointProtectionScanResult", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.hostEndpointProtectionScanResult", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetProblemSeverity() *plugin.TValue[string] {
+	return &c.ProblemSeverity
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetEndpointProtectionsCount() *plugin.TValue[int64] {
+	return &c.EndpointProtectionsCount
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningHostEndpointProtectionScanResult) GetEndpointProtections() *plugin.TValue[[]any] {
+	return &c.EndpointProtections
+}
+
+// mqlOciVulnerabilityScanningContainerScanResult for the oci.vulnerabilityScanning.containerScanResult resource
+type mqlOciVulnerabilityScanningContainerScanResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningContainerScanResultInternal
+	Id                     plugin.TValue[string]
+	Repository             plugin.TValue[string]
+	Image                  plugin.TValue[string]
+	RegistryUrl            plugin.TValue[string]
+	CompartmentId          plugin.TValue[string]
+	Compartment            plugin.TValue[*mqlOciCompartment]
+	TargetCompartmentId    plugin.TValue[string]
+	ContainerScanTargetId  plugin.TValue[string]
+	Target                 plugin.TValue[*mqlOciVulnerabilityScanningContainerScanTarget]
+	HighestProblemSeverity plugin.TValue[string]
+	ProblemCount           plugin.TValue[int64]
+	Problems               plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningContainerScanResult creates a new instance of this resource
+func createOciVulnerabilityScanningContainerScanResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningContainerScanResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.containerScanResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) MqlName() string {
+	return "oci.vulnerabilityScanning.containerScanResult"
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetRegistryUrl() *plugin.TValue[string] {
+	return &c.RegistryUrl
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanResult", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetTargetCompartmentId() *plugin.TValue[string] {
+	return &c.TargetCompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetContainerScanTargetId() *plugin.TValue[string] {
+	return &c.ContainerScanTargetId
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetTarget() *plugin.TValue[*mqlOciVulnerabilityScanningContainerScanTarget] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningContainerScanTarget](&c.Target, func() (*mqlOciVulnerabilityScanningContainerScanTarget, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanResult", c.__id, "target")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningContainerScanTarget), nil
+			}
+		}
+
+		return c.target()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetHighestProblemSeverity() *plugin.TValue[string] {
+	return &c.HighestProblemSeverity
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetProblemCount() *plugin.TValue[int64] {
+	return &c.ProblemCount
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResult) GetProblems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Problems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanResult", c.__id, "problems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.problems()
+	})
+}
+
+// mqlOciVulnerabilityScanningContainerScanResultProblem for the oci.vulnerabilityScanning.containerScanResult.problem resource
+type mqlOciVulnerabilityScanningContainerScanResultProblem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciVulnerabilityScanningContainerScanResultProblemInternal it will be used here
+	Name               plugin.TValue[string]
+	Severity           plugin.TValue[string]
+	State              plugin.TValue[string]
+	Description        plugin.TValue[string]
+	CveReference       plugin.TValue[string]
+	Vulnerability      plugin.TValue[*mqlOciVulnerabilityScanningVulnerability]
+	VulnerablePackages plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningContainerScanResultProblem creates a new instance of this resource
+func createOciVulnerabilityScanningContainerScanResultProblem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningContainerScanResultProblem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.containerScanResult.problem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) MqlName() string {
+	return "oci.vulnerabilityScanning.containerScanResult.problem"
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetCveReference() *plugin.TValue[string] {
+	return &c.CveReference
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetVulnerability() *plugin.TValue[*mqlOciVulnerabilityScanningVulnerability] {
+	return plugin.GetOrCompute[*mqlOciVulnerabilityScanningVulnerability](&c.Vulnerability, func() (*mqlOciVulnerabilityScanningVulnerability, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.containerScanResult.problem", c.__id, "vulnerability")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciVulnerabilityScanningVulnerability), nil
+			}
+		}
+
+		return c.vulnerability()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanResultProblem) GetVulnerablePackages() *plugin.TValue[[]any] {
+	return &c.VulnerablePackages
+}
+
+// mqlOciVulnerabilityScanningVulnerability for the oci.vulnerabilityScanning.vulnerability resource
+type mqlOciVulnerabilityScanningVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciVulnerabilityScanningVulnerabilityInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	CompartmentId           plugin.TValue[string]
+	Compartment             plugin.TValue[*mqlOciCompartment]
+	Severity                plugin.TValue[string]
+	VulnerabilityType       plugin.TValue[string]
+	State                   plugin.TValue[string]
+	Authentication          plugin.TValue[string]
+	VulnerabilityReference  plugin.TValue[string]
+	CveDescription          plugin.TValue[string]
+	CveTitle                plugin.TValue[string]
+	CveImpact               plugin.TValue[string]
+	CveThreat               plugin.TValue[string]
+	CveSolution             plugin.TValue[string]
+	CvePatchable            plugin.TValue[string]
+	CveExploitable          plugin.TValue[string]
+	CveRelatedReference     plugin.TValue[string]
+	CveReferenceUrl         plugin.TValue[string]
+	ImpactedHostsCount      plugin.TValue[int64]
+	ImpactedContainersCount plugin.TValue[int64]
+	LifecycleState          plugin.TValue[string]
+	ImpactedHosts           plugin.TValue[[]any]
+	ImpactedContainerImages plugin.TValue[[]any]
+}
+
+// createOciVulnerabilityScanningVulnerability creates a new instance of this resource
+func createOciVulnerabilityScanningVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciVulnerabilityScanningVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.vulnerabilityScanning.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) MqlName() string {
+	return "oci.vulnerabilityScanning.vulnerability"
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.vulnerability", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetVulnerabilityType() *plugin.TValue[string] {
+	return &c.VulnerabilityType
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetAuthentication() *plugin.TValue[string] {
+	return &c.Authentication
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetVulnerabilityReference() *plugin.TValue[string] {
+	return &c.VulnerabilityReference
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveDescription() *plugin.TValue[string] {
+	return &c.CveDescription
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveTitle() *plugin.TValue[string] {
+	return &c.CveTitle
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveImpact() *plugin.TValue[string] {
+	return &c.CveImpact
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveThreat() *plugin.TValue[string] {
+	return &c.CveThreat
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveSolution() *plugin.TValue[string] {
+	return &c.CveSolution
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCvePatchable() *plugin.TValue[string] {
+	return &c.CvePatchable
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveExploitable() *plugin.TValue[string] {
+	return &c.CveExploitable
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveRelatedReference() *plugin.TValue[string] {
+	return &c.CveRelatedReference
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetCveReferenceUrl() *plugin.TValue[string] {
+	return &c.CveReferenceUrl
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetImpactedHostsCount() *plugin.TValue[int64] {
+	return &c.ImpactedHostsCount
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetImpactedContainersCount() *plugin.TValue[int64] {
+	return &c.ImpactedContainersCount
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetImpactedHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImpactedHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.vulnerabilityScanning.vulnerability", c.__id, "impactedHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.impactedHosts()
+	})
+}
+
+func (c *mqlOciVulnerabilityScanningVulnerability) GetImpactedContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImpactedContainerImages, func() ([]any, error) {
+		return c.impactedContainerImages()
+	})
 }
