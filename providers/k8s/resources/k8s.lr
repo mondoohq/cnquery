@@ -546,6 +546,8 @@ private k8s.container @defaults("name") {
   livenessProbe dict
   // Periodic probe of container service readiness
   readinessProbe dict
+  // Periodic probe of container startup, gating other probes until it succeeds
+  startupProbe dict
   // Image pull policy: Always, Never, or IfNotPresent
   imagePullPolicy string
   // Security options the pod should run with
@@ -554,18 +556,36 @@ private k8s.container @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
+  // Whether stdin should be left open after the container starts
+  stdin bool
+  // Whether stdin should be closed after the first attached client disconnects
+  stdinOnce bool
   // Environment variables
   env dict
   // envFrom settings
   envFrom dict
+  // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
+  ports []dict
+  // Lifecycle hooks (postStart, preStop)
+  lifecycle dict
+  // Path at which the file to which the container's termination message will be written
+  terminationMessagePath string
+  // Policy for handling the termination message (File or FallbackToLogsOnError)
+  terminationMessagePolicy string
+  // Per-resource resize policy entries (resourceName + restartPolicy)
+  resizePolicy []dict
+  // Container-level restart policy override (currently used to mark a container as a sidecar via Always)
+  restartPolicy string
 }
 
 // Kubernetes container status
-private k8s.containerStatus @defaults("name") {
+private k8s.containerStatus @defaults("name ready restartCount") {
   // Name of the container
   name string
   // Whether the container is currently passing its readiness check
   ready bool
+  // Whether the container has passed its startup probe
+  started bool
   // The amount of times the container has been restarted
   restartCount int
   // Name of the container image that the container is running
@@ -574,6 +594,12 @@ private k8s.containerStatus @defaults("name") {
   imageId string
   // The ID of the container in the format '\<type\>://\<container_id\>'
   containerId string
+  // Current state of the container (waiting, running, or terminated)
+  state dict
+  // State of the container's previous instance, if any
+  lastState dict
+  // Actual compute resources allocated to the container
+  resources dict
 }
 
 // Kubernetes init container
@@ -596,6 +622,12 @@ private k8s.initContainer @defaults("name") {
   volumeMounts []dict
   // List of block devices to be used by the container
   volumeDevices []dict
+  // Periodic probe of container liveness (sidecar init containers only)
+  livenessProbe dict
+  // Periodic probe of container service readiness (sidecar init containers only)
+  readinessProbe dict
+  // Periodic probe of container startup (sidecar init containers only)
+  startupProbe dict
   // Image pull policy: Always, Never, or IfNotPresent
   imagePullPolicy string
   // Security options the pod should run with
@@ -604,10 +636,26 @@ private k8s.initContainer @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
+  // Whether stdin should be left open after the container starts
+  stdin bool
+  // Whether stdin should be closed after the first attached client disconnects
+  stdinOnce bool
   // Environment variables
   env dict
   // envFrom settings
   envFrom dict
+  // Network ports exposed by the container (containerPort, protocol, hostPort, hostIP, name)
+  ports []dict
+  // Lifecycle hooks (postStart, preStop)
+  lifecycle dict
+  // Path at which the file to which the container's termination message will be written
+  terminationMessagePath string
+  // Policy for handling the termination message (File or FallbackToLogsOnError)
+  terminationMessagePolicy string
+  // Per-resource resize policy entries (resourceName + restartPolicy)
+  resizePolicy []dict
+  // Container-level restart policy; setting this to Always turns the init container into a sidecar
+  restartPolicy string
 }
 
 // Kubernetes ephemeral container
@@ -636,10 +684,20 @@ private k8s.ephemeralContainer @defaults("name") {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
+  // Whether stdin should be left open after the container starts
+  stdin bool
+  // Whether stdin should be closed after the first attached client disconnects
+  stdinOnce bool
   // Environment variables
   env dict
   // envFrom settings
   envFrom dict
+  // Network ports exposed by the container (typically empty for ephemeral containers)
+  ports []dict
+  // Path at which the file to which the container's termination message will be written
+  terminationMessagePath string
+  // Policy for handling the termination message (File or FallbackToLogsOnError)
+  terminationMessagePolicy string
 }
 
 // Kubernetes Secret

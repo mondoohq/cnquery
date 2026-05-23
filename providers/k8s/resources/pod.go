@@ -117,14 +117,35 @@ func (k *mqlK8sPod) containerStatuses() ([]any, error) {
 
 	resp := []any{}
 	for _, c := range pod.Status.ContainerStatuses {
+		state, err := convert.JsonToDict(c.State)
+		if err != nil {
+			return nil, err
+		}
+		lastState, err := convert.JsonToDict(c.LastTerminationState)
+		if err != nil {
+			return nil, err
+		}
+		statusResources, err := convert.JsonToDict(c.Resources)
+		if err != nil {
+			return nil, err
+		}
+		started := false
+		if c.Started != nil {
+			started = *c.Started
+		}
+
 		args := map[string]*llx.RawData{
 			"__id":         llx.StringData(string(pod.GetUID()) + "-containerstatus-" + c.Name),
 			"name":         llx.StringData(c.Name),
 			"ready":        llx.BoolData(c.Ready),
+			"started":      llx.BoolData(started),
 			"restartCount": llx.IntData(int64(c.RestartCount)),
 			"image":        llx.StringData(c.Image),
 			"imageId":      llx.StringData(c.ImageID),
 			"containerId":  llx.StringData(c.ContainerID),
+			"state":        llx.DictData(state),
+			"lastState":    llx.DictData(lastState),
+			"resources":    llx.DictData(statusResources),
 		}
 		mqlContainer, err := CreateResource(k.MqlRuntime, ResourceK8sContainerStatus, args)
 		if err != nil {

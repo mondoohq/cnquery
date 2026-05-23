@@ -82,20 +82,40 @@ func getContainers(
 			return nil, err
 		}
 
+		ports, err := convert.JsonToDictSlice(c.Ports)
+		if err != nil {
+			return nil, err
+		}
+
+		resizePolicy, err := convert.JsonToDictSlice(c.ResizePolicy)
+		if err != nil {
+			return nil, err
+		}
+
+		restartPolicy := ""
+		if c.RestartPolicy != nil {
+			restartPolicy = string(*c.RestartPolicy)
+		}
+
 		args := map[string]*llx.RawData{
-			"uid":             llx.StringData(id + "/" + c.Name), // container names are unique within a resource
-			"name":            llx.StringData(c.Name),
-			"imageName":       llx.StringData(c.Image),
-			"command":         llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
-			"args":            llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
-			"volumeMounts":    llx.ArrayData(volumeMounts, types.Dict),
-			"volumeDevices":   llx.ArrayData(volumeDevices, types.Dict),
-			"imagePullPolicy": llx.StringData(string(c.ImagePullPolicy)),
-			"securityContext": llx.DictData(secContext),
-			"workingDir":      llx.StringData(c.WorkingDir),
-			"tty":             llx.BoolData(c.TTY),
-			"env":             llx.ArrayData(env, types.Dict),
-			"envFrom":         llx.ArrayData(envFrom, types.Dict),
+			"uid":                      llx.StringData(id + "/" + c.Name), // container names are unique within a resource
+			"name":                     llx.StringData(c.Name),
+			"imageName":                llx.StringData(c.Image),
+			"command":                  llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
+			"args":                     llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
+			"volumeMounts":             llx.ArrayData(volumeMounts, types.Dict),
+			"volumeDevices":            llx.ArrayData(volumeDevices, types.Dict),
+			"imagePullPolicy":          llx.StringData(string(c.ImagePullPolicy)),
+			"securityContext":          llx.DictData(secContext),
+			"workingDir":               llx.StringData(c.WorkingDir),
+			"tty":                      llx.BoolData(c.TTY),
+			"stdin":                    llx.BoolData(c.Stdin),
+			"stdinOnce":                llx.BoolData(c.StdinOnce),
+			"env":                      llx.ArrayData(env, types.Dict),
+			"envFrom":                  llx.ArrayData(envFrom, types.Dict),
+			"ports":                    llx.ArrayData(ports, types.Dict),
+			"terminationMessagePath":   llx.StringData(c.TerminationMessagePath),
+			"terminationMessagePolicy": llx.StringData(string(c.TerminationMessagePolicy)),
 		}
 
 		if containerType != EphemeralContainerType {
@@ -104,10 +124,18 @@ func getContainers(
 				return nil, err
 			}
 
+			lifecycle, err := convert.JsonToDict(c.Lifecycle)
+			if err != nil {
+				return nil, err
+			}
+
 			args["resources"] = llx.DictData(resources)
+			args["lifecycle"] = llx.DictData(lifecycle)
+			args["resizePolicy"] = llx.ArrayData(resizePolicy, types.Dict)
+			args["restartPolicy"] = llx.StringData(restartPolicy)
 		}
 
-		if containerType == ContainerContainerType {
+		if containerType == ContainerContainerType || containerType == InitContainerType {
 			livenessProbe, err := convert.JsonToDict(c.LivenessProbe)
 			if err != nil {
 				return nil, err
@@ -118,8 +146,14 @@ func getContainers(
 				return nil, err
 			}
 
+			startupProbe, err := convert.JsonToDict(c.StartupProbe)
+			if err != nil {
+				return nil, err
+			}
+
 			args["livenessProbe"] = llx.DictData(livenessProbe)
 			args["readinessProbe"] = llx.DictData(readinessProbe)
+			args["startupProbe"] = llx.DictData(startupProbe)
 		}
 
 		mqlContainer, err := CreateResource(pluginRuntime, resourceType, args)
