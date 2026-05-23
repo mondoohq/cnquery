@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/aws/smithy-go/ptr"
@@ -334,10 +333,18 @@ func (g *mqlGcpProjectComputeService) machineTypes() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	// get list of zones first since we need this for all entries
 	zones := g.GetZones()
 	if zones.Error != nil {
 		return nil, zones.Error
+	}
+	zonesByName := make(map[string]*mqlGcpProjectComputeServiceZone, len(zones.Data))
+	for _, z := range zones.Data {
+		zone := z.(*mqlGcpProjectComputeServiceZone)
+		name := zone.GetName()
+		if name.Error != nil {
+			return nil, name.Error
+		}
+		zonesByName[name.Data] = zone
 	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
@@ -348,45 +355,35 @@ func (g *mqlGcpProjectComputeService) machineTypes() ([]any, error) {
 	}
 
 	ctx := context.Background()
-
 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
-	res := []any{}
-	wg.Add(len(zones.Data))
-	mux := &sync.Mutex{}
-
-	for i := range zones.Data {
-		z := zones.Data[i].(*mqlGcpProjectComputeServiceZone)
-		zoneName := z.GetName()
-		if zoneName.Error != nil {
-			return nil, zoneName.Error
-		}
-
-		go func(svc *compute.Service, projectId string, zone *mqlGcpProjectComputeServiceZone, zoneName string) {
-			req := computeSvc.MachineTypes.List(projectId, zoneName)
-			if err := req.Pages(ctx, func(page *compute.MachineTypeList) error {
-				for _, machinetype := range page.Items {
-					mqlMachineType, err := newMqlMachineType(g.MqlRuntime, machinetype, projectId, zone)
-					if err != nil {
-						return err
-					} else {
-						mux.Lock()
-						res = append(res, mqlMachineType)
-						mux.Unlock()
-					}
-				}
-				return nil
-			}); err != nil {
-				log.Error().Err(err).Send()
+	var res []any
+	req := computeSvc.MachineTypes.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.MachineTypeAggregatedList) error {
+		for scope, scopedList := range page.Items {
+			zoneName, ok := strings.CutPrefix(scope, "zones/")
+			if !ok {
+				continue
 			}
-			wg.Done()
-		}(computeSvc, projectId, z, zoneName.Data)
+			zone, ok := zonesByName[zoneName]
+			if !ok {
+				continue
+			}
+			for _, machinetype := range scopedList.MachineTypes {
+				mqlMachineType, err := newMqlMachineType(g.MqlRuntime, machinetype, projectId, zone)
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlMachineType)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
-	wg.Wait()
 	return res, nil
 }
 
@@ -787,11 +784,18 @@ func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	// get list of zones first since we need this for all entries
-
 	zones := g.GetZones()
 	if zones.Error != nil {
 		return nil, zones.Error
+	}
+	zonesByName := make(map[string]*mqlGcpProjectComputeServiceZone, len(zones.Data))
+	for _, z := range zones.Data {
+		zone := z.(*mqlGcpProjectComputeServiceZone)
+		name := zone.GetName()
+		if name.Error != nil {
+			return nil, name.Error
+		}
+		zonesByName[name.Data] = zone
 	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
@@ -802,46 +806,35 @@ func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
 	}
 
 	ctx := context.Background()
-
 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
-	res := []any{}
-	wg.Add(len(zones.Data))
-	mux := &sync.Mutex{}
-
-	for i := range zones.Data {
-		z := zones.Data[i].(*mqlGcpProjectComputeServiceZone)
-		zoneName := z.GetName()
-		if zoneName.Error != nil {
-			return nil, zoneName.Error
-		}
-		go func(svc *compute.Service, project string, zone *mqlGcpProjectComputeServiceZone, zoneName string) {
-			req := computeSvc.Instances.List(projectId, zoneName)
-			if err := req.Pages(ctx, func(page *compute.InstanceList) error {
-				for _, instance := range page.Items {
-
-					mqlInstance, err := newMqlComputeServiceInstance(projectId, zone, g.MqlRuntime, instance)
-					if err != nil {
-						return err
-					} else {
-						mux.Lock()
-						res = append(res, mqlInstance)
-						mux.Unlock()
-					}
-				}
-				return nil
-			}); err != nil {
-				log.Error().Err(err).Send()
+	var res []any
+	req := computeSvc.Instances.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.InstanceAggregatedList) error {
+		for scope, scopedList := range page.Items {
+			zoneName, ok := strings.CutPrefix(scope, "zones/")
+			if !ok {
+				continue
 			}
-			wg.Done()
-		}(computeSvc, projectId, z, zoneName.Data)
+			zone, ok := zonesByName[zoneName]
+			if !ok {
+				continue
+			}
+			for _, instance := range scopedList.Instances {
+				mqlInstance, err := newMqlComputeServiceInstance(projectId, zone, g.MqlRuntime, instance)
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlInstance)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
-
-	wg.Wait()
 	return res, nil
 }
 
@@ -993,100 +986,95 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
-	res := []any{}
-	wg.Add(len(zones.Data))
-	mux := &sync.Mutex{}
-
-	var (
-		result error
-		errMux sync.Mutex
-	)
-	for i := range zones.Data {
-		z := zones.Data[i].(*mqlGcpProjectComputeServiceZone)
-		zoneName := z.GetName()
-		if zoneName.Error != nil {
-			return nil, zoneName.Error
+	zonesByName := make(map[string]*mqlGcpProjectComputeServiceZone, len(zones.Data))
+	for _, z := range zones.Data {
+		zone := z.(*mqlGcpProjectComputeServiceZone)
+		name := zone.GetName()
+		if name.Error != nil {
+			return nil, name.Error
 		}
-
-		go func(svc *compute.Service, project string, zone *mqlGcpProjectComputeServiceZone, zoneName string) {
-			req := computeSvc.Disks.List(projectId, zoneName)
-			if err := req.Pages(ctx, func(page *compute.DiskList) error {
-				for _, disk := range page.Items {
-					guestOsFeatures := []string{}
-					for i := range disk.GuestOsFeatures {
-						entry := disk.GuestOsFeatures[i]
-						guestOsFeatures = append(guestOsFeatures, entry.Type)
-					}
-
-					var mqlDiskEnc map[string]any
-					if disk.DiskEncryptionKey != nil {
-						mqlDiskEnc = map[string]any{
-							"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
-							"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
-							"rawKey":               disk.DiskEncryptionKey.RawKey,
-							"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
-							"sha256":               disk.DiskEncryptionKey.Sha256,
-						}
-					}
-
-					mqlDisk, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-						"id":                        llx.StringData(strconv.FormatUint(disk.Id, 10)),
-						"name":                      llx.StringData(disk.Name),
-						"architecture":              llx.StringData(disk.Architecture),
-						"description":               llx.StringData(disk.Description),
-						"guestOsFeatures":           llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
-						"labels":                    llx.MapData(convert.MapToInterfaceMap(disk.Labels), types.String),
-						"lastAttachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastAttachTimestamp)),
-						"lastDetachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastDetachTimestamp)),
-						"locationHint":              llx.StringData(disk.LocationHint),
-						"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(disk.Licenses), types.String),
-						"physicalBlockSizeBytes":    llx.IntData(disk.PhysicalBlockSizeBytes),
-						"provisionedIops":           llx.IntData(disk.ProvisionedIops),
-						"region":                    llx.StringData(RegionNameFromRegionUrl(disk.Region)),
-						"replicaZones":              llx.ArrayData(zoneNamesFromUrls(disk.ReplicaZones), types.String),
-						"resourcePolicies":          llx.ArrayData(convert.SliceAnyToInterface(disk.ResourcePolicies), types.String),
-						"satisfiesPzi":              llx.BoolData(disk.SatisfiesPzi),
-						"satisfiesPzs":              llx.BoolData(disk.SatisfiesPzs),
-						"sizeGb":                    llx.IntData(disk.SizeGb),
-						"status":                    llx.StringData(disk.Status),
-						"zone":                      llx.ResourceData(zone, "gcp.project.computeService.zone"),
-						"created":                   llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
-						"diskEncryptionKey":         llx.DictData(mqlDiskEnc),
-						"enableConfidentialCompute": llx.BoolData(disk.EnableConfidentialCompute),
-						"type":                      llx.StringData(disk.Type),
-						"users":                     llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
-						"accessMode":                llx.StringData(disk.AccessMode),
-						"provisionedThroughput":     llx.IntData(disk.ProvisionedThroughput),
-					})
-					if err != nil {
-						return err
-					}
-					mqlD := mqlDisk.(*mqlGcpProjectComputeServiceDisk)
-					mqlD.cacheSourceDiskUrl = disk.SourceDisk
-					mqlD.cacheSourceImageUrl = disk.SourceImage
-					mqlD.cacheSourceSnapshotUrl = disk.SourceSnapshot
-					mqlD.cacheStoragePoolUrl = disk.StoragePool
-					if disk.DiskEncryptionKey != nil {
-						mqlD.cacheKmsKeyName = disk.DiskEncryptionKey.KmsKeyName
-					}
-					mux.Lock()
-					res = append(res, mqlDisk)
-					mux.Unlock()
-				}
-				return nil
-			}); err != nil {
-				log.Error().Err(err).Send()
-				errMux.Lock()
-				result = err
-				errMux.Unlock()
-			}
-			wg.Done()
-		}(computeSvc, projectId, z, zoneName.Data)
+		zonesByName[name.Data] = zone
 	}
 
-	wg.Wait()
-	return res, result
+	var res []any
+	req := computeSvc.Disks.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.DiskAggregatedList) error {
+		for scope, scopedList := range page.Items {
+			zoneName, ok := strings.CutPrefix(scope, "zones/")
+			if !ok {
+				// regional disks are not modeled today; preserve prior behavior
+				continue
+			}
+			zone, ok := zonesByName[zoneName]
+			if !ok {
+				continue
+			}
+			for _, disk := range scopedList.Disks {
+				guestOsFeatures := []string{}
+				for i := range disk.GuestOsFeatures {
+					entry := disk.GuestOsFeatures[i]
+					guestOsFeatures = append(guestOsFeatures, entry.Type)
+				}
+
+				var mqlDiskEnc map[string]any
+				if disk.DiskEncryptionKey != nil {
+					mqlDiskEnc = map[string]any{
+						"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
+						"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
+						"rawKey":               disk.DiskEncryptionKey.RawKey,
+						"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
+						"sha256":               disk.DiskEncryptionKey.Sha256,
+					}
+				}
+
+				mqlDisk, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
+					"id":                        llx.StringData(strconv.FormatUint(disk.Id, 10)),
+					"name":                      llx.StringData(disk.Name),
+					"architecture":              llx.StringData(disk.Architecture),
+					"description":               llx.StringData(disk.Description),
+					"guestOsFeatures":           llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
+					"labels":                    llx.MapData(convert.MapToInterfaceMap(disk.Labels), types.String),
+					"lastAttachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastAttachTimestamp)),
+					"lastDetachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastDetachTimestamp)),
+					"locationHint":              llx.StringData(disk.LocationHint),
+					"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(disk.Licenses), types.String),
+					"physicalBlockSizeBytes":    llx.IntData(disk.PhysicalBlockSizeBytes),
+					"provisionedIops":           llx.IntData(disk.ProvisionedIops),
+					"region":                    llx.StringData(RegionNameFromRegionUrl(disk.Region)),
+					"replicaZones":              llx.ArrayData(zoneNamesFromUrls(disk.ReplicaZones), types.String),
+					"resourcePolicies":          llx.ArrayData(convert.SliceAnyToInterface(disk.ResourcePolicies), types.String),
+					"satisfiesPzi":              llx.BoolData(disk.SatisfiesPzi),
+					"satisfiesPzs":              llx.BoolData(disk.SatisfiesPzs),
+					"sizeGb":                    llx.IntData(disk.SizeGb),
+					"status":                    llx.StringData(disk.Status),
+					"zone":                      llx.ResourceData(zone, "gcp.project.computeService.zone"),
+					"created":                   llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
+					"diskEncryptionKey":         llx.DictData(mqlDiskEnc),
+					"enableConfidentialCompute": llx.BoolData(disk.EnableConfidentialCompute),
+					"type":                      llx.StringData(disk.Type),
+					"users":                     llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
+					"accessMode":                llx.StringData(disk.AccessMode),
+					"provisionedThroughput":     llx.IntData(disk.ProvisionedThroughput),
+				})
+				if err != nil {
+					return err
+				}
+				mqlD := mqlDisk.(*mqlGcpProjectComputeServiceDisk)
+				mqlD.cacheSourceDiskUrl = disk.SourceDisk
+				mqlD.cacheSourceImageUrl = disk.SourceImage
+				mqlD.cacheSourceSnapshotUrl = disk.SourceSnapshot
+				mqlD.cacheStoragePoolUrl = disk.StoragePool
+				if disk.DiskEncryptionKey != nil {
+					mqlD.cacheKmsKeyName = disk.DiskEncryptionKey.KmsKeyName
+				}
+				res = append(res, mqlDisk)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 type mqlGcpProjectComputeServiceFirewallInternal struct {
@@ -2217,48 +2205,41 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
-	res := []any{}
-	wg.Add(len(regions.Data))
-	mux := &sync.Mutex{}
-
-	var (
-		result error
-		errMux sync.Mutex
-	)
-	for i := range regions.Data {
-		r := regions.Data[i].(*mqlGcpProjectComputeServiceRegion)
-		regionName := r.GetName()
-		if regionName.Error != nil {
-			return nil, regionName.Error
+	regionsByName := make(map[string]*mqlGcpProjectComputeServiceRegion, len(regions.Data))
+	for _, r := range regions.Data {
+		region := r.(*mqlGcpProjectComputeServiceRegion)
+		name := region.GetName()
+		if name.Error != nil {
+			return nil, name.Error
 		}
-		go func(svc *compute.Service, project string, region *mqlGcpProjectComputeServiceRegion, regionName string) {
-			req := computeSvc.Routers.List(projectId, regionName)
-			if err := req.Pages(ctx, func(page *compute.RouterList) error {
-				for _, router := range page.Items {
-
-					mqlRouter, err := newMqlRouter(projectId, region, g.MqlRuntime, router)
-					if err != nil {
-						return err
-					} else {
-						mux.Lock()
-						res = append(res, mqlRouter)
-						mux.Unlock()
-					}
-				}
-				return nil
-			}); err != nil {
-				log.Error().Err(err).Send()
-				errMux.Lock()
-				result = err
-				errMux.Unlock()
-			}
-			wg.Done()
-		}(computeSvc, projectId, r, regionName.Data)
+		regionsByName[name.Data] = region
 	}
 
-	wg.Wait()
-	return res, result
+	var res []any
+	req := computeSvc.Routers.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.RouterAggregatedList) error {
+		for scope, scopedList := range page.Items {
+			regionName, ok := strings.CutPrefix(scope, "regions/")
+			if !ok {
+				continue
+			}
+			region, ok := regionsByName[regionName]
+			if !ok {
+				continue
+			}
+			for _, router := range scopedList.Routers {
+				mqlRouter, err := newMqlRouter(projectId, region, g.MqlRuntime, router)
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlRouter)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
