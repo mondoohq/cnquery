@@ -89,13 +89,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
-		var conn *connection.AnsibleConnection
-		var err error
-
-		switch conf.Type {
-		default:
-			conn, err = connection.NewAnsibleConnection(connId, asset, conf)
-		}
+		conn, err := connection.NewAnsibleConnection(connId, asset, conf)
 		if err != nil {
 			return nil, err
 		}
@@ -128,8 +122,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnection) error {
 	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
-
 	asset.Platform = &inventory.Platform{
 		Name:                  "ansible-playbook",
 		Family:                []string{"ansible"},
@@ -139,18 +131,21 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnect
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
-	if ok {
-		absPath, _ := filepath.Abs(projectPath)
-		h := sha256.New()
-		h.Write([]byte(absPath))
-		hash := hex.EncodeToString(h.Sum(nil))
-		platformID := "//platformid.api.mondoo.app/runtime/ansible/hash/" + hash
-		asset.Connections[0].PlatformId = platformID
-		asset.PlatformIds = []string{platformID}
-		asset.Name = "Ansible Playbook Static Analysis " + parseNameFromPath(projectPath)
+	if !ok || projectPath == "" {
+		asset.Name = conn.Conf.Host
 		return nil
 	}
 
+	absPath, err := filepath.Abs(projectPath)
+	if err != nil {
+		absPath = projectPath
+	}
+	h := sha256.New()
+	h.Write([]byte(absPath))
+	platformID := "//platformid.api.mondoo.app/runtime/ansible/hash/" + hex.EncodeToString(h.Sum(nil))
+	asset.Connections[0].PlatformId = platformID
+	asset.PlatformIds = []string{platformID}
+	asset.Name = "Ansible Playbook Static Analysis " + parseNameFromPath(projectPath)
 	return nil
 }
 

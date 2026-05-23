@@ -21,6 +21,7 @@ ansible.play.postTasks 13.0.13
 ansible.play.preTasks 13.0.13
 ansible.play.remoteUser 10.0.0
 ansible.play.roles 10.0.0
+ansible.play.serial 13.0.13
 ansible.play.strategy 10.0.0
 ansible.play.tags 13.0.13
 ansible.play.tasks 10.0.0

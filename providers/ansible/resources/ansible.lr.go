@@ -136,6 +136,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.play.becomeFlags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetBecomeFlags()).ToDataRes(types.String)
 	},
+	"ansible.play.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetSerial()).ToDataRes(types.Dict)
+	},
 	"ansible.play.strategy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetStrategy()).ToDataRes(types.String)
 	},
@@ -282,6 +285,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.play.becomeFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsiblePlay).BecomeFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.play.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).Serial, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ansible.play.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -517,6 +524,7 @@ type mqlAnsiblePlay struct {
 	BecomeUser        plugin.TValue[string]
 	BecomeMethod      plugin.TValue[string]
 	BecomeFlags       plugin.TValue[string]
+	Serial            plugin.TValue[any]
 	Strategy          plugin.TValue[string]
 	MaxFailPercentage plugin.TValue[int64]
 	IgnoreUnreachable plugin.TValue[bool]
@@ -542,12 +550,7 @@ func createAnsiblePlay(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ansible.play", res.__id)
@@ -594,6 +597,10 @@ func (c *mqlAnsiblePlay) GetBecomeMethod() *plugin.TValue[string] {
 
 func (c *mqlAnsiblePlay) GetBecomeFlags() *plugin.TValue[string] {
 	return &c.BecomeFlags
+}
+
+func (c *mqlAnsiblePlay) GetSerial() *plugin.TValue[any] {
+	return &c.Serial
 }
 
 func (c *mqlAnsiblePlay) GetStrategy() *plugin.TValue[string] {

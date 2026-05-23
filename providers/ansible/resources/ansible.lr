@@ -37,6 +37,12 @@ ansible.play @defaults("name") {
   becomeMethod string
   // Additional flags for become method
   becomeFlags string
+  // Batch size for the play
+  //
+  // Value supplied to the `serial:` keyword. Limits how many hosts run the
+  // play at once. Can be an integer (for example `3`), a percentage string
+  // (for example `"30%"`), or a list mixing both for rolling batches.
+  serial dict
   // Strategy
   strategy string
   // Max percentage of failed hosts before aborting

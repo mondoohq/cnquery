@@ -22,46 +22,42 @@ func (r *mqlAnsible) plays() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AnsibleConnection)
 	playbook := conn.Playbook()
 
-	var plays []any
-	for _, play := range playbook {
-
-		p, err := newMqlAnsiblePlay(r.MqlRuntime, play)
+	plays := make([]any, 0, len(playbook))
+	for i, p := range playbook {
+		mqlPlay, err := newMqlAnsiblePlay(r.MqlRuntime, "play["+strconv.Itoa(i)+"]", p)
 		if err != nil {
 			return nil, err
 		}
-		plays = append(plays, p)
+		plays = append(plays, mqlPlay)
 	}
 	return plays, nil
 }
 
-func newMqlAnsiblePlay(runtime *plugin.Runtime, play *play.Play) (*mqlAnsiblePlay, error) {
-	varsDict, err := convert.JsonToDict(play.Vars)
-	if err != nil {
-		return nil, err
-	}
-
+func newMqlAnsiblePlay(runtime *plugin.Runtime, id string, p *play.Play) (*mqlAnsiblePlay, error) {
 	res, err := CreateResource(runtime, "ansible.play", map[string]*llx.RawData{
-		"name":              llx.StringData(play.Name),
-		"hosts":             llx.DictData(play.Hosts),
-		"remoteUser":        llx.StringData(play.RemoteUser),
-		"become":            llx.BoolData(play.Become),
-		"becomeUser":        llx.StringData(play.BecomeUser),
-		"becomeMethod":      llx.StringData(play.BecomeMethod),
-		"becomeFlags":       llx.StringData(play.BecomeFlags),
-		"strategy":          llx.StringData(play.Strategy),
-		"maxFailPercentage": llx.IntData(play.MaxFailPercentage),
-		"ignoreUnreachable": llx.BoolData(play.IgnoreUnreachable),
-		"anyErrorsFatal":    llx.BoolData(play.AnyErrorsFatal),
-		"gatherFacts":       llx.StringData(play.GatherFacts),
-		"vars":              llx.DictData(varsDict),
-		"tags":              llx.ArrayData(convert.SliceAnyToInterface(play.Tags), types.String),
-		"roles":             llx.ArrayData(convert.SliceAnyToInterface(play.Roles), types.String),
+		"__id":              llx.StringData(id),
+		"name":              llx.StringData(p.Name),
+		"hosts":             llx.DictData(p.Hosts),
+		"remoteUser":        llx.StringData(p.RemoteUser),
+		"become":            llx.BoolData(p.Become),
+		"becomeUser":        llx.StringData(p.BecomeUser),
+		"becomeMethod":      llx.StringData(p.BecomeMethod),
+		"becomeFlags":       llx.StringData(p.BecomeFlags),
+		"serial":            llx.DictData(p.Serial),
+		"strategy":          llx.StringData(p.Strategy),
+		"maxFailPercentage": llx.IntData(p.MaxFailPercentage),
+		"ignoreUnreachable": llx.BoolData(p.IgnoreUnreachable),
+		"anyErrorsFatal":    llx.BoolData(p.AnyErrorsFatal),
+		"gatherFacts":       llx.StringData(p.GatherFacts),
+		"vars":              llx.MapData(p.Vars, types.Dict),
+		"tags":              llx.ArrayData(convert.SliceAnyToInterface(p.Tags), types.String),
+		"roles":             llx.ArrayData(convert.SliceAnyToInterface(p.Roles), types.String),
 	})
 	if err != nil {
 		return nil, err
 	}
 	mqlPlay := res.(*mqlAnsiblePlay)
-	mqlPlay.play = play
+	mqlPlay.play = p
 	return mqlPlay, nil
 }
 
@@ -69,70 +65,41 @@ type mqlAnsiblePlayInternal struct {
 	play *play.Play
 }
 
-func (r *mqlAnsiblePlay) id() (string, error) {
-	return r.Name.Data, nil
-}
-
-func newMqlAnsibleHandler(runtime *plugin.Runtime, id string, task *play.Handler) (*mqlAnsibleHandler, error) {
-	dict, err := convert.JsonToDict(task.Action)
-	if err != nil {
-		return nil, err
-	}
-
+func newMqlAnsibleHandler(runtime *plugin.Runtime, id string, handler *play.Handler) (*mqlAnsibleHandler, error) {
 	res, err := CreateResource(runtime, "ansible.handler", map[string]*llx.RawData{
 		"__id":   llx.StringData(id),
-		"name":   llx.StringData(task.Name),
-		"action": llx.DictData(dict),
+		"name":   llx.StringData(handler.Name),
+		"action": llx.DictData(toAny(handler.Action)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	mqlHandler := res.(*mqlAnsibleHandler)
-	return mqlHandler, nil
+	return res.(*mqlAnsibleHandler), nil
 }
 
-func newMqlAnsibleHandlers(runtime *plugin.Runtime, idPrefix string, handler []*play.Handler) ([]any, error) {
-	var mqlTasks []any
-	for i, t := range handler {
-		id := idPrefix + strconv.Itoa(i)
-		if t.Name != "" {
-			id = t.Name
-		}
-
-		t, err := newMqlAnsibleHandler(runtime, id, t)
+func newMqlAnsibleHandlers(runtime *plugin.Runtime, parentID string, handlers []*play.Handler) ([]any, error) {
+	mqlHandlers := make([]any, 0, len(handlers))
+	for i, h := range handlers {
+		id := parentID + "/handlers[" + strconv.Itoa(i) + "]"
+		mqlHandler, err := newMqlAnsibleHandler(runtime, id, h)
 		if err != nil {
 			return nil, err
 		}
-		mqlTasks = append(mqlTasks, t)
+		mqlHandlers = append(mqlHandlers, mqlHandler)
 	}
-	return mqlTasks, nil
+	return mqlHandlers, nil
 }
 
 func (r *mqlAnsiblePlay) handlers() ([]any, error) {
-	return newMqlAnsibleHandlers(r.MqlRuntime, "handlers", r.play.Handlers)
+	return newMqlAnsibleHandlers(r.MqlRuntime, r.MqlID(), r.play.Handlers)
 }
 
 func newMqlAnsibleTask(runtime *plugin.Runtime, id string, task *play.Task) (*mqlAnsibleTask, error) {
-	actionDict, err := convert.JsonToDict(task.Action)
-	if err != nil {
-		return nil, err
-	}
-
-	varDict, err := convert.JsonToDict(task.Vars)
-	if err != nil {
-		return nil, err
-	}
-
-	loopControlDict, err := convert.JsonToDict(task.LoopControl)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := CreateResource(runtime, "ansible.task", map[string]*llx.RawData{
 		"__id":            llx.StringData(id),
 		"name":            llx.StringData(task.Name),
-		"action":          llx.DictData(actionDict),
-		"vars":            llx.DictData(varDict),
+		"action":          llx.DictData(toAny(task.Action)),
+		"vars":            llx.MapData(task.Vars, types.Dict),
 		"tags":            llx.ArrayData(convert.SliceAnyToInterface(task.Tags), types.String),
 		"register":        llx.StringData(task.Register),
 		"when":            llx.StringData(task.When),
@@ -140,7 +107,7 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id string, task *play.Task) (*mq
 		"changedWhen":     llx.StringData(task.ChangedWhen),
 		"notify":          llx.ArrayData(convert.SliceAnyToInterface(task.Notify), types.String),
 		"loop":            llx.DictData(task.Loop),
-		"loopControl":     llx.DictData(loopControlDict),
+		"loopControl":     llx.DictData(toAny(task.LoopControl)),
 		"importPlaybook":  llx.StringData(task.ImportPlaybook),
 		"includePlaybook": llx.StringData(task.IncludePlaybook),
 		"importTasks":     llx.StringData(task.ImportTasks),
@@ -154,19 +121,15 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id string, task *play.Task) (*mq
 	return mqlTask, nil
 }
 
-func newMqlAnsibleTasks(runtime *plugin.Runtime, idPrefix string, tasks []*play.Task) ([]any, error) {
-	var mqlTasks []any
+func newMqlAnsibleTasks(runtime *plugin.Runtime, parentID, group string, tasks []*play.Task) ([]any, error) {
+	mqlTasks := make([]any, 0, len(tasks))
 	for i, t := range tasks {
-		id := idPrefix + strconv.Itoa(i)
-		if t.Name != "" {
-			id = t.Name
-		}
-
-		t, err := newMqlAnsibleTask(runtime, id, t)
+		id := parentID + "/" + group + "[" + strconv.Itoa(i) + "]"
+		mqlTask, err := newMqlAnsibleTask(runtime, id, t)
 		if err != nil {
 			return nil, err
 		}
-		mqlTasks = append(mqlTasks, t)
+		mqlTasks = append(mqlTasks, mqlTask)
 	}
 	return mqlTasks, nil
 }
@@ -176,25 +139,35 @@ type mqlAnsibleTaskInternal struct {
 }
 
 func (r *mqlAnsiblePlay) preTasks() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "preTasks", r.play.PreTasks)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "preTasks", r.play.PreTasks)
 }
 
 func (r *mqlAnsiblePlay) tasks() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "tasks", r.play.Tasks)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "tasks", r.play.Tasks)
 }
 
 func (r *mqlAnsiblePlay) postTasks() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "postTasks", r.play.PostTasks)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "postTasks", r.play.PostTasks)
 }
 
 func (r *mqlAnsibleTask) block() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "block", r.task.Block)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "block", r.task.Block)
 }
 
 func (r *mqlAnsibleTask) rescue() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "rescue", r.task.Rescue)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "rescue", r.task.Rescue)
 }
 
 func (r *mqlAnsibleTask) always() ([]any, error) {
-	return newMqlAnsibleTasks(r.MqlRuntime, "always", r.task.Always)
+	return newMqlAnsibleTasks(r.MqlRuntime, r.MqlID(), "always", r.task.Always)
+}
+
+// toAny converts a typed map to an untyped `any` for llx.DictData. Passing the
+// typed map directly would box the map type into the interface, which the dict
+// runtime cannot iterate the same way as map[string]any.
+func toAny(m map[string]any) any {
+	if m == nil {
+		return nil
+	}
+	return m
 }
