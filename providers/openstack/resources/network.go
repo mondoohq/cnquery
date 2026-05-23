@@ -751,7 +751,13 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 
 	// Prime the per-connection name->ID cache from this list call so that
 	// Nova security-group-by-name lookups (lookupSecurityGroupIDByName)
-	// reuse it instead of re-listing Neutron.
+	// reuse it instead of re-listing Neutron. First-writer-wins: whichever
+	// path populates the cache first (this accessor or
+	// lookupSecurityGroupIDByName) sets the canonical name->ID map for the
+	// connection's lifetime. Both paths list with default scope, so the
+	// result sets are equivalent; if scoping ever diverges, the second
+	// caller's data is silently ignored — at which point the cache should
+	// move into the lookup function itself.
 	c.SGNameCacheLock.Lock()
 	if c.SGNameCache == nil {
 		cache := make(map[string]string, len(items))
@@ -899,8 +905,11 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.NetworkClient()
 	if err != nil {
-		o.NetworkQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+		if serviceMissing(err) {
+			o.NetworkQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
 	}
 	projectId := c.ProjectID()
 	q, err := neutronquotas.Get(ctx(), client, projectId).Extract()

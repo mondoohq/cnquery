@@ -725,6 +725,10 @@ func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet
 	c := conn(o.MqlRuntime)
 	client, err := c.BlockStorageClient()
 	if err != nil {
+		if serviceMissing(err) {
+			o.BlockStorageQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	projectId := c.ProjectID()

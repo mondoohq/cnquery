@@ -74,6 +74,22 @@ func translateGetError(err error) error {
 	return err
 }
 
+// serviceMissing reports whether err indicates the service or endpoint is
+// absent from the Keystone catalog — the OpenStack way of saying "this
+// deployment doesn't run that service". Callers should treat this as "no
+// data" rather than a failure so a Cinder-less cloud can still query Nova.
+func serviceMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	var svc gophercloud.ErrServiceNotFound
+	if errors.As(err, &svc) {
+		return true
+	}
+	var ep gophercloud.ErrEndpointNotFound
+	return errors.As(err, &ep)
+}
+
 func stringSlice(in []string) []any {
 	out := make([]any, len(in))
 	for i, v := range in {

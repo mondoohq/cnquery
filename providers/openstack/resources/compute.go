@@ -888,6 +888,10 @@ func (o *mqlOpenstack) computeLimits() (*mqlOpenstackComputeLimits, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.ComputeClient()
 	if err != nil {
+		if serviceMissing(err) {
+			o.ComputeLimits.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	lim, err := limits.Get(ctx(), client, nil).Extract()
