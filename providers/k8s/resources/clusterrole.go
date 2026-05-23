@@ -78,7 +78,7 @@ func (k *mqlK8sRbacClusterrole) annotations() (map[string]any, error) {
 }
 
 func (k *mqlK8sRbacClusterrole) labels() (map[string]any, error) {
-	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
 func (k *mqlK8sRbacClusterrole) boundBy() ([]any, error) {
