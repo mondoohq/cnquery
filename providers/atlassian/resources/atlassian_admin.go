@@ -180,6 +180,9 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if domains == nil {
+		return []any{}, nil
+	}
 	res := []any{}
 	for _, domain := range domains.Data {
 		mqlAtlassianAdminDomain, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.domain",

@@ -28,7 +28,8 @@ func (a *mqlAtlassianScim) users() ([]any, error) {
 	admin := conn.Client()
 	directoryID := conn.Directory()
 	res := []any{}
-	startIndex := 0
+	// SCIM 2.0 (RFC 7644 §3.4.2.4) uses 1-based pagination.
+	startIndex := 1
 	for {
 		page, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, startIndex, scimPageSize)
 		if err != nil {
@@ -74,7 +75,8 @@ func (a *mqlAtlassianScim) groups() ([]any, error) {
 	admin := conn.Client()
 	directoryID := conn.Directory()
 	res := []any{}
-	startIndex := 0
+	// SCIM 2.0 (RFC 7644 §3.4.2.4) uses 1-based pagination.
+	startIndex := 1
 	for {
 		page, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", startIndex, scimPageSize)
 		if err != nil {
