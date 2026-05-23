@@ -215,7 +215,7 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   // Kubernetes object creation timestamp
   created time
   // Node configuration information
-  nodeInfo dict
+  nodeInfo() dict
   // Kubelet port
   kubeletPort int
   // Node taints for pod scheduling
@@ -225,9 +225,9 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   // Node network addresses (e.g., InternalIP, ExternalIP, Hostname)
   addresses() []k8s.nodeAddress
   // Total resources available on the node (e.g., cpu, memory, pods)
-  capacity dict
+  capacity() dict
   // Resources available for scheduling pods on the node
-  allocatable dict
+  allocatable() dict
   // Cloud-provider node identifier (e.g., aws:///us-east-1a/i-0123456789abcdef0)
   providerID() string
   // Whether the node is marked as unschedulable (cordoned)

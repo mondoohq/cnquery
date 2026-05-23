@@ -8794,7 +8794,9 @@ func (c *mqlK8sNode) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sNode) GetNodeInfo() *plugin.TValue[any] {
-	return &c.NodeInfo
+	return plugin.GetOrCompute[any](&c.NodeInfo, func() (any, error) {
+		return c.nodeInfo()
+	})
 }
 
 func (c *mqlK8sNode) GetKubeletPort() *plugin.TValue[int64] {
@@ -8850,11 +8852,15 @@ func (c *mqlK8sNode) GetAddresses() *plugin.TValue[[]any] {
 }
 
 func (c *mqlK8sNode) GetCapacity() *plugin.TValue[any] {
-	return &c.Capacity
+	return plugin.GetOrCompute[any](&c.Capacity, func() (any, error) {
+		return c.capacity()
+	})
 }
 
 func (c *mqlK8sNode) GetAllocatable() *plugin.TValue[any] {
-	return &c.Allocatable
+	return plugin.GetOrCompute[any](&c.Allocatable, func() (any, error) {
+		return c.allocatable()
+	})
 }
 
 func (c *mqlK8sNode) GetProviderID() *plugin.TValue[string] {

@@ -29,11 +29,6 @@ func (k *mqlK8s) networkPolicies() ([]any, error) {
 			return nil, errors.New("not a k8s networkpolicy")
 		}
 
-		spec, err := convert.JsonToDict(networkPolicy.Spec)
-		if err != nil {
-			return nil, err
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.networkpolicy", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -42,7 +37,6 @@ func (k *mqlK8s) networkPolicies() ([]any, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"spec":            llx.DictData(spec),
 		})
 		if err != nil {
 			return nil, err

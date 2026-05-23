@@ -63,21 +63,6 @@ func (k *mqlK8s) nodes() ([]any, error) {
 			return nil, errors.New("not a k8s node")
 		}
 
-		nodeInfo, err := convert.JsonToDict(n.Status.NodeInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		capacity, err := convert.JsonToDict(n.Status.Capacity)
-		if err != nil {
-			return nil, err
-		}
-
-		allocatable, err := convert.JsonToDict(n.Status.Allocatable)
-		if err != nil {
-			return nil, err
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.node", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -85,10 +70,7 @@ func (k *mqlK8s) nodes() ([]any, error) {
 			"name":            llx.StringData(obj.GetName()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"nodeInfo":        llx.DictData(nodeInfo),
 			"kubeletPort":     llx.IntData(n.Status.DaemonEndpoints.KubeletEndpoint.Port),
-			"capacity":        llx.DictData(capacity),
-			"allocatable":     llx.DictData(allocatable),
 		})
 		if err != nil {
 			return nil, err
@@ -111,6 +93,18 @@ func (k *mqlK8sNode) annotations() (map[string]any, error) {
 
 func (k *mqlK8sNode) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+}
+
+func (k *mqlK8sNode) nodeInfo() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Status.NodeInfo)
+}
+
+func (k *mqlK8sNode) capacity() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Status.Capacity)
+}
+
+func (k *mqlK8sNode) allocatable() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Status.Allocatable)
 }
 
 func (k *mqlK8sNode) taints() ([]any, error) {
