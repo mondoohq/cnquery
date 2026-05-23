@@ -561,6 +561,7 @@ PTn
 pubspec
 pushconfig
 pve
+PVCs
 PVEAPI
 pveproxy
 pyspark
