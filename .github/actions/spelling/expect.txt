@@ -97,12 +97,16 @@ ceph
 certificatechains
 certificatesmanagement
 cetypes
+cfs
 chabc
 chatgpt
 chokepoint
+cicustom
 cifs
+cipassword
 ciscocatalyst
 citus
+ciuser
 cksum
 classpath
 claude
@@ -115,6 +119,7 @@ cmdline
 cmek
 cmk
 cmnd
+cmode
 cname
 cocoapods
 codegen
@@ -130,6 +135,8 @@ cosmosdb
 costexplorer
 cowlib
 cpe
+cpulimit
+cpuunits
 CPWn
 cpx
 CRDR
@@ -279,6 +286,7 @@ hetzner
 hexpm
 hil
 Hns
+hookscript
 horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
@@ -408,6 +416,7 @@ minfree
 MINIMALUSER
 Mirrorings
 mkey
+mknod
 mlag
 mls
 Mnfz
@@ -428,6 +437,7 @@ mychart
 myproject
 myvendor
 naflags
+nameserver
 natgateway
 nativead
 ndp
@@ -606,6 +616,7 @@ scm
 sdn
 sdp
 seabios
+searchdomain
 SECRETID
 secretmanager
 SECRETVALUE
@@ -634,6 +645,7 @@ slo
 smbv
 snaptime
 snat
+snippets
 SNOWSQL
 SNYK
 softdep
@@ -647,6 +659,7 @@ sqlserver
 sriov
 srp
 SSHFP
+sshkeys
 ssis
 sslv
 Sspr
@@ -671,6 +684,7 @@ swi
 syd
 SYMANTEC
 symfony
+sys
 tacacs
 tailnets
 tailscale

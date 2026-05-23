@@ -340,6 +340,55 @@ proxmox.vm @defaults("id name status") {
   description() string
   // Tags assigned to the VM
   tags() []string
+  // Acquired lock blocking other operations
+  //
+  // One of `backup`, `migrate`, `snapshot`, `rollback`, `clone`,
+  // `create`, `destroy`, or empty when the VM is not locked.
+  lock() string
+  // Path to a hook script run before/after VM lifecycle events
+  //
+  // Stored as `<storage>:snippets/<file>`. Treat as a potential
+  // arbitrary-execution surface on the hypervisor host — anyone who
+  // can edit the snippet can run code as root during VM start, stop,
+  // pre-backup, etc.
+  hookscript() string
+  // Raw KVM/QEMU command-line arguments passed to the hypervisor
+  //
+  // Anything in here bypasses the normal config schema and can grant
+  // the VM extra device passthrough, capabilities, or host filesystem
+  // access. Empty when no overrides are configured.
+  args() string
+  // Display adapter configuration
+  //
+  // Examples: `qxl`, `std`, `serial0`, `none`. Empty selects the PVE
+  // default.
+  vga() string
+  // Serial ports attached to the VM
+  serialPorts() []proxmox.vm.serialPort
+
+  // --- Cloud-init ---
+
+  // Default username injected by cloud-init; empty when not configured
+  ciuser() string
+  // Whether a cloud-init password is configured for the VM
+  //
+  // True when the `cipassword` config key is set. The actual value is
+  // never read or surfaced through the resource — auditing should
+  // focus on whether a password is present, not on the password
+  // itself.
+  cipasswordSet() bool
+  // URL-encoded list of SSH public keys cloud-init writes to the default user; empty when not configured
+  sshkeys() string
+  // DNS search domain cloud-init writes to the guest
+  searchDomain() string
+  // DNS nameservers cloud-init writes to the guest (space-separated)
+  nameserver() string
+  // Custom cloud-init snippet references
+  //
+  // Maps the four cloud-init sections (`user`, `network`, `meta`,
+  // `vendor`) to `<storage>:snippets/<file>` paths. Empty when the VM
+  // uses the default Proxmox-generated config.
+  ciCustom() dict
 
   // --- Devices ---
 
@@ -1005,6 +1054,30 @@ proxmox.container @defaults("id name status unprivileged") {
   description() string
   // Tags assigned to the container
   tags() []string
+  // Console mode
+  //
+  // One of `tty` (per-tty consoles, default), `console` (single
+  // console on /dev/console), or `shell` (drop into a shell). `shell`
+  // disables the login prompt and is unusual in production.
+  cmode() string
+  // Swap size in bytes; 0 means swap is disabled
+  swap() int
+  // CPU limit in cores; 0 means no per-container limit (CFS bandwidth throttling disabled)
+  cpuLimit() float
+  // CPU weight relative to other containers; PVE default is 1024
+  cpuUnits() int
+  // DNS search domain configured for the container; empty inherits the host's resolver
+  searchDomain() string
+  // DNS nameservers configured for the container; empty inherits the host's resolver
+  nameserver() string
+  // Raw `lxc.*` config lines applied verbatim to the container
+  //
+  // Each entry is one `lxc.<key>: <value>` line — typically used for
+  // AppArmor profiles (`lxc.apparmor.profile`), capability adjustments
+  // (`lxc.cap.drop` / `lxc.cap.keep`), or mount tweaks. Anything in
+  // here is an explicit override of the PVE defaults and warrants an
+  // audit review.
+  rawLxc() []string
 
   // --- Devices ---
 
@@ -1419,4 +1492,18 @@ proxmox.sdn.subnet @defaults("id cidr gateway") {
   vnet string
   // Resolved parent vnet
   vnetRef() proxmox.sdn.vnet
+}
+
+// Proxmox VE VM serial port
+//
+// Examine a serial port attached to a virtual machine, identified by
+// `id` (`serial0` through `serial3`). The `target` reports either the
+// literal `socket` (VM speaks over a Unix-domain socket on the host)
+// or a host device path like `/dev/ttyS0`. A host-device target is a
+// pivot opportunity that audits should review.
+proxmox.vm.serialPort @defaults("id target") {
+  // Serial port slot (serial0..serial3)
+  id string
+  // Target — `socket` or a host device path (e.g. `/dev/ttyS0`)
+  target string
 }

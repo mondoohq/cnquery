@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -124,12 +125,88 @@ func (r *mqlProxmoxContainer) config() (any, error) {
 	return r.ctConfig, r.configErr
 }
 
-func (r *mqlProxmoxContainer) osType() (string, error)      { return r.cfgStr("ostype"), nil }
-func (r *mqlProxmoxContainer) hostname() (string, error)    { return r.cfgStr("hostname"), nil }
-func (r *mqlProxmoxContainer) unprivileged() (bool, error)  { return r.cfgBool("unprivileged"), nil }
-func (r *mqlProxmoxContainer) protection() (bool, error)    { return r.cfgBool("protection"), nil }
-func (r *mqlProxmoxContainer) onboot() (bool, error)        { return r.cfgBool("onboot"), nil }
-func (r *mqlProxmoxContainer) description() (string, error) { return r.cfgStr("description"), nil }
+func (r *mqlProxmoxContainer) osType() (string, error)       { return r.cfgStr("ostype"), nil }
+func (r *mqlProxmoxContainer) hostname() (string, error)     { return r.cfgStr("hostname"), nil }
+func (r *mqlProxmoxContainer) unprivileged() (bool, error)   { return r.cfgBool("unprivileged"), nil }
+func (r *mqlProxmoxContainer) protection() (bool, error)     { return r.cfgBool("protection"), nil }
+func (r *mqlProxmoxContainer) onboot() (bool, error)         { return r.cfgBool("onboot"), nil }
+func (r *mqlProxmoxContainer) description() (string, error)  { return r.cfgStr("description"), nil }
+func (r *mqlProxmoxContainer) cmode() (string, error)        { return r.cfgStr("cmode"), nil }
+func (r *mqlProxmoxContainer) searchDomain() (string, error) { return r.cfgStr("searchdomain"), nil }
+func (r *mqlProxmoxContainer) nameserver() (string, error)   { return r.cfgStr("nameserver"), nil }
+
+// swap is configured in MB; convert to bytes for consistency with the
+// other size fields on the resource.
+func (r *mqlProxmoxContainer) swap() (int64, error) {
+	val := r.cfgStr("swap")
+	if val == "" {
+		return 0, nil
+	}
+	mb, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return 0, nil
+	}
+	return mb * 1024 * 1024, nil
+}
+
+func (r *mqlProxmoxContainer) cpuLimit() (float64, error) {
+	val := r.cfgStr("cpulimit")
+	if val == "" {
+		return 0, nil
+	}
+	limit, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		return 0, nil
+	}
+	return limit, nil
+}
+
+func (r *mqlProxmoxContainer) cpuUnits() (int64, error) {
+	val := r.cfgStr("cpuunits")
+	if val == "" {
+		return 0, nil
+	}
+	units, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return 0, nil
+	}
+	return units, nil
+}
+
+// rawLxc surfaces the user-injected `lxc.<key>: <value>` lines. PVE
+// stores the field as one logical newline-delimited string; split it
+// and trim so audits can iterate one override at a time.
+func (r *mqlProxmoxContainer) rawLxc() ([]any, error) {
+	val := r.cfgStr("lxc")
+	if val == "" {
+		return []any{}, nil
+	}
+	lines := parseRawLxcLines(val)
+	out := make([]any, len(lines))
+	for i, line := range lines {
+		out[i] = line
+	}
+	return out, nil
+}
+
+// parseRawLxcLines splits a multi-line `lxc` config value into its
+// individual `lxc.<key>: <value>` lines. PVE uses `\n` as the line
+// delimiter inside JSON; some older API responses use the literal
+// two-character sequence `\\n`. Handle both, drop blank lines and the
+// commented-out form `#lxc.cap.drop = ...`.
+func parseRawLxcLines(raw string) []string {
+	// Normalize the literal-backslash form first.
+	raw = strings.ReplaceAll(raw, "\\n", "\n")
+	var out []string
+	for _, line := range strings.Split(raw, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		out = append(out, line)
+	}
+	return out
+}
 
 func (r *mqlProxmoxContainer) features() ([]any, error) {
 	val := r.cfgStr("features")

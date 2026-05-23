@@ -111,6 +111,14 @@ func (r *mqlProxmoxVmUpdate) id() (string, error) {
 	return fmt.Sprintf("proxmox.vm.update/%d/%s", r.parentVmid, r.Name.Data), nil
 }
 
+type mqlProxmoxVmSerialPortInternal struct {
+	parentVmid int64
+}
+
+func (r *mqlProxmoxVmSerialPort) id() (string, error) {
+	return fmt.Sprintf("proxmox.vm.serialPort/%d/%s", r.parentVmid, r.Id.Data), nil
+}
+
 // --- Container-scoped (include VMID to prevent cross-container collisions) ---
 
 type mqlProxmoxContainerNetworkInternal struct {

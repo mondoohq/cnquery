@@ -20,7 +20,7 @@ type mqlProxmoxVmInternal struct {
 	osInfoFetched bool
 	osInfo        *connection.OsInfo
 	osInfoErr     error
-	lock          sync.Mutex
+	cfgLock       sync.Mutex
 }
 
 func vmConn(r *mqlProxmoxVm) *connection.PveConnection {
@@ -35,8 +35,8 @@ func (r *mqlProxmoxVm) ensureConfig() {
 	if r.configFetched {
 		return
 	}
-	r.lock.Lock()
-	defer r.lock.Unlock()
+	r.cfgLock.Lock()
+	defer r.cfgLock.Unlock()
 	if r.configFetched {
 		return
 	}
@@ -95,6 +95,95 @@ func (r *mqlProxmoxVm) bootOrder() (string, error)   { return r.cfgStr("boot"), 
 func (r *mqlProxmoxVm) agent() (bool, error)         { return r.cfgBool("agent"), nil }
 func (r *mqlProxmoxVm) protection() (bool, error)    { return r.cfgBool("protection"), nil }
 func (r *mqlProxmoxVm) description() (string, error) { return r.cfgStr("description"), nil }
+func (r *mqlProxmoxVm) lock() (string, error)        { return r.cfgStr("lock"), nil }
+func (r *mqlProxmoxVm) hookscript() (string, error)  { return r.cfgStr("hookscript"), nil }
+func (r *mqlProxmoxVm) args() (string, error)        { return r.cfgStr("args"), nil }
+func (r *mqlProxmoxVm) vga() (string, error)         { return r.cfgStr("vga"), nil }
+
+// --- Cloud-init ---
+
+func (r *mqlProxmoxVm) ciuser() (string, error)       { return r.cfgStr("ciuser"), nil }
+func (r *mqlProxmoxVm) sshkeys() (string, error)      { return r.cfgStr("sshkeys"), nil }
+func (r *mqlProxmoxVm) searchDomain() (string, error) { return r.cfgStr("searchdomain"), nil }
+func (r *mqlProxmoxVm) nameserver() (string, error)   { return r.cfgStr("nameserver"), nil }
+
+// cipasswordSet only reports whether the key is present in the VM
+// config; the password value itself is intentionally never read or
+// surfaced through this resource. Audits should focus on whether a
+// password is configured, not on what it is.
+func (r *mqlProxmoxVm) cipasswordSet() (bool, error) {
+	r.ensureConfig()
+	if r.vmConfig == nil {
+		return false, nil
+	}
+	v, ok := r.vmConfig["cipassword"]
+	if !ok {
+		return false, nil
+	}
+	// PVE returns the raw value; a non-empty string means a password is set.
+	switch val := v.(type) {
+	case string:
+		return val != "", nil
+	default:
+		return v != nil, nil
+	}
+}
+
+func (r *mqlProxmoxVm) ciCustom() (any, error) {
+	// `cicustom` is serialized as comma-delimited key=storage:snippets/file
+	// pairs (e.g. `user=local:snippets/u.yaml,network=local:snippets/n.yaml`).
+	val := r.cfgStr("cicustom")
+	out := map[string]any{}
+	if val == "" {
+		return out, nil
+	}
+	for _, part := range strings.Split(val, ",") {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		out[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+	}
+	return out, nil
+}
+
+func (r *mqlProxmoxVm) serialPorts() ([]any, error) {
+	r.ensureConfig()
+	if r.configErr != nil {
+		return nil, r.configErr
+	}
+	var list []any
+	for key, val := range r.vmConfig {
+		if !isSerialPortKey(key) {
+			continue
+		}
+		target := fmt.Sprintf("%v", val)
+		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.serialPort", map[string]*llx.RawData{
+			"id":     llx.StringData(key),
+			"target": llx.StringData(target),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res.(*mqlProxmoxVmSerialPort).parentVmid = r.Id.Data
+		list = append(list, res)
+	}
+	return list, nil
+}
+
+// isSerialPortKey matches serial0..serial3 — the only valid slot names
+// in PVE. Anything else (`serialport` style typos, future slots) is
+// ignored so the audit sees exactly the ports PVE actually exposes.
+func isSerialPortKey(key string) bool {
+	if !strings.HasPrefix(key, "serial") {
+		return false
+	}
+	suffix := key[len("serial"):]
+	if len(suffix) != 1 {
+		return false
+	}
+	return suffix[0] >= '0' && suffix[0] <= '3'
+}
 
 func (r *mqlProxmoxVm) tags() ([]any, error) {
 	tagStr := r.cfgStr("tags")
@@ -204,8 +293,8 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 	conn := vmConn(r)
 	vmid := int(r.Id.Data)
 	if !r.osInfoFetched {
-		r.lock.Lock()
-		defer r.lock.Unlock()
+		r.cfgLock.Lock()
+		defer r.cfgLock.Unlock()
 		if !r.osInfoFetched {
 			r.osInfo, r.osInfoErr = conn.GetOsInfo(r.Node.Data, vmid)
 			r.osInfoFetched = true

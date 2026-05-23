@@ -59,6 +59,7 @@ const (
 	ResourceProxmoxSdnZone             string = "proxmox.sdn.zone"
 	ResourceProxmoxSdnVnet             string = "proxmox.sdn.vnet"
 	ResourceProxmoxSdnSubnet           string = "proxmox.sdn.subnet"
+	ResourceProxmoxVmSerialPort        string = "proxmox.vm.serialPort"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -236,6 +237,10 @@ func init() {
 		"proxmox.sdn.subnet": {
 			// to override args, implement: initProxmoxSdnSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProxmoxSdnSubnet,
+		},
+		"proxmox.vm.serialPort": {
+			// to override args, implement: initProxmoxVmSerialPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProxmoxVmSerialPort,
 		},
 	}
 }
@@ -616,6 +621,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.vm.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"proxmox.vm.lock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetLock()).ToDataRes(types.String)
+	},
+	"proxmox.vm.hookscript": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetHookscript()).ToDataRes(types.String)
+	},
+	"proxmox.vm.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetArgs()).ToDataRes(types.String)
+	},
+	"proxmox.vm.vga": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetVga()).ToDataRes(types.String)
+	},
+	"proxmox.vm.serialPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetSerialPorts()).ToDataRes(types.Array(types.Resource("proxmox.vm.serialPort")))
+	},
+	"proxmox.vm.ciuser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetCiuser()).ToDataRes(types.String)
+	},
+	"proxmox.vm.cipasswordSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetCipasswordSet()).ToDataRes(types.Bool)
+	},
+	"proxmox.vm.sshkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetSshkeys()).ToDataRes(types.String)
+	},
+	"proxmox.vm.searchDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetSearchDomain()).ToDataRes(types.String)
+	},
+	"proxmox.vm.nameserver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetNameserver()).ToDataRes(types.String)
+	},
+	"proxmox.vm.ciCustom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVm).GetCiCustom()).ToDataRes(types.Dict)
 	},
 	"proxmox.vm.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVm).GetNetworks()).ToDataRes(types.Array(types.Resource("proxmox.vm.network")))
@@ -1190,6 +1228,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.container.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetTags()).ToDataRes(types.Array(types.String))
 	},
+	"proxmox.container.cmode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetCmode()).ToDataRes(types.String)
+	},
+	"proxmox.container.swap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetSwap()).ToDataRes(types.Int)
+	},
+	"proxmox.container.cpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetCpuLimit()).ToDataRes(types.Float)
+	},
+	"proxmox.container.cpuUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetCpuUnits()).ToDataRes(types.Int)
+	},
+	"proxmox.container.searchDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetSearchDomain()).ToDataRes(types.String)
+	},
+	"proxmox.container.nameserver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetNameserver()).ToDataRes(types.String)
+	},
+	"proxmox.container.rawLxc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainer).GetRawLxc()).ToDataRes(types.Array(types.String))
+	},
 	"proxmox.container.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainer).GetNetworks()).ToDataRes(types.Array(types.Resource("proxmox.container.network")))
 	},
@@ -1576,6 +1635,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.sdn.subnet.vnetRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxSdnSubnet).GetVnetRef()).ToDataRes(types.Resource("proxmox.sdn.vnet"))
+	},
+	"proxmox.vm.serialPort.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmSerialPort).GetId()).ToDataRes(types.String)
+	},
+	"proxmox.vm.serialPort.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmSerialPort).GetTarget()).ToDataRes(types.String)
 	},
 }
 
@@ -2023,6 +2088,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.vm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVm).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.lock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Lock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.hookscript": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Hookscript, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Args, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.vga": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Vga, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.serialPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).SerialPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.ciuser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Ciuser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.cipasswordSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).CipasswordSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.sshkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Sshkeys, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.searchDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).SearchDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.nameserver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).Nameserver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.ciCustom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVm).CiCustom, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"proxmox.vm.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2885,6 +2994,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxContainer).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"proxmox.container.cmode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).Cmode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.swap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).Swap, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.cpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).CpuLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.cpuUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).CpuUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.searchDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).SearchDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.nameserver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).Nameserver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.rawLxc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainer).RawLxc, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"proxmox.container.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainer).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3451,6 +3588,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.sdn.subnet.vnetRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxSdnSubnet).VnetRef, ok = plugin.RawToTValue[*mqlProxmoxSdnVnet](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.serialPort.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmSerialPort).__id, ok = v.Value.(string)
+		return
+	},
+	"proxmox.vm.serialPort.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmSerialPort).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.vm.serialPort.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmSerialPort).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -4609,6 +4758,17 @@ type mqlProxmoxVm struct {
 	Protection      plugin.TValue[bool]
 	Description     plugin.TValue[string]
 	Tags            plugin.TValue[[]any]
+	Lock            plugin.TValue[string]
+	Hookscript      plugin.TValue[string]
+	Args            plugin.TValue[string]
+	Vga             plugin.TValue[string]
+	SerialPorts     plugin.TValue[[]any]
+	Ciuser          plugin.TValue[string]
+	CipasswordSet   plugin.TValue[bool]
+	Sshkeys         plugin.TValue[string]
+	SearchDomain    plugin.TValue[string]
+	Nameserver      plugin.TValue[string]
+	CiCustom        plugin.TValue[any]
 	Networks        plugin.TValue[[]any]
 	Disks           plugin.TValue[[]any]
 	Snapshots       plugin.TValue[[]any]
@@ -4771,6 +4931,82 @@ func (c *mqlProxmoxVm) GetDescription() *plugin.TValue[string] {
 func (c *mqlProxmoxVm) GetTags() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlProxmoxVm) GetLock() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Lock, func() (string, error) {
+		return c.lock()
+	})
+}
+
+func (c *mqlProxmoxVm) GetHookscript() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hookscript, func() (string, error) {
+		return c.hookscript()
+	})
+}
+
+func (c *mqlProxmoxVm) GetArgs() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Args, func() (string, error) {
+		return c.args()
+	})
+}
+
+func (c *mqlProxmoxVm) GetVga() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Vga, func() (string, error) {
+		return c.vga()
+	})
+}
+
+func (c *mqlProxmoxVm) GetSerialPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SerialPorts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm", c.__id, "serialPorts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serialPorts()
+	})
+}
+
+func (c *mqlProxmoxVm) GetCiuser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ciuser, func() (string, error) {
+		return c.ciuser()
+	})
+}
+
+func (c *mqlProxmoxVm) GetCipasswordSet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CipasswordSet, func() (bool, error) {
+		return c.cipasswordSet()
+	})
+}
+
+func (c *mqlProxmoxVm) GetSshkeys() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sshkeys, func() (string, error) {
+		return c.sshkeys()
+	})
+}
+
+func (c *mqlProxmoxVm) GetSearchDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SearchDomain, func() (string, error) {
+		return c.searchDomain()
+	})
+}
+
+func (c *mqlProxmoxVm) GetNameserver() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Nameserver, func() (string, error) {
+		return c.nameserver()
+	})
+}
+
+func (c *mqlProxmoxVm) GetCiCustom() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CiCustom, func() (any, error) {
+		return c.ciCustom()
 	})
 }
 
@@ -6858,6 +7094,13 @@ type mqlProxmoxContainer struct {
 	Onboot          plugin.TValue[bool]
 	Description     plugin.TValue[string]
 	Tags            plugin.TValue[[]any]
+	Cmode           plugin.TValue[string]
+	Swap            plugin.TValue[int64]
+	CpuLimit        plugin.TValue[float64]
+	CpuUnits        plugin.TValue[int64]
+	SearchDomain    plugin.TValue[string]
+	Nameserver      plugin.TValue[string]
+	RawLxc          plugin.TValue[[]any]
 	Networks        plugin.TValue[[]any]
 	MountPoints     plugin.TValue[[]any]
 	Snapshots       plugin.TValue[[]any]
@@ -7019,6 +7262,48 @@ func (c *mqlProxmoxContainer) GetDescription() *plugin.TValue[string] {
 func (c *mqlProxmoxContainer) GetTags() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetCmode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Cmode, func() (string, error) {
+		return c.cmode()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetSwap() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Swap, func() (int64, error) {
+		return c.swap()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetCpuLimit() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.CpuLimit, func() (float64, error) {
+		return c.cpuLimit()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetCpuUnits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CpuUnits, func() (int64, error) {
+		return c.cpuUnits()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetSearchDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SearchDomain, func() (string, error) {
+		return c.searchDomain()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetNameserver() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Nameserver, func() (string, error) {
+		return c.nameserver()
+	})
+}
+
+func (c *mqlProxmoxContainer) GetRawLxc() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RawLxc, func() ([]any, error) {
+		return c.rawLxc()
 	})
 }
 
@@ -8444,4 +8729,58 @@ func (c *mqlProxmoxSdnSubnet) GetVnetRef() *plugin.TValue[*mqlProxmoxSdnVnet] {
 
 		return c.vnetRef()
 	})
+}
+
+// mqlProxmoxVmSerialPort for the proxmox.vm.serialPort resource
+type mqlProxmoxVmSerialPort struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlProxmoxVmSerialPortInternal
+	Id     plugin.TValue[string]
+	Target plugin.TValue[string]
+}
+
+// createProxmoxVmSerialPort creates a new instance of this resource
+func createProxmoxVmSerialPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProxmoxVmSerialPort{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("proxmox.vm.serialPort", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProxmoxVmSerialPort) MqlName() string {
+	return "proxmox.vm.serialPort"
+}
+
+func (c *mqlProxmoxVmSerialPort) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProxmoxVmSerialPort) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlProxmoxVmSerialPort) GetTarget() *plugin.TValue[string] {
+	return &c.Target
 }
