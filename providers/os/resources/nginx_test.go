@@ -379,6 +379,15 @@ func TestParseNginxUpstreamBlockLoadBalancing(t *testing.T) {
 		})
 		assert.Equal(t, int64(32), up.Keepalive)
 	})
+
+	t.Run("keepalive not capped at TCP port range", func(t *testing.T) {
+		// keepalive is a connection-count, not a TCP port — values above
+		// 65535 must not be silently zeroed.
+		up := parseNginxUpstreamBlock("backend", []nginx.Directive{
+			{Name: "keepalive", Args: []string{"100000"}},
+		})
+		assert.Equal(t, int64(100000), up.Keepalive)
+	})
 }
 
 func TestParseUpstreamServer(t *testing.T) {
@@ -391,6 +400,9 @@ func TestParseUpstreamServer(t *testing.T) {
 		{"weight + max_fails + fail_timeout", []string{
 			"backend1.example.com", "weight=3", "max_fails=2", "fail_timeout=30s",
 		}, nginxUpstreamServer{Address: "backend1.example.com", Weight: 3, MaxFails: 2, FailTimeout: "30s"}},
+		{"weight above TCP port cap is preserved", []string{
+			"backend4", "weight=100000",
+		}, nginxUpstreamServer{Address: "backend4", Weight: 100000}},
 		{"backup + down", []string{"backend2", "backup", "down"}, nginxUpstreamServer{
 			Address: "backend2", Backup: true, Down: true,
 		}},

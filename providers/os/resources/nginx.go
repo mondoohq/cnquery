@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -719,7 +720,10 @@ func parseNginxUpstreamBlock(name string, directives []nginx.Directive) nginxUps
 			up.LoadBalancingMethod = "least_time"
 			setNginxParam(up.Params, d.Name, args)
 		case "keepalive":
-			if n, ok := parsePort(args); ok {
+			// keepalive is a connection-count, not a TCP port — must not be
+			// capped at 65535. High-traffic upstreams legitimately use
+			// values like `keepalive 128` or higher.
+			if n, err := strconv.ParseInt(args, 10, 64); err == nil && n >= 0 {
 				up.Keepalive = n
 			}
 			setNginxParam(up.Params, d.Name, args)
@@ -746,11 +750,13 @@ func parseUpstreamServer(args []string) nginxUpstreamServer {
 		case a == "down":
 			s.Down = true
 		case strings.HasPrefix(a, "weight="):
-			if n, ok := parsePort(strings.TrimPrefix(a, "weight=")); ok {
+			// weight is a count, not a port — no 65535 cap.
+			if n, err := strconv.ParseInt(strings.TrimPrefix(a, "weight="), 10, 64); err == nil && n >= 0 {
 				s.Weight = n
 			}
 		case strings.HasPrefix(a, "max_fails="):
-			if n, ok := parsePort(strings.TrimPrefix(a, "max_fails=")); ok {
+			// max_fails is a count, not a port — no 65535 cap.
+			if n, err := strconv.ParseInt(strings.TrimPrefix(a, "max_fails="), 10, 64); err == nil && n >= 0 {
 				s.MaxFails = n
 			}
 		case strings.HasPrefix(a, "fail_timeout="):
