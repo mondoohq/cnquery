@@ -24,10 +24,10 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 			"description":  llx.StringData(p.description),
 			"secure":       llx.BoolData(p.secure),
 			"allowed":      llx.ArrayData(allowed, types.String),
-			"minLength":    llx.IntData(p.minLength),
-			"maxLength":    llx.IntData(p.maxLength),
-			"minValue":     llx.IntData(p.minValue),
-			"maxValue":     llx.IntData(p.maxValue),
+			"minLength":    llx.IntDataPtr(p.minLength),
+			"maxLength":    llx.IntDataPtr(p.maxLength),
+			"minValue":     llx.IntDataPtr(p.minValue),
+			"maxValue":     llx.IntDataPtr(p.maxValue),
 			"decorators":   llx.ArrayData(decorators, types.String),
 		})
 		if err != nil {

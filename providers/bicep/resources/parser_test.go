@@ -619,10 +619,12 @@ param adminPassword string`
 		require.Len(t, result.parameters, 1)
 		p := result.parameters[0]
 		assert.Equal(t, "adminPassword", p.name)
-		assert.Equal(t, int64(8), p.minLength)
-		assert.Equal(t, int64(64), p.maxLength)
-		assert.Equal(t, int64(0), p.minValue)
-		assert.Equal(t, int64(0), p.maxValue)
+		require.NotNil(t, p.minLength)
+		assert.Equal(t, int64(8), *p.minLength)
+		require.NotNil(t, p.maxLength)
+		assert.Equal(t, int64(64), *p.maxLength)
+		assert.Nil(t, p.minValue)
+		assert.Nil(t, p.maxValue)
 	})
 
 	t.Run("int value bounds", func(t *testing.T) {
@@ -632,10 +634,12 @@ param replicaCount int`
 		result := parseBicep(input)
 		require.Len(t, result.parameters, 1)
 		p := result.parameters[0]
-		assert.Equal(t, int64(1), p.minValue)
-		assert.Equal(t, int64(1000), p.maxValue)
-		assert.Equal(t, int64(0), p.minLength)
-		assert.Equal(t, int64(0), p.maxLength)
+		require.NotNil(t, p.minValue)
+		assert.Equal(t, int64(1), *p.minValue)
+		require.NotNil(t, p.maxValue)
+		assert.Equal(t, int64(1000), *p.maxValue)
+		assert.Nil(t, p.minLength)
+		assert.Nil(t, p.maxLength)
 	})
 
 	t.Run("no bounds decorators", func(t *testing.T) {
@@ -643,10 +647,23 @@ param replicaCount int`
 		result := parseBicep(input)
 		require.Len(t, result.parameters, 1)
 		p := result.parameters[0]
-		assert.Equal(t, int64(0), p.minLength)
-		assert.Equal(t, int64(0), p.maxLength)
-		assert.Equal(t, int64(0), p.minValue)
-		assert.Equal(t, int64(0), p.maxValue)
+		assert.Nil(t, p.minLength)
+		assert.Nil(t, p.maxLength)
+		assert.Nil(t, p.minValue)
+		assert.Nil(t, p.maxValue)
+	})
+
+	t.Run("explicit zero is distinct from absent", func(t *testing.T) {
+		input := `@minValue(0)
+@maxValue(0)
+param zeroBounds int`
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
+		require.NotNil(t, p.minValue)
+		assert.Equal(t, int64(0), *p.minValue)
+		require.NotNil(t, p.maxValue)
+		assert.Equal(t, int64(0), *p.maxValue)
 	})
 
 	t.Run("malformed argument is ignored", func(t *testing.T) {
@@ -654,7 +671,7 @@ param replicaCount int`
 param thing string`
 		result := parseBicep(input)
 		require.Len(t, result.parameters, 1)
-		assert.Equal(t, int64(0), result.parameters[0].minLength)
+		assert.Nil(t, result.parameters[0].minLength)
 	})
 }
 

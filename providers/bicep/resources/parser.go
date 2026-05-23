@@ -26,10 +26,10 @@ type parsedParameter struct {
 	description  string
 	secure       bool
 	allowed      []string
-	minLength    int64
-	maxLength    int64
-	minValue     int64
-	maxValue     int64
+	minLength    *int64
+	maxLength    *int64
+	minValue     *int64
+	maxValue     *int64
 	decorators   []string
 }
 
@@ -205,19 +205,19 @@ func parseParameter(line string, decorators []string) parsedParameter {
 }
 
 // parseIntDecorator matches a decorator like `@minLength(8)` and returns the
-// numeric argument. Returns 0 when the decorator is not present or its
-// argument is non-numeric; callers treat 0 as "unset" the same way the .lr
-// schema does.
-func parseIntDecorator(decText string, re *regexp.Regexp) int64 {
+// numeric argument. Returns nil when the decorator is not present or its
+// argument is non-numeric, so callers can distinguish an explicit constraint
+// of 0 (e.g., `@minValue(0)`) from "no constraint at all".
+func parseIntDecorator(decText string, re *regexp.Regexp) *int64 {
 	m := re.FindStringSubmatch(decText)
 	if len(m) < 2 {
-		return 0
+		return nil
 	}
 	n, err := strconv.ParseInt(m[1], 10, 64)
 	if err != nil {
-		return 0
+		return nil
 	}
-	return n
+	return &n
 }
 
 // allowedValueRe matches individual quoted values like 'foo' or "foo".

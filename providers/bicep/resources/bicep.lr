@@ -64,22 +64,24 @@ bicep.parameter @defaults("name type") {
   allowed []string
   // `@minLength(n)` constraint
   //
-  // Applies to `string` and array parameters. Zero when the decorator is
-  // not declared. Audits commonly require non-zero `minLength` on string
+  // Applies to `string` and array parameters. Null when the decorator is
+  // not declared. Audits commonly require a non-null `minLength` on string
   // parameters that hold passwords or other credential material.
   minLength int
   // `@maxLength(n)` constraint
   //
-  // Applies to `string` and array parameters. Zero when the decorator is
+  // Applies to `string` and array parameters. Null when the decorator is
   // not declared.
   maxLength int
   // `@minValue(n)` constraint
   //
-  // Applies to `int` parameters. Zero when the decorator is not declared.
+  // Applies to `int` parameters. Null when the decorator is not declared,
+  // which is distinct from an explicit `@minValue(0)`.
   minValue int
   // `@maxValue(n)` constraint
   //
-  // Applies to `int` parameters. Zero when the decorator is not declared.
+  // Applies to `int` parameters. Null when the decorator is not declared,
+  // which is distinct from an explicit `@maxValue(0)`.
   maxValue int
   // All decorators as raw strings
   decorators []string
