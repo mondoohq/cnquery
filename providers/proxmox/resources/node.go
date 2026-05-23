@@ -177,7 +177,6 @@ func (r *mqlProxmoxNode) secureBoot() (bool, error) {
 	return r.nodeStatus.BootInfo.SecureBoot == 1, nil
 }
 
-
 func (r *mqlProxmoxNode) networks() ([]any, error) {
 	conn := nodeConn(r)
 	ifaces, err := conn.GetNodeNetworks(r.Name.Data)
