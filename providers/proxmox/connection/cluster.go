@@ -78,3 +78,24 @@ func (c *PveConnection) GetClusterFirewallRules() ([]FirewallRule, error) {
 	}
 	return rules, nil
 }
+
+// ---------------------------------------------------------------------------
+// HA groups
+// ---------------------------------------------------------------------------
+
+type HAGroup struct {
+	Group      string `json:"group"`
+	Nodes      string `json:"nodes"` // comma-separated; members may have priorities like "pve1:2"
+	Restricted int    `json:"restricted"`
+	NoFailback int    `json:"nofailback"`
+	Comment    string `json:"comment"`
+	Type       string `json:"type"`
+}
+
+func (c *PveConnection) GetHAGroups() ([]HAGroup, error) {
+	var groups []HAGroup
+	if err := c.apiGet("/cluster/ha/groups", &groups); err != nil {
+		return nil, fmt.Errorf("failed to get HA groups: %w", err)
+	}
+	return groups, nil
+}

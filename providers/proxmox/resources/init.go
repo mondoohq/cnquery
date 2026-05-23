@@ -188,3 +188,193 @@ func initProxmoxToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 	return args, nil, nil
 }
+
+func initProxmoxNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["name"] == nil {
+		return args, nil, nil
+	}
+	name := args["name"].Value.(string)
+	if name == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	nodes, err := conn.GetNodes()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, n := range nodes {
+		if n.Node != name {
+			continue
+		}
+		args["status"] = llx.StringData(n.Status)
+		// The IP lives in cluster status, not the nodes list. Fetch only
+		// when present; a single-node standalone host has no cluster row.
+		entries, _ := conn.GetClusterStatus()
+		for _, e := range entries {
+			if e.Type == "node" && e.Name == name {
+				args["ip"] = llx.StringData(e.IP)
+				break
+			}
+		}
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func initProxmoxClusterHaGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["id"] == nil {
+		return args, nil, nil
+	}
+	groupID := args["id"].Value.(string)
+	if groupID == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	groups, err := conn.GetHAGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, g := range groups {
+		if g.Group != groupID {
+			continue
+		}
+		args["nodes"] = llx.StringData(g.Nodes)
+		args["restricted"] = llx.BoolData(g.Restricted == 1)
+		args["noFailback"] = llx.BoolData(g.NoFailback == 1)
+		args["comment"] = llx.StringData(g.Comment)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func initProxmoxSdnZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["zone"] == nil {
+		return args, nil, nil
+	}
+	zoneID := args["zone"].Value.(string)
+	if zoneID == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	zones, err := conn.GetSDNZones()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, z := range zones {
+		if z.Zone != zoneID {
+			continue
+		}
+		args["type"] = llx.StringData(z.Type)
+		args["ipam"] = llx.StringData(z.IPAM)
+		args["mtu"] = llx.IntData(int64(z.MTU))
+		args["nodes"] = llx.StringData(z.Nodes)
+		args["dns"] = llx.StringData(z.DNS)
+		args["dnsZone"] = llx.StringData(z.DNSZone)
+		args["reverseDns"] = llx.StringData(z.ReverseDNS)
+		args["pending"] = llx.BoolData(z.Pending == 1)
+		args["state"] = llx.StringData(z.State)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func initProxmoxSdnVnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["vnet"] == nil {
+		return args, nil, nil
+	}
+	vnetID := args["vnet"].Value.(string)
+	if vnetID == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	vnets, err := conn.GetSDNVNets()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, v := range vnets {
+		if v.VNet != vnetID {
+			continue
+		}
+		args["zone"] = llx.StringData(v.Zone)
+		args["alias"] = llx.StringData(v.Alias)
+		args["tag"] = llx.IntData(int64(v.Tag))
+		args["vlanAware"] = llx.BoolData(v.VLANAware == 1)
+		args["type"] = llx.StringData(v.Type)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func initProxmoxVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["id"] == nil {
+		return args, nil, nil
+	}
+	want := args["id"].Value.(int64)
+	if want == 0 {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	vms, err := conn.GetAllVMs()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, vm := range vms {
+		if int64(vm.VMID) != want {
+			continue
+		}
+		args["name"] = llx.StringData(vm.Name)
+		args["node"] = llx.StringData(vm.Node)
+		args["status"] = llx.StringData(vm.Status)
+		args["cpu"] = llx.FloatData(vm.CPU)
+		args["maxcpu"] = llx.IntData(int64(vm.MaxCPU))
+		args["mem"] = llx.IntData(vm.Mem)
+		args["maxmem"] = llx.IntData(vm.MaxMem)
+		args["disk"] = llx.IntData(vm.Disk)
+		args["maxdisk"] = llx.IntData(vm.MaxDisk)
+		args["diskread"] = llx.IntData(vm.DiskRead)
+		args["diskwrite"] = llx.IntData(vm.DiskWrite)
+		args["netin"] = llx.IntData(vm.NetIn)
+		args["netout"] = llx.IntData(vm.NetOut)
+		args["uptime"] = llx.IntData(vm.Uptime)
+		args["template"] = llx.BoolData(vm.Template == 1)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}
+
+func initProxmoxContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["id"] == nil {
+		return args, nil, nil
+	}
+	want := args["id"].Value.(int64)
+	if want == 0 {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.PveConnection)
+	cts, err := conn.GetAllContainers()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, ct := range cts {
+		if int64(ct.VMID) != want {
+			continue
+		}
+		args["name"] = llx.StringData(ct.Name)
+		args["node"] = llx.StringData(ct.Node)
+		args["status"] = llx.StringData(ct.Status)
+		args["cpu"] = llx.FloatData(ct.CPU)
+		args["maxcpu"] = llx.IntData(int64(ct.MaxCPU))
+		args["mem"] = llx.IntData(ct.Mem)
+		args["maxmem"] = llx.IntData(ct.MaxMem)
+		args["disk"] = llx.IntData(ct.Disk)
+		args["maxdisk"] = llx.IntData(ct.MaxDisk)
+		args["diskread"] = llx.IntData(ct.DiskRead)
+		args["diskwrite"] = llx.IntData(ct.DiskWrite)
+		args["netin"] = llx.IntData(ct.NetIn)
+		args["netout"] = llx.IntData(ct.NetOut)
+		args["uptime"] = llx.IntData(ct.Uptime)
+		args["template"] = llx.BoolData(ct.Template == 1)
+		return args, nil, nil
+	}
+	return args, nil, nil
+}

@@ -200,3 +200,56 @@ func (r *mqlProxmoxToken) id() (string, error) {
 func (r *mqlProxmoxRole) id() (string, error) {
 	return "proxmox.role/" + r.Id.Data, nil
 }
+
+// --- HA group ---
+
+func (r *mqlProxmoxClusterHaGroup) id() (string, error) {
+	return "proxmox.cluster.haGroup/" + r.Id.Data, nil
+}
+
+// --- Node disks (node-scoped) ---
+
+func (r *mqlProxmoxNodeDisk) id() (string, error) {
+	return "proxmox.node.disk/" + r.parentNode + "/" + r.DevPath.Data, nil
+}
+
+type mqlProxmoxNodeDiskSmartInternal struct {
+	parentNode string
+	parentDev  string
+}
+
+func (r *mqlProxmoxNodeDiskSmart) id() (string, error) {
+	return "proxmox.node.disk.smart/" + r.parentNode + "/" + r.parentDev, nil
+}
+
+func (r *mqlProxmoxZfsPool) id() (string, error) {
+	return "proxmox.zfs.pool/" + r.parentNode + "/" + r.Name.Data, nil
+}
+
+func (r *mqlProxmoxLvmVolumeGroup) id() (string, error) {
+	return "proxmox.lvm.volumeGroup/" + r.parentNode + "/" + r.Name.Data, nil
+}
+
+func (r *mqlProxmoxLvmThinPool) id() (string, error) {
+	return "proxmox.lvm.thinPool/" + r.parentNode + "/" + r.VolumeGroup.Data + "/" + r.Name.Data, nil
+}
+
+// --- Replication ---
+
+func (r *mqlProxmoxReplicationJob) id() (string, error) {
+	return "proxmox.replication.job/" + r.Id.Data, nil
+}
+
+// --- SDN ---
+
+func (r *mqlProxmoxSdnZone) id() (string, error) {
+	return "proxmox.sdn.zone/" + r.Zone.Data, nil
+}
+
+func (r *mqlProxmoxSdnVnet) id() (string, error) {
+	return "proxmox.sdn.vnet/" + r.Vnet.Data, nil
+}
+
+func (r *mqlProxmoxSdnSubnet) id() (string, error) {
+	return "proxmox.sdn.subnet/" + r.Id.Data, nil
+}

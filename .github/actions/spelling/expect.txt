@@ -2,8 +2,8 @@ aad
 abortable
 accesscontextmanager
 accesskey
-acs
 ACCOUNTADMIN
+acs
 actioncable
 actionpack
 activedirectory
@@ -101,6 +101,7 @@ chokepoint
 cifs
 ciscocatalyst
 citus
+cksum
 classpath
 claude
 clcerts
@@ -201,6 +202,7 @@ evc
 eventarc
 eventhubs
 Eventstream
+evpn
 evs
 EXACC
 exadata
@@ -426,6 +428,7 @@ ndp
 NEGs
 neq
 netbios
+netbox
 netin
 netout
 networkfirewall
@@ -443,6 +446,7 @@ nodegroup
 nodekey
 nodepool
 noeviction
+nofailback
 nokeys
 nolog
 nomatch
@@ -509,6 +513,7 @@ persistentvolume
 persistentvolumeclaim
 pfs
 pgp
+phpipam
 phpunit
 pipefail
 pki
@@ -541,6 +546,7 @@ QAwr
 qcow
 QGA
 Qin
+qinq
 qlist
 qtype
 QUALYS
@@ -707,6 +713,7 @@ VCores
 vcpus
 vdcs
 vdev
+vdevs
 VDhir
 vdi
 vendored

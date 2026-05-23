@@ -42,6 +42,12 @@ proxmox {
   realms() []proxmox.realm
   // Scheduled cluster-wide vzdump backup jobs
   backupJobs() []proxmox.backup.job
+  // Guest-storage replication jobs configured on the cluster
+  replicationJobs() []proxmox.replication.job
+  // SDN zones defined on the cluster
+  sdnZones() []proxmox.sdn.zone
+  // SDN virtual networks defined on the cluster
+  sdnVnets() []proxmox.sdn.vnet
 }
 
 // Proxmox VE cluster
@@ -62,6 +68,8 @@ proxmox.cluster @defaults("name quorate") {
   nodeCount int
   // High-availability resources
   haResources() []proxmox.cluster.haResource
+  // High-availability groups
+  haGroups() []proxmox.cluster.haGroup
   // Cluster-level firewall rules
   firewallRules() []proxmox.firewall.rule
   // Cluster-level firewall options (enable, policy_in, policy_out, log_*)
@@ -98,6 +106,12 @@ proxmox.cluster.haResource @defaults("id type status") {
   state string
   // HA group
   group string
+  // VM this resource refers to when `type` is `vm`; null otherwise
+  vm() proxmox.vm
+  // Container this resource refers to when `type` is `ct`; null otherwise
+  container() proxmox.container
+  // Resolved HA group
+  groupRef() proxmox.cluster.haGroup
 }
 
 // Proxmox VE node
@@ -199,6 +213,17 @@ proxmox.node @defaults("name status") {
   firewallRules() []proxmox.firewall.rule
   // Node-level firewall options (enable, log_nf_conntrack, nf_conntrack_*)
   firewallOptions() proxmox.firewall.options
+
+  // --- Physical storage ---
+
+  // Physical disks attached to this node
+  disks() []proxmox.node.disk
+  // ZFS storage pools managed by this node
+  zfsPools() []proxmox.zfs.pool
+  // LVM volume groups on this node
+  volumeGroups() []proxmox.lvm.volumeGroup
+  // LVM-thin pools on this node
+  thinPools() []proxmox.lvm.thinPool
 
   // --- Guests ---
 
@@ -1081,4 +1106,280 @@ proxmox.backup.job @defaults("id schedule storage enabled") {
   targetStorage() proxmox.storage
   // Full raw job configuration as returned by /cluster/backup/<id>
   config() dict
+}
+
+// Proxmox VE HA group
+//
+// Examine a high-availability group defined on the cluster. A group
+// constrains where HA-managed guests are allowed to run. Reports the
+// group `id`, comma-separated `nodes` membership (entries may include
+// priorities like `pve1:2`), whether the group is `restricted` (HA
+// will refuse to fail over outside group members), and `noFailback`
+// (HA will not automatically move guests back to higher-priority
+// nodes once they recover).
+proxmox.cluster.haGroup @defaults("id restricted noFailback") {
+  // Group ID
+  id string
+  // Member nodes (comma-separated; entries may carry `node:priority`)
+  nodes string
+  // Whether HA refuses to fail over outside group members
+  restricted bool
+  // Whether HA suppresses automatic failback to higher-priority members
+  noFailback bool
+  // Group comment
+  comment string
+}
+
+// Proxmox VE physical disk
+//
+// Examine a physical disk attached to a Proxmox node, identified by
+// `devPath` (e.g. `/dev/sda`, `/dev/nvme0n1`). Reports the disk
+// `model`, `vendor`, `serial`, `wwn`, capacity (`size` in bytes),
+// rotational speed (`rpm`; 0 for SSDs/NVMe), `type` (hdd, ssd, nvme,
+// usb), and current `health` from SMART. The `used` field reports
+// which subsystem owns the disk (ZFS, LVM, partitions, or empty for
+// unallocated). SMART attributes are available through `smart` when
+// the device exposes them.
+proxmox.node.disk @defaults("devPath model size health") {
+  // Device path (e.g. /dev/sda)
+  devPath string
+  // Disk model
+  model string
+  // Disk vendor
+  vendor string
+  // Disk serial number
+  serial string
+  // World Wide Name identifier
+  wwn string
+  // Stable /dev/disk/by-id symlink
+  byIdLink string
+  // Capacity in bytes
+  size int
+  // Rotational speed in RPM (0 for SSD/NVMe)
+  rpm int
+  // Disk type (hdd, ssd, nvme, usb)
+  type string
+  // Subsystem currently using the disk (ZFS, LVM, partitions, or empty)
+  usedBy string
+  // Overall SMART health (PASSED, FAILED, UNKNOWN)
+  health string
+  // Whether the disk is partitioned with a GPT
+  gpt bool
+  // SMART report including the per-attribute table
+  smart() proxmox.node.disk.smart
+}
+
+// Proxmox VE disk SMART report
+//
+// Examine the SMART self-assessment for a Proxmox-managed disk. The
+// `health` field carries the device's overall PASSED/FAILED verdict.
+// `type` is the SMART report flavor (`ata`, `nvme`, `sas`, `text`);
+// when it is `text` the device only returns unstructured output via
+// the `text` field. Structured `attributes` are available for ATA and
+// SAS drives.
+proxmox.node.disk.smart @defaults("health type") {
+  // Overall device health verdict
+  health string
+  // SMART report flavor (ata, nvme, sas, text)
+  type string
+  // Unstructured SMART output (populated when type=text)
+  text string
+  // Per-attribute SMART entries (empty for text-only reports)
+  attributes []dict
+}
+
+// Proxmox VE ZFS pool
+//
+// Examine a ZFS storage pool managed by a Proxmox node, identified by
+// `name`. Reports the pool `size`, `alloc`ated and `free` bytes,
+// average `fragmentation` percentage, `dedupRatio`, and current
+// `health` (ONLINE, DEGRADED, FAULTED, etc.). The pool topology — the
+// tree of vdevs and the latest scrub status — is available through
+// `state`, `scan`, `errors`, and the `children` vdev tree.
+proxmox.zfs.pool @defaults("name health size") {
+  // Pool name
+  name string
+  // Pool capacity in bytes
+  size int
+  // Allocated bytes
+  alloc int
+  // Free bytes
+  free int
+  // Fragmentation percentage (0-100)
+  fragmentation int
+  // Deduplication ratio (1.0 = no dedup, higher = more savings)
+  dedupRatio float
+  // Pool health (ONLINE, DEGRADED, FAULTED, UNAVAIL, REMOVED)
+  health string
+  // Pool state from `zpool status` (e.g. ONLINE)
+  state() string
+  // Latest scrub line from `zpool status`
+  scan() string
+  // Pool-wide error counter line from `zpool status`
+  errors() string
+  // vdev / child-device tree
+  //
+  // Each entry is a dict with `name`, `state`, `read`/`write`/`cksum`
+  // error counters, and a recursive `children` array. The shape mirrors
+  // the `zpool status` output so audits can recurse to leaf disks.
+  children() []dict
+}
+
+// Proxmox VE LVM volume group
+//
+// Examine an LVM volume group on a Proxmox node, identified by
+// `name`. Reports the VG `size` and `free` bytes and the number of
+// logical volumes via `lvCount`.
+proxmox.lvm.volumeGroup @defaults("name size free lvCount") {
+  // Volume group name
+  name string
+  // VG size in bytes
+  size int
+  // Free space in bytes
+  free int
+  // Number of logical volumes in the VG
+  lvCount int
+}
+
+// Proxmox VE LVM-thin pool
+//
+// Examine an LVM-thin pool on a Proxmox node, identified by the pool
+// logical volume `name`. Reports the parent `volumeGroup`, total data
+// `size`, allocated data via `used`, and the metadata pool size and
+// usage via `metadataSize` and `metadataUsed`. Metadata exhaustion
+// renders the entire thin pool read-only, so these are the audit
+// signals that matter most.
+proxmox.lvm.thinPool @defaults("name volumeGroup size used") {
+  // Thin-pool LV name
+  name string
+  // Parent volume group
+  volumeGroup string
+  // Total data size in bytes
+  size int
+  // Allocated data bytes
+  used int
+  // Metadata pool size in bytes
+  metadataSize int
+  // Metadata pool usage in bytes
+  metadataUsed int
+}
+
+// Proxmox VE storage replication job
+//
+// Examine a guest replication job from /cluster/replication. Each job
+// continuously replicates a single guest from `source` to `target`
+// node on the cluster according to `schedule` (a systemd-calendar
+// expression). The `vmid` selects which guest, `rate` caps the
+// per-job bandwidth in MB/s (0 = unlimited), and `disabled` reflects
+// whether the job is paused. Typed `sourceNode`/`targetNode`/`guest`
+// references resolve the string identifiers for traversal.
+proxmox.replication.job @defaults("id schedule source target disabled") {
+  // Job identifier (format: <vmid>-<jobnum>)
+  id string
+  // VMID of the guest being replicated
+  vmid int
+  // Schedule expression (systemd-calendar)
+  schedule string
+  // Source node name
+  source string
+  // Target node name
+  target string
+  // Job type (local for built-in storage replication)
+  type string
+  // Job comment
+  comment string
+  // Bandwidth cap in MB/s; 0 = unlimited
+  rate int
+  // Whether the job is currently disabled
+  disabled bool
+  // Behavior when the job is removed (full | local)
+  removeJob string
+  // Resolved source node
+  sourceNode() proxmox.node
+  // Resolved target node
+  targetNode() proxmox.node
+  // Resolved guest — a VM or container, depending on what `vmid` refers to
+  vm() proxmox.vm
+  // Container counterpart of `vm`; only one of the two is non-null
+  container() proxmox.container
+}
+
+// Proxmox VE SDN zone
+//
+// Examine a software-defined networking zone, identified by `zone`.
+// A zone groups the layer-2 fabric a set of vnets share. Reports the
+// zone `type` (simple, vlan, qinq, vxlan, evpn), the IP-address
+// management backend via `ipam`, MTU, optional `nodes` restriction
+// (empty means all nodes), DNS settings, and whether the zone is
+// `pending` (has uncommitted changes).
+proxmox.sdn.zone @defaults("zone type") {
+  // Zone identifier
+  zone string
+  // Zone type (simple, vlan, qinq, vxlan, evpn)
+  type string
+  // IPAM backend (pve, phpipam, netbox, or empty)
+  ipam string
+  // MTU
+  mtu int
+  // Comma-separated node restriction; empty means all nodes
+  nodes string
+  // DNS server
+  dns string
+  // DNS forward zone
+  dnsZone string
+  // Reverse DNS forward zone
+  reverseDns string
+  // Whether the zone has uncommitted changes
+  pending bool
+  // Zone state
+  state string
+}
+
+// Proxmox VE SDN virtual network
+//
+// Examine a software-defined virtual network, identified by `vnet`.
+// A vnet is the bridge-equivalent guests attach to, scoped to its
+// parent `zone`. Reports the optional `alias`, VLAN/VXLAN `tag`, and
+// whether the network is `vlanAware` (Linux 802.1Q tagging is
+// preserved on the bridge).
+proxmox.sdn.vnet @defaults("vnet zone tag") {
+  // Vnet identifier
+  vnet string
+  // Parent zone identifier
+  zone string
+  // Friendly alias
+  alias string
+  // VLAN/VXLAN tag identifier
+  tag int
+  // Whether the vnet is VLAN-aware
+  vlanAware bool
+  // Vnet type
+  type string
+  // Resolved parent zone
+  zoneRef() proxmox.sdn.zone
+  // Subnets defined on this vnet
+  subnets() []proxmox.sdn.subnet
+}
+
+// Proxmox VE SDN subnet
+//
+// Examine an SDN subnet attached to a vnet. The `cidr` (e.g.
+// `10.0.0.0/24`) is the subnet's address range and `gateway` is the
+// default route presented to guests. `snat` controls whether outbound
+// traffic from the subnet is masqueraded behind the host.
+proxmox.sdn.subnet @defaults("id cidr gateway") {
+  // Subnet identifier (typically `<zone>-<network>-<prefix>`)
+  id string
+  // CIDR-formatted subnet (e.g. 10.0.0.0/24)
+  cidr string
+  // Default gateway advertised to guests
+  gateway string
+  // Whether outbound traffic is SNATed by the host
+  snat bool
+  // DNS prefix appended to records created for this subnet
+  dnsZonePrefix string
+  // Parent vnet identifier
+  vnet string
+  // Resolved parent vnet
+  vnetRef() proxmox.sdn.vnet
 }
