@@ -6,7 +6,6 @@ package resources
 import (
 	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/jamf/connection"
 )
 
@@ -16,46 +15,68 @@ func (s *mqlJamfSsoSettings) id() (string, error) {
 
 func (r *mqlJamf) sso() (*mqlJamfSsoSettings, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
-	client := conn.Client
 
-	info, err := client.GetSsoSettings()
+	info, err := conn.Client.GetSsoSettings()
 	if err != nil {
 		return nil, err
 	}
-	if info == nil {
-		r.Sso = plugin.TValue[*mqlJamfSsoSettings]{State: plugin.StateIsSet | plugin.StateIsNull}
-		return nil, nil
-	}
 
-	// As of go-api-sdk-jamfpro v1.47.0, the SAML-specific settings moved from
-	// the flat ResourceSsoSettings struct into a nested, optional SamlSettings
-	// struct. It is nil when SSO is disabled or configured for OIDC only.
-	saml := jamfpro.SamlSettings{}
-	if info.SamlSettings != nil {
-		saml = *info.SamlSettings
+	res, err := CreateResource(r.MqlRuntime, "jamf.ssoSettings", ssoSettingsArgs(info))
+	if err != nil {
+		return nil, err
 	}
+	return res.(*mqlJamfSsoSettings), nil
+}
 
-	res, err := CreateResource(r.MqlRuntime, "jamf.ssoSettings", map[string]*llx.RawData{
+// ssoSettingsArgs builds the CreateResource argument map from the SDK
+// response. As of go-api-sdk-jamfpro v1.47.0, the protocol-specific
+// settings live in separate optional sub-structs: SamlSettings is nil when
+// the tenant is OIDC-only, OidcSettings is nil when SAML-only. Fields that
+// come from the absent sub-struct surface as null rather than as silently
+// zero-filled "0"/"false"/"".
+func ssoSettingsArgs(info *jamfpro.ResourceSsoSettings) map[string]*llx.RawData {
+	args := map[string]*llx.RawData{
 		"__id":                          llx.StringData("jamf.ssoSettings"),
 		"ssoEnabled":                    llx.BoolData(info.SsoEnabled),
+		"configurationType":             llx.StringData(info.ConfigurationType),
 		"ssoForEnrollmentEnabled":       llx.BoolData(info.SsoForEnrollmentEnabled),
 		"ssoBypassAllowed":              llx.BoolData(info.SsoBypassAllowed),
-		"sessionTimeout":                llx.IntData(saml.SessionTimeout),
 		"ssoForMacOsSelfServiceEnabled": llx.BoolData(info.SsoForMacOsSelfServiceEnabled),
-		"tokenExpirationDisabled":       llx.BoolData(saml.TokenExpirationDisabled),
-		"userAttributeEnabled":          llx.BoolData(saml.UserAttributeEnabled),
-		"userAttributeName":             llx.StringData(saml.UserAttributeName),
-		"userMapping":                   llx.StringData(saml.UserMapping),
 		"enrollmentSsoForAccountDrivenEnrollmentEnabled": llx.BoolData(info.EnrollmentSsoForAccountDrivenEnrollmentEnabled),
-		"idpUrl":                       llx.StringData(saml.IdpUrl),
-		"idpProviderType":              llx.StringData(saml.IdpProviderType),
-		"groupEnrollmentAccessEnabled": llx.BoolData(info.GroupEnrollmentAccessEnabled),
-		"groupAttributeName":           llx.StringData(saml.GroupAttributeName),
-		"entityId":                     llx.StringData(saml.EntityId),
-	})
-	if err != nil {
-		return nil, err
+		"groupEnrollmentAccessEnabled":                   llx.BoolData(info.GroupEnrollmentAccessEnabled),
 	}
 
-	return res.(*mqlJamfSsoSettings), nil
+	if saml := info.SamlSettings; saml != nil {
+		args["sessionTimeout"] = llx.IntData(saml.SessionTimeout)
+		args["tokenExpirationDisabled"] = llx.BoolData(saml.TokenExpirationDisabled)
+		args["userAttributeEnabled"] = llx.BoolData(saml.UserAttributeEnabled)
+		args["userAttributeName"] = llx.StringData(saml.UserAttributeName)
+		args["userMapping"] = llx.StringData(saml.UserMapping)
+		args["idpUrl"] = llx.StringData(saml.IdpUrl)
+		args["idpProviderType"] = llx.StringData(saml.IdpProviderType)
+		args["groupAttributeName"] = llx.StringData(saml.GroupAttributeName)
+		args["entityId"] = llx.StringData(saml.EntityId)
+	} else {
+		args["sessionTimeout"] = llx.IntDataPtr[int64](nil)
+		args["tokenExpirationDisabled"] = llx.BoolDataPtr(nil)
+		args["userAttributeEnabled"] = llx.BoolDataPtr(nil)
+		args["userAttributeName"] = llx.StringDataPtr(nil)
+		args["userMapping"] = llx.StringDataPtr(nil)
+		args["idpUrl"] = llx.StringDataPtr(nil)
+		args["idpProviderType"] = llx.StringDataPtr(nil)
+		args["groupAttributeName"] = llx.StringDataPtr(nil)
+		args["entityId"] = llx.StringDataPtr(nil)
+	}
+
+	if oidc := info.OidcSettings; oidc != nil {
+		args["oidcUserMapping"] = llx.StringData(oidc.UserMapping)
+		args["oidcJamfIdAuthenticationEnabled"] = llx.BoolDataPtr(oidc.JamfIdAuthenticationEnabled)
+		args["oidcUsernameAttributeClaimMapping"] = llx.StringData(oidc.UsernameAttributeClaimMapping)
+	} else {
+		args["oidcUserMapping"] = llx.StringDataPtr(nil)
+		args["oidcJamfIdAuthenticationEnabled"] = llx.BoolDataPtr(nil)
+		args["oidcUsernameAttributeClaimMapping"] = llx.StringDataPtr(nil)
+	}
+
+	return args
 }

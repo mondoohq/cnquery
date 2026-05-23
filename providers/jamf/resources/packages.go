@@ -18,9 +18,6 @@ func (r *mqlJamf) packages() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if inventory == nil {
-		return nil, nil
-	}
 
 	var res []interface{}
 	for _, c := range inventory.Results {

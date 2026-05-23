@@ -64,12 +64,16 @@ jamf.package.suppressUpdates 13.0.0
 jamf.packages 13.0.0
 jamf.sso 13.0.0
 jamf.ssoSettings 13.0.0
+jamf.ssoSettings.configurationType 13.0.2
 jamf.ssoSettings.enrollmentSsoForAccountDrivenEnrollmentEnabled 13.0.0
 jamf.ssoSettings.entityId 13.0.0
 jamf.ssoSettings.groupAttributeName 13.0.0
 jamf.ssoSettings.groupEnrollmentAccessEnabled 13.0.0
 jamf.ssoSettings.idpProviderType 13.0.0
 jamf.ssoSettings.idpUrl 13.0.0
+jamf.ssoSettings.oidcJamfIdAuthenticationEnabled 13.0.2
+jamf.ssoSettings.oidcUserMapping 13.0.2
+jamf.ssoSettings.oidcUsernameAttributeClaimMapping 13.0.2
 jamf.ssoSettings.sessionTimeout 13.0.0
 jamf.ssoSettings.ssoBypassAllowed 13.0.0
 jamf.ssoSettings.ssoEnabled 13.0.0

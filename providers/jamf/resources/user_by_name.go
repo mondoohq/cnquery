@@ -27,16 +27,14 @@ func initJamfUserByName(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 	name := nameArg.Value.(string)
+	if name == "" {
+		return nil, nil, errors.New("jamf.userByName requires a non-empty name")
+	}
 
 	conn := runtime.Connection.(*connection.JamfConnection)
-	client := conn.Client
-
-	user, err := client.GetUserByName(name)
+	user, err := conn.Client.GetUserByName(name)
 	if err != nil {
 		return nil, nil, err
-	}
-	if user == nil {
-		return nil, nil, errors.New("jamf user not found: " + name)
 	}
 
 	args["__id"] = llx.StringData("jamf.userByName/" + user.Name)

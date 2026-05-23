@@ -19,6 +19,27 @@ func TestNewJamfConnection_MissingCredentials(t *testing.T) {
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "missing required Jamf credentials")
+	// Error should enumerate every missing piece so the user knows what to
+	// provide, not just that "something" is missing.
+	assert.Contains(t, err.Error(), "instance_domain")
+	assert.Contains(t, err.Error(), "client_id")
+	assert.Contains(t, err.Error(), "client_secret")
+}
+
+func TestNewJamfConnection_MissingOnlyDomainNamesOnlyDomain(t *testing.T) {
+	cred := &vault.Credential{
+		Type:   vault.CredentialType_password,
+		User:   "client-id",
+		Secret: []byte("client-secret"),
+	}
+	_, err := NewJamfConnection(0, &inventory.Asset{}, &inventory.Config{
+		Options:     map[string]string{},
+		Credentials: []*vault.Credential{cred},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "instance_domain")
+	assert.NotContains(t, err.Error(), "client_id")
+	assert.NotContains(t, err.Error(), "client_secret")
 }
 
 func TestNewJamfConnection_MissingDomain(t *testing.T) {

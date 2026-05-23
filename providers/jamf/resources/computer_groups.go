@@ -18,9 +18,6 @@ func (r *mqlJamf) computerGroups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if groups == nil {
-		return nil, nil
-	}
 
 	var res []interface{}
 	for _, g := range groups.Results {

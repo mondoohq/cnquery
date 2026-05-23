@@ -18,9 +18,6 @@ func (r *mqlJamf) users() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if users == nil {
-		return nil, nil
-	}
 
 	var res []interface{}
 	for _, u := range users.Users {

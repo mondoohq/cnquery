@@ -49,8 +49,18 @@ func NewJamfConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	}
 
 	// Validate that all necessary credentials are provided
-	if instanceDomain == "" || clientID == "" || clientSecret == "" {
-		return nil, errors.New("missing required Jamf credentials: instance_domain, client_id, client_secret")
+	var missing []string
+	if instanceDomain == "" {
+		missing = append(missing, "instance_domain")
+	}
+	if clientID == "" {
+		missing = append(missing, "client_id")
+	}
+	if clientSecret == "" {
+		missing = append(missing, "client_secret")
+	}
+	if len(missing) > 0 {
+		return nil, errors.New("missing required Jamf credentials: " + strings.Join(missing, ", "))
 	}
 
 	// Create the configuration container
@@ -68,7 +78,7 @@ func NewJamfConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		return nil, err
 	}
 	conn.Client = client
-	log.Info().Msg("jamf> client initialized using BuildClient with ConfigContainer")
+	log.Debug().Msg("jamf> client initialized")
 
 	return conn, nil
 }

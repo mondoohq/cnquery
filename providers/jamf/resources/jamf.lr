@@ -212,9 +212,24 @@ private jamf.localUserAccount @defaults("username") {
 }
 
 // Single Sign-On (SSO) settings for Jamf Pro
-private jamf.ssoSettings @defaults("ssoEnabled") {
+//
+// Top-level fields apply regardless of which identity protocol is in use.
+// SAML-specific fields (sessionTimeout, idpUrl, idpProviderType,
+// userAttributeEnabled, userAttributeName, userMapping,
+// tokenExpirationDisabled, groupAttributeName, entityId) are null when the
+// tenant is configured for OIDC only. OIDC-specific fields
+// (oidcUserMapping, oidcJamfIdAuthenticationEnabled,
+// oidcUsernameAttributeClaimMapping) are null when the tenant is configured
+// for SAML only. Use `configurationType` to branch.
+private jamf.ssoSettings @defaults("ssoEnabled configurationType") {
   // Whether SSO is enabled
   ssoEnabled bool
+
+  // Active SSO configuration type
+  //
+  // One of SAML, OIDC, or OIDC_WITH_SAML. Tells you which set of
+  // protocol-specific fields on this resource will be populated.
+  configurationType string
 
   // Whether SSO is enabled for enrollment
   ssoForEnrollmentEnabled bool
@@ -222,41 +237,57 @@ private jamf.ssoSettings @defaults("ssoEnabled") {
   // Whether bypassing SSO is allowed
   ssoBypassAllowed bool
 
-  // Session timeout in minutes
+  // Session timeout in minutes (SAML only)
   sessionTimeout int
 
   // Whether SSO is enabled for macOS Self Service
   ssoForMacOsSelfServiceEnabled bool
 
-  // Whether token expiration is disabled
+  // Whether token expiration is disabled (SAML only)
   tokenExpirationDisabled bool
 
-  // Whether user attribute is enabled
+  // Whether the SAML user attribute is enabled
   userAttributeEnabled bool
 
-  // Name of the user attribute used
+  // Name of the SAML user attribute used
   userAttributeName string
 
-  // User mapping details
+  // SAML user mapping mode
+  //
+  // One of USERNAME or EMAIL. Null when configurationType is OIDC.
   userMapping string
 
   // Whether account-driven enrollment uses SSO
   enrollmentSsoForAccountDrivenEnrollmentEnabled bool
 
-  // Identity provider URL
+  // SAML identity provider URL
   idpUrl string
 
-  // Type of identity provider (e.g., Azure, Google)
+  // SAML identity provider type
+  //
+  // One of ADFS, OKTA, GOOGLE, SHIBBOLETH, ONELOGIN, PING, CENTRIFY, AZURE,
+  // or OTHER.
   idpProviderType string
 
   // Whether group enrollment access is enabled
   groupEnrollmentAccessEnabled bool
 
-  // Name of the group attribute used
+  // Name of the SAML group attribute used
   groupAttributeName string
 
-  // Entity ID for the SSO provider
+  // SAML entity ID for the SSO provider
   entityId string
+
+  // OIDC user mapping mode
+  //
+  // One of USERNAME or EMAIL. Null when configurationType is SAML.
+  oidcUserMapping string
+
+  // Whether Jamf ID authentication is enabled for OIDC
+  oidcJamfIdAuthenticationEnabled bool
+
+  // OIDC claim used as the username attribute
+  oidcUsernameAttributeClaimMapping string
 }
 
 // Jamf Pro user summary

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
@@ -39,6 +40,11 @@ var inventorySections = []string{
 	"LOCAL_USER_ACCOUNTS",
 }
 
+// inventoryPageSize is the per-request page size. The SDK defaults to 100;
+// Jamf Pro allows up to 2000. 500 cuts round-trip count 5x compared to the
+// default while keeping per-request payload size manageable.
+const inventoryPageSize = 500
+
 func (r *mqlJamf) computerInventory() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.JamfConnection)
 	client := conn.Client
@@ -49,12 +55,10 @@ func (r *mqlJamf) computerInventory() ([]interface{}, error) {
 	for _, s := range inventorySections {
 		params.Add("section", s)
 	}
+	params.Set("page-size", strconv.Itoa(inventoryPageSize))
 	inventory, err := client.GetComputersInventory(params)
 	if err != nil {
 		return nil, err
-	}
-	if inventory == nil {
-		return nil, nil
 	}
 
 	res := make([]interface{}, 0, len(inventory.Results))
@@ -112,14 +116,14 @@ func (c *mqlJamfComputer) localUserAccounts() ([]interface{}, error) {
 		return createLocalUserAccountResources(c.MqlRuntime, c.Id.Data, cached)
 	}
 
-	client := conn.Client
-	inventory, err := client.GetComputerInventoryByID(c.Id.Data)
+	// Fallback path: the computer was constructed outside of
+	// jamf.computerInventory (e.g. a recording replay). Populate the cache so
+	// repeat accesses don't re-fetch.
+	inventory, err := conn.Client.GetComputerInventoryByID(c.Id.Data)
 	if err != nil {
 		return nil, err
 	}
-	if inventory == nil {
-		return nil, nil
-	}
+	conn.CacheLocalUserAccounts(c.Id.Data, inventory.LocalUserAccounts)
 	return createLocalUserAccountResources(c.MqlRuntime, c.Id.Data, inventory.LocalUserAccounts)
 }
 

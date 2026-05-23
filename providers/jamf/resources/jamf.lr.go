@@ -310,6 +310,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"jamf.ssoSettings.ssoEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfSsoSettings).GetSsoEnabled()).ToDataRes(types.Bool)
 	},
+	"jamf.ssoSettings.configurationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfSsoSettings).GetConfigurationType()).ToDataRes(types.String)
+	},
 	"jamf.ssoSettings.ssoForEnrollmentEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfSsoSettings).GetSsoForEnrollmentEnabled()).ToDataRes(types.Bool)
 	},
@@ -351,6 +354,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"jamf.ssoSettings.entityId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfSsoSettings).GetEntityId()).ToDataRes(types.String)
+	},
+	"jamf.ssoSettings.oidcUserMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfSsoSettings).GetOidcUserMapping()).ToDataRes(types.String)
+	},
+	"jamf.ssoSettings.oidcJamfIdAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfSsoSettings).GetOidcJamfIdAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"jamf.ssoSettings.oidcUsernameAttributeClaimMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfSsoSettings).GetOidcUsernameAttributeClaimMapping()).ToDataRes(types.String)
 	},
 	"jamf.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfUser).GetId()).ToDataRes(types.Int)
@@ -654,6 +666,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlJamfSsoSettings).SsoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"jamf.ssoSettings.configurationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfSsoSettings).ConfigurationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"jamf.ssoSettings.ssoForEnrollmentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJamfSsoSettings).SsoForEnrollmentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -708,6 +724,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"jamf.ssoSettings.entityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJamfSsoSettings).EntityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.ssoSettings.oidcUserMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfSsoSettings).OidcUserMapping, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.ssoSettings.oidcJamfIdAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfSsoSettings).OidcJamfIdAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.ssoSettings.oidcUsernameAttributeClaimMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfSsoSettings).OidcUsernameAttributeClaimMapping, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"jamf.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1369,6 +1397,7 @@ type mqlJamfSsoSettings struct {
 	__id       string
 	// optional: if you define mqlJamfSsoSettingsInternal it will be used here
 	SsoEnabled                                     plugin.TValue[bool]
+	ConfigurationType                              plugin.TValue[string]
 	SsoForEnrollmentEnabled                        plugin.TValue[bool]
 	SsoBypassAllowed                               plugin.TValue[bool]
 	SessionTimeout                                 plugin.TValue[int64]
@@ -1383,6 +1412,9 @@ type mqlJamfSsoSettings struct {
 	GroupEnrollmentAccessEnabled                   plugin.TValue[bool]
 	GroupAttributeName                             plugin.TValue[string]
 	EntityId                                       plugin.TValue[string]
+	OidcUserMapping                                plugin.TValue[string]
+	OidcJamfIdAuthenticationEnabled                plugin.TValue[bool]
+	OidcUsernameAttributeClaimMapping              plugin.TValue[string]
 }
 
 // createJamfSsoSettings creates a new instance of this resource
@@ -1424,6 +1456,10 @@ func (c *mqlJamfSsoSettings) MqlID() string {
 
 func (c *mqlJamfSsoSettings) GetSsoEnabled() *plugin.TValue[bool] {
 	return &c.SsoEnabled
+}
+
+func (c *mqlJamfSsoSettings) GetConfigurationType() *plugin.TValue[string] {
+	return &c.ConfigurationType
 }
 
 func (c *mqlJamfSsoSettings) GetSsoForEnrollmentEnabled() *plugin.TValue[bool] {
@@ -1480,6 +1516,18 @@ func (c *mqlJamfSsoSettings) GetGroupAttributeName() *plugin.TValue[string] {
 
 func (c *mqlJamfSsoSettings) GetEntityId() *plugin.TValue[string] {
 	return &c.EntityId
+}
+
+func (c *mqlJamfSsoSettings) GetOidcUserMapping() *plugin.TValue[string] {
+	return &c.OidcUserMapping
+}
+
+func (c *mqlJamfSsoSettings) GetOidcJamfIdAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.OidcJamfIdAuthenticationEnabled
+}
+
+func (c *mqlJamfSsoSettings) GetOidcUsernameAttributeClaimMapping() *plugin.TValue[string] {
+	return &c.OidcUsernameAttributeClaimMapping
 }
 
 // mqlJamfUser for the jamf.user resource
