@@ -162,7 +162,6 @@ ddl
 ddos
 DEAUTHORIZED
 DEAUTHORIZING
-deb822
 dedup
 dedupratio
 defc

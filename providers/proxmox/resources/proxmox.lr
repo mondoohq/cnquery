@@ -734,8 +734,8 @@ proxmox.repository @defaults("name enabled") {
   fileType string
   // Path to the keyring used to verify repository signatures
   //
-  // Reads the `Signed-By` option on deb822-format entries (`.sources`).
-  // Empty when the entry doesn't declare one — older `.list` entries
+  // Reads the `Signed-By` option from modern `.sources` entries. Empty
+  // when the entry doesn't declare one — older `.list` entries
   // typically don't, and instead inherit the system trust store.
   signedBy string
 }
