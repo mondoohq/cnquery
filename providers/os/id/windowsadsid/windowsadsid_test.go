@@ -120,14 +120,14 @@ func (c *stubConn) RunCommand(command string) (*shared.Command, error) {
 	}, nil
 }
 
-func (c *stubConn) ID() uint32                                  { return 1 }
-func (c *stubConn) ParentID() uint32                            { return 0 }
-func (c *stubConn) Name() string                                { return "stub" }
-func (c *stubConn) Type() shared.ConnectionType                 { return shared.Type_Local }
-func (c *stubConn) Asset() *inventory.Asset                     { return &inventory.Asset{} }
-func (c *stubConn) UpdateAsset(asset *inventory.Asset)          {}
-func (c *stubConn) Capabilities() shared.Capabilities           { return shared.Capability_RunCommand }
-func (c *stubConn) FileSystem() afero.Fs                        { return afero.NewMemMapFs() }
+func (c *stubConn) ID() uint32                         { return 1 }
+func (c *stubConn) ParentID() uint32                   { return 0 }
+func (c *stubConn) Name() string                       { return "stub" }
+func (c *stubConn) Type() shared.ConnectionType        { return shared.Type_Local }
+func (c *stubConn) Asset() *inventory.Asset            { return &inventory.Asset{} }
+func (c *stubConn) UpdateAsset(asset *inventory.Asset) {}
+func (c *stubConn) Capabilities() shared.Capabilities  { return shared.Capability_RunCommand }
+func (c *stubConn) FileSystem() afero.Fs               { return afero.NewMemMapFs() }
 func (c *stubConn) FileInfo(path string) (shared.FileInfoDetails, error) {
 	return shared.FileInfoDetails{}, nil
 }
