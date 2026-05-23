@@ -230,7 +230,10 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 		return &platformInfo{}, nil
 	case ids.IdDetector_WindowsADSID:
 		sid, err := windowsadsid.WindowsADSID(conn, pf)
-		if err == nil && len(sid) > 0 {
+		if err != nil {
+			return nil, err
+		}
+		if len(sid) > 0 {
 			identifier = "//platformid.api.mondoo.app/windows-ad-sid/" + sid
 			return &platformInfo{
 				IDs:                []string{identifier},

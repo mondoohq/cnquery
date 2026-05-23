@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
@@ -135,6 +134,3 @@ func (c *stubConn) FileInfo(path string) (shared.FileInfoDetails, error) {
 
 // Asserts that stubConn implements the shared.Connection interface.
 var _ shared.Connection = (*stubConn)(nil)
-
-// Silence unused-import warning for plugin when iface changes upstream.
-var _ = plugin.Connection(nil)
