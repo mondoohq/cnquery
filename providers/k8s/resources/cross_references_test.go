@@ -563,6 +563,20 @@ func TestResolveServiceAccountSubjects(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, out, "ServiceAccount with neither explicit namespace nor fallback must be skipped, not error")
 	})
+
+	t.Run("subject pointing at a deleted SA is skipped, not surfaced as an error", func(t *testing.T) {
+		// "not found" is the only error class the resolver swallows — it represents
+		// a binding that still references a SA that was deleted. Any other error
+		// (transient, auth, etc.) must propagate. This test pins the deleted-SA
+		// behavior alongside a real SA in the same call, asserting the live one
+		// is still returned.
+		out, err := resolveServiceAccountSubjects(runtime, []rbacv1.Subject{
+			{Kind: "ServiceAccount", Name: "deleted-sa", Namespace: "prod"},
+			{Kind: "ServiceAccount", Name: "api-sa", Namespace: "prod"},
+		}, "")
+		require.NoError(t, err, "missing SA must not break resolution of valid subjects in the same list")
+		assert.Equal(t, []string{"api-sa"}, mqlResourceNames(t, out))
+	})
 }
 
 func TestRoleBindingResolvers(t *testing.T) {
