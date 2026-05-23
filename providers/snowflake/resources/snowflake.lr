@@ -21,7 +21,9 @@ snowflake {
 // `roles`, `databases`, `warehouses`, `stages`, `shares`, `apiIntegrations`, `tags`,
 // `failoverGroups`, and `grants` (account-level privileges). Security controls are
 // accessible through `securityIntegrations`, `passwordPolicies`, `networkPolicies`,
-// and `sessionPolicies`. `accountAdmins` lists users that hold the ACCOUNTADMIN role.
+// `sessionPolicies`, `authenticationPolicies`, `maskingPolicies`, and `secrets`.
+// `resourceMonitors` exposes credit-usage guardrails for warehouses.
+// `accountAdmins` lists users that hold the ACCOUNTADMIN role.
 snowflake.account {
   // Account ID
   accountId() string
@@ -63,6 +65,14 @@ snowflake.account {
   tags() []snowflake.tag
   // Failover/replication groups in the account
   failoverGroups() []snowflake.failoverGroup
+  // Authentication policies in the account
+  authenticationPolicies() []snowflake.authenticationPolicy
+  // Masking policies in the account (column-level masking for sensitive data)
+  maskingPolicies() []snowflake.maskingPolicy
+  // Snowflake-managed secrets in the account
+  secrets() []snowflake.secret
+  // Resource monitors that govern credit usage for warehouses
+  resourceMonitors() []snowflake.resourceMonitor
 }
 
 // Snowflake User
@@ -729,4 +739,209 @@ snowflake.view @defaults("name") {
   ownerRoleType string
   // View change tracking
   changeTracking string
+}
+
+// Snowflake Resource Monitor
+//
+// Examine a Snowflake resource monitor that caps credit consumption for one or
+// more warehouses. Fields include `name`, `level` (ACCOUNT or WAREHOUSE),
+// `creditQuota`, `usedCredits`, `remainingCredits`, `frequency` (e.g., DAILY,
+// WEEKLY, MONTHLY, YEARLY, NEVER), `startTime`, `endTime`, `owner`, `comment`,
+// and `createdAt`. `notifyAt` lists the usage percentages that trigger
+// notifications; `suspendAt` and `suspendImmediateAt` give the percentages
+// at which warehouses are suspended (`null` when not configured).
+// `notifyUsers` names the users that receive alerts.
+snowflake.resourceMonitor @defaults("name creditQuota usedCredits level") {
+  // Resource monitor name
+  name string
+  // Scope at which the monitor applies (ACCOUNT or WAREHOUSE)
+  level string
+  // Total credit quota
+  creditQuota float
+  // Credits consumed in the current period
+  usedCredits float
+  // Credits remaining in the current period
+  remainingCredits float
+  // Refresh frequency for the credit quota (DAILY, WEEKLY, MONTHLY, YEARLY, NEVER)
+  frequency string
+  // When the current period started (Snowflake-formatted string)
+  startTime string
+  // When the current period ends (Snowflake-formatted string)
+  endTime string
+  // Owning role
+  owner string
+  // Optional comment
+  comment string
+  // Usage percentages at which Snowflake sends notifications
+  notifyAt []int
+  // Percentage at which the monitor suspends warehouses (allows running queries to finish); null if unset
+  suspendAt int
+  // Percentage at which the monitor immediately suspends warehouses; null if unset
+  suspendImmediateAt int
+  // Users notified when notification thresholds are crossed
+  notifyUsers []string
+  // When the resource monitor was created
+  createdAt time
+}
+
+// Snowflake Authentication Policy
+//
+// Examine a Snowflake authentication policy that controls which authentication
+// methods, MFA settings, and client types are permitted. Authentication policies
+// attach at the account or user level and are the definitive control for "is MFA
+// enforced" and "is password authentication still allowed". Fields include
+// `name`, `databaseName`, `schemaName`, `owner`, `ownerRoleType`, `comment`,
+// `createdAt`, and `options`. Computed fields surface the active policy
+// settings: `authenticationMethods` (ALL, SAML, PASSWORD, OAUTH, KEYPAIR),
+// `mfaAuthenticationMethods` (ALL, SAML, PASSWORD), `mfaEnrollment`
+// (REQUIRED or OPTIONAL), `clientTypes` (ALL, SNOWFLAKE_UI, DRIVERS, SNOWSQL),
+// and `securityIntegrations` (names of allowed external auth integrations).
+snowflake.authenticationPolicy @defaults("name mfaEnrollment") {
+  // Authentication policy name
+  name string
+  // Database that owns the policy
+  databaseName string
+  // Schema that owns the policy
+  schemaName string
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Comma-separated list of policy options reported by SHOW
+  options string
+  // When the policy was created (Snowflake-formatted string)
+  createdAt string
+  // Permitted authentication methods (one or more of ALL, SAML, PASSWORD, OAUTH, KEYPAIR)
+  authenticationMethods() []string
+  // Permitted MFA authentication methods (one or more of ALL, SAML, PASSWORD)
+  mfaAuthenticationMethods() []string
+  // MFA enrollment requirement (REQUIRED or OPTIONAL)
+  mfaEnrollment() string
+  // Permitted client types (one or more of ALL, SNOWFLAKE_UI, DRIVERS, SNOWSQL)
+  clientTypes() []string
+  // Names of security integrations permitted by this policy
+  securityIntegrations() []string
+}
+
+// Snowflake Masking Policy
+//
+// Examine a Snowflake masking policy that redacts column values at query time
+// based on the executing role. Fields include `name`, `databaseName`,
+// `schemaName`, `kind`, `owner`, `ownerRoleType`, `comment`, `createdAt`, and
+// `exemptOtherPolicies` (whether this policy is exempt from row-access or other
+// masking policies). Computed fields expose the policy body: `signature`
+// (the input column names and types, e.g., `val:STRING`), `returnType`, and
+// `body` (the SQL CASE expression that defines the masking). `references`
+// lists every table, view, or column where the policy is currently attached.
+snowflake.maskingPolicy @defaults("name databaseName schemaName") {
+  // Policy name (not database-qualified)
+  name string
+  // Database that owns the policy
+  databaseName string
+  // Schema that owns the policy
+  schemaName string
+  // Policy kind classifier (e.g., MASKING_POLICY)
+  kind string
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Whether other policies are exempt from this one
+  exemptOtherPolicies bool
+  // When the policy was created
+  createdAt time
+  // Input column signature: list of `name:type` pairs
+  signature() []string
+  // Data type the masking expression returns
+  returnType() string
+  // SQL body that implements the masking
+  body() string
+  // Entities (tables/views/columns) this policy is attached to
+  references() []snowflake.policyReference
+}
+
+// Snowflake Policy Reference
+//
+// Examine a single attachment of a policy (masking, row-access, password,
+// projection, aggregation, or authentication) to an entity. Returned by
+// `snowflake.maskingPolicy.references`. Fields include the policy identity
+// (`policyDatabase`, `policySchema`, `policyName`, `policyKind`), the entity
+// the policy is attached to (`refDatabaseName`, `refSchemaName`,
+// `refEntityName`, `refEntityDomain` — one of ACCOUNT, INTEGRATION, TABLE, TAG,
+// USER, VIEW), and `refColumnName` (the column the policy applies to, for
+// column-level policies). `policyStatus` reflects whether the attachment is
+// active.
+private snowflake.policyReference @defaults("policyName refEntityDomain refEntityName refColumnName") {
+  // Database that owns the policy
+  policyDatabase string
+  // Schema that owns the policy
+  policySchema string
+  // Policy name
+  policyName string
+  // Policy kind (MASKING_POLICY, ROW_ACCESS_POLICY, AUTHENTICATION_POLICY, etc.)
+  policyKind string
+  // Database of the entity the policy is attached to
+  refDatabaseName string
+  // Schema of the entity the policy is attached to
+  refSchemaName string
+  // Name of the entity the policy is attached to
+  refEntityName string
+  // Domain of the entity the policy is attached to (TABLE, VIEW, COLUMN, TAG, ACCOUNT, USER, INTEGRATION)
+  refEntityDomain string
+  // Column the policy applies to (for column-level masking)
+  refColumnName string
+  // Arg column names for table-function references
+  refArgColumnNames string
+  // Database of the tag, when the policy is attached via a tag
+  tagDatabase string
+  // Schema of the tag, when the policy is attached via a tag
+  tagSchema string
+  // Name of the tag, when the policy is attached via a tag
+  tagName string
+  // Status of the attachment (e.g., ACTIVE)
+  policyStatus string
+}
+
+// Snowflake Secret
+//
+// Examine a Snowflake-managed secret used by external functions, notification
+// integrations, and other Snowflake objects that need to authenticate to
+// external systems. Fields include `name`, `databaseName`, `schemaName`,
+// `owner`, `ownerRoleType`, `comment`, `createdAt`, and `secretType`
+// (PASSWORD, OAUTH2, GENERIC_STRING). `oauthScopes` lists the OAuth scopes
+// granted to the secret. Computed fields fetched on demand via DESCRIBE:
+// `username` (for PASSWORD secrets), `integrationName` (the linked security or
+// API integration), `oauthAccessTokenExpiryTime`, and
+// `oauthRefreshTokenExpiryTime` (rotation deadlines for OAUTH2 secrets).
+snowflake.secret @defaults("name secretType databaseName schemaName") {
+  // Secret name (not database-qualified)
+  name string
+  // Database that owns the secret
+  databaseName string
+  // Schema that owns the secret
+  schemaName string
+  // Owning role
+  owner string
+  // Owner role type (ROLE or DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Secret type (PASSWORD, OAUTH2, GENERIC_STRING)
+  secretType string
+  // OAuth scopes granted to the secret
+  oauthScopes []string
+  // When the secret was created
+  createdAt time
+  // Username stored in the secret (PASSWORD secrets only)
+  username() string
+  // Name of the security or API integration the secret is bound to
+  integrationName() string
+  // When the OAuth access token expires
+  oauthAccessTokenExpiryTime() time
+  // When the OAuth refresh token expires
+  oauthRefreshTokenExpiryTime() time
 }
