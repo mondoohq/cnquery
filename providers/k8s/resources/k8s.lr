@@ -110,6 +110,8 @@ k8s {
   certificateSigningRequests() []k8s.certificatesigningrequest
   // Kubernetes APIServices (aggregation layer)
   apiServices() []k8s.apiservice
+  // Kubernetes IngressClasses
+  ingressClasses() []k8s.ingressclass
 }
 
 // Kubernetes API resources
@@ -577,7 +579,7 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 }
 
 // Kubernetes Job
-private k8s.job @defaults("namespace name created") {
+private k8s.job @defaults("namespace name succeeded failed created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -604,10 +606,52 @@ private k8s.job @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Maximum number of pods the job should run in parallel
+  parallelism() int
+  // Total number of successful completions required to mark the job complete
+  completions() int
+  // Number of retries before marking a pod failed
+  backoffLimit() int
+  // Per-index retry limit when completionMode is Indexed
+  backoffLimitPerIndex() int
+  // Maximum number of failed indexes allowed before the job is marked failed (Indexed completion mode)
+  maxFailedIndexes() int
+  // Completion mode (NonIndexed or Indexed)
+  completionMode() string
+  // Maximum seconds the job may run before being terminated
+  activeDeadlineSeconds() int
+  // Number of seconds after the job finishes before it is automatically deleted
+  ttlSecondsAfterFinished() int
+  // Whether new pod creation is suspended
+  suspend() bool
+  // Policy for replacing pods that are terminating (TerminatingOrFailed or Failed)
+  podReplacementPolicy() string
+  // Label selector that identifies pods owned by this job
+  selector() dict
+  // Number of pods currently running for the job
+  active() int
+  // Number of pods that have successfully completed
+  succeeded() int
+  // Number of pods that have failed
+  failed() int
+  // Number of pods that are ready
+  ready() int
+  // Number of pods that are terminating
+  terminating() int
+  // Comma-separated list or range of indexes that have successfully completed (Indexed completion mode)
+  completedIndexes() string
+  // Comma-separated list of failed indexes (Indexed completion mode)
+  failedIndexes() string
+  // Time the job controller acknowledged the job
+  startTime() time
+  // Time the job entered a terminal state
+  completionTime() time
+  // Status conditions (Complete, Failed, FailureTarget, Suspended)
+  conditions() []dict
 }
 
 // Kubernetes CronJob
-private k8s.cronjob @defaults("namespace name created") {
+private k8s.cronjob @defaults("namespace name schedule suspend created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -634,6 +678,26 @@ private k8s.cronjob @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Cron schedule expression that determines when jobs are created
+  schedule() string
+  // IANA time zone the schedule is evaluated in (e.g., "America/New_York")
+  timeZone() string
+  // Concurrency policy (Allow, Forbid, Replace)
+  concurrencyPolicy() string
+  // Seconds within which a missed scheduled job is still allowed to start
+  startingDeadlineSeconds() int
+  // Number of successful finished jobs to retain
+  successfulJobsHistoryLimit() int
+  // Number of failed finished jobs to retain
+  failedJobsHistoryLimit() int
+  // Whether the CronJob is suspended
+  suspend() bool
+  // References to currently running jobs created by this CronJob
+  active() []dict
+  // Time of the last scheduling attempt
+  lastScheduleTime() time
+  // Time of the last successful job completion
+  lastSuccessfulTime() time
 }
 
 // Kubernetes workload container
@@ -1028,6 +1092,12 @@ private k8s.ingress @defaults("namespace name created") {
   rules []k8s.ingressrule
   // Ingress TLS data
   tls() []k8s.ingresstls
+  // Name of the IngressClass that handles this ingress
+  ingressClassName() string
+  // The IngressClass that handles this ingress
+  ingressClass() k8s.ingressclass
+  // Load-balancer ingress entries published in status (ip, hostname, ports)
+  loadBalancerIngress() []dict
 }
 
 // Kubernetes service account
@@ -1190,6 +1260,14 @@ private k8s.networkpolicy @defaults("namespace name created") {
   manifest() dict
   // Network policy spec
   spec() dict
+  // Label selector for pods this policy applies to (empty selects all pods in the namespace)
+  podSelector() dict
+  // Policy types in effect (Ingress and/or Egress)
+  policyTypes() []string
+  // Ingress rules; each rule lists `from` peers and `ports`
+  ingress() []dict
+  // Egress rules; each rule lists `to` peers and `ports`
+  egress() []dict
 }
 
 // Kubernetes CustomResource
@@ -1874,4 +1952,30 @@ private k8s.apiservice @defaults("name group version created") {
   service() k8s.service
   // Status conditions (Available)
   conditions []dict
+}
+
+// Kubernetes IngressClass
+private k8s.ingressclass @defaults("name controller created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the controller that handles ingresses of this class (e.g., k8s.io/ingress-nginx)
+  controller string
+  // Reference to a controller-specific configuration resource (apiGroup, kind, name, namespace, scope)
+  parameters dict
 }

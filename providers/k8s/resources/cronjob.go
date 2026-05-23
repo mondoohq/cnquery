@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -111,4 +112,109 @@ func (k *mqlK8sCronjob) containers() ([]any, error) {
 		return nil, err
 	}
 	return getContainers(cj, &cj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+}
+
+func (k *mqlK8sCronjob) schedule() (string, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return "", err
+	}
+	return cj.Spec.Schedule, nil
+}
+
+func (k *mqlK8sCronjob) timeZone() (string, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return "", err
+	}
+	if cj.Spec.TimeZone == nil {
+		return "", nil
+	}
+	return *cj.Spec.TimeZone, nil
+}
+
+func (k *mqlK8sCronjob) concurrencyPolicy() (string, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return "", err
+	}
+	return string(cj.Spec.ConcurrencyPolicy), nil
+}
+
+func (k *mqlK8sCronjob) startingDeadlineSeconds() (int64, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return 0, err
+	}
+	if cj.Spec.StartingDeadlineSeconds == nil {
+		return 0, nil
+	}
+	return *cj.Spec.StartingDeadlineSeconds, nil
+}
+
+func (k *mqlK8sCronjob) successfulJobsHistoryLimit() (int64, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return 0, err
+	}
+	if cj.Spec.SuccessfulJobsHistoryLimit == nil {
+		return 3, nil
+	}
+	return int64(*cj.Spec.SuccessfulJobsHistoryLimit), nil
+}
+
+func (k *mqlK8sCronjob) failedJobsHistoryLimit() (int64, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return 0, err
+	}
+	if cj.Spec.FailedJobsHistoryLimit == nil {
+		return 1, nil
+	}
+	return int64(*cj.Spec.FailedJobsHistoryLimit), nil
+}
+
+func (k *mqlK8sCronjob) suspend() (bool, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return false, err
+	}
+	if cj.Spec.Suspend == nil {
+		return false, nil
+	}
+	return *cj.Spec.Suspend, nil
+}
+
+func (k *mqlK8sCronjob) active() ([]any, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(cj.Status.Active)
+}
+
+func (k *mqlK8sCronjob) lastScheduleTime() (*time.Time, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	if cj.Status.LastScheduleTime == nil {
+		k.LastScheduleTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := cj.Status.LastScheduleTime.Time
+	return &t, nil
+}
+
+func (k *mqlK8sCronjob) lastSuccessfulTime() (*time.Time, error) {
+	cj, err := k.getCronJob()
+	if err != nil {
+		return nil, err
+	}
+	if cj.Status.LastSuccessfulTime == nil {
+		k.LastSuccessfulTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := cj.Status.LastSuccessfulTime.Time
+	return &t, nil
 }

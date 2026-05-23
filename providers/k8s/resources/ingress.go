@@ -119,6 +119,43 @@ func (k *mqlK8sIngress) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(ing.GetLabels()), nil
 }
 
+func (k *mqlK8sIngress) ingressClassName() (string, error) {
+	ing, err := k.getIngress()
+	if err != nil {
+		return "", err
+	}
+	if ing.Spec.IngressClassName == nil {
+		return "", nil
+	}
+	return *ing.Spec.IngressClassName, nil
+}
+
+func (k *mqlK8sIngress) ingressClass() (*mqlK8sIngressclass, error) {
+	ing, err := k.getIngress()
+	if err != nil {
+		return nil, err
+	}
+	if ing.Spec.IngressClassName == nil || *ing.Spec.IngressClassName == "" {
+		k.IngressClass.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ic, err := NewResource(k.MqlRuntime, "k8s.ingressclass", map[string]*llx.RawData{
+		"name": llx.StringData(*ing.Spec.IngressClassName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ic.(*mqlK8sIngressclass), nil
+}
+
+func (k *mqlK8sIngress) loadBalancerIngress() ([]any, error) {
+	ing, err := k.getIngress()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(ing.Status.LoadBalancer.Ingress)
+}
+
 func buildRules(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime) ([]any, error) {
 	k8sIngressRules := []any{}
 

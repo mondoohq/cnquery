@@ -83,3 +83,23 @@ func (k *mqlK8sNetworkpolicy) annotations() (map[string]any, error) {
 func (k *mqlK8sNetworkpolicy) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sNetworkpolicy) podSelector() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.PodSelector)
+}
+
+func (k *mqlK8sNetworkpolicy) policyTypes() ([]any, error) {
+	out := make([]any, len(k.obj.Spec.PolicyTypes))
+	for i, pt := range k.obj.Spec.PolicyTypes {
+		out[i] = string(pt)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sNetworkpolicy) ingress() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Spec.Ingress)
+}
+
+func (k *mqlK8sNetworkpolicy) egress() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Spec.Egress)
+}

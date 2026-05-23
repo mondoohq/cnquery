@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -109,4 +110,221 @@ func (k *mqlK8sJob) containers() ([]any, error) {
 		return nil, err
 	}
 	return getContainers(j, &j.ObjectMeta, k.MqlRuntime, ContainerContainerType)
+}
+
+func (k *mqlK8sJob) parallelism() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.Parallelism == nil {
+		return 1, nil
+	}
+	return int64(*j.Spec.Parallelism), nil
+}
+
+func (k *mqlK8sJob) completions() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.Completions == nil {
+		return 0, nil
+	}
+	return int64(*j.Spec.Completions), nil
+}
+
+func (k *mqlK8sJob) backoffLimit() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.BackoffLimit == nil {
+		return 6, nil
+	}
+	return int64(*j.Spec.BackoffLimit), nil
+}
+
+func (k *mqlK8sJob) backoffLimitPerIndex() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.BackoffLimitPerIndex == nil {
+		return 0, nil
+	}
+	return int64(*j.Spec.BackoffLimitPerIndex), nil
+}
+
+func (k *mqlK8sJob) maxFailedIndexes() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.MaxFailedIndexes == nil {
+		return 0, nil
+	}
+	return int64(*j.Spec.MaxFailedIndexes), nil
+}
+
+func (k *mqlK8sJob) completionMode() (string, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return "", err
+	}
+	if j.Spec.CompletionMode == nil {
+		return "", nil
+	}
+	return string(*j.Spec.CompletionMode), nil
+}
+
+func (k *mqlK8sJob) activeDeadlineSeconds() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.ActiveDeadlineSeconds == nil {
+		return 0, nil
+	}
+	return *j.Spec.ActiveDeadlineSeconds, nil
+}
+
+func (k *mqlK8sJob) ttlSecondsAfterFinished() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Spec.TTLSecondsAfterFinished == nil {
+		return 0, nil
+	}
+	return int64(*j.Spec.TTLSecondsAfterFinished), nil
+}
+
+func (k *mqlK8sJob) suspend() (bool, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return false, err
+	}
+	if j.Spec.Suspend == nil {
+		return false, nil
+	}
+	return *j.Spec.Suspend, nil
+}
+
+func (k *mqlK8sJob) podReplacementPolicy() (string, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return "", err
+	}
+	if j.Spec.PodReplacementPolicy == nil {
+		return "", nil
+	}
+	return string(*j.Spec.PodReplacementPolicy), nil
+}
+
+func (k *mqlK8sJob) selector() (map[string]any, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(j.Spec.Selector)
+}
+
+func (k *mqlK8sJob) active() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	return int64(j.Status.Active), nil
+}
+
+func (k *mqlK8sJob) succeeded() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	return int64(j.Status.Succeeded), nil
+}
+
+func (k *mqlK8sJob) failed() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	return int64(j.Status.Failed), nil
+}
+
+func (k *mqlK8sJob) ready() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Status.Ready == nil {
+		return 0, nil
+	}
+	return int64(*j.Status.Ready), nil
+}
+
+func (k *mqlK8sJob) terminating() (int64, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return 0, err
+	}
+	if j.Status.Terminating == nil {
+		return 0, nil
+	}
+	return int64(*j.Status.Terminating), nil
+}
+
+func (k *mqlK8sJob) completedIndexes() (string, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return "", err
+	}
+	return j.Status.CompletedIndexes, nil
+}
+
+func (k *mqlK8sJob) failedIndexes() (string, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return "", err
+	}
+	if j.Status.FailedIndexes == nil {
+		return "", nil
+	}
+	return *j.Status.FailedIndexes, nil
+}
+
+func (k *mqlK8sJob) startTime() (*time.Time, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	if j.Status.StartTime == nil {
+		k.StartTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := j.Status.StartTime.Time
+	return &t, nil
+}
+
+func (k *mqlK8sJob) completionTime() (*time.Time, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	if j.Status.CompletionTime == nil {
+		k.CompletionTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := j.Status.CompletionTime.Time
+	return &t, nil
+}
+
+func (k *mqlK8sJob) conditions() ([]any, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(j.Status.Conditions)
 }
