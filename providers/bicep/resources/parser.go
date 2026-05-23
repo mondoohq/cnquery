@@ -133,8 +133,9 @@ func parseBicep(content string) *parsedBicepFile {
 		}
 
 		if strings.HasPrefix(trimmed, "var ") {
-			result.variables = append(result.variables, parseVariable(trimmed, decorators))
-			i++
+			v, consumed := parseVariableDecl(lines, i, decorators)
+			result.variables = append(result.variables, v)
+			i = consumed
 			continue
 		}
 
@@ -250,6 +251,50 @@ func parseVariable(line string, decorators []string) parsedVariable {
 	return v
 }
 
+// parseVariableDecl handles `var foo = ...` declarations, collecting
+// continuation lines when the value opens an object (`{`) or array (`[`)
+// that closes on a later line. Without this, a `var pet = { name: 'x' }`
+// spread across multiple lines used to truncate at the first newline.
+func parseVariableDecl(lines []string, startIdx int, decorators []string) (parsedVariable, int) {
+	firstLine := lines[startIdx]
+	first := strings.TrimSpace(firstLine)
+	depth := parenBracketDepth(first) + braceDepth(first)
+
+	if depth <= 0 {
+		return parseVariable(first, decorators), startIdx + 1
+	}
+
+	// Value opens a block; reassemble until depth returns to zero.
+	joined := []string{first}
+	i := startIdx + 1
+	for depth > 0 && i < len(lines) {
+		t := strings.TrimSpace(lines[i])
+		joined = append(joined, t)
+		depth += parenBracketDepth(t) + braceDepth(t)
+		i++
+	}
+
+	combined := strings.Join(joined, " ")
+	// Collapse runs of whitespace inside the reassembled expression so
+	// the captured value is a single readable line.
+	combined = strings.Join(strings.Fields(combined), " ")
+	return parseVariable(combined, decorators), i
+}
+
+// braceDepth mirrors parenBracketDepth but counts curly braces.
+func braceDepth(s string) int {
+	depth := 0
+	for _, ch := range s {
+		switch ch {
+		case '{':
+			depth++
+		case '}':
+			depth--
+		}
+	}
+	return depth
+}
+
 func parseResourceDecl(lines []string, startIdx int, decorators []string) (*parsedResource, int) {
 	line := strings.TrimSpace(lines[startIdx])
 	m := resourceRe.FindStringSubmatch(line)
@@ -280,7 +325,7 @@ func parseResourceDecl(lines []string, startIdx int, decorators []string) (*pars
 	// Extract common fields from body
 	r.name = extractFieldValue(body, "name")
 	r.location = extractFieldValue(body, "location")
-	r.condition = extractCondition(line)
+	r.condition = extractCondition(joinDeclHeader(lines, startIdx))
 	r.parent = extractFieldValue(body, "parent")
 	r.dependsOn = extractDependsOn(body)
 	r.tags = extractTags(body)
@@ -303,7 +348,7 @@ func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsed
 		decorators:     decorators,
 	}
 
-	mod.condition = extractCondition(line)
+	mod.condition = extractCondition(joinDeclHeader(lines, startIdx))
 	body, endIdx := extractBlock(lines, startIdx)
 	mod.body = body
 	mod.scope = extractFieldValue(body, "scope")
@@ -390,6 +435,48 @@ func extractFieldValue(body string, fieldName string) string {
 	return ""
 }
 
+// joinDeclHeader reassembles the declaration header — everything from
+// startIdx up to but not including the body's opening `{` — into a
+// single line. This lets extractCondition see the whole `if (...)`
+// clause even when it spans several source lines, e.g.:
+//
+//	resource foo 'Type@ver' = if (
+//	  expr1 &&
+//	  expr2
+//	) { ... }
+//
+// The `{` is only counted as the body opener once paren/bracket depth
+// returns to zero.
+func joinDeclHeader(lines []string, startIdx int) string {
+	var parts []string
+	parenDepth := 0
+	for i := startIdx; i < len(lines); i++ {
+		line := lines[i]
+		end := -1
+		for j, ch := range line {
+			switch ch {
+			case '(', '[':
+				parenDepth++
+			case ')', ']':
+				parenDepth--
+			case '{':
+				if parenDepth == 0 {
+					end = j
+				}
+			}
+			if end >= 0 {
+				break
+			}
+		}
+		if end >= 0 {
+			parts = append(parts, line[:end])
+			break
+		}
+		parts = append(parts, line)
+	}
+	return strings.Join(parts, " ")
+}
+
 func extractCondition(line string) string {
 	// condition is expressed as: resource foo 'Type@ver' = if (expr) { ... }
 	if idx := strings.Index(line, "= if"); idx >= 0 {
@@ -415,27 +502,48 @@ func extractCondition(line string) string {
 
 // extractFieldBlock extracts the brace-delimited block for a top-level field
 // like "params: { ... }" from a body string. Returns the raw content between
-// the braces, or empty string if the field is not found.
+// the braces, or empty string if the field is not found. The opening `{`
+// may be on the same line as the field name or on a subsequent line (both
+// are valid Bicep):
+//
+//	params: { foo: 'x' }
+//	params:
+//	{
+//	  foo: 'x'
+//	}
 func extractFieldBlock(body string, fieldName string) string {
 	lines := strings.Split(body, "\n")
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, fieldName+":") {
-			// Find the opening brace on this or subsequent lines
-			rest := strings.TrimSpace(strings.TrimPrefix(trimmed, fieldName+":"))
-			if strings.HasPrefix(rest, "{") {
-				block, _ := extractBlock(lines, i)
-				// Strip the outer braces
-				if idx := strings.Index(block, "{"); idx >= 0 {
-					inner := block[idx+1:]
-					if last := strings.LastIndex(inner, "}"); last >= 0 {
-						inner = inner[:last]
-					}
-					return strings.TrimSpace(inner)
-				}
-				return block
-			}
+		if !strings.HasPrefix(trimmed, fieldName+":") {
+			continue
 		}
+		rest := strings.TrimSpace(strings.TrimPrefix(trimmed, fieldName+":"))
+		startIdx := i
+		// When the value is empty on this line, the `{` must be on a
+		// later (non-blank) line; advance to it.
+		if rest == "" {
+			j := i + 1
+			for j < len(lines) && strings.TrimSpace(lines[j]) == "" {
+				j++
+			}
+			if j >= len(lines) || !strings.HasPrefix(strings.TrimSpace(lines[j]), "{") {
+				continue
+			}
+			startIdx = j
+		} else if !strings.HasPrefix(rest, "{") {
+			continue
+		}
+		block, _ := extractBlock(lines, startIdx)
+		// Strip the outer braces
+		if idx := strings.Index(block, "{"); idx >= 0 {
+			inner := block[idx+1:]
+			if last := strings.LastIndex(inner, "}"); last >= 0 {
+				inner = inner[:last]
+			}
+			return strings.TrimSpace(inner)
+		}
+		return block
 	}
 	return ""
 }
@@ -453,6 +561,151 @@ func parenBracketDepth(s string) int {
 		}
 	}
 	return depth
+}
+
+// parseBicepObject takes the body of a Bicep object (text between the
+// outer braces) and returns it as a key/value map. Nested objects
+// become nested maps, arrays become slices, single-/double-quoted
+// scalars are unquoted, and anything else (booleans, numbers, function
+// calls, expressions) is kept in its raw text form so policy code can
+// pattern-match on it.
+//
+// This is a deliberately small parser, not a full Bicep lexer: it
+// honors string literals, `// ...` line comments, and brace/bracket/
+// paren nesting when splitting top-level entries, which covers the
+// shapes that show up in real-world `properties:` and `params:`
+// blocks. Anything it can't parse cleanly falls back to a string —
+// audits can still match on the text.
+func parseBicepObject(body string) map[string]any {
+	entries := splitTopLevelEntries(body)
+	out := make(map[string]any, len(entries))
+	for _, entry := range entries {
+		key, value, ok := splitFirstColon(entry)
+		if !ok {
+			continue
+		}
+		out[strings.TrimSpace(key)] = parseBicepValue(strings.TrimSpace(value))
+	}
+	return out
+}
+
+func parseBicepValue(v string) any {
+	if v == "" {
+		return ""
+	}
+	switch v[0] {
+	case '{':
+		return parseBicepObject(stripOuter(v, '{', '}'))
+	case '[':
+		return parseBicepArray(stripOuter(v, '[', ']'))
+	case '\'', '"':
+		if len(v) >= 2 && v[len(v)-1] == v[0] {
+			return v[1 : len(v)-1]
+		}
+	}
+	return v
+}
+
+func parseBicepArray(body string) []any {
+	entries := splitTopLevelEntries(body)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, parseBicepValue(strings.TrimSpace(e)))
+	}
+	return out
+}
+
+func splitFirstColon(s string) (string, string, bool) {
+	depth := 0
+	inStr := byte(0)
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+		if inStr != 0 {
+			if ch == inStr {
+				inStr = 0
+			}
+			continue
+		}
+		switch ch {
+		case '\'', '"':
+			inStr = ch
+		case '{', '[', '(':
+			depth++
+		case '}', ']', ')':
+			depth--
+		case ':':
+			if depth == 0 {
+				return s[:i], s[i+1:], true
+			}
+		}
+	}
+	return "", "", false
+}
+
+func stripOuter(s string, open, close byte) string {
+	if len(s) < 2 || s[0] != open {
+		return s
+	}
+	if s[len(s)-1] != close {
+		return s[1:]
+	}
+	return s[1 : len(s)-1]
+}
+
+func splitTopLevelEntries(body string) []string {
+	var entries []string
+	var current strings.Builder
+	depth := 0
+	inStr := byte(0)
+	flush := func() {
+		s := strings.TrimSpace(current.String())
+		if s != "" {
+			entries = append(entries, s)
+		}
+		current.Reset()
+	}
+	i := 0
+	for i < len(body) {
+		ch := body[i]
+		if inStr != 0 {
+			current.WriteByte(ch)
+			if ch == inStr {
+				inStr = 0
+			}
+			i++
+			continue
+		}
+		// Skip `// ...` line comments at top level so they don't leak
+		// into the next entry's key or value.
+		if depth == 0 && ch == '/' && i+1 < len(body) && body[i+1] == '/' {
+			for i < len(body) && body[i] != '\n' {
+				i++
+			}
+			continue
+		}
+		switch ch {
+		case '\'', '"':
+			inStr = ch
+			current.WriteByte(ch)
+		case '{', '[', '(':
+			depth++
+			current.WriteByte(ch)
+		case '}', ']', ')':
+			depth--
+			current.WriteByte(ch)
+		case '\n', ',':
+			if depth == 0 {
+				flush()
+			} else {
+				current.WriteByte(ch)
+			}
+		default:
+			current.WriteByte(ch)
+		}
+		i++
+	}
+	flush()
+	return entries
 }
 
 // tagsEntryRe matches one `key: 'value'` line inside a `tags: { ... }` block.
@@ -484,17 +737,42 @@ func extractTags(body string) map[string]string {
 	return tags
 }
 
-var dependsOnRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[([^\]]*)\]`)
+var dependsOnHeaderRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[`)
 
+// extractDependsOn finds a `dependsOn: [ ... ]` block and returns the
+// raw entries. Bracket depth is tracked manually so the matcher survives
+// nested-bracket expressions like `dependsOn: [ foo[0], bar ]` that the
+// prior regex form (`\[([^\]]*)\]`) terminated on the first inner `]`.
 func extractDependsOn(body string) []string {
-	re := dependsOnRe
-	m := re.FindStringSubmatch(body)
-	if len(m) < 2 {
+	loc := dependsOnHeaderRe.FindStringIndex(body)
+	if loc == nil {
 		return nil
 	}
+	// loc[1] points just past the opening `[`.
+	start := loc[1]
+	depth := 1
+	end := -1
+	for i := start; i < len(body); i++ {
+		switch body[i] {
+		case '[':
+			depth++
+		case ']':
+			depth--
+			if depth == 0 {
+				end = i
+			}
+		}
+		if end >= 0 {
+			break
+		}
+	}
+	if end < 0 {
+		return nil
+	}
+	inner := body[start:end]
 
 	var deps []string
-	for _, part := range strings.Split(m[1], "\n") {
+	for _, part := range strings.Split(inner, "\n") {
 		part = strings.TrimSpace(part)
 		part = strings.TrimSuffix(part, ",")
 		part = strings.TrimSpace(part)

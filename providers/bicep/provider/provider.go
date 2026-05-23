@@ -180,8 +180,12 @@ func parseNameFromPath(file string) string {
 		name = strings.TrimSuffix(name, extension)
 	}
 
+	// When the user passed a bare "." (current directory) the loop above
+	// hands back "." via path.Base, which makes the asset name read
+	// "Bicep Static Analysis .". Resolve to the absolute path so the
+	// recursion picks up the actual directory basename instead.
 	if name == "." {
-		abspath, err := filepath.Abs(name)
+		abspath, err := filepath.Abs(file)
 		if err == nil {
 			name = parseNameFromPath(abspath)
 		}

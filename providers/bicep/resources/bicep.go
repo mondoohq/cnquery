@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"sync"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/bicep/connection"
@@ -39,7 +41,8 @@ func (r *mqlBicep) template() (*mqlBicepTemplate, error) {
 }
 
 type mqlBicepFileInternal struct {
-	parsed *parsedBicepFile
+	parseOnce sync.Once
+	parsed    *parsedBicepFile
 }
 
 func newMqlBicepFile(runtime *plugin.Runtime, f *connection.BicepFile) (*mqlBicepFile, error) {
@@ -55,8 +58,21 @@ func newMqlBicepFile(runtime *plugin.Runtime, f *connection.BicepFile) (*mqlBice
 		return nil, err
 	}
 	mqlF := res.(*mqlBicepFile)
-	mqlF.parsed = parsed
+	// CreateResource may return a cached instance for the same __id;
+	// parseOnce keeps the stamp race-free under concurrent callers and
+	// happens-before any subsequent reader.
+	mqlF.parseOnce.Do(func() { mqlF.parsed = parsed })
 	return mqlF, nil
+}
+
+// getParsed returns the parsed Bicep model, parsing on demand if the
+// resource was reconstructed across a gRPC boundary (where Internal
+// fields are zeroed but the public `content` field survives).
+func (f *mqlBicepFile) getParsed() *parsedBicepFile {
+	f.parseOnce.Do(func() {
+		f.parsed = parseBicep(f.Content.Data)
+	})
+	return f.parsed
 }
 
 func (f *mqlBicepFile) id() (string, error) {
@@ -64,21 +80,21 @@ func (f *mqlBicepFile) id() (string, error) {
 }
 
 func (f *mqlBicepFile) parameters() ([]any, error) {
-	return createMqlParameters(f.MqlRuntime, f.Path.Data, f.parsed.parameters)
+	return createMqlParameters(f.MqlRuntime, f.Path.Data, f.getParsed().parameters)
 }
 
 func (f *mqlBicepFile) variables() ([]any, error) {
-	return createMqlVariables(f.MqlRuntime, f.Path.Data, f.parsed.variables)
+	return createMqlVariables(f.MqlRuntime, f.Path.Data, f.getParsed().variables)
 }
 
 func (f *mqlBicepFile) resources() ([]any, error) {
-	return createMqlResources(f.MqlRuntime, f.Path.Data, f.parsed.resources)
+	return createMqlResources(f.MqlRuntime, f.Path.Data, f.getParsed().resources)
 }
 
 func (f *mqlBicepFile) modules() ([]any, error) {
-	return createMqlModules(f.MqlRuntime, f.Path.Data, f.parsed.modules)
+	return createMqlModules(f.MqlRuntime, f.Path.Data, f.getParsed().modules)
 }
 
 func (f *mqlBicepFile) outputs() ([]any, error) {
-	return createMqlOutputs(f.MqlRuntime, f.Path.Data, f.parsed.outputs)
+	return createMqlOutputs(f.MqlRuntime, f.Path.Data, f.getParsed().outputs)
 }
