@@ -1123,7 +1123,7 @@ aws.cloudformation.stackSet.permissionModel 13.1.1
 aws.cloudformation.stackSet.region 13.1.1
 aws.cloudformation.stackSet.stackSetId 13.1.1
 aws.cloudformation.stackSet.status 13.1.1
-aws.cloudformation.stackSet.tags 13.1.1
+aws.cloudformation.stackSet.tags 13.26.3
 aws.cloudformation.stackSets 13.1.1
 aws.cloudformation.stacks 13.1.1
 aws.cloudfront 11.15.2
