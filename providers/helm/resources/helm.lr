@@ -49,6 +49,19 @@ helm.chart @defaults("name version") {
   icon string
   // Whether the chart is deprecated
   deprecated bool
+  // SemVer constraint on the supported Kubernetes versions
+  //
+  // From `kubeVersion:` in Chart.yaml. Empty when unconstrained — audits
+  // commonly require every chart to pin a kubeVersion so it can be
+  // gated against a cluster's actual version (e.g. `>=1.27.0-0`).
+  kubeVersion string
+  // Chart-level annotations
+  //
+  // From `annotations:` in Chart.yaml. Used by Helm itself (for example
+  // `artifacthub.io/changes`, `artifacthub.io/license`,
+  // `helm.sh/chart-deprecation`) and by chart consumers for arbitrary
+  // metadata.
+  annotations map[string]string
   // Parsed templates
   templates() []helm.template
   // Default values from values.yaml

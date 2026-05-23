@@ -51,7 +51,7 @@ func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart) (*mqlHelmChart, er
 	keywords := convert.SliceAnyToInterface(meta.Keywords)
 	sources := convert.SliceAnyToInterface(meta.Sources)
 
-	res, err := CreateResource(runtime, "helm.chart", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"__id":        llx.StringData("helm.chart:" + meta.Name + ":" + meta.Version),
 		"name":        llx.StringData(meta.Name),
 		"version":     llx.StringData(meta.Version),
@@ -64,7 +64,19 @@ func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart) (*mqlHelmChart, er
 		"sources":     llx.ArrayData(sources, types.String),
 		"icon":        llx.StringData(meta.Icon),
 		"deprecated":  llx.BoolData(meta.Deprecated),
-	})
+		"kubeVersion": llx.StringData(meta.KubeVersion),
+	}
+	if meta.Annotations == nil {
+		args["annotations"] = llx.NilData
+	} else {
+		annotations := make(map[string]any, len(meta.Annotations))
+		for k, v := range meta.Annotations {
+			annotations[k] = v
+		}
+		args["annotations"] = llx.MapData(annotations, types.String)
+	}
+
+	res, err := CreateResource(runtime, "helm.chart", args)
 	if err != nil {
 		return nil, err
 	}

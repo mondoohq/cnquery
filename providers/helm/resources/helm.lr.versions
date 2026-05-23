@@ -3,6 +3,7 @@
 
 helm 13.0.0
 helm.chart 13.0.0
+helm.chart.annotations 13.0.9
 helm.chart.apiVersion 13.0.0
 helm.chart.appVersion 13.0.0
 helm.chart.dependencies 13.0.0
@@ -12,6 +13,7 @@ helm.chart.files 13.0.0
 helm.chart.home 13.0.0
 helm.chart.icon 13.0.0
 helm.chart.keywords 13.0.0
+helm.chart.kubeVersion 13.0.9
 helm.chart.maintainers 13.0.0
 helm.chart.name 13.0.0
 helm.chart.resources 13.0.0

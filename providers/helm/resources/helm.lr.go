@@ -174,6 +174,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.chart.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetDeprecated()).ToDataRes(types.Bool)
 	},
+	"helm.chart.kubeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetKubeVersion()).ToDataRes(types.String)
+	},
+	"helm.chart.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"helm.chart.templates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetTemplates()).ToDataRes(types.Array(types.Resource("helm.template")))
 	},
@@ -344,6 +350,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.chart.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmChart).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.kubeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).KubeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"helm.chart.templates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -601,6 +615,8 @@ type mqlHelmChart struct {
 	Sources      plugin.TValue[[]any]
 	Icon         plugin.TValue[string]
 	Deprecated   plugin.TValue[bool]
+	KubeVersion  plugin.TValue[string]
+	Annotations  plugin.TValue[map[string]any]
 	Templates    plugin.TValue[[]any]
 	Values       plugin.TValue[any]
 	Resources    plugin.TValue[[]any]
@@ -718,6 +734,14 @@ func (c *mqlHelmChart) GetIcon() *plugin.TValue[string] {
 
 func (c *mqlHelmChart) GetDeprecated() *plugin.TValue[bool] {
 	return &c.Deprecated
+}
+
+func (c *mqlHelmChart) GetKubeVersion() *plugin.TValue[string] {
+	return &c.KubeVersion
+}
+
+func (c *mqlHelmChart) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
 }
 
 func (c *mqlHelmChart) GetTemplates() *plugin.TValue[[]any] {
