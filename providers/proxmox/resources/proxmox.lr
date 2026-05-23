@@ -715,8 +715,8 @@ proxmox.user @defaults("id enable realm") {
   firstname string
   // Last name
   lastname string
-  // Groups the user belongs to
-  groups []string
+  // DEPRECATED: use `groupRefs` instead
+  groups @maturity("deprecated") []string
   // Resolved group memberships
   groupRefs() []proxmox.group
   // Authentication realm (pam, pve, ldap, ad)
