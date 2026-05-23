@@ -944,8 +944,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.user.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetGroups()).ToDataRes(types.Array(types.String))
 	},
-	"proxmox.user.groupsTyped": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxUser).GetGroupsTyped()).ToDataRes(types.Array(types.Resource("proxmox.group")))
+	"proxmox.user.groupRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxUser).GetGroupRefs()).ToDataRes(types.Array(types.Resource("proxmox.group")))
 	},
 	"proxmox.user.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetRealm()).ToDataRes(types.String)
@@ -2517,8 +2517,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"proxmox.user.groupsTyped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxUser).GroupsTyped, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"proxmox.user.groupRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxUser).GroupRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"proxmox.user.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5968,7 +5968,7 @@ type mqlProxmoxUser struct {
 	Firstname      plugin.TValue[string]
 	Lastname       plugin.TValue[string]
 	Groups         plugin.TValue[[]any]
-	GroupsTyped    plugin.TValue[[]any]
+	GroupRefs      plugin.TValue[[]any]
 	Realm          plugin.TValue[string]
 	RealmType      plugin.TValue[string]
 	TfaLockedUntil plugin.TValue[int64]
@@ -6041,10 +6041,10 @@ func (c *mqlProxmoxUser) GetGroups() *plugin.TValue[[]any] {
 	return &c.Groups
 }
 
-func (c *mqlProxmoxUser) GetGroupsTyped() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.GroupsTyped, func() ([]any, error) {
+func (c *mqlProxmoxUser) GetGroupRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupRefs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.user", c.__id, "groupsTyped")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.user", c.__id, "groupRefs")
 			if err != nil {
 				return nil, err
 			}
@@ -6053,7 +6053,7 @@ func (c *mqlProxmoxUser) GetGroupsTyped() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.groupsTyped()
+		return c.groupRefs()
 	})
 }
 

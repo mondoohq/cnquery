@@ -60,10 +60,10 @@ func (r *mqlProxmoxToken) owner() (*mqlProxmoxUser, error) {
 }
 
 // ---------------------------------------------------------------------------
-// user → groupsTyped
+// user → groupRefs
 // ---------------------------------------------------------------------------
 
-func (r *mqlProxmoxUser) groupsTyped() ([]any, error) {
+func (r *mqlProxmoxUser) groupRefs() ([]any, error) {
 	out := make([]any, 0, len(r.Groups.Data))
 	for _, raw := range r.Groups.Data {
 		g, ok := raw.(string)

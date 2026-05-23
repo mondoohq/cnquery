@@ -717,8 +717,8 @@ proxmox.user @defaults("id enable realm") {
   lastname string
   // Groups the user belongs to
   groups []string
-  // Same as `groups`, resolved to typed group references for traversal
-  groupsTyped() []proxmox.group
+  // Resolved group memberships
+  groupRefs() []proxmox.group
   // Authentication realm (pam, pve, ldap, ad)
   realm string
   // Authentication realm type (pam, pve, ldap, ad, openid)
