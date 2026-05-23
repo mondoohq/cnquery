@@ -37,9 +37,11 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 	k8s := k8sRaw.(*mqlK8s)
 
-	// Only list nodes if the cache is empty. GetNodes() populates nodesByName
-	// under k8s.lock, so guard the cold-cache check and the lookup with the
-	// same lock to avoid racing against a concurrent nodes() call.
+	// k8s.lock here only protects against reading a half-populated nodesByName
+	// while nodes() is mid-reset. It does NOT dedup concurrent GetNodes()
+	// calls — two cold initK8sNode goroutines can both see empty == true and
+	// both invoke GetNodes(); the MQL runtime's GetOrCompute handles that
+	// dedup so only one nodes() body actually runs.
 	k8s.lock.Lock()
 	empty := len(k8s.nodesByName) == 0
 	k8s.lock.Unlock()
