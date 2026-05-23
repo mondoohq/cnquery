@@ -219,6 +219,7 @@ exadata
 exo
 faa
 fargate
+fastcgi
 favourited
 fce
 fdfhash
