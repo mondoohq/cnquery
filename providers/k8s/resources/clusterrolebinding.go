@@ -89,7 +89,7 @@ func (k *mqlK8sRbacClusterrolebinding) serviceAccounts() ([]any, error) {
 }
 
 func (k *mqlK8sRbacClusterrolebinding) clusterRole() (*mqlK8sRbacClusterrole, error) {
-	if k.obj.RoleRef.Name == "" {
+	if k.obj.RoleRef.Kind != "ClusterRole" || k.obj.RoleRef.Name == "" {
 		k.ClusterRole.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

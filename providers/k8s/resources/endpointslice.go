@@ -86,6 +86,12 @@ func (k *mqlK8sEndpointslice) service() (*mqlK8sService, error) {
 		"namespace": llx.StringData(k.obj.Namespace),
 	})
 	if err != nil {
+		// EndpointSlices may outlive the Service they back (mid-deletion or
+		// hand-managed slices). Treat that as null, surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Service.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sService), nil

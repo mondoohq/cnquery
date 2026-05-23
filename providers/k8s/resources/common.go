@@ -19,6 +19,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// ErrResourceNotFound is returned by the resource init helpers when a lookup
+// by id or name/namespace finds no match in the cluster snapshot. Callers can
+// distinguish this case from transient errors with errors.Is. The literal
+// "not found" message is also matched by cnspec, so don't change the text.
+var ErrResourceNotFound = errors.New("not found")
+
 func k8sProvider(t plugin.Connection) (shared.Connection, error) {
 	at, ok := t.(shared.Connection)
 	if !ok {
@@ -178,8 +184,8 @@ func initNamespacedResource[T K8sNamespacedObject](
 		}
 	}
 
-	// the error ResourceNotFound is checked by cnspec
-	return args, nil, errors.New("not found")
+	// the error message must stay "not found" — cnspec matches on this text
+	return args, nil, ErrResourceNotFound
 }
 
 func initResource[T K8sObject](
@@ -244,8 +250,8 @@ func initResource[T K8sObject](
 		}
 	}
 
-	// the error ResourceNotFound is checked by cnspec
-	return nil, nil, errors.New("not found")
+	// the error message must stay "not found" — cnspec matches on this text
+	return nil, nil, ErrResourceNotFound
 }
 
 // filterByNamespace returns the items from the k8s root accessor `all` whose

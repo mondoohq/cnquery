@@ -88,7 +88,7 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetName() (string, error) {
 }
 
 func (k *mqlK8sHorizontalpodautoscaler) scaleTargetDeployment() (*mqlK8sDeployment, error) {
-	if k.obj.Spec.ScaleTargetRef.Kind != "Deployment" {
+	if k.obj.Spec.ScaleTargetRef.Kind != "Deployment" || k.obj.Spec.ScaleTargetRef.Name == "" {
 		k.ScaleTargetDeployment.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -103,7 +103,7 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetDeployment() (*mqlK8sDeployme
 }
 
 func (k *mqlK8sHorizontalpodautoscaler) scaleTargetStatefulSet() (*mqlK8sStatefulset, error) {
-	if k.obj.Spec.ScaleTargetRef.Kind != "StatefulSet" {
+	if k.obj.Spec.ScaleTargetRef.Kind != "StatefulSet" || k.obj.Spec.ScaleTargetRef.Name == "" {
 		k.ScaleTargetStatefulSet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -118,7 +118,7 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetStatefulSet() (*mqlK8sStatefu
 }
 
 func (k *mqlK8sHorizontalpodautoscaler) scaleTargetReplicaSet() (*mqlK8sReplicaset, error) {
-	if k.obj.Spec.ScaleTargetRef.Kind != "ReplicaSet" {
+	if k.obj.Spec.ScaleTargetRef.Kind != "ReplicaSet" || k.obj.Spec.ScaleTargetRef.Name == "" {
 		k.ScaleTargetReplicaSet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

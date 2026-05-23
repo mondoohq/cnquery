@@ -37,15 +37,22 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 	k8s := k8sRaw.(*mqlK8s)
 
-	// Only list nodes if the cache is empty
-	if k8s.nodesByName == nil || len(k8s.nodesByName) == 0 {
+	// Only list nodes if the cache is empty. GetNodes() populates nodesByName
+	// under k8s.lock, so guard the cold-cache check and the lookup with the
+	// same lock to avoid racing against a concurrent nodes() call.
+	k8s.lock.Lock()
+	empty := len(k8s.nodesByName) == 0
+	k8s.lock.Unlock()
+	if empty {
 		list := k8s.GetNodes()
 		if list.Error != nil {
 			return nil, nil, list.Error
 		}
 	}
 
+	k8s.lock.Lock()
 	x, found := k8s.nodesByName[name]
+	k8s.lock.Unlock()
 	if !found {
 		return nil, nil, errors.New("cannot find node " + name)
 	}
@@ -54,7 +61,9 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 }
 
 func (k *mqlK8s) nodes() ([]any, error) {
-	k.mqlK8sInternal.nodesByName = make(map[string]*mqlK8sNode)
+	k.lock.Lock()
+	k.nodesByName = make(map[string]*mqlK8sNode)
+	k.lock.Unlock()
 	return k8sResourceToMql(k.MqlRuntime, gvkString(corev1.SchemeGroupVersion.WithKind("nodes")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
@@ -95,7 +104,9 @@ func (k *mqlK8s) nodes() ([]any, error) {
 		}
 
 		r.(*mqlK8sNode).obj = n
-		k.mqlK8sInternal.nodesByName[obj.GetName()] = r.(*mqlK8sNode)
+		k.lock.Lock()
+		k.nodesByName[obj.GetName()] = r.(*mqlK8sNode)
+		k.lock.Unlock()
 
 		return r, nil
 	})

@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -143,7 +142,7 @@ func resolveServiceAccountSubjects(runtime *plugin.Runtime, subjects []rbacv1.Su
 			// Subject points at a SA that doesn't exist (e.g., deleted) — skip.
 			// Anything else (transient API error, etc.) must surface; otherwise
 			// a connectivity blip silently empties the subject list.
-			if strings.Contains(err.Error(), "not found") {
+			if errors.Is(err, ErrResourceNotFound) {
 				continue
 			}
 			return nil, err
