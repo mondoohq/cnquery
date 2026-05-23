@@ -209,10 +209,13 @@ func (c *mqlHelmChart) resources() ([]any, error) {
 // through helm.template.rendered() and helm.template.resources().
 func (c *mqlHelmChart) fetchResources() ([]any, error) {
 	c.resourcesOnce.Do(func() {
+		// Initialize to an empty (non-nil) slice so the success-with-
+		// zero-resources path and the render-error path return the
+		// same shape — callers can rely on a non-nil result either way.
+		c.cachedResources = []any{}
 		rendered, err := c.fetchRendered()
 		if err != nil {
 			log.Warn().Err(err).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates, returning empty resources")
-			c.cachedResources = []any{}
 			return
 		}
 		for templateKey, content := range rendered {
