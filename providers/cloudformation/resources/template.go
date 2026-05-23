@@ -180,14 +180,44 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			}
 		}
 
+		deletionPolicy := ""
+		_, val, err = gatherMapValue(valueNode, "DeletionPolicy")
+		if err == nil {
+			deletionPolicy = val.Value
+		}
+
+		updateReplacePolicy := ""
+		_, val, err = gatherMapValue(valueNode, "UpdateReplacePolicy")
+		if err == nil {
+			updateReplacePolicy = val.Value
+		}
+
+		creationPolicy, err := nodeToDict(valueNode, "CreationPolicy")
+		if err != nil {
+			return nil, err
+		}
+		updatePolicy, err := nodeToDict(valueNode, "UpdatePolicy")
+		if err != nil {
+			return nil, err
+		}
+		resourceMetadata, err := nodeToDict(valueNode, "Metadata")
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.resource", map[string]*llx.RawData{
-			"name":          llx.StringData(keyNode.Value),
-			"type":          llx.StringData(resourceType),
-			"condition":     llx.StringData(resourceCondition),
-			"documentation": llx.StringData(resourceDocumentation),
-			"attributes":    llx.MapData(attrs, types.Dict),
-			"properties":    llx.MapData(props, types.Dict),
-			"dependsOn":     llx.ArrayData(dependsOn, types.String),
+			"name":                llx.StringData(keyNode.Value),
+			"type":                llx.StringData(resourceType),
+			"condition":           llx.StringData(resourceCondition),
+			"documentation":       llx.StringData(resourceDocumentation),
+			"attributes":          llx.MapData(attrs, types.Dict),
+			"properties":          llx.MapData(props, types.Dict),
+			"dependsOn":           llx.ArrayData(dependsOn, types.String),
+			"deletionPolicy":      llx.StringData(deletionPolicy),
+			"updateReplacePolicy": llx.StringData(updateReplacePolicy),
+			"creationPolicy":      llx.DictData(creationPolicy),
+			"updatePolicy":        llx.DictData(updatePolicy),
+			"resourceMetadata":    llx.DictData(resourceMetadata),
 		})
 		if err != nil {
 			return nil, err
@@ -201,6 +231,10 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 }
 
 func (x *mqlCloudformationOutput) id() (string, error) {
+	return x.Name.Data, nil
+}
+
+func (x *mqlCloudformationParameter) id() (string, error) {
 	return x.Name.Data, nil
 }
 
@@ -225,9 +259,35 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			return nil, err
 		}
 
+		value, err := nodeToDict(valueNode, "Value")
+		if err != nil {
+			return nil, err
+		}
+
+		description := ""
+		if _, n, err := gatherMapValue(valueNode, "Description"); err == nil {
+			description = n.Value
+		}
+
+		condition := ""
+		if _, n, err := gatherMapValue(valueNode, "Condition"); err == nil {
+			condition = n.Value
+		}
+
+		exportName := ""
+		if _, exportNode, err := gatherMapValue(valueNode, "Export"); err == nil {
+			if _, n, err := gatherMapValue(exportNode, "Name"); err == nil {
+				exportName = n.Value
+			}
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.output", map[string]*llx.RawData{
-			"name":       llx.StringData(keyNode.Value),
-			"properties": llx.DictData(dict),
+			"name":        llx.StringData(keyNode.Value),
+			"properties":  llx.DictData(dict),
+			"value":       llx.DictData(value),
+			"description": llx.StringData(description),
+			"exportName":  llx.StringData(exportName),
+			"condition":   llx.StringData(condition),
 		})
 		if err != nil {
 			return nil, err
@@ -235,6 +295,101 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 
 		s := pkg.(*mqlCloudformationOutput)
 		result = append(result, s)
+	}
+
+	return result, nil
+}
+
+func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
+	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
+	template := conn.CftTemplate()
+
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return nil, nil
+	}
+	_, params, err := gatherMapValue(template.Node.Content[0], string(cft.Parameters))
+	if err != nil && status.Code(err) == codes.NotFound {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	result := make([]any, 0)
+	for i := 0; i < len(params.Content); i += 2 {
+		keyNode := params.Content[i]
+		valueNode := params.Content[i+1]
+
+		paramType := ""
+		if _, n, err := gatherMapValue(valueNode, "Type"); err == nil {
+			paramType = n.Value
+		}
+
+		description := ""
+		if _, n, err := gatherMapValue(valueNode, "Description"); err == nil {
+			description = n.Value
+		}
+
+		allowedPattern := ""
+		if _, n, err := gatherMapValue(valueNode, "AllowedPattern"); err == nil {
+			allowedPattern = n.Value
+		}
+
+		constraintDescription := ""
+		if _, n, err := gatherMapValue(valueNode, "ConstraintDescription"); err == nil {
+			constraintDescription = n.Value
+		}
+
+		noEcho := false
+		if _, n, err := gatherMapValue(valueNode, "NoEcho"); err == nil {
+			noEcho = n.Value == "true" || n.Value == "True" || n.Value == "TRUE"
+		}
+
+		minLength, err := nodeToInt(valueNode, "MinLength")
+		if err != nil {
+			return nil, err
+		}
+		maxLength, err := nodeToInt(valueNode, "MaxLength")
+		if err != nil {
+			return nil, err
+		}
+		minValue, err := nodeToInt(valueNode, "MinValue")
+		if err != nil {
+			return nil, err
+		}
+		maxValue, err := nodeToInt(valueNode, "MaxValue")
+		if err != nil {
+			return nil, err
+		}
+
+		defaultDict, err := nodeToDict(valueNode, "Default")
+		if err != nil {
+			return nil, err
+		}
+
+		allowedValues, err := nodeToDictList(valueNode, "AllowedValues")
+		if err != nil {
+			return nil, err
+		}
+
+		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.parameter", map[string]*llx.RawData{
+			"__id":                  llx.StringData(keyNode.Value),
+			"name":                  llx.StringData(keyNode.Value),
+			"type":                  llx.StringData(paramType),
+			"default":               llx.DictData(defaultDict),
+			"description":           llx.StringData(description),
+			"allowedValues":         llx.ArrayData(allowedValues, types.Dict),
+			"allowedPattern":        llx.StringData(allowedPattern),
+			"noEcho":                llx.BoolData(noEcho),
+			"minLength":             llx.IntData(minLength),
+			"maxLength":             llx.IntData(maxLength),
+			"minValue":              llx.IntData(minValue),
+			"maxValue":              llx.IntData(maxValue),
+			"constraintDescription": llx.StringData(constraintDescription),
+		})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, pkg)
 	}
 
 	return result, nil

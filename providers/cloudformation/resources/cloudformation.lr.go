@@ -15,9 +15,10 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceCloudformationTemplate string = "cloudformation.template"
-	ResourceCloudformationResource string = "cloudformation.resource"
-	ResourceCloudformationOutput   string = "cloudformation.output"
+	ResourceCloudformationTemplate  string = "cloudformation.template"
+	ResourceCloudformationResource  string = "cloudformation.resource"
+	ResourceCloudformationOutput    string = "cloudformation.output"
+	ResourceCloudformationParameter string = "cloudformation.parameter"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -35,6 +36,10 @@ func init() {
 		"cloudformation.output": {
 			// to override args, implement: initCloudformationOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudformationOutput,
+		},
+		"cloudformation.parameter": {
+			// to override args, implement: initCloudformationParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudformationParameter,
 		},
 	}
 }
@@ -143,6 +148,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudformation.template.types": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationTemplate).GetTypes()).ToDataRes(types.Array(types.String))
 	},
+	"cloudformation.template.parameterList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationTemplate).GetParameterList()).ToDataRes(types.Array(types.Resource("cloudformation.parameter")))
+	},
 	"cloudformation.resource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationResource).GetName()).ToDataRes(types.String)
 	},
@@ -164,11 +172,74 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudformation.resource.dependsOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationResource).GetDependsOn()).ToDataRes(types.Array(types.String))
 	},
+	"cloudformation.resource.deletionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetDeletionPolicy()).ToDataRes(types.String)
+	},
+	"cloudformation.resource.updateReplacePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetUpdateReplacePolicy()).ToDataRes(types.String)
+	},
+	"cloudformation.resource.creationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetCreationPolicy()).ToDataRes(types.Dict)
+	},
+	"cloudformation.resource.updatePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetUpdatePolicy()).ToDataRes(types.Dict)
+	},
+	"cloudformation.resource.resourceMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationResource).GetResourceMetadata()).ToDataRes(types.Dict)
+	},
 	"cloudformation.output.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationOutput).GetName()).ToDataRes(types.String)
 	},
 	"cloudformation.output.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudformationOutput).GetProperties()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"cloudformation.output.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationOutput).GetValue()).ToDataRes(types.Dict)
+	},
+	"cloudformation.output.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationOutput).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudformation.output.exportName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationOutput).GetExportName()).ToDataRes(types.String)
+	},
+	"cloudformation.output.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationOutput).GetCondition()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetName()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetType()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetDefault()).ToDataRes(types.Dict)
+	},
+	"cloudformation.parameter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetAllowedValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"cloudformation.parameter.allowedPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetAllowedPattern()).ToDataRes(types.String)
+	},
+	"cloudformation.parameter.noEcho": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetNoEcho()).ToDataRes(types.Bool)
+	},
+	"cloudformation.parameter.minLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetMinLength()).ToDataRes(types.Int)
+	},
+	"cloudformation.parameter.maxLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetMaxLength()).ToDataRes(types.Int)
+	},
+	"cloudformation.parameter.minValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetMinValue()).ToDataRes(types.Int)
+	},
+	"cloudformation.parameter.maxValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetMaxValue()).ToDataRes(types.Int)
+	},
+	"cloudformation.parameter.constraintDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudformationParameter).GetConstraintDescription()).ToDataRes(types.String)
 	},
 }
 
@@ -234,6 +305,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudformationTemplate).Types, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cloudformation.template.parameterList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationTemplate).ParameterList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"cloudformation.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationResource).__id, ok = v.Value.(string)
 		return
@@ -266,6 +341,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudformationResource).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cloudformation.resource.deletionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).DeletionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.resource.updateReplacePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).UpdateReplacePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.resource.creationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).CreationPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.resource.updatePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).UpdatePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.resource.resourceMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationResource).ResourceMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"cloudformation.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationOutput).__id, ok = v.Value.(string)
 		return
@@ -276,6 +371,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudformation.output.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudformationOutput).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.output.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationOutput).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.output.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationOutput).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.output.exportName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationOutput).ExportName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.output.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationOutput).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudformation.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).Default, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).AllowedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.allowedPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).AllowedPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.noEcho": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).NoEcho, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.minLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).MinLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.maxLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).MaxLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.minValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).MinValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.maxValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).MaxValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudformation.parameter.constraintDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudformationParameter).ConstraintDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -307,18 +470,19 @@ type mqlCloudformationTemplate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudformationTemplateInternal it will be used here
-	Version     plugin.TValue[string]
-	Transform   plugin.TValue[[]any]
-	Description plugin.TValue[string]
-	Mappings    plugin.TValue[map[string]any]
-	Globals     plugin.TValue[map[string]any]
-	Parameters  plugin.TValue[map[string]any]
-	Metadata    plugin.TValue[map[string]any]
-	Conditions  plugin.TValue[map[string]any]
-	Rules       plugin.TValue[map[string]any]
-	Resources   plugin.TValue[[]any]
-	Outputs     plugin.TValue[[]any]
-	Types       plugin.TValue[[]any]
+	Version       plugin.TValue[string]
+	Transform     plugin.TValue[[]any]
+	Description   plugin.TValue[string]
+	Mappings      plugin.TValue[map[string]any]
+	Globals       plugin.TValue[map[string]any]
+	Parameters    plugin.TValue[map[string]any]
+	Metadata      plugin.TValue[map[string]any]
+	Conditions    plugin.TValue[map[string]any]
+	Rules         plugin.TValue[map[string]any]
+	Resources     plugin.TValue[[]any]
+	Outputs       plugin.TValue[[]any]
+	Types         plugin.TValue[[]any]
+	ParameterList plugin.TValue[[]any]
 }
 
 // createCloudformationTemplate creates a new instance of this resource
@@ -444,18 +608,39 @@ func (c *mqlCloudformationTemplate) GetTypes() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlCloudformationTemplate) GetParameterList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ParameterList, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudformation.template", c.__id, "parameterList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.parameterList()
+	})
+}
+
 // mqlCloudformationResource for the cloudformation.resource resource
 type mqlCloudformationResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudformationResourceInternal it will be used here
-	Name          plugin.TValue[string]
-	Type          plugin.TValue[string]
-	Condition     plugin.TValue[string]
-	Documentation plugin.TValue[string]
-	Attributes    plugin.TValue[map[string]any]
-	Properties    plugin.TValue[map[string]any]
-	DependsOn     plugin.TValue[[]any]
+	Name                plugin.TValue[string]
+	Type                plugin.TValue[string]
+	Condition           plugin.TValue[string]
+	Documentation       plugin.TValue[string]
+	Attributes          plugin.TValue[map[string]any]
+	Properties          plugin.TValue[map[string]any]
+	DependsOn           plugin.TValue[[]any]
+	DeletionPolicy      plugin.TValue[string]
+	UpdateReplacePolicy plugin.TValue[string]
+	CreationPolicy      plugin.TValue[any]
+	UpdatePolicy        plugin.TValue[any]
+	ResourceMetadata    plugin.TValue[any]
 }
 
 // createCloudformationResource creates a new instance of this resource
@@ -523,13 +708,37 @@ func (c *mqlCloudformationResource) GetDependsOn() *plugin.TValue[[]any] {
 	return &c.DependsOn
 }
 
+func (c *mqlCloudformationResource) GetDeletionPolicy() *plugin.TValue[string] {
+	return &c.DeletionPolicy
+}
+
+func (c *mqlCloudformationResource) GetUpdateReplacePolicy() *plugin.TValue[string] {
+	return &c.UpdateReplacePolicy
+}
+
+func (c *mqlCloudformationResource) GetCreationPolicy() *plugin.TValue[any] {
+	return &c.CreationPolicy
+}
+
+func (c *mqlCloudformationResource) GetUpdatePolicy() *plugin.TValue[any] {
+	return &c.UpdatePolicy
+}
+
+func (c *mqlCloudformationResource) GetResourceMetadata() *plugin.TValue[any] {
+	return &c.ResourceMetadata
+}
+
 // mqlCloudformationOutput for the cloudformation.output resource
 type mqlCloudformationOutput struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudformationOutputInternal it will be used here
-	Name       plugin.TValue[string]
-	Properties plugin.TValue[map[string]any]
+	Name        plugin.TValue[string]
+	Properties  plugin.TValue[map[string]any]
+	Value       plugin.TValue[any]
+	Description plugin.TValue[string]
+	ExportName  plugin.TValue[string]
+	Condition   plugin.TValue[string]
 }
 
 // createCloudformationOutput creates a new instance of this resource
@@ -575,4 +784,124 @@ func (c *mqlCloudformationOutput) GetName() *plugin.TValue[string] {
 
 func (c *mqlCloudformationOutput) GetProperties() *plugin.TValue[map[string]any] {
 	return &c.Properties
+}
+
+func (c *mqlCloudformationOutput) GetValue() *plugin.TValue[any] {
+	return &c.Value
+}
+
+func (c *mqlCloudformationOutput) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudformationOutput) GetExportName() *plugin.TValue[string] {
+	return &c.ExportName
+}
+
+func (c *mqlCloudformationOutput) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+// mqlCloudformationParameter for the cloudformation.parameter resource
+type mqlCloudformationParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudformationParameterInternal it will be used here
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Default               plugin.TValue[any]
+	Description           plugin.TValue[string]
+	AllowedValues         plugin.TValue[[]any]
+	AllowedPattern        plugin.TValue[string]
+	NoEcho                plugin.TValue[bool]
+	MinLength             plugin.TValue[int64]
+	MaxLength             plugin.TValue[int64]
+	MinValue              plugin.TValue[int64]
+	MaxValue              plugin.TValue[int64]
+	ConstraintDescription plugin.TValue[string]
+}
+
+// createCloudformationParameter creates a new instance of this resource
+func createCloudformationParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudformationParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudformation.parameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudformationParameter) MqlName() string {
+	return "cloudformation.parameter"
+}
+
+func (c *mqlCloudformationParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudformationParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudformationParameter) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlCloudformationParameter) GetDefault() *plugin.TValue[any] {
+	return &c.Default
+}
+
+func (c *mqlCloudformationParameter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudformationParameter) GetAllowedValues() *plugin.TValue[[]any] {
+	return &c.AllowedValues
+}
+
+func (c *mqlCloudformationParameter) GetAllowedPattern() *plugin.TValue[string] {
+	return &c.AllowedPattern
+}
+
+func (c *mqlCloudformationParameter) GetNoEcho() *plugin.TValue[bool] {
+	return &c.NoEcho
+}
+
+func (c *mqlCloudformationParameter) GetMinLength() *plugin.TValue[int64] {
+	return &c.MinLength
+}
+
+func (c *mqlCloudformationParameter) GetMaxLength() *plugin.TValue[int64] {
+	return &c.MaxLength
+}
+
+func (c *mqlCloudformationParameter) GetMinValue() *plugin.TValue[int64] {
+	return &c.MinValue
+}
+
+func (c *mqlCloudformationParameter) GetMaxValue() *plugin.TValue[int64] {
+	return &c.MaxValue
+}
+
+func (c *mqlCloudformationParameter) GetConstraintDescription() *plugin.TValue[string] {
+	return &c.ConstraintDescription
 }

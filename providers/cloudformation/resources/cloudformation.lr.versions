@@ -2,16 +2,38 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 cloudformation.output 11.0.0
+cloudformation.output.condition 13.0.13
+cloudformation.output.description 13.0.13
+cloudformation.output.exportName 13.0.13
 cloudformation.output.name 11.0.0
 cloudformation.output.properties 11.0.0
+cloudformation.output.value 13.0.13
+cloudformation.parameter 13.0.13
+cloudformation.parameter.allowedPattern 13.0.13
+cloudformation.parameter.allowedValues 13.0.13
+cloudformation.parameter.constraintDescription 13.0.13
+cloudformation.parameter.default 13.0.13
+cloudformation.parameter.description 13.0.13
+cloudformation.parameter.maxLength 13.0.13
+cloudformation.parameter.maxValue 13.0.13
+cloudformation.parameter.minLength 13.0.13
+cloudformation.parameter.minValue 13.0.13
+cloudformation.parameter.name 13.0.13
+cloudformation.parameter.noEcho 13.0.13
+cloudformation.parameter.type 13.0.13
 cloudformation.resource 11.0.0
 cloudformation.resource.attributes 11.0.0
 cloudformation.resource.condition 11.0.0
+cloudformation.resource.creationPolicy 13.0.13
+cloudformation.resource.deletionPolicy 13.0.13
 cloudformation.resource.dependsOn 13.0.1
 cloudformation.resource.documentation 11.0.0
 cloudformation.resource.name 11.0.0
 cloudformation.resource.properties 11.0.0
+cloudformation.resource.resourceMetadata 13.0.13
 cloudformation.resource.type 11.0.0
+cloudformation.resource.updatePolicy 13.0.13
+cloudformation.resource.updateReplacePolicy 13.0.13
 cloudformation.template 11.0.0
 cloudformation.template.conditions 11.0.0
 cloudformation.template.description 11.0.0
@@ -19,6 +41,7 @@ cloudformation.template.globals 11.0.0
 cloudformation.template.mappings 11.0.0
 cloudformation.template.metadata 11.0.0
 cloudformation.template.outputs 11.0.0
+cloudformation.template.parameterList 13.0.13
 cloudformation.template.parameters 11.0.0
 cloudformation.template.resources 11.0.0
 cloudformation.template.rules 13.0.1

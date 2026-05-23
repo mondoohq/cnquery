@@ -242,4 +242,103 @@ func TestCloudformationResources(t *testing.T) {
 
 		assert.Equal(t, []any{"MyMacro", "AWS::Serverless"}, tpl.Transform.Data)
 	})
+
+	t.Run("cloudformation resource policies + metadata", func(t *testing.T) {
+		tpl, err := loadTemplate("../testdata/policies.yaml")
+		require.NoError(t, err)
+
+		res := tpl.GetResources()
+		require.NoError(t, res.Error)
+
+		byName := map[string]*mqlCloudformationResource{}
+		for _, r := range res.Data {
+			rr := r.(*mqlCloudformationResource)
+			byName[rr.Name.Data] = rr
+		}
+
+		bucket := byName["RetainedBucket"]
+		require.NotNil(t, bucket)
+		assert.Equal(t, "Retain", bucket.DeletionPolicy.Data)
+		assert.Equal(t, "Retain", bucket.UpdateReplacePolicy.Data)
+		require.NotNil(t, bucket.ResourceMetadata.Data)
+		require.NotEmpty(t, bucket.ResourceMetadata.Data)
+
+		asg := byName["ASG"]
+		require.NotNil(t, asg)
+		require.NotNil(t, asg.CreationPolicy.Data)
+		cp := asg.CreationPolicy.Data.(map[string]any)
+		require.Contains(t, cp, "ResourceSignal")
+		require.NotNil(t, asg.UpdatePolicy.Data)
+		up := asg.UpdatePolicy.Data.(map[string]any)
+		require.Contains(t, up, "AutoScalingRollingUpdate")
+
+		// Resources without policies expose empty strings / nil dicts so
+		// queries can distinguish "explicit Delete" from "unset".
+		assert.Equal(t, "", asg.DeletionPolicy.Data)
+		assert.Equal(t, "", asg.UpdateReplacePolicy.Data)
+	})
+
+	t.Run("cloudformation typed outputs", func(t *testing.T) {
+		tpl, err := loadTemplate("../testdata/policies.yaml")
+		require.NoError(t, err)
+
+		res := tpl.GetOutputs()
+		require.NoError(t, res.Error)
+
+		byName := map[string]*mqlCloudformationOutput{}
+		for _, o := range res.Data {
+			oo := o.(*mqlCloudformationOutput)
+			byName[oo.Name.Data] = oo
+		}
+
+		bucket := byName["BucketArn"]
+		require.NotNil(t, bucket)
+		assert.Equal(t, "ARN of the retained bucket", bucket.Description.Data)
+		assert.Equal(t, "my-stack-BucketArn", bucket.ExportName.Data)
+		assert.Equal(t, "", bucket.Condition.Data)
+		require.NotNil(t, bucket.Value.Data)
+
+		port := byName["DBPortValue"]
+		require.NotNil(t, port)
+		assert.Equal(t, "HasDB", port.Condition.Data)
+		assert.Equal(t, "", port.ExportName.Data)
+	})
+
+	t.Run("cloudformation typed parameters", func(t *testing.T) {
+		tpl, err := loadTemplate("../testdata/policies.yaml")
+		require.NoError(t, err)
+
+		res := tpl.GetParameterList()
+		require.NoError(t, res.Error)
+		require.Equal(t, 3, len(res.Data))
+
+		byName := map[string]*mqlCloudformationParameter{}
+		for _, p := range res.Data {
+			pp := p.(*mqlCloudformationParameter)
+			byName[pp.Name.Data] = pp
+		}
+
+		pw := byName["DBPassword"]
+		require.NotNil(t, pw)
+		assert.Equal(t, "String", pw.Type.Data)
+		assert.True(t, pw.NoEcho.Data)
+		assert.Equal(t, int64(8), pw.MinLength.Data)
+		assert.Equal(t, int64(41), pw.MaxLength.Data)
+		assert.Equal(t, "^[a-zA-Z0-9]*$", pw.AllowedPattern.Data)
+		assert.Equal(t, "Must contain only alphanumeric characters.", pw.ConstraintDescription.Data)
+
+		port := byName["DBPort"]
+		require.NotNil(t, port)
+		assert.Equal(t, "Number", port.Type.Data)
+		assert.False(t, port.NoEcho.Data)
+		assert.Equal(t, int64(1150), port.MinValue.Data)
+		assert.Equal(t, int64(65535), port.MaxValue.Data)
+		// Numeric defaults arrive as float64 because the dict primitive uses
+		// JSON-style numeric typing.
+		require.Equal(t, float64(3306), port.Default.Data)
+
+		env := byName["Environment"]
+		require.NotNil(t, env)
+		require.Equal(t, []any{"production", "staging", "dev"}, env.AllowedValues.Data)
+	})
 }

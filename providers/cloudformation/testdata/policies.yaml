@@ -1,0 +1,58 @@
+Parameters:
+  DBPassword:
+    NoEcho: true
+    Description: The database admin account password
+    Type: String
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: ^[a-zA-Z0-9]*$
+    ConstraintDescription: Must contain only alphanumeric characters.
+  DBPort:
+    Default: 3306
+    Description: TCP/IP port for the database
+    Type: Number
+    MinValue: 1150
+    MaxValue: 65535
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - production
+      - staging
+      - dev
+Resources:
+  RetainedBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [E3001]
+    Properties:
+      BucketName: my-retained-bucket
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy:
+      AutoScalingCreationPolicy:
+        MinSuccessfulInstancesPercent: 80
+      ResourceSignal:
+        Count: 3
+        Timeout: PT10M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT5M
+    Properties:
+      MinSize: 1
+      MaxSize: 5
+Outputs:
+  BucketArn:
+    Description: ARN of the retained bucket
+    Value: !GetAtt RetainedBucket.Arn
+    Export:
+      Name: my-stack-BucketArn
+  DBPortValue:
+    Value: !Ref DBPort
+    Condition: HasDB

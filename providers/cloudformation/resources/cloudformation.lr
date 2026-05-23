@@ -37,6 +37,14 @@ cloudformation.template @defaults("description") {
   outputs() []cloudformation.output
   // Supported resource types
   types() []string
+  // Parameter declarations as typed objects
+  //
+  // Iterate the `Parameters` section as `cloudformation.parameter` records
+  // exposing type, default, allowed values / patterns, length and value
+  // bounds, and the `NoEcho` flag — useful for policy that needs to reason
+  // about how a stack accepts input. Use `parameters` (the dict form) when
+  // you need a key-keyed view of the same data.
+  parameterList() []cloudformation.parameter
 }
 
 // AWS CloudFormation resource declaration
@@ -60,6 +68,37 @@ cloudformation.resource @defaults("name") {
   properties map[string]dict
   // Resource dependencies (DependsOn)
   dependsOn []string
+  // `DeletionPolicy` attribute
+  //
+  // One of `Delete`, `Retain`, `RetainExceptOnCreate`, or `Snapshot`. Empty
+  // when the attribute is not declared (CloudFormation then applies the
+  // `Delete` default). Stateful resources such as `AWS::RDS::DBInstance`
+  // or `AWS::S3::Bucket` typically require `Retain` to avoid accidental
+  // data loss on stack deletion.
+  deletionPolicy string
+  // `UpdateReplacePolicy` attribute
+  //
+  // One of `Delete`, `Retain`, `RetainExceptOnCreate`, or `Snapshot`. Empty
+  // when not declared. Controls what happens to the existing physical
+  // resource when an update forces replacement.
+  updateReplacePolicy string
+  // `CreationPolicy` attribute
+  //
+  // Nested object with `AutoScalingCreationPolicy` and `ResourceSignal`
+  // sub-sections used to wait for resource readiness before reporting
+  // CREATE_COMPLETE. Empty when not declared.
+  creationPolicy dict
+  // `UpdatePolicy` attribute
+  //
+  // Used by `AWS::AutoScaling::AutoScalingGroup`,
+  // `AWS::ElastiCache::ReplicationGroup`, `AWS::Lambda::Alias`, and a few
+  // others to control update behavior. Empty when not declared.
+  updatePolicy dict
+  // `Metadata` attribute
+  //
+  // Stores resource-specific metadata such as `AWS::CloudFormation::Init`
+  // or interface designer hints. Empty when not declared.
+  resourceMetadata dict
 }
 
 // AWS CloudFormation output
@@ -72,4 +111,70 @@ cloudformation.output @defaults("name") {
   name string
   // Output properties
   properties map[string]dict
+  // The `Value` expression
+  //
+  // Returned as a `dict` because the value may be a literal, a `Ref`, a
+  // `Fn::GetAtt`, or any other intrinsic-function call. Audits commonly
+  // pattern-match against the shape to detect outputs that leak resource
+  // ARNs or sensitive references.
+  value dict
+  // `Description` field from the Outputs entry
+  description string
+  // `Export.Name` value
+  //
+  // Empty when the output is not exported across stacks. Audits commonly
+  // forbid exporting sensitive resource ARNs (databases, KMS keys) so they
+  // can't be picked up by unrelated stacks.
+  exportName string
+  // `Condition` name that gates whether this output is produced
+  condition string
+}
+
+// AWS CloudFormation parameter declaration
+//
+// Examine a single entry from the `Parameters` section: type, default,
+// allowed-values / allowed-pattern constraints, length and value bounds,
+// the `NoEcho` flag, and any constraint description. This is the
+// primary surface for policies that enforce strong input typing, secret
+// masking (`NoEcho: true` for credential-shaped parameters), and bounded
+// inputs.
+cloudformation.parameter @defaults("name type") {
+  // Parameter name
+  name string
+  // Parameter type
+  //
+  // `String`, `Number`, `List<Number>`, `CommaDelimitedList`, or any of
+  // the AWS-specific parameter types (`AWS::EC2::KeyPair::KeyName`,
+  // `AWS::SSM::Parameter::Value<String>`, etc.).
+  type string
+  // `Default` value
+  //
+  // Returned as a `dict` because the value may be a string, number, or
+  // list depending on `type`. Empty when the parameter is required.
+  default dict
+  // `Description` text
+  description string
+  // `AllowedValues` constraint
+  //
+  // Heterogeneous list (strings, numbers) preserved as `dict`. Empty when
+  // the constraint is not set.
+  allowedValues []dict
+  // `AllowedPattern` regular expression (String parameters only)
+  allowedPattern string
+  // `NoEcho` flag
+  //
+  // When true, the parameter value is masked in stack events, the console,
+  // and the CLI. Required by most audit policies on parameters that hold
+  // passwords, API keys, or other credentials.
+  noEcho bool
+  // `MinLength` constraint (String parameters)
+  minLength int
+  // `MaxLength` constraint (String parameters)
+  maxLength int
+  // `MinValue` constraint (Number parameters)
+  minValue int
+  // `MaxValue` constraint (Number parameters)
+  maxValue int
+  // `ConstraintDescription` shown when validation fails
+  constraintDescription string
 }
