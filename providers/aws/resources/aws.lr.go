@@ -27470,6 +27470,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudformation.stack.driftStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStack).GetDriftStatus()).ToDataRes(types.String)
 	},
+	"aws.cloudformation.stack.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStack).GetRoleArn()).ToDataRes(types.String)
+	},
 	"aws.cloudformation.stack.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStack).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
@@ -27509,8 +27512,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudformation.stackSet.driftStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStackSet).GetDriftStatus()).ToDataRes(types.String)
 	},
+	"aws.cloudformation.stackSet.lastDriftCheckTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStackSet).GetLastDriftCheckTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudformation.stackSet.managedExecutionActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStackSet).GetManagedExecutionActive()).ToDataRes(types.Bool)
+	},
 	"aws.cloudformation.stackSet.autoDeploymentEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStackSet).GetAutoDeploymentEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudformation.stackSet.administrationRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStackSet).GetAdministrationRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.cloudformation.stackSet.executionRoleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStackSet).GetExecutionRoleName()).ToDataRes(types.String)
+	},
+	"aws.cloudformation.stackSet.organizationalUnitIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudformationStackSet).GetOrganizationalUnitIds()).ToDataRes(types.Array(types.String))
 	},
 	"aws.cloudformation.stackSet.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStackSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -63868,6 +63886,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudformationStack).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudformation.stack.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStack).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudformation.stack.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudformationStack).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
@@ -63924,8 +63946,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudformationStackSet).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudformation.stackSet.lastDriftCheckTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStackSet).LastDriftCheckTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudformation.stackSet.managedExecutionActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStackSet).ManagedExecutionActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.cloudformation.stackSet.autoDeploymentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudformationStackSet).AutoDeploymentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudformation.stackSet.administrationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStackSet).AdministrationRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.cloudformation.stackSet.executionRoleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStackSet).ExecutionRoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudformation.stackSet.organizationalUnitIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudformationStackSet).OrganizationalUnitIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudformation.stackSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -155024,6 +155066,7 @@ type mqlAwsCloudformationStack struct {
 	Capabilities                plugin.TValue[[]any]
 	NotificationTopics          plugin.TValue[[]any]
 	DriftStatus                 plugin.TValue[string]
+	RoleArn                     plugin.TValue[string]
 	IamRole                     plugin.TValue[*mqlAwsIamRole]
 	Parameters                  plugin.TValue[[]any]
 	Outputs                     plugin.TValue[[]any]
@@ -155116,6 +155159,10 @@ func (c *mqlAwsCloudformationStack) GetDriftStatus() *plugin.TValue[string] {
 	return &c.DriftStatus
 }
 
+func (c *mqlAwsCloudformationStack) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
 func (c *mqlAwsCloudformationStack) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
 		if c.MqlRuntime.HasRecording {
@@ -155161,15 +155208,20 @@ type mqlAwsCloudformationStackSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCloudformationStackSetInternal
-	StackSetId            plugin.TValue[string]
-	Name                  plugin.TValue[string]
-	Region                plugin.TValue[string]
-	Status                plugin.TValue[string]
-	Description           plugin.TValue[string]
-	PermissionModel       plugin.TValue[string]
-	DriftStatus           plugin.TValue[string]
-	AutoDeploymentEnabled plugin.TValue[bool]
-	Tags                  plugin.TValue[map[string]any]
+	StackSetId              plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Description             plugin.TValue[string]
+	PermissionModel         plugin.TValue[string]
+	DriftStatus             plugin.TValue[string]
+	LastDriftCheckTimestamp plugin.TValue[*time.Time]
+	ManagedExecutionActive  plugin.TValue[bool]
+	AutoDeploymentEnabled   plugin.TValue[bool]
+	AdministrationRole      plugin.TValue[*mqlAwsIamRole]
+	ExecutionRoleName       plugin.TValue[string]
+	OrganizationalUnitIds   plugin.TValue[[]any]
+	Tags                    plugin.TValue[map[string]any]
 }
 
 // createAwsCloudformationStackSet creates a new instance of this resource
@@ -155232,14 +155284,52 @@ func (c *mqlAwsCloudformationStackSet) GetDriftStatus() *plugin.TValue[string] {
 	return &c.DriftStatus
 }
 
+func (c *mqlAwsCloudformationStackSet) GetLastDriftCheckTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastDriftCheckTimestamp
+}
+
+func (c *mqlAwsCloudformationStackSet) GetManagedExecutionActive() *plugin.TValue[bool] {
+	return &c.ManagedExecutionActive
+}
+
 func (c *mqlAwsCloudformationStackSet) GetAutoDeploymentEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AutoDeploymentEnabled, func() (bool, error) {
 		return c.autoDeploymentEnabled()
 	})
 }
 
+func (c *mqlAwsCloudformationStackSet) GetAdministrationRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.AdministrationRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudformation.stackSet", c.__id, "administrationRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.administrationRole()
+	})
+}
+
+func (c *mqlAwsCloudformationStackSet) GetExecutionRoleName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionRoleName, func() (string, error) {
+		return c.executionRoleName()
+	})
+}
+
+func (c *mqlAwsCloudformationStackSet) GetOrganizationalUnitIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrganizationalUnitIds, func() ([]any, error) {
+		return c.organizationalUnitIds()
+	})
+}
+
 func (c *mqlAwsCloudformationStackSet) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsKeyspaces for the aws.keyspaces resource

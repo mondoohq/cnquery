@@ -20491,11 +20491,12 @@ private aws.lightsail.bucket @defaults("name arn") {
 // deployments in the account. Iterate `stacks()` for every CloudFormation
 // stack across enabled regions (with its template-driven parameters,
 // outputs, capabilities, drift status, deletion-protection flag, and
-// notification ARNs), and `stackSets()` for stack sets that deploy a
-// single template across multiple accounts and regions in an
-// organization (with their permission model, deployment targets, and
-// stack instances). Both ACTIVE and DELETED stack sets are returned;
-// filter with `where(status == "ACTIVE")` if you only want live ones.
+// notification topics), and `stackSets()` for stack sets that deploy a
+// single template across multiple accounts and regions in an organization
+// (with their permission model, drift status, administration/execution
+// roles, and the organizational unit IDs they target). Both ACTIVE and
+// DELETED stack sets are returned; filter with `where(status == "ACTIVE")`
+// if you only want live ones.
 aws.cloudformation @defaults("stacks") {
   // List of CloudFormation stacks
   stacks() []aws.cloudformation.stack
@@ -20525,6 +20526,8 @@ private aws.cloudformation.stack @defaults("name status") {
   notificationTopics() []aws.sns.topic
   // Drift detection status: DRIFTED, IN_SYNC, NOT_CHECKED, UNKNOWN
   driftStatus string
+  // ARN of the IAM role used to create or update the stack
+  roleArn string
   // IAM role used to create/update the stack
   iamRole() aws.iam.role
   // Stack parameters
@@ -20555,10 +20558,20 @@ private aws.cloudformation.stackSet @defaults("name status") {
   permissionModel string
   // Drift detection status
   driftStatus string
+  // Time of the most recent drift detection operation, or null if drift detection has never been run
+  lastDriftCheckTimestamp time
+  // Whether non-conflicting stack set operations run concurrently
+  managedExecutionActive bool
   // Whether auto deployment is enabled
   autoDeploymentEnabled() bool
+  // IAM role in the management account used to deploy stack instances (SELF_MANAGED stack sets)
+  administrationRole() aws.iam.role
+  // Name of the IAM execution role in target accounts (SELF_MANAGED stack sets)
+  executionRoleName() string
+  // Organizational unit IDs the stack set targets (SERVICE_MANAGED stack sets)
+  organizationalUnitIds() []string
   // Tags for the stack set
-  tags map[string]string
+  tags() map[string]string
 }
 
 // Amazon Keyspaces (for Apache Cassandra)

@@ -143,3 +143,53 @@ func TestStackOutputToDict(t *testing.T) {
 		assert.NotContains(t, minimal, "exportName")
 	})
 }
+
+func TestStackSetSummaryCacheKey(t *testing.T) {
+	t.Run("nil StackSetId signals skip", func(t *testing.T) {
+		// Two summaries with nil StackSetId in the same region would
+		// otherwise collide on the synthetic "<region>/" __id.
+		_, ok := stackSetSummaryCacheKey("us-east-1", cf_types.StackSetSummary{
+			StackSetId: nil,
+		})
+		assert.False(t, ok)
+	})
+
+	t.Run("composes region/stackSetId", func(t *testing.T) {
+		id, ok := stackSetSummaryCacheKey("us-east-1", cf_types.StackSetSummary{
+			StackSetId: aws.String("my-set:abc123"),
+		})
+		assert.True(t, ok)
+		assert.Equal(t, "us-east-1/my-set:abc123", id)
+	})
+
+	t.Run("empty StackSetId still composes (only nil skips)", func(t *testing.T) {
+		// Empty-string StackSetId is structurally distinct from nil and
+		// we let it through — AWS shouldn't return it, but if it does
+		// the caller's downstream validation will catch it.
+		id, ok := stackSetSummaryCacheKey("us-east-1", cf_types.StackSetSummary{
+			StackSetId: aws.String(""),
+		})
+		assert.True(t, ok)
+		assert.Equal(t, "us-east-1/", id)
+	})
+}
+
+func TestManagedExecutionActive(t *testing.T) {
+	t.Run("nil ManagedExecution is false", func(t *testing.T) {
+		// AWS docs: false is the documented default when the field is
+		// absent (one operation at a time).
+		assert.False(t, managedExecutionActive(nil))
+	})
+
+	t.Run("nil Active inside non-nil struct is false", func(t *testing.T) {
+		assert.False(t, managedExecutionActive(&cf_types.ManagedExecution{Active: nil}))
+	})
+
+	t.Run("true passes through", func(t *testing.T) {
+		assert.True(t, managedExecutionActive(&cf_types.ManagedExecution{Active: aws.Bool(true)}))
+	})
+
+	t.Run("false passes through", func(t *testing.T) {
+		assert.False(t, managedExecutionActive(&cf_types.ManagedExecution{Active: aws.Bool(false)}))
+	})
+}

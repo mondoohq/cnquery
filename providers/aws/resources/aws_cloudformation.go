@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
@@ -93,6 +94,26 @@ func normalizeDriftStatus(s string) string {
 	return s
 }
 
+// stackSetSummaryCacheKey builds the region-qualified __id for a stack set
+// summary. Returns ok=false when StackSetId is nil so callers can skip the
+// entry — synthesizing "<region>/" would collide across nil-id summaries.
+func stackSetSummaryCacheKey(region string, ss cf_types.StackSetSummary) (string, bool) {
+	if ss.StackSetId == nil {
+		return "", false
+	}
+	return region + "/" + *ss.StackSetId, true
+}
+
+// managedExecutionActive returns whether the StackSet runs non-conflicting
+// operations concurrently. SDK default for missing/nil is `false`, per AWS
+// docs.
+func managedExecutionActive(m *cf_types.ManagedExecution) bool {
+	if m == nil || m.Active == nil {
+		return false
+	}
+	return *m.Active
+}
+
 func (a *mqlAwsCloudformation) getStacks(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -115,7 +136,7 @@ func (a *mqlAwsCloudformation) getStacks(conn *connection.AwsConnection) []*jobp
 				})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						log.Warn().Str("region", region).Msg("access denied calling cloudformation.DescribeStacks")
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
@@ -148,6 +169,7 @@ func (a *mqlAwsCloudformation) getStacks(conn *connection.AwsConnection) []*jobp
 							"enableTerminationProtection": llx.BoolDataPtr(stack.EnableTerminationProtection),
 							"capabilities":                llx.ArrayData(capabilities, types.String),
 							"driftStatus":                 llx.StringData(normalizeDriftStatus(driftStatus)),
+							"roleArn":                     llx.StringData(aws.ToString(stack.RoleARN)),
 							"tags":                        llx.MapData(cfnTagsToMap(stack.Tags), types.String),
 							"createdAt":                   llx.TimeDataPtr(stack.CreationTime),
 							"updatedAt":                   llx.TimeDataPtr(stack.LastUpdatedTime),
@@ -160,7 +182,6 @@ func (a *mqlAwsCloudformation) getStacks(conn *connection.AwsConnection) []*jobp
 					mqlStackRes.cacheParameters = stack.Parameters
 					mqlStackRes.cacheOutputs = stack.Outputs
 					mqlStackRes.cacheNotificationArns = stack.NotificationARNs
-					mqlStackRes.cacheRegion = region
 					res = append(res, mqlStackRes)
 				}
 
@@ -181,7 +202,6 @@ type mqlAwsCloudformationStackInternal struct {
 	cacheParameters       []cf_types.Parameter
 	cacheOutputs          []cf_types.Output
 	cacheNotificationArns []string
-	cacheRegion           string
 }
 
 func (a *mqlAwsCloudformationStack) iamRole() (*mqlAwsIamRole, error) {
@@ -217,10 +237,7 @@ func (a *mqlAwsCloudformationStack) notificationTopics() ([]any, error) {
 	res := make([]any, 0, len(a.cacheNotificationArns))
 	for _, arn := range a.cacheNotificationArns {
 		mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
-			map[string]*llx.RawData{
-				"arn":    llx.StringData(arn),
-				"region": llx.StringData(a.cacheRegion),
-			})
+			map[string]*llx.RawData{"arn": llx.StringData(arn)})
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +295,7 @@ func (a *mqlAwsCloudformation) getStackSets(conn *connection.AwsConnection) []*j
 					})
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+							log.Warn().Str("region", region).Msg("access denied calling cloudformation.ListStackSets")
 							return res, nil
 						}
 						if IsServiceNotAvailableInRegionError(err) {
@@ -289,46 +306,34 @@ func (a *mqlAwsCloudformation) getStackSets(conn *connection.AwsConnection) []*j
 					}
 
 					for _, ss := range resp.Summaries {
-						// Resolve tags inline by calling DescribeStackSet here
-						// rather than deferring to a lazy per-resource accessor.
-						// Tags are only fetchable via DescribeStackSet, and the
-						// previous lazy pattern produced an N-serial-call burst
-						// whenever a user queried `stackSets { tags }`. Inlining
-						// keeps the calls within the parallel region sweep so
-						// each region's tag lookups serialize among themselves
-						// but run concurrently across regions.
-						tags := map[string]any{}
-						if ss.Status == cf_types.StackSetStatusActive && ss.StackSetId != nil {
-							dresp, derr := svc.DescribeStackSet(ctx, &cloudformation.DescribeStackSetInput{
-								StackSetName: ss.StackSetId,
-							})
-							if derr != nil {
-								if !Is400AccessDeniedError(derr) && !IsServiceNotAvailableInRegionError(derr) {
-									return nil, derr
-								}
-								log.Debug().Str("region", region).Str("stackSet", aws.ToString(ss.StackSetId)).Msg("could not describe stack set for tags")
-							} else if dresp.StackSet != nil {
-								tags = cfnTagsToMap(dresp.StackSet.Tags)
-							}
+						id, ok := stackSetSummaryCacheKey(region, ss)
+						if !ok {
+							// Defensive: AWS shouldn't return a nil
+							// StackSetId, but two nil-id summaries in
+							// the same region would collide on __id.
+							log.Debug().Str("region", region).Msg("skipping stack set summary with nil StackSetId")
+							continue
 						}
 
 						mqlSs, err := CreateResource(a.MqlRuntime, "aws.cloudformation.stackSet",
 							map[string]*llx.RawData{
-								"__id":            llx.StringData(region + "/" + aws.ToString(ss.StackSetId)),
-								"stackSetId":      llx.StringDataPtr(ss.StackSetId),
-								"name":            llx.StringDataPtr(ss.StackSetName),
-								"region":          llx.StringData(region),
-								"status":          llx.StringData(string(ss.Status)),
-								"description":     llx.StringDataPtr(ss.Description),
-								"permissionModel": llx.StringData(string(ss.PermissionModel)),
-								"driftStatus":     llx.StringData(normalizeDriftStatus(string(ss.DriftStatus))),
-								"tags":            llx.MapData(tags, types.String),
+								"__id":                    llx.StringData(id),
+								"stackSetId":              llx.StringDataPtr(ss.StackSetId),
+								"name":                    llx.StringDataPtr(ss.StackSetName),
+								"region":                  llx.StringData(region),
+								"status":                  llx.StringData(string(ss.Status)),
+								"description":             llx.StringDataPtr(ss.Description),
+								"permissionModel":         llx.StringData(string(ss.PermissionModel)),
+								"driftStatus":             llx.StringData(normalizeDriftStatus(string(ss.DriftStatus))),
+								"lastDriftCheckTimestamp": llx.TimeDataPtr(ss.LastDriftCheckTimestamp),
+								"managedExecutionActive":  llx.BoolData(managedExecutionActive(ss.ManagedExecution)),
 							})
 						if err != nil {
 							return nil, err
 						}
 						mqlSsRes := mqlSs.(*mqlAwsCloudformationStackSet)
 						mqlSsRes.cacheAutoDeployment = ss.AutoDeployment
+						mqlSsRes.cacheStatus = ss.Status
 						res = append(res, mqlSsRes)
 					}
 
@@ -347,6 +352,14 @@ func (a *mqlAwsCloudformation) getStackSets(conn *connection.AwsConnection) []*j
 
 type mqlAwsCloudformationStackSetInternal struct {
 	cacheAutoDeployment *cf_types.AutoDeployment
+	cacheStatus         cf_types.StackSetStatus
+
+	detailsLock    sync.Mutex
+	detailsFetched bool
+	cacheTags      map[string]any
+	cacheAdminRole *string
+	cacheExecRole  *string
+	cacheOuIds     []string
 }
 
 func (a *mqlAwsCloudformationStackSet) autoDeploymentEnabled() (bool, error) {
@@ -355,4 +368,96 @@ func (a *mqlAwsCloudformationStackSet) autoDeploymentEnabled() (bool, error) {
 		return false, nil
 	}
 	return *a.cacheAutoDeployment.Enabled, nil
+}
+
+// fetchDetails calls DescribeStackSet exactly once per stack set and caches
+// the fields ListStackSets doesn't return (tags, admin/exec roles, OU IDs).
+// Multiple field accessors share the result via double-check locking.
+// DELETED stack sets are skipped — DescribeStackSet on a deleted set returns
+// StackSetNotFoundException.
+func (a *mqlAwsCloudformationStackSet) fetchDetails() error {
+	if a.detailsFetched {
+		return nil
+	}
+	a.detailsLock.Lock()
+	defer a.detailsLock.Unlock()
+	if a.detailsFetched {
+		return nil
+	}
+	if a.cacheStatus != cf_types.StackSetStatusActive {
+		a.detailsFetched = true
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudFormation(a.Region.Data)
+	ctx := context.Background()
+	name := a.StackSetId.Data
+	resp, err := svc.DescribeStackSet(ctx, &cloudformation.DescribeStackSetInput{
+		StackSetName: &name,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			log.Debug().Str("region", a.Region.Data).Str("stackSet", name).Msg("could not describe stack set")
+			a.detailsFetched = true
+			return nil
+		}
+		return err
+	}
+	if resp.StackSet != nil {
+		a.cacheTags = cfnTagsToMap(resp.StackSet.Tags)
+		a.cacheAdminRole = resp.StackSet.AdministrationRoleARN
+		a.cacheExecRole = resp.StackSet.ExecutionRoleName
+		a.cacheOuIds = resp.StackSet.OrganizationalUnitIds
+	}
+	a.detailsFetched = true
+	return nil
+}
+
+func (a *mqlAwsCloudformationStackSet) tags() (map[string]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheTags == nil {
+		return map[string]any{}, nil
+	}
+	return a.cacheTags, nil
+}
+
+func (a *mqlAwsCloudformationStackSet) administrationRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheAdminRole == nil || *a.cacheAdminRole == "" {
+		a.AdministrationRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheAdminRole)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsCloudformationStackSet) executionRoleName() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	if a.cacheExecRole == nil {
+		a.ExecutionRoleName.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return *a.cacheExecRole, nil
+}
+
+func (a *mqlAwsCloudformationStackSet) organizationalUnitIds() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheOuIds))
+	for _, ou := range a.cacheOuIds {
+		res = append(res, ou)
+	}
+	return res, nil
 }
