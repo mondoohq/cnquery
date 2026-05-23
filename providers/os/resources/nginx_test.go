@@ -263,3 +263,180 @@ func TestParseNginxModulesEmpty(t *testing.T) {
 	modules := parseNginxModules(output)
 	assert.Empty(t, modules)
 }
+
+// New tests for TLS, header collection, listen parsing, upstream details, and
+// location modifier handling.
+
+func TestParseNginxServerBlockTLSAndHeaders(t *testing.T) {
+	directives := []nginx.Directive{
+		{Name: "listen", Args: []string{"443", "ssl", "http2", "default_server"}},
+		{Name: "server_name", Args: []string{"secure.example.com"}},
+		{Name: "ssl_certificate", Args: []string{"/etc/ssl/cert.pem"}},
+		{Name: "ssl_certificate_key", Args: []string{"/etc/ssl/key.pem"}},
+		{Name: "ssl_protocols", Args: []string{"TLSv1.2", "TLSv1.3"}},
+		{Name: "ssl_ciphers", Args: []string{"HIGH:!aNULL:!MD5"}},
+		{Name: "ssl_prefer_server_ciphers", Args: []string{"on"}},
+		{Name: "ssl_session_tickets", Args: []string{"off"}},
+		{Name: "ssl_session_timeout", Args: []string{"1d"}},
+		{Name: "server_tokens", Args: []string{"off"}},
+		{Name: "add_header", Args: []string{"X-Frame-Options", "DENY", "always"}},
+		{Name: "add_header", Args: []string{"Strict-Transport-Security", "max-age=63072000"}},
+		{Name: "add_header", Args: []string{"X-Frame-Options", "SAMEORIGIN"}},
+	}
+
+	srv := parseNginxServerBlock(directives)
+
+	assert.True(t, srv.SSL, "listen flag `ssl` must mark the server as SSL")
+	assert.Equal(t, "/etc/ssl/cert.pem", srv.SSLCertificate)
+	assert.Equal(t, "/etc/ssl/key.pem", srv.SSLCertificateKey)
+	assert.Equal(t, "TLSv1.2 TLSv1.3", srv.SSLProtocols)
+	assert.Equal(t, "HIGH:!aNULL:!MD5", srv.SSLCiphers)
+	assert.True(t, srv.SSLPreferServerCiphers, "ssl_prefer_server_ciphers `on` must be true")
+	assert.Equal(t, "off", srv.SSLSessionTickets)
+	assert.Equal(t, "1d", srv.SSLSessionTimeout)
+	assert.Equal(t, "off", srv.ServerTokens)
+
+	// Headers must accumulate by name in order.
+	require.Len(t, srv.Listens, 1)
+	l := srv.Listens[0]
+	assert.True(t, l.SSL)
+	assert.True(t, l.HTTP2)
+	assert.True(t, l.DefaultServer)
+	assert.False(t, l.ProxyProtocol)
+	assert.Equal(t, int64(443), l.Port)
+
+	assert.Equal(t,
+		[]string{"DENY always", "SAMEORIGIN"},
+		srv.AddHeaders["X-Frame-Options"],
+		"add_header collects every value per name in source order, including trailing flags")
+	assert.Equal(t,
+		[]string{"max-age=63072000"},
+		srv.AddHeaders["Strict-Transport-Security"])
+}
+
+func TestParseNginxListen(t *testing.T) {
+	cases := []struct {
+		name string
+		args []string
+		want nginxListen
+	}{
+		{"bare port", []string{"80"}, nginxListen{Raw: "80", Port: 80}},
+		{"port + ssl", []string{"443", "ssl"}, nginxListen{Raw: "443 ssl", Port: 443, SSL: true}},
+		{"ipv4 host:port", []string{"127.0.0.1:8080"}, nginxListen{Raw: "127.0.0.1:8080", Address: "127.0.0.1", Port: 8080}},
+		{"ipv6 host:port", []string{"[::]:443", "ssl"}, nginxListen{Raw: "[::]:443 ssl", Address: "[::]", Port: 443, SSL: true}},
+		{"default_server + http2", []string{"443", "ssl", "http2", "default_server"}, nginxListen{
+			Raw: "443 ssl http2 default_server", Port: 443, SSL: true, HTTP2: true, DefaultServer: true,
+		}},
+		{"proxy_protocol", []string{"80", "proxy_protocol"}, nginxListen{
+			Raw: "80 proxy_protocol", Port: 80, ProxyProtocol: true,
+		}},
+		{"unix socket", []string{"unix:/var/run/nginx.sock"}, nginxListen{
+			Raw: "unix:/var/run/nginx.sock", Address: "unix:/var/run/nginx.sock",
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseNginxListen(tc.args)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestParseNginxUpstreamBlockLoadBalancing(t *testing.T) {
+	t.Run("default round_robin", func(t *testing.T) {
+		up := parseNginxUpstreamBlock("backend", []nginx.Directive{
+			{Name: "server", Args: []string{"127.0.0.1:8080"}},
+		})
+		assert.Equal(t, "round_robin", up.LoadBalancingMethod)
+	})
+
+	t.Run("least_conn", func(t *testing.T) {
+		up := parseNginxUpstreamBlock("backend", []nginx.Directive{
+			{Name: "least_conn"},
+			{Name: "server", Args: []string{"127.0.0.1:8080"}},
+		})
+		assert.Equal(t, "least_conn", up.LoadBalancingMethod)
+	})
+
+	t.Run("ip_hash", func(t *testing.T) {
+		up := parseNginxUpstreamBlock("backend", []nginx.Directive{
+			{Name: "ip_hash"},
+			{Name: "server", Args: []string{"127.0.0.1:8080"}},
+		})
+		assert.Equal(t, "ip_hash", up.LoadBalancingMethod)
+	})
+
+	t.Run("hash / random / least_time", func(t *testing.T) {
+		for _, method := range []string{"hash", "random", "least_time"} {
+			up := parseNginxUpstreamBlock("b", []nginx.Directive{{Name: method}})
+			assert.Equal(t, method, up.LoadBalancingMethod, "method %q", method)
+		}
+	})
+
+	t.Run("keepalive parsed numerically", func(t *testing.T) {
+		up := parseNginxUpstreamBlock("backend", []nginx.Directive{
+			{Name: "keepalive", Args: []string{"32"}},
+		})
+		assert.Equal(t, int64(32), up.Keepalive)
+	})
+}
+
+func TestParseUpstreamServer(t *testing.T) {
+	cases := []struct {
+		name string
+		args []string
+		want nginxUpstreamServer
+	}{
+		{"address only", []string{"127.0.0.1:8080"}, nginxUpstreamServer{Address: "127.0.0.1:8080"}},
+		{"weight + max_fails + fail_timeout", []string{
+			"backend1.example.com", "weight=3", "max_fails=2", "fail_timeout=30s",
+		}, nginxUpstreamServer{Address: "backend1.example.com", Weight: 3, MaxFails: 2, FailTimeout: "30s"}},
+		{"backup + down", []string{"backend2", "backup", "down"}, nginxUpstreamServer{
+			Address: "backend2", Backup: true, Down: true,
+		}},
+		{"slow_start + route", []string{"backend3", "slow_start=30s", "route=a"}, nginxUpstreamServer{
+			Address: "backend3", SlowStart: "30s", Route: "a",
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseUpstreamServer(tc.args)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestParseNginxLocationModifiers(t *testing.T) {
+	cases := []struct {
+		name     string
+		arg      string
+		wantMod  string
+		wantPath string
+	}{
+		{"prefix default", "/api", "", "/api"},
+		{"exact", "= /api", "=", "/api"},
+		{"case-sensitive regex", "~ ^/api/(.*)$", "~", "^/api/(.*)$"},
+		{"case-insensitive regex", "~* \\.jpg$", "~*", `\.jpg$`},
+		{"preferential prefix", "^~ /static/", "^~", "/static/"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mod, p := splitLocationModifier(tc.arg)
+			assert.Equal(t, tc.wantMod, mod)
+			assert.Equal(t, tc.wantPath, p)
+		})
+	}
+}
+
+func TestParseNginxLocationDetail(t *testing.T) {
+	loc := parseNginxLocationBlock("~ ^/api/(.*)$", []nginx.Directive{
+		{Name: "try_files", Args: []string{"$uri", "$uri/", "=404"}},
+		{Name: "return", Args: []string{"301", "https://example.com$request_uri"}},
+		{Name: "fastcgi_pass", Args: []string{"unix:/var/run/php-fpm.sock"}},
+	})
+	assert.Equal(t, "~", loc.Modifier)
+	assert.Equal(t, "^/api/(.*)$", loc.Path)
+	assert.Equal(t, "$uri $uri/ =404", loc.TryFiles)
+	assert.Equal(t, "301 https://example.com$request_uri", loc.Return)
+	assert.Equal(t, "unix:/var/run/php-fpm.sock", loc.FastcgiPass)
+}

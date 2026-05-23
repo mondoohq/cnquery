@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/nginx"
 	"go.mondoo.com/mql/v13/types"
@@ -402,25 +403,65 @@ func (s *mqlNginxConf) errorLog(params map[string]any) (string, error) {
 // Internal types for collecting parsed data before converting to MQL resources.
 
 type nginxServer struct {
-	ServerName string
-	Listen     string
-	Root       string
-	SSL        bool
-	Locations  []nginxLocation
-	Params     map[string]any
+	ServerName             string
+	Listen                 string
+	Listens                []nginxListen
+	Root                   string
+	SSL                    bool
+	SSLProtocols           string
+	SSLCiphers             string
+	SSLCertificate         string
+	SSLCertificateKey      string
+	SSLPreferServerCiphers bool
+	SSLSessionTickets      string
+	SSLSessionTimeout      string
+	AddHeaders             map[string][]string // collected from `add_header NAME VALUE [...flags]`
+	ServerTokens           string
+	Locations              []nginxLocation
+	Params                 map[string]any
+}
+
+// nginxListen is a parsed `listen` directive.
+type nginxListen struct {
+	Raw           string // original argument string
+	Address       string // optional address part (e.g. "127.0.0.1" or "[::]")
+	Port          int64  // numeric port; 0 if the directive used a unix:/path target
+	SSL           bool   // `ssl` flag present
+	HTTP2         bool   // `http2` flag present
+	DefaultServer bool   // `default_server` flag present
+	ProxyProtocol bool   // `proxy_protocol` flag present
 }
 
 type nginxUpstream struct {
-	Name    string
-	Servers []string
-	Params  map[string]any
+	Name                string
+	Servers             []string
+	ServerDetails       []nginxUpstreamServer
+	LoadBalancingMethod string
+	Keepalive           int64
+	Params              map[string]any
+}
+
+// nginxUpstreamServer is a parsed `server` directive inside an upstream{} block.
+type nginxUpstreamServer struct {
+	Address     string
+	Weight      int64
+	MaxFails    int64
+	FailTimeout string
+	Backup      bool
+	Down        bool
+	SlowStart   string
+	Route       string
 }
 
 type nginxLocation struct {
-	Path      string
-	ProxyPass string
-	Root      string
-	Params    map[string]any
+	Path        string
+	Modifier    string
+	ProxyPass   string
+	Root        string
+	TryFiles    string
+	Return      string
+	FastcgiPass string
+	Params      map[string]any
 }
 
 // walkHTTPBlock processes the http{} block's directives.
@@ -453,7 +494,8 @@ func walkHTTPBlock(directives []nginx.Directive, httpParams map[string]any, serv
 // parseNginxServerBlock extracts structured data from a server{} block.
 func parseNginxServerBlock(directives []nginx.Directive) nginxServer {
 	srv := nginxServer{
-		Params: map[string]any{},
+		Params:     map[string]any{},
+		AddHeaders: map[string][]string{},
 	}
 
 	var listens []string
@@ -466,10 +508,10 @@ func parseNginxServerBlock(directives []nginx.Directive) nginxServer {
 			setNginxParam(srv.Params, d.Name, args)
 		case "listen":
 			listens = append(listens, args)
-			for _, arg := range d.Args {
-				if arg == "ssl" {
-					srv.SSL = true
-				}
+			l := parseNginxListen(d.Args)
+			srv.Listens = append(srv.Listens, l)
+			if l.SSL {
+				srv.SSL = true
 			}
 			setNginxParam(srv.Params, d.Name, args)
 		case "root":
@@ -477,6 +519,35 @@ func parseNginxServerBlock(directives []nginx.Directive) nginxServer {
 			setNginxParam(srv.Params, d.Name, args)
 		case "ssl_certificate":
 			srv.SSL = true
+			srv.SSLCertificate = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_certificate_key":
+			srv.SSLCertificateKey = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_protocols":
+			srv.SSLProtocols = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_ciphers":
+			srv.SSLCiphers = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_prefer_server_ciphers":
+			srv.SSLPreferServerCiphers = strings.EqualFold(args, "on")
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_session_tickets":
+			srv.SSLSessionTickets = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "ssl_session_timeout":
+			srv.SSLSessionTimeout = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "server_tokens":
+			srv.ServerTokens = args
+			setNginxParam(srv.Params, d.Name, args)
+		case "add_header":
+			if len(d.Args) >= 2 {
+				name := d.Args[0]
+				value := strings.Join(d.Args[1:], " ")
+				srv.AddHeaders[name] = append(srv.AddHeaders[name], value)
+			}
 			setNginxParam(srv.Params, d.Name, args)
 		case "location":
 			loc := parseNginxLocationBlock(args, d.Block)
@@ -492,11 +563,80 @@ func parseNginxServerBlock(directives []nginx.Directive) nginxServer {
 	return srv
 }
 
+// parseNginxListen breaks a `listen` directive's arguments into structured
+// fields. Nginx accepts a wide variety of shapes; this handler covers the
+// common ones used in audits: a bare port, an address:port, the
+// `default_server` / `ssl` / `http2` / `proxy_protocol` flags, and
+// `unix:/path` sockets (which produce port=0 with the path stored on Address).
+func parseNginxListen(args []string) nginxListen {
+	l := nginxListen{Raw: strings.Join(args, " ")}
+	if len(args) == 0 {
+		return l
+	}
+	// First positional arg is the listen target.
+	addr := args[0]
+	rest := args[1:]
+	if strings.HasPrefix(addr, "unix:") {
+		l.Address = addr
+	} else if strings.HasPrefix(addr, "[") && strings.Contains(addr, "]") {
+		// IPv6 form: [::]:443 or [::1]:443
+		idx := strings.LastIndex(addr, "]")
+		l.Address = addr[:idx+1]
+		if idx+2 < len(addr) && addr[idx+1] == ':' {
+			l.Port, _ = parsePort(addr[idx+2:])
+		}
+	} else if i := strings.LastIndex(addr, ":"); i >= 0 {
+		l.Address = addr[:i]
+		l.Port, _ = parsePort(addr[i+1:])
+	} else {
+		// Could be just a port number, or just an address.
+		if p, ok := parsePort(addr); ok {
+			l.Port = p
+		} else {
+			l.Address = addr
+		}
+	}
+	for _, flag := range rest {
+		switch flag {
+		case "ssl":
+			l.SSL = true
+		case "http2":
+			l.HTTP2 = true
+		case "default_server", "default":
+			l.DefaultServer = true
+		case "proxy_protocol":
+			l.ProxyProtocol = true
+		}
+	}
+	return l
+}
+
+func parsePort(s string) (int64, bool) {
+	if s == "" {
+		return 0, false
+	}
+	var n int64
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return 0, false
+		}
+		n = n*10 + int64(c-'0')
+		if n > 65535 {
+			return 0, false
+		}
+	}
+	return n, true
+}
+
 // parseNginxLocationBlock extracts structured data from a location{} block.
+// The `path` argument from the parent is the joined `args` string, which may
+// include a leading modifier ("=", "~", "~*", "^~").
 func parseNginxLocationBlock(path string, directives []nginx.Directive) nginxLocation {
+	mod, p := splitLocationModifier(path)
 	loc := nginxLocation{
-		Path:   path,
-		Params: map[string]any{},
+		Path:     p,
+		Modifier: mod,
+		Params:   map[string]any{},
 	}
 
 	for _, d := range directives {
@@ -511,17 +651,47 @@ func parseNginxLocationBlock(path string, directives []nginx.Directive) nginxLoc
 			loc.ProxyPass = args
 		case "root":
 			loc.Root = args
+		case "try_files":
+			loc.TryFiles = args
+		case "return":
+			loc.Return = args
+		case "fastcgi_pass":
+			loc.FastcgiPass = args
 		}
 	}
 
 	return loc
 }
 
+// splitLocationModifier separates a leading modifier from the path argument
+// of a location{} block. nginx recognizes "=", "~", "~*", "^~"; anything
+// else is treated as a prefix path with an empty modifier.
+func splitLocationModifier(arg string) (string, string) {
+	arg = strings.TrimSpace(arg)
+	for _, m := range []string{"~*", "~", "^~", "="} {
+		prefix := m + " "
+		if strings.HasPrefix(arg, prefix) {
+			return m, strings.TrimSpace(arg[len(prefix):])
+		}
+		if arg == m {
+			return m, ""
+		}
+	}
+	return "", arg
+}
+
 // parseNginxUpstreamBlock extracts structured data from an upstream{} block.
+//
+// In addition to the raw `server` directive arguments (kept for backward
+// compatibility), this also parses the per-server suffix flags (weight,
+// max_fails, fail_timeout, backup, down, slow_start, route) and the
+// load-balancing method (least_conn, ip_hash, hash, random, least_time —
+// otherwise "round_robin" by default).
 func parseNginxUpstreamBlock(name string, directives []nginx.Directive) nginxUpstream {
 	up := nginxUpstream{
-		Name:   name,
-		Params: map[string]any{},
+		Name:                name,
+		Params:              map[string]any{},
+		LoadBalancingMethod: "round_robin",
 	}
 
 	for _, d := range directives {
@@ -529,14 +699,69 @@ func parseNginxUpstreamBlock(name string, directives []nginx.Directive) nginxUps
 			continue
 		}
 		args := strings.Join(d.Args, " ")
-		if d.Name == "server" {
+		switch d.Name {
+		case "server":
 			up.Servers = append(up.Servers, args)
-		} else {
+			up.ServerDetails = append(up.ServerDetails, parseUpstreamServer(d.Args))
+		case "least_conn":
+			up.LoadBalancingMethod = "least_conn"
+			setNginxParam(up.Params, d.Name, args)
+		case "ip_hash":
+			up.LoadBalancingMethod = "ip_hash"
+			setNginxParam(up.Params, d.Name, args)
+		case "hash":
+			up.LoadBalancingMethod = "hash"
+			setNginxParam(up.Params, d.Name, args)
+		case "random":
+			up.LoadBalancingMethod = "random"
+			setNginxParam(up.Params, d.Name, args)
+		case "least_time":
+			up.LoadBalancingMethod = "least_time"
+			setNginxParam(up.Params, d.Name, args)
+		case "keepalive":
+			if n, ok := parsePort(args); ok {
+				up.Keepalive = n
+			}
+			setNginxParam(up.Params, d.Name, args)
+		default:
 			setNginxParam(up.Params, d.Name, args)
 		}
 	}
 
 	return up
+}
+
+// parseUpstreamServer decodes the per-server flags on an upstream `server`
+// directive: `server ADDRESS [weight=N] [max_fails=N] [fail_timeout=T] [backup] [down] [slow_start=T] [route=...]`.
+func parseUpstreamServer(args []string) nginxUpstreamServer {
+	s := nginxUpstreamServer{}
+	if len(args) == 0 {
+		return s
+	}
+	s.Address = args[0]
+	for _, a := range args[1:] {
+		switch {
+		case a == "backup":
+			s.Backup = true
+		case a == "down":
+			s.Down = true
+		case strings.HasPrefix(a, "weight="):
+			if n, ok := parsePort(strings.TrimPrefix(a, "weight=")); ok {
+				s.Weight = n
+			}
+		case strings.HasPrefix(a, "max_fails="):
+			if n, ok := parsePort(strings.TrimPrefix(a, "max_fails=")); ok {
+				s.MaxFails = n
+			}
+		case strings.HasPrefix(a, "fail_timeout="):
+			s.FailTimeout = strings.TrimPrefix(a, "fail_timeout=")
+		case strings.HasPrefix(a, "slow_start="):
+			s.SlowStart = strings.TrimPrefix(a, "slow_start=")
+		case strings.HasPrefix(a, "route="):
+			s.Route = strings.TrimPrefix(a, "route=")
+		}
+	}
+	return s
 }
 
 // setNginxParam sets a directive value. For directives that can appear
@@ -578,14 +803,42 @@ func nginxServers2Resources(servers []nginxServer, runtime *plugin.Runtime, owne
 			return nil, err
 		}
 
+		listens := make([]any, len(srv.Listens))
+		for j, l := range srv.Listens {
+			listens[j] = map[string]any{
+				"raw":           l.Raw,
+				"address":       l.Address,
+				"port":          l.Port,
+				"ssl":           l.SSL,
+				"http2":         l.HTTP2,
+				"defaultServer": l.DefaultServer,
+				"proxyProtocol": l.ProxyProtocol,
+			}
+		}
+
+		addHeaders := make(map[string]any, len(srv.AddHeaders))
+		for name, values := range srv.AddHeaders {
+			addHeaders[name] = convert.SliceAnyToInterface(values)
+		}
+
 		obj, err := CreateResource(runtime, "nginx.conf.server", map[string]*llx.RawData{
-			"__id":       llx.StringData(id),
-			"serverName": llx.StringData(srv.ServerName),
-			"listen":     llx.StringData(srv.Listen),
-			"root":       llx.StringData(srv.Root),
-			"ssl":        llx.BoolData(srv.SSL),
-			"locations":  llx.ArrayData(locations, types.Resource("nginx.conf.location")),
-			"params":     llx.MapData(srv.Params, types.String),
+			"__id":                   llx.StringData(id),
+			"serverName":             llx.StringData(srv.ServerName),
+			"listen":                 llx.StringData(srv.Listen),
+			"listens":                llx.ArrayData(listens, types.Dict),
+			"root":                   llx.StringData(srv.Root),
+			"ssl":                    llx.BoolData(srv.SSL),
+			"sslProtocols":           llx.StringData(srv.SSLProtocols),
+			"sslCiphers":             llx.StringData(srv.SSLCiphers),
+			"sslCertificate":         llx.StringData(srv.SSLCertificate),
+			"sslCertificateKey":      llx.StringData(srv.SSLCertificateKey),
+			"sslPreferServerCiphers": llx.BoolData(srv.SSLPreferServerCiphers),
+			"sslSessionTickets":      llx.StringData(srv.SSLSessionTickets),
+			"sslSessionTimeout":      llx.StringData(srv.SSLSessionTimeout),
+			"addHeaders":             llx.MapData(addHeaders, types.Array(types.String)),
+			"serverTokens":           llx.StringData(srv.ServerTokens),
+			"locations":              llx.ArrayData(locations, types.Resource("nginx.conf.location")),
+			"params":                 llx.MapData(srv.Params, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -603,11 +856,28 @@ func nginxUpstreams2Resources(upstreams []nginxUpstream, runtime *plugin.Runtime
 			serversData[j] = s
 		}
 
+		details := make([]any, len(up.ServerDetails))
+		for j, d := range up.ServerDetails {
+			details[j] = map[string]any{
+				"address":     d.Address,
+				"weight":      d.Weight,
+				"maxFails":    d.MaxFails,
+				"failTimeout": d.FailTimeout,
+				"backup":      d.Backup,
+				"down":        d.Down,
+				"slowStart":   d.SlowStart,
+				"route":       d.Route,
+			}
+		}
+
 		obj, err := CreateResource(runtime, "nginx.conf.upstream", map[string]*llx.RawData{
-			"__id":    llx.StringData(ownerID + "/upstream/" + up.Name),
-			"name":    llx.StringData(up.Name),
-			"servers": llx.ArrayData(serversData, types.String),
-			"params":  llx.MapData(up.Params, types.String),
+			"__id":                llx.StringData(ownerID + "/upstream/" + up.Name),
+			"name":                llx.StringData(up.Name),
+			"servers":             llx.ArrayData(serversData, types.String),
+			"serverDetails":       llx.ArrayData(details, types.Dict),
+			"loadBalancingMethod": llx.StringData(up.LoadBalancingMethod),
+			"keepalive":           llx.IntData(up.Keepalive),
+			"params":              llx.MapData(up.Params, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -621,11 +891,15 @@ func nginxLocations2Resources(locations []nginxLocation, runtime *plugin.Runtime
 	res := make([]any, len(locations))
 	for i, loc := range locations {
 		obj, err := CreateResource(runtime, "nginx.conf.location", map[string]*llx.RawData{
-			"__id":      llx.StringData(fmt.Sprintf("%s/location/%d-%s", ownerID, i, loc.Path)),
-			"path":      llx.StringData(loc.Path),
-			"proxyPass": llx.StringData(loc.ProxyPass),
-			"root":      llx.StringData(loc.Root),
-			"params":    llx.MapData(loc.Params, types.String),
+			"__id":        llx.StringData(fmt.Sprintf("%s/location/%d-%s", ownerID, i, loc.Path)),
+			"path":        llx.StringData(loc.Path),
+			"modifier":    llx.StringData(loc.Modifier),
+			"proxyPass":   llx.StringData(loc.ProxyPass),
+			"root":        llx.StringData(loc.Root),
+			"tryFiles":    llx.StringData(loc.TryFiles),
+			"return":      llx.StringData(loc.Return),
+			"fastcgiPass": llx.StringData(loc.FastcgiPass),
+			"params":      llx.MapData(loc.Params, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -633,4 +907,12 @@ func nginxLocations2Resources(locations []nginxLocation, runtime *plugin.Runtime
 		res[i] = obj
 	}
 	return res, nil
+}
+
+func (s *mqlNginxConfServer) certificate() ([]any, error) {
+	path := s.SslCertificate.Data
+	if path == "" {
+		return []any{}, nil
+	}
+	return readCertificatesFromPath(s.MqlRuntime, path)
 }

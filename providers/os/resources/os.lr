@@ -1143,8 +1143,18 @@ apache2.conf {
   virtualHosts(file) []apache2.conf.virtualHost
   // Directory blocks
   directories(file) []apache2.conf.directory
+  // <Location> blocks (URL-space access rules)
+  locations(file) []apache2.conf.location
   // Environment variables sourced by Apache at startup (e.g. Debian's /etc/apache2/envvars)
   envvars() apache2.conf.envvars
+  // ServerTokens disclosure level (Full, OS, Minimal, Minor, Major, Prod)
+  serverTokens(params) string
+  // ServerSignature footer mode (On, Off, EMail)
+  serverSignature(params) string
+  // TraceEnable directive value (on, off, extended)
+  traceEnable(params) string
+  // Response headers added via `Header always set NAME VALUE` (header name -> values)
+  securityHeaders(file) map[string][]string
 }
 
 // Apache2 environment variables (e.g. Debian's /etc/apache2/envvars)
@@ -1165,15 +1175,33 @@ private apache2.conf.module @defaults("name") {
 }
 
 // Apache2 VirtualHost block
-private apache2.conf.virtualHost @defaults("address") {
+private apache2.conf.virtualHost @defaults("address serverName ssl") {
   // VirtualHost address (e.g., "*:443")
   address string
   // ServerName directive
   serverName string
+  // ServerAlias names (one entry per name across one or more ServerAlias lines)
+  serverAliases []string
   // DocumentRoot directive
   documentRoot string
   // Whether SSL is enabled (SSLEngine on)
   ssl bool
+  // SSLProtocol directive value (e.g., "all -SSLv3 -TLSv1 -TLSv1.1")
+  sslProtocol string
+  // SSLCipherSuite directive value
+  sslCipherSuite string
+  // SSLHonorCipherOrder directive value (true when "on")
+  sslHonorCipherOrder bool
+  // Path to the server certificate (SSLCertificateFile)
+  sslCertificateFile string
+  // Path to the server private key (SSLCertificateKeyFile)
+  sslCertificateKeyFile string
+  // Path to the certificate chain (SSLCertificateChainFile, deprecated in favor of full chain in SSLCertificateFile)
+  sslCertificateChainFile string
+  // X.509 certificates parsed from sslCertificateFile (empty if the file is unreadable)
+  certificate() []network.certificate
+  // Redirect / RedirectMatch directives within this VirtualHost (target, status, match)
+  redirects []dict
   // All directives within this VirtualHost
   params map[string]string
 }
@@ -1186,7 +1214,27 @@ private apache2.conf.directory @defaults("path") {
   options string
   // AllowOverride directive value
   allowOverride string
+  // Require directive values (one entry per Require line)
+  require []string
   // All directives within this Directory block
+  params map[string]string
+}
+
+// Apache2 <Location> block — URL-space access rules
+private apache2.conf.location @defaults("path") {
+  // Location path or regex
+  path string
+  // Whether this block was defined with <LocationMatch> (regex form) instead of <Location>
+  isMatch bool
+  // AuthType directive value (None, Basic, Digest, ...)
+  authType string
+  // AuthName directive value (realm)
+  authName string
+  // Require directive values (one entry per Require line)
+  require []string
+  // ProxyPass target, if set
+  proxyPass string
+  // All directives within this Location block
   params map[string]string
 }
 
@@ -1228,39 +1276,75 @@ nginx.conf {
 }
 
 // Nginx server block
-private nginx.conf.server @defaults("serverName") {
+private nginx.conf.server @defaults("serverName ssl") {
   // Server name(s)
   serverName string
   // Listen directives (comma-separated if multiple)
   listen string
+  // Listen directives broken out per declaration (port, ssl, http2, defaultServer, proxyProtocol, address, raw)
+  listens []dict
   // Document root
   root string
-  // Whether SSL is configured
+  // Whether SSL is configured (any listen line carries `ssl`, or ssl_certificate is set)
   ssl bool
+  // ssl_protocols directive value (e.g., "TLSv1.2 TLSv1.3")
+  sslProtocols string
+  // ssl_ciphers directive value
+  sslCiphers string
+  // Path to the server certificate (ssl_certificate)
+  sslCertificate string
+  // Path to the server private key (ssl_certificate_key)
+  sslCertificateKey string
+  // ssl_prefer_server_ciphers directive value (true when "on")
+  sslPreferServerCiphers bool
+  // ssl_session_tickets directive value ("on"/"off"; empty if unset)
+  sslSessionTickets string
+  // ssl_session_timeout directive value (e.g., "1d")
+  sslSessionTimeout string
+  // X.509 certificates parsed from sslCertificate (empty if the file is unreadable)
+  certificate() []network.certificate
+  // Response headers from `add_header NAME VALUE` directives (header name -> values)
+  addHeaders map[string][]string
   // Location blocks
   locations []nginx.conf.location
+  // server_tokens directive value (on/off/build)
+  serverTokens string
   // All directives within this server block
   params map[string]string
 }
 
 // Nginx upstream block
-private nginx.conf.upstream @defaults("name") {
+private nginx.conf.upstream @defaults("name loadBalancingMethod") {
   // Upstream group name
   name string
-  // Backend server addresses
+  // Backend server addresses (raw `server` directive arguments)
   servers []string
+  // Parsed backend entries (address, weight, maxFails, failTimeout, backup, down, slowStart, route)
+  serverDetails []dict
+  // Load-balancing method (round_robin, least_conn, ip_hash, hash, random, least_time)
+  loadBalancingMethod string
+  // keepalive directive value (idle connections per worker; 0 if unset)
+  keepalive int
   // All directives within this upstream block
   params map[string]string
 }
 
 // Nginx location block
 private nginx.conf.location @defaults("path") {
-  // Location path or pattern
+  // Location path or pattern (excluding modifier)
   path string
+  // Location modifier ("=", "~", "~*", "^~", or "" for prefix-default)
+  modifier string
   // Proxy pass target
   proxyPass string
   // Document root override
   root string
+  // try_files directive value
+  tryFiles string
+  // return directive value (status + URI/text)
+  return string
+  // fastcgi_pass directive value
+  fastcgiPass string
   // All directives within this location block
   params map[string]string
 }

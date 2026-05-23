@@ -17,11 +17,27 @@ type Module struct {
 
 // VirtualHost represents a <VirtualHost> block.
 type VirtualHost struct {
-	Address      string         // e.g., "*:443"
-	ServerName   string         // ServerName directive
-	DocumentRoot string         // DocumentRoot directive
-	SSL          bool           // SSLEngine on
-	Params       map[string]any // all directives in this block
+	Address                 string         // e.g., "*:443"
+	ServerName              string         // ServerName directive
+	ServerAliases           []string       // one entry per ServerAlias arg across one or more lines
+	DocumentRoot            string         // DocumentRoot directive
+	SSL                     bool           // SSLEngine on
+	SSLProtocol             string         // SSLProtocol directive
+	SSLCipherSuite          string         // SSLCipherSuite directive
+	SSLHonorCipherOrder     bool           // SSLHonorCipherOrder on
+	SSLCertificateFile      string         // SSLCertificateFile path
+	SSLCertificateKeyFile   string         // SSLCertificateKeyFile path
+	SSLCertificateChainFile string         // SSLCertificateChainFile path (deprecated)
+	Redirects               []Redirect     // Redirect / RedirectMatch directives
+	Params                  map[string]any // all directives in this block
+}
+
+// Redirect represents a Redirect or RedirectMatch directive inside a VirtualHost.
+type Redirect struct {
+	Status string // optional status ("permanent", "temp", "303", ...). Empty if unspecified.
+	Match  string // URL or regex (depending on Type)
+	Target string // target URL
+	Type   string // "Redirect" or "RedirectMatch"
 }
 
 // Directory represents a <Directory> block.
@@ -29,16 +45,30 @@ type Directory struct {
 	Path          string         // e.g., "/var/www/html"
 	Options       string         // Options directive
 	AllowOverride string         // AllowOverride directive
+	Require       []string       // each Require directive captured verbatim (e.g., "all granted")
 	Params        map[string]any // all directives in this block
+}
+
+// Location represents a <Location> or <LocationMatch> block.
+type Location struct {
+	Path      string         // e.g., "/admin" or a regex
+	IsMatch   bool           // true if <LocationMatch>, false if <Location>
+	AuthType  string         // AuthType directive value
+	AuthName  string         // AuthName directive value
+	Require   []string       // each Require directive captured verbatim
+	ProxyPass string         // ProxyPass target
+	Params    map[string]any // all directives in this block
 }
 
 // Config is the parsed result of Apache configuration files.
 type Config struct {
-	Params   map[string]any // top-level directives (key → value)
-	Modules  []Module       // LoadModule directives
-	VHosts   []VirtualHost  // <VirtualHost> blocks
-	Dirs     []Directory    // <Directory> blocks
-	Includes []string       // Include/IncludeOptional paths (unexpanded)
+	Params    map[string]any      // top-level directives (key → value)
+	Modules   []Module            // LoadModule directives
+	VHosts    []VirtualHost       // <VirtualHost> blocks
+	Dirs      []Directory         // <Directory> blocks
+	Locations []Location          // <Location> / <LocationMatch> blocks at top-level scope
+	Headers   map[string][]string // headers added via `Header always set` at any scope
+	Includes  []string            // Include/IncludeOptional paths (unexpanded)
 }
 
 type (
@@ -100,11 +130,16 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 			case "virtualhost":
 				vh := parseVirtualHost(blockArg, blockLines, vars)
 				cfg.VHosts = append(cfg.VHosts, vh)
+				// VirtualHosts can contain their own <Location> blocks + Header directives.
+				collectScopedHeadersAndLocations(cfg, blockLines)
 			case "directory", "directorymatch":
 				d := parseDirectory(blockArg, blockLines, vars)
 				cfg.Dirs = append(cfg.Dirs, d)
+			case "location", "locationmatch":
+				loc := parseLocation(blockArg, blockLines, vars, strings.EqualFold(blockTag, "locationmatch"))
+				cfg.Locations = append(cfg.Locations, loc)
 			}
-			// Other block types (Location, Files, etc.) are silently skipped for now
+			// Other block types (Files, etc.) are silently skipped for now
 			continue
 		}
 
@@ -128,6 +163,13 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 			if len(parts) >= 2 {
 				cfg.Modules = append(cfg.Modules, Module{Name: parts[0], Path: parts[1]})
 			}
+		case "header":
+			if name, val, ok := parseHeaderAlwaysSet(value); ok {
+				if cfg.Headers == nil {
+					cfg.Headers = map[string][]string{}
+				}
+				cfg.Headers[name] = append(cfg.Headers[name], val)
+			}
 		case "define":
 			// `Define VAR value` adds an Apache-level variable usable as ${VAR}.
 			if name, val, ok := splitDefine(value); ok {
@@ -139,6 +181,61 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 
 		i++
 	}
+}
+
+// collectScopedHeadersAndLocations walks the lines inside a containing block
+// (typically a VirtualHost) and extracts any nested <Location> blocks and
+// `Header always set` directives so they're reachable from the top-level
+// Config aggregates without forcing the caller to walk the tree again.
+func collectScopedHeadersAndLocations(cfg *Config, lines []string) {
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if strings.HasPrefix(line, "<") {
+			blockTag, blockArg := parseBlockOpen(line)
+			blockLines, end := collectBlock(lines, i+1, blockTag)
+			switch strings.ToLower(blockTag) {
+			case "location", "locationmatch":
+				loc := parseLocation(blockArg, blockLines, nil, strings.EqualFold(blockTag, "locationmatch"))
+				cfg.Locations = append(cfg.Locations, loc)
+			}
+			i = end
+			continue
+		}
+		key, value := parseDirective(line)
+		if key == "" {
+			continue
+		}
+		if strings.EqualFold(key, "header") {
+			if name, val, ok := parseHeaderAlwaysSet(value); ok {
+				if cfg.Headers == nil {
+					cfg.Headers = map[string][]string{}
+				}
+				cfg.Headers[name] = append(cfg.Headers[name], val)
+			}
+		}
+	}
+}
+
+// parseHeaderAlwaysSet decodes a `Header always set NAME VALUE` directive
+// argument, returning the (name, value) pair. Returns ok=false for any other
+// shape (e.g. `Header set ...`, `Header unset ...`) which we deliberately
+// ignore — security audits care about the "always set" rule that survives
+// proxy intermediaries.
+func parseHeaderAlwaysSet(arg string) (string, string, bool) {
+	parts := strings.Fields(arg)
+	if len(parts) < 4 {
+		return "", "", false
+	}
+	if !strings.EqualFold(parts[0], "always") || !strings.EqualFold(parts[1], "set") {
+		return "", "", false
+	}
+	name := parts[2]
+	// Reassemble the remaining tokens; strip a surrounding pair of quotes if present.
+	rest := strings.TrimSpace(strings.Join(parts[3:], " "))
+	if len(rest) >= 2 && rest[0] == '"' && rest[len(rest)-1] == '"' {
+		rest = rest[1 : len(rest)-1]
+	}
+	return name, rest, true
 }
 
 // splitDefine splits a Define directive argument into name and value. When
@@ -196,9 +293,13 @@ func parseLines(cfg *Config, lines []string, start int) {
 			case "virtualhost":
 				vh := parseVirtualHost(blockArg, blockLines, nil)
 				cfg.VHosts = append(cfg.VHosts, vh)
+				collectScopedHeadersAndLocations(cfg, blockLines)
 			case "directory", "directorymatch":
 				d := parseDirectory(blockArg, blockLines, nil)
 				cfg.Dirs = append(cfg.Dirs, d)
+			case "location", "locationmatch":
+				loc := parseLocation(blockArg, blockLines, nil, strings.EqualFold(blockTag, "locationmatch"))
+				cfg.Locations = append(cfg.Locations, loc)
 			}
 			continue
 		}
@@ -217,6 +318,13 @@ func parseLines(cfg *Config, lines []string, start int) {
 			parts := strings.Fields(value)
 			if len(parts) >= 2 {
 				cfg.Modules = append(cfg.Modules, Module{Name: parts[0], Path: parts[1]})
+			}
+		case "header":
+			if name, val, ok := parseHeaderAlwaysSet(value); ok {
+				if cfg.Headers == nil {
+					cfg.Headers = map[string][]string{}
+				}
+				cfg.Headers[name] = append(cfg.Headers[name], val)
 			}
 		default:
 			setParam(cfg.Params, key, value)
@@ -260,14 +368,80 @@ func parseVirtualHost(address string, lines []string, vars map[string]string) Vi
 		switch strings.ToLower(key) {
 		case "servername":
 			vh.ServerName = value
+		case "serveralias":
+			// Apache allows multiple aliases per line and multiple ServerAlias lines.
+			for _, a := range strings.Fields(value) {
+				vh.ServerAliases = append(vh.ServerAliases, a)
+			}
 		case "documentroot":
 			vh.DocumentRoot = value
 		case "sslengine":
 			vh.SSL = strings.EqualFold(value, "on")
+		case "sslprotocol":
+			vh.SSLProtocol = value
+		case "sslciphersuite":
+			vh.SSLCipherSuite = value
+		case "sslhonorcipherorder":
+			vh.SSLHonorCipherOrder = strings.EqualFold(value, "on")
+		case "sslcertificatefile":
+			vh.SSLCertificateFile = value
+			vh.SSL = true
+		case "sslcertificatekeyfile":
+			vh.SSLCertificateKeyFile = value
+		case "sslcertificatechainfile":
+			vh.SSLCertificateChainFile = value
+		case "redirect", "redirectmatch":
+			if r, ok := parseRedirect(key, value); ok {
+				vh.Redirects = append(vh.Redirects, r)
+			}
 		}
 	}
 
 	return vh
+}
+
+// parseRedirect decodes a `Redirect [status] match target` or
+// `RedirectMatch [status] regex target` directive argument. Returns
+// ok=false when the directive doesn't have the expected number of args.
+func parseRedirect(directive, arg string) (Redirect, bool) {
+	parts := strings.Fields(arg)
+	if len(parts) < 2 {
+		return Redirect{}, false
+	}
+	r := Redirect{Type: directive}
+	// Detect an optional status token: keyword (permanent/temp/seeother/gone) or a 3-digit code.
+	first := parts[0]
+	isStatus := false
+	switch strings.ToLower(first) {
+	case "permanent", "temp", "seeother", "gone":
+		isStatus = true
+	}
+	if !isStatus && len(first) == 3 && first[0] >= '1' && first[0] <= '9' {
+		// crude 3xx/4xx/etc check; good enough for this surface
+		allDigits := true
+		for _, c := range first {
+			if c < '0' || c > '9' {
+				allDigits = false
+				break
+			}
+		}
+		isStatus = allDigits
+	}
+	if isStatus {
+		r.Status = first
+		parts = parts[1:]
+	}
+	if len(parts) == 1 {
+		// Redirect target — no match (legacy "Redirect URL" form)
+		r.Target = parts[0]
+		return r, true
+	}
+	if len(parts) >= 2 {
+		r.Match = parts[0]
+		r.Target = parts[1]
+		return r, true
+	}
+	return Redirect{}, false
 }
 
 // parseDirectory parses the lines inside a <Directory> block.
@@ -306,10 +480,59 @@ func parseDirectory(path string, lines []string, vars map[string]string) Directo
 			d.Options = value
 		case "allowoverride":
 			d.AllowOverride = value
+		case "require":
+			d.Require = append(d.Require, value)
 		}
 	}
 
 	return d
+}
+
+// parseLocation parses the lines inside a <Location> or <LocationMatch> block.
+func parseLocation(path string, lines []string, vars map[string]string, isMatch bool) Location {
+	loc := Location{
+		Path:    path,
+		IsMatch: isMatch,
+		Params:  map[string]any{},
+	}
+
+	depth := 0
+	for _, line := range lines {
+		if strings.HasPrefix(line, "<") {
+			if strings.HasPrefix(line, "</") {
+				if depth > 0 {
+					depth--
+				}
+			} else {
+				depth++
+			}
+			continue
+		}
+		if depth > 0 {
+			continue
+		}
+
+		key, value := parseDirective(line)
+		if key == "" {
+			continue
+		}
+
+		value = expandApacheVars(value, vars)
+		setParam(loc.Params, key, value)
+
+		switch strings.ToLower(key) {
+		case "authtype":
+			loc.AuthType = value
+		case "authname":
+			loc.AuthName = strings.Trim(value, `"`)
+		case "require":
+			loc.Require = append(loc.Require, value)
+		case "proxypass":
+			loc.ProxyPass = value
+		}
+	}
+
+	return loc
 }
 
 // splitAndClean splits content into lines, strips comments and blank lines,

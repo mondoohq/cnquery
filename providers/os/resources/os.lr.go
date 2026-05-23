@@ -83,6 +83,7 @@ const (
 	ResourceApache2ConfModule            string = "apache2.conf.module"
 	ResourceApache2ConfVirtualHost       string = "apache2.conf.virtualHost"
 	ResourceApache2ConfDirectory         string = "apache2.conf.directory"
+	ResourceApache2ConfLocation          string = "apache2.conf.location"
 	ResourceNginx                        string = "nginx"
 	ResourceNginxConf                    string = "nginx.conf"
 	ResourceNginxConfServer              string = "nginx.conf.server"
@@ -626,6 +627,10 @@ func init() {
 		"apache2.conf.directory": {
 			// to override args, implement: initApache2ConfDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createApache2ConfDirectory,
+		},
+		"apache2.conf.location": {
+			// to override args, implement: initApache2ConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache2ConfLocation,
 		},
 		"nginx": {
 			// to override args, implement: initNginx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2669,8 +2674,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"apache2.conf.directories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2Conf).GetDirectories()).ToDataRes(types.Array(types.Resource("apache2.conf.directory")))
 	},
+	"apache2.conf.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetLocations()).ToDataRes(types.Array(types.Resource("apache2.conf.location")))
+	},
 	"apache2.conf.envvars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2Conf).GetEnvvars()).ToDataRes(types.Resource("apache2.conf.envvars"))
+	},
+	"apache2.conf.serverTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetServerTokens()).ToDataRes(types.String)
+	},
+	"apache2.conf.serverSignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetServerSignature()).ToDataRes(types.String)
+	},
+	"apache2.conf.traceEnable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetTraceEnable()).ToDataRes(types.String)
+	},
+	"apache2.conf.securityHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetSecurityHeaders()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
 	"apache2.conf.envvars.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfEnvvars).GetFile()).ToDataRes(types.Resource("file"))
@@ -2690,11 +2710,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"apache2.conf.virtualHost.serverName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfVirtualHost).GetServerName()).ToDataRes(types.String)
 	},
+	"apache2.conf.virtualHost.serverAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetServerAliases()).ToDataRes(types.Array(types.String))
+	},
 	"apache2.conf.virtualHost.documentRoot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfVirtualHost).GetDocumentRoot()).ToDataRes(types.String)
 	},
 	"apache2.conf.virtualHost.ssl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfVirtualHost).GetSsl()).ToDataRes(types.Bool)
+	},
+	"apache2.conf.virtualHost.sslProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslProtocol()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.sslCipherSuite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslCipherSuite()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.sslHonorCipherOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslHonorCipherOrder()).ToDataRes(types.Bool)
+	},
+	"apache2.conf.virtualHost.sslCertificateFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslCertificateFile()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.sslCertificateKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslCertificateKeyFile()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.sslCertificateChainFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSslCertificateChainFile()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetCertificate()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"apache2.conf.virtualHost.redirects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetRedirects()).ToDataRes(types.Array(types.Dict))
 	},
 	"apache2.conf.virtualHost.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfVirtualHost).GetParams()).ToDataRes(types.Map(types.String, types.String))
@@ -2708,8 +2755,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"apache2.conf.directory.allowOverride": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfDirectory).GetAllowOverride()).ToDataRes(types.String)
 	},
+	"apache2.conf.directory.require": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfDirectory).GetRequire()).ToDataRes(types.Array(types.String))
+	},
 	"apache2.conf.directory.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2ConfDirectory).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"apache2.conf.location.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetPath()).ToDataRes(types.String)
+	},
+	"apache2.conf.location.isMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetIsMatch()).ToDataRes(types.Bool)
+	},
+	"apache2.conf.location.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetAuthType()).ToDataRes(types.String)
+	},
+	"apache2.conf.location.authName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetAuthName()).ToDataRes(types.String)
+	},
+	"apache2.conf.location.require": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetRequire()).ToDataRes(types.Array(types.String))
+	},
+	"apache2.conf.location.proxyPass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetProxyPass()).ToDataRes(types.String)
+	},
+	"apache2.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"nginx.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginx).GetVersion()).ToDataRes(types.String)
@@ -2753,14 +2824,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nginx.conf.server.listen": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetListen()).ToDataRes(types.String)
 	},
+	"nginx.conf.server.listens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetListens()).ToDataRes(types.Array(types.Dict))
+	},
 	"nginx.conf.server.root": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetRoot()).ToDataRes(types.String)
 	},
 	"nginx.conf.server.ssl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetSsl()).ToDataRes(types.Bool)
 	},
+	"nginx.conf.server.sslProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslProtocols()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.sslCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslCiphers()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.sslCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslCertificate()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.sslCertificateKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslCertificateKey()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.sslPreferServerCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslPreferServerCiphers()).ToDataRes(types.Bool)
+	},
+	"nginx.conf.server.sslSessionTickets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslSessionTickets()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.sslSessionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSslSessionTimeout()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetCertificate()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"nginx.conf.server.addHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetAddHeaders()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
 	"nginx.conf.server.locations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetLocations()).ToDataRes(types.Array(types.Resource("nginx.conf.location")))
+	},
+	"nginx.conf.server.serverTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetServerTokens()).ToDataRes(types.String)
 	},
 	"nginx.conf.server.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfServer).GetParams()).ToDataRes(types.Map(types.String, types.String))
@@ -2771,17 +2875,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nginx.conf.upstream.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfUpstream).GetServers()).ToDataRes(types.Array(types.String))
 	},
+	"nginx.conf.upstream.serverDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetServerDetails()).ToDataRes(types.Array(types.Dict))
+	},
+	"nginx.conf.upstream.loadBalancingMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetLoadBalancingMethod()).ToDataRes(types.String)
+	},
+	"nginx.conf.upstream.keepalive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetKeepalive()).ToDataRes(types.Int)
+	},
 	"nginx.conf.upstream.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfUpstream).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"nginx.conf.location.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetPath()).ToDataRes(types.String)
 	},
+	"nginx.conf.location.modifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetModifier()).ToDataRes(types.String)
+	},
 	"nginx.conf.location.proxyPass": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetProxyPass()).ToDataRes(types.String)
 	},
 	"nginx.conf.location.root": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetRoot()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.tryFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetTryFiles()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.return": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetReturn()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.fastcgiPass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetFastcgiPass()).ToDataRes(types.String)
 	},
 	"nginx.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
@@ -8591,8 +8716,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlApache2Conf).Directories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"apache2.conf.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"apache2.conf.envvars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApache2Conf).Envvars, ok = plugin.RawToTValue[*mqlApache2ConfEnvvars](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.serverTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).ServerTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.serverSignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).ServerSignature, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.traceEnable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).TraceEnable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.securityHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).SecurityHeaders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"apache2.conf.envvars.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8631,12 +8776,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlApache2ConfVirtualHost).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"apache2.conf.virtualHost.serverAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).ServerAliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"apache2.conf.virtualHost.documentRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApache2ConfVirtualHost).DocumentRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"apache2.conf.virtualHost.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApache2ConfVirtualHost).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslCipherSuite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslCipherSuite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslHonorCipherOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslHonorCipherOrder, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslCertificateFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslCertificateFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslCertificateKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslCertificateKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.sslCertificateChainFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).SslCertificateChainFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).Certificate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.redirects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).Redirects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"apache2.conf.virtualHost.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8659,8 +8840,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlApache2ConfDirectory).AllowOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"apache2.conf.directory.require": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).Require, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"apache2.conf.directory.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApache2ConfDirectory).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.conf.location.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.isMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).IsMatch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.authName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).AuthName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.require": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).Require, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.proxyPass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).ProxyPass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfLocation).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"nginx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8731,6 +8948,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNginxConfServer).Listen, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"nginx.conf.server.listens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Listens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"nginx.conf.server.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfServer).Root, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8739,8 +8960,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNginxConfServer).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"nginx.conf.server.sslProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslProtocols, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslCertificateKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslCertificateKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslPreferServerCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslPreferServerCiphers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslSessionTickets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslSessionTickets, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.sslSessionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).SslSessionTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Certificate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.addHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).AddHeaders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"nginx.conf.server.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfServer).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.serverTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).ServerTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"nginx.conf.server.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8759,6 +9020,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNginxConfUpstream).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"nginx.conf.upstream.serverDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).ServerDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstream.loadBalancingMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).LoadBalancingMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstream.keepalive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).Keepalive, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"nginx.conf.upstream.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfUpstream).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -8771,12 +9044,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNginxConfLocation).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"nginx.conf.location.modifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).Modifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"nginx.conf.location.proxyPass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfLocation).ProxyPass, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"nginx.conf.location.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfLocation).Root, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.tryFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).TryFiles, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.return": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).Return, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.fastcgiPass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).FastcgiPass, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"nginx.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20845,7 +21134,12 @@ type mqlApache2Conf struct {
 	Modules         plugin.TValue[[]any]
 	VirtualHosts    plugin.TValue[[]any]
 	Directories     plugin.TValue[[]any]
+	Locations       plugin.TValue[[]any]
 	Envvars         plugin.TValue[*mqlApache2ConfEnvvars]
+	ServerTokens    plugin.TValue[string]
+	ServerSignature plugin.TValue[string]
+	TraceEnable     plugin.TValue[string]
+	SecurityHeaders plugin.TValue[map[string]any]
 }
 
 // createApache2Conf creates a new instance of this resource
@@ -21007,6 +21301,27 @@ func (c *mqlApache2Conf) GetDirectories() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlApache2Conf) GetLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Locations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "locations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.locations(vargFile.Data)
+	})
+}
+
 func (c *mqlApache2Conf) GetEnvvars() *plugin.TValue[*mqlApache2ConfEnvvars] {
 	return plugin.GetOrCompute[*mqlApache2ConfEnvvars](&c.Envvars, func() (*mqlApache2ConfEnvvars, error) {
 		if c.MqlRuntime.HasRecording {
@@ -21020,6 +21335,50 @@ func (c *mqlApache2Conf) GetEnvvars() *plugin.TValue[*mqlApache2ConfEnvvars] {
 		}
 
 		return c.envvars()
+	})
+}
+
+func (c *mqlApache2Conf) GetServerTokens() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerTokens, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverTokens(vargParams.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetServerSignature() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerSignature, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.serverSignature(vargParams.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetTraceEnable() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TraceEnable, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.traceEnable(vargParams.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetSecurityHeaders() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.SecurityHeaders, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.securityHeaders(vargFile.Data)
 	})
 }
 
@@ -21150,11 +21509,20 @@ type mqlApache2ConfVirtualHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlApache2ConfVirtualHostInternal it will be used here
-	Address      plugin.TValue[string]
-	ServerName   plugin.TValue[string]
-	DocumentRoot plugin.TValue[string]
-	Ssl          plugin.TValue[bool]
-	Params       plugin.TValue[map[string]any]
+	Address                 plugin.TValue[string]
+	ServerName              plugin.TValue[string]
+	ServerAliases           plugin.TValue[[]any]
+	DocumentRoot            plugin.TValue[string]
+	Ssl                     plugin.TValue[bool]
+	SslProtocol             plugin.TValue[string]
+	SslCipherSuite          plugin.TValue[string]
+	SslHonorCipherOrder     plugin.TValue[bool]
+	SslCertificateFile      plugin.TValue[string]
+	SslCertificateKeyFile   plugin.TValue[string]
+	SslCertificateChainFile plugin.TValue[string]
+	Certificate             plugin.TValue[[]any]
+	Redirects               plugin.TValue[[]any]
+	Params                  plugin.TValue[map[string]any]
 }
 
 // createApache2ConfVirtualHost creates a new instance of this resource
@@ -21197,12 +21565,60 @@ func (c *mqlApache2ConfVirtualHost) GetServerName() *plugin.TValue[string] {
 	return &c.ServerName
 }
 
+func (c *mqlApache2ConfVirtualHost) GetServerAliases() *plugin.TValue[[]any] {
+	return &c.ServerAliases
+}
+
 func (c *mqlApache2ConfVirtualHost) GetDocumentRoot() *plugin.TValue[string] {
 	return &c.DocumentRoot
 }
 
 func (c *mqlApache2ConfVirtualHost) GetSsl() *plugin.TValue[bool] {
 	return &c.Ssl
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslProtocol() *plugin.TValue[string] {
+	return &c.SslProtocol
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslCipherSuite() *plugin.TValue[string] {
+	return &c.SslCipherSuite
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslHonorCipherOrder() *plugin.TValue[bool] {
+	return &c.SslHonorCipherOrder
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslCertificateFile() *plugin.TValue[string] {
+	return &c.SslCertificateFile
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslCertificateKeyFile() *plugin.TValue[string] {
+	return &c.SslCertificateKeyFile
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSslCertificateChainFile() *plugin.TValue[string] {
+	return &c.SslCertificateChainFile
+}
+
+func (c *mqlApache2ConfVirtualHost) GetCertificate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificate, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf.virtualHost", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlApache2ConfVirtualHost) GetRedirects() *plugin.TValue[[]any] {
+	return &c.Redirects
 }
 
 func (c *mqlApache2ConfVirtualHost) GetParams() *plugin.TValue[map[string]any] {
@@ -21217,6 +21633,7 @@ type mqlApache2ConfDirectory struct {
 	Path          plugin.TValue[string]
 	Options       plugin.TValue[string]
 	AllowOverride plugin.TValue[string]
+	Require       plugin.TValue[[]any]
 	Params        plugin.TValue[map[string]any]
 }
 
@@ -21264,7 +21681,85 @@ func (c *mqlApache2ConfDirectory) GetAllowOverride() *plugin.TValue[string] {
 	return &c.AllowOverride
 }
 
+func (c *mqlApache2ConfDirectory) GetRequire() *plugin.TValue[[]any] {
+	return &c.Require
+}
+
 func (c *mqlApache2ConfDirectory) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlApache2ConfLocation for the apache2.conf.location resource
+type mqlApache2ConfLocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApache2ConfLocationInternal it will be used here
+	Path      plugin.TValue[string]
+	IsMatch   plugin.TValue[bool]
+	AuthType  plugin.TValue[string]
+	AuthName  plugin.TValue[string]
+	Require   plugin.TValue[[]any]
+	ProxyPass plugin.TValue[string]
+	Params    plugin.TValue[map[string]any]
+}
+
+// createApache2ConfLocation creates a new instance of this resource
+func createApache2ConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2ConfLocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2.conf.location", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2ConfLocation) MqlName() string {
+	return "apache2.conf.location"
+}
+
+func (c *mqlApache2ConfLocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2ConfLocation) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlApache2ConfLocation) GetIsMatch() *plugin.TValue[bool] {
+	return &c.IsMatch
+}
+
+func (c *mqlApache2ConfLocation) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlApache2ConfLocation) GetAuthName() *plugin.TValue[string] {
+	return &c.AuthName
+}
+
+func (c *mqlApache2ConfLocation) GetRequire() *plugin.TValue[[]any] {
+	return &c.Require
+}
+
+func (c *mqlApache2ConfLocation) GetProxyPass() *plugin.TValue[string] {
+	return &c.ProxyPass
+}
+
+func (c *mqlApache2ConfLocation) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
 }
 
@@ -21525,12 +22020,23 @@ type mqlNginxConfServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNginxConfServerInternal it will be used here
-	ServerName plugin.TValue[string]
-	Listen     plugin.TValue[string]
-	Root       plugin.TValue[string]
-	Ssl        plugin.TValue[bool]
-	Locations  plugin.TValue[[]any]
-	Params     plugin.TValue[map[string]any]
+	ServerName             plugin.TValue[string]
+	Listen                 plugin.TValue[string]
+	Listens                plugin.TValue[[]any]
+	Root                   plugin.TValue[string]
+	Ssl                    plugin.TValue[bool]
+	SslProtocols           plugin.TValue[string]
+	SslCiphers             plugin.TValue[string]
+	SslCertificate         plugin.TValue[string]
+	SslCertificateKey      plugin.TValue[string]
+	SslPreferServerCiphers plugin.TValue[bool]
+	SslSessionTickets      plugin.TValue[string]
+	SslSessionTimeout      plugin.TValue[string]
+	Certificate            plugin.TValue[[]any]
+	AddHeaders             plugin.TValue[map[string]any]
+	Locations              plugin.TValue[[]any]
+	ServerTokens           plugin.TValue[string]
+	Params                 plugin.TValue[map[string]any]
 }
 
 // createNginxConfServer creates a new instance of this resource
@@ -21573,6 +22079,10 @@ func (c *mqlNginxConfServer) GetListen() *plugin.TValue[string] {
 	return &c.Listen
 }
 
+func (c *mqlNginxConfServer) GetListens() *plugin.TValue[[]any] {
+	return &c.Listens
+}
+
 func (c *mqlNginxConfServer) GetRoot() *plugin.TValue[string] {
 	return &c.Root
 }
@@ -21581,8 +22091,60 @@ func (c *mqlNginxConfServer) GetSsl() *plugin.TValue[bool] {
 	return &c.Ssl
 }
 
+func (c *mqlNginxConfServer) GetSslProtocols() *plugin.TValue[string] {
+	return &c.SslProtocols
+}
+
+func (c *mqlNginxConfServer) GetSslCiphers() *plugin.TValue[string] {
+	return &c.SslCiphers
+}
+
+func (c *mqlNginxConfServer) GetSslCertificate() *plugin.TValue[string] {
+	return &c.SslCertificate
+}
+
+func (c *mqlNginxConfServer) GetSslCertificateKey() *plugin.TValue[string] {
+	return &c.SslCertificateKey
+}
+
+func (c *mqlNginxConfServer) GetSslPreferServerCiphers() *plugin.TValue[bool] {
+	return &c.SslPreferServerCiphers
+}
+
+func (c *mqlNginxConfServer) GetSslSessionTickets() *plugin.TValue[string] {
+	return &c.SslSessionTickets
+}
+
+func (c *mqlNginxConfServer) GetSslSessionTimeout() *plugin.TValue[string] {
+	return &c.SslSessionTimeout
+}
+
+func (c *mqlNginxConfServer) GetCertificate() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificate, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf.server", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+func (c *mqlNginxConfServer) GetAddHeaders() *plugin.TValue[map[string]any] {
+	return &c.AddHeaders
+}
+
 func (c *mqlNginxConfServer) GetLocations() *plugin.TValue[[]any] {
 	return &c.Locations
+}
+
+func (c *mqlNginxConfServer) GetServerTokens() *plugin.TValue[string] {
+	return &c.ServerTokens
 }
 
 func (c *mqlNginxConfServer) GetParams() *plugin.TValue[map[string]any] {
@@ -21594,9 +22156,12 @@ type mqlNginxConfUpstream struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNginxConfUpstreamInternal it will be used here
-	Name    plugin.TValue[string]
-	Servers plugin.TValue[[]any]
-	Params  plugin.TValue[map[string]any]
+	Name                plugin.TValue[string]
+	Servers             plugin.TValue[[]any]
+	ServerDetails       plugin.TValue[[]any]
+	LoadBalancingMethod plugin.TValue[string]
+	Keepalive           plugin.TValue[int64]
+	Params              plugin.TValue[map[string]any]
 }
 
 // createNginxConfUpstream creates a new instance of this resource
@@ -21639,6 +22204,18 @@ func (c *mqlNginxConfUpstream) GetServers() *plugin.TValue[[]any] {
 	return &c.Servers
 }
 
+func (c *mqlNginxConfUpstream) GetServerDetails() *plugin.TValue[[]any] {
+	return &c.ServerDetails
+}
+
+func (c *mqlNginxConfUpstream) GetLoadBalancingMethod() *plugin.TValue[string] {
+	return &c.LoadBalancingMethod
+}
+
+func (c *mqlNginxConfUpstream) GetKeepalive() *plugin.TValue[int64] {
+	return &c.Keepalive
+}
+
 func (c *mqlNginxConfUpstream) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
 }
@@ -21648,10 +22225,14 @@ type mqlNginxConfLocation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNginxConfLocationInternal it will be used here
-	Path      plugin.TValue[string]
-	ProxyPass plugin.TValue[string]
-	Root      plugin.TValue[string]
-	Params    plugin.TValue[map[string]any]
+	Path        plugin.TValue[string]
+	Modifier    plugin.TValue[string]
+	ProxyPass   plugin.TValue[string]
+	Root        plugin.TValue[string]
+	TryFiles    plugin.TValue[string]
+	Return      plugin.TValue[string]
+	FastcgiPass plugin.TValue[string]
+	Params      plugin.TValue[map[string]any]
 }
 
 // createNginxConfLocation creates a new instance of this resource
@@ -21690,12 +22271,28 @@ func (c *mqlNginxConfLocation) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
+func (c *mqlNginxConfLocation) GetModifier() *plugin.TValue[string] {
+	return &c.Modifier
+}
+
 func (c *mqlNginxConfLocation) GetProxyPass() *plugin.TValue[string] {
 	return &c.ProxyPass
 }
 
 func (c *mqlNginxConfLocation) GetRoot() *plugin.TValue[string] {
 	return &c.Root
+}
+
+func (c *mqlNginxConfLocation) GetTryFiles() *plugin.TValue[string] {
+	return &c.TryFiles
+}
+
+func (c *mqlNginxConfLocation) GetReturn() *plugin.TValue[string] {
+	return &c.Return
+}
+
+func (c *mqlNginxConfLocation) GetFastcgiPass() *plugin.TValue[string] {
+	return &c.FastcgiPass
 }
 
 func (c *mqlNginxConfLocation) GetParams() *plugin.TValue[map[string]any] {

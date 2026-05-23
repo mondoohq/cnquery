@@ -329,3 +329,157 @@ type fileNotFoundError struct {
 func (e *fileNotFoundError) Error() string {
 	return "file not found: " + e.path
 }
+
+// New tests for the TLS / hardening / Location / ServerAlias / Redirect surface.
+
+const tlsVHostConfig = `
+<VirtualHost *:443>
+  ServerName secure.example.com
+  ServerAlias www.secure.example.com api.secure.example.com
+  ServerAlias alt.secure.example.com
+  DocumentRoot /var/www/secure
+
+  SSLEngine on
+  SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+  SSLCipherSuite HIGH:!aNULL:!MD5
+  SSLHonorCipherOrder on
+  SSLCertificateFile /etc/ssl/certs/server.crt
+  SSLCertificateKeyFile /etc/ssl/private/server.key
+  SSLCertificateChainFile /etc/ssl/certs/chain.crt
+
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set X-Frame-Options DENY
+
+  Redirect permanent /old /new
+  RedirectMatch 301 ^/legacy/(.*)$ /v2/$1
+
+  <Location "/admin">
+    AuthType Basic
+    AuthName "Restricted"
+    Require valid-user
+    Require ip 10.0.0.0/8
+  </Location>
+</VirtualHost>
+
+Header always set X-Top-Header "top-value"
+
+<LocationMatch "^/secret/.*$">
+  AuthType Basic
+  AuthName "Secret area"
+  Require valid-user
+</LocationMatch>
+`
+
+func TestParseVirtualHostTLSFields(t *testing.T) {
+	cfg := Parse(tlsVHostConfig)
+	require.Len(t, cfg.VHosts, 1)
+	vh := cfg.VHosts[0]
+
+	assert.Equal(t, "secure.example.com", vh.ServerName)
+	assert.Equal(t, []string{"www.secure.example.com", "api.secure.example.com", "alt.secure.example.com"}, vh.ServerAliases,
+		"multiple ServerAlias args + multiple ServerAlias lines must accumulate")
+	assert.True(t, vh.SSL, "SSLEngine on must set SSL")
+	assert.Equal(t, "all -SSLv3 -TLSv1 -TLSv1.1", vh.SSLProtocol)
+	assert.Equal(t, "HIGH:!aNULL:!MD5", vh.SSLCipherSuite)
+	assert.True(t, vh.SSLHonorCipherOrder)
+	assert.Equal(t, "/etc/ssl/certs/server.crt", vh.SSLCertificateFile)
+	assert.Equal(t, "/etc/ssl/private/server.key", vh.SSLCertificateKeyFile)
+	assert.Equal(t, "/etc/ssl/certs/chain.crt", vh.SSLCertificateChainFile)
+}
+
+func TestParseVirtualHostRedirects(t *testing.T) {
+	cfg := Parse(tlsVHostConfig)
+	require.Len(t, cfg.VHosts, 1)
+	vh := cfg.VHosts[0]
+	require.Len(t, vh.Redirects, 2)
+
+	r0 := vh.Redirects[0]
+	assert.Equal(t, "Redirect", r0.Type)
+	assert.Equal(t, "permanent", r0.Status)
+	assert.Equal(t, "/old", r0.Match)
+	assert.Equal(t, "/new", r0.Target)
+
+	r1 := vh.Redirects[1]
+	assert.Equal(t, "RedirectMatch", r1.Type)
+	assert.Equal(t, "301", r1.Status)
+	assert.Equal(t, `^/legacy/(.*)$`, r1.Match)
+	assert.Equal(t, `/v2/$1`, r1.Target)
+}
+
+func TestParseLocationBlocks(t *testing.T) {
+	cfg := Parse(tlsVHostConfig)
+	// Both top-level <Location> AND nested <Location> inside the VHost must
+	// surface in cfg.Locations.
+	require.Len(t, cfg.Locations, 2)
+
+	// Order is parse-discovery order: vhost-nested first, then top-level.
+	nested := cfg.Locations[0]
+	assert.Equal(t, "/admin", nested.Path)
+	assert.False(t, nested.IsMatch)
+	assert.Equal(t, "Basic", nested.AuthType)
+	assert.Equal(t, "Restricted", nested.AuthName, "AuthName quotes must be stripped")
+	assert.Equal(t, []string{"valid-user", "ip 10.0.0.0/8"}, nested.Require,
+		"multiple Require lines must accumulate in order")
+
+	top := cfg.Locations[1]
+	assert.True(t, top.IsMatch, "<LocationMatch> must set IsMatch=true")
+	assert.Equal(t, "^/secret/.*$", top.Path)
+}
+
+func TestParseSecurityHeaders(t *testing.T) {
+	cfg := Parse(tlsVHostConfig)
+	require.NotNil(t, cfg.Headers)
+
+	// Both the VHost-scoped Header directives and the top-level one must
+	// collect into the same map.
+	assert.Equal(t,
+		[]string{"max-age=63072000; includeSubDomains"},
+		cfg.Headers["Strict-Transport-Security"])
+	assert.Equal(t, []string{"DENY"}, cfg.Headers["X-Frame-Options"])
+	assert.Equal(t, []string{"top-value"}, cfg.Headers["X-Top-Header"])
+
+	// `Header set ...` (without `always`) must be ignored — only the
+	// always-set rule survives every response path.
+	cfg2 := Parse(`Header set X-Sometimes "v"`)
+	assert.Empty(t, cfg2.Headers, "non-always `Header set` should not be collected")
+}
+
+func TestParseDirectoryRequire(t *testing.T) {
+	cfg := Parse(`
+<Directory /var/www>
+  Options Indexes FollowSymLinks
+  AllowOverride None
+  Require all granted
+  Require ip 192.168.0.0/16
+</Directory>
+`)
+	require.Len(t, cfg.Dirs, 1)
+	d := cfg.Dirs[0]
+	assert.Equal(t, "Indexes FollowSymLinks", d.Options)
+	assert.Equal(t, "None", d.AllowOverride)
+	assert.Equal(t, []string{"all granted", "ip 192.168.0.0/16"}, d.Require)
+}
+
+func TestParseHeaderAlwaysSet(t *testing.T) {
+	tests := []struct {
+		arg       string
+		wantName  string
+		wantValue string
+		wantOK    bool
+	}{
+		{`always set X-Frame-Options DENY`, "X-Frame-Options", "DENY", true},
+		{`always set Strict-Transport-Security "max-age=63072000; includeSubDomains"`,
+			"Strict-Transport-Security", "max-age=63072000; includeSubDomains", true},
+		{`set X-Foo Bar`, "", "", false},
+		{`always unset X-Foo`, "", "", false},
+		{`always set X-Foo`, "", "", false}, // missing value
+	}
+	for _, tc := range tests {
+		t.Run(tc.arg, func(t *testing.T) {
+			name, val, ok := parseHeaderAlwaysSet(tc.arg)
+			assert.Equal(t, tc.wantOK, ok)
+			assert.Equal(t, tc.wantName, name)
+			assert.Equal(t, tc.wantValue, val)
+		})
+	}
+}

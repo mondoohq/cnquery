@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/apache2"
 	"go.mondoo.com/mql/v13/types"
@@ -383,6 +384,8 @@ func (s *mqlApache2Conf) setEmpty() {
 	s.Modules = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
 	s.VirtualHosts = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
 	s.Directories = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.Locations = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.SecurityHeaders = plugin.TValue[map[string]any]{Data: map[string]any{}, State: plugin.StateIsSet}
 	s.Files = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
 }
 
@@ -456,6 +459,8 @@ func (s *mqlApache2Conf) parse(file *mqlFile) error {
 		s.Modules = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.VirtualHosts = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Directories = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		s.Locations = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		s.SecurityHeaders = plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Files = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 	} else {
 		s.Params = plugin.TValue[map[string]any]{Data: cfg.Params, State: plugin.StateIsSet}
@@ -477,6 +482,20 @@ func (s *mqlApache2Conf) parse(file *mqlFile) error {
 			return err
 		}
 		s.Directories = plugin.TValue[[]any]{Data: dirs, State: plugin.StateIsSet}
+
+		locations, err := apacheLocations2Resources(cfg.Locations, s.MqlRuntime, s.__id)
+		if err != nil {
+			return err
+		}
+		s.Locations = plugin.TValue[[]any]{Data: locations, State: plugin.StateIsSet}
+
+		// Headers map: map[string][]string keyed by header name.
+		// The generated field type is map[string]any (with []any values).
+		headersOut := make(map[string]any, len(cfg.Headers))
+		for name, values := range cfg.Headers {
+			headersOut[name] = convert.SliceAnyToInterface(values)
+		}
+		s.SecurityHeaders = plugin.TValue[map[string]any]{Data: headersOut, State: plugin.StateIsSet}
 
 		files := make([]any, 0, len(filesIdx))
 		for _, f := range filesIdx {
@@ -506,6 +525,50 @@ func (s *mqlApache2Conf) virtualHosts(file *mqlFile) ([]any, error) {
 
 func (s *mqlApache2Conf) directories(file *mqlFile) ([]any, error) {
 	return nil, s.parse(file)
+}
+
+func (s *mqlApache2Conf) locations(file *mqlFile) ([]any, error) {
+	return nil, s.parse(file)
+}
+
+func (s *mqlApache2Conf) securityHeaders(file *mqlFile) (map[string]any, error) {
+	return nil, s.parse(file)
+}
+
+// serverTokens / serverSignature / traceEnable derive from the params map.
+// They take params() as input so the .lr-declared dependency is correct.
+func (s *mqlApache2Conf) serverTokens(params map[string]any) (string, error) {
+	return apacheParamScalar(params, "ServerTokens"), nil
+}
+
+func (s *mqlApache2Conf) serverSignature(params map[string]any) (string, error) {
+	return apacheParamScalar(params, "ServerSignature"), nil
+}
+
+func (s *mqlApache2Conf) traceEnable(params map[string]any) (string, error) {
+	return apacheParamScalar(params, "TraceEnable"), nil
+}
+
+// apacheParamScalar returns the first scalar value from the case-insensitive
+// param map. Apache directive names are case-insensitive; the parser
+// preserves whatever casing the config used, so we scan keys case-insensitively.
+// When the same directive appears multiple times (concatenated as "a,b" by
+// setParam), the first segment is returned.
+func apacheParamScalar(params map[string]any, name string) string {
+	for k, v := range params {
+		if !strings.EqualFold(k, name) {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		if comma := strings.IndexByte(s, ','); comma >= 0 {
+			return strings.TrimSpace(s[:comma])
+		}
+		return s
+	}
+	return ""
 }
 
 // loadEnvvars reads the platform's Apache envvars file (if any) via the
@@ -662,13 +725,32 @@ func apacheModules2Resources(modules []apache2.Module, runtime *plugin.Runtime, 
 func apacheVHosts2Resources(vhosts []apache2.VirtualHost, runtime *plugin.Runtime, ownerID string) ([]any, error) {
 	res := make([]any, len(vhosts))
 	for i, vh := range vhosts {
+		aliases := convert.SliceAnyToInterface(vh.ServerAliases)
+		redirects := make([]any, len(vh.Redirects))
+		for j, r := range vh.Redirects {
+			redirects[j] = map[string]any{
+				"type":   r.Type,
+				"status": r.Status,
+				"match":  r.Match,
+				"target": r.Target,
+			}
+		}
+
 		obj, err := CreateResource(runtime, "apache2.conf.virtualHost", map[string]*llx.RawData{
-			"__id":         llx.StringData(ownerID + "/vhost/" + strconv.Itoa(i) + "/" + vh.Address),
-			"address":      llx.StringData(vh.Address),
-			"serverName":   llx.StringData(vh.ServerName),
-			"documentRoot": llx.StringData(vh.DocumentRoot),
-			"ssl":          llx.BoolData(vh.SSL),
-			"params":       llx.MapData(vh.Params, types.String),
+			"__id":                    llx.StringData(ownerID + "/vhost/" + strconv.Itoa(i) + "/" + vh.Address),
+			"address":                 llx.StringData(vh.Address),
+			"serverName":              llx.StringData(vh.ServerName),
+			"serverAliases":           llx.ArrayData(aliases, types.String),
+			"documentRoot":            llx.StringData(vh.DocumentRoot),
+			"ssl":                     llx.BoolData(vh.SSL),
+			"sslProtocol":             llx.StringData(vh.SSLProtocol),
+			"sslCipherSuite":          llx.StringData(vh.SSLCipherSuite),
+			"sslHonorCipherOrder":     llx.BoolData(vh.SSLHonorCipherOrder),
+			"sslCertificateFile":      llx.StringData(vh.SSLCertificateFile),
+			"sslCertificateKeyFile":   llx.StringData(vh.SSLCertificateKeyFile),
+			"sslCertificateChainFile": llx.StringData(vh.SSLCertificateChainFile),
+			"redirects":               llx.ArrayData(redirects, types.Dict),
+			"params":                  llx.MapData(vh.Params, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -686,6 +768,7 @@ func apacheDirs2Resources(dirs []apache2.Directory, runtime *plugin.Runtime, own
 			"path":          llx.StringData(d.Path),
 			"options":       llx.StringData(d.Options),
 			"allowOverride": llx.StringData(d.AllowOverride),
+			"require":       llx.ArrayData(convert.SliceAnyToInterface(d.Require), types.String),
 			"params":        llx.MapData(d.Params, types.String),
 		})
 		if err != nil {
@@ -694,4 +777,64 @@ func apacheDirs2Resources(dirs []apache2.Directory, runtime *plugin.Runtime, own
 		res[i] = obj
 	}
 	return res, nil
+}
+
+func apacheLocations2Resources(locs []apache2.Location, runtime *plugin.Runtime, ownerID string) ([]any, error) {
+	res := make([]any, len(locs))
+	for i, loc := range locs {
+		obj, err := CreateResource(runtime, "apache2.conf.location", map[string]*llx.RawData{
+			"__id":      llx.StringData(ownerID + "/loc/" + strconv.Itoa(i) + "/" + loc.Path),
+			"path":      llx.StringData(loc.Path),
+			"isMatch":   llx.BoolData(loc.IsMatch),
+			"authType":  llx.StringData(loc.AuthType),
+			"authName":  llx.StringData(loc.AuthName),
+			"require":   llx.ArrayData(convert.SliceAnyToInterface(loc.Require), types.String),
+			"proxyPass": llx.StringData(loc.ProxyPass),
+			"params":    llx.MapData(loc.Params, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res[i] = obj
+	}
+	return res, nil
+}
+
+func (v *mqlApache2ConfVirtualHost) certificate() ([]any, error) {
+	path := v.SslCertificateFile.Data
+	if path == "" {
+		return []any{}, nil
+	}
+	return readCertificatesFromPath(v.MqlRuntime, path)
+}
+
+// readCertificatesFromPath reads a PEM file via the runtime's file resource
+// and returns the parsed []network.certificate. Returns an empty slice when
+// the file is unreadable so audits don't blow up on a misconfigured path.
+func readCertificatesFromPath(runtime *plugin.Runtime, path string) ([]any, error) {
+	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return []any{}, nil
+	}
+	mqlF := f.(*mqlFile)
+	content := mqlF.GetContent()
+	if content.Error != nil || content.Data == "" {
+		return []any{}, nil
+	}
+	c, err := runtime.CreateSharedResource("certificates", map[string]*llx.RawData{
+		"pem": llx.StringData(content.Data),
+	})
+	if err != nil {
+		return []any{}, nil
+	}
+	list, err := runtime.GetSharedData("certificates", c.MqlID(), "list")
+	if err != nil || list == nil {
+		return []any{}, nil
+	}
+	if v, ok := list.Value.([]any); ok {
+		return v, nil
+	}
+	return []any{}, nil
 }
