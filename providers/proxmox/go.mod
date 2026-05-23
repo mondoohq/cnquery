@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/proxmox
 
 go 1.26.3
 
-require go.mondoo.com/mql/v13 v13.10.0
+require go.mondoo.com/mql/v13 v13.11.0
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
