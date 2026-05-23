@@ -123,6 +123,96 @@ func TestParseSizeToBytes(t *testing.T) {
 	}
 }
 
+func TestParseContainerNetworkConfig_Full(t *testing.T) {
+	net := parseContainerNetworkConfig("net0",
+		"name=eth0,bridge=vmbr0,firewall=1,gw=192.168.1.1,hwaddr=AA:BB:CC:DD:EE:FF,ip=192.168.1.50/24,ip6=auto,tag=42,type=veth")
+
+	if v := getStr(net, "name"); v != "eth0" {
+		t.Errorf("expected name 'eth0', got %q", v)
+	}
+	if v := getStr(net, "macAddress"); v != "AA:BB:CC:DD:EE:FF" {
+		t.Errorf("expected MAC 'AA:BB:CC:DD:EE:FF', got %q", v)
+	}
+	if v := getStr(net, "bridge"); v != "vmbr0" {
+		t.Errorf("expected bridge 'vmbr0', got %q", v)
+	}
+	if !getBool(net, "firewall") {
+		t.Error("expected firewall=true")
+	}
+	if v := getInt(net, "tag"); v != 42 {
+		t.Errorf("expected tag 42, got %d", v)
+	}
+	if v := getStr(net, "ip"); v != "192.168.1.50/24" {
+		t.Errorf("expected ip '192.168.1.50/24', got %q", v)
+	}
+	if v := getStr(net, "gw"); v != "192.168.1.1" {
+		t.Errorf("expected gw '192.168.1.1', got %q", v)
+	}
+	if v := getStr(net, "ip6"); v != "auto" {
+		t.Errorf("expected ip6 'auto', got %q", v)
+	}
+}
+
+func TestParseContainerNetworkConfig_DHCPMinimal(t *testing.T) {
+	net := parseContainerNetworkConfig("net1", "name=eth0,bridge=vmbr0,ip=dhcp")
+
+	if v := getStr(net, "name"); v != "eth0" {
+		t.Errorf("expected name 'eth0', got %q", v)
+	}
+	if v := getStr(net, "ip"); v != "dhcp" {
+		t.Errorf("expected ip 'dhcp', got %q", v)
+	}
+	if getBool(net, "firewall") {
+		t.Error("expected firewall=false")
+	}
+	if v := getInt(net, "tag"); v != 0 {
+		t.Errorf("expected tag 0 (untagged), got %d", v)
+	}
+}
+
+func TestParseContainerMountPoint_Rootfs(t *testing.T) {
+	mp := parseContainerMountPoint("rootfs", "local-lvm:vm-100-disk-0,size=8G")
+
+	if v := getStr(mp, "storage"); v != "local-lvm" {
+		t.Errorf("expected storage 'local-lvm', got %q", v)
+	}
+	if v := getInt(mp, "size"); v != 8*1024*1024*1024 {
+		t.Errorf("expected size 8GiB, got %d", v)
+	}
+	if v := getStr(mp, "mountPath"); v != "/" {
+		t.Errorf("expected mountPath '/' for rootfs, got %q", v)
+	}
+	if !getBool(mp, "backup") {
+		t.Error("expected backup=true (default)")
+	}
+	if getBool(mp, "readonly") {
+		t.Error("expected readonly=false (default)")
+	}
+}
+
+func TestParseContainerMountPoint_ExtraMount(t *testing.T) {
+	mp := parseContainerMountPoint("mp0", "local-zfs:subvol-200-disk-1,size=50G,mp=/var/lib/data,backup=0,ro=1,replicate=0,acl=1")
+
+	if v := getStr(mp, "storage"); v != "local-zfs" {
+		t.Errorf("expected storage 'local-zfs', got %q", v)
+	}
+	if v := getStr(mp, "mountPath"); v != "/var/lib/data" {
+		t.Errorf("expected mountPath '/var/lib/data', got %q", v)
+	}
+	if getBool(mp, "backup") {
+		t.Error("expected backup=false")
+	}
+	if !getBool(mp, "readonly") {
+		t.Error("expected readonly=true")
+	}
+	if getBool(mp, "replicate") {
+		t.Error("expected replicate=false")
+	}
+	if !getBool(mp, "aclEnabled") {
+		t.Error("expected aclEnabled=true")
+	}
+}
+
 func TestLooksLikeMAC(t *testing.T) {
 	if !looksLikeMAC("AA:BB:CC:DD:EE:FF") {
 		t.Error("expected true for valid MAC")

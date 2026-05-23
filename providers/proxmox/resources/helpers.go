@@ -188,6 +188,109 @@ func looksLikeMAC(s string) bool {
 	return len(s) == 17 && strings.Count(s, ":") == 5
 }
 
+// parseContainerNetworkConfig parses a Proxmox LXC network config value.
+// Format: name=eth0,bridge=vmbr0,firewall=1,gw=192.168.1.1,hwaddr=AA:..,
+//
+//	ip=dhcp,ip6=auto,tag=10,type=veth
+func parseContainerNetworkConfig(id, val string) map[string]*llx.RawData {
+	name, mac, bridge, ip, gw, ip6, gw6 := "", "", "", "", "", "", ""
+	firewall := false
+	tag := int64(0)
+
+	for _, part := range strings.Split(val, ",") {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "name":
+			name = kv[1]
+		case "hwaddr":
+			mac = kv[1]
+		case "bridge":
+			bridge = kv[1]
+		case "firewall":
+			firewall = kv[1] == "1"
+		case "tag":
+			fmt.Sscanf(kv[1], "%d", &tag)
+		case "ip":
+			ip = kv[1]
+		case "gw":
+			gw = kv[1]
+		case "ip6":
+			ip6 = kv[1]
+		case "gw6":
+			gw6 = kv[1]
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"id":         llx.StringData(id),
+		"name":       llx.StringData(name),
+		"macAddress": llx.StringData(mac),
+		"bridge":     llx.StringData(bridge),
+		"tag":        llx.IntData(tag),
+		"firewall":   llx.BoolData(firewall),
+		"ip":         llx.StringData(ip),
+		"gw":         llx.StringData(gw),
+		"ip6":        llx.StringData(ip6),
+		"gw6":        llx.StringData(gw6),
+	}
+}
+
+// parseContainerMountPoint parses a Proxmox LXC mount-point config value.
+// Format: local-lvm:vm-100-disk-0,size=8G,mp=/data,backup=1,ro=0,acl=1,replicate=1
+// rootfs uses the same format minus mp=.
+func parseContainerMountPoint(id, val string) map[string]*llx.RawData {
+	storage, mountPath := "", ""
+	size := int64(0)
+	backup := true
+	replicate := true
+	readonly := false
+	aclEnabled := false
+
+	parts := strings.Split(val, ",")
+	if len(parts) > 0 {
+		if idx := strings.Index(parts[0], ":"); idx >= 0 {
+			storage = parts[0][:idx]
+		}
+	}
+	for _, part := range parts[1:] {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "size":
+			size = parseSizeToBytes(kv[1])
+		case "mp":
+			mountPath = kv[1]
+		case "backup":
+			backup = kv[1] != "0"
+		case "replicate":
+			replicate = kv[1] != "0"
+		case "ro":
+			readonly = kv[1] == "1"
+		case "acl":
+			aclEnabled = kv[1] == "1"
+		}
+	}
+	if id == "rootfs" && mountPath == "" {
+		mountPath = "/"
+	}
+
+	return map[string]*llx.RawData{
+		"id":         llx.StringData(id),
+		"storage":    llx.StringData(storage),
+		"size":       llx.IntData(size),
+		"mountPath":  llx.StringData(mountPath),
+		"backup":     llx.BoolData(backup),
+		"replicate":  llx.BoolData(replicate),
+		"readonly":   llx.BoolData(readonly),
+		"aclEnabled": llx.BoolData(aclEnabled),
+	}
+}
+
 func parseSizeToBytes(s string) int64 {
 	s = strings.TrimSpace(s)
 	multiplier := int64(1)

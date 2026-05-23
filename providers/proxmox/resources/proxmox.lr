@@ -8,11 +8,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/proxmox/resources"
 //
 // Use this resource to access the top-level Proxmox Virtual Environment
 // cluster. Query version and system information via `about`, enumerate
-// all virtual machines with `vms`, list cluster nodes with `nodes`,
-// inspect storage pools via `storages`, manage resource pools with
-// `pools`, and audit users and roles through `users` and `roles`.
-// Cluster-level HA, quorum, and firewall configuration is available
-// through `cluster`.
+// all virtual machines with `vms`, all LXC `containers`, list cluster
+// nodes with `nodes`, inspect storage pools via `storages`, manage
+// resource pools with `pools`, and audit users, groups, roles, ACL
+// entries, and authentication realms through `users`, `groups`,
+// `roles`, `acl`, and `realms`. Cluster-level HA, quorum, and firewall
+// configuration is available through `cluster`. Scheduled vzdump
+// backup jobs are exposed via `backupJobs`.
 proxmox {
   // Version and system information
   about() dict
@@ -20,6 +22,8 @@ proxmox {
   cluster() proxmox.cluster
   // All QEMU virtual machines across the cluster
   vms() []proxmox.vm
+  // All LXC containers across the cluster
+  containers() []proxmox.container
   // All cluster nodes
   nodes() []proxmox.node
   // Storage pools configured in the cluster
@@ -28,8 +32,16 @@ proxmox {
   pools() []proxmox.pool
   // Users configured in the cluster
   users() []proxmox.user
+  // Groups configured in the cluster
+  groups() []proxmox.group
   // Roles defined in the cluster
   roles() []proxmox.role
+  // Access-control list entries assigning roles to users, groups, and tokens on cluster paths
+  acl() []proxmox.acl
+  // Authentication realms (pam, pve, ldap, ad, openid)
+  realms() []proxmox.realm
+  // Scheduled cluster-wide vzdump backup jobs
+  backupJobs() []proxmox.backup.job
 }
 
 // Proxmox VE cluster
@@ -52,6 +64,12 @@ proxmox.cluster @defaults("name quorate") {
   haResources() []proxmox.cluster.haResource
   // Cluster-level firewall rules
   firewallRules() []proxmox.firewall.rule
+  // Cluster-level firewall options (enable, policy_in, policy_out, log_*)
+  firewallOptions() proxmox.firewall.options
+  // Cluster-level IPsets
+  ipsets() []proxmox.firewall.ipset
+  // Cluster-level firewall aliases
+  aliases() []proxmox.firewall.alias
   // Cluster-level options
   options() dict
 }
@@ -179,11 +197,15 @@ proxmox.node @defaults("name status") {
 
   // Node-level firewall rules
   firewallRules() []proxmox.firewall.rule
+  // Node-level firewall options (enable, log_nf_conntrack, nf_conntrack_*)
+  firewallOptions() proxmox.firewall.options
 
-  // --- VMs ---
+  // --- Guests ---
 
   // VMs running on this node
   vms() []proxmox.vm
+  // LXC containers running on this node
+  containers() []proxmox.container
 }
 
 // Proxmox VE node package update
@@ -290,6 +312,12 @@ proxmox.vm @defaults("id name status") {
 
   // VM-level firewall rules
   firewallRules() []proxmox.firewall.rule
+  // VM-level firewall options (enable, policy_in, policy_out, dhcp, ndp, macfilter)
+  firewallOptions() proxmox.firewall.options
+  // VM-level IPsets
+  ipsets() []proxmox.firewall.ipset
+  // VM-level firewall aliases
+  aliases() []proxmox.firewall.alias
 
   // --- Updates (via QEMU Guest Agent) ---
 
@@ -615,8 +643,10 @@ proxmox.firewall.rule @defaults("pos action") {
 // in the form `user@realm`. Reports whether the account is `enable`d,
 // its `email`, `firstname`, `lastname`, `realm` (pam, pve, ldap, ad),
 // `groups` membership, and `expire` time (Unix timestamp, 0 = never).
-// API tokens belonging to the user are listed through `tokens`.
-proxmox.user @defaults("id enable") {
+// Multi-factor enrollment is available through `tfaFactors` and
+// `tfaLockedUntil`, the realm authentication type through `realmType`,
+// and API tokens belonging to the user through `tokens`.
+proxmox.user @defaults("id enable realm") {
   // User ID (user@realm)
   id string
   // Email address
@@ -633,6 +663,15 @@ proxmox.user @defaults("id enable") {
   groups []string
   // Authentication realm (pam, pve, ldap, ad)
   realm string
+  // Authentication realm type (pam, pve, ldap, ad, openid)
+  realmType string
+  // Unix timestamp until which the user is locked out due to failed TFA attempts; 0 if not locked
+  tfaLockedUntil int
+  // Enrolled multi-factor authentication factor types
+  //
+  // One per enrolled second-factor: `totp`, `webauthn`, `recovery`, or
+  // `yubico`. An empty list means the user has no TFA enrolled.
+  tfaFactors() []string
   // API tokens for this user
   tokens() []proxmox.token
 }
@@ -670,4 +709,376 @@ proxmox.role @defaults("id") {
   privs []string
   // Whether this is a built-in role
   special bool
+}
+
+// Proxmox VE access control group
+//
+// Examine a group defined in the Proxmox cluster, identified by `id`.
+// Groups bundle users for path-based ACL assignment. The `comment`
+// holds the group description. `memberIds` lists the user IDs that
+// belong to the group; `members` resolves them to typed
+// `proxmox.user` references for traversal.
+proxmox.group @defaults("id comment") {
+  // Group ID
+  id string
+  // Group comment/description
+  comment string
+  // User IDs that belong to this group
+  memberIds []string
+  // Members of this group resolved as user resources
+  members() []proxmox.user
+}
+
+// Proxmox VE access control list entry
+//
+// Examine an ACL assignment in the Proxmox cluster. An entry grants a
+// `role` to a user, group, or API token (identified by `ugid`) at a
+// specific `path` such as `/`, `/vms/100`, or `/storage/local`. The
+// `type` field discriminates between user, group, and token entries;
+// `propagate` indicates whether the grant applies to child paths.
+// Typed accessors `user`, `group`, `token`, and `role` resolve `ugid`
+// and `roleId` to their corresponding resources for traversal — only
+// the accessor matching `type` is non-null.
+proxmox.acl @defaults("path type ugid roleId propagate") {
+  // Path the entry applies to (e.g. /, /vms/100, /storage/local)
+  path string
+  // Entry type — user, group, or token
+  type string
+  // Identifier of the user, group, or token the grant applies to
+  ugid string
+  // Role ID granted at this path
+  roleId string
+  // Whether the grant propagates to child paths
+  propagate bool
+  // Resolved role
+  role() proxmox.role
+  // User this entry refers to when `type` is `user`; null otherwise
+  user() proxmox.user
+  // Group this entry refers to when `type` is `group`; null otherwise
+  group() proxmox.group
+  // Token this entry refers to when `type` is `token`; null otherwise
+  token() proxmox.token
+}
+
+// Proxmox VE authentication realm
+//
+// Examine an authentication realm configured in the Proxmox cluster,
+// identified by `realm`. Reports the realm `type` (pam, pve, ldap, ad,
+// openid), whether it is the `default` realm, the realm-enforced TFA
+// challenge in `tfaType` (empty when no realm-wide TFA is required),
+// and full configuration via `config` — including LDAP servers, sync
+// settings, OpenID issuer URLs, and `autocreate` flags.
+proxmox.realm @defaults("realm type default") {
+  // Realm identifier
+  realm string
+  // Realm type (pam, pve, ldap, ad, openid)
+  type string
+  // Realm description
+  comment string
+  // Whether this is the default realm
+  default bool
+  // Realm-enforced TFA challenge type (e.g. oath, yubico); empty when not required at the realm level
+  tfaType string
+  // Full realm configuration as returned by /access/domains/<realm>
+  config() dict
+}
+
+// Proxmox VE firewall options
+//
+// Examine the firewall options configured at the cluster, node, VM, or
+// container level. The available keys differ by scope — cluster-level
+// options include `policy_in`, `policy_out`, and `log_ratelimit`; node
+// options include `nf_conntrack_*` tuning; guest-level options include
+// `dhcp`, `ndp`, `macfilter`, `ipfilter`, and `radv`. The `config`
+// dict holds the raw response so audits can target keys that vary by
+// Proxmox version.
+proxmox.firewall.options @defaults("scope enable") {
+  // Scope of these options (cluster, node/<name>, vm/<id>, ct/<id>)
+  scope string
+  // Whether the firewall is enabled at this scope
+  enable bool
+  // Default inbound policy (ACCEPT, DROP, REJECT)
+  policyIn string
+  // Default outbound policy (ACCEPT, DROP, REJECT)
+  policyOut string
+  // Log level for inbound traffic (nolog, emerg, alert, crit, err, warning, notice, info, debug)
+  logLevelIn string
+  // Log level for outbound traffic
+  logLevelOut string
+  // Whether DHCP is permitted (guest scope)
+  dhcp bool
+  // Whether NDP is permitted (guest scope)
+  ndp bool
+  // Whether the firewall enforces matching MAC addresses (guest scope)
+  macfilter bool
+  // Whether IP-address spoofing is filtered (guest scope)
+  ipfilter bool
+  // Whether router advertisements are permitted (guest scope)
+  radv bool
+  // Raw options as returned by the API
+  config dict
+}
+
+// Proxmox VE firewall IPset
+//
+// Examine an IP set defined at the cluster or guest level, identified
+// by `name`. IPsets group CIDR ranges that firewall rules can
+// reference by name through the `+<name>` syntax. The `scope` field
+// identifies the owner (cluster, vm/<id>, ct/<id>) and `entries` lists
+// the contained CIDRs.
+proxmox.firewall.ipset @defaults("scope name") {
+  // Scope of this ipset (cluster, vm/<id>, ct/<id>)
+  scope string
+  // IPset name
+  name string
+  // IPset comment
+  comment string
+  // CIDR entries that belong to this set
+  entries() []proxmox.firewall.ipset.entry
+}
+
+// Proxmox VE firewall IPset entry
+//
+// Examine a single CIDR entry inside a Proxmox firewall IPset. The
+// `cidr` is the network or host (e.g. `10.0.0.0/24`), `comment` holds
+// any descriptive text, and `nomatch` inverts the membership semantics
+// so the entry excludes rather than includes its CIDR.
+proxmox.firewall.ipset.entry @defaults("cidr nomatch") {
+  // CIDR entry (e.g. 10.0.0.0/24)
+  cidr string
+  // Entry comment
+  comment string
+  // Whether the entry is a negative match (excludes the CIDR)
+  nomatch bool
+}
+
+// Proxmox VE firewall alias
+//
+// Examine a named alias for a CIDR at the cluster or guest level,
+// identified by `name`. Aliases let firewall rules reference networks
+// by symbolic name. The `scope` field identifies the owner (cluster,
+// vm/<id>, ct/<id>) and `ipVersion` is 4 or 6.
+proxmox.firewall.alias @defaults("scope name cidr") {
+  // Scope of this alias (cluster, vm/<id>, ct/<id>)
+  scope string
+  // Alias name
+  name string
+  // CIDR the alias resolves to
+  cidr string
+  // Alias comment
+  comment string
+  // IP version (4 or 6)
+  ipVersion int
+}
+
+// Proxmox VE LXC container
+//
+// Examine an LXC container in the cluster, identified by numeric `id`
+// and display `name`. Reports current `status` (running, stopped), the
+// `node` it runs on, and resource usage including `cpu`, `mem`,
+// `disk`, `netin`, and `netout`. Configuration details — whether the
+// container runs `unprivileged`, its `ostype`, `hostname`, enabled
+// `features` (nesting, fuse, mount, keyctl), boot options
+// (`onboot`, `startup`, `protection`), description, and tags — are
+// available as computed fields. Network interfaces are listed through
+// `networks`, mount points through `mountPoints`, point-in-time
+// `snapshots` through the snapshots field, firewall configuration via
+// `firewallRules`, `firewallOptions`, `ipsets`, and `aliases`.
+proxmox.container @defaults("id name status unprivileged") {
+  // VMID
+  id int
+  // Container display name
+  name string
+  // Node this container is running on
+  node string
+  // Current status (running, stopped)
+  status string
+
+  // --- Resource usage ---
+
+  // Current CPU usage (fraction)
+  cpu float
+  // Number of configured vCPUs
+  maxcpu int
+  // Current memory usage in bytes
+  mem int
+  // Configured maximum memory in bytes
+  maxmem int
+  // Current disk usage in bytes
+  disk int
+  // Configured maximum disk size in bytes
+  maxdisk int
+  // Total bytes read from disk
+  diskread int
+  // Total bytes written to disk
+  diskwrite int
+  // Total incoming network bytes
+  netin int
+  // Total outgoing network bytes
+  netout int
+  // Uptime in seconds
+  uptime int
+  // Whether this container is a template
+  template bool
+
+  // --- Configuration ---
+
+  // Full container configuration as dictionary
+  config() dict
+  // OS type (debian, ubuntu, centos, alpine, ...)
+  osType() string
+  // Container hostname
+  hostname() string
+  // Whether the container runs unprivileged
+  unprivileged() bool
+  // Enabled features parsed from the `features` config line
+  //
+  // Each entry is the name of an enabled extra capability — `nesting`,
+  // `fuse`, `mount=<types>`, or `keyctl`. An empty list means the
+  // container runs with the default capability set.
+  features() []string
+  // Whether the container is protected from removal
+  protection() bool
+  // Whether the container starts on boot
+  onboot() bool
+  // Container description/notes
+  description() string
+  // Tags assigned to the container
+  tags() []string
+
+  // --- Devices ---
+
+  // Network interfaces attached to the container
+  networks() []proxmox.container.network
+  // Mount points (rootfs + mp0..mp254) attached to the container
+  mountPoints() []proxmox.container.mountPoint
+
+  // --- Snapshots ---
+
+  // Container snapshots
+  snapshots() []proxmox.vm.snapshot
+
+  // --- Firewall ---
+
+  // Container-level firewall rules
+  firewallRules() []proxmox.firewall.rule
+  // Container-level firewall options
+  firewallOptions() proxmox.firewall.options
+  // Container-level IPsets
+  ipsets() []proxmox.firewall.ipset
+  // Container-level firewall aliases
+  aliases() []proxmox.firewall.alias
+}
+
+// Proxmox VE container network interface
+//
+// Examine a network interface attached to an LXC container. The `id`
+// field identifies the slot (e.g. `net0`, `net1`). Reports the
+// interface `name` (as seen inside the guest), `macAddress`, connected
+// `bridge`, VLAN `tag`, whether the per-NIC `firewall` is enabled,
+// and IPv4/IPv6 addressing (`ip`, `gw`, `ip6`, `gw6`).
+proxmox.container.network @defaults("id name bridge") {
+  // Interface ID (net0, net1, ...)
+  id string
+  // Interface name inside the container (e.g. eth0)
+  name string
+  // MAC address
+  macAddress string
+  // Bridge this NIC is connected to
+  bridge string
+  // VLAN tag (0 = none)
+  tag int
+  // Whether the firewall is enabled for this NIC
+  firewall bool
+  // IPv4 address (CIDR notation, dhcp, or empty)
+  ip string
+  // IPv4 gateway
+  gw string
+  // IPv6 address (CIDR notation, auto, dhcp, or empty)
+  ip6 string
+  // IPv6 gateway
+  gw6 string
+}
+
+// Proxmox VE container mount point
+//
+// Examine a mount point attached to an LXC container. The `id` field
+// identifies the slot (`rootfs`, `mp0`–`mp254`). Reports the backing
+// `storage`, `size` in bytes, in-container `mountPath`, whether the
+// mount is `backup`-included, `replicate`-included, and `readonly`,
+// and whether ID mapping is permitted via `aclEnabled`.
+proxmox.container.mountPoint @defaults("id storage mountPath size") {
+  // Mount point ID (rootfs, mp0, mp1, ...)
+  id string
+  // Backing storage name
+  storage string
+  // Size in bytes
+  size int
+  // Path inside the container
+  mountPath string
+  // Whether this mount point is included in backups
+  backup bool
+  // Whether this mount point is included in replication
+  replicate bool
+  // Whether the mount point is read-only
+  readonly bool
+  // Whether POSIX ACLs are enabled on the mount
+  aclEnabled bool
+}
+
+// Proxmox VE scheduled backup job
+//
+// Examine a cluster-wide vzdump backup job, identified by `id`. The
+// job selects guests by explicit `vmids`, by `pool`, or by `all`, and
+// writes to `storage` on the optional `schedule`. Reports the dump
+// `mode` (snapshot, suspend, stop), `compress` algorithm,
+// notification configuration via `mailto` and `notificationMode`,
+// retention via `prune`, and the `fleecing` setting. `targetStorage`
+// resolves `storage` to a typed `proxmox.storage` reference so
+// audits can check the storage pool's encryption or sharing semantics
+// in the same query. The full raw job definition is available
+// through `config`.
+proxmox.backup.job @defaults("id schedule storage enabled") {
+  // Job identifier
+  id string
+  // Whether the job is enabled
+  enabled bool
+  // Schedule (systemd-calendar expression, e.g. `mon..fri 03:00`)
+  schedule string
+  // Storage name backups are written to
+  storage string
+  // Dump mode (snapshot, suspend, stop)
+  mode string
+  // Job comment
+  comment string
+  // Comma-separated VMIDs the job targets
+  vmids string
+  // Pool the job targets (alternative to vmids)
+  pool string
+  // Whether the job targets every guest
+  all bool
+  // Comma-separated VMIDs to exclude
+  exclude string
+  // Compression algorithm (0, 1, gzip, lzo, zstd)
+  compress string
+  // Comma-separated email recipients
+  mailto string
+  // Notification routing mode (auto, legacy-sendmail, notification-system)
+  notificationMode string
+  // Node the job is restricted to; empty when cluster-wide
+  node string
+  // Retention specification (e.g. keep-last=7,keep-daily=14)
+  prune string
+  // Fleecing configuration (e.g. enabled=1,storage=pbs)
+  fleecing string
+  // Template for backup notes
+  notesTemplate string
+  // Whether resulting backups are marked protected
+  protected bool
+  // Next scheduled run as a Unix timestamp; 0 if not scheduled
+  nextRun int
+  // Resolved target storage pool
+  targetStorage() proxmox.storage
+  // Full raw job configuration as returned by /cluster/backup/<id>
+  config() dict
 }

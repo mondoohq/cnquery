@@ -150,14 +150,16 @@ func (r *mqlProxmox) users() ([]any, error) {
 			realm = parts[1]
 		}
 		res, err := CreateResource(r.MqlRuntime, "proxmox.user", map[string]*llx.RawData{
-			"id":        llx.StringData(u.UserID),
-			"email":     llx.StringData(u.Email),
-			"enable":    llx.BoolData(u.Enable == 1),
-			"expire":    llx.IntData(u.Expire),
-			"firstname": llx.StringData(u.Firstname),
-			"lastname":  llx.StringData(u.Lastname),
-			"groups":    llx.ArrayData(groups, "\x02"),
-			"realm":     llx.StringData(realm),
+			"id":             llx.StringData(u.UserID),
+			"email":          llx.StringData(u.Email),
+			"enable":         llx.BoolData(u.Enable == 1),
+			"expire":         llx.IntData(u.Expire),
+			"firstname":      llx.StringData(u.Firstname),
+			"lastname":       llx.StringData(u.Lastname),
+			"groups":         llx.ArrayData(groups, "\x02"),
+			"realm":          llx.StringData(realm),
+			"realmType":      llx.StringData(u.RealmType),
+			"tfaLockedUntil": llx.IntData(u.TFALockedUntil),
 		})
 		if err != nil {
 			return nil, err

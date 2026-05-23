@@ -3,7 +3,11 @@
 
 package resources
 
-import "fmt"
+import (
+	"fmt"
+
+	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+)
 
 // id() overrides for resources that need unique cache keys.
 // Resources scoped to a parent (VM or Node) include the parent
@@ -107,15 +111,72 @@ func (r *mqlProxmoxVmUpdate) id() (string, error) {
 	return fmt.Sprintf("proxmox.vm.update/%d/%s", r.parentVmid, r.Name.Data), nil
 }
 
+// --- Container-scoped (include VMID to prevent cross-container collisions) ---
+
+type mqlProxmoxContainerNetworkInternal struct {
+	parentVmid int64
+}
+
+func (r *mqlProxmoxContainerNetwork) id() (string, error) {
+	return fmt.Sprintf("proxmox.container.network/%d/%s", r.parentVmid, r.Id.Data), nil
+}
+
+type mqlProxmoxContainerMountPointInternal struct {
+	parentVmid int64
+}
+
+func (r *mqlProxmoxContainerMountPoint) id() (string, error) {
+	return fmt.Sprintf("proxmox.container.mountPoint/%d/%s", r.parentVmid, r.Id.Data), nil
+}
+
 // --- Firewall rules (scoped to cluster/node/VM to prevent collisions) ---
 
 type mqlProxmoxFirewallRuleInternal struct {
-	scope string // e.g. "cluster", "node/pve1", "vm/100"
+	scope string // e.g. "cluster", "node/pve1", "vm/100", "ct/200"
 }
 
 func (r *mqlProxmoxFirewallRule) id() (string, error) {
 	return fmt.Sprintf("proxmox.firewall.rule/%s/%d/%s/%s/%s/%s",
 		r.scope, r.Pos.Data, r.Type.Data, r.Action.Data, r.Source.Data, r.Dest.Data), nil
+}
+
+// --- Firewall options/ipsets/aliases (scoped) ---
+
+type mqlProxmoxFirewallOptionsInternal struct{}
+
+func (r *mqlProxmoxFirewallOptions) id() (string, error) {
+	return "proxmox.firewall.options/" + r.Scope.Data, nil
+}
+
+type mqlProxmoxFirewallIpsetInternal struct {
+	entriesScope string
+	fetcherName  string
+	fetcher      func(name string) ([]connection.IPSetEntry, error)
+}
+
+func (r *mqlProxmoxFirewallIpset) id() (string, error) {
+	return "proxmox.firewall.ipset/" + r.Scope.Data + "/" + r.Name.Data, nil
+}
+
+type mqlProxmoxFirewallIpsetEntryInternal struct {
+	scope   string // e.g. "cluster/myset", "vm/100/myset"
+	ipsetID string
+}
+
+func (r *mqlProxmoxFirewallIpsetEntry) id() (string, error) {
+	return "proxmox.firewall.ipset.entry/" + r.scope + "/" + r.Cidr.Data, nil
+}
+
+type mqlProxmoxFirewallAliasInternal struct{}
+
+func (r *mqlProxmoxFirewallAlias) id() (string, error) {
+	return "proxmox.firewall.alias/" + r.Scope.Data + "/" + r.Name.Data, nil
+}
+
+// --- Container (vmid is unique cluster-wide) ---
+
+func (r *mqlProxmoxBackupJob) id() (string, error) {
+	return "proxmox.backup.job/" + r.Id.Data, nil
 }
 
 // --- Globally unique (id field is already unique) ---

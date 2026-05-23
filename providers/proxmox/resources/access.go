@@ -1,0 +1,248 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"strings"
+	"sync"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+)
+
+// ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+func (r *mqlProxmox) groups() ([]any, error) {
+	conn := proxmoxConn(r)
+	groups, err := conn.GetGroups()
+	if err != nil {
+		return nil, err
+	}
+	list := make([]any, len(groups))
+	for i, g := range groups {
+		var memberIds []any
+		if g.Users != "" {
+			for _, u := range strings.Split(g.Users, ",") {
+				if u = strings.TrimSpace(u); u != "" {
+					memberIds = append(memberIds, u)
+				}
+			}
+		}
+		res, err := CreateResource(r.MqlRuntime, "proxmox.group", map[string]*llx.RawData{
+			"id":        llx.StringData(g.GroupID),
+			"comment":   llx.StringData(g.Comment),
+			"memberIds": llx.ArrayData(memberIds, "\x02"),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+func (r *mqlProxmoxGroup) id() (string, error) {
+	return "proxmox.group/" + r.Id.Data, nil
+}
+
+func (r *mqlProxmoxGroup) members() ([]any, error) {
+	var out []any
+	for _, raw := range r.MemberIds.Data {
+		uid, ok := raw.(string)
+		if !ok || uid == "" {
+			continue
+		}
+		res, err := NewResource(r.MqlRuntime, "proxmox.user", map[string]*llx.RawData{
+			"id": llx.StringData(uid),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ---------------------------------------------------------------------------
+// ACL
+// ---------------------------------------------------------------------------
+
+type mqlProxmoxAclInternal struct {
+	// ugid resolves to one of these depending on Type; cache decisions
+	// so the typed accessors don't repeat the work.
+}
+
+func (r *mqlProxmox) acl() ([]any, error) {
+	conn := proxmoxConn(r)
+	entries, err := conn.GetACL()
+	if err != nil {
+		return nil, err
+	}
+	list := make([]any, len(entries))
+	for i, e := range entries {
+		res, err := CreateResource(r.MqlRuntime, "proxmox.acl", map[string]*llx.RawData{
+			"path":      llx.StringData(e.Path),
+			"type":      llx.StringData(e.Type),
+			"ugid":      llx.StringData(e.UGID),
+			"roleId":    llx.StringData(e.RoleID),
+			"propagate": llx.BoolData(e.Propagate == 1),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+func (r *mqlProxmoxAcl) id() (string, error) {
+	// path + ugid + roleId uniquely identifies an entry; propagate
+	// doesn't, but the same path/ugid/roleId can't repeat with
+	// different propagation in PVE so this is safe.
+	return "proxmox.acl/" + r.Path.Data + "|" + r.Type.Data + "|" + r.Ugid.Data + "|" + r.RoleId.Data, nil
+}
+
+func (r *mqlProxmoxAcl) role() (*mqlProxmoxRole, error) {
+	res, err := NewResource(r.MqlRuntime, "proxmox.role", map[string]*llx.RawData{
+		"id": llx.StringData(r.RoleId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxRole), nil
+}
+
+func (r *mqlProxmoxAcl) user() (*mqlProxmoxUser, error) {
+	if r.Type.Data != "user" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "proxmox.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.Ugid.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxUser), nil
+}
+
+func (r *mqlProxmoxAcl) group() (*mqlProxmoxGroup, error) {
+	if r.Type.Data != "group" {
+		r.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "proxmox.group", map[string]*llx.RawData{
+		"id": llx.StringData(r.Ugid.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxGroup), nil
+}
+
+func (r *mqlProxmoxAcl) token() (*mqlProxmoxToken, error) {
+	if r.Type.Data != "token" {
+		r.Token.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "proxmox.token", map[string]*llx.RawData{
+		"id": llx.StringData(r.Ugid.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxToken), nil
+}
+
+// ---------------------------------------------------------------------------
+// Realms
+// ---------------------------------------------------------------------------
+
+type mqlProxmoxRealmInternal struct {
+	configFetched bool
+	cfg           map[string]any
+	cfgErr        error
+	lock          sync.Mutex
+}
+
+func (r *mqlProxmox) realms() ([]any, error) {
+	conn := proxmoxConn(r)
+	realms, err := conn.GetRealms()
+	if err != nil {
+		return nil, err
+	}
+	list := make([]any, len(realms))
+	for i, rm := range realms {
+		tfaType := ""
+		if rm.TFA != "" {
+			// /access/domains returns tfa as "type=oath,step=30,id=..."
+			// Pull the type=value pair.
+			for _, part := range strings.Split(rm.TFA, ",") {
+				kv := strings.SplitN(part, "=", 2)
+				if len(kv) == 2 && kv[0] == "type" {
+					tfaType = kv[1]
+					break
+				}
+			}
+			if tfaType == "" {
+				tfaType = rm.TFA
+			}
+		}
+		res, err := CreateResource(r.MqlRuntime, "proxmox.realm", map[string]*llx.RawData{
+			"realm":   llx.StringData(rm.Realm),
+			"type":    llx.StringData(rm.Type),
+			"comment": llx.StringData(rm.Comment),
+			"default": llx.BoolData(rm.Default == 1),
+			"tfaType": llx.StringData(tfaType),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+func (r *mqlProxmoxRealm) id() (string, error) {
+	return "proxmox.realm/" + r.Realm.Data, nil
+}
+
+func (r *mqlProxmoxRealm) config() (any, error) {
+	if r.configFetched {
+		return r.cfg, r.cfgErr
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.configFetched {
+		return r.cfg, r.cfgErr
+	}
+	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+	r.cfg, r.cfgErr = conn.GetRealmConfig(r.Realm.Data)
+	r.configFetched = true
+	return r.cfg, r.cfgErr
+}
+
+// ---------------------------------------------------------------------------
+// User additions — realmType, tfaLockedUntil already populated by users();
+// only the lazy tfaFactors() lookup lives here.
+// ---------------------------------------------------------------------------
+
+func (r *mqlProxmoxUser) tfaFactors() ([]any, error) {
+	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+	entries, err := conn.GetUserTFA(r.Id.Data)
+	if err != nil {
+		// /access/tfa/<userid> 403s for non-admins and returns 404 when
+		// the user has nothing enrolled; treat both as "no factors" so
+		// audits over many users don't blow up on a single missing row.
+		return []any{}, nil
+	}
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, e.Type)
+	}
+	return out, nil
+}
