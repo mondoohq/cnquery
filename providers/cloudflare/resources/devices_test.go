@@ -6,6 +6,8 @@ package resources
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,4 +80,39 @@ func TestDevicePostureIntegrations(t *testing.T) {
 	assert.Equal(t, "CrowdStrike Integration", integ.Name.Data)
 	assert.Equal(t, "crowdstrike_s2s", integ.Type.Data)
 	assert.Equal(t, "10m", integ.Interval.Data)
+}
+
+// TestDevicesPagination asserts the new paginateRaw helper walks every page
+// for the Teams Devices endpoint (previously single-page only).
+func TestDevicesPagination(t *testing.T) {
+	env := setupTestEnv(t)
+	one := createTestOne(t, env)
+
+	const totalPages = 4
+	var calls int32
+
+	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/devices", testAccountID), func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page == 0 {
+			page = 1
+		}
+		body := fmt.Sprintf(`{
+			"success": true, "errors": [], "messages": [],
+			"result": [{"id": "device-p%d", "name": "Device P%d", "device_type": "desktop", "model": "", "manufacturer": "", "serial_number": "", "mac_address": "", "ip": "", "os_version": "", "os_distro_name": "", "os_distro_revision": "", "version": "", "deleted": false, "created": "2024-01-01T00:00:00Z", "updated": "2024-01-01T00:00:00Z", "last_seen": "2024-01-01T00:00:00Z", "revoked_at": ""}],
+			"result_info": {"page": %d, "per_page": 1, "total_pages": %d, "count": 1, "total_count": %d}
+		}`, page, page, page, totalPages, totalPages)
+		jsonResponse(w, body)
+	})
+
+	result, err := one.devices()
+	require.NoError(t, err)
+	require.Len(t, result, totalPages)
+	require.Equal(t, int32(totalPages), atomic.LoadInt32(&calls))
+
+	ids := make([]string, len(result))
+	for i, r := range result {
+		ids[i] = r.(*mqlCloudflareOneDevice).Id.Data
+	}
+	assert.Equal(t, []string{"device-p1", "device-p2", "device-p3", "device-p4"}, ids)
 }

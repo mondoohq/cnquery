@@ -41,9 +41,9 @@ func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
 type mqlCloudflareR2BucketInternal struct {
 	accountID string
 
-	publicAccessLock        sync.Mutex
-	publicAccessFetched     bool
+	publicAccessOnce        sync.Once
 	publicAccessAvailable   bool
+	publicAccessErr         error
 	cachePublicAccessOn     bool
 	cachePublicAccessDomain string
 }
@@ -129,54 +129,44 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 // caller lacks access to read it; in that case the calling computed method
 // should mark its field null.
 func (c *mqlCloudflareR2Bucket) fetchPublicAccess() (available, enabled bool, domain string, err error) {
-	if c.publicAccessFetched {
-		return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
-	}
-	c.publicAccessLock.Lock()
-	defer c.publicAccessLock.Unlock()
-	if c.publicAccessFetched {
-		return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
-	}
-
-	if c.accountID == "" {
-		c.publicAccessFetched = true
-		return false, false, "", nil
-	}
-
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	uri := fmt.Sprintf("/accounts/%s/r2/buckets/%s/domains/managed", c.accountID, c.GetName().Data)
-	raw, rerr := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
-	if rerr != nil {
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(rerr, &notFound) || errors.As(rerr, &authN) || errors.As(rerr, &authZ) {
-			c.publicAccessFetched = true
-			return false, false, "", nil
+	c.publicAccessOnce.Do(func() {
+		if c.accountID == "" {
+			return
 		}
-		return false, false, "", rerr
-	}
 
-	// An empty result body means the managed-domain endpoint returned no data —
-	// treat that as "not available" rather than "available but disabled".
-	if len(raw.Result) == 0 {
-		c.publicAccessFetched = true
-		return false, false, "", nil
-	}
+		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+		uri := fmt.Sprintf("/accounts/%s/r2/buckets/%s/domains/managed", c.accountID, c.GetName().Data)
+		raw, rerr := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+		if rerr != nil {
+			var notFound *cloudflare.NotFoundError
+			var authN *cloudflare.AuthenticationError
+			var authZ *cloudflare.AuthorizationError
+			if errors.As(rerr, &notFound) || errors.As(rerr, &authN) || errors.As(rerr, &authZ) {
+				return
+			}
+			c.publicAccessErr = rerr
+			return
+		}
 
-	var payload struct {
-		Enabled bool   `json:"enabled"`
-		Domain  string `json:"domain"`
-	}
-	if err := json.Unmarshal(raw.Result, &payload); err != nil {
-		return false, false, "", fmt.Errorf("failed to decode r2 managed-domain response: %w", err)
-	}
+		// Empty body → managed domain not available; not the same as available-but-disabled.
+		if len(raw.Result) == 0 {
+			return
+		}
 
-	c.publicAccessAvailable = true
-	c.cachePublicAccessOn = payload.Enabled
-	c.cachePublicAccessDomain = payload.Domain
-	c.publicAccessFetched = true
-	return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
+		var payload struct {
+			Enabled bool   `json:"enabled"`
+			Domain  string `json:"domain"`
+		}
+		if uerr := json.Unmarshal(raw.Result, &payload); uerr != nil {
+			c.publicAccessErr = fmt.Errorf("failed to decode r2 managed-domain response: %w", uerr)
+			return
+		}
+
+		c.publicAccessAvailable = true
+		c.cachePublicAccessOn = payload.Enabled
+		c.cachePublicAccessDomain = payload.Domain
+	})
+	return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, c.publicAccessErr
 }
 
 func (c *mqlCloudflareR2Bucket) publicAccessEnabled() (bool, error) {

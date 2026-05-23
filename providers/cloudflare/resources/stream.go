@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/cloudflare/cloudflare-go"
@@ -14,6 +13,20 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
+
+// metaString returns the string value at key in a Cloudflare `meta` map, or ""
+// if the key is missing or the value is not a string. The Cloudflare stream
+// API allows arbitrary user-set keys here.
+func metaString(meta map[string]any, key string) string {
+	if meta == nil {
+		return ""
+	}
+	v, ok := meta[key].(string)
+	if !ok {
+		return ""
+	}
+	return v
+}
 
 func (c *mqlCloudflareStreamsLiveInput) id() (string, error) {
 	if c.Id.Error != nil {
@@ -40,44 +53,35 @@ func (c *mqlCloudflareAccount) liveInputs() ([]any, error) {
 func fetchLiveInputs(runtime *plugin.Runtime, account_id string) ([]any, error) {
 	conn := runtime.Connection.(*connection.CloudflareConnection)
 
-	req, _ := http.NewRequest(
-		"GET", fmt.Sprintf("%s/accounts/%s/stream/live_inputs", conn.Cf.BaseURL, account_id), nil,
+	raw, err := conn.Cf.Raw(
+		context.Background(),
+		http.MethodGet,
+		fmt.Sprintf("/accounts/%s/stream/live_inputs", account_id),
+		nil,
+		nil,
 	)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conn.Cf.APIToken))
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var results struct {
-		Result []struct {
-			Uid                      string         `json:"uid"`
-			Modified                 string         `json:"modified"`
-			Created                  string         `json:"created"`
-			DeleteRecordingAfterDays int            `json:"deleteRecordingAfterDays"`
-			Meta                     map[string]any `json:"meta"`
-		} `json:"result"`
-	}
-
-	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(bytes, &results); err != nil {
-		return nil, err
+	var results []struct {
+		Uid                      string         `json:"uid"`
+		Modified                 string         `json:"modified"`
+		Created                  string         `json:"created"`
+		DeleteRecordingAfterDays int            `json:"deleteRecordingAfterDays"`
+		Meta                     map[string]any `json:"meta"`
+	}
+	if err := json.Unmarshal(raw.Result, &results); err != nil {
+		return nil, fmt.Errorf("cloudflare stream live_inputs: unmarshal: %w", err)
 	}
 
 	var res []any
-
-	for _, result := range results.Result {
+	for _, result := range results {
 		input, err := NewResource(runtime, "cloudflare.streams.liveInput", map[string]*llx.RawData{
 			"id":                       llx.StringData(result.Uid),
 			"uid":                      llx.StringData(result.Uid),
 			"deleteRecordingAfterDays": llx.IntData(result.DeleteRecordingAfterDays),
-			"name":                     llx.StringData(result.Meta["name"].(string)),
+			"name":                     llx.StringData(metaString(result.Meta, "name")),
 		})
 		if err != nil {
 			return nil, err
@@ -114,7 +118,7 @@ func fetchVideos(runtime *plugin.Runtime, account_id string) ([]any, error) {
 		res, err := NewResource(runtime, "cloudflare.streams.video", map[string]*llx.RawData{
 			"id":                    llx.StringData(video.UID),
 			"uid":                   llx.StringData(video.UID),
-			"name":                  llx.StringData(video.Meta["name"].(string)),
+			"name":                  llx.StringData(metaString(video.Meta, "name")),
 			"creator":               llx.StringData(video.Creator),
 			"duration":              llx.FloatData(video.Duration),
 			"height":                llx.IntData(video.Input.Height),

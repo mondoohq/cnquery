@@ -4,6 +4,10 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -11,6 +15,39 @@ import (
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+const defaultCloudflarePageSize = 50
+
+// paginateRaw walks pagination on a Cloudflare GET endpoint via the SDK's Raw
+// helper, which reuses the same HTTP client, retries, and authentication as
+// the typed SDK methods. Stops when the response omits result_info or
+// HasMorePages reports no further pages. handle is invoked once per page with
+// the raw `result` array bytes.
+//
+// This exists because many cloudflare-go v0 List* methods (devices, posture
+// rules, notifications, teams rules/lists/locations, DLP profiles, workers)
+// take no pagination parameters and silently return only the first page.
+func paginateRaw(ctx context.Context, cf *cloudflare.API, endpoint string, handle func(raw json.RawMessage) error) error {
+	page := 1
+	for {
+		sep := "?"
+		if strings.Contains(endpoint, "?") {
+			sep = "&"
+		}
+		uri := fmt.Sprintf("%s%spage=%d&per_page=%d", endpoint, sep, page, defaultCloudflarePageSize)
+		raw, err := cf.Raw(ctx, http.MethodGet, uri, nil, nil)
+		if err != nil {
+			return err
+		}
+		if err := handle(raw.Result); err != nil {
+			return err
+		}
+		if raw.ResultInfo == nil || !raw.ResultInfo.HasMorePages() {
+			return nil
+		}
+		page = raw.ResultInfo.Page + 1
+	}
+}
 
 func (r *mqlCloudflare) id() (string, error) {
 	return "cloudflare", nil
@@ -90,28 +127,26 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
-	cursor := cloudflare.ResultInfo{}
+	params := cloudflare.AccountsListParams{}
 
 	for {
-		_accounts, info, err := conn.Cf.Accounts(context.Background(), cloudflare.AccountsListParams{
-			PaginationOptions: cloudflare.PaginationOptions{
-				Page:    cursor.Page,
-				PerPage: cursor.PerPage,
-			},
-		})
+		_accounts, info, err := conn.Cf.Accounts(context.Background(), params)
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
 		for i := range _accounts {
 			acc := _accounts[i]
 
-			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
-				"__id":             llx.StringData("cloudflare.account.settings@" + acc.ID),
-				"enforceTwoFactor": llx.BoolData(acc.Settings.EnforceTwoFactor),
-			})
+			settingsArgs := map[string]*llx.RawData{
+				"__id": llx.StringData("cloudflare.account.settings@" + acc.ID),
+			}
+			if acc.Settings != nil {
+				settingsArgs["enforceTwoFactor"] = llx.BoolData(acc.Settings.EnforceTwoFactor)
+			} else {
+				settingsArgs["enforceTwoFactor"] = llx.BoolData(false)
+			}
+			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", settingsArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -130,9 +165,10 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 			result = append(result, res)
 		}
 
-		if !cursor.HasMorePages() {
+		if !info.HasMorePages() {
 			break
 		}
+		params.PaginationOptions.Page = info.Page + 1
 	}
 
 	return result, nil

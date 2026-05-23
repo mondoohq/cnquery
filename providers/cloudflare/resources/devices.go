@@ -4,8 +4,11 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
+	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -20,39 +23,42 @@ func (c *mqlCloudflareOneDevice) id() (string, error) {
 func (c *mqlCloudflareOne) devices() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListTeamsDevices(context.TODO(), c.AccountID)
+	var result []any
+	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices", c.AccountID), func(raw json.RawMessage) error {
+		var records []cloudflare.TeamsDeviceListItem
+		if err := json.Unmarshal(raw, &records); err != nil {
+			return err
+		}
+		for i := range records {
+			rec := records[i]
+			res, err := NewResource(c.MqlRuntime, "cloudflare.one.device", map[string]*llx.RawData{
+				"id":               llx.StringData(rec.ID),
+				"name":             llx.StringData(rec.Name),
+				"deviceType":       llx.StringData(rec.DeviceType),
+				"model":            llx.StringData(rec.Model),
+				"manufacturer":     llx.StringData(rec.Manufacturer),
+				"serialNumber":     llx.StringData(rec.SerialNumber),
+				"macAddress":       llx.StringData(rec.MacAddress),
+				"ip":               llx.StringData(rec.IP),
+				"osVersion":        llx.StringData(rec.OSVersion),
+				"osDistroName":     llx.StringData(rec.OSDistroName),
+				"osDistroRevision": llx.StringData(rec.OsDistroRevision),
+				"version":          llx.StringData(rec.Version),
+				"deleted":          llx.BoolData(rec.Deleted),
+				"created":          llx.TimeData(parseRFC3339(rec.Created)),
+				"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
+				"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
+				"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
+			})
+			if err != nil {
+				return err
+			}
+			result = append(result, res)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.one.device", map[string]*llx.RawData{
-			"id":               llx.StringData(rec.ID),
-			"name":             llx.StringData(rec.Name),
-			"deviceType":       llx.StringData(rec.DeviceType),
-			"model":            llx.StringData(rec.Model),
-			"manufacturer":     llx.StringData(rec.Manufacturer),
-			"serialNumber":     llx.StringData(rec.SerialNumber),
-			"macAddress":       llx.StringData(rec.MacAddress),
-			"ip":               llx.StringData(rec.IP),
-			"osVersion":        llx.StringData(rec.OSVersion),
-			"osDistroName":     llx.StringData(rec.OSDistroName),
-			"osDistroRevision": llx.StringData(rec.OsDistroRevision),
-			"version":          llx.StringData(rec.Version),
-			"deleted":          llx.BoolData(rec.Deleted),
-			"created":          llx.TimeData(parseRFC3339(rec.Created)),
-			"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
-			"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
-			"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, res)
 	}
 
 	return result, nil
@@ -68,28 +74,31 @@ func (c *mqlCloudflareOneDevicePostureRule) id() (string, error) {
 func (c *mqlCloudflareOne) devicePostureRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.DevicePostureRules(context.TODO(), c.AccountID)
+	var result []any
+	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices/posture", c.AccountID), func(raw json.RawMessage) error {
+		var records []cloudflare.DevicePostureRule
+		if err := json.Unmarshal(raw, &records); err != nil {
+			return err
+		}
+		for i := range records {
+			rec := records[i]
+			res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureRule", map[string]*llx.RawData{
+				"id":          llx.StringData(rec.ID),
+				"name":        llx.StringData(rec.Name),
+				"type":        llx.StringData(rec.Type),
+				"description": llx.StringData(rec.Description),
+				"schedule":    llx.StringData(rec.Schedule),
+				"expiration":  llx.StringData(rec.Expiration),
+			})
+			if err != nil {
+				return err
+			}
+			result = append(result, res)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureRule", map[string]*llx.RawData{
-			"id":          llx.StringData(rec.ID),
-			"name":        llx.StringData(rec.Name),
-			"type":        llx.StringData(rec.Type),
-			"description": llx.StringData(rec.Description),
-			"schedule":    llx.StringData(rec.Schedule),
-			"expiration":  llx.StringData(rec.Expiration),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, res)
 	}
 
 	return result, nil
@@ -105,26 +114,29 @@ func (c *mqlCloudflareOneDevicePostureIntegration) id() (string, error) {
 func (c *mqlCloudflareOne) devicePostureIntegrations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.DevicePostureIntegrations(context.TODO(), c.AccountID)
+	var result []any
+	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices/posture/integration", c.AccountID), func(raw json.RawMessage) error {
+		var records []cloudflare.DevicePostureIntegration
+		if err := json.Unmarshal(raw, &records); err != nil {
+			return err
+		}
+		for i := range records {
+			rec := records[i]
+			res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureIntegration", map[string]*llx.RawData{
+				"id":       llx.StringData(rec.IntegrationID),
+				"name":     llx.StringData(rec.Name),
+				"type":     llx.StringData(rec.Type),
+				"interval": llx.StringData(rec.Interval),
+			})
+			if err != nil {
+				return err
+			}
+			result = append(result, res)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureIntegration", map[string]*llx.RawData{
-			"id":       llx.StringData(rec.IntegrationID),
-			"name":     llx.StringData(rec.Name),
-			"type":     llx.StringData(rec.Type),
-			"interval": llx.StringData(rec.Interval),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, res)
 	}
 
 	return result, nil

@@ -4,7 +4,10 @@
 package resources
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -87,4 +90,69 @@ func TestAccounts(t *testing.T) {
 	assert.Equal(t, "9d4e6c8f0a2b1d3f5e7c9b1a8f6e4d2c", a2.Id.Data)
 	assert.Equal(t, "enterprise", a2.Type.Data)
 	assert.True(t, a2.Settings.Data.EnforceTwoFactor.Data)
+}
+
+// TestAccountsPagination guards against the infinite-loop bug where the
+// accounts cursor was never advanced and HasMorePages stayed true forever.
+// It also asserts every page is consumed (not just the first one).
+func TestAccountsPagination(t *testing.T) {
+	env := setupTestEnv(t)
+	root := newTestRoot(t, env)
+
+	const totalPages = 3
+	var calls int32
+
+	env.Mux.HandleFunc("/accounts", func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page == 0 {
+			page = 1
+		}
+		// Distinct ids per page so we can tell if a page repeats (infinite loop).
+		body := fmt.Sprintf(`{
+			"success": true, "errors": [], "messages": [],
+			"result": [{"id": "acct-p%d", "name": "Account P%d", "type": "standard", "created_on": "2026-01-01T00:00:00Z"}],
+			"result_info": {"page": %d, "per_page": 1, "total_pages": %d, "count": 1, "total_count": %d}
+		}`, page, page, page, totalPages, totalPages)
+		jsonResponse(w, body)
+	})
+
+	// If pagination were broken the request handler would loop forever; cap
+	// the test with t.Deadline via a goroutine isn't necessary — the previous
+	// (buggy) code would re-request page=0 indefinitely. We assert that the
+	// handler is called exactly totalPages times.
+	result, err := root.accounts()
+	require.NoError(t, err)
+	require.Len(t, result, totalPages)
+	require.Equal(t, int32(totalPages), atomic.LoadInt32(&calls), "handler should be called once per page, no repeats")
+
+	ids := make([]string, len(result))
+	for i, r := range result {
+		ids[i] = r.(*mqlCloudflareAccount).Id.Data
+	}
+	assert.Equal(t, []string{"acct-p1", "acct-p2", "acct-p3"}, ids)
+}
+
+// TestAccountsNilSettings asserts that an account whose `settings` field is
+// missing from the API response does not panic. The previous code derefenced
+// acc.Settings.EnforceTwoFactor unconditionally.
+func TestAccountsNilSettings(t *testing.T) {
+	env := setupTestEnv(t)
+	root := newTestRoot(t, env)
+
+	env.Mux.HandleFunc("/accounts", func(w http.ResponseWriter, r *http.Request) {
+		jsonResponse(w, `{
+			"success": true, "errors": [], "messages": [],
+			"result": [{"id": "no-settings", "name": "No Settings", "type": "standard", "created_on": "2026-01-01T00:00:00Z"}],
+			"result_info": {"page": 1, "per_page": 20, "total_pages": 1, "count": 1, "total_count": 1}
+		}`)
+	})
+
+	result, err := root.accounts()
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+
+	acc := result[0].(*mqlCloudflareAccount)
+	require.NotNil(t, acc.Settings.Data)
+	assert.False(t, acc.Settings.Data.EnforceTwoFactor.Data)
 }

@@ -173,9 +173,10 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 					"allowedOrigins":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedOrigins), types.String),
 					"maxAge":           llx.IntData(headers.MaxAge),
 				})
-				if err == nil {
-					resourceData["corsHeaders"] = llx.ResourceData(corsHeaders, corsHeaders.MqlName())
+				if err != nil {
+					return nil, err
 				}
+				resourceData["corsHeaders"] = llx.ResourceData(corsHeaders, corsHeaders.MqlName())
 			}
 
 			res, err := NewResource(c.MqlRuntime, "cloudflare.one.app", resourceData)

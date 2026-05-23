@@ -184,9 +184,6 @@ func (c *mqlCloudflareZoneEmailRouting) resolveZoneName() (string, error) {
 }
 
 func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare.DNSRecord, error) {
-	if c.dnsFetched {
-		return c.dnsCache, nil
-	}
 	c.dnsLock.Lock()
 	defer c.dnsLock.Unlock()
 	if c.dnsFetched {

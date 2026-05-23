@@ -4,7 +4,9 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/cloudflare/cloudflare-go"
@@ -29,35 +31,28 @@ func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 type mqlCloudflareWorkersInternal struct {
 	AccountID string
 
-	workerListLock sync.Mutex
-	workerListDone bool
+	workerListOnce sync.Once
 	workerList     []cloudflare.WorkerMetaData
 	workerListErr  error
 }
 
 // fetchWorkerList caches the per-account workers list so that workers() and
-// secrets() share a single ListWorkers API call.
+// secrets() share a single round-trip across the underlying API.
 func (c *mqlCloudflareWorkers) fetchWorkerList() ([]cloudflare.WorkerMetaData, error) {
-	if c.workerListDone {
-		return c.workerList, c.workerListErr
-	}
-	c.workerListLock.Lock()
-	defer c.workerListLock.Unlock()
-	if c.workerListDone {
-		return c.workerList, c.workerListErr
-	}
-
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	resp, _, err := conn.Cf.ListWorkers(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.mqlCloudflareWorkersInternal.AccountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.ListWorkersParams{})
-	if err != nil {
-		c.workerListErr = err
-	} else {
-		c.workerList = resp.WorkerList
-	}
-	c.workerListDone = true
+	c.workerListOnce.Do(func() {
+		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+		err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/workers/scripts", c.mqlCloudflareWorkersInternal.AccountID), func(raw json.RawMessage) error {
+			var batch []cloudflare.WorkerMetaData
+			if err := json.Unmarshal(raw, &batch); err != nil {
+				return err
+			}
+			c.workerList = append(c.workerList, batch...)
+			return nil
+		})
+		if err != nil {
+			c.workerListErr = err
+		}
+	})
 	return c.workerList, c.workerListErr
 }
 

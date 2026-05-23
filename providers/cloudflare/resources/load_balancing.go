@@ -57,17 +57,29 @@ func poolMapDict(m map[string][]string) map[string]any {
 func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	lbs, err := conn.Cf.ListLoadBalancers(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-		Level:      cloudflare.ZoneRouteLevel,
-	}, cloudflare.ListLoadBalancerParams{})
-	if err != nil {
-		// Load balancing is a paid add-on; treat a missing subscription as "no
-		// load balancers" rather than failing the whole zone query.
-		if isLoadBalancingUnavailable(err) {
-			return []any{}, nil
+	const perPage = 50
+	var lbs []cloudflare.LoadBalancer
+	{
+		params := cloudflare.ListLoadBalancerParams{PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1}}
+		for {
+			page, err := conn.Cf.ListLoadBalancers(context.TODO(), &cloudflare.ResourceContainer{
+				Identifier: c.Id.Data,
+				Level:      cloudflare.ZoneRouteLevel,
+			}, params)
+			if err != nil {
+				// Load balancing is a paid add-on; treat a missing subscription as "no
+				// load balancers" rather than failing the whole zone query.
+				if isLoadBalancingUnavailable(err) {
+					return []any{}, nil
+				}
+				return nil, err
+			}
+			lbs = append(lbs, page...)
+			if len(page) < perPage {
+				break
+			}
+			params.PaginationOptions.Page++
 		}
-		return nil, err
 	}
 	if len(lbs) == 0 {
 		return []any{}, nil
@@ -81,15 +93,25 @@ func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 		// empty pool references are not mistaken for "no pools configured".
 		log.Warn().Msg("cloudflare> could not resolve the zone's account; load balancer pool references will be empty")
 	} else {
-		pools, err := conn.Cf.ListLoadBalancerPools(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: acc.Data.Id.Data,
-			Level:      cloudflare.AccountRouteLevel,
-		}, cloudflare.ListLoadBalancerPoolParams{})
-		if err != nil && !isLoadBalancingUnavailable(err) {
-			return nil, err
-		}
-		for i := range pools {
-			poolIndex[pools[i].ID] = pools[i]
+		params := cloudflare.ListLoadBalancerPoolParams{PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1}}
+		for {
+			pools, err := conn.Cf.ListLoadBalancerPools(context.TODO(), &cloudflare.ResourceContainer{
+				Identifier: acc.Data.Id.Data,
+				Level:      cloudflare.AccountRouteLevel,
+			}, params)
+			if err != nil {
+				if isLoadBalancingUnavailable(err) {
+					break
+				}
+				return nil, err
+			}
+			for i := range pools {
+				poolIndex[pools[i].ID] = pools[i]
+			}
+			if len(pools) < perPage {
+				break
+			}
+			params.PaginationOptions.Page++
 		}
 	}
 

@@ -125,6 +125,10 @@ func (c *mqlCloudflareTunnelRoute) id() (string, error) {
 	return fmt.Sprintf("tunnelRoute@%s@%s", c.Network.Data, c.TunnelId.Data), nil
 }
 
+func tunnelRouteID(network, tunnelID, vnetID string) string {
+	return fmt.Sprintf("tunnelRoute@%s@%s@%s", network, tunnelID, vnetID)
+}
+
 func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 	acc := c.GetAccount()
@@ -133,37 +137,45 @@ func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 	}
 	accountID := acc.Data.GetId().Data
 
-	records, err := conn.Cf.ListTunnelRoutes(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: accountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.TunnelRoutesListParams{})
-	if err != nil {
-		return nil, err
+	const perPage = 50
+	params := cloudflare.TunnelRoutesListParams{
+		PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1},
 	}
 
 	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.route", map[string]*llx.RawData{
-			"network":    llx.StringData(rec.Network),
-			"tunnelId":   llx.StringData(rec.TunnelID),
-			"tunnelName": llx.StringData(rec.TunnelName),
-			"comment":    llx.StringData(rec.Comment),
-			"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
-			"deletedAt":  llx.TimeDataPtr(rec.DeletedAt),
-		})
+	for {
+		records, err := conn.Cf.ListTunnelRoutes(context.TODO(), &cloudflare.ResourceContainer{
+			Identifier: accountID,
+			Level:      cloudflare.AccountRouteLevel,
+		}, params)
 		if err != nil {
 			return nil, err
 		}
 
-		mqlRoute := res.(*mqlCloudflareTunnelRoute)
-		mqlRoute.cacheVirtualNetworkID = rec.VirtualNetworkID
-		if err != nil {
-			return nil, err
+		for i := range records {
+			rec := records[i]
+
+			res, err := CreateResource(c.MqlRuntime, "cloudflare.tunnel.route", map[string]*llx.RawData{
+				"__id":       llx.StringData(tunnelRouteID(rec.Network, rec.TunnelID, rec.VirtualNetworkID)),
+				"network":    llx.StringData(rec.Network),
+				"tunnelId":   llx.StringData(rec.TunnelID),
+				"tunnelName": llx.StringData(rec.TunnelName),
+				"comment":    llx.StringData(rec.Comment),
+				"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
+				"deletedAt":  llx.TimeDataPtr(rec.DeletedAt),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			res.(*mqlCloudflareTunnelRoute).cacheVirtualNetworkID = rec.VirtualNetworkID
+			result = append(result, res)
 		}
 
-		result = append(result, res)
+		if len(records) < perPage {
+			break
+		}
+		params.PaginationOptions.Page++
 	}
 
 	return result, nil
@@ -184,31 +196,43 @@ func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
 	}
 	accountID := acc.Data.GetId().Data
 
-	records, err := conn.Cf.ListTunnelVirtualNetworks(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: accountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.TunnelVirtualNetworksListParams{})
-	if err != nil {
-		return nil, err
+	const perPage = 50
+	params := cloudflare.TunnelVirtualNetworksListParams{
+		PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1},
 	}
 
 	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.virtualNetwork", map[string]*llx.RawData{
-			"id":               llx.StringData(rec.ID),
-			"name":             llx.StringData(rec.Name),
-			"comment":          llx.StringData(rec.Comment),
-			"isDefaultNetwork": llx.BoolData(rec.IsDefaultNetwork),
-			"createdAt":        llx.TimeDataPtr(rec.CreatedAt),
-			"deletedAt":        llx.TimeDataPtr(rec.DeletedAt),
-		})
+	for {
+		records, err := conn.Cf.ListTunnelVirtualNetworks(context.TODO(), &cloudflare.ResourceContainer{
+			Identifier: accountID,
+			Level:      cloudflare.AccountRouteLevel,
+		}, params)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, res)
+		for i := range records {
+			rec := records[i]
+
+			res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.virtualNetwork", map[string]*llx.RawData{
+				"id":               llx.StringData(rec.ID),
+				"name":             llx.StringData(rec.Name),
+				"comment":          llx.StringData(rec.Comment),
+				"isDefaultNetwork": llx.BoolData(rec.IsDefaultNetwork),
+				"createdAt":        llx.TimeDataPtr(rec.CreatedAt),
+				"deletedAt":        llx.TimeDataPtr(rec.DeletedAt),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, res)
+		}
+
+		if len(records) < perPage {
+			break
+		}
+		params.PaginationOptions.Page++
 	}
 
 	return result, nil
