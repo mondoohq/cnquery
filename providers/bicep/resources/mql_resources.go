@@ -6,7 +6,6 @@ package resources
 import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -70,9 +69,7 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 		var properties any = map[string]any{}
 		if r.body != "" {
 			if raw := extractFieldBlock(r.body, "properties"); raw != "" {
-				if dict, err := convert.JsonToDict(parseBicepObject(raw)); err == nil {
-					properties = dict
-				}
+				properties = parseBicepObject(raw)
 			}
 		}
 
@@ -118,9 +115,7 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 		var params any = map[string]any{}
 		if m.body != "" {
 			if raw := extractFieldBlock(m.body, "params"); raw != "" {
-				if dict, err := convert.JsonToDict(parseBicepObject(raw)); err == nil {
-					params = dict
-				}
+				params = parseBicepObject(raw)
 			}
 		}
 

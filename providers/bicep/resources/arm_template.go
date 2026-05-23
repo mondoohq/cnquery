@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -35,17 +36,21 @@ func newMqlBicepTemplate(runtime *plugin.Runtime, filePath string, tmpl *connect
 
 // id falls back to the connection's path when the Internal struct hasn't
 // been populated yet (e.g., the resource came back via StoreData and no
-// accessor has run getARMTemplate). Without this fallback id() would
-// return the truncated "bicep.template:" sentinel and break the
-// runtime's cache keying.
+// accessor has run getARMTemplate). If neither source yields a path we
+// surface an error rather than returning a "bicep.template:" sentinel —
+// a non-unique id would cause every such reconstruction to collide on
+// the same cache entry.
 func (t *mqlBicepTemplate) id() (string, error) {
-	if t.cachePath != "" {
-		return "bicep.template:" + t.cachePath, nil
+	path := t.cachePath
+	if path == "" {
+		if conn, ok := t.MqlRuntime.Connection.(*connection.BicepConnection); ok {
+			path = conn.Path()
+		}
 	}
-	if conn, ok := t.MqlRuntime.Connection.(*connection.BicepConnection); ok {
-		return "bicep.template:" + conn.Path(), nil
+	if path == "" {
+		return "", errors.New("bicep.template: no path available to derive a stable cache id")
 	}
-	return "bicep.template:", nil
+	return "bicep.template:" + path, nil
 }
 
 func (t *mqlBicepTemplate) getARMTemplate() *connection.ARMTemplate {

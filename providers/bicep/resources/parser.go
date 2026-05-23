@@ -105,17 +105,21 @@ func parseBicep(content string) *parsedBicepFile {
 		trimmed := strings.TrimSpace(line)
 
 		// Collect decorators. Multiline decorators (e.g. @allowed([\n...\n]))
-		// are reassembled by tracking paren/bracket depth.
+		// are reassembled by walking the string-aware depth scanner —
+		// paren / bracket counts inside Bicep string literals don't
+		// contribute, so `@description('contains ] bracket')` still
+		// terminates after one line.
 		var decorators []string
 		for strings.HasPrefix(trimmed, "@") {
 			decLine := trimmed
-			depth := parenBracketDepth(decLine)
+			st := scanState{}
+			st.feed(decLine)
 			i++
-			for depth > 0 && i < len(lines) {
+			for st.totalDepth() > 0 && i < len(lines) {
 				line = lines[i]
 				trimmed = strings.TrimSpace(line)
 				decLine += "\n" + trimmed
-				depth += parenBracketDepth(trimmed)
+				st.feed(trimmed)
 				i++
 			}
 			decorators = append(decorators, decLine)
@@ -255,22 +259,25 @@ func parseVariable(line string, decorators []string) parsedVariable {
 // continuation lines when the value opens an object (`{`) or array (`[`)
 // that closes on a later line. Without this, a `var pet = { name: 'x' }`
 // spread across multiple lines used to truncate at the first newline.
+// Depth tracking is string-aware so braces or brackets that live inside
+// a Bicep string literal (e.g. `var x = { msg: 'closing brace }' }`)
+// don't confuse the counter.
 func parseVariableDecl(lines []string, startIdx int, decorators []string) (parsedVariable, int) {
-	firstLine := lines[startIdx]
-	first := strings.TrimSpace(firstLine)
-	depth := parenBracketDepth(first) + braceDepth(first)
+	first := strings.TrimSpace(lines[startIdx])
+	st := scanState{}
+	st.feed(first)
 
-	if depth <= 0 {
+	if st.totalDepth() <= 0 {
 		return parseVariable(first, decorators), startIdx + 1
 	}
 
 	// Value opens a block; reassemble until depth returns to zero.
 	joined := []string{first}
 	i := startIdx + 1
-	for depth > 0 && i < len(lines) {
+	for st.totalDepth() > 0 && i < len(lines) {
 		t := strings.TrimSpace(lines[i])
 		joined = append(joined, t)
-		depth += parenBracketDepth(t) + braceDepth(t)
+		st.feed(t)
 		i++
 	}
 
@@ -279,20 +286,6 @@ func parseVariableDecl(lines []string, startIdx int, decorators []string) (parse
 	// the captured value is a single readable line.
 	combined = strings.Join(strings.Fields(combined), " ")
 	return parseVariable(combined, decorators), i
-}
-
-// braceDepth mirrors parenBracketDepth but counts curly braces.
-func braceDepth(s string) int {
-	depth := 0
-	for _, ch := range s {
-		switch ch {
-		case '{':
-			depth++
-		case '}':
-			depth--
-		}
-	}
-	return depth
 }
 
 func parseResourceDecl(lines []string, startIdx int, decorators []string) (*parsedResource, int) {
@@ -445,29 +438,14 @@ func extractFieldValue(body string, fieldName string) string {
 //	  expr2
 //	) { ... }
 //
-// The `{` is only counted as the body opener once paren/bracket depth
-// returns to zero.
+// The `{` is only counted as the body opener when paren/bracket depth
+// is zero and the cursor isn't inside a string literal.
 func joinDeclHeader(lines []string, startIdx int) string {
 	var parts []string
-	parenDepth := 0
+	st := scanState{}
 	for i := startIdx; i < len(lines); i++ {
 		line := lines[i]
-		end := -1
-		for j, ch := range line {
-			switch ch {
-			case '(', '[':
-				parenDepth++
-			case ')', ']':
-				parenDepth--
-			case '{':
-				if parenDepth == 0 {
-					end = j
-				}
-			}
-			if end >= 0 {
-				break
-			}
-		}
+		end := st.scanForBodyBrace(line)
 		if end >= 0 {
 			parts = append(parts, line[:end])
 			break
@@ -548,19 +526,105 @@ func extractFieldBlock(body string, fieldName string) string {
 	return ""
 }
 
-// parenBracketDepth returns the net depth change from parens and brackets on a line.
-// Positive means more openers than closers.
-func parenBracketDepth(s string) int {
-	depth := 0
-	for _, ch := range s {
+// scanState is a tiny lexer state for tracking paren/bracket/brace
+// depth across one or more lines of Bicep source while respecting
+// string literals (single- and double-quoted, with `\<char>` escapes)
+// and `// ...` line comments. All of the bracket-balancing helpers
+// in this package share it so a brace inside `'closing brace }'`
+// can't sneak in as a real opener.
+type scanState struct {
+	paren   int
+	bracket int
+	brace   int
+	inStr   byte
+}
+
+func (s *scanState) totalDepth() int { return s.paren + s.bracket + s.brace }
+
+// feed advances the state through one line of source, updating the
+// running depth counters. Characters inside a string literal or after
+// a top-level `//` comment marker do not affect depth.
+func (s *scanState) feed(line string) {
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if s.inStr != 0 {
+			// Bicep string escapes: `\\`, `\'`, `\n`, `\$`, etc. The
+			// next byte is literal regardless of what it is, so just
+			// skip it.
+			if ch == '\\' && i+1 < len(line) {
+				i++
+				continue
+			}
+			if ch == s.inStr {
+				s.inStr = 0
+			}
+			continue
+		}
+		// `// ...` line comment — everything to end of line is dead.
+		if ch == '/' && i+1 < len(line) && line[i+1] == '/' {
+			return
+		}
 		switch ch {
-		case '(', '[':
-			depth++
-		case ')', ']':
-			depth--
+		case '\'', '"':
+			s.inStr = ch
+		case '(':
+			s.paren++
+		case ')':
+			s.paren--
+		case '[':
+			s.bracket++
+		case ']':
+			s.bracket--
+		case '{':
+			s.brace++
+		case '}':
+			s.brace--
 		}
 	}
-	return depth
+}
+
+// scanForBodyBrace advances the state through one line and returns the
+// byte index of the first `{` that lands outside any string and at
+// paren/bracket depth 0 — i.e., the opener of a resource/module body.
+// Returns -1 if no such brace is on the line. The state still tracks
+// every other character so subsequent calls keep their depth context.
+func (s *scanState) scanForBodyBrace(line string) int {
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if s.inStr != 0 {
+			if ch == '\\' && i+1 < len(line) {
+				i++
+				continue
+			}
+			if ch == s.inStr {
+				s.inStr = 0
+			}
+			continue
+		}
+		if ch == '/' && i+1 < len(line) && line[i+1] == '/' {
+			return -1
+		}
+		switch ch {
+		case '\'', '"':
+			s.inStr = ch
+		case '(':
+			s.paren++
+		case ')':
+			s.paren--
+		case '[':
+			s.bracket++
+		case ']':
+			s.bracket--
+		case '{':
+			if s.paren == 0 && s.bracket == 0 {
+				return i
+			}
+			s.brace++
+		case '}':
+			s.brace--
+		}
+	}
+	return -1
 }
 
 // parseBicepObject takes the body of a Bicep object (text between the
@@ -616,25 +680,36 @@ func parseBicepArray(body string) []any {
 }
 
 func splitFirstColon(s string) (string, string, bool) {
-	depth := 0
-	inStr := byte(0)
+	st := scanState{}
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
-		if inStr != 0 {
-			if ch == inStr {
-				inStr = 0
+		if st.inStr != 0 {
+			if ch == '\\' && i+1 < len(s) {
+				i++
+				continue
+			}
+			if ch == st.inStr {
+				st.inStr = 0
 			}
 			continue
 		}
 		switch ch {
 		case '\'', '"':
-			inStr = ch
-		case '{', '[', '(':
-			depth++
-		case '}', ']', ')':
-			depth--
+			st.inStr = ch
+		case '{':
+			st.brace++
+		case '[':
+			st.bracket++
+		case '(':
+			st.paren++
+		case '}':
+			st.brace--
+		case ']':
+			st.bracket--
+		case ')':
+			st.paren--
 		case ':':
-			if depth == 0 {
+			if st.totalDepth() == 0 {
 				return s[:i], s[i+1:], true
 			}
 		}
@@ -655,8 +730,7 @@ func stripOuter(s string, open, close byte) string {
 func splitTopLevelEntries(body string) []string {
 	var entries []string
 	var current strings.Builder
-	depth := 0
-	inStr := byte(0)
+	st := scanState{}
 	flush := func() {
 		s := strings.TrimSpace(current.String())
 		if s != "" {
@@ -664,37 +738,58 @@ func splitTopLevelEntries(body string) []string {
 		}
 		current.Reset()
 	}
-	i := 0
-	for i < len(body) {
+	for i := 0; i < len(body); i++ {
 		ch := body[i]
-		if inStr != 0 {
+		if st.inStr != 0 {
 			current.WriteByte(ch)
-			if ch == inStr {
-				inStr = 0
+			if ch == '\\' && i+1 < len(body) {
+				// Preserve the escape sequence verbatim so the unquoted
+				// value the caller eventually sees still contains `\'`,
+				// `\\`, etc. exactly as the source had them.
+				current.WriteByte(body[i+1])
+				i++
+				continue
 			}
-			i++
+			if ch == st.inStr {
+				st.inStr = 0
+			}
 			continue
 		}
 		// Skip `// ...` line comments at top level so they don't leak
 		// into the next entry's key or value.
-		if depth == 0 && ch == '/' && i+1 < len(body) && body[i+1] == '/' {
+		if st.totalDepth() == 0 && ch == '/' && i+1 < len(body) && body[i+1] == '/' {
 			for i < len(body) && body[i] != '\n' {
 				i++
 			}
+			// Step back one so the outer loop's `i++` lands us on the
+			// `\n` that terminates the comment (or end of input).
+			i--
 			continue
 		}
 		switch ch {
 		case '\'', '"':
-			inStr = ch
+			st.inStr = ch
 			current.WriteByte(ch)
-		case '{', '[', '(':
-			depth++
+		case '{':
+			st.brace++
 			current.WriteByte(ch)
-		case '}', ']', ')':
-			depth--
+		case '[':
+			st.bracket++
+			current.WriteByte(ch)
+		case '(':
+			st.paren++
+			current.WriteByte(ch)
+		case '}':
+			st.brace--
+			current.WriteByte(ch)
+		case ']':
+			st.bracket--
+			current.WriteByte(ch)
+		case ')':
+			st.paren--
 			current.WriteByte(ch)
 		case '\n', ',':
-			if depth == 0 {
+			if st.totalDepth() == 0 {
 				flush()
 			} else {
 				current.WriteByte(ch)
@@ -702,7 +797,6 @@ func splitTopLevelEntries(body string) []string {
 		default:
 			current.WriteByte(ch)
 		}
-		i++
 	}
 	flush()
 	return entries

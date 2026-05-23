@@ -775,6 +775,47 @@ func TestParseBicepObject(t *testing.T) {
 		assert.Equal(t, "https://example.com/path:port", obj["url"])
 		assert.Equal(t, `{"key": "value"}`, obj["json"])
 	})
+
+	t.Run("escaped quotes inside string literals", func(t *testing.T) {
+		// `'it\\'s here'` — the escaped `'` shouldn't terminate the
+		// string and split the entry early.
+		body := `
+  message: 'it\'s here'
+  other: 'plain'
+`
+		obj := parseBicepObject(body)
+		assert.Equal(t, `it\'s here`, obj["message"])
+		assert.Equal(t, "plain", obj["other"])
+	})
+}
+
+// A brace inside a string literal used to fool the naive
+// `parenBracketDepth + braceDepth` counter into thinking the var's
+// block had closed, so the reassembled expression dropped trailing
+// lines. The string-aware scanner ignores it.
+func TestParseVariable_BraceInsideStringLiteral(t *testing.T) {
+	input := `var settings = {
+  message: 'closing brace } not real'
+  enabled: true
+}`
+	result := parseBicep(input)
+	require.Len(t, result.variables, 1)
+	v := result.variables[0]
+	assert.Equal(t, "settings", v.name)
+	assert.Contains(t, v.expression, "message: 'closing brace } not real'")
+	assert.Contains(t, v.expression, "enabled: true")
+}
+
+// Same idea on the resource side: a `{` inside the `if (...)` clause's
+// string argument shouldn't be mistaken for the body opener and
+// truncate the condition prematurely.
+func TestExtractCondition_BraceInsideStringLiteral(t *testing.T) {
+	input := `resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = if (contains(env, 'prod{1}')) {
+  name: 'mystorage'
+}`
+	result := parseBicep(input)
+	require.Len(t, result.resources, 1)
+	assert.Equal(t, "contains(env, 'prod{1}')", result.resources[0].condition)
 }
 
 func TestParseParameterBounds(t *testing.T) {
