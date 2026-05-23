@@ -30,6 +30,9 @@ type NodeStatus struct {
 		Sockets int    `json:"sockets"`
 		Cores   int    `json:"cores"`
 		CPUs    int    `json:"cpus"`
+		// Flags is space-separated as returned by /proc/cpuinfo. Older
+		// PVE versions may omit the field entirely.
+		Flags string `json:"flags"`
 	} `json:"cpuinfo"`
 	CPU float64 `json:"cpu"`
 	// Memory
@@ -48,6 +51,15 @@ type NodeStatus struct {
 	PVEVer   string   `json:"pveversion"`
 	Uptime   int64    `json:"uptime"`
 	LoadAvg  []string `json:"loadavg"`
+	// BootInfo reports the running kernel image and what would boot
+	// on the next reboot. When the two differ a kernel package has
+	// been installed but the host hasn't picked it up yet.
+	BootInfo struct {
+		Mode          string `json:"mode"`
+		SecureBoot    int    `json:"secureboot"`
+		CurrentKernel string `json:"current-kernel"`
+		BootKernel    string `json:"boot-kernel"`
+	} `json:"boot-info"`
 }
 
 func (c *PveConnection) GetNodeStatus(node string) (*NodeStatus, error) {
@@ -209,6 +221,13 @@ type AptRepoInfo struct {
 			Components []string `json:"Components"`
 			Enabled    bool     `json:"Enabled"`
 			Comment    string   `json:"Comment"`
+			// PVE serializes Signed-By and the other deb822 options as an
+			// array of {Key, Values}. Older API versions and one-line
+			// sources don't return Options at all.
+			Options []struct {
+				Key    string   `json:"Key"`
+				Values []string `json:"Values"`
+			} `json:"Options"`
 		} `json:"repositories"`
 	} `json:"files"`
 	Infos []struct {

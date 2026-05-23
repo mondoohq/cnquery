@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
 )
 
@@ -196,6 +197,21 @@ func (r *mqlProxmoxVm) tags() ([]any, error) {
 		result[i] = p
 	}
 	return result, nil
+}
+
+func (r *mqlProxmoxVm) pool() (*mqlProxmoxPool, error) {
+	id := r.cfgStr("pool")
+	if id == "" {
+		r.Pool.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "proxmox.pool", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxPool), nil
 }
 
 func (r *mqlProxmoxVm) networks() ([]any, error) {

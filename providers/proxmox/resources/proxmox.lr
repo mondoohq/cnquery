@@ -165,6 +165,13 @@ proxmox.node @defaults("name status") {
   cpuCores int
   // Current CPU usage (fraction 0.0-1.0)
   cpuUsage float
+  // CPU feature flags reported by /proc/cpuinfo
+  //
+  // Space-separated when set, empty on older PVE versions that don't
+  // expose `cpuinfo.flags`. Use a `cpuFlags.contains(...)` query to
+  // detect microcode/vulnerability mitigations like `ibpb`, `ssbd`,
+  // `md_clear`, `pti`, etc.
+  cpuFlags() string
   // Total memory in bytes
   memTotal int
   // Used memory in bytes
@@ -184,6 +191,19 @@ proxmox.node @defaults("name status") {
   pveVersion string
   // Uptime in seconds
   uptime int
+  // Kernel image that would boot on next reboot
+  //
+  // When this differs from `kernelVersion` a kernel package has been
+  // installed but the host hasn't been rebooted to pick it up. Empty
+  // on older PVE versions that don't report `boot-info`.
+  bootKernel() string
+  // Whether a kernel upgrade is pending a reboot
+  //
+  // True when `kernelVersion` and `bootKernel` disagree. False when
+  // either value is empty so older PVE versions don't false-positive.
+  pendingReboot() bool
+  // UEFI Secure Boot status — true when enforcing, false when disabled or on BIOS-only platforms
+  secureBoot() bool
 
   // --- Network ---
 
@@ -340,6 +360,8 @@ proxmox.vm @defaults("id name status") {
   description() string
   // Tags assigned to the VM
   tags() []string
+  // Resource pool this VM belongs to; null when unassigned
+  pool() proxmox.pool
   // Acquired lock blocking other operations
   //
   // One of `backup`, `migrate`, `snapshot`, `rollback`, `clone`,
@@ -652,6 +674,13 @@ proxmox.certificate @defaults("subject notAfter") {
   san []string
   // Certificate subject
   subject string
+  // Days remaining until `notAfter`
+  //
+  // Computed as `notAfter` minus the time the value is read. Negative
+  // when the certificate has already expired, which makes
+  // `daysUntilExpiry < 30` / `< 0` a natural way to write expiry
+  // policies.
+  daysUntilExpiry() int
 }
 
 // Proxmox VE subscription
@@ -703,6 +732,12 @@ proxmox.repository @defaults("name enabled") {
   components []string
   // File type (sources.list, sources.list.d)
   fileType string
+  // Path to the keyring used to verify repository signatures
+  //
+  // Reads the `Signed-By` option on deb822-format entries (`.sources`).
+  // Empty when the entry doesn't declare one — older `.list` entries
+  // typically don't, and instead inherit the system trust store.
+  signedBy string
 }
 
 // Proxmox VE firewall rule
@@ -1054,6 +1089,8 @@ proxmox.container @defaults("id name status unprivileged") {
   description() string
   // Tags assigned to the container
   tags() []string
+  // Resource pool this container belongs to; null when unassigned
+  pool() proxmox.pool
   // Console mode
   //
   // One of `tty` (per-tty consoles, default), `console` (single
@@ -1214,6 +1251,15 @@ proxmox.backup.job @defaults("id schedule storage enabled") {
   nextRun int
   // Resolved target storage pool
   targetStorage() proxmox.storage
+  // VMs this job targets
+  //
+  // Resolved from `vmids` and `all` against the current cluster
+  // inventory. When `all` is true this returns every VM and `vmids`
+  // is ignored. Pool-scoped jobs (`pool` set, `vmids` empty) return
+  // an empty list — query `pool` for those instead.
+  targetVms() []proxmox.vm
+  // Containers this job targets, resolved the same way as `targetVms`
+  targetContainers() []proxmox.container
   // Full raw job configuration as returned by /cluster/backup/<id>
   config() dict
 }

@@ -166,6 +166,7 @@ ddl
 ddos
 DEAUTHORIZED
 DEAUTHORIZING
+deb822
 dedup
 dedupratio
 defc
@@ -302,6 +303,7 @@ Iaa
 iana
 iap
 IBgt
+ibpb
 iccid
 identitycenter
 identitysource
@@ -361,6 +363,7 @@ kts
 kty
 kubenet
 kustomization
+kversion
 KVM
 labelmatchstatement
 Laravel
@@ -665,6 +668,7 @@ sqlimatchstatement
 sqlserver
 sriov
 srp
+ssbd
 SSHFP
 sshkeys
 ssis

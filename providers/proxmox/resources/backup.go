@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -67,6 +69,117 @@ func (r *mqlProxmoxBackupJob) targetStorage() (*mqlProxmoxStorage, error) {
 		return nil, err
 	}
 	return res.(*mqlProxmoxStorage), nil
+}
+
+// parseBackupVMIDs splits a Proxmox `vmid` string into individual VMIDs.
+// The API accepts comma-separated lists (and tolerates whitespace).
+// Tokens that don't parse as integers are skipped — the API can also
+// accept "all" or ranges like "100-105" which we don't materialize as
+// targets here; ranges aren't surfaced by the listing endpoint at the
+// VM resource level.
+func parseBackupVMIDs(raw string) []int64 {
+	if raw == "" {
+		return nil
+	}
+	var out []int64
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" || part == "all" {
+			continue
+		}
+		// Skip ranges like "100-105" — not used in /cluster/backup output
+		// but defend against the future.
+		if strings.Contains(part, "-") {
+			continue
+		}
+		n, err := strconv.ParseInt(part, 10, 64)
+		if err != nil {
+			continue
+		}
+		out = append(out, n)
+	}
+	return out
+}
+
+// resolveBackupTargets walks the cluster inventory once and returns the
+// VMs and containers selected by the job. `all` selects everything; a
+// non-empty `vmids` list selects only the matching guests.
+func (r *mqlProxmoxBackupJob) resolveBackupTargets() (vms, containers []any, err error) {
+	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
+	all := r.All.Data
+	wanted := parseBackupVMIDs(r.Vmids.Data)
+	if !all && len(wanted) == 0 {
+		// Pool-scoped jobs land here; surface empty lists so an audit
+		// can branch on `pool != ""` separately.
+		return nil, nil, nil
+	}
+	wantSet := make(map[int64]struct{}, len(wanted))
+	for _, id := range wanted {
+		wantSet[id] = struct{}{}
+	}
+
+	allVMs, vmErr := conn.GetAllVMs()
+	if vmErr == nil {
+		for _, vm := range allVMs {
+			if !all {
+				if _, ok := wantSet[int64(vm.VMID)]; !ok {
+					continue
+				}
+			}
+			ref, err := NewResource(r.MqlRuntime, "proxmox.vm", map[string]*llx.RawData{
+				"id": llx.IntData(int64(vm.VMID)),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			vms = append(vms, ref)
+		}
+	}
+	allCT, ctErr := conn.GetAllContainers()
+	if ctErr == nil {
+		for _, ct := range allCT {
+			if !all {
+				if _, ok := wantSet[int64(ct.VMID)]; !ok {
+					continue
+				}
+			}
+			ref, err := NewResource(r.MqlRuntime, "proxmox.container", map[string]*llx.RawData{
+				"id": llx.IntData(int64(ct.VMID)),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			containers = append(containers, ref)
+		}
+	}
+	// Only return the cluster-listing error when both lookups failed —
+	// a partial result is more useful for audits than a hard failure.
+	if vmErr != nil && ctErr != nil {
+		return nil, nil, vmErr
+	}
+	return vms, containers, nil
+}
+
+func (r *mqlProxmoxBackupJob) targetVms() ([]any, error) {
+	vms, _, err := r.resolveBackupTargets()
+	if err != nil {
+		return nil, err
+	}
+	if vms == nil {
+		return []any{}, nil
+	}
+	return vms, nil
+}
+
+func (r *mqlProxmoxBackupJob) targetContainers() ([]any, error) {
+	_, cts, err := r.resolveBackupTargets()
+	if err != nil {
+		return nil, err
+	}
+	if cts == nil {
+		return []any{}, nil
+	}
+	return cts, nil
 }
 
 func (r *mqlProxmoxBackupJob) config() (any, error) {

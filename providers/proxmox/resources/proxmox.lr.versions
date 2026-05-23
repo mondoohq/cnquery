@@ -33,10 +33,13 @@ proxmox.backup.job.protected 0.1.9
 proxmox.backup.job.prune 0.1.9
 proxmox.backup.job.schedule 0.1.9
 proxmox.backup.job.storage 0.1.9
+proxmox.backup.job.targetContainers 0.1.9
 proxmox.backup.job.targetStorage 0.1.9
+proxmox.backup.job.targetVms 0.1.9
 proxmox.backup.job.vmids 0.1.9
 proxmox.backupJobs 0.1.9
 proxmox.certificate 0.1.1
+proxmox.certificate.daysUntilExpiry 0.1.9
 proxmox.certificate.filename 0.1.1
 proxmox.certificate.fingerprint 0.1.1
 proxmox.certificate.issuer 0.1.1
@@ -131,6 +134,7 @@ proxmox.container.networks 0.1.9
 proxmox.container.node 0.1.9
 proxmox.container.onboot 0.1.9
 proxmox.container.osType 0.1.9
+proxmox.container.pool 0.1.9
 proxmox.container.protection 0.1.9
 proxmox.container.rawLxc 0.1.9
 proxmox.container.searchDomain 0.1.9
@@ -220,9 +224,11 @@ proxmox.network.method 0.1.1
 proxmox.network.netmask 0.1.1
 proxmox.network.type 0.1.1
 proxmox.node 0.1.1
+proxmox.node.bootKernel 0.1.9
 proxmox.node.certificates 0.1.1
 proxmox.node.containers 0.1.9
 proxmox.node.cpuCores 0.1.1
+proxmox.node.cpuFlags 0.1.9
 proxmox.node.cpuModel 0.1.1
 proxmox.node.cpuSockets 0.1.1
 proxmox.node.cpuUsage 0.1.1
@@ -255,8 +261,10 @@ proxmox.node.memTotal 0.1.1
 proxmox.node.memUsed 0.1.1
 proxmox.node.name 0.1.1
 proxmox.node.networks 0.1.1
+proxmox.node.pendingReboot 0.1.9
 proxmox.node.pveVersion 0.1.1
 proxmox.node.repositories 0.1.1
+proxmox.node.secureBoot 0.1.9
 proxmox.node.services 0.1.1
 proxmox.node.status 0.1.1
 proxmox.node.storages 0.1.1
@@ -310,6 +318,7 @@ proxmox.repository.enabled 0.1.1
 proxmox.repository.fileType 0.1.1
 proxmox.repository.id 0.1.1
 proxmox.repository.name 0.1.1
+proxmox.repository.signedBy 0.1.9
 proxmox.repository.suites 0.1.1
 proxmox.repository.types 0.1.1
 proxmox.repository.uris 0.1.1
@@ -445,6 +454,7 @@ proxmox.vm.network.tag 0.1.1
 proxmox.vm.networks 0.1.1
 proxmox.vm.node 0.1.1
 proxmox.vm.osType 0.1.1
+proxmox.vm.pool 0.1.9
 proxmox.vm.protection 0.1.1
 proxmox.vm.searchDomain 0.1.9
 proxmox.vm.serialPort 0.1.9

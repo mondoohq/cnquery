@@ -246,6 +246,21 @@ func (r *mqlProxmoxContainer) tags() ([]any, error) {
 	return result, nil
 }
 
+func (r *mqlProxmoxContainer) pool() (*mqlProxmoxPool, error) {
+	id := r.cfgStr("pool")
+	if id == "" {
+		r.Pool.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "proxmox.pool", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlProxmoxPool), nil
+}
+
 func (r *mqlProxmoxContainer) networks() ([]any, error) {
 	r.ensureConfig()
 	if r.configErr != nil {
