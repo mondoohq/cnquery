@@ -2,6 +2,7 @@ aad
 abortable
 accesscontextmanager
 accesskey
+acs
 ACCOUNTADMIN
 actioncable
 actionpack
@@ -318,7 +319,7 @@ julia
 junie
 junos
 jupyter
-jwks
+jwk
 KENDRA
 kerberoastable
 keymanager

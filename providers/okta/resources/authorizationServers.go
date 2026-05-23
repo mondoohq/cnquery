@@ -110,18 +110,36 @@ func (o *mqlOktaAuthorizationServer) policies() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	policies, _, err := client.AuthorizationServer.ListAuthorizationServerPolicies(ctx, o.Id.Data)
+	policies, resp, err := client.AuthorizationServer.ListAuthorizationServerPolicies(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	for i := range policies {
-		r, err := newMqlOktaAuthorizationServerPolicy(o.MqlRuntime, o.Id.Data, policies[i])
+	appendEntry := func(entries []*okta.AuthorizationServerPolicy) error {
+		for i := range entries {
+			r, err := newMqlOktaAuthorizationServerPolicy(o.MqlRuntime, o.Id.Data, entries[i])
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
+		}
+		return nil
+	}
+
+	if err := appendEntry(policies); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []*okta.AuthorizationServerPolicy
+		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		if err := appendEntry(page); err != nil {
+			return nil, err
+		}
 	}
 	return list, nil
 }
@@ -188,18 +206,36 @@ func (o *mqlOktaAuthorizationServer) claims() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	claims, _, err := client.AuthorizationServer.ListOAuth2Claims(ctx, o.Id.Data)
+	claims, resp, err := client.AuthorizationServer.ListOAuth2Claims(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	for i := range claims {
-		r, err := newMqlOktaAuthorizationServerClaim(o.MqlRuntime, o.Id.Data, claims[i])
+	appendEntry := func(entries []*okta.OAuth2Claim) error {
+		for i := range entries {
+			r, err := newMqlOktaAuthorizationServerClaim(o.MqlRuntime, o.Id.Data, entries[i])
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
+		}
+		return nil
+	}
+
+	if err := appendEntry(claims); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []*okta.OAuth2Claim
+		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		if err := appendEntry(page); err != nil {
+			return nil, err
+		}
 	}
 	return list, nil
 }
@@ -298,7 +334,7 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	rules, _, err := client.AuthorizationServer.ListAuthorizationServerPolicyRules(
+	rules, resp, err := client.AuthorizationServer.ListAuthorizationServerPolicyRules(
 		ctx, o.AuthorizationServerId.Data, o.Id.Data,
 	)
 	if err != nil {
@@ -306,39 +342,57 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 	}
 
 	list := []any{}
-	for i := range rules {
-		entry := rules[i]
-		actions, err := convert.JsonToDict(entry.Actions)
-		if err != nil {
-			return nil, err
-		}
-		conditions, err := convert.JsonToDict(entry.Conditions)
-		if err != nil {
-			return nil, err
-		}
-		system := false
-		if entry.System != nil {
-			system = *entry.System
-		}
+	appendEntry := func(entries []*okta.AuthorizationServerPolicyRule) error {
+		for i := range entries {
+			entry := entries[i]
+			actions, err := convert.JsonToDict(entry.Actions)
+			if err != nil {
+				return err
+			}
+			conditions, err := convert.JsonToDict(entry.Conditions)
+			if err != nil {
+				return err
+			}
+			system := false
+			if entry.System != nil {
+				system = *entry.System
+			}
 
-		r, err := CreateResource(o.MqlRuntime, "okta.authorizationServer.policyRule", map[string]*llx.RawData{
-			"authorizationServerId": llx.StringData(o.AuthorizationServerId.Data),
-			"policyId":              llx.StringData(o.Id.Data),
-			"id":                    llx.StringData(entry.Id),
-			"name":                  llx.StringData(entry.Name),
-			"priority":              llx.IntData(entry.Priority),
-			"status":                llx.StringData(entry.Status),
-			"system":                llx.BoolData(system),
-			"type":                  llx.StringData(entry.Type),
-			"actions":               llx.DictData(actions),
-			"conditions":            llx.DictData(conditions),
-			"created":               llx.TimeDataPtr(entry.Created),
-			"lastUpdated":           llx.TimeDataPtr(entry.LastUpdated),
-		})
+			r, err := CreateResource(o.MqlRuntime, "okta.authorizationServer.policyRule", map[string]*llx.RawData{
+				"authorizationServerId": llx.StringData(o.AuthorizationServerId.Data),
+				"policyId":              llx.StringData(o.Id.Data),
+				"id":                    llx.StringData(entry.Id),
+				"name":                  llx.StringData(entry.Name),
+				"priority":              llx.IntData(entry.Priority),
+				"status":                llx.StringData(entry.Status),
+				"system":                llx.BoolData(system),
+				"type":                  llx.StringData(entry.Type),
+				"actions":               llx.DictData(actions),
+				"conditions":            llx.DictData(conditions),
+				"created":               llx.TimeDataPtr(entry.Created),
+				"lastUpdated":           llx.TimeDataPtr(entry.LastUpdated),
+			})
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
+		}
+		return nil
+	}
+
+	if err := appendEntry(rules); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []*okta.AuthorizationServerPolicyRule
+		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		if err := appendEntry(page); err != nil {
+			return nil, err
+		}
 	}
 	return list, nil
 }
