@@ -286,10 +286,7 @@ const MaxTitleLength = 150
 // resource/field, so the title should remain a plain noun phrase.
 func titleStartsWithDeprecated(title string) bool {
 	t := strings.TrimSpace(title)
-	if !hasDeprecatedWordPrefix(t) {
-		return false
-	}
-	return true
+	return hasDeprecatedWordPrefix(t)
 }
 
 // descriptionStartsWithBadDeprecated reports whether a description starts

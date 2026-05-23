@@ -327,7 +327,9 @@ private gcp.project.redisService.instance @defaults("name") {
   readEndpoint string
   // The port number of the exposed read-only Redis endpoint
   readEndpointPort int
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Customer-managed encryption key resource ID
+  //
+  // Deprecated in favor of `kmsKey()`.
   customerManagedKey @maturity("deprecated") string
   // Customer-managed encryption key (CMEK) used to encrypt the at-rest data of the instance
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -423,7 +425,9 @@ private gcp.project.redisService.cluster @defaults("name") {
   preciseSizeGb float
   // Whether delete protection is enabled
   deletionProtectionEnabled bool
-  // DEPRECATED: use cryptoKey() for the typed cryptokey reference
+  // Customer-managed encryption key resource ID
+  //
+  // Deprecated in favor of `cryptoKey()`.
   kmsKey @maturity("deprecated") string
   // Customer-managed encryption key (CMEK) used to encrypt the at-rest data of the cluster
   cryptoKey() gcp.project.kmsService.keyring.cryptokey
@@ -1028,7 +1032,9 @@ private gcp.project.computeService.address @defaults("name address addressType")
   name string
   // Labels applied to this resource
   labels map[string]string
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network in which to reserve the address
   network() gcp.project.computeService.network
@@ -1038,13 +1044,17 @@ private gcp.project.computeService.address @defaults("name address addressType")
   prefixLength int
   // Address purpose
   purpose string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region where this address is reserved
   region() gcp.project.computeService.region
   // Address status
   status string
-  // DEPRECATED: use subnetwork instead
+  // Raw subnetwork self-link URL
+  //
+  // Deprecated in favor of `subnetwork`.
   subnetworkUrl @maturity("deprecated") string
   // Subnetwork in which to reserve the address
   subnetwork() gcp.project.computeService.subnetwork
@@ -1091,7 +1101,9 @@ private gcp.project.computeService.forwardingRule {
   metadataFilters []dict
   // Forwarding rule name
   name string
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network used for internal load balancing
   network() gcp.project.computeService.network
@@ -1103,7 +1115,9 @@ private gcp.project.computeService.forwardingRule {
   portRange string
   // Ports to forward
   ports []string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the forwarding rule lives in (empty for global forwarding rules)
   region() gcp.project.computeService.region
@@ -1113,7 +1127,9 @@ private gcp.project.computeService.forwardingRule {
   serviceLabel string
   // Internal fully qualified service name for this forwarding rule
   serviceName string
-  // DEPRECATED: use subnetwork instead
+  // Raw subnetwork self-link URL
+  //
+  // Deprecated in favor of `subnetwork`.
   subnetworkUrl @maturity("deprecated") string
   // Subnetwork to which the load balanced IP belongs
   subnetwork() gcp.project.computeService.subnetwork
@@ -1227,7 +1243,10 @@ gcp.project.computeService.instance @defaults("name id") {
   name string
   // Optional description for this instance
   description string
-  // DEPRECATED: use confidentialCompute for the typed sub-resource that exposes the same fields plus the confidential VM type
+  // Raw confidential instance config dict
+  //
+  // Deprecated in favor of `confidentialCompute`, which exposes the same
+  // fields as a typed sub-resource plus the confidential VM type.
   confidentialInstanceConfig @maturity("deprecated") dict
   // Confidential Compute configuration for this instance
   confidentialCompute gcp.project.computeService.instance.confidentialCompute
@@ -1289,11 +1308,17 @@ gcp.project.computeService.instance @defaults("name id") {
   shieldedInstanceConfig gcp.project.computeService.instance.shieldedInstanceConfig
   // Shielded VM integrity monitoring auto-learn policy (updateAutoLearnPolicy)
   shieldedInstanceIntegrityPolicy dict
-  // DEPRECATED: Use shieldedInstanceConfig.enableIntegrityMonitoring instead
+  // Whether Shielded VM integrity monitoring is enabled
+  //
+  // Deprecated in favor of `shieldedInstanceConfig.enableIntegrityMonitoring`.
   enableIntegrityMonitoring @maturity("deprecated") bool
-  // DEPRECATED: Use shieldedInstanceConfig.enableSecureBoot instead
+  // Whether Shielded VM secure boot is enabled
+  //
+  // Deprecated in favor of `shieldedInstanceConfig.enableSecureBoot`.
   enableSecureBoot @maturity("deprecated") bool
-  // DEPRECATED: Use shieldedInstanceConfig.enableVtpm instead
+  // Whether Shielded VM vTPM is enabled
+  //
+  // Deprecated in favor of `shieldedInstanceConfig.enableVtpm`.
   enableVtpm @maturity("deprecated") bool
   // Whether VM has been restricted from starting because Compute Engine has detected suspicious activity
   startRestricted bool
@@ -1727,7 +1752,9 @@ gcp.project.computeService.network @defaults("name") {
   networkFirewallPolicyEnforcementOrder string
   // Creation timestamp
   created time
-  // DEPRECATED: Use networkPeerings instead
+  // Raw network peering dicts
+  //
+  // Deprecated in favor of `networkPeerings`.
   peerings @maturity("deprecated") []dict
   // Network peerings for the resource
   networkPeerings() []gcp.project.computeService.network.peering
@@ -1791,7 +1818,9 @@ gcp.project.computeService.subnetwork @defaults("name") {
   purpose string
   // GCP compute region this resource belongs to
   region() gcp.project.computeService.region
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Role of subnetwork
   role string
@@ -1803,7 +1832,9 @@ gcp.project.computeService.subnetwork @defaults("name") {
   created time
   // The URL of the reserved internal range
   reservedInternalRange string
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Parent VPC network this subnetwork belongs to
   network() gcp.project.computeService.network
@@ -1848,7 +1879,9 @@ private gcp.project.computeService.router @defaults("name")  {
   bgpPeers []dict
   // Whether a router is dedicated for use with encrypted VLAN attachments
   encryptedInterconnectRouter bool
-  // DEPRECATED: Use natServices instead
+  // Raw NAT service dicts
+  //
+  // Deprecated in favor of `natServices`.
   nats @maturity("deprecated") []dict
   // NAT services created in this router
   natServices []gcp.project.computeService.router.nat
@@ -1917,7 +1950,9 @@ private gcp.project.computeService.backendService @defaults("name") {
   maxStreamDuration time
   // Backend service name
   name string
-  // DEPRECATED: Use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network to which this backend service belongs
   network() gcp.project.computeService.network
@@ -1925,11 +1960,15 @@ private gcp.project.computeService.backendService @defaults("name") {
   portName string
   // Protocol used for communication
   protocol string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the backend service lives in (empty for global services)
   region() gcp.project.computeService.region
-  // DEPRECATED: Use securityPolicy instead
+  // Raw security policy self-link URL
+  //
+  // Deprecated in favor of `securityPolicy`.
   securityPolicyUrl @maturity("deprecated") string
   // Cloud Armor security policy
   securityPolicy() gcp.project.computeService.securityPolicy
@@ -2241,7 +2280,9 @@ private gcp.project.sqlService.instance @defaults("name") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name and status of the failover replica
   failoverReplica dict
-  // DEPRECATED: Use zone instead
+  // Raw GCE zone name
+  //
+  // Deprecated in favor of `zone`.
   gceZone @maturity("deprecated") string
   // Compute Engine zone that the instance is currently serviced from
   zone() gcp.project.computeService.zone
@@ -2453,7 +2494,10 @@ private gcp.project.sqlService.instance.settings {
   instanceName string
   // When the instance is activated
   activationPolicy string
-  // DEPRECATED: use activeDirectory for the typed sub-resource that exposes domain, mode, and DNS servers
+  // Raw Active Directory config dict
+  //
+  // Deprecated in favor of `activeDirectory`, which exposes the same fields
+  // (domain, mode, and DNS servers) as a typed sub-resource.
   activeDirectoryConfig @maturity("deprecated") dict
   // Entra ID (formerly Active Directory) configuration; relevant only for Cloud SQL for SQL Server
   activeDirectory gcp.project.sqlService.instance.settings.activeDirectory
@@ -2678,7 +2722,9 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   modified time
   // Tags associated with this dataset
   tags map[string]string
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Customer-managed KMS key resource name
+  //
+  // Deprecated in favor of `kmsKey()`.
   kmsName @maturity("deprecated") string
   // Customer-managed KMS key used to protect tables in this dataset (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -2769,7 +2815,9 @@ private gcp.project.bigqueryService.table @defaults("id") {
   type string
   // Time when this table expires
   expirationTime time
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Customer-managed KMS key resource name
+  //
+  // Deprecated in favor of `kmsKey()`.
   kmsName @maturity("deprecated") string
   // Customer-managed KMS key used to protect this table (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -2822,7 +2870,9 @@ private gcp.project.bigqueryService.model @defaults("id") {
   type string
   // Expiration time of the model
   expirationTime time
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Customer-managed KMS key resource name
+  //
+  // Deprecated in favor of `kmsKey()`.
   kmsName @maturity("deprecated") string
   // Customer-managed KMS key used to protect this model (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -3148,7 +3198,9 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   confidentialNodesConfig dict
   // Configuration for Identity Service component
   identityServiceConfig dict
-  // DEPRECATED: Use networkPolicy instead
+  // Raw network policy config dict
+  //
+  // Deprecated in favor of `networkPolicy`.
   networkPolicyConfig @maturity("deprecated") dict
   // Network policy configuration
   networkPolicy() gcp.project.gkeService.cluster.networkPolicy
@@ -3712,7 +3764,9 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   topicName string
   // Labels associated with this topic
   labels map[string]string
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Customer-managed KMS key resource name
+  //
+  // Deprecated in favor of `kmsKey()`.
   kmsKeyName @maturity("deprecated") string
   // Customer-managed KMS key used to protect topic messages (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -4239,7 +4293,9 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   projectId string
   // Location where the bucket is stored
   location string
-  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  // Raw CMEK settings dict
+  //
+  // Deprecated in favor of `kmsKey()`.
   cmekSettings @maturity("deprecated") dict
   // Customer-managed KMS key used to encrypt log entries in this bucket (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -5219,7 +5275,10 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   annotations map[string]string
   // Scaling settings
   scaling dict
-  // DEPRECATED: use vpcAccessConfig for the typed sub-resource (connector, egress, networkInterfaces)
+  // Raw VPC access dict
+  //
+  // Deprecated in favor of `vpcAccessConfig`, which exposes the same fields
+  // (connector, egress, networkInterfaces) as a typed sub-resource.
   vpcAccess @maturity("deprecated") dict
   // VPC access configuration (Serverless VPC connector and egress policy)
   vpcAccessConfig gcp.project.cloudRunService.vpcAccessConfig
@@ -5412,7 +5471,10 @@ private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   id string
   // Project ID
   projectId string
-  // DEPRECATED: use vpcAccessConfig for the typed sub-resource (connector, egress, networkInterfaces)
+  // Raw VPC access dict
+  //
+  // Deprecated in favor of `vpcAccessConfig`, which exposes the same fields
+  // (connector, egress, networkInterfaces) as a typed sub-resource.
   vpcAccess @maturity("deprecated") dict
   // VPC access configuration (Serverless VPC connector and egress policy)
   vpcAccessConfig gcp.project.cloudRunService.vpcAccessConfig
@@ -5742,7 +5804,10 @@ private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use noteReference, publicKeys, and delegationServiceAccountEmail instead
+  // Raw user-owned Grafeas note dict
+  //
+  // Deprecated in favor of `noteReference`, `publicKeys`, and
+  // `delegationServiceAccountEmail`.
   userOwnedGrafeasNote @maturity("deprecated") dict
   // Resource name of the Grafeas Attestation.Authority Note backing this attestor (format: `projects/*/notes/*`)
   noteReference string
@@ -5833,7 +5898,9 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   annotations map[string]string
   // Version destroy TTL duration
   versionDestroyTtl time
-  // DEPRECATED: use kmsKeys() for the typed cryptokey references
+  // Customer-managed KMS key resource names
+  //
+  // Deprecated in favor of `kmsKeys()`.
   customerManagedEncryption @maturity("deprecated") []string
   // Customer-managed KMS keys protecting this secret across all replication locations (empty when Google-managed)
   kmsKeys() []gcp.project.kmsService.keyring.cryptokey
@@ -6655,7 +6722,9 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   fingerprint string
   // User-defined fields for custom rule tuning
   userDefinedFields []dict
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the policy lives in (empty for global policies)
   region() gcp.project.computeService.region
@@ -6722,7 +6791,9 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   customFeatures []string
   // Features enabled in the SSL policy
   enabledFeatures []string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the SSL policy lives in (empty for global policies)
   region() gcp.project.computeService.region
@@ -6755,7 +6826,9 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
   subjectAlternativeNames []string
   // Managed certificate configuration and status
   managed dict
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the certificate lives in (empty for global certificates)
   region() gcp.project.computeService.region
@@ -6792,7 +6865,9 @@ private gcp.project.computeService.vpnGateway @defaults("name") {
   gatewayIpVersion string
   // Stack type for this VPN gateway (IPV4_ONLY, IPV4_IPV6, IPV6_ONLY)
   stackType string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the VPN gateway lives in
   region() gcp.project.computeService.region
@@ -6829,23 +6904,31 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   localTrafficSelector []string
   // Remote traffic selector CIDRs
   remoteTrafficSelector []string
-  // DEPRECATED: Use peerExternalVpnGateway instead
+  // Raw peer external VPN gateway URL
+  //
+  // Deprecated in favor of `peerExternalVpnGateway`.
   peerExternalGateway @maturity("deprecated") string
   // Interface ID of the external VPN gateway
   peerExternalGatewayInterface int
   // Peer external VPN gateway resource
   peerExternalVpnGateway() gcp.project.computeService.externalVpnGateway
-  // DEPRECATED: Use peerGcpVpnGateway instead
+  // Raw peer GCP VPN gateway URL
+  //
+  // Deprecated in favor of `peerGcpVpnGateway`.
   peerGcpGateway @maturity("deprecated") string
   // Peer GCP HA VPN gateway resource
   peerGcpVpnGateway() gcp.project.computeService.vpnGateway
   // IP address of the peer VPN gateway
   peerIp string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the VPN tunnel lives in
   region() gcp.project.computeService.region
-  // DEPRECATED: Use router instead
+  // Raw Cloud Router self-link URL
+  //
+  // Deprecated in favor of `router`.
   routerUrl @maturity("deprecated") string
   // Cloud Router resource for dynamic routing
   router() gcp.project.computeService.router
@@ -6855,7 +6938,9 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   status string
   // URL of the Target VPN gateway (Classic VPN only)
   targetVpnGateway string
-  // DEPRECATED: Use vpnGateway instead
+  // Raw VPN gateway self-link URL
+  //
+  // Deprecated in favor of `vpnGateway`.
   vpnGatewayUrl @maturity("deprecated") string
   // HA VPN gateway resource
   vpnGateway() gcp.project.computeService.vpnGateway
@@ -7468,11 +7553,15 @@ private gcp.project.computeService.instanceGroup @defaults("name size") {
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use zone instead
+  // Raw zone self-link URL
+  //
+  // Deprecated in favor of `zone`.
   zoneUrl @maturity("deprecated") string
   // Zone the instance group lives in
   zone() gcp.project.computeService.zone
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network resource
   network() gcp.project.computeService.network
@@ -7506,11 +7595,15 @@ private gcp.project.computeService.instanceGroupManager @defaults("name targetSi
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use zone instead
+  // Raw zone self-link URL
+  //
+  // Deprecated in favor of `zone`.
   zoneUrl @maturity("deprecated") string
   // Zone the MIG lives in (empty for regional MIGs)
   zone() gcp.project.computeService.zone
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the MIG lives in (empty for zonal MIGs)
   region() gcp.project.computeService.region
@@ -7562,7 +7655,9 @@ private gcp.project.computeService.firewallPolicy @defaults("name") {
   ruleTupleCount int
   // Creation timestamp
   created time
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the firewall policy lives in (empty for global policies)
   region() gcp.project.computeService.region
@@ -8318,7 +8413,9 @@ private gcp.project.computeService.healthCheck @defaults("name type") {
   grpcHealthCheck dict
   // Whether to enable logging
   logConfig dict
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the health check lives in (empty for global health checks)
   region() gcp.project.computeService.region
@@ -8351,7 +8448,9 @@ private gcp.project.computeService.urlMap @defaults("name") {
   created time
   // Server-defined URL for the resource
   selfLink string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the URL map lives in (empty for global URL maps)
   region() gcp.project.computeService.region
@@ -8371,7 +8470,9 @@ private gcp.project.computeService.targetHttpProxy @defaults("name") {
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use urlMap instead
+  // Raw URL map self-link URL
+  //
+  // Deprecated in favor of `urlMap`.
   urlMapUrl @maturity("deprecated") string
   // URL map resource
   urlMap() gcp.project.computeService.urlMap
@@ -8381,7 +8482,9 @@ private gcp.project.computeService.targetHttpProxy @defaults("name") {
   selfLink string
   // Whether the proxy can be used by Cloud Armor
   proxyBind bool
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the proxy lives in (empty for global proxies)
   region() gcp.project.computeService.region
@@ -8403,13 +8506,17 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use urlMap instead
+  // Raw URL map self-link URL
+  //
+  // Deprecated in favor of `urlMap`.
   urlMapUrl @maturity("deprecated") string
   // URL map resource
   urlMap() gcp.project.computeService.urlMap
   // SSL certificate URLs
   sslCertificateUrls []string
-  // DEPRECATED: use sslPolicy instead
+  // Raw SSL policy self-link URL
+  //
+  // Deprecated in favor of `sslPolicy`.
   sslPolicyUrl @maturity("deprecated") string
   // SSL policy resource
   sslPolicy() gcp.project.computeService.sslPolicy
@@ -8421,7 +8528,9 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   selfLink string
   // Whether the proxy can be used by Cloud Armor
   proxyBind bool
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the proxy lives in (empty for global proxies)
   region() gcp.project.computeService.region
@@ -8438,7 +8547,9 @@ private gcp.project.computeService.network.peering @defaults("name state") {
   id string
   // Name of the peering
   name string
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network resource of the peer
   network() gcp.project.computeService.network
@@ -8479,7 +8590,9 @@ private gcp.project.computeService.route @defaults("name destRange") {
   destRange string
   // Route priority (0-65535)
   priority int
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network resource
   network() gcp.project.computeService.network
@@ -8549,7 +8662,9 @@ private gcp.project.computeService.serviceAttachment @defaults("name connectionP
   targetService string
   // Whether connection reconciliation is enabled
   reconcileConnections bool
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the service attachment lives in
   region() gcp.project.computeService.region
@@ -8582,19 +8697,27 @@ private gcp.project.computeService.networkEndpointGroup @defaults("name networkE
   defaultPort int
   // Number of endpoints
   size int
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network resource
   network() gcp.project.computeService.network
-  // DEPRECATED: use subnetwork instead
+  // Raw subnetwork self-link URL
+  //
+  // Deprecated in favor of `subnetwork`.
   subnetworkUrl @maturity("deprecated") string
   // Subnetwork resource
   subnetwork() gcp.project.computeService.subnetwork
-  // DEPRECATED: use zone instead
+  // Raw zone self-link URL
+  //
+  // Deprecated in favor of `zone`.
   zoneUrl @maturity("deprecated") string
   // Zone the NEG lives in (empty for regional NEGs)
   zone() gcp.project.computeService.zone
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the NEG lives in (empty for zonal NEGs)
   region() gcp.project.computeService.region
@@ -8707,11 +8830,15 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
   state string
   // Edge availability domain
   edgeAvailabilityDomain string
-  // DEPRECATED: Use interconnect instead
+  // Raw interconnect self-link URL
+  //
+  // Deprecated in favor of `interconnect`.
   interconnectUrl @maturity("deprecated") string
   // Interconnect resource
   interconnect() gcp.project.computeService.interconnect
-  // DEPRECATED: Use router instead
+  // Raw Cloud Router self-link URL
+  //
+  // Deprecated in favor of `router`.
   routerUrl @maturity("deprecated") string
   // Cloud Router resource
   router() gcp.project.computeService.router
@@ -8733,7 +8860,9 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
   partnerMetadata dict
   // Private interconnect info
   privateInterconnectInfo dict
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the attachment lives in
   region() gcp.project.computeService.region
@@ -8788,7 +8917,9 @@ private gcp.project.computeService.targetTcpProxy @defaults("name") {
   proxyBind bool
   // Backend service URL
   serviceUrl string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the proxy lives in (empty for global proxies)
   region() gcp.project.computeService.region
@@ -8817,7 +8948,9 @@ private gcp.project.computeService.targetSslProxy @defaults("name") {
   serviceUrl string
   // SSL certificate URLs
   sslCertificateUrls []string
-  // DEPRECATED: use sslPolicy instead
+  // Raw SSL policy self-link URL
+  //
+  // Deprecated in favor of `sslPolicy`.
   sslPolicyUrl @maturity("deprecated") string
   // SSL policy
   sslPolicy() gcp.project.computeService.sslPolicy
@@ -8854,7 +8987,9 @@ private gcp.project.computeService.packetMirroring @defaults("name enable") {
   mirroredResources dict
   // Filter configuration
   filter dict
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the packet mirroring policy lives in
   region() gcp.project.computeService.region
@@ -8920,7 +9055,9 @@ private gcp.project.computeService.targetPool @defaults("name") {
   instanceUrls []string
   // Security policy URL
   securityPolicy string
-  // DEPRECATED: use region instead
+  // Raw region self-link URL
+  //
+  // Deprecated in favor of `region`.
   regionUrl @maturity("deprecated") string
   // Region the target pool lives in
   region() gcp.project.computeService.region
@@ -10031,9 +10168,13 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   description string
   // Perimeter type (PERIMETER_TYPE_REGULAR, PERIMETER_TYPE_BRIDGE)
   perimeterType string
-  // DEPRECATED: Use statusConfig instead
+  // Raw enforced perimeter config dict
+  //
+  // Deprecated in favor of `statusConfig`.
   status @maturity("deprecated") dict
-  // DEPRECATED: Use specConfig instead
+  // Raw dry-run perimeter config dict
+  //
+  // Deprecated in favor of `specConfig`.
   spec @maturity("deprecated") dict
   // Enforced perimeter configuration
   statusConfig() gcp.accesscontextmanager.servicePerimeter.config
@@ -10718,7 +10859,9 @@ private gcp.project.idsService.endpoint @defaults("name severity state") {
   name string
   // Human-readable description of the resource
   description string
-  // DEPRECATED: use network instead
+  // Raw network self-link URL
+  //
+  // Deprecated in favor of `network`.
   networkUrl @maturity("deprecated") string
   // Network resource
   network() gcp.project.computeService.network

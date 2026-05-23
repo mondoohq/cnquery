@@ -2162,7 +2162,9 @@ azure.subscription.networkService.interface @defaults("name location properties.
   enableAcceleratedNetworking bool
   // Whether this is a primary network interface on a VM
   primary bool
-  // DEPRECATED: use networkSecurityGroup instead
+  // Raw network security group resource ID
+  //
+  // Deprecated in favor of `networkSecurityGroup()`.
   networkSecurityGroupId @maturity("deprecated") string
   // Network security group attached to the NIC; null when the NIC inherits NSG enforcement from its subnet only
   networkSecurityGroup() azure.subscription.networkService.securityGroup
@@ -2619,7 +2621,9 @@ private azure.subscription.networkService.privateEndpoint.serviceconnection @def
   id string
   // Connection name
   name string
-  // DEPRECATED: use privateLinkService instead
+  // Raw private link service resource ID
+  //
+  // Deprecated in favor of `privateLinkService()`.
   privateLinkServiceId @maturity("deprecated") string
   // Private link service being connected to
   privateLinkService() azure.subscription.networkService.privateLinkService
@@ -3971,7 +3975,9 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   type string
   // Private endpoint connection IP addresses
   ipAddresses []string
-  // DEPRECATED: use privateEndpoint instead
+  // Raw private endpoint resource ID
+  //
+  // Deprecated in favor of `privateEndpoint()`.
   privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
@@ -4385,17 +4391,27 @@ private azure.subscription.sqlService.server @defaults("name location properties
   firewallRules() []azure.subscription.sqlService.firewallrule
   // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
-  // DEPRECATED: use connectionType instead
+  // Raw server connection policy
+  //
+  // Deprecated in favor of `connectionType`.
   connectionPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use blobAuditingPolicy() instead
+  // Raw server auditing policy
+  //
+  // Deprecated in favor of `blobAuditingPolicy()`.
   auditingPolicy() @maturity("deprecated") dict
   // SQL Database server administrator login
   administratorLogin string
-  // DEPRECATED: use securityAlertPolicyConfig() instead
+  // Raw server security alert policy
+  //
+  // Deprecated in favor of `securityAlertPolicyConfig()`.
   securityAlertPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use encryptionProtectorConfig() instead
+  // Raw server encryption protector
+  //
+  // Deprecated in favor of `encryptionProtectorConfig()`.
   encryptionProtector() @maturity("deprecated") dict
-  // DEPRECATED: legacy preview API; use securityAlertPolicyConfig() and advancedThreatProtectionSetting() instead
+  // Legacy preview threat detection policy
+  //
+  // Deprecated in favor of `securityAlertPolicyConfig()` and `advancedThreatProtectionSetting()`.
   threatDetectionPolicy() @maturity("deprecated") dict
   // SQL Database server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
@@ -4518,15 +4534,23 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   sampleName string
   // Whether the database is zone redundant
   zoneRedundant bool
-  // DEPRECATED: use transparentDataEncryptionEnabled instead
+  // Raw transparent data encryption configuration
+  //
+  // Deprecated in favor of `transparentDataEncryptionEnabled`.
   transparentDataEncryption() @maturity("deprecated") dict
   // SQL database advisor
   advisor() []dict
-  // DEPRECATED: use securityAlertPolicy() instead
+  // Legacy preview threat detection policy
+  //
+  // Deprecated in favor of `securityAlertPolicy()`.
   threatDetectionPolicy() @maturity("deprecated") dict
-  // DEPRECATED: Azure SQL DB has no per-database connection policy; use server.connectionType instead
+  // Legacy per-database connection policy
+  //
+  // Deprecated, please use `azure.subscription.sqlService.server.connectionType` — Azure SQL DB has no per-database connection policy.
   connectionPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use blobAuditingPolicy() instead
+  // Raw database auditing policy
+  //
+  // Deprecated in favor of `blobAuditingPolicy()`.
   auditingPolicy() @maturity("deprecated") dict
   // SQL database advanced threat protection settings
   advancedThreatProtection() azure.subscription.sqlService.database.advancedthreatprotection
@@ -6077,39 +6101,57 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
-  // DEPRECATED: use "forServers" instead. List of Defender for Servers components and whether they are enabled
+  // List of Defender for Servers components and whether they are enabled
+  //
+  // Deprecated in favor of `forServers()`.
   defenderForServers() @maturity("deprecated") dict
   // List of Defender for Servers components and whether they are enabled
   forServers() azure.subscription.cloudDefenderService.defenderForServers
-  // DEPRECATED: use "forAppServices" instead. Microsoft Defender for App Service configuration
+  // Microsoft Defender for App Service configuration
+  //
+  // Deprecated in favor of `forAppServices()`.
   defenderForAppServices() @maturity("deprecated") dict
   // Microsoft Defender for App Service configuration
   forAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
-  // DEPRECATED: use "forSqlServersOnMachines" instead. Microsoft Defender for SQL servers on machines configuration
+  // Microsoft Defender for SQL servers on machines configuration
+  //
+  // Deprecated in favor of `forSqlServersOnMachines()`.
   defenderForSqlServersOnMachines() @maturity("deprecated") dict
   // Microsoft Defender for SQL servers on machines configuration
   forSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
-  // DEPRECATED: use "forSqlDatabases" instead. Microsoft Defender for Azure SQL Databases configuration
+  // Microsoft Defender for Azure SQL Databases configuration
+  //
+  // Deprecated in favor of `forSqlDatabases()`.
   defenderForSqlDatabases() @maturity("deprecated") dict
   // Microsoft Defender for Azure SQL Databases configuration
   forSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
-  // DEPRECATED: use "forOpenSourceDatabases" instead. Microsoft Defender for open-source relational databases configuration
+  // Microsoft Defender for open-source relational databases configuration
+  //
+  // Deprecated in favor of `forOpenSourceDatabases()`.
   defenderForOpenSourceDatabases() @maturity("deprecated") dict
   // Microsoft Defender for open-source relational databases configuration
   forOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
-  // DEPRECATED: use "forCosmosDb" instead. Microsoft Defender for Azure Cosmos DB configuration
+  // Microsoft Defender for Azure Cosmos DB configuration
+  //
+  // Deprecated in favor of `forCosmosDb()`.
   defenderForCosmosDb() @maturity("deprecated") dict
   // Microsoft Defender for Azure Cosmos DB configuration
   forCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
-  // DEPRECATED: use "forStorageAccounts" instead. Microsoft Defender for Storage Accounts configuration
+  // Microsoft Defender for Storage Accounts configuration
+  //
+  // Deprecated in favor of `forStorageAccounts()`.
   defenderForStorageAccounts() @maturity("deprecated") dict
   // Microsoft Defender for Storage Accounts configuration
   forStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
-  // DEPRECATED: use "forKeyVaults" instead. Microsoft Defender for Key Vault configuration
+  // Microsoft Defender for Key Vault configuration
+  //
+  // Deprecated in favor of `forKeyVaults()`.
   defenderForKeyVaults() @maturity("deprecated") dict
   // Microsoft Defender for Key Vault configuration
   forKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
-  // DEPRECATED: use "forResourceManager" instead. Microsoft Defender for Resource Manager configuration
+  // Microsoft Defender for Resource Manager configuration
+  //
+  // Deprecated in favor of `forResourceManager()`.
   defenderForResourceManager() @maturity("deprecated") dict
   // Microsoft Defender for Resource Manager configuration
   forResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
@@ -6117,7 +6159,9 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
   // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
   defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
-  // DEPRECATED: use "forContainers" instead. Defender for Containers components configuration
+  // Defender for Containers components configuration
+  //
+  // Deprecated in favor of `forContainers()`.
   defenderForContainers() @maturity("deprecated") dict
   // Defender for Containers components configuration
   forContainers() azure.subscription.cloudDefenderService.defenderForContainers
@@ -6851,7 +6895,9 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   httpProxyConfig dict
   // The add-on profiles of the AKS cluster
   addonProfiles []dict
-  // DEPRECATED: use nodePools() instead
+  // Raw agent pool profiles attached to the cluster
+  //
+  // Deprecated in favor of `nodePools()`.
   agentPoolProfiles @maturity("deprecated") []dict
   // Node pools (agent pools) attached to the cluster
   nodePools() []azure.subscription.aksService.cluster.nodePool
@@ -7245,7 +7291,9 @@ private azure.subscription.policy.complianceSummary @defaults("nonCompliantResou
 private azure.subscription.iotService {
   // Subscription identifier
   subscriptionId string
-  // DEPRECATED: prefer `iotHubs()` for typed field access. Retained for backward compatibility.
+  // Raw IoT hubs in the subscription
+  //
+  // Deprecated in favor of `iotHubs()`.
   hubs() @maturity("deprecated") []dict
   // Typed IoT hubs in the subscription
   iotHubs() []azure.subscription.iotService.iotHub
@@ -7400,7 +7448,9 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   name string
   // Private endpoint connection type
   type string
-  // DEPRECATED: use privateEndpoint instead
+  // Raw private endpoint resource ID
+  //
+  // Deprecated in favor of `privateEndpoint()`.
   privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
@@ -8523,7 +8573,9 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   requireInfrastructureEncryption bool
   // Customer-managed encryption keys (Key Vault references) configured for this namespace
   cmkKeys []dict
-  // DEPRECATED: use networkRules instead
+  // Raw namespace network rule set
+  //
+  // Deprecated in favor of `networkRules()`.
   networkRuleSet() @maturity("deprecated") dict
   // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.serviceBusService.namespace.networkRules
@@ -8695,7 +8747,9 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   requireInfrastructureEncryption bool
   // Customer-managed encryption keys (Key Vault references) configured for this namespace
   cmkKeys []dict
-  // DEPRECATED: use networkRules instead
+  // Raw namespace network rule set
+  //
+  // Deprecated in favor of `networkRules()`.
   networkRuleSet() @maturity("deprecated") dict
   // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.eventHubService.namespace.networkRules

@@ -139,7 +139,9 @@ digitalocean.droplet @defaults("id name status") {
   publicIpv6 string
   // Tags applied to the droplet
   tags []string
-  // DEPRECATED: use vpc() instead. VPC UUID
+  // VPC UUID
+  //
+  // Deprecated in favor of `vpc()`.
   vpcUuid @maturity("deprecated") string
   // VPC the droplet is attached to
   vpc() digitalocean.vpc
@@ -149,7 +151,9 @@ digitalocean.droplet @defaults("id name status") {
   backupsEnabled bool
   // Monitoring enabled
   monitoringEnabled bool
-  // DEPRECATED: use baseImage instead. Image details (id, name, distribution, slug)
+  // Raw image details dict (id, name, distribution, slug)
+  //
+  // Deprecated in favor of `baseImage`.
   image @maturity("deprecated") dict
   // Base image the droplet runs
   baseImage() digitalocean.image
@@ -180,7 +184,9 @@ digitalocean.firewall @defaults("id name status") {
   inboundRules []dict
   // Rules controlling outgoing traffic from protected droplets
   outboundRules []dict
-  // DEPRECATED: use droplets() instead. Droplet IDs protected by this firewall
+  // Droplet IDs protected by this firewall
+  //
+  // Deprecated in favor of `droplets()`.
   dropletIds @maturity("deprecated") []int
   // Droplets covered by this firewall (by direct ID or matching tag)
   droplets() []digitalocean.droplet
@@ -389,7 +395,9 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // DEPRECATED: use droplets() instead. Droplet IDs attached to this volume
+  // Droplet IDs attached to this volume
+  //
+  // Deprecated in favor of `droplets()`.
   dropletIds @maturity("deprecated") []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
@@ -426,11 +434,15 @@ digitalocean.loadBalancer @defaults("id name status") {
   enableProxyProtocol bool
   // Enable backend keepalive
   enableBackendKeepalive bool
-  // DEPRECATED: use vpc() instead. VPC UUID
+  // VPC UUID
+  //
+  // Deprecated in favor of `vpc()`.
   vpcUuid @maturity("deprecated") string
   // VPC the load balancer is attached to
   vpc() digitalocean.vpc
-  // DEPRECATED: use droplets() instead. Droplet IDs
+  // Droplet IDs attached to the load balancer
+  //
+  // Deprecated in favor of `droplets()`.
   dropletIds @maturity("deprecated") []int
   // Droplets attached to this load balancer
   droplets() []digitalocean.droplet
@@ -518,7 +530,9 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   clusterSubnet string
   // Service subnet
   serviceSubnet string
-  // DEPRECATED: use vpc() instead. VPC UUID
+  // VPC UUID
+  //
+  // Deprecated in favor of `vpc()`.
   vpcUuid @maturity("deprecated") string
   // VPC the cluster is attached to
   vpc() digitalocean.vpc

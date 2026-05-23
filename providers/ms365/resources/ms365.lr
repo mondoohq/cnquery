@@ -13,7 +13,9 @@ alias microsoft.organization = microsoft.tenant
 // and access policies. Serves as the top-level entry point for querying
 // tenant-wide Microsoft Entra ID and Microsoft 365 configuration.
 microsoft {
-  // DEPRECATED: use `microsoft.tenant` instead
+  // Microsoft 365 tenant organizations
+  //
+  // Deprecated in favor of `microsoft.tenant`.
   organizations() @maturity("deprecated") []microsoft.tenant
   // List of users
   users() microsoft.users
@@ -33,7 +35,9 @@ microsoft {
   oauth2PermissionGrants() []microsoft.oauth2PermissionGrant
   // List of roles
   roles() microsoft.roles
-  // DEPRECATED: use groupSettings instead
+  // Tenant-wide settings
+  //
+  // Deprecated in favor of `groupSettings`.
   settings() @maturity("deprecated") dict
   // Microsoft 365 settings
   groupSettings() []microsoft.setting
@@ -177,7 +181,9 @@ microsoft.tenant @defaults("name") {
   assignedPlans []dict
   // Provisioned plan
   provisionedPlans []dict
-  // DEPRECATED: use `createdAt` instead
+  // Tenant creation date and time
+  //
+  // Deprecated in favor of `createdAt`.
   createdDateTime @maturity("deprecated") time
   // Tenant display name
   name string
@@ -289,7 +295,9 @@ microsoft.users {
 microsoft.identityAndAccess {
   []microsoft.identityAndAccess.policy
   init(filter? string)
-  // DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policies` instead.
+  // Policy filter expression
+  //
+  // Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policies`.
   filter @maturity("deprecated") string
 
   // Get the instances of role eligibilities
@@ -814,35 +822,59 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   accountEnabled bool
   // User city
   city string
-  // DEPRECATED: use job.companyName instead
+  // User company name
+  //
+  // Deprecated in favor of `job.companyName`.
   companyName @maturity("deprecated") string
-  // DEPRECATED: use contact.country instead
+  // User country
+  //
+  // Deprecated in favor of `contact.country`.
   country @maturity("deprecated") string
   // User create time
   createdDateTime time
-  // DEPRECATED: use job.department instead
+  // User department
+  //
+  // Deprecated in favor of `job.department`.
   department @maturity("deprecated") string
   // User display name
   displayName string
-  // DEPRECATED: use job.employeeId instead
+  // User employee ID
+  //
+  // Deprecated in favor of `job.employeeId`.
   employeeId @maturity("deprecated") string
   // User given name
   givenName string
-  // DEPRECATED: use job.title instead
+  // User job title
+  //
+  // Deprecated in favor of `job.title`.
   jobTitle @maturity("deprecated") string
-  // DEPRECATED: use contact.email instead
+  // User email address
+  //
+  // Deprecated in favor of `contact.email`.
   mail @maturity("deprecated") string
-  // DEPRECATED: use contact.mobilePhone instead
+  // User mobile phone number
+  //
+  // Deprecated in favor of `contact.mobilePhone`.
   mobilePhone @maturity("deprecated") string
-  // DEPRECATED: use contact.otherMails instead
+  // Additional email addresses for the user
+  //
+  // Deprecated in favor of `contact.otherMails`.
   otherMails @maturity("deprecated") []string
-  // DEPRECATED: use job.officeLocation instead
+  // User office location
+  //
+  // Deprecated in favor of `job.officeLocation`.
   officeLocation @maturity("deprecated") string
-  // DEPRECATED: use contact.postalCode instead
+  // User postal code
+  //
+  // Deprecated in favor of `contact.postalCode`.
   postalCode @maturity("deprecated") string
-  // DEPRECATED: use contact.state instead
+  // User state or province
+  //
+  // Deprecated in favor of `contact.state`.
   state @maturity("deprecated") string
-  // DEPRECATED: use contact.streetAddress instead
+  // User street address
+  //
+  // Deprecated in favor of `contact.streetAddress`.
   streetAddress @maturity("deprecated") string
   // User surname
   surname string
@@ -1221,7 +1253,9 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
-  // DEPRECATED: kept for backwards compatibility
+  // Raw domain record properties
+  //
+  // Deprecated in favor of the typed fields on this resource (`recordType`, `supportedService`, `ttl`, `label`).
   properties @maturity("deprecated") dict
 }
 
@@ -1424,7 +1458,9 @@ microsoft.serviceprincipal @defaults("name") {
   notificationEmailAddresses []string
   // App role assignment required
   appRoleAssignmentRequired bool
-  // DEPRECATED: use `enabled` instead
+  // Whether the service principal account is enabled
+  //
+  // Deprecated in favor of `enabled`.
   accountEnabled @maturity("deprecated") bool
   // Whether it is a first-party Microsoft application
   isFirstParty() bool
@@ -2230,7 +2266,9 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
-  // DEPRECATED: kept for backwards compatibility
+  // Raw device configuration properties
+  //
+  // Deprecated in favor of `settings` and `policyAssignments`.
   properties @maturity("deprecated") dict
   // Assignments targeting this configuration profile, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment
@@ -2260,7 +2298,9 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
-  // DEPRECATED: kept for backwards compatibility
+  // Raw device compliance policy properties
+  //
+  // Deprecated in favor of `settings` and `policyAssignments`.
   properties @maturity("deprecated") dict
   // Assignments targeting this compliance policy, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment

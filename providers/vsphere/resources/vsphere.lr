@@ -1064,11 +1064,17 @@ private vsphere.vswitch.standard @defaults("name") {
   numPorts int
   // Free ports remaining — equal to numPorts minus the ports consumed by attached VMkernel and VM NICs
   numPortsAvailable int
-  // DEPRECATED: use failoverPolicySettings instead.
+  // Raw failover policy dict
+  //
+  // Deprecated in favor of `failoverPolicySettings`.
   failoverPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use securityPolicySettings instead.
+  // Raw security policy dict
+  //
+  // Deprecated in favor of `securityPolicySettings`.
   securityPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use shapingPolicySettings instead.
+  // Raw shaping policy dict
+  //
+  // Deprecated in favor of `shapingPolicySettings`.
   shapingPolicy() @maturity("deprecated") dict
   // NIC teaming / failover policy applied to traffic on this vSwitch
   failoverPolicySettings() vsphere.vswitch.failoverPolicy

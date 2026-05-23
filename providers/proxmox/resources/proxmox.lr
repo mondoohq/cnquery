@@ -834,7 +834,9 @@ proxmox.user @defaults("id enable realm") {
   firstname string
   // Last name
   lastname string
-  // DEPRECATED: use `groupRefs` instead
+  // Raw group membership names
+  //
+  // Deprecated in favor of `groupRefs`.
   groups @maturity("deprecated") []string
   // Resolved group memberships
   groupRefs() []proxmox.group
