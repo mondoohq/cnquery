@@ -39,6 +39,11 @@ type mqlKustomizeKustomizationInternal struct {
 	rendered      []map[string]any
 	renderedErr   error
 	renderedOnce  sync.Once
+	// stampOnce guards the post-construction write of kustomization
+	// and kustPath. CreateResource may return a cached instance for
+	// concurrent callers with the same __id; stampOnce ensures the
+	// stamp happens exactly once across those goroutines.
+	stampOnce sync.Once
 }
 
 func newMqlKustomization(runtime *plugin.Runtime, entry *connection.KustomizationEntry) (*mqlKustomizeKustomization, error) {
@@ -74,13 +79,13 @@ func newMqlKustomization(runtime *plugin.Runtime, entry *connection.Kustomizatio
 	}
 	mqlK := res.(*mqlKustomizeKustomization)
 	// CreateResource may return an already-cached instance when two
-	// callers ask for the same __id. Only stamp the Internal fields
-	// once so we don't overwrite a populated instance another caller
-	// is already using.
-	if mqlK.kustomization == nil {
+	// callers ask for the same __id; stampOnce keeps the write
+	// race-free under concurrent newMqlKustomization calls and
+	// happens-before any subsequent reader on the returned pointer.
+	mqlK.stampOnce.Do(func() {
 		mqlK.kustomization = k
 		mqlK.kustPath = entry.Path
-	}
+	})
 	return mqlK, nil
 }
 
