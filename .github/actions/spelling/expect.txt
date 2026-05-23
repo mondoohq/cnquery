@@ -602,6 +602,7 @@ slo
 smbv
 snaptime
 snat
+SNOWSQL
 SNYK
 softdep
 spdx
