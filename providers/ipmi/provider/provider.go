@@ -161,11 +161,20 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.IpmiConnection
 		TechnologyUrlSegments: []string{"network", "ipmi"},
 	}
 
-	// TODO: consider using the ipmi vendor id and product id
-	if asset.Name == "" {
-		asset.Name = "IPMI device " + conn.Guid()
+	identifier, err := conn.Identifier()
+	if err != nil {
+		return err
 	}
 
-	asset.PlatformIds = []string{conn.Identifier()}
+	// TODO: consider using the ipmi vendor id and product id
+	if asset.Name == "" {
+		guid, err := conn.Guid()
+		if err != nil {
+			return err
+		}
+		asset.Name = "IPMI device " + guid
+	}
+
+	asset.PlatformIds = []string{identifier}
 	return nil
 }

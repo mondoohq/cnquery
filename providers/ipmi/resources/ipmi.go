@@ -14,13 +14,7 @@ func (r *mqlIpmi) id() (string, error) {
 
 func (r *mqlIpmi) guid() (string, error) {
 	conn := r.MqlRuntime.Connection.(*connection.IpmiConnection)
-	client := conn.Client()
-
-	resp, err := client.DeviceGUID()
-	if err != nil {
-		return "", err
-	}
-	return resp.GUID, nil
+	return conn.Guid()
 }
 
 func (r *mqlIpmi) deviceID() (map[string]any, error) {

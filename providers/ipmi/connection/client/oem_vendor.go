@@ -65,7 +65,7 @@ var oemStrings = map[OemVendorID]string{
 	OemNokia:                "Nokia",
 	OemBull:                 "Bull Company",
 	OemHitachi116:           "Hitachi",
-	OemNEC:                  "NEEC",
+	OemNEC:                  "NEC",
 	OemToshiba:              "Toshiba",
 	OemIntel:                "Intel Corporation",
 	OemTatung:               "Tatung",

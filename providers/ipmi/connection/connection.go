@@ -6,7 +6,6 @@ package connection
 import (
 	"errors"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -77,20 +76,24 @@ func (c *IpmiConnection) Client() *impi_client.IpmiClient {
 	return c.client
 }
 
-func (c *IpmiConnection) Identifier() string {
-	return "//platformid.api.mondoo.app/runtime/ipmi/deviceid/" + c.Guid()
+func (c *IpmiConnection) Identifier() (string, error) {
+	guid, err := c.Guid()
+	if err != nil {
+		return "", err
+	}
+	return "//platformid.api.mondoo.app/runtime/ipmi/deviceid/" + guid, nil
 }
 
-func (c *IpmiConnection) Guid() string {
+func (c *IpmiConnection) Guid() (string, error) {
 	if c.guid != "" {
-		return c.guid
+		return c.guid, nil
 	}
 
 	resp, err := c.client.DeviceGUID()
 	if err != nil {
-		log.Error().Err(err).Msg("could not retrieve Ipmi GUID")
+		return "", err
 	}
 
 	c.guid = resp.GUID
-	return c.guid
+	return c.guid, nil
 }

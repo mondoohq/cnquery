@@ -127,8 +127,7 @@ func (c *IpmiClient) DeviceID() (*DeviceID, error) {
 		return nil, err
 	}
 
-	// 20 bits of are used for the vendor id
-	manufactor := OemVendorID(uint32(res.ManufacturerID1) + uint32(res.ManufacturerID2)&0x3<<8)
+	manufactor := decodeManufacturerID(res.ManufacturerID1, res.ManufacturerID2)
 	product := OemProductID(res.ProductID)
 
 	return &DeviceID{
@@ -203,36 +202,18 @@ func (c *IpmiClient) ChassisStatus() (*ChassisStatus, error) {
 		return nil, err
 	}
 
-	policy := ""
-	switch (res.PowerState & 0x60) >> 5 {
-	case 0x0:
-		policy = "always-off"
-	case 0x1:
-		policy = "previous"
-	case 0x2:
-		policy = "always-on"
-	default:
-		policy = "unknown"
-	}
-
 	return &ChassisStatus{
 		SystemPower:        res.PowerState&0x1 != 0,
 		PowerOverload:      res.PowerState&0x2 != 0,
 		PowerInterlock:     res.PowerState&0x4 != 0,
 		MainPowerFault:     res.PowerState&0x8 != 0,
 		PowerControlFault:  res.PowerState&0x10 != 0,
-		PowerRestorePolicy: policy,
-		LastPowerEvent: ChassisLastPowerEvent{
-			AcFailed:  res.LastPowerEvent&0x1 != 0,
-			Overload:  res.LastPowerEvent&0x2 != 0,
-			Interlock: res.LastPowerEvent&0x4 != 0,
-			Fault:     res.LastPowerEvent&0x8 != 0,
-			Command:   res.LastPowerEvent&0x8 != 0,
-		},
-		ChassisIntrusion:  res.State&0x1 != 0,
-		FrontPanelLockout: res.State&0x2 != 0,
-		DriveFault:        res.State&0x4 != 0,
-		CoolingFanFault:   res.State&0x8 != 0,
+		PowerRestorePolicy: decodePowerRestorePolicy(res.PowerState),
+		LastPowerEvent:     decodeLastPowerEvent(res.LastPowerEvent),
+		ChassisIntrusion:   res.State&0x1 != 0,
+		FrontPanelLockout:  res.State&0x2 != 0,
+		DriveFault:         res.State&0x4 != 0,
+		CoolingFanFault:    res.State&0x8 != 0,
 	}, nil
 }
 
@@ -276,44 +257,6 @@ func (c *IpmiClient) ChassisSystemBootOptions() (*ChassisSystemBootOptions, erro
 	if err != nil {
 		return nil, err
 	}
-	bootDevice := res.BootDeviceSelector()
-
-	consoleRedirection := ""
-	switch res.Data[2] & 0x3 {
-	case 0x0:
-		consoleRedirection = "bios"
-	case 0x1:
-		consoleRedirection = "skip"
-	case 0x2:
-		consoleRedirection = "redirected"
-	default:
-		consoleRedirection = "reserved"
-	}
-
-	biosVerbosity := ""
-	switch res.Data[2] & 0x3 >> 5 {
-	case 0x0:
-		biosVerbosity = "default"
-	case 0x1:
-		biosVerbosity = "quiet"
-	case 0x2:
-		biosVerbosity = "verbose"
-	default:
-		biosVerbosity = "reserved"
-	}
-
-	biosMuxControlOverride := ""
-	switch res.Data[3] & 0x3 {
-	case 0x0:
-		biosMuxControlOverride = "recommended"
-	case 0x1:
-		biosMuxControlOverride = "force-bmc"
-	case 0x2:
-		biosMuxControlOverride = "force-system"
-	default:
-		biosMuxControlOverride = "reserved"
-	}
-
 	return &ChassisSystemBootOptions{
 		ParameterVersion:       int64(res.Version),
 		ParameterValidUnlocked: res.Param&0x80 == 0,
@@ -321,18 +264,18 @@ func (c *IpmiClient) ChassisSystemBootOptions() (*ChassisSystemBootOptions, erro
 			BootFlagsValid:         res.Data[0]&0x80 != 0,
 			ApplyToNextBootOnly:    res.Data[0]&0x40 == 0,
 			LegacyBootType:         res.Data[0]&0x20 == 0,
-			BootDeviceSelector:     bootDevice.String(),
+			BootDeviceSelector:     res.BootDeviceSelector().String(),
 			CmosClear:              res.Data[1]&0x80 != 0,
 			LockKeyboard:           res.Data[1]&0x40 != 0,
 			ScreenBlank:            res.Data[1]&0x2 != 0,
 			LockOutResetButton:     res.Data[1]&0x1 != 0,
-			ConsoleRedirection:     consoleRedirection,
+			ConsoleRedirection:     decodeConsoleRedirection(res.Data[2]),
 			LockOutSleepButton:     res.Data[2]&0x4 != 0,
 			UserPasswordBypass:     res.Data[2]&0x8 != 0,
 			ForceProgressEventTrap: res.Data[2]&0x10 != 0,
-			BIOSVerbosity:          biosVerbosity,
+			BIOSVerbosity:          decodeBIOSVerbosity(res.Data[2]),
 			LockOutPowerButton:     res.Data[2]&0x80 != 0,
-			BIOSMuxControlOverride: biosMuxControlOverride,
+			BIOSMuxControlOverride: decodeBIOSMuxControlOverride(res.Data[3]),
 			BIOSSharedModeOverride: res.Data[3]&0x8 != 0,
 		},
 	}, nil
