@@ -34,11 +34,6 @@ func (k *mqlK8s) ingressClasses() ([]any, error) {
 			return nil, err
 		}
 
-		controller := ""
-		if ic.Spec.Controller != "" {
-			controller = ic.Spec.Controller
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.ingressclass", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -46,7 +41,7 @@ func (k *mqlK8s) ingressClasses() ([]any, error) {
 			"name":            llx.StringData(obj.GetName()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"controller":      llx.StringData(controller),
+			"controller":      llx.StringData(ic.Spec.Controller),
 			"parameters":      llx.DictData(parameters),
 		})
 		if err != nil {

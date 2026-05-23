@@ -137,7 +137,12 @@ func (k *mqlK8sJob) completions() (int64, error) {
 		return 0, err
 	}
 	if j.Spec.Completions == nil {
-		return 0, nil
+		// nil means "one per parallelism value"; mirror that so audits don't
+		// see a misleading 0.
+		if j.Spec.Parallelism != nil {
+			return int64(*j.Spec.Parallelism), nil
+		}
+		return 1, nil
 	}
 	return int64(*j.Spec.Completions), nil
 }
@@ -181,7 +186,7 @@ func (k *mqlK8sJob) completionMode() (string, error) {
 		return "", err
 	}
 	if j.Spec.CompletionMode == nil {
-		return "", nil
+		return "NonIndexed", nil
 	}
 	return string(*j.Spec.CompletionMode), nil
 }
