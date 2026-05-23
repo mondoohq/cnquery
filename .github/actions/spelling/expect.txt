@@ -386,7 +386,7 @@ lsp
 lte
 lvm
 lvmthin
-LXC
+lxc
 lzo
 lzpabcdef
 macfilter
@@ -568,6 +568,7 @@ QUALYS
 querypack
 quorate
 qwen
+qxl
 RABBITMQ
 radv
 rai
@@ -741,6 +742,7 @@ vendored
 verifiedaccess
 vertexai
 Veth
+vga
 VGeneration
 vhd
 virtio
