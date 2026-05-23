@@ -48,6 +48,11 @@ func newMqlKustomizeReplacement(runtime *plugin.Runtime, kustPath string, index 
 func (r *mqlKustomizeReplacement) targets() ([]any, error) {
 	var mqlTargets []any
 	for i, t := range r.replacementTargets {
+		// A bare `- ` list entry in the source YAML produces a nil
+		// element here; skip it before touching t.Select.
+		if t == nil {
+			continue
+		}
 		kind := ""
 		name := ""
 		if t.Select != nil {

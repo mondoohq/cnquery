@@ -4,6 +4,9 @@
 package resources
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -17,13 +20,15 @@ import (
 func (k *mqlKustomizeKustomization) resources() ([]any, error) {
 	rendered, err := k.fetchRendered()
 	if err != nil {
-		log.Warn().Err(err).Str("path", k.kustPath).Msg("failed to render kustomize overlay, returning empty resources")
-		return []any{}, nil
+		// Propagate render failures so a broken overlay surfaces in
+		// audits rather than silently passing checks that count
+		// resources. Matches the helm.template.resources contract.
+		return nil, err
 	}
 
-	var allResources []any
-	for _, obj := range rendered {
-		mqlRes, err := newMqlKustomizeResource(k.MqlRuntime, k.kustPath, obj)
+	allResources := make([]any, 0, len(rendered))
+	for idx, obj := range rendered {
+		mqlRes, err := newMqlKustomizeResource(k.MqlRuntime, k.kustPath, idx, obj)
 		if err != nil {
 			log.Warn().Err(err).Msg("skipping rendered kustomize resource")
 			continue
@@ -34,46 +39,36 @@ func (k *mqlKustomizeKustomization) resources() ([]any, error) {
 }
 
 func (k *mqlKustomizeKustomization) fetchRendered() ([]map[string]any, error) {
-	if k.fetched.Load() {
-		return k.rendered, k.renderedErr
-	}
-	k.lock.Lock()
-	defer k.lock.Unlock()
-	if k.fetched.Load() {
-		return k.rendered, k.renderedErr
-	}
+	k.renderedOnce.Do(func() {
+		fSys := filesys.MakeFsOnDisk()
+		kustomizer := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 
-	fSys := filesys.MakeFsOnDisk()
-	kustomizer := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-
-	resMap, err := kustomizer.Run(fSys, k.kustPath)
-	if err != nil {
-		k.renderedErr = err
-		k.fetched.Store(true)
-		return nil, err
-	}
-
-	var resources []map[string]any
-	for _, res := range resMap.Resources() {
-		yamlBytes, err := res.AsYAML()
+		resMap, err := kustomizer.Run(fSys, k.kustPath)
 		if err != nil {
-			log.Warn().Err(err).Msg("skipping kustomize resource: failed to convert to YAML")
-			continue
+			k.renderedErr = err
+			return
 		}
-		var obj map[string]any
-		if err := yaml.Unmarshal(yamlBytes, &obj); err != nil {
-			log.Warn().Err(err).Msg("skipping kustomize resource: failed to unmarshal YAML")
-			continue
-		}
-		resources = append(resources, obj)
-	}
 
-	k.rendered = resources
-	k.fetched.Store(true)
-	return k.rendered, nil
+		resources := make([]map[string]any, 0, len(resMap.Resources()))
+		for _, res := range resMap.Resources() {
+			yamlBytes, err := res.AsYAML()
+			if err != nil {
+				log.Warn().Err(err).Msg("skipping kustomize resource: failed to convert to YAML")
+				continue
+			}
+			var obj map[string]any
+			if err := yaml.Unmarshal(yamlBytes, &obj); err != nil {
+				log.Warn().Err(err).Msg("skipping kustomize resource: failed to unmarshal YAML")
+				continue
+			}
+			resources = append(resources, obj)
+		}
+		k.rendered = resources
+	})
+	return k.rendered, k.renderedErr
 }
 
-func newMqlKustomizeResource(runtime *plugin.Runtime, kustPath string, obj map[string]any) (*mqlKustomizeResource, error) {
+func newMqlKustomizeResource(runtime *plugin.Runtime, kustPath string, idx int, obj map[string]any) (*mqlKustomizeResource, error) {
 	kind, _ := obj["kind"].(string)
 	apiVersion, _ := obj["apiVersion"].(string)
 	name := ""
@@ -92,25 +87,24 @@ func newMqlKustomizeResource(runtime *plugin.Runtime, kustPath string, obj map[s
 		}
 	}
 
-	labelsStr := make(map[string]any, len(labels))
-	for k, v := range labels {
-		if s, ok := v.(string); ok {
-			labelsStr[k] = s
-		}
-	}
-	annotationsStr := make(map[string]any, len(annotations))
-	for k, v := range annotations {
-		if s, ok := v.(string); ok {
-			annotationsStr[k] = s
-		}
-	}
+	// Kubernetes requires label and annotation values to be strings,
+	// but the YAML parser can hand us ints/bools/etc. when the
+	// manifest is non-compliant (e.g. an unquoted `replicas: 3` under
+	// labels). Coerce non-strings via fmt.Sprintf so audits can see
+	// the offending value rather than silently dropping it.
+	labelsStr := coerceStringMap(labels)
+	annotationsStr := coerceStringMap(annotations)
 
 	manifest, err := convert.JsonToDict(obj)
 	if err != nil {
 		return nil, err
 	}
 
-	id := "kustomize.resource:" + kustPath + ":" + apiVersion + ":" + kind + ":" + namespace + "/" + name
+	// idx makes the cache key unique even when two manifests in the
+	// same overlay share apiVersion+kind+namespace+name — possible for
+	// cluster-scoped resources without `name`, or for malformed
+	// overlays. Without it CreateResource silently dedupes them.
+	id := "kustomize.resource:" + kustPath + ":" + apiVersion + ":" + kind + ":" + namespace + "/" + name + ":" + strconv.Itoa(idx)
 
 	res, err := CreateResource(runtime, "kustomize.resource", map[string]*llx.RawData{
 		"__id":        llx.StringData(id),
@@ -128,6 +122,21 @@ func newMqlKustomizeResource(runtime *plugin.Runtime, kustPath string, obj map[s
 	return res.(*mqlKustomizeResource), nil
 }
 
-func initKustomizeResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, nil
+// coerceStringMap converts every value in src to a string, preserving
+// non-string entries that the YAML parser may have left as ints, bools,
+// or nested values. Empty input returns an empty (non-nil) map so
+// downstream MapData calls don't get a nil slot.
+func coerceStringMap(src map[string]any) map[string]any {
+	out := make(map[string]any, len(src))
+	for k, v := range src {
+		switch val := v.(type) {
+		case string:
+			out[k] = val
+		case nil:
+			out[k] = ""
+		default:
+			out[k] = fmt.Sprintf("%v", val)
+		}
+	}
+	return out
 }

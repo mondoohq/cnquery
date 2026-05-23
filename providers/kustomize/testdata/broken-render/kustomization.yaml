@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # nonexistent.yaml does not exist; krusty.Run will fail. Used by
+  # TestKustomizeResourcesPropagatesRenderError.
+  - nonexistent.yaml

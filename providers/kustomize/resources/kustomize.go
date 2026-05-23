@@ -5,7 +5,6 @@ package resources
 
 import (
 	"sync"
-	"sync/atomic"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -39,8 +38,7 @@ type mqlKustomizeKustomizationInternal struct {
 	kustPath      string
 	rendered      []map[string]any
 	renderedErr   error
-	lock          sync.Mutex
-	fetched       atomic.Bool
+	renderedOnce  sync.Once
 }
 
 func newMqlKustomization(runtime *plugin.Runtime, entry *connection.KustomizationEntry) (*mqlKustomizeKustomization, error) {
@@ -75,8 +73,14 @@ func newMqlKustomization(runtime *plugin.Runtime, entry *connection.Kustomizatio
 		return nil, err
 	}
 	mqlK := res.(*mqlKustomizeKustomization)
-	mqlK.kustomization = k
-	mqlK.kustPath = entry.Path
+	// CreateResource may return an already-cached instance when two
+	// callers ask for the same __id. Only stamp the Internal fields
+	// once so we don't overwrite a populated instance another caller
+	// is already using.
+	if mqlK.kustomization == nil {
+		mqlK.kustomization = k
+		mqlK.kustPath = entry.Path
+	}
 	return mqlK, nil
 }
 

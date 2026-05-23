@@ -50,7 +50,7 @@ func init() {
 			Create: createKustomizeImage,
 		},
 		"kustomize.resource": {
-			Init:   initKustomizeResource,
+			// to override args, implement: initKustomizeResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKustomizeResource,
 		},
 		"kustomize.replacement": {

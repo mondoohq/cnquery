@@ -8,11 +8,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
+
+// ErrNoKustomization is the sentinel returned by loadSingleKustomization
+// when the directory has none of the recognized kustomization filenames.
+// Callers use errors.Is to distinguish "look elsewhere" from a real
+// parse failure on a file that exists.
+var ErrNoKustomization = errors.New("no kustomization file found")
 
 var _ plugin.Connection = (*KustomizeConnection)(nil)
 
@@ -90,9 +97,16 @@ func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 		return nil, errors.New("kustomize path must be a directory: " + kustomizePath)
 	}
 
-	// Check if this directory has a kustomization file
-	if entry, err := loadSingleKustomization(kustomizePath); err == nil {
+	// Check if this directory has a kustomization file.
+	// "no kustomization file found" → fall through to subdir scan.
+	// Any other error (malformed YAML, unreadable file) is a real
+	// failure the caller should see, not silently swallow.
+	entry, err := loadSingleKustomization(kustomizePath)
+	if err == nil {
 		return []*KustomizationEntry{entry}, nil
+	}
+	if !errors.Is(err, ErrNoKustomization) {
+		return nil, err
 	}
 
 	// Otherwise scan subdirectories
@@ -107,8 +121,15 @@ func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 			continue
 		}
 		subPath := filepath.Join(kustomizePath, de.Name())
-		if entry, err := loadSingleKustomization(subPath); err == nil {
+		entry, err := loadSingleKustomization(subPath)
+		if err == nil {
 			entries = append(entries, entry)
+			continue
+		}
+		// Quiet skip when the subdir simply has no kustomization
+		// file; loud warning when a file exists but won't parse.
+		if !errors.Is(err, ErrNoKustomization) {
+			log.Warn().Err(err).Str("path", subPath).Msg("failed to load kustomization; skipping")
 		}
 	}
 
@@ -135,5 +156,5 @@ func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
 		}, nil
 	}
 
-	return nil, errors.New("no kustomization file found in " + dir)
+	return nil, ErrNoKustomization
 }

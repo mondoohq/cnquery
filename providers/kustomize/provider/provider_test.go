@@ -373,3 +373,48 @@ func TestStagingOverlay(t *testing.T) {
 	resNsResp := getData(t, srv, resp.Id, "kustomize.resource", resID, "namespace")
 	assert.Equal(t, "staging", string(resNsResp.Data.Value))
 }
+
+// A kustomization that references a non-existent file used to silently
+// produce zero resources (rendering error swallowed, []any{} returned).
+// That made audits like `.resources.length > 0` pass on broken
+// overlays. The accessor now surfaces the krusty error.
+func TestKustomizeResourcesPropagatesRenderError(t *testing.T) {
+	srv, resp := newTestService("../testdata/broken-render")
+
+	kustResp := getData(t, srv, resp.Id, "kustomize", "", "")
+	kustID := string(kustResp.Data.Value)
+	kustsResp := getData(t, srv, resp.Id, "kustomize", kustID, "kustomizations")
+	require.NotEmpty(t, kustsResp.Data.Array)
+	kID := string(kustsResp.Data.Array[0].Value)
+
+	// Use the lower-level call instead of getData so we can inspect Error.
+	resp2, err := srv.GetData(&plugin.DataReq{
+		Connection: resp.Id,
+		Resource:   "kustomize.kustomization",
+		ResourceId: kID,
+		Field:      "resources",
+	})
+	require.NoError(t, err, "transport-level call should not fail")
+	assert.NotEmpty(t, resp2.Error, "expected render failure to surface as a field error")
+}
+
+// A directory containing a kustomization.yaml that doesn't parse used
+// to fall through to a subdir scan and return "no kustomization found"
+// — masking the real problem. Now the connection refuses with the
+// parse error.
+func TestConnect_MalformedKustomizationSurfaces(t *testing.T) {
+	srv := Init()
+	_, err := srv.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type:    DefaultConnectionType,
+					Options: map[string]string{"path": "../testdata/malformed"},
+				},
+			},
+		},
+	}, nil)
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "no kustomization.yaml found",
+		"a parse error must not be reported as 'no kustomization found'")
+}
