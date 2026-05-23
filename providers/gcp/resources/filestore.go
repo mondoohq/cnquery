@@ -71,9 +71,9 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 		}
 
 		fileShares := make([]any, 0, len(instance.FileShares))
-		for i, fs := range instance.FileShares {
+		for _, fs := range instance.FileShares {
 			mqlFs, err := CreateResource(g.MqlRuntime, "gcp.project.filestoreService.instance.fileShare", map[string]*llx.RawData{
-				"id":         llx.StringData(fmt.Sprintf("%s/fileShares/%d", instance.Name, i)),
+				"id":         llx.StringData(fmt.Sprintf("%s/fileShares/%s", instance.Name, fs.Name)),
 				"name":       llx.StringData(fs.Name),
 				"capacityGb": llx.IntData(fs.CapacityGb),
 			})
@@ -84,13 +84,13 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 		}
 
 		networks := make([]any, 0, len(instance.Networks))
-		for i, net := range instance.Networks {
+		for _, net := range instance.Networks {
 			modes := make([]any, 0, len(net.Modes))
 			for _, m := range net.Modes {
 				modes = append(modes, m.String())
 			}
 			mqlNet, err := CreateResource(g.MqlRuntime, "gcp.project.filestoreService.instance.network", map[string]*llx.RawData{
-				"id":              llx.StringData(fmt.Sprintf("%s/networks/%d", instance.Name, i)),
+				"id":              llx.StringData(fmt.Sprintf("%s/networks/%s", instance.Name, net.Network)),
 				"network":         llx.StringData(net.Network),
 				"modes":           llx.ArrayData(modes, types.String),
 				"ipAddresses":     llx.ArrayData(convert.SliceAnyToInterface(net.IpAddresses), types.String),

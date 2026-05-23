@@ -1562,9 +1562,9 @@ func (g *mqlGcpProjectComputeServiceNetwork) networkPeerings() ([]any, error) {
 	}
 	networkId := g.Id.Data
 	res := make([]any, 0, len(g.cachePeerings))
-	for i, p := range g.cachePeerings {
+	for _, p := range g.cachePeerings {
 		mqlPeering, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network.peering", map[string]*llx.RawData{
-			"id":                             llx.StringData(fmt.Sprintf("gcloud.compute.network/%s/peering/%d", networkId, i)),
+			"id":                             llx.StringData(fmt.Sprintf("gcloud.compute.network/%s/peering/%s", networkId, p.Name)),
 			"name":                           llx.StringData(p.Name),
 			"networkUrl":                     llx.StringData(p.Network),
 			"state":                          llx.StringData(p.State),
@@ -2295,9 +2295,9 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 		for _, b := range sb.BackendServices {
 			backendServiceId := strconv.FormatUint(b.Id, 10)
 			mqlBackends := make([]any, 0, len(b.Backends))
-			for i, backend := range b.Backends {
+			for _, backend := range b.Backends {
 				mqlBackend, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.backend", map[string]*llx.RawData{
-					"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i)),
+					"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%s", backendServiceId, backend.Group)),
 					"balancingMode":             llx.StringData(backend.BalancingMode),
 					"capacityScaler":            llx.FloatData(backend.CapacityScaler),
 					"description":               llx.StringData(backend.Description),

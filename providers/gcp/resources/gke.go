@@ -917,9 +917,9 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	}
 
 	nodeTaints := make([]any, 0, len(cfg.Taints))
-	for i, taint := range cfg.Taints {
+	for _, taint := range cfg.Taints {
 		mqlNodeTaint, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.nodeTaint", map[string]*llx.RawData{
-			"id":     llx.StringData(fmt.Sprintf("%s/taints/%d", nodePoolId, i)),
+			"id":     llx.StringData(fmt.Sprintf("%s/taints/%s", nodePoolId, taint.Key)),
 			"key":    llx.StringData(taint.Key),
 			"value":  llx.StringData(taint.Value),
 			"effect": llx.StringData(taint.Effect.String()),

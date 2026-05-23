@@ -128,9 +128,9 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 		}
 
 		eventFilters := make([]any, 0, len(trigger.EventFilters))
-		for i, ef := range trigger.EventFilters {
+		for _, ef := range trigger.EventFilters {
 			mqlEF, err := CreateResource(g.MqlRuntime, "gcp.project.eventarcService.trigger.eventFilter", map[string]*llx.RawData{
-				"id":        llx.StringData(fmt.Sprintf("%s/eventFilters/%d", trigger.Name, i)),
+				"id":        llx.StringData(fmt.Sprintf("%s/eventFilters/%s", trigger.Name, ef.Attribute)),
 				"attribute": llx.StringData(ef.Attribute),
 				"value":     llx.StringData(ef.Value),
 				"operator":  llx.StringData(ef.Operator),

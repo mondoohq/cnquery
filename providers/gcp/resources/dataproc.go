@@ -495,9 +495,9 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 					}
 
 					mqlStatusHistory := make([]any, 0, len(c.StatusHistory))
-					for i, s := range c.StatusHistory {
+					for _, s := range c.StatusHistory {
 						mqlHistoryEntry, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.status", map[string]*llx.RawData{
-							"id":       llx.StringData(fmt.Sprintf("%s/dataproc/%s/status/%d", projectId, c.ClusterName, i)),
+							"id":       llx.StringData(fmt.Sprintf("%s/dataproc/%s/status/%s", projectId, c.ClusterName, s.StateStartTime)),
 							"detail":   llx.StringData(s.Detail),
 							"state":    llx.StringData(s.State),
 							"started":  llx.TimeDataPtr(parseTime(s.StateStartTime)),

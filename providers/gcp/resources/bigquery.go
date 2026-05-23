@@ -124,7 +124,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 		}
 
 		access := make([]any, 0, len(metadata.Access))
-		for i, a := range metadata.Access {
+		for _, a := range metadata.Access {
 			var viewRef any
 			if a.View != nil {
 				viewRef = map[string]any{
@@ -150,7 +150,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 				}
 			}
 			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset.accessEntry", map[string]*llx.RawData{
-				"id":         llx.StringData(fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%d", projectId, dataset.DatasetID, i)),
+				"id":         llx.StringData(fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%s/%s/%s", projectId, dataset.DatasetID, a.Role, entityTypeToString(a.EntityType), a.Entity)),
 				"datasetId":  llx.StringData(dataset.DatasetID),
 				"role":       llx.StringData(string(a.Role)),
 				"entityType": llx.StringData(entityTypeToString(a.EntityType)),
