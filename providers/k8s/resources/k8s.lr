@@ -90,6 +90,16 @@ k8s {
   persistentVolumeClaims() []k8s.persistentvolumeclaim
   // Kubernetes EndpointSlices
   endpointSlices() []k8s.endpointslice
+  // Kubernetes Gateway API GatewayClasses
+  gatewayClasses() []k8s.gatewayclass
+  // Kubernetes Gateway API Gateways
+  gateways() []k8s.gateway
+  // Kubernetes Gateway API HTTPRoutes
+  httpRoutes() []k8s.httproute
+  // Kubernetes Gateway API GRPCRoutes
+  grpcRoutes() []k8s.grpcroute
+  // Kubernetes Gateway API ReferenceGrants
+  referenceGrants() []k8s.referencegrant
 }
 
 // Kubernetes API resources
@@ -1206,4 +1216,166 @@ private k8s.app {
   partOf string
   // Component names within the architecture (e.g., database, cache, frontend)
   components []string
+}
+
+// Kubernetes Gateway API GatewayClass
+private k8s.gatewayclass @defaults("name controllerName created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the controller that manages Gateways of this class
+  controllerName string
+  // Human-readable description of the GatewayClass
+  description string
+  // Reference to a controller-specific configuration resource
+  parametersRef dict
+  // Status conditions
+  conditions []dict
+}
+
+// Kubernetes Gateway API Gateway
+private k8s.gateway @defaults("namespace name gatewayClassName created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the GatewayClass that backs this Gateway
+  gatewayClassName string
+  // The GatewayClass that backs this Gateway
+  gatewayClass() k8s.gatewayclass
+  // Listeners associated with the Gateway
+  listeners []dict
+  // Addresses requested for the Gateway
+  addresses []dict
+  // Infrastructure settings (labels, annotations, parametersRef)
+  infrastructure dict
+  // Network addresses assigned to the Gateway by the controller
+  statusAddresses []dict
+  // Per-listener status (attached route count and conditions)
+  listenerStatus []dict
+  // Status conditions
+  conditions []dict
+}
+
+// Kubernetes Gateway API HTTPRoute
+private k8s.httproute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API GRPCRoute
+private k8s.grpcroute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API ReferenceGrant
+private k8s.referencegrant @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Resources that are permitted to reference targets in this ReferenceGrant's namespace
+  from []dict
+  // Resources in this namespace that may be referenced
+  to []dict
 }

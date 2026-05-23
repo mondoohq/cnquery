@@ -64,6 +64,11 @@ const (
 	ResourceK8sUserinfo                                string = "k8s.userinfo"
 	ResourceK8sAdmissionValidatingwebhookconfiguration string = "k8s.admission.validatingwebhookconfiguration"
 	ResourceK8sApp                                     string = "k8s.app"
+	ResourceK8sGatewayclass                            string = "k8s.gatewayclass"
+	ResourceK8sGateway                                 string = "k8s.gateway"
+	ResourceK8sHttproute                               string = "k8s.httproute"
+	ResourceK8sGrpcroute                               string = "k8s.grpcroute"
+	ResourceK8sReferencegrant                          string = "k8s.referencegrant"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -262,6 +267,26 @@ func init() {
 			// to override args, implement: initK8sApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sApp,
 		},
+		"k8s.gatewayclass": {
+			Init:   initK8sGatewayclass,
+			Create: createK8sGatewayclass,
+		},
+		"k8s.gateway": {
+			Init:   initK8sGateway,
+			Create: createK8sGateway,
+		},
+		"k8s.httproute": {
+			Init:   initK8sHttproute,
+			Create: createK8sHttproute,
+		},
+		"k8s.grpcroute": {
+			Init:   initK8sGrpcroute,
+			Create: createK8sGrpcroute,
+		},
+		"k8s.referencegrant": {
+			Init:   initK8sReferencegrant,
+			Create: createK8sReferencegrant,
+		},
 	}
 }
 
@@ -428,6 +453,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.endpointSlices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetEndpointSlices()).ToDataRes(types.Array(types.Resource("k8s.endpointslice")))
+	},
+	"k8s.gatewayClasses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetGatewayClasses()).ToDataRes(types.Array(types.Resource("k8s.gatewayclass")))
+	},
+	"k8s.gateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetGateways()).ToDataRes(types.Array(types.Resource("k8s.gateway")))
+	},
+	"k8s.httpRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetHttpRoutes()).ToDataRes(types.Array(types.Resource("k8s.httproute")))
+	},
+	"k8s.grpcRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetGrpcRoutes()).ToDataRes(types.Array(types.Resource("k8s.grpcroute")))
+	},
+	"k8s.referenceGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetReferenceGrants()).ToDataRes(types.Array(types.Resource("k8s.referencegrant")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1809,6 +1849,219 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.app.components": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApp).GetComponents()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.gatewayclass.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetId()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.gatewayclass.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.gatewayclass.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetName()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.gatewayclass.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.gatewayclass.controllerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetControllerName()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetDescription()).ToDataRes(types.String)
+	},
+	"k8s.gatewayclass.parametersRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetParametersRef()).ToDataRes(types.Dict)
+	},
+	"k8s.gatewayclass.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetId()).ToDataRes(types.String)
+	},
+	"k8s.gateway.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.gateway.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.gateway.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.gateway.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.gateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetName()).ToDataRes(types.String)
+	},
+	"k8s.gateway.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.gateway.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.gateway.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.gateway.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.gateway.gatewayClassName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetGatewayClassName()).ToDataRes(types.String)
+	},
+	"k8s.gateway.gatewayClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetGatewayClass()).ToDataRes(types.Resource("k8s.gatewayclass"))
+	},
+	"k8s.gateway.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetListeners()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gateway.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gateway.infrastructure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetInfrastructure()).ToDataRes(types.Dict)
+	},
+	"k8s.gateway.statusAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetStatusAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gateway.listenerStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetListenerStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gateway.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.httproute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.httproute.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.httproute.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.httproute.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.httproute.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.httproute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetName()).ToDataRes(types.String)
+	},
+	"k8s.httproute.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.httproute.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.httproute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.httproute.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.httproute.parentRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetParentRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.httproute.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.httproute.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.httproute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.grpcroute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.grpcroute.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.grpcroute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetName()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.grpcroute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.grpcroute.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.grpcroute.parentRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetParentRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.grpcroute.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.grpcroute.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.grpcroute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.referencegrant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetId()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.referencegrant.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.referencegrant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetName()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.referencegrant.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.referencegrant.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.referencegrant.from": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetFrom()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.referencegrant.to": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetTo()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1951,6 +2204,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.endpointSlices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).EndpointSlices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayClasses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).GatewayClasses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httpRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).HttpRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).GrpcRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referenceGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ReferenceGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3981,6 +4254,310 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sApp).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.gatewayclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.gatewayclass.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.controllerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).ControllerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.parametersRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).ParametersRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.gateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.gatewayClassName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).GatewayClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.gatewayClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).GatewayClass, ok = plugin.RawToTValue[*mqlK8sGatewayclass](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.infrastructure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Infrastructure, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.statusAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).StatusAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.listenerStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).ListenerStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.httproute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.parentRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).ParentRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.grpcroute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.parentRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).ParentRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.referencegrant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).From, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.to": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).To, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4042,6 +4619,11 @@ type mqlK8s struct {
 	LimitRanges                     plugin.TValue[[]any]
 	PersistentVolumeClaims          plugin.TValue[[]any]
 	EndpointSlices                  plugin.TValue[[]any]
+	GatewayClasses                  plugin.TValue[[]any]
+	Gateways                        plugin.TValue[[]any]
+	HttpRoutes                      plugin.TValue[[]any]
+	GrpcRoutes                      plugin.TValue[[]any]
+	ReferenceGrants                 plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -4575,6 +5157,86 @@ func (c *mqlK8s) GetEndpointSlices() *plugin.TValue[[]any] {
 		}
 
 		return c.endpointSlices()
+	})
+}
+
+func (c *mqlK8s) GetGatewayClasses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GatewayClasses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "gatewayClasses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gatewayClasses()
+	})
+}
+
+func (c *mqlK8s) GetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Gateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "gateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gateways()
+	})
+}
+
+func (c *mqlK8s) GetHttpRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HttpRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "httpRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.httpRoutes()
+	})
+}
+
+func (c *mqlK8s) GetGrpcRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GrpcRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "grpcRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grpcRoutes()
+	})
+}
+
+func (c *mqlK8s) GetReferenceGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReferenceGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "referenceGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.referenceGrants()
 	})
 }
 
@@ -9451,4 +10113,621 @@ func (c *mqlK8sApp) GetPartOf() *plugin.TValue[string] {
 
 func (c *mqlK8sApp) GetComponents() *plugin.TValue[[]any] {
 	return &c.Components
+}
+
+// mqlK8sGatewayclass for the k8s.gatewayclass resource
+type mqlK8sGatewayclass struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sGatewayclassInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ControllerName  plugin.TValue[string]
+	Description     plugin.TValue[string]
+	ParametersRef   plugin.TValue[any]
+	Conditions      plugin.TValue[[]any]
+}
+
+// createK8sGatewayclass creates a new instance of this resource
+func createK8sGatewayclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sGatewayclass{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.gatewayclass", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sGatewayclass) MqlName() string {
+	return "k8s.gatewayclass"
+}
+
+func (c *mqlK8sGatewayclass) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sGatewayclass) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sGatewayclass) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sGatewayclass) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sGatewayclass) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sGatewayclass) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sGatewayclass) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sGatewayclass) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sGatewayclass) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sGatewayclass) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sGatewayclass) GetControllerName() *plugin.TValue[string] {
+	return &c.ControllerName
+}
+
+func (c *mqlK8sGatewayclass) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlK8sGatewayclass) GetParametersRef() *plugin.TValue[any] {
+	return &c.ParametersRef
+}
+
+func (c *mqlK8sGatewayclass) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+// mqlK8sGateway for the k8s.gateway resource
+type mqlK8sGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sGatewayInternal
+	Id               plugin.TValue[string]
+	Uid              plugin.TValue[string]
+	ResourceVersion  plugin.TValue[string]
+	Labels           plugin.TValue[map[string]any]
+	Annotations      plugin.TValue[map[string]any]
+	Name             plugin.TValue[string]
+	Namespace        plugin.TValue[string]
+	Kind             plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Manifest         plugin.TValue[any]
+	GatewayClassName plugin.TValue[string]
+	GatewayClass     plugin.TValue[*mqlK8sGatewayclass]
+	Listeners        plugin.TValue[[]any]
+	Addresses        plugin.TValue[[]any]
+	Infrastructure   plugin.TValue[any]
+	StatusAddresses  plugin.TValue[[]any]
+	ListenerStatus   plugin.TValue[[]any]
+	Conditions       plugin.TValue[[]any]
+}
+
+// createK8sGateway creates a new instance of this resource
+func createK8sGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.gateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sGateway) MqlName() string {
+	return "k8s.gateway"
+}
+
+func (c *mqlK8sGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sGateway) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sGateway) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sGateway) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sGateway) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sGateway) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sGateway) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sGateway) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sGateway) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sGateway) GetGatewayClassName() *plugin.TValue[string] {
+	return &c.GatewayClassName
+}
+
+func (c *mqlK8sGateway) GetGatewayClass() *plugin.TValue[*mqlK8sGatewayclass] {
+	return plugin.GetOrCompute[*mqlK8sGatewayclass](&c.GatewayClass, func() (*mqlK8sGatewayclass, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gateway", c.__id, "gatewayClass")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sGatewayclass), nil
+			}
+		}
+
+		return c.gatewayClass()
+	})
+}
+
+func (c *mqlK8sGateway) GetListeners() *plugin.TValue[[]any] {
+	return &c.Listeners
+}
+
+func (c *mqlK8sGateway) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlK8sGateway) GetInfrastructure() *plugin.TValue[any] {
+	return &c.Infrastructure
+}
+
+func (c *mqlK8sGateway) GetStatusAddresses() *plugin.TValue[[]any] {
+	return &c.StatusAddresses
+}
+
+func (c *mqlK8sGateway) GetListenerStatus() *plugin.TValue[[]any] {
+	return &c.ListenerStatus
+}
+
+func (c *mqlK8sGateway) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+// mqlK8sHttproute for the k8s.httproute resource
+type mqlK8sHttproute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sHttprouteInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ParentRefs      plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	ParentStatus    plugin.TValue[[]any]
+}
+
+// createK8sHttproute creates a new instance of this resource
+func createK8sHttproute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sHttproute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.httproute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sHttproute) MqlName() string {
+	return "k8s.httproute"
+}
+
+func (c *mqlK8sHttproute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sHttproute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sHttproute) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sHttproute) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sHttproute) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sHttproute) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sHttproute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sHttproute) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sHttproute) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sHttproute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sHttproute) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sHttproute) GetParentRefs() *plugin.TValue[[]any] {
+	return &c.ParentRefs
+}
+
+func (c *mqlK8sHttproute) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlK8sHttproute) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlK8sHttproute) GetParentStatus() *plugin.TValue[[]any] {
+	return &c.ParentStatus
+}
+
+// mqlK8sGrpcroute for the k8s.grpcroute resource
+type mqlK8sGrpcroute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sGrpcrouteInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ParentRefs      plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	ParentStatus    plugin.TValue[[]any]
+}
+
+// createK8sGrpcroute creates a new instance of this resource
+func createK8sGrpcroute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sGrpcroute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.grpcroute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sGrpcroute) MqlName() string {
+	return "k8s.grpcroute"
+}
+
+func (c *mqlK8sGrpcroute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sGrpcroute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sGrpcroute) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sGrpcroute) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sGrpcroute) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sGrpcroute) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sGrpcroute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sGrpcroute) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sGrpcroute) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sGrpcroute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sGrpcroute) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sGrpcroute) GetParentRefs() *plugin.TValue[[]any] {
+	return &c.ParentRefs
+}
+
+func (c *mqlK8sGrpcroute) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlK8sGrpcroute) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlK8sGrpcroute) GetParentStatus() *plugin.TValue[[]any] {
+	return &c.ParentStatus
+}
+
+// mqlK8sReferencegrant for the k8s.referencegrant resource
+type mqlK8sReferencegrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sReferencegrantInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	From            plugin.TValue[[]any]
+	To              plugin.TValue[[]any]
+}
+
+// createK8sReferencegrant creates a new instance of this resource
+func createK8sReferencegrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sReferencegrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.referencegrant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sReferencegrant) MqlName() string {
+	return "k8s.referencegrant"
+}
+
+func (c *mqlK8sReferencegrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sReferencegrant) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sReferencegrant) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sReferencegrant) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sReferencegrant) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sReferencegrant) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sReferencegrant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sReferencegrant) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sReferencegrant) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sReferencegrant) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sReferencegrant) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sReferencegrant) GetFrom() *plugin.TValue[[]any] {
+	return &c.From
+}
+
+func (c *mqlK8sReferencegrant) GetTo() *plugin.TValue[[]any] {
+	return &c.To
 }

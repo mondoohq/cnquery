@@ -32,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
+	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gatewayv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 var (
@@ -70,6 +72,8 @@ func ClientSchema() *runtime.Scheme {
 	rbacv1.AddToScheme(scheme)
 	schedulingv1.AddToScheme(scheme)
 	storagev1.AddToScheme(scheme)
+	gatewayv1.Install(scheme)
+	gatewayv1beta1.Install(scheme)
 
 	return scheme
 }
