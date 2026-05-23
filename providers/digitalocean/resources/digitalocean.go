@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -16,6 +18,18 @@ import (
 
 func (r *mqlDigitalocean) id() (string, error) {
 	return "digitalocean", nil
+}
+
+// isDoNotFound reports whether err is a 404 from the DigitalOcean API.
+// Use it to distinguish "this resource is not configured / does not
+// exist on this account" (a soft absence) from transient or
+// authorization failures (which should propagate).
+func isDoNotFound(err error) bool {
+	var er *godo.ErrorResponse
+	if errors.As(err, &er) {
+		return er.Response != nil && er.Response.StatusCode == http.StatusNotFound
+	}
+	return false
 }
 
 func (r *mqlDigitaloceanAccount) id() (string, error) {

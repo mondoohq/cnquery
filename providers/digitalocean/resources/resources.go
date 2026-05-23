@@ -40,7 +40,10 @@ func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -83,7 +86,10 @@ func (r *mqlDigitaloceanDatabase) replicas() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -121,7 +127,10 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -164,7 +173,10 @@ func (r *mqlDigitalocean) vpcPeerings() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -228,7 +240,10 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -244,12 +259,20 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 	conn := runtime.Connection.(*connection.DigitaloceanConnection)
 	reg, _, err := conn.Client().Registry.Get(context.Background())
 	if err != nil {
-		// No registry configured -- return empty sentinel
+		// 404 means the account simply has no container registry —
+		// return an empty sentinel so the resource remains usable for
+		// audits that branch on `registry.name == ""`. Other errors
+		// (5xx, auth) propagate so the user sees the failure instead
+		// of a silently empty registry.
+		if !isDoNotFound(err) {
+			return nil, nil, err
+		}
 		args["name"] = llx.StringData("")
 		args["storageUsageBytes"] = llx.IntData(0)
 		args["region"] = llx.StringData("")
 		args["createdAt"] = llx.TimeData(time.Time{})
 		args["subscriptionTier"] = llx.StringData("")
+		args["subscription"] = llx.DictData(map[string]interface{}{})
 		return args, nil, nil
 	}
 	args["name"] = llx.StringData(reg.Name)
@@ -325,7 +348,10 @@ func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -376,7 +402,13 @@ func (r *mqlDigitalocean) registryRepositories() ([]interface{}, error) {
 
 	reg, _, err := client.Registry.Get(context.Background())
 	if err != nil {
-		return []interface{}{}, nil
+		// Same shape as initDigitaloceanRegistry: empty list for the
+		// "no registry configured" case (404), propagate everything
+		// else so transient failures aren't silently masked.
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
+		}
+		return nil, err
 	}
 	return listRegistryRepositories(r.MqlRuntime, client, reg.Name)
 }
@@ -418,7 +450,10 @@ func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -445,7 +480,10 @@ func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -535,7 +573,10 @@ func (r *mqlDigitalocean) reservedIPs() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -619,7 +660,10 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -689,7 +733,10 @@ func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -733,7 +780,10 @@ func (r *mqlDigitalocean) uptimeChecks() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -774,7 +824,10 @@ func (r *mqlDigitalocean) cdnEndpoints() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -814,7 +867,10 @@ func (r *mqlDigitalocean) tags() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil
@@ -860,7 +916,10 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 		if resp.Links == nil || resp.Links.IsLastPage() {
 			break
 		}
-		page, _ := resp.Links.CurrentPage()
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			break
+		}
 		opt.Page = page + 1
 	}
 	return all, nil

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +17,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -28,8 +29,28 @@ var knownSpacesRegions = []string{
 	"nyc3", "sfo2", "sfo3", "ams3", "sgp1", "fra1", "syd1", "tor1", "blr1",
 }
 
+// regionConcurrency caps the parallel ListBuckets sweep across Spaces
+// regions. Most accounts use a handful of regions, so a small number
+// is fine.
+const regionConcurrency = 5
+
+// bucketConcurrency caps the parallel per-bucket detail fan-out.
+// Each bucket triggers up to 7 sequential S3-compatible API calls
+// (access block, ACL, encryption, versioning, policy, CORS,
+// lifecycle); running them across multiple buckets in parallel is
+// the main win.
+const bucketConcurrency = 8
+
 func (r *mqlDigitaloceanSpacesBucket) id() (string, error) {
 	return "digitalocean.spacesBucket/" + r.Region.Data + "/" + r.Name.Data, nil
+}
+
+// bucketRef carries the (region, client, summary) tuple from the
+// per-region ListBuckets pass into the per-bucket detail-fetch pass.
+type bucketRef struct {
+	region string
+	client *s3.Client
+	b      s3types.Bucket
 }
 
 func (r *mqlDigitalocean) spacesBuckets() ([]interface{}, error) {
@@ -45,28 +66,75 @@ func (r *mqlDigitalocean) spacesBuckets() ([]interface{}, error) {
 		regions = knownSpacesRegions
 	}
 
+	refs, err := listSpacesBucketRefs(conn, regions)
+	if err != nil {
+		return nil, err
+	}
+	return fetchSpacesBucketDetails(r, refs)
+}
+
+// listSpacesBucketRefs lists buckets across the requested regions in
+// parallel and returns the merged refs slice. ListBuckets is
+// region-scoped on DigitalOcean Spaces (each region's endpoint
+// returns only that region's buckets), so the refs are disjoint.
+func listSpacesBucketRefs(conn *connection.DigitaloceanConnection, regions []string) ([]bucketRef, error) {
 	ctx := context.Background()
-	all := []interface{}{}
+	var (
+		mu   sync.Mutex
+		refs []bucketRef
+	)
+	jobs := make([]*jobpool.Job, 0, len(regions))
 	for _, region := range regions {
-		client, err := conn.SpacesClient(region)
-		if err != nil {
-			return nil, err
-		}
-		out, err := client.ListBuckets(ctx, &s3.ListBucketsInput{})
-		if err != nil {
-			return nil, err
-		}
-		for _, b := range out.Buckets {
-			res, err := newSpacesBucket(r, client, region, b)
+		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
+			client, err := conn.SpacesClient(region)
 			if err != nil {
 				return nil, err
 			}
-			if res != nil {
-				all = append(all, res)
+			out, err := client.ListBuckets(ctx, &s3.ListBucketsInput{})
+			if err != nil {
+				return nil, err
 			}
-		}
+			local := make([]bucketRef, 0, len(out.Buckets))
+			for _, b := range out.Buckets {
+				local = append(local, bucketRef{region: region, client: client, b: b})
+			}
+			mu.Lock()
+			refs = append(refs, local...)
+			mu.Unlock()
+			return nil, nil
+		}))
 	}
-	return all, nil
+	pool := jobpool.CreatePool(jobs, regionConcurrency)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
+	}
+	return refs, nil
+}
+
+// fetchSpacesBucketDetails runs newSpacesBucket per ref in parallel.
+// Results are written into an index-aligned slice so the final order
+// is stable.
+func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface{}, error) {
+	results := make([]interface{}, len(refs))
+	jobs := make([]*jobpool.Job, 0, len(refs))
+	for i, ref := range refs {
+		idx, ref := i, ref
+		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
+			res, err := newSpacesBucket(r, ref.client, ref.region, ref.b)
+			if err != nil {
+				return nil, err
+			}
+			results[idx] = res
+			return nil, nil
+		}))
+	}
+	pool := jobpool.CreatePool(jobs, bucketConcurrency)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
+	}
+	return results, nil
 }
 
 // newSpacesBucket builds a single bucket resource by fanning out
@@ -231,40 +299,40 @@ func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3t
 		"mfaDeleteEnabled":     llx.BoolData(mfaDeleteEnabled),
 		"policy":               llx.DictData(policyDict),
 		"corsRules":            llx.ArrayData(corsRules, types.Dict),
-		"lifecycleRules":       llx.ArrayData(convert.SliceAnyToInterface(lifecycleRules), types.Dict),
+		"lifecycleRules":       llx.ArrayData(lifecycleRules, types.Dict),
 	})
 }
 
+// noSuchConfigurationCodes are the S3 error codes returned for
+// well-formed buckets that have never been configured for a given
+// property (no policy, no encryption, no CORS, etc.). Treat as
+// soft-absent.
+var noSuchConfigurationCodes = []string{
+	"NoSuchBucketPolicy",
+	"NoSuchPublicAccessBlockConfiguration",
+	"ServerSideEncryptionConfigurationNotFoundError",
+	"NoSuchCORSConfiguration",
+	"NoSuchLifecycleConfiguration",
+}
+
 // isNoSuchConfiguration returns true when the S3 error code indicates
-// the bucket has never been configured for that property (e.g.,
-// no policy set, no encryption set, no CORS set). In that case we
-// want to surface the "absence" cleanly rather than aborting the
-// whole bucket fetch.
+// the bucket has never been configured for that property. Both the
+// typed APIError code and the raw error string are checked because
+// Spaces sometimes surfaces the code only in the body text.
 func isNoSuchConfiguration(err error) bool {
 	if err == nil {
 		return false
 	}
 	var ae smithy.APIError
 	if errors.As(err, &ae) {
-		switch ae.ErrorCode() {
-		case "NoSuchBucketPolicy",
-			"NoSuchPublicAccessBlockConfiguration",
-			"ServerSideEncryptionConfigurationNotFoundError",
-			"NoSuchCORSConfiguration",
-			"NoSuchLifecycleConfiguration":
-			return true
+		for _, code := range noSuchConfigurationCodes {
+			if ae.ErrorCode() == code {
+				return true
+			}
 		}
 	}
-	// Spaces sometimes returns the code in the body text rather than
-	// as a typed APIError code.
 	msg := err.Error()
-	for _, code := range []string{
-		"NoSuchBucketPolicy",
-		"NoSuchPublicAccessBlockConfiguration",
-		"ServerSideEncryptionConfigurationNotFoundError",
-		"NoSuchCORSConfiguration",
-		"NoSuchLifecycleConfiguration",
-	} {
+	for _, code := range noSuchConfigurationCodes {
 		if strings.Contains(msg, code) {
 			return true
 		}

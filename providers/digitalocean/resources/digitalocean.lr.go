@@ -2972,7 +2972,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlDigitalocean struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDigitaloceanInternal it will be used here
+	mqlDigitaloceanInternal
 	Droplets             plugin.TValue[[]any]
 	Firewalls            plugin.TValue[[]any]
 	Databases            plugin.TValue[[]any]

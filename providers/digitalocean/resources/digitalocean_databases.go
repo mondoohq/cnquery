@@ -117,6 +117,12 @@ func (r *mqlDigitaloceanDatabase) caCertificate() (string, error) {
 	client := conn.Client()
 	ca, _, err := client.Databases.GetCA(context.Background(), r.Id.Data)
 	if err != nil {
+		// 404 indicates the cluster has no client CA (e.g., engines that
+		// don't terminate TLS at the cluster). Treat as absent rather
+		// than failing the whole query for this database.
+		if isDoNotFound(err) {
+			return "", nil
+		}
 		return "", err
 	}
 	if ca == nil {
