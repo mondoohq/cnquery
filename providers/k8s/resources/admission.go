@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -158,4 +159,14 @@ func (k *mqlK8sAdmissionValidatingwebhookconfiguration) webhooks() ([]any, error
 		return nil, err
 	}
 	return dict, nil
+}
+
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) id() (string, error) {
+	return k.Id.Data, nil
+}
+
+func initK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initResource[*mqlK8sAdmissionValidatingwebhookconfiguration](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] {
+		return k.GetValidatingWebhookConfigurations()
+	})
 }

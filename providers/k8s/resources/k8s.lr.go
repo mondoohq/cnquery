@@ -266,7 +266,7 @@ func init() {
 			Create: createK8sUserinfo,
 		},
 		"k8s.admission.validatingwebhookconfiguration": {
-			// to override args, implement: initK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initK8sAdmissionValidatingwebhookconfiguration,
 			Create: createK8sAdmissionValidatingwebhookconfiguration,
 		},
 		"k8s.app": {
@@ -294,7 +294,7 @@ func init() {
 			Create: createK8sReferencegrant,
 		},
 		"k8s.admission.mutatingwebhookconfiguration": {
-			// to override args, implement: initK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initK8sAdmissionMutatingwebhookconfiguration,
 			Create: createK8sAdmissionMutatingwebhookconfiguration,
 		},
 		"k8s.poddisruptionbudget": {
@@ -15417,7 +15417,12 @@ func createK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, a
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("k8s.admission.validatingwebhookconfiguration", res.__id)

@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,4 +63,10 @@ func (k *mqlK8sAdmissionMutatingwebhookconfiguration) labels() (map[string]any, 
 
 func (k *mqlK8sAdmissionMutatingwebhookconfiguration) webhooks() ([]any, error) {
 	return convert.JsonToDictSlice(k.obj.Webhooks)
+}
+
+func initK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initResource[*mqlK8sAdmissionMutatingwebhookconfiguration](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] {
+		return k.GetMutatingWebhookConfigurations()
+	})
 }
