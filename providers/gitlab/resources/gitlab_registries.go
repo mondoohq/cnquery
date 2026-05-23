@@ -469,10 +469,10 @@ func (p *mqlGitlabProject) packageProtectionRules() ([]any, error) {
 	projectID := int(p.Id.Data)
 
 	var all []*gitlab.PackageProtectionRule
-	page := int64(1)
+	opts := &gitlab.ListPackageProtectionRulesOptions{ListOptions: gitlab.ListOptions{PerPage: 100}}
+	var nextOpts []gitlab.RequestOptionFunc
 	for {
-		rules, resp, err := conn.Client().ProtectedPackages.ListPackageProtectionRules(projectID,
-			&gitlab.ListPackageProtectionRulesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+		rules, resp, err := conn.Client().ProtectedPackages.ListPackageProtectionRules(projectID, opts, nextOpts...)
 		if err != nil {
 			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 				return []any{}, nil
@@ -480,10 +480,11 @@ func (p *mqlGitlabProject) packageProtectionRules() ([]any, error) {
 			return nil, err
 		}
 		all = append(all, rules...)
-		if resp.NextPage == 0 {
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
 			break
 		}
-		page = resp.NextPage
+		nextOpts = []gitlab.RequestOptionFunc{next}
 	}
 
 	out := make([]any, 0, len(all))
