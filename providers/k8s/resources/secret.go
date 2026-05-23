@@ -98,3 +98,86 @@ func (k *mqlK8sSecret) certificates() ([]any, error) {
 
 	return list.Value.([]any), nil
 }
+
+func (k *mqlK8sSecret) usedBy() ([]any, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	pods := o.(*mqlK8s).GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+
+	secretName := k.Name.Data
+	namespace := k.Namespace.Data
+
+	out := []any{}
+	for i := range pods.Data {
+		p, ok := pods.Data[i].(*mqlK8sPod)
+		if !ok {
+			continue
+		}
+		if p.Namespace.Data != namespace {
+			continue
+		}
+		pod, err := p.getPod()
+		if err != nil {
+			continue
+		}
+		if podReferencesSecret(pod, secretName) {
+			out = append(out, p)
+		}
+	}
+	return out, nil
+}
+
+func podReferencesSecret(pod *corev1.Pod, secretName string) bool {
+	for _, v := range pod.Spec.Volumes {
+		if v.Secret != nil && v.Secret.SecretName == secretName {
+			return true
+		}
+		if v.Projected != nil {
+			for _, src := range v.Projected.Sources {
+				if src.Secret != nil && src.Secret.Name == secretName {
+					return true
+				}
+			}
+		}
+	}
+	for _, ips := range pod.Spec.ImagePullSecrets {
+		if ips.Name == secretName {
+			return true
+		}
+	}
+	for _, c := range pod.Spec.Containers {
+		if containerReferencesSecret(c, secretName) {
+			return true
+		}
+	}
+	for _, c := range pod.Spec.InitContainers {
+		if containerReferencesSecret(c, secretName) {
+			return true
+		}
+	}
+	for _, c := range pod.Spec.EphemeralContainers {
+		if containerReferencesSecret(corev1.Container(c.EphemeralContainerCommon), secretName) {
+			return true
+		}
+	}
+	return false
+}
+
+func containerReferencesSecret(c corev1.Container, secretName string) bool {
+	for _, e := range c.Env {
+		if e.ValueFrom != nil && e.ValueFrom.SecretKeyRef != nil && e.ValueFrom.SecretKeyRef.Name == secretName {
+			return true
+		}
+	}
+	for _, ef := range c.EnvFrom {
+		if ef.SecretRef != nil && ef.SecretRef.Name == secretName {
+			return true
+		}
+	}
+	return false
+}

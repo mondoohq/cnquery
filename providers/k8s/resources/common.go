@@ -248,6 +248,32 @@ func initResource[T K8sObject](
 	return nil, nil, errors.New("not found")
 }
 
+// filterByNamespace returns the items from the k8s root accessor `all` whose
+// Namespace matches `namespace`. Powers the typed `k8s.namespace.<kind>s()`
+// accessors so users can write `k8s.namespace("prod").pods` instead of
+// `k8s.pods.where(namespace == "prod")`.
+func filterByNamespace[T K8sNamespacedObject](runtime *plugin.Runtime, namespace string, all func(k *mqlK8s) *plugin.TValue[[]any]) ([]any, error) {
+	o, err := CreateResource(runtime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	items := all(o.(*mqlK8s))
+	if items.Error != nil {
+		return nil, items.Error
+	}
+	out := []any{}
+	for i := range items.Data {
+		nsR, ok := items.Data[i].(T)
+		if !ok {
+			continue
+		}
+		if nsR.GetNamespace().Data == namespace {
+			out = append(out, nsR)
+		}
+	}
+	return out, nil
+}
+
 // podsMatchingSelector returns the modeled k8s.pod resources in the given
 // namespace whose labels match the supplied LabelSelector. Workloads use this
 // to expose a typed `pods()` accessor.

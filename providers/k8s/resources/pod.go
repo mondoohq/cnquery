@@ -587,3 +587,118 @@ func (k *mqlK8sPod) message() (string, error) {
 	}
 	return pod.Status.Message, nil
 }
+
+func (k *mqlK8sPod) ownerReferences() ([]any, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(pod.OwnerReferences)
+}
+
+// ownerOfKind looks up the first owner reference matching kind and returns the
+// (namespace, name) pair, or empty strings if not found.
+func (k *mqlK8sPod) ownerOfKind(kind string) (string, string, bool) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", "", false
+	}
+	for _, o := range pod.OwnerReferences {
+		if o.Kind == kind {
+			return pod.Namespace, o.Name, true
+		}
+	}
+	return "", "", false
+}
+
+func (k *mqlK8sPod) replicaSet() (*mqlK8sReplicaset, error) {
+	ns, name, ok := k.ownerOfKind("ReplicaSet")
+	if !ok {
+		k.ReplicaSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.replicaset", map[string]*llx.RawData{
+		"name":      llx.StringData(name),
+		"namespace": llx.StringData(ns),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sReplicaset), nil
+}
+
+func (k *mqlK8sPod) statefulSet() (*mqlK8sStatefulset, error) {
+	ns, name, ok := k.ownerOfKind("StatefulSet")
+	if !ok {
+		k.StatefulSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.statefulset", map[string]*llx.RawData{
+		"name":      llx.StringData(name),
+		"namespace": llx.StringData(ns),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sStatefulset), nil
+}
+
+func (k *mqlK8sPod) daemonSet() (*mqlK8sDaemonset, error) {
+	ns, name, ok := k.ownerOfKind("DaemonSet")
+	if !ok {
+		k.DaemonSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.daemonset", map[string]*llx.RawData{
+		"name":      llx.StringData(name),
+		"namespace": llx.StringData(ns),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sDaemonset), nil
+}
+
+func (k *mqlK8sPod) job() (*mqlK8sJob, error) {
+	ns, name, ok := k.ownerOfKind("Job")
+	if !ok {
+		k.Job.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.job", map[string]*llx.RawData{
+		"name":      llx.StringData(name),
+		"namespace": llx.StringData(ns),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sJob), nil
+}
+
+func (k *mqlK8sPod) deployment() (*mqlK8sDeployment, error) {
+	// Pods are owned by a ReplicaSet, which is owned by a Deployment.
+	rs, err := k.replicaSet()
+	if err != nil || rs == nil {
+		k.Deployment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, err
+	}
+	rsTyped, err := rs.getReplicaSet()
+	if err != nil {
+		k.Deployment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	for _, o := range rsTyped.OwnerReferences {
+		if o.Kind == "Deployment" {
+			r, err := NewResource(k.MqlRuntime, "k8s.deployment", map[string]*llx.RawData{
+				"name":      llx.StringData(o.Name),
+				"namespace": llx.StringData(rsTyped.Namespace),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return r.(*mqlK8sDeployment), nil
+		}
+	}
+	k.Deployment.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}

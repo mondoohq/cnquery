@@ -152,6 +152,48 @@ private k8s.namespace @defaults("name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Pods in this namespace
+  pods() []k8s.pod
+  // Deployments in this namespace
+  deployments() []k8s.deployment
+  // StatefulSets in this namespace
+  statefulsets() []k8s.statefulset
+  // DaemonSets in this namespace
+  daemonsets() []k8s.daemonset
+  // ReplicaSets in this namespace
+  replicasets() []k8s.replicaset
+  // Jobs in this namespace
+  jobs() []k8s.job
+  // CronJobs in this namespace
+  cronjobs() []k8s.cronjob
+  // Services in this namespace
+  services() []k8s.service
+  // Ingresses in this namespace
+  ingresses() []k8s.ingress
+  // EndpointSlices in this namespace
+  endpointSlices() []k8s.endpointslice
+  // NetworkPolicies in this namespace
+  networkPolicies() []k8s.networkpolicy
+  // Secrets in this namespace
+  secrets() []k8s.secret
+  // ConfigMaps in this namespace
+  configmaps() []k8s.configmap
+  // ServiceAccounts in this namespace
+  serviceaccounts() []k8s.serviceaccount
+  // PersistentVolumeClaims in this namespace
+  persistentVolumeClaims() []k8s.persistentvolumeclaim
+  // HorizontalPodAutoscalers in this namespace
+  horizontalPodAutoscalers() []k8s.horizontalpodautoscaler
+  // ResourceQuotas in this namespace
+  resourceQuotas() []k8s.resourcequota
+  // LimitRanges in this namespace
+  limitRanges() []k8s.limitrange
+  // PodDisruptionBudgets in this namespace
+  podDisruptionBudgets() []k8s.poddisruptionbudget
+  // RBAC Roles in this namespace
+  roles() []k8s.rbac.role
+  // RBAC RoleBindings in this namespace
+  rolebindings() []k8s.rbac.rolebinding
 }
 
 // Kubernetes node
@@ -342,6 +384,18 @@ private k8s.pod @defaults("namespace name created"){
   reason() string
   // Human-readable message about the pod's current phase
   message() string
+  // Raw owner references (kind, name, uid, controller, blockOwnerDeletion, apiVersion)
+  ownerReferences() []dict
+  // ReplicaSet that owns this pod (null if not owned by one)
+  replicaSet() k8s.replicaset
+  // StatefulSet that owns this pod (null if not owned by one)
+  statefulSet() k8s.statefulset
+  // DaemonSet that owns this pod (null if not owned by one)
+  daemonSet() k8s.daemonset
+  // Job that owns this pod (null if not owned by one)
+  job() k8s.job
+  // Deployment that owns this pod via its ReplicaSet (null if not part of a deployment-managed rollout)
+  deployment() k8s.deployment
 }
 
 // Kubernetes Deployment
@@ -918,6 +972,8 @@ private k8s.secret @defaults("namespace name created") {
   type string
   // Secret certificates
   certificates() []network.certificate
+  // Pods that reference this Secret through volumes, env, envFrom, or imagePullSecrets
+  usedBy() []k8s.pod
 }
 
 // Kubernetes ConfigMap
@@ -944,6 +1000,8 @@ private k8s.configmap @defaults("namespace name created") {
   manifest() dict
   // Key-value pairs containing the configuration data
   data map[string]string
+  // Pods that reference this ConfigMap through volumes, env, or envFrom
+  usedBy() []k8s.pod
 }
 
 // Kubernetes Service

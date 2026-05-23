@@ -80,3 +80,87 @@ func (k *mqlK8sNamespace) annotations() (map[string]any, error) {
 func (k *mqlK8sNamespace) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sNamespace) pods() ([]any, error) {
+	return filterByNamespace[*mqlK8sPod](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetPods() })
+}
+
+func (k *mqlK8sNamespace) deployments() ([]any, error) {
+	return filterByNamespace[*mqlK8sDeployment](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetDeployments() })
+}
+
+func (k *mqlK8sNamespace) statefulsets() ([]any, error) {
+	return filterByNamespace[*mqlK8sStatefulset](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetStatefulsets() })
+}
+
+func (k *mqlK8sNamespace) daemonsets() ([]any, error) {
+	return filterByNamespace[*mqlK8sDaemonset](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetDaemonsets() })
+}
+
+func (k *mqlK8sNamespace) replicasets() ([]any, error) {
+	return filterByNamespace[*mqlK8sReplicaset](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetReplicasets() })
+}
+
+func (k *mqlK8sNamespace) jobs() ([]any, error) {
+	return filterByNamespace[*mqlK8sJob](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetJobs() })
+}
+
+func (k *mqlK8sNamespace) cronjobs() ([]any, error) {
+	return filterByNamespace[*mqlK8sCronjob](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetCronjobs() })
+}
+
+func (k *mqlK8sNamespace) services() ([]any, error) {
+	return filterByNamespace[*mqlK8sService](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetServices() })
+}
+
+func (k *mqlK8sNamespace) ingresses() ([]any, error) {
+	return filterByNamespace[*mqlK8sIngress](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetIngresses() })
+}
+
+func (k *mqlK8sNamespace) endpointSlices() ([]any, error) {
+	return filterByNamespace[*mqlK8sEndpointslice](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetEndpointSlices() })
+}
+
+func (k *mqlK8sNamespace) networkPolicies() ([]any, error) {
+	return filterByNamespace[*mqlK8sNetworkpolicy](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetNetworkPolicies() })
+}
+
+func (k *mqlK8sNamespace) secrets() ([]any, error) {
+	return filterByNamespace[*mqlK8sSecret](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetSecrets() })
+}
+
+func (k *mqlK8sNamespace) configmaps() ([]any, error) {
+	return filterByNamespace[*mqlK8sConfigmap](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetConfigmaps() })
+}
+
+func (k *mqlK8sNamespace) serviceaccounts() ([]any, error) {
+	return filterByNamespace[*mqlK8sServiceaccount](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetServiceaccounts() })
+}
+
+func (k *mqlK8sNamespace) persistentVolumeClaims() ([]any, error) {
+	return filterByNamespace[*mqlK8sPersistentvolumeclaim](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetPersistentVolumeClaims() })
+}
+
+func (k *mqlK8sNamespace) horizontalPodAutoscalers() ([]any, error) {
+	return filterByNamespace[*mqlK8sHorizontalpodautoscaler](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetHorizontalPodAutoscalers() })
+}
+
+func (k *mqlK8sNamespace) resourceQuotas() ([]any, error) {
+	return filterByNamespace[*mqlK8sResourcequota](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetResourceQuotas() })
+}
+
+func (k *mqlK8sNamespace) limitRanges() ([]any, error) {
+	return filterByNamespace[*mqlK8sLimitrange](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetLimitRanges() })
+}
+
+func (k *mqlK8sNamespace) podDisruptionBudgets() ([]any, error) {
+	return filterByNamespace[*mqlK8sPoddisruptionbudget](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetPodDisruptionBudgets() })
+}
+
+func (k *mqlK8sNamespace) roles() ([]any, error) {
+	return filterByNamespace[*mqlK8sRbacRole](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetRoles() })
+}
+
+func (k *mqlK8sNamespace) rolebindings() ([]any, error) {
+	return filterByNamespace[*mqlK8sRbacRolebinding](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetRolebindings() })
+}

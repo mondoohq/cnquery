@@ -88,3 +88,81 @@ func (k *mqlK8sConfigmap) labels() (map[string]any, error) {
 	}
 	return convert.MapToInterfaceMap(cm.GetLabels()), nil
 }
+
+func (k *mqlK8sConfigmap) usedBy() ([]any, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	pods := o.(*mqlK8s).GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+
+	cmName := k.Name.Data
+	namespace := k.Namespace.Data
+
+	out := []any{}
+	for i := range pods.Data {
+		p, ok := pods.Data[i].(*mqlK8sPod)
+		if !ok {
+			continue
+		}
+		if p.Namespace.Data != namespace {
+			continue
+		}
+		pod, err := p.getPod()
+		if err != nil {
+			continue
+		}
+		if podReferencesConfigMap(pod, cmName) {
+			out = append(out, p)
+		}
+	}
+	return out, nil
+}
+
+func podReferencesConfigMap(pod *corev1.Pod, cmName string) bool {
+	for _, v := range pod.Spec.Volumes {
+		if v.ConfigMap != nil && v.ConfigMap.Name == cmName {
+			return true
+		}
+		if v.Projected != nil {
+			for _, src := range v.Projected.Sources {
+				if src.ConfigMap != nil && src.ConfigMap.Name == cmName {
+					return true
+				}
+			}
+		}
+	}
+	for _, c := range pod.Spec.Containers {
+		if containerReferencesConfigMap(c, cmName) {
+			return true
+		}
+	}
+	for _, c := range pod.Spec.InitContainers {
+		if containerReferencesConfigMap(c, cmName) {
+			return true
+		}
+	}
+	for _, c := range pod.Spec.EphemeralContainers {
+		if containerReferencesConfigMap(corev1.Container(c.EphemeralContainerCommon), cmName) {
+			return true
+		}
+	}
+	return false
+}
+
+func containerReferencesConfigMap(c corev1.Container, cmName string) bool {
+	for _, e := range c.Env {
+		if e.ValueFrom != nil && e.ValueFrom.ConfigMapKeyRef != nil && e.ValueFrom.ConfigMapKeyRef.Name == cmName {
+			return true
+		}
+	}
+	for _, ef := range c.EnvFrom {
+		if ef.ConfigMapRef != nil && ef.ConfigMapRef.Name == cmName {
+			return true
+		}
+	}
+	return false
+}
