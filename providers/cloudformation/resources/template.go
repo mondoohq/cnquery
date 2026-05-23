@@ -120,6 +120,9 @@ func (x *mqlCloudformationResource) id() (string, error) {
 func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return nil, nil
+	}
 	_, resources, err := gatherMapValue(template.Node.Content[0], string(cft.Resources))
 	if err != nil && status.Code(err) == codes.NotFound {
 		return nil, nil
@@ -241,6 +244,9 @@ func (x *mqlCloudformationParameter) id() (string, error) {
 func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
 	template := conn.CftTemplate()
+	if template.Node == nil || len(template.Node.Content) == 0 {
+		return nil, nil
+	}
 
 	_, outputs, err := gatherMapValue(template.Node.Content[0], string(cft.Outputs))
 	if err != nil && status.Code(err) == codes.NotFound {
