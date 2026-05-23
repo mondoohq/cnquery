@@ -87,16 +87,6 @@ func getContainers(
 			return nil, err
 		}
 
-		resizePolicy, err := convert.JsonToDictSlice(c.ResizePolicy)
-		if err != nil {
-			return nil, err
-		}
-
-		restartPolicy := ""
-		if c.RestartPolicy != nil {
-			restartPolicy = string(*c.RestartPolicy)
-		}
-
 		args := map[string]*llx.RawData{
 			"uid":                      llx.StringData(id + "/" + c.Name), // container names are unique within a resource
 			"name":                     llx.StringData(c.Name),
@@ -127,6 +117,16 @@ func getContainers(
 			lifecycle, err := convert.JsonToDict(c.Lifecycle)
 			if err != nil {
 				return nil, err
+			}
+
+			resizePolicy, err := convert.JsonToDictSlice(c.ResizePolicy)
+			if err != nil {
+				return nil, err
+			}
+
+			restartPolicy := ""
+			if c.RestartPolicy != nil {
+				restartPolicy = string(*c.RestartPolicy)
 			}
 
 			args["resources"] = llx.DictData(resources)
