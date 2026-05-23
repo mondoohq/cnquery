@@ -2705,6 +2705,7 @@ private oci.dataSafe.maskingPolicy @defaults("displayName lifecycleState region"
   // Defined tags on the masking policy
   definedTags map[string]map[string]string
 }
+
 // Oracle Cloud Vulnerability Scanning Service
 //
 // Examine VSS configuration and findings — scan recipes that describe
@@ -3066,13 +3067,13 @@ private oci.vulnerabilityScanning.containerScanResult @defaults("repository imag
   // Image tag or digest
   image string
   // Registry URL the image was pulled from
-  registryUrl string
+  registryUrl() string
   // Compartment OCID containing the scan result
   compartmentId string
   // Compartment containing the scan result
   compartment() oci.compartment
   // Target compartment OCID (where the source image lives)
-  targetCompartmentId string
+  targetCompartmentId() string
   // Container scan target OCID
   containerScanTargetId string
   // Container scan target that produced the result

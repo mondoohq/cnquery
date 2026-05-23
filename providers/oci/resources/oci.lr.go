@@ -22510,7 +22510,9 @@ func (c *mqlOciVulnerabilityScanningContainerScanResult) GetImage() *plugin.TVal
 }
 
 func (c *mqlOciVulnerabilityScanningContainerScanResult) GetRegistryUrl() *plugin.TValue[string] {
-	return &c.RegistryUrl
+	return plugin.GetOrCompute[string](&c.RegistryUrl, func() (string, error) {
+		return c.registryUrl()
+	})
 }
 
 func (c *mqlOciVulnerabilityScanningContainerScanResult) GetCompartmentId() *plugin.TValue[string] {
@@ -22534,7 +22536,9 @@ func (c *mqlOciVulnerabilityScanningContainerScanResult) GetCompartment() *plugi
 }
 
 func (c *mqlOciVulnerabilityScanningContainerScanResult) GetTargetCompartmentId() *plugin.TValue[string] {
-	return &c.TargetCompartmentId
+	return plugin.GetOrCompute[string](&c.TargetCompartmentId, func() (string, error) {
+		return c.targetCompartmentId()
+	})
 }
 
 func (c *mqlOciVulnerabilityScanningContainerScanResult) GetContainerScanTargetId() *plugin.TValue[string] {
