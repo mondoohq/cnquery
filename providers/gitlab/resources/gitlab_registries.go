@@ -260,15 +260,31 @@ func (p *mqlGitlabProject) containerExpirationPolicy() (*mqlGitlabProjectContain
 func (p *mqlGitlabProject) containerRegistryProtectionRules() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 	projectID := int(p.Id.Data)
-	rules, resp, err := conn.Client().ContainerRegistryProtectionRules.ListContainerRegistryProtectionRules(projectID)
-	if err != nil {
-		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
-			return []any{}, nil
+
+	// ListContainerRegistryProtectionRules doesn't accept a typed options
+	// struct, but the endpoint still paginates (default 20/page). Drive the
+	// next page via gitlab.WithNext, which works for offset, keyset, and
+	// cursor styles uniformly.
+	var all []*gitlab.ContainerRegistryProtectionRule
+	var nextOpts []gitlab.RequestOptionFunc
+	for {
+		rules, resp, err := conn.Client().ContainerRegistryProtectionRules.ListContainerRegistryProtectionRules(projectID, nextOpts...)
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
 		}
-		return nil, err
+		all = append(all, rules...)
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
+			break
+		}
+		nextOpts = []gitlab.RequestOptionFunc{next}
 	}
-	out := make([]any, 0, len(rules))
-	for _, r := range rules {
+
+	out := make([]any, 0, len(all))
+	for _, r := range all {
 		args := map[string]*llx.RawData{
 			"id":                          llx.IntData(r.ID),
 			"repositoryPathPattern":       llx.StringData(r.RepositoryPathPattern),
@@ -451,15 +467,27 @@ func (p *mqlGitlabProjectPackage) files() ([]any, error) {
 func (p *mqlGitlabProject) packageProtectionRules() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 	projectID := int(p.Id.Data)
-	rules, resp, err := conn.Client().ProtectedPackages.ListPackageProtectionRules(projectID, nil)
-	if err != nil {
-		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
-			return []any{}, nil
+
+	var all []*gitlab.PackageProtectionRule
+	page := int64(1)
+	for {
+		rules, resp, err := conn.Client().ProtectedPackages.ListPackageProtectionRules(projectID,
+			&gitlab.ListPackageProtectionRulesOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: 100}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
 		}
-		return nil, err
+		all = append(all, rules...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
-	out := make([]any, 0, len(rules))
-	for _, r := range rules {
+
+	out := make([]any, 0, len(all))
+	for _, r := range all {
 		args := map[string]*llx.RawData{
 			"id":                          llx.IntData(r.ID),
 			"packageNamePattern":          llx.StringData(r.PackageNamePattern),
