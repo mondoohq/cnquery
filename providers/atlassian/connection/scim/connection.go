@@ -48,11 +48,11 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetBearerToken(token)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
-	_, response, _ := client.SCIM.Schema.User(context.Background(), conf.Options["directory-id"])
-	if response != nil {
-		if response.StatusCode == 401 {
+	if _, response, probeErr := client.SCIM.Schema.User(context.Background(), conf.Options["directory-id"]); probeErr != nil {
+		if response != nil && response.StatusCode == 401 {
 			return nil, errors.New("failed to authenticate")
 		}
+		return nil, errors.New("failed to reach Atlassian SCIM directory: " + probeErr.Error())
 	}
 
 	name := fmt.Sprintf("Directory %s", conf.Options["directory-id"])

@@ -69,3 +69,98 @@ func TestStringsToAny(t *testing.T) {
 	assert.Equal(t, []any{}, stringsToAny([]string{}))
 	assert.Equal(t, []any{"a", "b", "c"}, stringsToAny([]string{"a", "b", "c"}))
 }
+
+func TestJiraUserAvatar(t *testing.T) {
+	assert.Equal(t, "", jiraUserAvatar(nil))
+	assert.Equal(t, "", jiraUserAvatar(&models.UserScheme{}))
+	assert.Equal(t,
+		"https://example.com/16.png",
+		jiraUserAvatar(&models.UserScheme{
+			AvatarURLs: &models.AvatarURLScheme{One6X16: "https://example.com/16.png"},
+		}),
+	)
+}
+
+func TestJiraWatcherAndVoteCounts(t *testing.T) {
+	assert.Equal(t, 0, jiraWatcherCount(nil))
+	assert.Equal(t, 7, jiraWatcherCount(&models.IssueWatcherScheme{WatchCount: 7}))
+	assert.Equal(t, 0, jiraVoteCount(nil))
+	assert.Equal(t, 3, jiraVoteCount(&models.IssueVoteScheme{Votes: 3}))
+}
+
+func TestJiraIssueSecurity(t *testing.T) {
+	assert.Nil(t, jiraIssueSecurity(nil))
+
+	got := jiraIssueSecurity(&models.SecurityScheme{ID: "10000", Name: "Public", Description: "anyone"})
+	want := map[string]any{
+		"id":          "10000",
+		"name":        "Public",
+		"description": "anyone",
+	}
+	assert.Equal(t, want, got)
+}
+
+func TestJiraIssueComponentsAndVersionsSkipNil(t *testing.T) {
+	t.Run("components skips nil entries", func(t *testing.T) {
+		got := jiraIssueComponents([]*models.ComponentScheme{
+			nil,
+			{ID: "1", Name: "auth"},
+			nil,
+			{ID: "2", Name: "billing"},
+		})
+		assert.Len(t, got, 2)
+	})
+
+	t.Run("versions skips nil entries", func(t *testing.T) {
+		got := jiraIssueVersions([]*models.VersionScheme{
+			nil,
+			{ID: "10", Name: "1.0.0"},
+		})
+		assert.Len(t, got, 1)
+	})
+}
+
+func TestJiraIssueComments(t *testing.T) {
+	t.Run("nil page returns empty", func(t *testing.T) {
+		assert.Equal(t, []any{}, jiraIssueComments(nil))
+	})
+
+	t.Run("nil comment entries are skipped", func(t *testing.T) {
+		got := jiraIssueComments(&models.IssueCommentPageSchemeV2{
+			Comments: []*models.IssueCommentSchemeV2{
+				nil,
+				{ID: "1", Body: "ok"},
+			},
+		})
+		assert.Len(t, got, 1)
+	})
+
+	t.Run("nil author and nil visibility do not panic", func(t *testing.T) {
+		got := jiraIssueComments(&models.IssueCommentPageSchemeV2{
+			Comments: []*models.IssueCommentSchemeV2{
+				{ID: "1", Body: "anon", Author: nil, Visibility: nil},
+			},
+		})
+		require.Len(t, got, 1)
+		row := got[0].(map[string]any)
+		assert.Equal(t, "", row["author"])
+		assert.Equal(t, "", row["authorName"])
+		assert.Nil(t, row["visibility"])
+	})
+
+	t.Run("populated visibility surfaces as dict", func(t *testing.T) {
+		got := jiraIssueComments(&models.IssueCommentPageSchemeV2{
+			Comments: []*models.IssueCommentSchemeV2{
+				{
+					ID:         "1",
+					Body:       "restricted",
+					Visibility: &models.CommentVisibilityScheme{Type: "role", Value: "Administrators"},
+				},
+			},
+		})
+		require.Len(t, got, 1)
+		vis := got[0].(map[string]any)["visibility"].(map[string]any)
+		assert.Equal(t, "role", vis["type"])
+		assert.Equal(t, "Administrators", vis["value"])
+	})
+}

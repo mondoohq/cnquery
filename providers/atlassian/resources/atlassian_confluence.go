@@ -30,24 +30,37 @@ func (a *mqlAtlassianConfluence) users() ([]any, error) {
 	if !ok {
 		return nil, errors.New("Current connection does not allow confluence access")
 	}
-	confluence := conn.Client()
+	client := conn.Client()
 	cql := "type = user"
-	users, _, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
-	if err != nil {
-		return nil, err
-	}
 	res := []any{}
-	for _, user := range users.Results {
-		mqlAtlassianConfluenceUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
-			map[string]*llx.RawData{
-				"id":   llx.StringData(user.User.AccountID),
-				"type": llx.StringData(user.User.AccountType),
-				"name": llx.StringData(user.User.DisplayName),
-			})
+	startAt := 0
+	for {
+		page, _, err := client.Search.Users(context.Background(), cql, startAt, CONFLUENCE_PAGE_LIMIT, nil)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianConfluenceUser)
+		if page == nil || len(page.Results) == 0 {
+			break
+		}
+		for _, hit := range page.Results {
+			if hit == nil || hit.User == nil {
+				continue
+			}
+			mqlUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
+				map[string]*llx.RawData{
+					"id":   llx.StringData(hit.User.AccountID),
+					"type": llx.StringData(hit.User.AccountType),
+					"name": llx.StringData(hit.User.DisplayName),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlUser)
+		}
+		if len(page.Results) < CONFLUENCE_PAGE_LIMIT {
+			break
+		}
+		startAt += len(page.Results)
 	}
 	return res, nil
 }
@@ -298,9 +311,12 @@ func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
 	res := []any{}
 	startAt := 0
 
+	// Restrictions are loaded lazily by fetchRestrictions; requesting them in
+	// the bulk expand without caching them here would just pay for data we
+	// throw away. version/history/metadata.labels/ancestors are populated into
+	// the Internal cache via cacheFromContent, which short-circuits the
+	// per-page Content.Get round-trip.
 	expand := []string{
-		"restrictions.read.restrictions.user",
-		"restrictions.read.restrictions.group",
 		"version",
 		"history",
 		"metadata.labels",
@@ -368,8 +384,16 @@ func (a *mqlAtlassianConfluencePage) restrictions() ([]any, error) {
 }
 
 // fetchRestrictions loads page-level restrictions and caches them on first call.
-// Both hasRestrictions() and restrictions() share this so we only call the API once.
+// Both hasRestrictions() and restrictions() share this so we only call the API
+// once. Uses the same lock as ensureFetched to make concurrent callers safe —
+// without it, two goroutines hitting the page at the same time would both miss
+// the cache and double up the API call (and racily clobber Restrictions.Data).
 func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
+	if a.Restrictions.State == plugin.StateIsSet {
+		return a.Restrictions.Data, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	if a.Restrictions.State == plugin.StateIsSet {
 		return a.Restrictions.Data, nil
 	}
@@ -385,18 +409,21 @@ func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
 		return []any{}, nil
 	}
 
-	page, _, err := client.Content.Restriction.Gets(context.Background(),
-		contentID,
-		[]string{"restrictions.user", "restrictions.group"},
-		0,
-		CONFLUENCE_PAGE_LIMIT,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	res := []any{}
-	if page != nil {
+	startAt := 0
+	for {
+		page, _, err := client.Content.Restriction.Gets(context.Background(),
+			contentID,
+			[]string{"restrictions.user", "restrictions.group"},
+			startAt,
+			CONFLUENCE_PAGE_LIMIT,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if page == nil || len(page.Results) == 0 {
+			break
+		}
 		for _, restriction := range page.Results {
 			if restriction == nil {
 				continue
@@ -438,6 +465,10 @@ func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
 			}
 			res = append(res, mqlRestriction)
 		}
+		if len(page.Results) < CONFLUENCE_PAGE_LIMIT {
+			break
+		}
+		startAt += len(page.Results)
 	}
 
 	a.Restrictions = plugin.TValue[[]any]{Data: res, State: plugin.StateIsSet}

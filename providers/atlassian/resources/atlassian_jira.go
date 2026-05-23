@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -96,52 +95,76 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]any, error) {
 	return res, nil
 }
 
+// groups returns the groups this specific user is a member of. Uses the
+// per-user /rest/api/2/user/groups endpoint — the original code called the
+// global Group.Bulk which returned every group on the instance regardless of
+// the user, breaking any membership-based audit. The per-user endpoint only
+// exposes group names (not GroupIDs), so name doubles as the id here.
 func (a *mqlAtlassianJiraUser) groups() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow jira access")
 	}
-	jira := conn.Client()
-	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	jiraClient := conn.Client()
+	groups, _, err := jiraClient.User.Groups(context.Background(), a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
-	res := []any{}
-	for _, group := range groups.Values {
-		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
+	res := make([]any, 0, len(groups))
+	for _, group := range groups {
+		if group == nil || group.Name == "" {
+			continue
+		}
+		mqlGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(group.GroupID),
+				"id":   llx.StringData(group.Name),
 				"name": llx.StringData(group.Name),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianJiraUserGroup)
+		res = append(res, mqlGroup)
 	}
 	return res, nil
 }
 
+// groups returns every group defined on the Jira instance, paginating through
+// Group.Bulk. The previous implementation hardcoded maxResults=1000 and stopped
+// after the first page, silently truncating large orgs.
 func (a *mqlAtlassianJira) groups() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	if !ok {
 		return nil, errors.New("Current connection does not allow jira access")
 	}
-	jira := conn.Client()
-	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
-	if err != nil {
-		return nil, err
-	}
+	jiraClient := conn.Client()
 	res := []any{}
-	for _, group := range groups.Values {
-		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
-			map[string]*llx.RawData{
-				"id":   llx.StringData(group.GroupID),
-				"name": llx.StringData(group.Name),
-			})
+	startAt := 0
+	for {
+		page, _, err := jiraClient.Group.Bulk(context.Background(), nil, startAt, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianJiraUserGroup)
+		if page == nil || len(page.Values) == 0 {
+			break
+		}
+		for _, group := range page.Values {
+			if group == nil {
+				continue
+			}
+			mqlGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
+				map[string]*llx.RawData{
+					"id":   llx.StringData(group.GroupID),
+					"name": llx.StringData(group.Name),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlGroup)
+		}
+		if page.IsLast || len(page.Values) < JIRA_SEARCH_MAX_RESULTS {
+			break
+		}
+		startAt += len(page.Values)
 	}
 	return res, nil
 }
@@ -182,6 +205,11 @@ func (a *mqlAtlassianJira) projects() ([]any, error) {
 		projects, _, err := jira.Project.Search(context.Background(), options, startAt, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
+		}
+		// Guard against empty pages with non-zero Total — without this an
+		// upstream that returns []Values with Total>0 would spin forever.
+		if projects == nil || len(projects.Values) == 0 {
+			break
 		}
 
 		for _, project := range projects.Values {
@@ -240,6 +268,9 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 		issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, startAt, JIRA_SEARCH_MAX_RESULTS, validate)
 		if err != nil {
 			return nil, err
+		}
+		if issues == nil || len(issues.Issues) == 0 {
+			break
 		}
 		for _, issue := range issues.Issues {
 			creator, err := mqlJiraUser(a.MqlRuntime, issue.Fields.Creator)
@@ -470,7 +501,6 @@ func (a *mqlAtlassianJiraProject) properties() ([]any, error) {
 
 	res := []any{}
 	for _, property := range properties.Keys {
-		fmt.Println(property.Key)
 		mqlAtlassianJiraProjectProperty, err := CreateResource(a.MqlRuntime, "atlassian.jira.project.property",
 			map[string]*llx.RawData{
 				"id": llx.StringData(property.Key),

@@ -43,11 +43,11 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetBearerToken(adminToken)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
-	_, response, _ := client.Organization.Gets(context.Background(), "")
-	if response != nil {
-		if response.StatusCode == 401 {
+	if _, response, probeErr := client.Organization.Gets(context.Background(), ""); probeErr != nil {
+		if response != nil && response.StatusCode == 401 {
 			return nil, errors.New("failed to authenticate")
 		}
+		return nil, errors.New("failed to reach Atlassian Admin: " + probeErr.Error())
 	}
 
 	return &AdminConnection{

@@ -59,14 +59,11 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetBasicAuth(user, token)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
-	_, response, err := client.Label.Get(context.Background(), "test", "page", 0, 50)
-	if err != nil {
-		return nil, err
-	}
-	if response != nil {
-		if response.StatusCode == 401 {
+	if _, response, probeErr := client.Label.Get(context.Background(), "test", "page", 0, 50); probeErr != nil {
+		if response != nil && response.StatusCode == 401 {
 			return nil, errors.New("failed to authenticate")
 		}
+		return nil, errors.New("failed to reach Confluence: " + probeErr.Error())
 	}
 
 	return &ConfluenceConnection{

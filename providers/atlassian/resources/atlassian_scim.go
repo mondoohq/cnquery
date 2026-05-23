@@ -11,6 +11,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/scim"
 )
 
+// scimPageSize is the per-request limit used when paginating SCIM endpoints.
+// 100 is the conservative ceiling — some Atlassian SCIM deployments cap count
+// at 100 server-side.
+const scimPageSize = 100
+
 func (a *mqlAtlassianScim) id() (string, error) {
 	return "scim", nil
 }
@@ -22,24 +27,41 @@ func (a *mqlAtlassianScim) users() ([]any, error) {
 	}
 	admin := conn.Client()
 	directoryID := conn.Directory()
-	scimUsers, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
-	if err != nil {
-		return nil, err
-	}
 	res := []any{}
-	for _, scimUser := range scimUsers.Resources {
-		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user",
-			map[string]*llx.RawData{
-				"id":           llx.StringData(scimUser.ID),
-				"name":         llx.StringData(scimUser.Name.Formatted),
-				"displayName":  llx.StringData(scimUser.DisplayName),
-				"organization": llx.StringData(scimUser.Organization),
-				"title":        llx.StringData(scimUser.Title),
-			})
+	startIndex := 0
+	for {
+		page, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, startIndex, scimPageSize)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianAdminSCIMuser)
+		if page == nil || len(page.Resources) == 0 {
+			break
+		}
+		for _, scimUser := range page.Resources {
+			if scimUser == nil {
+				continue
+			}
+			formatted := ""
+			if scimUser.Name != nil {
+				formatted = scimUser.Name.Formatted
+			}
+			mqlUser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user",
+				map[string]*llx.RawData{
+					"id":           llx.StringData(scimUser.ID),
+					"name":         llx.StringData(formatted),
+					"displayName":  llx.StringData(scimUser.DisplayName),
+					"organization": llx.StringData(scimUser.Organization),
+					"title":        llx.StringData(scimUser.Title),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlUser)
+		}
+		if len(page.Resources) < scimPageSize {
+			break
+		}
+		startIndex += len(page.Resources)
 	}
 	return res, nil
 }
@@ -51,21 +73,34 @@ func (a *mqlAtlassianScim) groups() ([]any, error) {
 	}
 	admin := conn.Client()
 	directoryID := conn.Directory()
-	scimGroup, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)
-	if err != nil {
-		return nil, err
-	}
 	res := []any{}
-	for _, scimGroup := range scimGroup.Resources {
-		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.group",
-			map[string]*llx.RawData{
-				"id":   llx.StringData(scimGroup.ID),
-				"name": llx.StringData(scimGroup.DisplayName),
-			})
+	startIndex := 0
+	for {
+		page, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", startIndex, scimPageSize)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAtlassianAdminSCIMgroup)
+		if page == nil || len(page.Resources) == 0 {
+			break
+		}
+		for _, scimGroup := range page.Resources {
+			if scimGroup == nil {
+				continue
+			}
+			mqlGroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.group",
+				map[string]*llx.RawData{
+					"id":   llx.StringData(scimGroup.ID),
+					"name": llx.StringData(scimGroup.DisplayName),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlGroup)
+		}
+		if len(page.Resources) < scimPageSize {
+			break
+		}
+		startIndex += len(page.Resources)
 	}
 	return res, nil
 }

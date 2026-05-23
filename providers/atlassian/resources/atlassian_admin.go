@@ -15,6 +15,20 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// parseAtlassianTime parses Atlassian Admin API timestamps (RFC3339). Returns
+// nil for empty or unparseable input — the API returns "" for never-active
+// accounts, which should surface as a null time, not a zero-value.
+func parseAtlassianTime(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return nil
+	}
+	return &t
+}
+
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn, ok := runtime.Connection.(*admin.AdminConnection)
 	if !ok {
@@ -62,28 +76,13 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]any, error) {
 		var products []ProductAccess
 
 		for i := range user.ProductAccess {
-
-			var lastProductUse *time.Time
-			if user.LastActive != "" {
-				t, err := time.Parse(time.RFC3339, user.LastActive)
-				if err != nil {
-					lastProductUse = &t
-				}
-			}
-
 			products = append(products, ProductAccess{
 				Name:       user.ProductAccess[i].Name,
-				LastActive: lastProductUse,
+				LastActive: parseAtlassianTime(user.ProductAccess[i].LastActive),
 			})
 		}
 
-		var lastActive *time.Time
-		if user.LastActive != "" {
-			t, err := time.Parse(time.RFC3339, user.LastActive)
-			if err != nil {
-				lastActive = &t
-			}
-		}
+		lastActive := parseAtlassianTime(user.LastActive)
 
 		productArray, err := convert.JsonToDictSlice(products)
 		if err != nil {
@@ -172,12 +171,13 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]any, error) {
 	admin := conn.Client()
 	orgId := a.Id.Data
 	domains, resp, err := admin.Organization.Domains(context.Background(), orgId, "")
-	if err != nil && resp.StatusCode != 404 {
-		a.Domains.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	} else if resp.StatusCode == 404 {
-		return nil, nil
-	} else if err != nil {
+	// A 404 means the org has no verified domains — that's a valid empty
+	// state, not an error. Anything else (transport failure, 5xx, 403) should
+	// surface so callers can't mistake it for "no domains."
+	if resp != nil && resp.StatusCode == 404 {
+		return []any{}, nil
+	}
+	if err != nil {
 		return nil, err
 	}
 	res := []any{}
