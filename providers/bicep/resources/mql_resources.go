@@ -70,12 +70,7 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 			}
 		}
 
-		tags := map[string]any{}
-		for k, v := range r.tags {
-			tags[k] = v
-		}
-
-		res, err := CreateResource(runtime, "bicep.resource", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"__id":         llx.StringData("bicep.resource:" + filePath + ":" + r.symbolicName),
 			"symbolicName": llx.StringData(r.symbolicName),
 			"type":         llx.StringData(r.typ),
@@ -86,10 +81,20 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 			"condition":    llx.StringData(r.condition),
 			"parent":       llx.StringData(r.parent),
 			"properties":   llx.DictData(properties),
-			"tags":         llx.MapData(tags, types.String),
 			"dependsOn":    llx.ArrayData(dependsOn, types.String),
 			"decorators":   llx.ArrayData(decorators, types.String),
-		})
+		}
+		if r.tags == nil {
+			args["tags"] = llx.NilData
+		} else {
+			tags := make(map[string]any, len(r.tags))
+			for k, v := range r.tags {
+				tags[k] = v
+			}
+			args["tags"] = llx.MapData(tags, types.String)
+		}
+
+		res, err := CreateResource(runtime, "bicep.resource", args)
 		if err != nil {
 			return nil, err
 		}
