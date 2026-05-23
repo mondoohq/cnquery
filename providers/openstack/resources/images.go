@@ -30,12 +30,13 @@ func initOpenstackImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetImages()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			img := raw.(*mqlOpenstackImage)
-			if img.Id.Data == id {
-				return args, img, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		img := raw.(*mqlOpenstackImage)
+		if img.Id.Data == id {
+			return args, img, nil
 		}
 	}
 	initSyntheticID("openstack.image", "id", args)

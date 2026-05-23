@@ -70,9 +70,14 @@ func resolveAuth(conf *inventory.Config) (*authResult, error) {
 	}
 	authOpts.AllowReauth = true
 
+	// Fall back to the clouds.yaml region when the caller didn't supply
+	// --region. clientOpts.RegionName is just the explicit input; the
+	// resolved region from clouds.yaml lives on the Cloud record.
 	region := opts[OPTION_REGION]
 	if region == "" {
-		region = clientOpts.RegionName
+		if cloud, cerr := clientconfig.GetCloudFromYAML(clientOpts); cerr == nil && cloud != nil {
+			region = cloud.RegionName
+		}
 	}
 
 	return &authResult{authOpts: *authOpts, region: region}, nil

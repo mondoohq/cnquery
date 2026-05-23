@@ -960,7 +960,7 @@ private openstack.octavia.pool @defaults("id name lbAlgorithm protocol provision
   // Barbican container holding the client cert/key bundle for backend mTLS; null when not set
   clientTlsContainer() openstack.keymanager.container
   // Members in this pool
-  members []openstack.octavia.member
+  members() []openstack.octavia.member
 }
 
 // OpenStack Octavia pool member
@@ -1078,7 +1078,7 @@ private openstack.octavia.l7Policy @defaults("id name action position provisioni
   // Pool requests are redirected to when action is REDIRECT_TO_POOL; null otherwise
   redirectPool() openstack.octavia.pool
   // Match rules; the policy fires when ALL rules match
-  rules []openstack.octavia.l7Rule
+  rules() []openstack.octavia.l7Rule
 }
 
 // OpenStack Octavia L7 match rule

@@ -34,12 +34,13 @@ func initOpenstackFirewallGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetFirewallGroups()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			g := raw.(*mqlOpenstackFirewallGroup)
-			if g.Id.Data == id {
-				return args, g, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		g := raw.(*mqlOpenstackFirewallGroup)
+		if g.Id.Data == id {
+			return args, g, nil
 		}
 	}
 	initSyntheticID("openstack.firewall.group", "id", args)
@@ -149,12 +150,13 @@ func initOpenstackFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetFirewallPolicies()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			p := raw.(*mqlOpenstackFirewallPolicy)
-			if p.Id.Data == id {
-				return args, p, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		p := raw.(*mqlOpenstackFirewallPolicy)
+		if p.Id.Data == id {
+			return args, p, nil
 		}
 	}
 	initSyntheticID("openstack.firewall.policy", "id", args)
@@ -206,9 +208,35 @@ func (r *mqlOpenstackFirewallPolicy) project() (*mqlOpenstackProject, error) {
 }
 
 func (r *mqlOpenstackFirewallPolicy) rules() ([]any, error) {
+	if len(r.cacheRuleIDs) == 0 {
+		return []any{}, nil
+	}
+
+	// Index the global rule list once. Without the index, each rule ID
+	// triggers a NewResource + init function that linearly scans the
+	// full rules list, producing O(N*M) per policy. The index folds that
+	// to O(N+M) total when openstack.firewallRules has been resolved.
+	root, err := CreateResource(r.MqlRuntime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := root.(*mqlOpenstack).GetFirewallRules()
+	var byID map[string]*mqlOpenstackFirewallRule
+	if list.Error == nil {
+		byID = make(map[string]*mqlOpenstackFirewallRule, len(list.Data))
+		for _, raw := range list.Data {
+			fr := raw.(*mqlOpenstackFirewallRule)
+			byID[fr.Id.Data] = fr
+		}
+	}
+
 	out := make([]any, 0, len(r.cacheRuleIDs))
 	for _, id := range r.cacheRuleIDs {
 		if id == "" {
+			continue
+		}
+		if fr, ok := byID[id]; ok {
+			out = append(out, fr)
 			continue
 		}
 		res, err := NewResource(r.MqlRuntime, "openstack.firewall.rule", map[string]*llx.RawData{"id": llx.StringData(id)})
@@ -241,12 +269,13 @@ func initOpenstackFirewallRule(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetFirewallRules()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			r := raw.(*mqlOpenstackFirewallRule)
-			if r.Id.Data == id {
-				return args, r, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		r := raw.(*mqlOpenstackFirewallRule)
+		if r.Id.Data == id {
+			return args, r, nil
 		}
 	}
 	initSyntheticID("openstack.firewall.rule", "id", args)

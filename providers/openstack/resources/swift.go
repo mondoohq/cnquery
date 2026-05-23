@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/accounts"
@@ -67,6 +68,7 @@ func (o *mqlOpenstack) objectStorageAccount() (*mqlOpenstackObjectstorageAccount
 // ---- openstack.objectstorage.container ----
 
 type mqlOpenstackObjectstorageContainerInternal struct {
+	headerLock    sync.Mutex
 	headerFetched bool
 	headerErr     error
 	header        *containers.GetHeader
@@ -87,12 +89,13 @@ func initOpenstackObjectstorageContainer(runtime *plugin.Runtime, args map[strin
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetObjectStorageContainers()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			cc := raw.(*mqlOpenstackObjectstorageContainer)
-			if cc.Name.Data == name {
-				return args, cc, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		cc := raw.(*mqlOpenstackObjectstorageContainer)
+		if cc.Name.Data == name {
+			return args, cc, nil
 		}
 	}
 	initSyntheticID("openstack.objectstorage.container", "name", args)
@@ -134,6 +137,8 @@ func (o *mqlOpenstack) objectStorageContainers() ([]any, error) {
 }
 
 func (r *mqlOpenstackObjectstorageContainer) fetchHeader() (*containers.GetHeader, map[string]string, error) {
+	r.headerLock.Lock()
+	defer r.headerLock.Unlock()
 	if r.headerFetched {
 		return r.header, r.headerMeta, r.headerErr
 	}

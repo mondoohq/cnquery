@@ -10169,7 +10169,19 @@ func (c *mqlOpenstackOctaviaPool) GetClientTlsContainer() *plugin.TValue[*mqlOpe
 }
 
 func (c *mqlOpenstackOctaviaPool) GetMembers() *plugin.TValue[[]any] {
-	return &c.Members
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.pool", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
 }
 
 // mqlOpenstackOctaviaMember for the openstack.octavia.member resource
@@ -10657,7 +10669,19 @@ func (c *mqlOpenstackOctaviaL7Policy) GetRedirectPool() *plugin.TValue[*mqlOpens
 }
 
 func (c *mqlOpenstackOctaviaL7Policy) GetRules() *plugin.TValue[[]any] {
-	return &c.Rules
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.l7Policy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
 }
 
 // mqlOpenstackOctaviaL7Rule for the openstack.octavia.l7Rule resource

@@ -26,12 +26,13 @@ func initOpenstackDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetDnsZones()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			z := raw.(*mqlOpenstackDnsZone)
-			if z.Id.Data == id {
-				return args, z, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		z := raw.(*mqlOpenstackDnsZone)
+		if z.Id.Data == id {
+			return args, z, nil
 		}
 	}
 	initSyntheticID("openstack.dns.zone", "id", args)

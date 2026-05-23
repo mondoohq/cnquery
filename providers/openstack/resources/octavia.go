@@ -11,9 +11,9 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/pools"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 )
 
 // barbicanRefIsContainer reports whether a Barbican ref URL points at a
@@ -62,7 +62,11 @@ func (r *mqlOpenstackOctaviaLoadBalancer) id() (string, error) {
 }
 
 func initOpenstackOctaviaLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) >= 2 {
+	// Skip the per-ID Get when the caller already supplied populated
+	// fields. provisioningStatus is mandatory in every Octavia API
+	// response, so its presence reliably distinguishes a fully-populated
+	// resource from one created with just {__id, id}.
+	if _, ok := args["provisioningStatus"]; ok {
 		return args, nil, nil
 	}
 	id, ok := stringArg(args, "id")
@@ -277,12 +281,13 @@ func initOpenstackOctaviaListener(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetListeners()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			l := raw.(*mqlOpenstackOctaviaListener)
-			if l.Id.Data == id {
-				return args, l, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		l := raw.(*mqlOpenstackOctaviaListener)
+		if l.Id.Data == id {
+			return args, l, nil
 		}
 	}
 	initSyntheticID("openstack.octavia.listener", "id", args)
@@ -340,6 +345,12 @@ func (o *mqlOpenstack) listeners() ([]any, error) {
 		mqlL.cacheProjectID = l.ProjectID
 		if len(l.Loadbalancers) > 0 {
 			mqlL.cacheLoadBalancerID = l.Loadbalancers[0].ID
+			if len(l.Loadbalancers) > 1 {
+				log.Warn().
+					Str("listenerId", l.ID).
+					Int("loadBalancerCount", len(l.Loadbalancers)).
+					Msg("openstack: listener references multiple load balancers; exposing only the first")
+			}
 		}
 		mqlL.cacheDefaultPoolID = l.DefaultPoolID
 		mqlL.cacheDefaultTlsContainerRef = l.DefaultTlsContainerRef
@@ -463,6 +474,7 @@ type mqlOpenstackOctaviaPoolInternal struct {
 	cacheCATlsContainerRef     string
 	cacheCRLContainerRef       string
 	cacheClientTlsContainerRef string
+	cacheMembers               []pools.Member
 }
 
 func (r *mqlOpenstackOctaviaPool) id() (string, error) {
@@ -479,12 +491,13 @@ func initOpenstackOctaviaPool(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetPools()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			p := raw.(*mqlOpenstackOctaviaPool)
-			if p.Id.Data == id {
-				return args, p, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		p := raw.(*mqlOpenstackOctaviaPool)
+		if p.Id.Data == id {
+			return args, p, nil
 		}
 	}
 	initSyntheticID("openstack.octavia.pool", "id", args)
@@ -512,10 +525,6 @@ func (o *mqlOpenstack) pools() ([]any, error) {
 	out := make([]any, 0, len(items))
 	for i := range items {
 		p := &items[i]
-		members, err := buildOctaviaMembers(o.MqlRuntime, p)
-		if err != nil {
-			return nil, err
-		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.octavia.pool", map[string]*llx.RawData{
 			"__id":               llx.StringData("openstack.octavia.pool/" + p.ID),
 			"id":                 llx.StringData(p.ID),
@@ -533,7 +542,6 @@ func (o *mqlOpenstack) pools() ([]any, error) {
 			"tlsVersions":        stringSliceData(p.TLSVersions),
 			"alpnProtocols":      stringSliceData(p.ALPNProtocols),
 			"tags":               stringSliceData(p.Tags),
-			"members":            llx.ArrayData(members, types.Resource("openstack.octavia.member")),
 		})
 		if err != nil {
 			return nil, err
@@ -542,6 +550,12 @@ func (o *mqlOpenstack) pools() ([]any, error) {
 		mqlP.cacheProjectID = p.ProjectID
 		if len(p.Loadbalancers) > 0 {
 			mqlP.cacheLoadBalancerID = p.Loadbalancers[0].ID
+			if len(p.Loadbalancers) > 1 {
+				log.Warn().
+					Str("poolId", p.ID).
+					Int("loadBalancerCount", len(p.Loadbalancers)).
+					Msg("openstack: pool references multiple load balancers; exposing only the first")
+			}
 		}
 		mqlP.cacheListenerIDs = listenerIDsFromPoolListeners(p.Listeners)
 		mqlP.cacheHealthMonitorID = p.MonitorID
@@ -549,9 +563,14 @@ func (o *mqlOpenstack) pools() ([]any, error) {
 		mqlP.cacheCATlsContainerRef = p.CATLSContainerRef
 		mqlP.cacheCRLContainerRef = p.CRLContainerRef
 		mqlP.cacheClientTlsContainerRef = p.TLSContainerRef
+		mqlP.cacheMembers = p.Members
 		out = append(out, mqlP)
 	}
 	return out, nil
+}
+
+func (r *mqlOpenstackOctaviaPool) members() ([]any, error) {
+	return buildOctaviaMembers(r.MqlRuntime, r.cacheMembers)
 }
 
 func (r *mqlOpenstackOctaviaPool) project() (*mqlOpenstackProject, error) {
@@ -675,10 +694,10 @@ func (r *mqlOpenstackOctaviaMember) id() (string, error) {
 	return "openstack.octavia.member/" + r.Id.Data, nil
 }
 
-func buildOctaviaMembers(runtime *plugin.Runtime, p *pools.Pool) ([]any, error) {
-	out := make([]any, 0, len(p.Members))
-	for i := range p.Members {
-		m := &p.Members[i]
+func buildOctaviaMembers(runtime *plugin.Runtime, members []pools.Member) ([]any, error) {
+	out := make([]any, 0, len(members))
+	for i := range members {
+		m := &members[i]
 		res, err := CreateResource(runtime, "openstack.octavia.member", map[string]*llx.RawData{
 			"__id":               llx.StringData("openstack.octavia.member/" + m.ID),
 			"id":                 llx.StringData(m.ID),
@@ -757,12 +776,13 @@ func initOpenstackOctaviaHealthMonitor(runtime *plugin.Runtime, args map[string]
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetHealthMonitors()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			h := raw.(*mqlOpenstackOctaviaHealthMonitor)
-			if h.Id.Data == id {
-				return args, h, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		h := raw.(*mqlOpenstackOctaviaHealthMonitor)
+		if h.Id.Data == id {
+			return args, h, nil
 		}
 	}
 	initSyntheticID("openstack.octavia.healthMonitor", "id", args)
@@ -856,6 +876,7 @@ type mqlOpenstackOctaviaL7PolicyInternal struct {
 	cacheProjectID      string
 	cacheListenerID     string
 	cacheRedirectPoolID string
+	cacheRules          []l7policies.Rule
 }
 
 func (r *mqlOpenstackOctaviaL7Policy) id() (string, error) {
@@ -872,12 +893,13 @@ func initOpenstackOctaviaL7Policy(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetL7Policies()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			p := raw.(*mqlOpenstackOctaviaL7Policy)
-			if p.Id.Data == id {
-				return args, p, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		p := raw.(*mqlOpenstackOctaviaL7Policy)
+		if p.Id.Data == id {
+			return args, p, nil
 		}
 	}
 	initSyntheticID("openstack.octavia.l7Policy", "id", args)
@@ -905,10 +927,6 @@ func (o *mqlOpenstack) l7Policies() ([]any, error) {
 	out := make([]any, 0, len(items))
 	for i := range items {
 		p := &items[i]
-		rules, err := buildOctaviaL7Rules(o.MqlRuntime, p)
-		if err != nil {
-			return nil, err
-		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.octavia.l7Policy", map[string]*llx.RawData{
 			"__id":               llx.StringData("openstack.octavia.l7Policy/" + p.ID),
 			"id":                 llx.StringData(p.ID),
@@ -923,7 +941,6 @@ func (o *mqlOpenstack) l7Policies() ([]any, error) {
 			"provisioningStatus": llx.StringData(p.ProvisioningStatus),
 			"operatingStatus":    llx.StringData(p.OperatingStatus),
 			"tags":               stringSliceData(p.Tags),
-			"rules":              llx.ArrayData(rules, types.Resource("openstack.octavia.l7Rule")),
 		})
 		if err != nil {
 			return nil, err
@@ -932,9 +949,14 @@ func (o *mqlOpenstack) l7Policies() ([]any, error) {
 		mqlP.cacheProjectID = p.ProjectID
 		mqlP.cacheListenerID = p.ListenerID
 		mqlP.cacheRedirectPoolID = p.RedirectPoolID
+		mqlP.cacheRules = p.Rules
 		out = append(out, mqlP)
 	}
 	return out, nil
+}
+
+func (r *mqlOpenstackOctaviaL7Policy) rules() ([]any, error) {
+	return buildOctaviaL7Rules(r.MqlRuntime, r.Id.Data, r.cacheRules)
 }
 
 func (r *mqlOpenstackOctaviaL7Policy) project() (*mqlOpenstackProject, error) {
@@ -976,10 +998,10 @@ func (r *mqlOpenstackOctaviaL7Rule) id() (string, error) {
 	return "openstack.octavia.l7Rule/" + r.Id.Data, nil
 }
 
-func buildOctaviaL7Rules(runtime *plugin.Runtime, policy *l7policies.L7Policy) ([]any, error) {
-	out := make([]any, 0, len(policy.Rules))
-	for i := range policy.Rules {
-		rule := &policy.Rules[i]
+func buildOctaviaL7Rules(runtime *plugin.Runtime, policyID string, rules []l7policies.Rule) ([]any, error) {
+	out := make([]any, 0, len(rules))
+	for i := range rules {
+		rule := &rules[i]
 		res, err := CreateResource(runtime, "openstack.octavia.l7Rule", map[string]*llx.RawData{
 			"__id":               llx.StringData("openstack.octavia.l7Rule/" + rule.ID),
 			"id":                 llx.StringData(rule.ID),
@@ -998,7 +1020,7 @@ func buildOctaviaL7Rules(runtime *plugin.Runtime, policy *l7policies.L7Policy) (
 		}
 		mqlR := res.(*mqlOpenstackOctaviaL7Rule)
 		mqlR.cacheProjectID = rule.ProjectID
-		mqlR.cacheL7PolicyID = policy.ID
+		mqlR.cacheL7PolicyID = policyID
 		out = append(out, mqlR)
 	}
 	return out, nil

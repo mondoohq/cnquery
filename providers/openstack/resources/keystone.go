@@ -35,12 +35,13 @@ func initOpenstackProject(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetProjects()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			p := raw.(*mqlOpenstackProject)
-			if p.Id.Data == id {
-				return args, p, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		p := raw.(*mqlOpenstackProject)
+		if p.Id.Data == id {
+			return args, p, nil
 		}
 	}
 	initSyntheticID("openstack.project", "id", args)
@@ -144,12 +145,13 @@ func initOpenstackUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetUsers()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			u := raw.(*mqlOpenstackUser)
-			if u.Id.Data == id {
-				return args, u, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		u := raw.(*mqlOpenstackUser)
+		if u.Id.Data == id {
+			return args, u, nil
 		}
 	}
 	initSyntheticID("openstack.user", "id", args)
@@ -176,25 +178,32 @@ func (o *mqlOpenstack) users() ([]any, error) {
 
 	out := make([]any, 0, len(items))
 	for i := range items {
-		u := &items[i]
-		res, err := CreateResource(o.MqlRuntime, "openstack.user", map[string]*llx.RawData{
-			"__id":                         llx.StringData("openstack.user/" + u.ID),
-			"id":                           llx.StringData(u.ID),
-			"name":                         llx.StringData(u.Name),
-			"enabled":                      llx.BoolData(u.Enabled),
-			"description":                  llx.StringData(u.Description),
-			"passwordExpiresAt":            llx.TimeDataPtr(timePtr(u.PasswordExpiresAt)),
-			"ignoreLockoutFailureAttempts": llx.BoolData(userOptionBool(u.Options, "ignore_lockout_failure_attempts")),
-		})
+		mqlUser, err := newMqlOpenstackUser(o.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		mqlUser := res.(*mqlOpenstackUser)
-		mqlUser.cacheDomainID = u.DomainID
-		mqlUser.cacheDefaultProjectID = u.DefaultProjectID
 		out = append(out, mqlUser)
 	}
 	return out, nil
+}
+
+func newMqlOpenstackUser(runtime *plugin.Runtime, u *users.User) (*mqlOpenstackUser, error) {
+	res, err := CreateResource(runtime, "openstack.user", map[string]*llx.RawData{
+		"__id":                         llx.StringData("openstack.user/" + u.ID),
+		"id":                           llx.StringData(u.ID),
+		"name":                         llx.StringData(u.Name),
+		"enabled":                      llx.BoolData(u.Enabled),
+		"description":                  llx.StringData(u.Description),
+		"passwordExpiresAt":            llx.TimeDataPtr(timePtr(u.PasswordExpiresAt)),
+		"ignoreLockoutFailureAttempts": llx.BoolData(userOptionBool(u.Options, "ignore_lockout_failure_attempts")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlUser := res.(*mqlOpenstackUser)
+	mqlUser.cacheDomainID = u.DomainID
+	mqlUser.cacheDefaultProjectID = u.DefaultProjectID
+	return mqlUser, nil
 }
 
 func (r *mqlOpenstackUser) domain() (*mqlOpenstackDomain, error) {
@@ -246,27 +255,7 @@ func (r *mqlOpenstackUser) roles() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	seen := make(map[string]struct{}, len(items))
-	out := make([]any, 0, len(items))
-	for _, a := range items {
-		if a.Role.ID == "" {
-			continue
-		}
-		if _, dup := seen[a.Role.ID]; dup {
-			continue
-		}
-		seen[a.Role.ID] = struct{}{}
-		res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
-			"id":   llx.StringData(a.Role.ID),
-			"name": llx.StringData(a.Role.Name),
-		})
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, res)
-	}
-	return out, nil
+	return resolveAssignedRoles(r.MqlRuntime, items)
 }
 
 // ---- openstack.role ----
@@ -289,12 +278,13 @@ func initOpenstackRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetRoles()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			r := raw.(*mqlOpenstackRole)
-			if r.Id.Data == id {
-				return args, r, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		r := raw.(*mqlOpenstackRole)
+		if r.Id.Data == id {
+			return args, r, nil
 		}
 	}
 	initSyntheticID("openstack.role", "id", args)
@@ -368,12 +358,13 @@ func initOpenstackDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetDomains()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			d := raw.(*mqlOpenstackDomain)
-			if d.Id.Data == id {
-				return args, d, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		d := raw.(*mqlOpenstackDomain)
+		if d.Id.Data == id {
+			return args, d, nil
 		}
 	}
 	initSyntheticID("openstack.domain", "id", args)
@@ -435,12 +426,13 @@ func initOpenstackGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetGroups()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			g := raw.(*mqlOpenstackGroup)
-			if g.Id.Data == id {
-				return args, g, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		g := raw.(*mqlOpenstackGroup)
+		if g.Id.Data == id {
+			return args, g, nil
 		}
 	}
 	initSyntheticID("openstack.group", "id", args)
@@ -474,21 +466,29 @@ func listKeystoneGroups(runtime *plugin.Runtime, opts groups.ListOpts) ([]any, e
 	}
 
 	out := make([]any, 0, len(items))
-	for _, g := range items {
-		res, err := CreateResource(runtime, "openstack.group", map[string]*llx.RawData{
-			"__id":        llx.StringData("openstack.group/" + g.ID),
-			"id":          llx.StringData(g.ID),
-			"name":        llx.StringData(g.Name),
-			"description": llx.StringData(g.Description),
-		})
+	for i := range items {
+		mqlGroup, err := newMqlOpenstackGroup(runtime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		mqlGroup := res.(*mqlOpenstackGroup)
-		mqlGroup.cacheDomainID = g.DomainID
 		out = append(out, mqlGroup)
 	}
 	return out, nil
+}
+
+func newMqlOpenstackGroup(runtime *plugin.Runtime, g *groups.Group) (*mqlOpenstackGroup, error) {
+	res, err := CreateResource(runtime, "openstack.group", map[string]*llx.RawData{
+		"__id":        llx.StringData("openstack.group/" + g.ID),
+		"id":          llx.StringData(g.ID),
+		"name":        llx.StringData(g.Name),
+		"description": llx.StringData(g.Description),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlGroup := res.(*mqlOpenstackGroup)
+	mqlGroup.cacheDomainID = g.DomainID
+	return mqlGroup, nil
 }
 
 func (r *mqlOpenstackGroup) domain() (*mqlOpenstackDomain, error) {
@@ -524,14 +524,12 @@ func (r *mqlOpenstackGroup) users() ([]any, error) {
 	}
 
 	out := make([]any, 0, len(items))
-	for _, u := range items {
-		res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
-			"id": llx.StringData(u.ID),
-		})
+	for i := range items {
+		mqlUser, err := newMqlOpenstackUser(r.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		out = append(out, mqlUser)
 	}
 	return out, nil
 }
@@ -555,27 +553,7 @@ func (r *mqlOpenstackGroup) roles() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	seen := make(map[string]struct{}, len(items))
-	out := make([]any, 0, len(items))
-	for _, a := range items {
-		if a.Role.ID == "" {
-			continue
-		}
-		if _, dup := seen[a.Role.ID]; dup {
-			continue
-		}
-		seen[a.Role.ID] = struct{}{}
-		res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
-			"id":   llx.StringData(a.Role.ID),
-			"name": llx.StringData(a.Role.Name),
-		})
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, res)
-	}
-	return out, nil
+	return resolveAssignedRoles(r.MqlRuntime, items)
 }
 
 func (r *mqlOpenstackUser) groups() ([]any, error) {
@@ -597,9 +575,52 @@ func (r *mqlOpenstackUser) groups() ([]any, error) {
 	}
 
 	out := make([]any, 0, len(items))
-	for _, g := range items {
-		res, err := NewResource(r.MqlRuntime, "openstack.group", map[string]*llx.RawData{
-			"id": llx.StringData(g.ID),
+	for i := range items {
+		mqlGroup, err := newMqlOpenstackGroup(r.MqlRuntime, &items[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlGroup)
+	}
+	return out, nil
+}
+
+// resolveAssignedRoles dedupes role assignments by role ID and, when the
+// caller has already triggered openstack.roles, resolves each role from the
+// cached list so the returned resources carry full data (name, domain).
+// ListAssignments returns only role IDs — accepting that as-is leaves a
+// blank `name` field on every assignment-derived role.
+func resolveAssignedRoles(runtime *plugin.Runtime, items []roles.RoleAssignment) ([]any, error) {
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := root.(*mqlOpenstack).GetRoles()
+	var byID map[string]*mqlOpenstackRole
+	if list.Error == nil {
+		byID = make(map[string]*mqlOpenstackRole, len(list.Data))
+		for _, raw := range list.Data {
+			role := raw.(*mqlOpenstackRole)
+			byID[role.Id.Data] = role
+		}
+	}
+
+	seen := make(map[string]struct{}, len(items))
+	out := make([]any, 0, len(items))
+	for _, a := range items {
+		if a.Role.ID == "" {
+			continue
+		}
+		if _, dup := seen[a.Role.ID]; dup {
+			continue
+		}
+		seen[a.Role.ID] = struct{}{}
+		if role, ok := byID[a.Role.ID]; ok {
+			out = append(out, role)
+			continue
+		}
+		res, err := NewResource(runtime, "openstack.role", map[string]*llx.RawData{
+			"id": llx.StringData(a.Role.ID),
 		})
 		if err != nil {
 			return nil, err

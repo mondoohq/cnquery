@@ -10,6 +10,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/containers"
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/orders"
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/secrets"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -46,12 +47,13 @@ func initOpenstackKeymanagerSecret(runtime *plugin.Runtime, args map[string]*llx
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetSecrets()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			s := raw.(*mqlOpenstackKeymanagerSecret)
-			if s.Id.Data == id {
-				return args, s, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		s := raw.(*mqlOpenstackKeymanagerSecret)
+		if s.Id.Data == id {
+			return args, s, nil
 		}
 	}
 	initSyntheticID("openstack.keymanager.secret", "id", args)
@@ -79,6 +81,10 @@ func (o *mqlOpenstack) secrets() ([]any, error) {
 	out := make([]any, 0, len(items))
 	for i := range items {
 		s := &items[i]
+		if barbicanRefID(s.SecretRef) == "" {
+			log.Warn().Str("secretRef", s.SecretRef).Msg("openstack: skipping Barbican secret with unresolvable ref")
+			continue
+		}
 		res, err := newMqlOpenstackKeymanagerSecret(o.MqlRuntime, s)
 		if err != nil {
 			return nil, err
@@ -151,12 +157,13 @@ func initOpenstackKeymanagerContainer(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetSecretContainers()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			c := raw.(*mqlOpenstackKeymanagerContainer)
-			if c.Id.Data == id {
-				return args, c, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		c := raw.(*mqlOpenstackKeymanagerContainer)
+		if c.Id.Data == id {
+			return args, c, nil
 		}
 	}
 	initSyntheticID("openstack.keymanager.container", "id", args)
@@ -185,6 +192,10 @@ func (o *mqlOpenstack) secretContainers() ([]any, error) {
 	for i := range items {
 		ct := &items[i]
 		id := barbicanRefID(ct.ContainerRef)
+		if id == "" {
+			log.Warn().Str("containerRef", ct.ContainerRef).Msg("openstack: skipping Barbican container with unresolvable ref")
+			continue
+		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.keymanager.container", map[string]*llx.RawData{
 			"__id":         llx.StringData("openstack.keymanager.container/" + id),
 			"id":           llx.StringData(id),
@@ -326,12 +337,13 @@ func initOpenstackKeymanagerOrder(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetSecretOrders()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			o := raw.(*mqlOpenstackKeymanagerOrder)
-			if o.Id.Data == id {
-				return args, o, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		o := raw.(*mqlOpenstackKeymanagerOrder)
+		if o.Id.Data == id {
+			return args, o, nil
 		}
 	}
 	initSyntheticID("openstack.keymanager.order", "id", args)
@@ -360,6 +372,10 @@ func (o *mqlOpenstack) secretOrders() ([]any, error) {
 	for i := range items {
 		ord := &items[i]
 		id := barbicanRefID(ord.OrderRef)
+		if id == "" {
+			log.Warn().Str("orderRef", ord.OrderRef).Msg("openstack: skipping Barbican order with unresolvable ref")
+			continue
+		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.keymanager.order", map[string]*llx.RawData{
 			"__id":             llx.StringData("openstack.keymanager.order/" + id),
 			"id":               llx.StringData(id),

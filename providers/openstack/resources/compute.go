@@ -47,12 +47,13 @@ func initOpenstackComputeServer(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetServers()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			s := raw.(*mqlOpenstackComputeServer)
-			if s.Id.Data == id {
-				return args, s, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		s := raw.(*mqlOpenstackComputeServer)
+		if s.Id.Data == id {
+			return args, s, nil
 		}
 	}
 	initSyntheticID("openstack.compute.server", "id", args)
@@ -306,34 +307,36 @@ func serverFlavorRef(raw map[string]any) (id, name string) {
 }
 
 // lookupFlavorIDByName resolves a flavor name to an id via a per-connection
-// cache populated lazily from a single flavors.ListDetail call.
+// cache populated lazily from a single flavors.ListDetail call. After the
+// once-only fetch, reads are lock-free.
 func lookupFlavorIDByName(c *connection.OpenstackConnection, name string) (string, error) {
-	c.FlavorNameCacheLock.Lock()
-	defer c.FlavorNameCacheLock.Unlock()
-
-	if !c.FlavorNameCacheDone {
+	c.FlavorNameCacheOnce.Do(func() {
 		client, err := c.ComputeClient()
 		if err != nil {
-			return "", err
+			c.FlavorNameCacheErr = err
+			return
 		}
 		pages, err := flavors.ListDetail(client, flavors.ListOpts{}).AllPages(ctx())
 		if err != nil {
 			if translateOpenstackError(err) == nil {
-				c.FlavorNameCacheDone = true
 				c.FlavorNameCache = map[string]string{}
-				return "", nil
+				return
 			}
-			return "", err
+			c.FlavorNameCacheErr = err
+			return
 		}
 		items, err := flavors.ExtractFlavors(pages)
 		if err != nil {
-			return "", err
+			c.FlavorNameCacheErr = err
+			return
 		}
 		c.FlavorNameCache = make(map[string]string, len(items))
 		for _, f := range items {
 			c.FlavorNameCache[f.Name] = f.ID
 		}
-		c.FlavorNameCacheDone = true
+	})
+	if c.FlavorNameCacheErr != nil {
+		return "", c.FlavorNameCacheErr
 	}
 	return c.FlavorNameCache[name], nil
 }
@@ -493,12 +496,13 @@ func initOpenstackComputeKeypair(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetKeypairs()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			k := raw.(*mqlOpenstackComputeKeypair)
-			if k.Name.Data == name {
-				return args, k, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		k := raw.(*mqlOpenstackComputeKeypair)
+		if k.Name.Data == name {
+			return args, k, nil
 		}
 	}
 	initSyntheticID("openstack.compute.keypair", "name", args)
@@ -557,12 +561,13 @@ func initOpenstackComputeServerGroup(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetServerGroups()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			g := raw.(*mqlOpenstackComputeServerGroup)
-			if g.Id.Data == id {
-				return args, g, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		g := raw.(*mqlOpenstackComputeServerGroup)
+		if g.Id.Data == id {
+			return args, g, nil
 		}
 	}
 	initSyntheticID("openstack.compute.serverGroup", "id", args)
@@ -648,12 +653,13 @@ func initOpenstackComputeHypervisor(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetHypervisors()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			h := raw.(*mqlOpenstackComputeHypervisor)
-			if h.Id.Data == id {
-				return args, h, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		h := raw.(*mqlOpenstackComputeHypervisor)
+		if h.Id.Data == id {
+			return args, h, nil
 		}
 	}
 	initSyntheticID("openstack.compute.hypervisor", "id", args)
@@ -759,12 +765,13 @@ func initOpenstackComputeService(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetComputeServices()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			s := raw.(*mqlOpenstackComputeService)
-			if s.Id.Data == id {
-				return args, s, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		s := raw.(*mqlOpenstackComputeService)
+		if s.Id.Data == id {
+			return args, s, nil
 		}
 	}
 	initSyntheticID("openstack.compute.service", "id", args)
@@ -882,8 +889,7 @@ func (o *mqlOpenstack) computeLimits() (*mqlOpenstackComputeLimits, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.ComputeClient()
 	if err != nil {
-		o.ComputeLimits.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+		return nil, err
 	}
 	lim, err := limits.Get(ctx(), client, nil).Extract()
 	if err != nil {

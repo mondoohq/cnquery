@@ -44,12 +44,13 @@ func initOpenstackBlockstorageVolume(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetVolumes()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			v := raw.(*mqlOpenstackBlockstorageVolume)
-			if v.Id.Data == id {
-				return args, v, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		v := raw.(*mqlOpenstackBlockstorageVolume)
+		if v.Id.Data == id {
+			return args, v, nil
 		}
 	}
 	initSyntheticID("openstack.blockstorage.volume", "id", args)
@@ -315,12 +316,13 @@ func initOpenstackBlockstorageSnapshot(runtime *plugin.Runtime, args map[string]
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetSnapshots()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			s := raw.(*mqlOpenstackBlockstorageSnapshot)
-			if s.Id.Data == id {
-				return args, s, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		s := raw.(*mqlOpenstackBlockstorageSnapshot)
+		if s.Id.Data == id {
+			return args, s, nil
 		}
 	}
 	initSyntheticID("openstack.blockstorage.snapshot", "id", args)
@@ -438,12 +440,13 @@ func initOpenstackBlockstorageVolumeType(runtime *plugin.Runtime, args map[strin
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetVolumeTypes()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			vt := raw.(*mqlOpenstackBlockstorageVolumeType)
-			if vt.Id.Data == id {
-				return args, vt, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		vt := raw.(*mqlOpenstackBlockstorageVolumeType)
+		if vt.Id.Data == id {
+			return args, vt, nil
 		}
 	}
 	initSyntheticID("openstack.blockstorage.volumeType", "id", args)
@@ -598,12 +601,13 @@ func initOpenstackBlockstorageBackup(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, err
 	}
 	list := root.(*mqlOpenstack).GetBackups()
-	if list.Error == nil {
-		for _, raw := range list.Data {
-			b := raw.(*mqlOpenstackBlockstorageBackup)
-			if b.Id.Data == id {
-				return args, b, nil
-			}
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		b := raw.(*mqlOpenstackBlockstorageBackup)
+		if b.Id.Data == id {
+			return args, b, nil
 		}
 	}
 	initSyntheticID("openstack.blockstorage.backup", "id", args)
@@ -721,8 +725,7 @@ func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet
 	c := conn(o.MqlRuntime)
 	client, err := c.BlockStorageClient()
 	if err != nil {
-		o.BlockStorageQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+		return nil, err
 	}
 	projectId := c.ProjectID()
 	q, err := quotasets.Get(ctx(), client, projectId).Extract()
