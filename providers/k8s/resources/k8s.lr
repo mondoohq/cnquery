@@ -372,6 +372,8 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Pods backing this deployment (label-selector match; technically owned by the deployment's ReplicaSets)
+  pods() []k8s.pod
   // Number of pods requested by the deployment
   desiredReplicas() int
   // Label selector that identifies pods owned by this deployment
@@ -432,6 +434,8 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Pods backing this DaemonSet (label-selector match)
+  pods() []k8s.pod
   // Label selector that identifies pods owned by this DaemonSet
   selector() dict
   // Update strategy (OnDelete or RollingUpdate with maxUnavailable/maxSurge)
@@ -490,6 +494,8 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Pods backing this StatefulSet (label-selector match)
+  pods() []k8s.pod
   // Number of pods requested by the StatefulSet
   desiredReplicas() int
   // Label selector that identifies pods owned by this StatefulSet
@@ -558,6 +564,8 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Pods backing this ReplicaSet (label-selector match)
+  pods() []k8s.pod
   // Number of pods requested by the ReplicaSet
   desiredReplicas() int
   // Label selector that identifies pods owned by this ReplicaSet
@@ -606,6 +614,8 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Pods backing this Job (label-selector match)
+  pods() []k8s.pod
   // Maximum number of pods the job should run in parallel
   parallelism() int
   // Total number of successful completions required to mark the job complete
@@ -698,6 +708,10 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   lastScheduleTime() time
   // Time of the last successful job completion
   lastSuccessfulTime() time
+  // Currently active jobs created by this CronJob (resolves status.active ObjectReferences)
+  activeJobs() []k8s.job
+  // All jobs ever owned by this CronJob (filtered from k8s.jobs by ownerReference UID; subject to the CronJob's history limits)
+  jobs() []k8s.job
 }
 
 // Kubernetes workload container

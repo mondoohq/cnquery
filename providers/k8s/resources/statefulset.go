@@ -111,6 +111,14 @@ func (k *mqlK8sStatefulset) containers() ([]any, error) {
 	return getContainers(s, &s.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
+func (k *mqlK8sStatefulset) pods() ([]any, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return podsMatchingSelector(k.MqlRuntime, s.Spec.Selector, s.Namespace)
+}
+
 func (k *mqlK8sStatefulset) desiredReplicas() (int64, error) {
 	s, err := k.getStatefulSet()
 	if err != nil {

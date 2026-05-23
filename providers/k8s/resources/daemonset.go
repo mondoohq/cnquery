@@ -111,6 +111,14 @@ func (k *mqlK8sDaemonset) containers() ([]any, error) {
 	return getContainers(ds, &ds.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
+func (k *mqlK8sDaemonset) pods() ([]any, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return podsMatchingSelector(k.MqlRuntime, ds.Spec.Selector, ds.Namespace)
+}
+
 func (k *mqlK8sDaemonset) selector() (map[string]any, error) {
 	ds, err := k.getDaemonSet()
 	if err != nil {

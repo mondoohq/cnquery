@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -245,4 +246,51 @@ func initResource[T K8sObject](
 
 	// the error ResourceNotFound is checked by cnspec
 	return nil, nil, errors.New("not found")
+}
+
+// podsMatchingSelector returns the modeled k8s.pod resources in the given
+// namespace whose labels match the supplied LabelSelector. Workloads use this
+// to expose a typed `pods()` accessor.
+func podsMatchingSelector(runtime *plugin.Runtime, selector *metav1.LabelSelector, namespace string) ([]any, error) {
+	if selector == nil {
+		return []any{}, nil
+	}
+	sel, err := metav1.LabelSelectorAsSelector(selector)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := CreateResource(runtime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	pods := o.(*mqlK8s).GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+
+	out := []any{}
+	for i := range pods.Data {
+		p, ok := pods.Data[i].(*mqlK8sPod)
+		if !ok {
+			continue
+		}
+		if namespace != "" && p.Namespace.Data != namespace {
+			continue
+		}
+		podLabels := p.GetLabels()
+		if podLabels.Error != nil {
+			continue
+		}
+		stringLabels := make(map[string]string, len(podLabels.Data))
+		for k, v := range podLabels.Data {
+			if s, ok := v.(string); ok {
+				stringLabels[k] = s
+			}
+		}
+		if sel.Matches(labels.Set(stringLabels)) {
+			out = append(out, p)
+		}
+	}
+	return out, nil
 }

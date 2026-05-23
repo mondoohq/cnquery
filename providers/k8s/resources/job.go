@@ -112,6 +112,14 @@ func (k *mqlK8sJob) containers() ([]any, error) {
 	return getContainers(j, &j.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
+func (k *mqlK8sJob) pods() ([]any, error) {
+	j, err := k.getJob()
+	if err != nil {
+		return nil, err
+	}
+	return podsMatchingSelector(k.MqlRuntime, j.Spec.Selector, j.Namespace)
+}
+
 func (k *mqlK8sJob) parallelism() (int64, error) {
 	j, err := k.getJob()
 	if err != nil {
