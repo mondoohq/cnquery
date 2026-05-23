@@ -307,36 +307,35 @@ func serverFlavorRef(raw map[string]any) (id, name string) {
 }
 
 // lookupFlavorIDByName resolves a flavor name to an id via a per-connection
-// cache populated lazily from a single flavors.ListDetail call. After the
-// once-only fetch, reads are lock-free.
+// cache populated lazily from a single flavors.ListDetail call. The lock
+// single-flights the first fetch; on success or auth-translated failure the
+// cache map is non-nil and subsequent callers fast-path. Real errors leave
+// the cache nil so the next call retries instead of inheriting a stale error.
 func lookupFlavorIDByName(c *connection.OpenstackConnection, name string) (string, error) {
-	c.FlavorNameCacheOnce.Do(func() {
-		client, err := c.ComputeClient()
-		if err != nil {
-			c.FlavorNameCacheErr = err
-			return
+	c.FlavorNameCacheLock.Lock()
+	defer c.FlavorNameCacheLock.Unlock()
+	if c.FlavorNameCache != nil {
+		return c.FlavorNameCache[name], nil
+	}
+	client, err := c.ComputeClient()
+	if err != nil {
+		return "", err
+	}
+	pages, err := flavors.ListDetail(client, flavors.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			c.FlavorNameCache = map[string]string{}
+			return "", nil
 		}
-		pages, err := flavors.ListDetail(client, flavors.ListOpts{}).AllPages(ctx())
-		if err != nil {
-			if translateOpenstackError(err) == nil {
-				c.FlavorNameCache = map[string]string{}
-				return
-			}
-			c.FlavorNameCacheErr = err
-			return
-		}
-		items, err := flavors.ExtractFlavors(pages)
-		if err != nil {
-			c.FlavorNameCacheErr = err
-			return
-		}
-		c.FlavorNameCache = make(map[string]string, len(items))
-		for _, f := range items {
-			c.FlavorNameCache[f.Name] = f.ID
-		}
-	})
-	if c.FlavorNameCacheErr != nil {
-		return "", c.FlavorNameCacheErr
+		return "", err
+	}
+	items, err := flavors.ExtractFlavors(pages)
+	if err != nil {
+		return "", err
+	}
+	c.FlavorNameCache = make(map[string]string, len(items))
+	for _, f := range items {
+		c.FlavorNameCache[f.Name] = f.ID
 	}
 	return c.FlavorNameCache[name], nil
 }

@@ -752,12 +752,15 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 	// Prime the per-connection name->ID cache from this list call so that
 	// Nova security-group-by-name lookups (lookupSecurityGroupIDByName)
 	// reuse it instead of re-listing Neutron.
-	c.SGNameCacheOnce.Do(func() {
-		c.SGNameCache = make(map[string]string, len(items))
+	c.SGNameCacheLock.Lock()
+	if c.SGNameCache == nil {
+		cache := make(map[string]string, len(items))
 		for _, sg := range items {
-			c.SGNameCache[sg.Name] = sg.ID
+			cache[sg.Name] = sg.ID
 		}
-	})
+		c.SGNameCache = cache
+	}
+	c.SGNameCacheLock.Unlock()
 
 	out := make([]any, 0, len(items))
 	for i := range items {
@@ -856,32 +859,32 @@ func (r *mqlOpenstackSecurityGroupRule) remoteGroup() (*mqlOpenstackSecurityGrou
 
 // lookupSecurityGroupIDByName resolves a security-group name to an ID using a
 // per-connection cache. Nova reports server security groups by name, but
-// Neutron is the source of truth for IDs, so each connection lists groups once
-// and consults its cache thereafter. After the once-only fetch, reads are
-// lock-free.
+// Neutron is the source of truth for IDs, so each connection lists groups
+// once and consults its cache thereafter. The lock single-flights the first
+// fetch; on success or auth-translated failure the cache map is non-nil and
+// subsequent callers fast-path. Real errors leave the cache nil so the next
+// call retries instead of inheriting a stale error.
 func lookupSecurityGroupIDByName(c *connection.OpenstackConnection, client *gophercloud.ServiceClient, name string) (string, error) {
-	c.SGNameCacheOnce.Do(func() {
-		pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
-		if err != nil {
-			if translateOpenstackError(err) == nil {
-				c.SGNameCache = map[string]string{}
-				return
-			}
-			c.SGNameCacheErr = err
-			return
+	c.SGNameCacheLock.Lock()
+	defer c.SGNameCacheLock.Unlock()
+	if c.SGNameCache != nil {
+		return c.SGNameCache[name], nil
+	}
+	pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			c.SGNameCache = map[string]string{}
+			return "", nil
 		}
-		items, err := groups.ExtractGroups(pages)
-		if err != nil {
-			c.SGNameCacheErr = err
-			return
-		}
-		c.SGNameCache = make(map[string]string, len(items))
-		for _, sg := range items {
-			c.SGNameCache[sg.Name] = sg.ID
-		}
-	})
-	if c.SGNameCacheErr != nil {
-		return "", c.SGNameCacheErr
+		return "", err
+	}
+	items, err := groups.ExtractGroups(pages)
+	if err != nil {
+		return "", err
+	}
+	c.SGNameCache = make(map[string]string, len(items))
+	for _, sg := range items {
+		c.SGNameCache[sg.Name] = sg.ID
 	}
 	return c.SGNameCache[name], nil
 }
