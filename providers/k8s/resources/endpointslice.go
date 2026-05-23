@@ -74,3 +74,19 @@ func (k *mqlK8sEndpointslice) annotations() (map[string]any, error) {
 func (k *mqlK8sEndpointslice) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sEndpointslice) service() (*mqlK8sService, error) {
+	svcName := k.obj.Labels["kubernetes.io/service-name"]
+	if svcName == "" {
+		k.Service.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.service", map[string]*llx.RawData{
+		"name":      llx.StringData(svcName),
+		"namespace": llx.StringData(k.obj.Namespace),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sService), nil
+}

@@ -2053,6 +2053,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetAggregationRule()).ToDataRes(types.Dict)
 	},
+	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrolebinding")))
+	},
 	"k8s.rbac.clusterrolebinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetId()).ToDataRes(types.String)
 	},
@@ -2086,6 +2089,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrolebinding.roleRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetRoleRef()).ToDataRes(types.Dict)
 	},
+	"k8s.rbac.clusterrolebinding.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
+	},
+	"k8s.rbac.clusterrolebinding.clusterRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetClusterRole()).ToDataRes(types.Resource("k8s.rbac.clusterrole"))
+	},
 	"k8s.rbac.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetId()).ToDataRes(types.String)
 	},
@@ -2118,6 +2127,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.role.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.rbac.role.boundBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
 	},
 	"k8s.rbac.rolebinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetId()).ToDataRes(types.String)
@@ -2154,6 +2166,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetRoleRef()).ToDataRes(types.Dict)
+	},
+	"k8s.rbac.rolebinding.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
+	},
+	"k8s.rbac.rolebinding.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetRole()).ToDataRes(types.Resource("k8s.rbac.role"))
+	},
+	"k8s.rbac.rolebinding.clusterRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetClusterRole()).ToDataRes(types.Resource("k8s.rbac.clusterrole"))
 	},
 	"k8s.networkpolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetId()).ToDataRes(types.String)
@@ -2509,6 +2530,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.resourcequota.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sResourcequota).GetStatus()).ToDataRes(types.Dict)
 	},
+	"k8s.resourcequota.hard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetHard()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourcequota.used": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetUsed()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourcequota.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.resourcequota.scopeSelector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetScopeSelector()).ToDataRes(types.Dict)
+	},
 	"k8s.limitrange.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetId()).ToDataRes(types.String)
 	},
@@ -2541,6 +2574,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.limitrange.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.limitrange.limits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetLimits()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.persistentvolumeclaim.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolumeclaim).GetId()).ToDataRes(types.String)
@@ -2658,6 +2694,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.endpointslice.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.endpointslice.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetService()).ToDataRes(types.Resource("k8s.service"))
 	},
 	"k8s.admissionreview.request": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionreview).GetRequest()).ToDataRes(types.Resource("k8s.admissionrequest"))
@@ -5587,6 +5626,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrolebinding).__id, ok = v.Value.(string)
 		return
@@ -5635,6 +5678,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrolebinding).RoleRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrolebinding.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.clusterRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).ClusterRole, ok = plugin.RawToTValue[*mqlK8sRbacClusterrole](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).__id, ok = v.Value.(string)
 		return
@@ -5681,6 +5732,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.role.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5733,6 +5788,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRolebinding).RoleRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Role, ok = plugin.RawToTValue[*mqlK8sRbacRole](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.clusterRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).ClusterRole, ok = plugin.RawToTValue[*mqlK8sRbacClusterrole](v.Value, v.Error)
 		return
 	},
 	"k8s.networkpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6235,6 +6302,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sResourcequota).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.resourcequota.hard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Hard, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.used": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Used, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.scopeSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).ScopeSelector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"k8s.limitrange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLimitrange).__id, ok = v.Value.(string)
 		return
@@ -6281,6 +6364,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.limitrange.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLimitrange).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Limits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.persistentvolumeclaim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6445,6 +6532,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.endpointslice.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEndpointslice).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Service, ok = plugin.RawToTValue[*mqlK8sService](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12988,6 +13079,7 @@ type mqlK8sRbacClusterrole struct {
 	Manifest        plugin.TValue[any]
 	Rules           plugin.TValue[[]any]
 	AggregationRule plugin.TValue[any]
+	BoundBy         plugin.TValue[[]any]
 }
 
 // createK8sRbacClusterrole creates a new instance of this resource
@@ -13077,6 +13169,22 @@ func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[any] {
 	return &c.AggregationRule
 }
 
+func (c *mqlK8sRbacClusterrole) GetBoundBy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BoundBy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrole", c.__id, "boundBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.boundBy()
+	})
+}
+
 // mqlK8sRbacClusterrolebinding for the k8s.rbac.clusterrolebinding resource
 type mqlK8sRbacClusterrolebinding struct {
 	MqlRuntime *plugin.Runtime
@@ -13093,6 +13201,8 @@ type mqlK8sRbacClusterrolebinding struct {
 	Manifest        plugin.TValue[any]
 	Subjects        plugin.TValue[[]any]
 	RoleRef         plugin.TValue[any]
+	ServiceAccounts plugin.TValue[[]any]
+	ClusterRole     plugin.TValue[*mqlK8sRbacClusterrole]
 }
 
 // createK8sRbacClusterrolebinding creates a new instance of this resource
@@ -13182,6 +13292,38 @@ func (c *mqlK8sRbacClusterrolebinding) GetRoleRef() *plugin.TValue[any] {
 	return &c.RoleRef
 }
 
+func (c *mqlK8sRbacClusterrolebinding) GetServiceAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrolebinding", c.__id, "serviceAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceAccounts()
+	})
+}
+
+func (c *mqlK8sRbacClusterrolebinding) GetClusterRole() *plugin.TValue[*mqlK8sRbacClusterrole] {
+	return plugin.GetOrCompute[*mqlK8sRbacClusterrole](&c.ClusterRole, func() (*mqlK8sRbacClusterrole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrolebinding", c.__id, "clusterRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sRbacClusterrole), nil
+			}
+		}
+
+		return c.clusterRole()
+	})
+}
+
 // mqlK8sRbacRole for the k8s.rbac.role resource
 type mqlK8sRbacRole struct {
 	MqlRuntime *plugin.Runtime
@@ -13198,6 +13340,7 @@ type mqlK8sRbacRole struct {
 	Created         plugin.TValue[*time.Time]
 	Manifest        plugin.TValue[any]
 	Rules           plugin.TValue[[]any]
+	BoundBy         plugin.TValue[[]any]
 }
 
 // createK8sRbacRole creates a new instance of this resource
@@ -13287,6 +13430,22 @@ func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
+func (c *mqlK8sRbacRole) GetBoundBy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BoundBy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.role", c.__id, "boundBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.boundBy()
+	})
+}
+
 // mqlK8sRbacRolebinding for the k8s.rbac.rolebinding resource
 type mqlK8sRbacRolebinding struct {
 	MqlRuntime *plugin.Runtime
@@ -13304,6 +13463,9 @@ type mqlK8sRbacRolebinding struct {
 	Manifest        plugin.TValue[any]
 	Subjects        plugin.TValue[[]any]
 	RoleRef         plugin.TValue[any]
+	ServiceAccounts plugin.TValue[[]any]
+	Role            plugin.TValue[*mqlK8sRbacRole]
+	ClusterRole     plugin.TValue[*mqlK8sRbacClusterrole]
 }
 
 // createK8sRbacRolebinding creates a new instance of this resource
@@ -13395,6 +13557,54 @@ func (c *mqlK8sRbacRolebinding) GetSubjects() *plugin.TValue[[]any] {
 
 func (c *mqlK8sRbacRolebinding) GetRoleRef() *plugin.TValue[any] {
 	return &c.RoleRef
+}
+
+func (c *mqlK8sRbacRolebinding) GetServiceAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "serviceAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceAccounts()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetRole() *plugin.TValue[*mqlK8sRbacRole] {
+	return plugin.GetOrCompute[*mqlK8sRbacRole](&c.Role, func() (*mqlK8sRbacRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sRbacRole), nil
+			}
+		}
+
+		return c.role()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetClusterRole() *plugin.TValue[*mqlK8sRbacClusterrole] {
+	return plugin.GetOrCompute[*mqlK8sRbacClusterrole](&c.ClusterRole, func() (*mqlK8sRbacClusterrole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "clusterRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sRbacClusterrole), nil
+			}
+		}
+
+		return c.clusterRole()
+	})
 }
 
 // mqlK8sNetworkpolicy for the k8s.networkpolicy resource
@@ -14376,6 +14586,10 @@ type mqlK8sResourcequota struct {
 	Manifest        plugin.TValue[any]
 	Spec            plugin.TValue[any]
 	Status          plugin.TValue[any]
+	Hard            plugin.TValue[map[string]any]
+	Used            plugin.TValue[map[string]any]
+	Scopes          plugin.TValue[[]any]
+	ScopeSelector   plugin.TValue[any]
 }
 
 // createK8sResourcequota creates a new instance of this resource
@@ -14473,6 +14687,30 @@ func (c *mqlK8sResourcequota) GetStatus() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlK8sResourcequota) GetHard() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Hard, func() (map[string]any, error) {
+		return c.hard()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetUsed() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Used, func() (map[string]any, error) {
+		return c.used()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Scopes, func() ([]any, error) {
+		return c.scopes()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetScopeSelector() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ScopeSelector, func() (any, error) {
+		return c.scopeSelector()
+	})
+}
+
 // mqlK8sLimitrange for the k8s.limitrange resource
 type mqlK8sLimitrange struct {
 	MqlRuntime *plugin.Runtime
@@ -14489,6 +14727,7 @@ type mqlK8sLimitrange struct {
 	Created         plugin.TValue[*time.Time]
 	Manifest        plugin.TValue[any]
 	Spec            plugin.TValue[any]
+	Limits          plugin.TValue[[]any]
 }
 
 // createK8sLimitrange creates a new instance of this resource
@@ -14577,6 +14816,12 @@ func (c *mqlK8sLimitrange) GetManifest() *plugin.TValue[any] {
 func (c *mqlK8sLimitrange) GetSpec() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
 		return c.spec()
+	})
+}
+
+func (c *mqlK8sLimitrange) GetLimits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Limits, func() ([]any, error) {
+		return c.limits()
 	})
 }
 
@@ -14830,6 +15075,7 @@ type mqlK8sEndpointslice struct {
 	AddressType     plugin.TValue[string]
 	Endpoints       plugin.TValue[[]any]
 	Ports           plugin.TValue[[]any]
+	Service         plugin.TValue[*mqlK8sService]
 }
 
 // createK8sEndpointslice creates a new instance of this resource
@@ -14928,6 +15174,22 @@ func (c *mqlK8sEndpointslice) GetEndpoints() *plugin.TValue[[]any] {
 func (c *mqlK8sEndpointslice) GetPorts() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
 		return c.ports()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetService() *plugin.TValue[*mqlK8sService] {
+	return plugin.GetOrCompute[*mqlK8sService](&c.Service, func() (*mqlK8sService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.endpointslice", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sService), nil
+			}
+		}
+
+		return c.service()
 	})
 }
 

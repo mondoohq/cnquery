@@ -1252,6 +1252,8 @@ private k8s.rbac.clusterrole @defaults("name created") {
   rules []dict
   // ClusterRole aggregation rule
   aggregationRule dict
+  // ClusterRoleBindings that reference this ClusterRole via roleRef
+  boundBy() []k8s.rbac.clusterrolebinding
 }
 
 // Kubernetes ClusterRoleBinding
@@ -1278,6 +1280,10 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
   subjects []dict
   // ClusterRole in the global namespace
   roleRef dict
+  // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
+  serviceAccounts() []k8s.serviceaccount
+  // The ClusterRole granted by this binding (roleRef.name)
+  clusterRole() k8s.rbac.clusterrole
 }
 
 // Kubernetes Role
@@ -1304,6 +1310,8 @@ private k8s.rbac.role @defaults("name namespace") {
   manifest() dict
   // Role rules defining the permissions granted within this namespace
   rules []dict
+  // RoleBindings in this namespace that reference this Role via roleRef
+  boundBy() []k8s.rbac.rolebinding
 }
 
 // Kubernetes RoleBinding
@@ -1332,6 +1340,12 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   subjects []dict
   // RoleRef can only reference a ClusterRole in the global namespace
   roleRef dict
+  // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
+  serviceAccounts() []k8s.serviceaccount
+  // The Role granted by this binding (null when roleRef points to a ClusterRole)
+  role() k8s.rbac.role
+  // The ClusterRole granted by this binding (null when roleRef points to a Role)
+  clusterRole() k8s.rbac.clusterrole
 }
 
 // Kubernetes Network Policy
@@ -1596,6 +1610,14 @@ private k8s.resourcequota @defaults("namespace name created") {
   spec() dict
   // ResourceQuota status
   status() dict
+  // Hard limits enforced by the quota (resource name -> quantity string)
+  hard() map[string]string
+  // Current usage observed against the quota (resource name -> quantity string)
+  used() map[string]string
+  // Scopes to which the quota applies (e.g., Terminating, NotTerminating, BestEffort, NotBestEffort, PriorityClass, CrossNamespacePodAffinity)
+  scopes() []string
+  // Scope selector for fine-grained scope matching (operators on scope names)
+  scopeSelector() dict
 }
 
 // Kubernetes LimitRange
@@ -1622,6 +1644,8 @@ private k8s.limitrange @defaults("namespace name created") {
   manifest() dict
   // LimitRange spec
   spec() dict
+  // Limit items keyed by resource type (Container, Pod, PersistentVolumeClaim): default, defaultRequest, max, min, maxLimitRequestRatio
+  limits() []dict
 }
 
 // Kubernetes PersistentVolumeClaim
@@ -1708,6 +1732,8 @@ private k8s.endpointslice @defaults("namespace name addressType") {
   endpoints() []dict
   // List of network ports exposed by each endpoint
   ports() []dict
+  // The Service this slice backs (resolved from the kubernetes.io/service-name label)
+  service() k8s.service
 }
 
 // Kubernetes AdmissionReview

@@ -261,6 +261,7 @@ k8s.endpointslice.name 11.1.139
 k8s.endpointslice.namespace 11.1.139
 k8s.endpointslice.ports 11.1.139
 k8s.endpointslice.resourceVersion 11.1.139
+k8s.endpointslice.service 13.0.16
 k8s.endpointslice.uid 11.1.139
 k8s.ephemeralContainer 9.0.0
 k8s.ephemeralContainer.args 9.0.0
@@ -526,6 +527,7 @@ k8s.limitrange.created 11.1.139
 k8s.limitrange.id 11.1.139
 k8s.limitrange.kind 11.1.139
 k8s.limitrange.labels 11.1.139
+k8s.limitrange.limits 13.0.16
 k8s.limitrange.manifest 11.1.139
 k8s.limitrange.name 11.1.139
 k8s.limitrange.namespace 11.1.139
@@ -787,6 +789,7 @@ k8s.priorityclass.value 11.1.139
 k8s.rbac.clusterrole 9.0.0
 k8s.rbac.clusterrole.aggregationRule 9.0.0
 k8s.rbac.clusterrole.annotations 9.0.0
+k8s.rbac.clusterrole.boundBy 13.0.16
 k8s.rbac.clusterrole.created 9.0.0
 k8s.rbac.clusterrole.id 9.0.0
 k8s.rbac.clusterrole.kind 9.0.0
@@ -798,6 +801,7 @@ k8s.rbac.clusterrole.rules 9.0.0
 k8s.rbac.clusterrole.uid 9.0.0
 k8s.rbac.clusterrolebinding 9.0.0
 k8s.rbac.clusterrolebinding.annotations 9.0.0
+k8s.rbac.clusterrolebinding.clusterRole 13.0.16
 k8s.rbac.clusterrolebinding.created 9.0.0
 k8s.rbac.clusterrolebinding.id 9.0.0
 k8s.rbac.clusterrolebinding.kind 9.0.0
@@ -806,10 +810,12 @@ k8s.rbac.clusterrolebinding.manifest 9.0.0
 k8s.rbac.clusterrolebinding.name 9.0.0
 k8s.rbac.clusterrolebinding.resourceVersion 9.0.0
 k8s.rbac.clusterrolebinding.roleRef 9.0.0
+k8s.rbac.clusterrolebinding.serviceAccounts 13.0.16
 k8s.rbac.clusterrolebinding.subjects 9.0.0
 k8s.rbac.clusterrolebinding.uid 9.0.0
 k8s.rbac.role 9.0.0
 k8s.rbac.role.annotations 9.0.0
+k8s.rbac.role.boundBy 13.0.16
 k8s.rbac.role.created 9.0.0
 k8s.rbac.role.id 9.0.0
 k8s.rbac.role.kind 9.0.0
@@ -822,6 +828,7 @@ k8s.rbac.role.rules 9.0.0
 k8s.rbac.role.uid 9.0.0
 k8s.rbac.rolebinding 9.0.0
 k8s.rbac.rolebinding.annotations 9.0.0
+k8s.rbac.rolebinding.clusterRole 13.0.16
 k8s.rbac.rolebinding.created 9.0.0
 k8s.rbac.rolebinding.id 9.0.0
 k8s.rbac.rolebinding.kind 9.0.0
@@ -830,7 +837,9 @@ k8s.rbac.rolebinding.manifest 9.0.0
 k8s.rbac.rolebinding.name 9.0.0
 k8s.rbac.rolebinding.namespace 9.0.0
 k8s.rbac.rolebinding.resourceVersion 9.0.0
+k8s.rbac.rolebinding.role 13.0.16
 k8s.rbac.rolebinding.roleRef 9.0.0
+k8s.rbac.rolebinding.serviceAccounts 13.0.16
 k8s.rbac.rolebinding.subjects 9.0.0
 k8s.rbac.rolebinding.uid 9.0.0
 k8s.referenceGrants 13.0.16
@@ -876,6 +885,7 @@ k8s.resourceQuotas 11.1.139
 k8s.resourcequota 11.1.139
 k8s.resourcequota.annotations 11.1.139
 k8s.resourcequota.created 11.1.139
+k8s.resourcequota.hard 13.0.16
 k8s.resourcequota.id 11.1.139
 k8s.resourcequota.kind 11.1.139
 k8s.resourcequota.labels 11.1.139
@@ -883,9 +893,12 @@ k8s.resourcequota.manifest 11.1.139
 k8s.resourcequota.name 11.1.139
 k8s.resourcequota.namespace 11.1.139
 k8s.resourcequota.resourceVersion 11.1.139
+k8s.resourcequota.scopeSelector 13.0.16
+k8s.resourcequota.scopes 13.0.16
 k8s.resourcequota.spec 11.1.139
 k8s.resourcequota.status 11.1.139
 k8s.resourcequota.uid 11.1.139
+k8s.resourcequota.used 13.0.16
 k8s.rolebindings 9.0.0
 k8s.roles 9.0.0
 k8s.secret 9.0.0

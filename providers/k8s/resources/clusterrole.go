@@ -80,3 +80,27 @@ func (k *mqlK8sRbacClusterrole) annotations() (map[string]any, error) {
 func (k *mqlK8sRbacClusterrole) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
+
+func (k *mqlK8sRbacClusterrole) boundBy() ([]any, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	crbs := o.(*mqlK8s).GetClusterrolebindings()
+	if crbs.Error != nil {
+		return nil, crbs.Error
+	}
+
+	roleName := k.Name.Data
+	out := []any{}
+	for i := range crbs.Data {
+		crb, ok := crbs.Data[i].(*mqlK8sRbacClusterrolebinding)
+		if !ok {
+			continue
+		}
+		if crb.obj.RoleRef.Name == roleName {
+			out = append(out, crb)
+		}
+	}
+	return out, nil
+}

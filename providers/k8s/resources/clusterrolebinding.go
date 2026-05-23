@@ -81,3 +81,23 @@ func (k *mqlK8sRbacClusterrolebinding) annotations() (map[string]any, error) {
 func (k *mqlK8sRbacClusterrolebinding) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sRbacClusterrolebinding) serviceAccounts() ([]any, error) {
+	// ClusterRoleBindings are cluster-scoped; ServiceAccount subjects must
+	// specify their own namespace (no fallback).
+	return resolveServiceAccountSubjects(k.MqlRuntime, k.obj.Subjects, "")
+}
+
+func (k *mqlK8sRbacClusterrolebinding) clusterRole() (*mqlK8sRbacClusterrole, error) {
+	if k.obj.RoleRef.Name == "" {
+		k.ClusterRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.rbac.clusterrole", map[string]*llx.RawData{
+		"name": llx.StringData(k.obj.RoleRef.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sRbacClusterrole), nil
+}

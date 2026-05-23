@@ -76,3 +76,31 @@ func (k *mqlK8sRbacRole) annotations() (map[string]any, error) {
 func (k *mqlK8sRbacRole) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sRbacRole) boundBy() ([]any, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	rbs := o.(*mqlK8s).GetRolebindings()
+	if rbs.Error != nil {
+		return nil, rbs.Error
+	}
+
+	roleName := k.Name.Data
+	namespace := k.Namespace.Data
+	out := []any{}
+	for i := range rbs.Data {
+		rb, ok := rbs.Data[i].(*mqlK8sRbacRolebinding)
+		if !ok {
+			continue
+		}
+		if rb.Namespace.Data != namespace {
+			continue
+		}
+		if rb.obj.RoleRef.Kind == "Role" && rb.obj.RoleRef.Name == roleName {
+			out = append(out, rb)
+		}
+	}
+	return out, nil
+}

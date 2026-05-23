@@ -69,3 +69,7 @@ func (k *mqlK8sLimitrange) annotations() (map[string]any, error) {
 func (k *mqlK8sLimitrange) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sLimitrange) limits() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Spec.Limits)
+}

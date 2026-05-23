@@ -82,3 +82,67 @@ func (k *mqlK8sRbacRolebinding) annotations() (map[string]any, error) {
 func (k *mqlK8sRbacRolebinding) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sRbacRolebinding) serviceAccounts() ([]any, error) {
+	return resolveServiceAccountSubjects(k.MqlRuntime, k.obj.Subjects, k.obj.Namespace)
+}
+
+func (k *mqlK8sRbacRolebinding) role() (*mqlK8sRbacRole, error) {
+	if k.obj.RoleRef.Kind != "Role" || k.obj.RoleRef.Name == "" {
+		k.Role.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.rbac.role", map[string]*llx.RawData{
+		"name":      llx.StringData(k.obj.RoleRef.Name),
+		"namespace": llx.StringData(k.obj.Namespace),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sRbacRole), nil
+}
+
+func (k *mqlK8sRbacRolebinding) clusterRole() (*mqlK8sRbacClusterrole, error) {
+	if k.obj.RoleRef.Kind != "ClusterRole" || k.obj.RoleRef.Name == "" {
+		k.ClusterRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.rbac.clusterrole", map[string]*llx.RawData{
+		"name": llx.StringData(k.obj.RoleRef.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sRbacClusterrole), nil
+}
+
+// resolveServiceAccountSubjects resolves the ServiceAccount entries in an RBAC
+// subjects list to typed k8s.serviceaccount resources. Subjects with kinds
+// other than "ServiceAccount" are skipped. A subject's namespace falls back to
+// the binding's namespace when omitted (matches kube-apiserver behavior for
+// RoleBindings).
+func resolveServiceAccountSubjects(runtime *plugin.Runtime, subjects []rbacv1.Subject, fallbackNamespace string) ([]any, error) {
+	out := []any{}
+	for _, s := range subjects {
+		if s.Kind != "ServiceAccount" {
+			continue
+		}
+		ns := s.Namespace
+		if ns == "" {
+			ns = fallbackNamespace
+		}
+		if ns == "" || s.Name == "" {
+			continue
+		}
+		r, err := NewResource(runtime, "k8s.serviceaccount", map[string]*llx.RawData{
+			"name":      llx.StringData(s.Name),
+			"namespace": llx.StringData(ns),
+		})
+		if err != nil {
+			// Subject points at a SA that doesn't exist (e.g., deleted) — skip.
+			continue
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}

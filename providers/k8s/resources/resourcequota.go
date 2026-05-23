@@ -73,3 +73,31 @@ func (k *mqlK8sResourcequota) annotations() (map[string]any, error) {
 func (k *mqlK8sResourcequota) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sResourcequota) hard() (map[string]any, error) {
+	out := make(map[string]any, len(k.obj.Spec.Hard))
+	for name, qty := range k.obj.Spec.Hard {
+		out[string(name)] = qty.String()
+	}
+	return out, nil
+}
+
+func (k *mqlK8sResourcequota) used() (map[string]any, error) {
+	out := make(map[string]any, len(k.obj.Status.Used))
+	for name, qty := range k.obj.Status.Used {
+		out[string(name)] = qty.String()
+	}
+	return out, nil
+}
+
+func (k *mqlK8sResourcequota) scopes() ([]any, error) {
+	out := make([]any, len(k.obj.Spec.Scopes))
+	for i, s := range k.obj.Spec.Scopes {
+		out[i] = string(s)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sResourcequota) scopeSelector() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.ScopeSelector)
+}
