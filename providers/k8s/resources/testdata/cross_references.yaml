@@ -1,0 +1,556 @@
+# Comprehensive fixture for cross-reference resolver tests:
+#   - Pod owner refs (replicaSet, statefulSet, daemonSet, job, deployment 2-hop)
+#   - Workload pods() via spec.selector (matchLabels + matchExpressions)
+#   - CronJob activeJobs (UID match) + jobs (ownerReference UID filter)
+#   - Service ↔ EndpointSlice (kubernetes.io/service-name label)
+#   - Secret + ConfigMap usedBy (volumes, projected, env, envFrom, imagePullSecrets,
+#     init + ephemeral containers)
+#   - RBAC subjects → ServiceAccount, roleRef → Role/ClusterRole, boundBy reverse lookup
+#   - filterByNamespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+---
+# ServiceAccount referenced by RBAC bindings and as a pod imagePullSecret target
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-sa
+  namespace: prod
+---
+# Secret referenced from every supported path (so usedBy must find one pod)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-creds
+  namespace: prod
+type: Opaque
+data:
+  password: c2VjcmV0
+---
+# Unused secret — secret.usedBy.length == 0 should select this
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orphan-secret
+  namespace: prod
+type: Opaque
+data:
+  key: dmFsdWU=
+---
+# Image-pull secret target — referenced via spec.imagePullSecrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+  namespace: prod
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: e30=
+---
+# ConfigMap referenced from volume, env, envFrom, init container, ephemeral container
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: prod
+data:
+  LOG_LEVEL: info
+---
+# Unused ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orphan-config
+  namespace: prod
+data:
+  unused: "true"
+---
+# Deployment → ReplicaSet → Pod ownership chain (for pod.deployment 2-hop)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: prod
+  uid: dep-uid-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: api-7d4f
+  namespace: prod
+  uid: rs-uid-api
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: api
+      uid: dep-uid-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: nginx:1.27
+---
+# An orphan ReplicaSet with no Deployment owner — verifies pod.deployment() returns null
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: standalone-rs
+  namespace: prod
+  uid: rs-uid-standalone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: standalone
+  template:
+    metadata:
+      labels:
+        app: standalone
+    spec:
+      containers:
+        - name: app
+          image: busybox
+---
+# Pod owned by the api ReplicaSet — tests pod.replicaSet + pod.deployment 2-hop
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-7d4f-xyz
+  namespace: prod
+  labels:
+    app: api
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: ReplicaSet
+      name: api-7d4f
+      uid: rs-uid-api
+spec:
+  serviceAccountName: api-sa
+  imagePullSecrets:
+    - name: regcred
+  initContainers:
+    - name: migrate
+      image: migrate:1.0
+      env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-creds
+              key: password
+      envFrom:
+        - configMapRef:
+            name: app-config
+  containers:
+    - name: api
+      image: nginx:1.27
+      env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-creds
+              key: password
+      envFrom:
+        - secretRef:
+            name: db-creds
+        - configMapRef:
+            name: app-config
+      volumeMounts:
+        - name: creds-vol
+          mountPath: /etc/creds
+        - name: config-vol
+          mountPath: /etc/config
+        - name: projected-vol
+          mountPath: /etc/projected
+  ephemeralContainers:
+    - name: debugger
+      image: busybox
+      env:
+        - name: SECRET_PEEK
+          valueFrom:
+            secretKeyRef:
+              name: db-creds
+              key: password
+  volumes:
+    - name: creds-vol
+      secret:
+        secretName: db-creds
+    - name: config-vol
+      configMap:
+        name: app-config
+    - name: projected-vol
+      projected:
+        sources:
+          - secret:
+              name: db-creds
+          - configMap:
+              name: app-config
+status:
+  phase: Running
+---
+# Pod owned by the orphan ReplicaSet — pod.deployment must be null even though replicaSet is set
+apiVersion: v1
+kind: Pod
+metadata:
+  name: standalone-pod
+  namespace: prod
+  labels:
+    app: standalone
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: ReplicaSet
+      name: standalone-rs
+      uid: rs-uid-standalone
+spec:
+  containers:
+    - name: app
+      image: busybox
+status:
+  phase: Running
+---
+# Pod with no owner refs — every typed owner accessor should return null
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bare-pod
+  namespace: prod
+  labels:
+    app: bare
+spec:
+  containers:
+    - name: app
+      image: busybox
+status:
+  phase: Running
+---
+# StatefulSet + owned Pod — tests pod.statefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: prod
+  uid: ss-uid-db
+spec:
+  replicas: 1
+  serviceName: db
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: postgres:16
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-0
+  namespace: prod
+  labels:
+    app: db
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: db
+      uid: ss-uid-db
+spec:
+  containers:
+    - name: db
+      image: postgres:16
+status:
+  phase: Running
+---
+# DaemonSet + owned Pod in a different namespace — tests pod.daemonSet + namespace filter on pods()
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: kube-system
+  uid: ds-uid-fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd:v1.16
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fluentd-abc
+  namespace: kube-system
+  labels:
+    app: fluentd
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: fluentd
+      uid: ds-uid-fluentd
+spec:
+  containers:
+    - name: fluentd
+      image: fluent/fluentd:v1.16
+status:
+  phase: Running
+---
+# Job-with-matchExpressions selector — exercises the matchExpressions path in podsMatchingSelector
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: importer
+  namespace: prod
+  uid: job-uid-importer
+spec:
+  selector:
+    matchExpressions:
+      - key: job-name
+        operator: In
+        values: [importer]
+  template:
+    metadata:
+      labels:
+        job-name: importer
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: importer
+          image: importer:1.0
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: importer-pod
+  namespace: prod
+  labels:
+    job-name: importer
+  ownerReferences:
+    - apiVersion: batch/v1
+      kind: Job
+      name: importer
+      uid: job-uid-importer
+spec:
+  containers:
+    - name: importer
+      image: importer:1.0
+status:
+  phase: Succeeded
+---
+# CronJob with status.active referencing one of its owned Jobs
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-cleanup
+  namespace: prod
+  uid: cj-uid-cleanup
+spec:
+  schedule: "0 2 * * 0"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: cleanup:1.0
+status:
+  active:
+    - kind: Job
+      name: weekly-cleanup-active
+      namespace: prod
+      uid: job-uid-active
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weekly-cleanup-active
+  namespace: prod
+  uid: job-uid-active
+  ownerReferences:
+    - apiVersion: batch/v1
+      kind: CronJob
+      name: weekly-cleanup
+      uid: cj-uid-cleanup
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: cleanup
+          image: cleanup:1.0
+status:
+  active: 1
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weekly-cleanup-completed
+  namespace: prod
+  uid: job-uid-completed
+  ownerReferences:
+    - apiVersion: batch/v1
+      kind: CronJob
+      name: weekly-cleanup
+      uid: cj-uid-cleanup
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: cleanup
+          image: cleanup:1.0
+status:
+  succeeded: 1
+---
+# Unrelated job — must NOT appear in cronjob.jobs() (no ownerReference back to the CronJob)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: unrelated-job
+  namespace: prod
+  uid: job-uid-unrelated
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: x
+          image: busybox
+---
+# Service + EndpointSlice tied via kubernetes.io/service-name label
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: prod
+spec:
+  selector:
+    app: api
+  ports:
+    - port: 80
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: api-slice
+  namespace: prod
+  labels:
+    kubernetes.io/service-name: api
+addressType: IPv4
+endpoints:
+  - addresses: ["10.0.0.5"]
+ports:
+  - port: 8080
+---
+# EndpointSlice without the service-name label — service() must be null
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: orphan-slice
+  namespace: prod
+addressType: IPv4
+endpoints: []
+ports: []
+---
+# RBAC: ClusterRole granted via ClusterRoleBinding to api-sa (cross-namespace SA subject)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: read-pods-everywhere
+subjects:
+  - kind: ServiceAccount
+    name: api-sa
+    namespace: prod
+  - kind: User
+    name: alice@example.com
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# RBAC: Role granted via RoleBinding (roleRef.kind=Role)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secret-reader
+  namespace: prod
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-secrets
+  namespace: prod
+subjects:
+  - kind: ServiceAccount
+    name: api-sa
+    # namespace omitted on purpose — must fall back to the binding's namespace
+roleRef:
+  kind: Role
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# RBAC: RoleBinding that references a ClusterRole instead of a Role
+# Exercises roleBinding.role()=null + roleBinding.clusterRole()=pod-reader
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods-in-prod
+  namespace: prod
+subjects:
+  - kind: Group
+    name: devs
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
