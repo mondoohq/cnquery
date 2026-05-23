@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -302,6 +301,12 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 
 	project, err := p.projectDetails(conn)
 	if err != nil {
+		// Stay consistent with containerExpirationPolicy and initGitlabProject:
+		// 403/404 on the shared GetProject call shouldn't fail a broader query
+		// just because the token can't read this scalar.
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
+			return "", nil
+		}
 		return "", err
 	}
 
@@ -525,8 +530,7 @@ func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 
 		mqlFile, err := CreateResource(p.MqlRuntime, "gitlab.project.file", fileInfo)
 		if err != nil {
-			log.Error().Err(err).Str("path", file.Path).Msg("failed to create gitlab.project.file resource")
-			continue
+			return nil, err
 		}
 		mf := mqlFile.(*mqlGitlabProjectFile)
 		mf.projectID = projectID
