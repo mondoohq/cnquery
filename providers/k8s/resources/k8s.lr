@@ -228,6 +228,32 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   capacity dict
   // Resources available for scheduling pods on the node
   allocatable dict
+  // Cloud-provider node identifier (e.g., aws:///us-east-1a/i-0123456789abcdef0)
+  providerID() string
+  // Whether the node is marked as unschedulable (cordoned)
+  unschedulable() bool
+  // CIDR range assigned to pods on this node (legacy single-CIDR field)
+  podCIDR() string
+  // CIDR ranges assigned to pods on this node (one per IP family)
+  podCIDRs() []string
+  // OS image reported by the kubelet (e.g., "Ubuntu 22.04.5 LTS")
+  osImage() string
+  // Operating system reported by the kubelet (e.g., linux, windows)
+  operatingSystem() string
+  // CPU architecture reported by the kubelet (e.g., amd64, arm64)
+  architecture() string
+  // Kernel version reported by the kubelet
+  kernelVersion() string
+  // Kubelet version
+  kubeletVersion() string
+  // Container runtime version (e.g., containerd://1.7.20)
+  containerRuntimeVersion() string
+  // Container images present on the node (names + sizeBytes)
+  images() []dict
+  // Volumes currently attached to the node
+  volumesAttached() []dict
+  // Names of volumes currently in use by pods on the node
+  volumesInUse() []string
 }
 
 // Kubernetes node taint
@@ -1367,7 +1393,7 @@ private k8s.customresource @defaults("name namespace created") {
 }
 
 // Kubernetes PersistentVolume
-private k8s.persistentvolume @defaults("name created") {
+private k8s.persistentvolume @defaults("name capacity['storage'] phase storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1390,6 +1416,34 @@ private k8s.persistentvolume @defaults("name created") {
   spec() dict
   // PersistentVolume status
   status() dict
+  // Total capacity of the volume (resource name -> quantity string, e.g., {storage: "100Gi"})
+  capacity() map[string]string
+  // Access modes the volume supports (ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod)
+  accessModes() []string
+  // Reclaim policy when the bound claim is released (Retain, Delete, Recycle)
+  persistentVolumeReclaimPolicy() string
+  // Name of the StorageClass that backs this volume
+  storageClassName() string
+  // The StorageClass that backs this volume (null if storageClassName is empty)
+  storageClass() k8s.storageclass
+  // Volume mode (Filesystem or Block)
+  volumeMode() string
+  // Mount options propagated to volume mounts
+  mountOptions() []string
+  // Namespace of the PVC bound to this volume (null if unbound)
+  claimNamespace() string
+  // Name of the PVC bound to this volume (null if unbound)
+  claimName() string
+  // The PVC bound to this volume (null if unbound)
+  claim() k8s.persistentvolumeclaim
+  // Node-affinity constraints that gate where this volume can be attached
+  nodeAffinity() dict
+  // Current phase (Pending, Available, Bound, Released, Failed)
+  phase() string
+  // Reason for the current phase (e.g., why Failed)
+  reason() string
+  // Human-readable message about the current phase
+  message() string
 }
 
 // Kubernetes StorageClass
@@ -1457,7 +1511,7 @@ private k8s.priorityclass @defaults("name value") {
 }
 
 // Kubernetes HorizontalPodAutoscaler
-private k8s.horizontalpodautoscaler @defaults("namespace name created") {
+private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxReplicas currentReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1482,6 +1536,38 @@ private k8s.horizontalpodautoscaler @defaults("namespace name created") {
   spec() dict
   // HorizontalPodAutoscaler status
   status() dict
+  // API version of the workload the HPA scales
+  scaleTargetApiVersion() string
+  // Kind of the workload the HPA scales (Deployment, StatefulSet, ReplicaSet)
+  scaleTargetKind() string
+  // Name of the workload the HPA scales
+  scaleTargetName() string
+  // The scaled Deployment (null if the target is not a Deployment)
+  scaleTargetDeployment() k8s.deployment
+  // The scaled StatefulSet (null if the target is not a StatefulSet)
+  scaleTargetStatefulSet() k8s.statefulset
+  // The scaled ReplicaSet (null if the target is not a ReplicaSet)
+  scaleTargetReplicaSet() k8s.replicaset
+  // Lower bound on the number of replicas the HPA will allow (defaults to 1)
+  minReplicas() int
+  // Upper bound on the number of replicas the HPA will allow
+  maxReplicas() int
+  // Metrics the HPA evaluates to compute the desired replica count
+  metrics() []dict
+  // Scale-up and scale-down policies (stabilization windows, policies)
+  behavior() dict
+  // Generation of the spec most recently observed by the controller
+  observedGeneration() int
+  // Last time the HPA scaled the target
+  lastScaleTime() time
+  // Current number of replicas observed by the autoscaler
+  currentReplicas() int
+  // Desired number of replicas the autoscaler computed
+  desiredReplicas() int
+  // Most recent metric readings the autoscaler used to compute desiredReplicas
+  currentMetrics() []dict
+  // Status conditions (AbleToScale, ScalingActive, ScalingLimited)
+  conditions() []dict
 }
 
 // Kubernetes ResourceQuota
@@ -1539,7 +1625,7 @@ private k8s.limitrange @defaults("namespace name created") {
 }
 
 // Kubernetes PersistentVolumeClaim
-private k8s.persistentvolumeclaim @defaults("namespace name created") {
+private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['storage'] storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1564,6 +1650,34 @@ private k8s.persistentvolumeclaim @defaults("namespace name created") {
   spec() dict
   // PersistentVolumeClaim status
   status() dict
+  // Access modes the claim requires (ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod)
+  accessModes() []string
+  // Name of the StorageClass requested by the claim
+  storageClassName() string
+  // The StorageClass requested by the claim (null if storageClassName is empty)
+  storageClass() k8s.storageclass
+  // Name of the PV the claim is bound to (empty until bound)
+  volumeName() string
+  // The PV the claim is bound to (null if unbound)
+  volume() k8s.persistentvolume
+  // Volume mode (Filesystem or Block)
+  volumeMode() string
+  // Resource requirements (requests, limits keyed by resource name)
+  resources() dict
+  // Label selector for pre-existing PVs eligible to satisfy the claim
+  selector() dict
+  // Data source for populating the volume (snapshot, PVC, custom resource)
+  dataSource() dict
+  // Typed data-source ref (allows cross-namespace refs and arbitrary kinds)
+  dataSourceRef() dict
+  // Current phase (Pending, Bound, Lost)
+  phase() string
+  // Actual capacity of the bound volume (resource name -> quantity string)
+  capacity() map[string]string
+  // Access modes the bound volume actually provides
+  boundAccessModes() []string
+  // Status conditions (Resizing, FileSystemResizePending, etc.)
+  conditions() []dict
 }
 
 // Kubernetes EndpointSlice

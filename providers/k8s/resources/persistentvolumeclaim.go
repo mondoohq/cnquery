@@ -73,3 +73,97 @@ func (k *mqlK8sPersistentvolumeclaim) annotations() (map[string]any, error) {
 func (k *mqlK8sPersistentvolumeclaim) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sPersistentvolumeclaim) accessModes() ([]any, error) {
+	out := make([]any, len(k.obj.Spec.AccessModes))
+	for i, m := range k.obj.Spec.AccessModes {
+		out[i] = string(m)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) storageClassName() (string, error) {
+	if k.obj.Spec.StorageClassName == nil {
+		return "", nil
+	}
+	return *k.obj.Spec.StorageClassName, nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) storageClass() (*mqlK8sStorageclass, error) {
+	if k.obj.Spec.StorageClassName == nil || *k.obj.Spec.StorageClassName == "" {
+		k.StorageClass.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.storageclass", map[string]*llx.RawData{
+		"name": llx.StringData(*k.obj.Spec.StorageClassName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sStorageclass), nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) volumeName() (string, error) {
+	return k.obj.Spec.VolumeName, nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) volume() (*mqlK8sPersistentvolume, error) {
+	if k.obj.Spec.VolumeName == "" {
+		k.Volume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.persistentvolume", map[string]*llx.RawData{
+		"name": llx.StringData(k.obj.Spec.VolumeName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sPersistentvolume), nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) volumeMode() (string, error) {
+	if k.obj.Spec.VolumeMode == nil {
+		return "Filesystem", nil
+	}
+	return string(*k.obj.Spec.VolumeMode), nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) resources() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.Resources)
+}
+
+func (k *mqlK8sPersistentvolumeclaim) selector() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.Selector)
+}
+
+func (k *mqlK8sPersistentvolumeclaim) dataSource() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.DataSource)
+}
+
+func (k *mqlK8sPersistentvolumeclaim) dataSourceRef() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.DataSourceRef)
+}
+
+func (k *mqlK8sPersistentvolumeclaim) phase() (string, error) {
+	return string(k.obj.Status.Phase), nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) capacity() (map[string]any, error) {
+	out := make(map[string]any, len(k.obj.Status.Capacity))
+	for name, qty := range k.obj.Status.Capacity {
+		out[string(name)] = qty.String()
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) boundAccessModes() ([]any, error) {
+	out := make([]any, len(k.obj.Status.AccessModes))
+	for i, m := range k.obj.Status.AccessModes {
+		out[i] = string(m)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPersistentvolumeclaim) conditions() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Status.Conditions)
+}

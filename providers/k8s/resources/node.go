@@ -174,3 +174,59 @@ func (k *mqlK8sNode) addresses() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (k *mqlK8sNode) providerID() (string, error) {
+	return k.obj.Spec.ProviderID, nil
+}
+
+func (k *mqlK8sNode) unschedulable() (bool, error) {
+	return k.obj.Spec.Unschedulable, nil
+}
+
+func (k *mqlK8sNode) podCIDR() (string, error) {
+	return k.obj.Spec.PodCIDR, nil
+}
+
+func (k *mqlK8sNode) podCIDRs() ([]any, error) {
+	return convert.SliceAnyToInterface(k.obj.Spec.PodCIDRs), nil
+}
+
+func (k *mqlK8sNode) osImage() (string, error) {
+	return k.obj.Status.NodeInfo.OSImage, nil
+}
+
+func (k *mqlK8sNode) operatingSystem() (string, error) {
+	return k.obj.Status.NodeInfo.OperatingSystem, nil
+}
+
+func (k *mqlK8sNode) architecture() (string, error) {
+	return k.obj.Status.NodeInfo.Architecture, nil
+}
+
+func (k *mqlK8sNode) kernelVersion() (string, error) {
+	return k.obj.Status.NodeInfo.KernelVersion, nil
+}
+
+func (k *mqlK8sNode) kubeletVersion() (string, error) {
+	return k.obj.Status.NodeInfo.KubeletVersion, nil
+}
+
+func (k *mqlK8sNode) containerRuntimeVersion() (string, error) {
+	return k.obj.Status.NodeInfo.ContainerRuntimeVersion, nil
+}
+
+func (k *mqlK8sNode) images() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Status.Images)
+}
+
+func (k *mqlK8sNode) volumesAttached() ([]any, error) {
+	return convert.JsonToDictSlice(k.obj.Status.VolumesAttached)
+}
+
+func (k *mqlK8sNode) volumesInUse() ([]any, error) {
+	out := make([]any, len(k.obj.Status.VolumesInUse))
+	for i, v := range k.obj.Status.VolumesInUse {
+		out[i] = string(v)
+	}
+	return out, nil
+}

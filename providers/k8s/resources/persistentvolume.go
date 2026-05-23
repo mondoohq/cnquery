@@ -72,3 +72,97 @@ func (k *mqlK8sPersistentvolume) annotations() (map[string]any, error) {
 func (k *mqlK8sPersistentvolume) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sPersistentvolume) capacity() (map[string]any, error) {
+	out := make(map[string]any, len(k.obj.Spec.Capacity))
+	for name, qty := range k.obj.Spec.Capacity {
+		out[string(name)] = qty.String()
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPersistentvolume) accessModes() ([]any, error) {
+	out := make([]any, len(k.obj.Spec.AccessModes))
+	for i, m := range k.obj.Spec.AccessModes {
+		out[i] = string(m)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPersistentvolume) persistentVolumeReclaimPolicy() (string, error) {
+	return string(k.obj.Spec.PersistentVolumeReclaimPolicy), nil
+}
+
+func (k *mqlK8sPersistentvolume) storageClassName() (string, error) {
+	return k.obj.Spec.StorageClassName, nil
+}
+
+func (k *mqlK8sPersistentvolume) storageClass() (*mqlK8sStorageclass, error) {
+	if k.obj.Spec.StorageClassName == "" {
+		k.StorageClass.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.storageclass", map[string]*llx.RawData{
+		"name": llx.StringData(k.obj.Spec.StorageClassName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sStorageclass), nil
+}
+
+func (k *mqlK8sPersistentvolume) volumeMode() (string, error) {
+	if k.obj.Spec.VolumeMode == nil {
+		return "Filesystem", nil
+	}
+	return string(*k.obj.Spec.VolumeMode), nil
+}
+
+func (k *mqlK8sPersistentvolume) mountOptions() ([]any, error) {
+	return convert.SliceAnyToInterface(k.obj.Spec.MountOptions), nil
+}
+
+func (k *mqlK8sPersistentvolume) claimNamespace() (string, error) {
+	if k.obj.Spec.ClaimRef == nil {
+		return "", nil
+	}
+	return k.obj.Spec.ClaimRef.Namespace, nil
+}
+
+func (k *mqlK8sPersistentvolume) claimName() (string, error) {
+	if k.obj.Spec.ClaimRef == nil {
+		return "", nil
+	}
+	return k.obj.Spec.ClaimRef.Name, nil
+}
+
+func (k *mqlK8sPersistentvolume) claim() (*mqlK8sPersistentvolumeclaim, error) {
+	if k.obj.Spec.ClaimRef == nil || k.obj.Spec.ClaimRef.Name == "" {
+		k.Claim.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(k.MqlRuntime, "k8s.persistentvolumeclaim", map[string]*llx.RawData{
+		"name":      llx.StringData(k.obj.Spec.ClaimRef.Name),
+		"namespace": llx.StringData(k.obj.Spec.ClaimRef.Namespace),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sPersistentvolumeclaim), nil
+}
+
+func (k *mqlK8sPersistentvolume) nodeAffinity() (map[string]any, error) {
+	return convert.JsonToDict(k.obj.Spec.NodeAffinity)
+}
+
+func (k *mqlK8sPersistentvolume) phase() (string, error) {
+	return string(k.obj.Status.Phase), nil
+}
+
+func (k *mqlK8sPersistentvolume) reason() (string, error) {
+	return k.obj.Status.Reason, nil
+}
+
+func (k *mqlK8sPersistentvolume) message() (string, error) {
+	return k.obj.Status.Message, nil
+}
