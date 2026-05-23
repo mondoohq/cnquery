@@ -205,6 +205,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			var editionTier *string
+			if entry.SKU != nil {
+				editionTier = entry.SKU.Tier
+			}
 			args := map[string]*llx.RawData{
 				"id":               llx.StringDataPtr(entry.ID),
 				"name":             llx.StringDataPtr(entry.Name),
@@ -215,7 +219,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 				"createMode":       llx.StringDataPtr((*string)(entry.Properties.CreateMode)),
 				"sourceDatabaseId": llx.StringDataPtr(entry.Properties.SourceDatabaseID),
 				"recoveryServicesRecoveryPointResourceId": llx.StringDataPtr(entry.Properties.RecoveryServicesRecoveryPointID),
-				"edition":                       llx.StringDataPtr(entry.SKU.Tier),
+				"edition":                       llx.StringDataPtr(editionTier),
 				"maxSizeBytes":                  llx.IntDataDefault(entry.Properties.MaxSizeBytes, 0),
 				"requestedServiceObjectiveName": llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName),
 				"serviceLevelObjective":         llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName),

@@ -809,7 +809,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscrip
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	fwp := propsDict["firewallPolicy"]
 	if fwp == nil {
 		return nil, errors.New("no firewall policy is associated with the ip configuration")
@@ -847,7 +847,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	publicIpAddress := propsDict["publicIPAddress"]
 	if publicIpAddress == nil {
 		return nil, errors.New("no public ip address is associated with the ip configuration")
@@ -885,7 +885,7 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) public
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	publicIpAddress := propsDict["publicIPAddress"]
 	if publicIpAddress == nil {
 		return nil, errors.New("no public ip address is associated with the ip configuration")
@@ -923,7 +923,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzure
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	subnet := propsDict["subnet"]
 	if subnet == nil {
 		return nil, errors.New("no subnet is associated with the ip configuration")
@@ -2341,7 +2341,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]an
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	publicIpAddresses := propsDict["publicIpAddresses"]
 	// if we have no present public ip addresses ids, we can just return nil
 	if publicIpAddresses == nil {
@@ -2489,7 +2489,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]any, error) 
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	subnets := propsDict["subnets"]
 	// if we have no present subnets in the dict, we can just return nil
 	if subnets == nil {
@@ -2540,7 +2540,7 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 		return nil, err
 	}
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	natGatewayDict := propsDict["natGateway"]
 	if natGatewayDict == nil {
 		// TODO: Preslav: how do we define a 'nil' resource here? if i return nil, it panics
@@ -2577,7 +2577,7 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, er
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	subId := conn.SubId()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	ipConfigsDict := propsDict["ipConfigurations"]
 	if ipConfigsDict == nil {
 		return nil, nil
@@ -2625,7 +2625,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	basePolicy := propsDict["basePolicy"]
 	if basePolicy == nil {
 		// TODO: find a way to return nil instead of err here, nil currently panics
@@ -2659,7 +2659,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]an
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	childPolicies := propsDict["childPolicies"]
 	if childPolicies == nil {
 		return nil, nil
@@ -2706,7 +2706,7 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]any, e
 	ctx := context.Background()
 	token := conn.Token()
 	props := a.Properties.Data
-	propsDict := props.(map[string]any)
+	propsDict, _ := props.(map[string]any)
 	firewalls := propsDict["firewalls"]
 	if firewalls == nil {
 		return nil, nil

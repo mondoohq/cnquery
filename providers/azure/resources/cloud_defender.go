@@ -459,8 +459,10 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 	if err != nil {
 		return false, err
 	}
-	autoProvision := *setting.Properties.AutoProvision
-	return autoProvision == security.AutoProvisionOn, nil
+	if setting.Properties == nil || setting.Properties.AutoProvision == nil {
+		return false, nil
+	}
+	return *setting.Properties.AutoProvision == security.AutoProvisionOn, nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any, error) {

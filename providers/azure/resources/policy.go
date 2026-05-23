@@ -39,7 +39,7 @@ func initAzureSubscriptionPolicy(runtime *plugin.Runtime, args map[string]*llx.R
 }
 
 func (a *mqlAzureSubscriptionPolicyAssignment) id() (string, error) {
-	return fmt.Sprintf("azure.subscription.policy/%s/%s", a.Scope.Data, a.Id.Data), nil
+	return "azure.subscription.policy.assignment/" + a.AssignmentId.Data, nil
 }
 
 // initAzureSubscriptionPolicyAssignment resolves a single policy assignment by

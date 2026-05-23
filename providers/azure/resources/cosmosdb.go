@@ -183,7 +183,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			}
 
 			virtualNetworkRules := []any{}
-			if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
+			if account.ID != nil && account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 				for _, rule := range account.Properties.VirtualNetworkRules {
 					if rule == nil {
 						continue

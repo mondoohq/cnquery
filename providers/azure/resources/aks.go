@@ -243,6 +243,11 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				skuTier = string(*entry.SKU.Tier)
 			}
 
+			var powerState *string
+			if entry.Properties.PowerState != nil {
+				powerState = (*string)(entry.Properties.PowerState.Code)
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -252,7 +257,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"provisioningState":                 llx.StringDataPtr(entry.Properties.ProvisioningState),
 					"createdAt":                         llx.TimeDataPtr(createdAt),
 					"nodeResourceGroup":                 llx.StringDataPtr(entry.Properties.NodeResourceGroup),
-					"powerState":                        llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
+					"powerState":                        llx.StringDataPtr(powerState),
 					"tags":                              llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"rbacEnabled":                       llx.BoolDataPtr(entry.Properties.EnableRBAC),
 					"dnsPrefix":                         llx.StringDataPtr(entry.Properties.DNSPrefix),
