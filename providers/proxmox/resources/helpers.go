@@ -54,16 +54,18 @@ func storageInfoToResources(runtime *plugin.Runtime, storages []connection.Stora
 			usagePct = float64(s.Used) / float64(s.Total) * 100.0
 		}
 		res, err := CreateResource(runtime, "proxmox.storage", map[string]*llx.RawData{
-			"id":           llx.StringData(s.Storage),
-			"type":         llx.StringData(s.Type),
-			"content":      llx.StringData(s.Content),
-			"path":         llx.StringData(s.Path),
-			"enabled":      llx.BoolData(s.Enabled != 0),
-			"shared":       llx.BoolData(s.Shared != 0),
-			"total":        llx.IntData(s.Total),
-			"used":         llx.IntData(s.Used),
-			"available":    llx.IntData(s.Avail),
-			"usagePercent": llx.FloatData(usagePct),
+			"id":            llx.StringData(s.Storage),
+			"type":          llx.StringData(s.Type),
+			"content":       llx.StringData(s.Content),
+			"path":          llx.StringData(s.Path),
+			"enabled":       llx.BoolData(s.Enabled != 0),
+			"shared":        llx.BoolData(s.Shared != 0),
+			"total":         llx.IntData(s.Total),
+			"used":          llx.IntData(s.Used),
+			"available":     llx.IntData(s.Avail),
+			"usagePercent":  llx.FloatData(usagePct),
+			"encrypted":     llx.BoolData(s.EncryptionKey != ""),
+			"encryptionKey": llx.StringData(s.EncryptionKey),
 		})
 		if err != nil {
 			return nil, err

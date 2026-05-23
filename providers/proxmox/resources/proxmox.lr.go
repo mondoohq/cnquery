@@ -389,6 +389,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.cluster.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxCluster).GetOptions()).ToDataRes(types.Dict)
 	},
+	"proxmox.cluster.migrationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCluster).GetMigrationPolicy()).ToDataRes(types.String)
+	},
+	"proxmox.cluster.migrationNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCluster).GetMigrationNetwork()).ToDataRes(types.String)
+	},
+	"proxmox.cluster.consoleViewer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCluster).GetConsoleViewer()).ToDataRes(types.String)
+	},
+	"proxmox.cluster.bandwidthLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxCluster).GetBandwidthLimits()).ToDataRes(types.Dict)
+	},
 	"proxmox.cluster.haResource.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxClusterHaResource).GetId()).ToDataRes(types.String)
 	},
@@ -668,6 +680,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.disk.backup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmDisk).GetBackup()).ToDataRes(types.Bool)
 	},
+	"proxmox.vm.disk.storageRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmDisk).GetStorageRef()).ToDataRes(types.Resource("proxmox.storage"))
+	},
 	"proxmox.vm.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmSnapshot).GetName()).ToDataRes(types.String)
 	},
@@ -727,6 +742,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.storage.usagePercent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxStorage).GetUsagePercent()).ToDataRes(types.Float)
+	},
+	"proxmox.storage.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"proxmox.storage.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxStorage).GetEncryptionKey()).ToDataRes(types.String)
 	},
 	"proxmox.pool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxPool).GetId()).ToDataRes(types.String)
@@ -923,6 +944,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.user.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetGroups()).ToDataRes(types.Array(types.String))
 	},
+	"proxmox.user.groupsTyped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxUser).GetGroupsTyped()).ToDataRes(types.Array(types.Resource("proxmox.group")))
+	},
 	"proxmox.user.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetRealm()).ToDataRes(types.String)
 	},
@@ -949,6 +973,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.token.privsep": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxToken).GetPrivsep()).ToDataRes(types.Bool)
+	},
+	"proxmox.token.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxToken).GetOwner()).ToDataRes(types.Resource("proxmox.user"))
 	},
 	"proxmox.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxRole).GetId()).ToDataRes(types.String)
@@ -1237,6 +1264,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.container.mountPoint.aclEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxContainerMountPoint).GetAclEnabled()).ToDataRes(types.Bool)
+	},
+	"proxmox.container.mountPoint.storageRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxContainerMountPoint).GetStorageRef()).ToDataRes(types.Resource("proxmox.storage"))
 	},
 	"proxmox.backup.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxBackupJob).GetId()).ToDataRes(types.String)
@@ -1675,6 +1705,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxCluster).Options, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"proxmox.cluster.migrationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCluster).MigrationPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.cluster.migrationNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCluster).MigrationNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.cluster.consoleViewer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCluster).ConsoleViewer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"proxmox.cluster.bandwidthLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxCluster).BandwidthLimits, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"proxmox.cluster.haResource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxClusterHaResource).__id, ok = v.Value.(string)
 		return
@@ -2071,6 +2117,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVmDisk).Backup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"proxmox.vm.disk.storageRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmDisk).StorageRef, ok = plugin.RawToTValue[*mqlProxmoxStorage](v.Value, v.Error)
+		return
+	},
 	"proxmox.vm.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVmSnapshot).__id, ok = v.Value.(string)
 		return
@@ -2161,6 +2211,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.storage.usagePercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxStorage).UsagePercent, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.storage.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxStorage).EncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"proxmox.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2459,6 +2517,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"proxmox.user.groupsTyped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxUser).GroupsTyped, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"proxmox.user.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxUser).Realm, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2497,6 +2559,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.token.privsep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxToken).Privsep, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.token.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxToken).Owner, ok = plugin.RawToTValue[*mqlProxmoxUser](v.Value, v.Error)
 		return
 	},
 	"proxmox.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2925,6 +2991,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.container.mountPoint.aclEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxContainerMountPoint).AclEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"proxmox.container.mountPoint.storageRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxContainerMountPoint).StorageRef, ok = plugin.RawToTValue[*mqlProxmoxStorage](v.Value, v.Error)
 		return
 	},
 	"proxmox.backup.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3717,18 +3787,22 @@ func (c *mqlProxmox) GetSdnVnets() *plugin.TValue[[]any] {
 type mqlProxmoxCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProxmoxClusterInternal it will be used here
-	Name            plugin.TValue[string]
-	Version         plugin.TValue[int64]
-	Quorate         plugin.TValue[bool]
-	NodeCount       plugin.TValue[int64]
-	HaResources     plugin.TValue[[]any]
-	HaGroups        plugin.TValue[[]any]
-	FirewallRules   plugin.TValue[[]any]
-	FirewallOptions plugin.TValue[*mqlProxmoxFirewallOptions]
-	Ipsets          plugin.TValue[[]any]
-	Aliases         plugin.TValue[[]any]
-	Options         plugin.TValue[any]
+	mqlProxmoxClusterInternal
+	Name             plugin.TValue[string]
+	Version          plugin.TValue[int64]
+	Quorate          plugin.TValue[bool]
+	NodeCount        plugin.TValue[int64]
+	HaResources      plugin.TValue[[]any]
+	HaGroups         plugin.TValue[[]any]
+	FirewallRules    plugin.TValue[[]any]
+	FirewallOptions  plugin.TValue[*mqlProxmoxFirewallOptions]
+	Ipsets           plugin.TValue[[]any]
+	Aliases          plugin.TValue[[]any]
+	Options          plugin.TValue[any]
+	MigrationPolicy  plugin.TValue[string]
+	MigrationNetwork plugin.TValue[string]
+	ConsoleViewer    plugin.TValue[string]
+	BandwidthLimits  plugin.TValue[any]
 }
 
 // createProxmoxCluster creates a new instance of this resource
@@ -3883,6 +3957,30 @@ func (c *mqlProxmoxCluster) GetAliases() *plugin.TValue[[]any] {
 func (c *mqlProxmoxCluster) GetOptions() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Options, func() (any, error) {
 		return c.options()
+	})
+}
+
+func (c *mqlProxmoxCluster) GetMigrationPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MigrationPolicy, func() (string, error) {
+		return c.migrationPolicy()
+	})
+}
+
+func (c *mqlProxmoxCluster) GetMigrationNetwork() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MigrationNetwork, func() (string, error) {
+		return c.migrationNetwork()
+	})
+}
+
+func (c *mqlProxmoxCluster) GetConsoleViewer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConsoleViewer, func() (string, error) {
+		return c.consoleViewer()
+	})
+}
+
+func (c *mqlProxmoxCluster) GetBandwidthLimits() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BandwidthLimits, func() (any, error) {
+		return c.bandwidthLimits()
 	})
 }
 
@@ -4883,13 +4981,14 @@ type mqlProxmoxVmDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlProxmoxVmDiskInternal
-	Id       plugin.TValue[string]
-	Storage  plugin.TValue[string]
-	Size     plugin.TValue[int64]
-	Format   plugin.TValue[string]
-	Cache    plugin.TValue[string]
-	Iothread plugin.TValue[bool]
-	Backup   plugin.TValue[bool]
+	Id         plugin.TValue[string]
+	Storage    plugin.TValue[string]
+	Size       plugin.TValue[int64]
+	Format     plugin.TValue[string]
+	Cache      plugin.TValue[string]
+	Iothread   plugin.TValue[bool]
+	Backup     plugin.TValue[bool]
+	StorageRef plugin.TValue[*mqlProxmoxStorage]
 }
 
 // createProxmoxVmDisk creates a new instance of this resource
@@ -4955,6 +5054,22 @@ func (c *mqlProxmoxVmDisk) GetIothread() *plugin.TValue[bool] {
 
 func (c *mqlProxmoxVmDisk) GetBackup() *plugin.TValue[bool] {
 	return &c.Backup
+}
+
+func (c *mqlProxmoxVmDisk) GetStorageRef() *plugin.TValue[*mqlProxmoxStorage] {
+	return plugin.GetOrCompute[*mqlProxmoxStorage](&c.StorageRef, func() (*mqlProxmoxStorage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.vm.disk", c.__id, "storageRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxStorage), nil
+			}
+		}
+
+		return c.storageRef()
+	})
 }
 
 // mqlProxmoxVmSnapshot for the proxmox.vm.snapshot resource
@@ -5100,16 +5215,18 @@ type mqlProxmoxStorage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlProxmoxStorageInternal it will be used here
-	Id           plugin.TValue[string]
-	Type         plugin.TValue[string]
-	Content      plugin.TValue[string]
-	Path         plugin.TValue[string]
-	Enabled      plugin.TValue[bool]
-	Shared       plugin.TValue[bool]
-	Total        plugin.TValue[int64]
-	Used         plugin.TValue[int64]
-	Available    plugin.TValue[int64]
-	UsagePercent plugin.TValue[float64]
+	Id            plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Content       plugin.TValue[string]
+	Path          plugin.TValue[string]
+	Enabled       plugin.TValue[bool]
+	Shared        plugin.TValue[bool]
+	Total         plugin.TValue[int64]
+	Used          plugin.TValue[int64]
+	Available     plugin.TValue[int64]
+	UsagePercent  plugin.TValue[float64]
+	Encrypted     plugin.TValue[bool]
+	EncryptionKey plugin.TValue[string]
 }
 
 // createProxmoxStorage creates a new instance of this resource
@@ -5187,6 +5304,14 @@ func (c *mqlProxmoxStorage) GetAvailable() *plugin.TValue[int64] {
 
 func (c *mqlProxmoxStorage) GetUsagePercent() *plugin.TValue[float64] {
 	return &c.UsagePercent
+}
+
+func (c *mqlProxmoxStorage) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlProxmoxStorage) GetEncryptionKey() *plugin.TValue[string] {
+	return &c.EncryptionKey
 }
 
 // mqlProxmoxPool for the proxmox.pool resource
@@ -5843,6 +5968,7 @@ type mqlProxmoxUser struct {
 	Firstname      plugin.TValue[string]
 	Lastname       plugin.TValue[string]
 	Groups         plugin.TValue[[]any]
+	GroupsTyped    plugin.TValue[[]any]
 	Realm          plugin.TValue[string]
 	RealmType      plugin.TValue[string]
 	TfaLockedUntil plugin.TValue[int64]
@@ -5915,6 +6041,22 @@ func (c *mqlProxmoxUser) GetGroups() *plugin.TValue[[]any] {
 	return &c.Groups
 }
 
+func (c *mqlProxmoxUser) GetGroupsTyped() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupsTyped, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.user", c.__id, "groupsTyped")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groupsTyped()
+	})
+}
+
 func (c *mqlProxmoxUser) GetRealm() *plugin.TValue[string] {
 	return &c.Realm
 }
@@ -5958,6 +6100,7 @@ type mqlProxmoxToken struct {
 	Comment plugin.TValue[string]
 	Expire  plugin.TValue[int64]
 	Privsep plugin.TValue[bool]
+	Owner   plugin.TValue[*mqlProxmoxUser]
 }
 
 // createProxmoxToken creates a new instance of this resource
@@ -6011,6 +6154,22 @@ func (c *mqlProxmoxToken) GetExpire() *plugin.TValue[int64] {
 
 func (c *mqlProxmoxToken) GetPrivsep() *plugin.TValue[bool] {
 	return &c.Privsep
+}
+
+func (c *mqlProxmoxToken) GetOwner() *plugin.TValue[*mqlProxmoxUser] {
+	return plugin.GetOrCompute[*mqlProxmoxUser](&c.Owner, func() (*mqlProxmoxUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.token", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxUser), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 // mqlProxmoxRole for the proxmox.role resource
@@ -7082,6 +7241,7 @@ type mqlProxmoxContainerMountPoint struct {
 	Replicate  plugin.TValue[bool]
 	Readonly   plugin.TValue[bool]
 	AclEnabled plugin.TValue[bool]
+	StorageRef plugin.TValue[*mqlProxmoxStorage]
 }
 
 // createProxmoxContainerMountPoint creates a new instance of this resource
@@ -7151,6 +7311,22 @@ func (c *mqlProxmoxContainerMountPoint) GetReadonly() *plugin.TValue[bool] {
 
 func (c *mqlProxmoxContainerMountPoint) GetAclEnabled() *plugin.TValue[bool] {
 	return &c.AclEnabled
+}
+
+func (c *mqlProxmoxContainerMountPoint) GetStorageRef() *plugin.TValue[*mqlProxmoxStorage] {
+	return plugin.GetOrCompute[*mqlProxmoxStorage](&c.StorageRef, func() (*mqlProxmoxStorage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("proxmox.container.mountPoint", c.__id, "storageRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProxmoxStorage), nil
+			}
+		}
+
+		return c.storageRef()
+	})
 }
 
 // mqlProxmoxBackupJob for the proxmox.backup.job resource

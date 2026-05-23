@@ -4,16 +4,39 @@
 package resources
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
 )
 
+type mqlProxmoxClusterInternal struct {
+	optionsFetched bool
+	clusterOptions map[string]any
+	optionsErr     error
+	optionsLock    sync.Mutex
+}
+
 func clusterConn(r *mqlProxmoxCluster) *connection.PveConnection {
 	return r.MqlRuntime.Connection.(*connection.PveConnection)
+}
+
+func (r *mqlProxmoxCluster) ensureOptions() (map[string]any, error) {
+	if r.optionsFetched {
+		return r.clusterOptions, r.optionsErr
+	}
+	r.optionsLock.Lock()
+	defer r.optionsLock.Unlock()
+	if r.optionsFetched {
+		return r.clusterOptions, r.optionsErr
+	}
+	r.clusterOptions, r.optionsErr = clusterConn(r).GetClusterOptions()
+	r.optionsFetched = true
+	return r.clusterOptions, r.optionsErr
 }
 
 func (r *mqlProxmoxCluster) id() (string, error) {
@@ -79,8 +102,89 @@ func (r *mqlProxmoxCluster) haGroups() ([]any, error) {
 }
 
 func (r *mqlProxmoxCluster) options() (any, error) {
-	conn := clusterConn(r)
-	return conn.GetClusterOptions()
+	return r.ensureOptions()
+}
+
+// ---------------------------------------------------------------------------
+// Typed views over /cluster/options
+// ---------------------------------------------------------------------------
+
+// clusterOptionString reads a string-coerced value from cluster.options; if
+// the key isn't present or the fetch failed, returns "" with no error so an
+// audit can still proceed against partially-readable clusters.
+func (r *mqlProxmoxCluster) clusterOptionString(key string) (string, error) {
+	opts, err := r.ensureOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	v, ok := opts[key]
+	if !ok || v == nil {
+		return "", nil
+	}
+	return fmt.Sprintf("%v", v), nil
+}
+
+func (r *mqlProxmoxCluster) migrationPolicy() (string, error) {
+	// /cluster/options serializes the `migration` block as a comma-delimited
+	// string like `secure,network=10.0.0.0/24`. Split off the leading mode.
+	mig, err := r.clusterOptionString("migration")
+	if err != nil || mig == "" {
+		return "", err
+	}
+	if idx := strings.Index(mig, ","); idx >= 0 {
+		return mig[:idx], nil
+	}
+	return mig, nil
+}
+
+func (r *mqlProxmoxCluster) migrationNetwork() (string, error) {
+	mig, err := r.clusterOptionString("migration")
+	if err != nil || mig == "" {
+		return "", err
+	}
+	for _, part := range strings.Split(mig, ",") {
+		if kv := strings.SplitN(part, "=", 2); len(kv) == 2 && kv[0] == "network" {
+			return kv[1], nil
+		}
+	}
+	return "", nil
+}
+
+func (r *mqlProxmoxCluster) consoleViewer() (string, error) {
+	return r.clusterOptionString("console")
+}
+
+func (r *mqlProxmoxCluster) bandwidthLimits() (any, error) {
+	opts, err := r.ensureOptions()
+	if err != nil || opts == nil {
+		return map[string]any{}, err
+	}
+	raw, ok := opts["bwlimit"]
+	if !ok || raw == nil {
+		return map[string]any{}, nil
+	}
+	// `bwlimit` is serialized as a comma-delimited key=value string when
+	// the user sets multiple limits, e.g. `default=10000,restore=20000`.
+	// Convert it into a dict so MQL can index by operation name.
+	str, isStr := raw.(string)
+	if !isStr {
+		return raw, nil
+	}
+	out := map[string]any{}
+	for _, part := range strings.Split(str, ",") {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		// values are KB/s as numeric strings; carry them as int64 when
+		// they parse, otherwise leave the raw string for audits to inspect.
+		if n, err := strconv.ParseInt(strings.TrimSpace(kv[1]), 10, 64); err == nil {
+			out[kv[0]] = n
+		} else {
+			out[kv[0]] = kv[1]
+		}
+	}
+	return out, nil
 }
 
 // ---------------------------------------------------------------------------

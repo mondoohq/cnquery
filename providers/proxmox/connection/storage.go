@@ -20,6 +20,10 @@ type StorageInfo struct {
 	Used     int64   `json:"used"`
 	Avail    int64   `json:"avail"`
 	UsedFrac float64 `json:"used_fraction"`
+	// EncryptionKey carries the PBS encryption-key field. The value is
+	// either an explicit key fingerprint or the literal "autogen" when
+	// Proxmox manages the key. An empty string means encryption is off.
+	EncryptionKey string `json:"encryption-key"`
 }
 
 func (c *PveConnection) GetStorages() ([]StorageInfo, error) {

@@ -48,6 +48,8 @@ proxmox.certificate.san 0.1.1
 proxmox.certificate.subject 0.1.1
 proxmox.cluster 0.1.1
 proxmox.cluster.aliases 0.1.9
+proxmox.cluster.bandwidthLimits 0.1.9
+proxmox.cluster.consoleViewer 0.1.9
 proxmox.cluster.firewallOptions 0.1.9
 proxmox.cluster.firewallRules 0.1.1
 proxmox.cluster.haGroup 0.1.9
@@ -71,6 +73,8 @@ proxmox.cluster.haResource.type 0.1.1
 proxmox.cluster.haResource.vm 0.1.9
 proxmox.cluster.haResources 0.1.1
 proxmox.cluster.ipsets 0.1.9
+proxmox.cluster.migrationNetwork 0.1.9
+proxmox.cluster.migrationPolicy 0.1.9
 proxmox.cluster.name 0.1.1
 proxmox.cluster.nodeCount 0.1.1
 proxmox.cluster.options 0.1.1
@@ -103,6 +107,7 @@ proxmox.container.mountPoint.readonly 0.1.9
 proxmox.container.mountPoint.replicate 0.1.9
 proxmox.container.mountPoint.size 0.1.9
 proxmox.container.mountPoint.storage 0.1.9
+proxmox.container.mountPoint.storageRef 0.1.9
 proxmox.container.mountPoints 0.1.9
 proxmox.container.name 0.1.9
 proxmox.container.netin 0.1.9
@@ -345,6 +350,8 @@ proxmox.storage 0.1.1
 proxmox.storage.available 0.1.1
 proxmox.storage.content 0.1.1
 proxmox.storage.enabled 0.1.1
+proxmox.storage.encrypted 0.1.9
+proxmox.storage.encryptionKey 0.1.9
 proxmox.storage.id 0.1.1
 proxmox.storage.path 0.1.1
 proxmox.storage.shared 0.1.1
@@ -365,6 +372,7 @@ proxmox.token 0.1.1
 proxmox.token.comment 0.1.1
 proxmox.token.expire 0.1.1
 proxmox.token.id 0.1.1
+proxmox.token.owner 0.1.9
 proxmox.token.privsep 0.1.1
 proxmox.user 0.1.1
 proxmox.user.email 0.1.1
@@ -372,6 +380,7 @@ proxmox.user.enable 0.1.1
 proxmox.user.expire 0.1.1
 proxmox.user.firstname 0.1.1
 proxmox.user.groups 0.1.1
+proxmox.user.groupsTyped 0.1.9
 proxmox.user.id 0.1.1
 proxmox.user.lastname 0.1.1
 proxmox.user.realm 0.1.1
@@ -396,6 +405,7 @@ proxmox.vm.disk.id 0.1.1
 proxmox.vm.disk.iothread 0.1.1
 proxmox.vm.disk.size 0.1.1
 proxmox.vm.disk.storage 0.1.1
+proxmox.vm.disk.storageRef 0.1.9
 proxmox.vm.diskread 0.1.1
 proxmox.vm.disks 0.1.1
 proxmox.vm.diskwrite 0.1.1

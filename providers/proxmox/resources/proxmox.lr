@@ -80,6 +80,26 @@ proxmox.cluster @defaults("name quorate") {
   aliases() []proxmox.firewall.alias
   // Cluster-level options
   options() dict
+  // Migration network policy
+  //
+  // `secure` tunnels through SSH; `insecure` exposes the storage stream
+  // on the chosen migration network. Empty when not configured; Proxmox
+  // defaults to `secure`.
+  migrationPolicy() string
+  // CIDR of the dedicated migration network
+  //
+  // Empty when migrations use the management network.
+  migrationNetwork() string
+  // Default VNC/SPICE console viewer
+  //
+  // One of `html5`, `vv`, or empty for the PVE default.
+  consoleViewer() string
+  // Default cluster-wide bandwidth limits
+  //
+  // Limits cover restore, migration, clone, and move operations. Keys
+  // mirror /cluster/options (`default`, `restore`, `migration`, etc.).
+  // Empty when no limits are set.
+  bandwidthLimits() dict
 }
 
 // Proxmox VE cluster HA resource
@@ -393,6 +413,8 @@ proxmox.vm.disk @defaults("id storage size") {
   iothread bool
   // Whether backup is enabled for this disk
   backup bool
+  // Resolved backing storage pool
+  storageRef() proxmox.storage
 }
 
 // Proxmox VE VM snapshot
@@ -463,6 +485,15 @@ proxmox.storage @defaults("id type enabled") {
   available int
   // Usage percentage
   usagePercent float
+  // Whether backups written to this storage are encrypted at rest
+  //
+  // True when the storage configuration carries an `encryption-key`
+  // (PBS-encrypted datastore). The key value itself is exposed via
+  // `encryptionKey` — it is either an explicit fingerprint or the
+  // literal `autogen` when Proxmox manages the key.
+  encrypted bool
+  // The raw `encryption-key` value from the storage config; empty when not configured
+  encryptionKey string
 }
 
 // Proxmox VE resource pool
@@ -686,6 +717,8 @@ proxmox.user @defaults("id enable realm") {
   lastname string
   // Groups the user belongs to
   groups []string
+  // Same as `groups`, resolved to typed group references for traversal
+  groupsTyped() []proxmox.group
   // Authentication realm (pam, pve, ldap, ad)
   realm string
   // Authentication realm type (pam, pve, ldap, ad, openid)
@@ -718,6 +751,8 @@ proxmox.token @defaults("id privsep") {
   expire int
   // Whether privilege separation is active
   privsep bool
+  // Resolved owner of this token (everything before the `!` in `id`)
+  owner() proxmox.user
 }
 
 // Proxmox VE access control role
@@ -1049,6 +1084,8 @@ proxmox.container.mountPoint @defaults("id storage mountPath size") {
   readonly bool
   // Whether POSIX ACLs are enabled on the mount
   aclEnabled bool
+  // Resolved backing storage pool
+  storageRef() proxmox.storage
 }
 
 // Proxmox VE scheduled backup job

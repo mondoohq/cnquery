@@ -151,6 +151,8 @@ func initProxmoxStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		args["used"] = llx.IntData(s.Used)
 		args["available"] = llx.IntData(s.Avail)
 		args["usagePercent"] = llx.FloatData(usagePct)
+		args["encrypted"] = llx.BoolData(s.EncryptionKey != "")
+		args["encryptionKey"] = llx.StringData(s.EncryptionKey)
 		return args, nil, nil
 	}
 	return args, nil, nil
