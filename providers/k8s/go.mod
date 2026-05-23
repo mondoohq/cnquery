@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.1
 	github.com/aws/smithy-go v1.25.1
 	golang.org/x/oauth2 v0.36.0
+	k8s.io/kube-aggregator v0.36.1
 	sigs.k8s.io/gateway-api v1.5.1
 )
 

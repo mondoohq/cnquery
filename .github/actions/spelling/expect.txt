@@ -25,6 +25,7 @@ ams
 antispam
 aof
 APKINDEX
+apiservice
 apm
 apparmor
 appsettings
@@ -96,6 +97,7 @@ cdn
 cdroms
 ceph
 certificatechains
+certificatesigningrequest
 certificatesmanagement
 cetypes
 cfs
@@ -434,6 +436,7 @@ mtls
 mtv
 MULTIAZ
 multiplatform
+mutatingwebhookconfiguration
 myacr
 myapp
 mychart
@@ -535,6 +538,7 @@ phpipam
 phpunit
 pipefail
 pki
+poddisruptionbudget
 podfile
 Policer
 portgroup

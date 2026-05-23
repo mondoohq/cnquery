@@ -13,13 +13,17 @@ import (
 	"regexp"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	batchv1 "k8s.io/api/batch/v1"
+	certificatesv1 "k8s.io/api/certificates/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
@@ -32,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
+	apiregistrationv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
@@ -72,6 +77,11 @@ func ClientSchema() *runtime.Scheme {
 	rbacv1.AddToScheme(scheme)
 	schedulingv1.AddToScheme(scheme)
 	storagev1.AddToScheme(scheme)
+	admissionregistrationv1.AddToScheme(scheme)
+	certificatesv1.AddToScheme(scheme)
+	coordinationv1.AddToScheme(scheme)
+	policyv1.AddToScheme(scheme)
+	apiregistrationv1.AddToScheme(scheme)
 	gatewayv1.Install(scheme)
 	gatewayv1beta1.Install(scheme)
 

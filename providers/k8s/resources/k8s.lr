@@ -100,6 +100,16 @@ k8s {
   grpcRoutes() []k8s.grpcroute
   // Kubernetes Gateway API ReferenceGrants
   referenceGrants() []k8s.referencegrant
+  // Kubernetes admission mutating webhook configurations
+  mutatingWebhookConfigurations() []k8s.admission.mutatingwebhookconfiguration
+  // Kubernetes PodDisruptionBudgets
+  podDisruptionBudgets() []k8s.poddisruptionbudget
+  // Kubernetes coordination Leases
+  leases() []k8s.lease
+  // Kubernetes CertificateSigningRequests
+  certificateSigningRequests() []k8s.certificatesigningrequest
+  // Kubernetes APIServices (aggregation layer)
+  apiServices() []k8s.apiservice
 }
 
 // Kubernetes API resources
@@ -1378,4 +1388,194 @@ private k8s.referencegrant @defaults("namespace name created") {
   from []dict
   // Resources in this namespace that may be referenced
   to []dict
+}
+
+// Kubernetes MutatingWebhookConfiguration
+private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Webhooks configuration
+  webhooks() []dict
+}
+
+// Kubernetes PodDisruptionBudget
+private k8s.poddisruptionbudget @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Minimum number or percentage of pods that must remain available (IntOrString)
+  minAvailable dict
+  // Maximum number or percentage of pods that may be unavailable (IntOrString)
+  maxUnavailable dict
+  // Label selector for the pods this PDB protects
+  selector dict
+  // Policy for evicting unhealthy pods (IfHealthyBudget or AlwaysAllow)
+  unhealthyPodEvictionPolicy string
+  // Number of currently healthy pods
+  currentHealthy int
+  // Minimum number of healthy pods required
+  desiredHealthy int
+  // Total number of pods counted by this PDB
+  expectedPods int
+  // Number of pod disruptions currently allowed
+  disruptionsAllowed int
+  // Generation of the most recently observed PDB spec
+  observedGeneration int
+  // Status conditions
+  conditions []dict
+}
+
+// Kubernetes Lease (coordination.k8s.io)
+private k8s.lease @defaults("namespace name holderIdentity created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Identity of the lease holder (often "<hostname>_<uuid>")
+  holderIdentity string
+  // Lease duration in seconds
+  leaseDurationSeconds int
+  // Time the current holder acquired the lease
+  acquireTime time
+  // Time the current holder last renewed the lease
+  renewTime time
+  // Number of times this lease has been transferred to a new holder
+  leaseTransitions int
+  // Strategy used to coordinate leadership (e.g., OldestEmulationVersion)
+  strategy string
+  // Preferred future holder for the lease
+  preferredHolder string
+}
+
+// Kubernetes CertificateSigningRequest
+private k8s.certificatesigningrequest @defaults("name signerName username created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // PEM-encoded certificate signing request
+  request string
+  // Name of the signer that should handle this request (e.g., kubernetes.io/kube-apiserver-client)
+  signerName string
+  // Requested duration for the issued certificate, in seconds
+  expirationSeconds int
+  // Requested key usages for the certificate (e.g., client auth, server auth)
+  usages []string
+  // Username of the user that created the request
+  username string
+  // UID of the user that created the request
+  requesterUid string
+  // Groups of the user that created the request
+  groups []string
+  // PEM-encoded issued certificate (empty until the request is approved and signed)
+  certificate string
+  // Status conditions (Approved, Denied, Failed)
+  conditions []dict
+}
+
+// Kubernetes APIService (aggregation layer)
+private k8s.apiservice @defaults("name group version created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // API group this APIService handles (empty for the core group)
+  group string
+  // API version this APIService handles
+  version string
+  // Whether TLS verification of the backend service is skipped
+  insecureSkipTLSVerify bool
+  // PEM-encoded CA bundle used to validate the backend service
+  caBundle string
+  // Minimum priority for this group across versions
+  groupPriorityMinimum int
+  // Ordering priority for this version within the group
+  versionPriority int
+  // Name of the backend service (empty when the APIService is served by kube-apiserver itself)
+  serviceName string
+  // Namespace of the backend service
+  serviceNamespace string
+  // Port the backend service is reachable on
+  servicePort int
+  // The backend Kubernetes service that handles requests for this APIService
+  service() k8s.service
+  // Status conditions (Available)
+  conditions []dict
 }

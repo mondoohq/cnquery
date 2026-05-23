@@ -69,6 +69,11 @@ const (
 	ResourceK8sHttproute                               string = "k8s.httproute"
 	ResourceK8sGrpcroute                               string = "k8s.grpcroute"
 	ResourceK8sReferencegrant                          string = "k8s.referencegrant"
+	ResourceK8sAdmissionMutatingwebhookconfiguration   string = "k8s.admission.mutatingwebhookconfiguration"
+	ResourceK8sPoddisruptionbudget                     string = "k8s.poddisruptionbudget"
+	ResourceK8sLease                                   string = "k8s.lease"
+	ResourceK8sCertificatesigningrequest               string = "k8s.certificatesigningrequest"
+	ResourceK8sApiservice                              string = "k8s.apiservice"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -287,6 +292,26 @@ func init() {
 			Init:   initK8sReferencegrant,
 			Create: createK8sReferencegrant,
 		},
+		"k8s.admission.mutatingwebhookconfiguration": {
+			// to override args, implement: initK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sAdmissionMutatingwebhookconfiguration,
+		},
+		"k8s.poddisruptionbudget": {
+			Init:   initK8sPoddisruptionbudget,
+			Create: createK8sPoddisruptionbudget,
+		},
+		"k8s.lease": {
+			Init:   initK8sLease,
+			Create: createK8sLease,
+		},
+		"k8s.certificatesigningrequest": {
+			Init:   initK8sCertificatesigningrequest,
+			Create: createK8sCertificatesigningrequest,
+		},
+		"k8s.apiservice": {
+			Init:   initK8sApiservice,
+			Create: createK8sApiservice,
+		},
 	}
 }
 
@@ -468,6 +493,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.referenceGrants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetReferenceGrants()).ToDataRes(types.Array(types.Resource("k8s.referencegrant")))
+	},
+	"k8s.mutatingWebhookConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetMutatingWebhookConfigurations()).ToDataRes(types.Array(types.Resource("k8s.admission.mutatingwebhookconfiguration")))
+	},
+	"k8s.podDisruptionBudgets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetPodDisruptionBudgets()).ToDataRes(types.Array(types.Resource("k8s.poddisruptionbudget")))
+	},
+	"k8s.leases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetLeases()).ToDataRes(types.Array(types.Resource("k8s.lease")))
+	},
+	"k8s.certificateSigningRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetCertificateSigningRequests()).ToDataRes(types.Array(types.Resource("k8s.certificatesigningrequest")))
+	},
+	"k8s.apiServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetApiServices()).ToDataRes(types.Array(types.Resource("k8s.apiservice")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -2062,6 +2102,261 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.referencegrant.to": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReferencegrant).GetTo()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.admission.mutatingwebhookconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetId()).ToDataRes(types.String)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.mutatingwebhookconfiguration.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.mutatingwebhookconfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetName()).ToDataRes(types.String)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.webhooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetWebhooks()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.poddisruptionbudget.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetId()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.poddisruptionbudget.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.poddisruptionbudget.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetName()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.poddisruptionbudget.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.poddisruptionbudget.minAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetMinAvailable()).ToDataRes(types.Dict)
+	},
+	"k8s.poddisruptionbudget.maxUnavailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetMaxUnavailable()).ToDataRes(types.Dict)
+	},
+	"k8s.poddisruptionbudget.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.poddisruptionbudget.unhealthyPodEvictionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetUnhealthyPodEvictionPolicy()).ToDataRes(types.String)
+	},
+	"k8s.poddisruptionbudget.currentHealthy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetCurrentHealthy()).ToDataRes(types.Int)
+	},
+	"k8s.poddisruptionbudget.desiredHealthy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetDesiredHealthy()).ToDataRes(types.Int)
+	},
+	"k8s.poddisruptionbudget.expectedPods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetExpectedPods()).ToDataRes(types.Int)
+	},
+	"k8s.poddisruptionbudget.disruptionsAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetDisruptionsAllowed()).ToDataRes(types.Int)
+	},
+	"k8s.poddisruptionbudget.observedGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetObservedGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.poddisruptionbudget.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.lease.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetId()).ToDataRes(types.String)
+	},
+	"k8s.lease.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.lease.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.lease.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.lease.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.lease.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetName()).ToDataRes(types.String)
+	},
+	"k8s.lease.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.lease.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.lease.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.lease.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.lease.holderIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetHolderIdentity()).ToDataRes(types.String)
+	},
+	"k8s.lease.leaseDurationSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetLeaseDurationSeconds()).ToDataRes(types.Int)
+	},
+	"k8s.lease.acquireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetAcquireTime()).ToDataRes(types.Time)
+	},
+	"k8s.lease.renewTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetRenewTime()).ToDataRes(types.Time)
+	},
+	"k8s.lease.leaseTransitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetLeaseTransitions()).ToDataRes(types.Int)
+	},
+	"k8s.lease.strategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetStrategy()).ToDataRes(types.String)
+	},
+	"k8s.lease.preferredHolder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetPreferredHolder()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetId()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.certificatesigningrequest.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.certificatesigningrequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetName()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.certificatesigningrequest.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.certificatesigningrequest.request": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetRequest()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.signerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetSignerName()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.expirationSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetExpirationSeconds()).ToDataRes(types.Int)
+	},
+	"k8s.certificatesigningrequest.usages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetUsages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.certificatesigningrequest.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetUsername()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.requesterUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetRequesterUid()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetGroups()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.certificatesigningrequest.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetCertificate()).ToDataRes(types.String)
+	},
+	"k8s.certificatesigningrequest.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.apiservice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetId()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.apiservice.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.apiservice.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetName()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.apiservice.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.apiservice.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetGroup()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetVersion()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.insecureSkipTLSVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetInsecureSkipTLSVerify()).ToDataRes(types.Bool)
+	},
+	"k8s.apiservice.caBundle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetCaBundle()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.groupPriorityMinimum": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetGroupPriorityMinimum()).ToDataRes(types.Int)
+	},
+	"k8s.apiservice.versionPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetVersionPriority()).ToDataRes(types.Int)
+	},
+	"k8s.apiservice.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetServiceName()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.serviceNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetServiceNamespace()).ToDataRes(types.String)
+	},
+	"k8s.apiservice.servicePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetServicePort()).ToDataRes(types.Int)
+	},
+	"k8s.apiservice.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetService()).ToDataRes(types.Resource("k8s.service"))
+	},
+	"k8s.apiservice.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2224,6 +2519,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.referenceGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).ReferenceGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.mutatingWebhookConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).MutatingWebhookConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.podDisruptionBudgets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).PodDisruptionBudgets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.leases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Leases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificateSigningRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).CertificateSigningRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ApiServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4558,6 +4873,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReferencegrant).To, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.mutatingwebhookconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.poddisruptionbudget.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.minAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).MinAvailable, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.maxUnavailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).MaxUnavailable, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.unhealthyPodEvictionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).UnhealthyPodEvictionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.currentHealthy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).CurrentHealthy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.desiredHealthy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).DesiredHealthy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.expectedPods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).ExpectedPods, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.disruptionsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).DisruptionsAllowed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.observedGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).ObservedGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.lease.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.holderIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).HolderIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.leaseDurationSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).LeaseDurationSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.acquireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).AcquireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.renewTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).RenewTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.leaseTransitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).LeaseTransitions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Strategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.preferredHolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).PreferredHolder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.certificatesigningrequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.request": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Request, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.signerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).SignerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.expirationSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).ExpirationSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.usages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Usages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.requesterUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).RequesterUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.apiservice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.insecureSkipTLSVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).InsecureSkipTLSVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.caBundle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).CaBundle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.groupPriorityMinimum": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).GroupPriorityMinimum, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.versionPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).VersionPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.serviceNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).ServiceNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.servicePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).ServicePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Service, ok = plugin.RawToTValue[*mqlK8sService](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4624,6 +5299,11 @@ type mqlK8s struct {
 	HttpRoutes                      plugin.TValue[[]any]
 	GrpcRoutes                      plugin.TValue[[]any]
 	ReferenceGrants                 plugin.TValue[[]any]
+	MutatingWebhookConfigurations   plugin.TValue[[]any]
+	PodDisruptionBudgets            plugin.TValue[[]any]
+	Leases                          plugin.TValue[[]any]
+	CertificateSigningRequests      plugin.TValue[[]any]
+	ApiServices                     plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -5237,6 +5917,86 @@ func (c *mqlK8s) GetReferenceGrants() *plugin.TValue[[]any] {
 		}
 
 		return c.referenceGrants()
+	})
+}
+
+func (c *mqlK8s) GetMutatingWebhookConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MutatingWebhookConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "mutatingWebhookConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mutatingWebhookConfigurations()
+	})
+}
+
+func (c *mqlK8s) GetPodDisruptionBudgets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PodDisruptionBudgets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "podDisruptionBudgets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.podDisruptionBudgets()
+	})
+}
+
+func (c *mqlK8s) GetLeases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Leases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "leases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.leases()
+	})
+}
+
+func (c *mqlK8s) GetCertificateSigningRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CertificateSigningRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "certificateSigningRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificateSigningRequests()
+	})
+}
+
+func (c *mqlK8s) GetApiServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "apiServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiServices()
 	})
 }
 
@@ -10730,4 +11490,693 @@ func (c *mqlK8sReferencegrant) GetFrom() *plugin.TValue[[]any] {
 
 func (c *mqlK8sReferencegrant) GetTo() *plugin.TValue[[]any] {
 	return &c.To
+}
+
+// mqlK8sAdmissionMutatingwebhookconfiguration for the k8s.admission.mutatingwebhookconfiguration resource
+type mqlK8sAdmissionMutatingwebhookconfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sAdmissionMutatingwebhookconfigurationInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Webhooks        plugin.TValue[[]any]
+}
+
+// createK8sAdmissionMutatingwebhookconfiguration creates a new instance of this resource
+func createK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionMutatingwebhookconfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admission.mutatingwebhookconfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) MqlName() string {
+	return "k8s.admission.mutatingwebhookconfiguration"
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetWebhooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
+		return c.webhooks()
+	})
+}
+
+// mqlK8sPoddisruptionbudget for the k8s.poddisruptionbudget resource
+type mqlK8sPoddisruptionbudget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sPoddisruptionbudgetInternal
+	Id                         plugin.TValue[string]
+	Uid                        plugin.TValue[string]
+	ResourceVersion            plugin.TValue[string]
+	Labels                     plugin.TValue[map[string]any]
+	Annotations                plugin.TValue[map[string]any]
+	Name                       plugin.TValue[string]
+	Namespace                  plugin.TValue[string]
+	Kind                       plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	Manifest                   plugin.TValue[any]
+	MinAvailable               plugin.TValue[any]
+	MaxUnavailable             plugin.TValue[any]
+	Selector                   plugin.TValue[any]
+	UnhealthyPodEvictionPolicy plugin.TValue[string]
+	CurrentHealthy             plugin.TValue[int64]
+	DesiredHealthy             plugin.TValue[int64]
+	ExpectedPods               plugin.TValue[int64]
+	DisruptionsAllowed         plugin.TValue[int64]
+	ObservedGeneration         plugin.TValue[int64]
+	Conditions                 plugin.TValue[[]any]
+}
+
+// createK8sPoddisruptionbudget creates a new instance of this resource
+func createK8sPoddisruptionbudget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sPoddisruptionbudget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.poddisruptionbudget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sPoddisruptionbudget) MqlName() string {
+	return "k8s.poddisruptionbudget"
+}
+
+func (c *mqlK8sPoddisruptionbudget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetMinAvailable() *plugin.TValue[any] {
+	return &c.MinAvailable
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetMaxUnavailable() *plugin.TValue[any] {
+	return &c.MaxUnavailable
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetSelector() *plugin.TValue[any] {
+	return &c.Selector
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetUnhealthyPodEvictionPolicy() *plugin.TValue[string] {
+	return &c.UnhealthyPodEvictionPolicy
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetCurrentHealthy() *plugin.TValue[int64] {
+	return &c.CurrentHealthy
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetDesiredHealthy() *plugin.TValue[int64] {
+	return &c.DesiredHealthy
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetExpectedPods() *plugin.TValue[int64] {
+	return &c.ExpectedPods
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetDisruptionsAllowed() *plugin.TValue[int64] {
+	return &c.DisruptionsAllowed
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetObservedGeneration() *plugin.TValue[int64] {
+	return &c.ObservedGeneration
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+// mqlK8sLease for the k8s.lease resource
+type mqlK8sLease struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sLeaseInternal
+	Id                   plugin.TValue[string]
+	Uid                  plugin.TValue[string]
+	ResourceVersion      plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	Annotations          plugin.TValue[map[string]any]
+	Name                 plugin.TValue[string]
+	Namespace            plugin.TValue[string]
+	Kind                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Manifest             plugin.TValue[any]
+	HolderIdentity       plugin.TValue[string]
+	LeaseDurationSeconds plugin.TValue[int64]
+	AcquireTime          plugin.TValue[*time.Time]
+	RenewTime            plugin.TValue[*time.Time]
+	LeaseTransitions     plugin.TValue[int64]
+	Strategy             plugin.TValue[string]
+	PreferredHolder      plugin.TValue[string]
+}
+
+// createK8sLease creates a new instance of this resource
+func createK8sLease(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sLease{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.lease", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sLease) MqlName() string {
+	return "k8s.lease"
+}
+
+func (c *mqlK8sLease) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sLease) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sLease) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sLease) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sLease) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sLease) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sLease) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sLease) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sLease) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sLease) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sLease) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sLease) GetHolderIdentity() *plugin.TValue[string] {
+	return &c.HolderIdentity
+}
+
+func (c *mqlK8sLease) GetLeaseDurationSeconds() *plugin.TValue[int64] {
+	return &c.LeaseDurationSeconds
+}
+
+func (c *mqlK8sLease) GetAcquireTime() *plugin.TValue[*time.Time] {
+	return &c.AcquireTime
+}
+
+func (c *mqlK8sLease) GetRenewTime() *plugin.TValue[*time.Time] {
+	return &c.RenewTime
+}
+
+func (c *mqlK8sLease) GetLeaseTransitions() *plugin.TValue[int64] {
+	return &c.LeaseTransitions
+}
+
+func (c *mqlK8sLease) GetStrategy() *plugin.TValue[string] {
+	return &c.Strategy
+}
+
+func (c *mqlK8sLease) GetPreferredHolder() *plugin.TValue[string] {
+	return &c.PreferredHolder
+}
+
+// mqlK8sCertificatesigningrequest for the k8s.certificatesigningrequest resource
+type mqlK8sCertificatesigningrequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sCertificatesigningrequestInternal
+	Id                plugin.TValue[string]
+	Uid               plugin.TValue[string]
+	ResourceVersion   plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	Annotations       plugin.TValue[map[string]any]
+	Name              plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	Manifest          plugin.TValue[any]
+	Request           plugin.TValue[string]
+	SignerName        plugin.TValue[string]
+	ExpirationSeconds plugin.TValue[int64]
+	Usages            plugin.TValue[[]any]
+	Username          plugin.TValue[string]
+	RequesterUid      plugin.TValue[string]
+	Groups            plugin.TValue[[]any]
+	Certificate       plugin.TValue[string]
+	Conditions        plugin.TValue[[]any]
+}
+
+// createK8sCertificatesigningrequest creates a new instance of this resource
+func createK8sCertificatesigningrequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sCertificatesigningrequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.certificatesigningrequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sCertificatesigningrequest) MqlName() string {
+	return "k8s.certificatesigningrequest"
+}
+
+func (c *mqlK8sCertificatesigningrequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetRequest() *plugin.TValue[string] {
+	return &c.Request
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetSignerName() *plugin.TValue[string] {
+	return &c.SignerName
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetExpirationSeconds() *plugin.TValue[int64] {
+	return &c.ExpirationSeconds
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetUsages() *plugin.TValue[[]any] {
+	return &c.Usages
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetRequesterUid() *plugin.TValue[string] {
+	return &c.RequesterUid
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetGroups() *plugin.TValue[[]any] {
+	return &c.Groups
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+// mqlK8sApiservice for the k8s.apiservice resource
+type mqlK8sApiservice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sApiserviceInternal
+	Id                    plugin.TValue[string]
+	Uid                   plugin.TValue[string]
+	ResourceVersion       plugin.TValue[string]
+	Labels                plugin.TValue[map[string]any]
+	Annotations           plugin.TValue[map[string]any]
+	Name                  plugin.TValue[string]
+	Kind                  plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	Manifest              plugin.TValue[any]
+	Group                 plugin.TValue[string]
+	Version               plugin.TValue[string]
+	InsecureSkipTLSVerify plugin.TValue[bool]
+	CaBundle              plugin.TValue[string]
+	GroupPriorityMinimum  plugin.TValue[int64]
+	VersionPriority       plugin.TValue[int64]
+	ServiceName           plugin.TValue[string]
+	ServiceNamespace      plugin.TValue[string]
+	ServicePort           plugin.TValue[int64]
+	Service               plugin.TValue[*mqlK8sService]
+	Conditions            plugin.TValue[[]any]
+}
+
+// createK8sApiservice creates a new instance of this resource
+func createK8sApiservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sApiservice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.apiservice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sApiservice) MqlName() string {
+	return "k8s.apiservice"
+}
+
+func (c *mqlK8sApiservice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sApiservice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sApiservice) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sApiservice) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sApiservice) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sApiservice) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sApiservice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sApiservice) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sApiservice) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sApiservice) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sApiservice) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlK8sApiservice) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlK8sApiservice) GetInsecureSkipTLSVerify() *plugin.TValue[bool] {
+	return &c.InsecureSkipTLSVerify
+}
+
+func (c *mqlK8sApiservice) GetCaBundle() *plugin.TValue[string] {
+	return &c.CaBundle
+}
+
+func (c *mqlK8sApiservice) GetGroupPriorityMinimum() *plugin.TValue[int64] {
+	return &c.GroupPriorityMinimum
+}
+
+func (c *mqlK8sApiservice) GetVersionPriority() *plugin.TValue[int64] {
+	return &c.VersionPriority
+}
+
+func (c *mqlK8sApiservice) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlK8sApiservice) GetServiceNamespace() *plugin.TValue[string] {
+	return &c.ServiceNamespace
+}
+
+func (c *mqlK8sApiservice) GetServicePort() *plugin.TValue[int64] {
+	return &c.ServicePort
+}
+
+func (c *mqlK8sApiservice) GetService() *plugin.TValue[*mqlK8sService] {
+	return plugin.GetOrCompute[*mqlK8sService](&c.Service, func() (*mqlK8sService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.apiservice", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlK8sApiservice) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
 }

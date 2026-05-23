@@ -5,6 +5,7 @@ package resources
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -14,7 +15,6 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -114,6 +114,11 @@ func (k *mqlK8s) validatingWebhookConfigurations() ([]any, error) {
 	return k8sResourceToMql(k.MqlRuntime, gvkString(admissionregistrationv1.SchemeGroupVersion.WithKind("ValidatingWebhookConfiguration")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
+		vwc, ok := resource.(*admissionregistrationv1.ValidatingWebhookConfiguration)
+		if !ok {
+			return nil, errors.New("not a k8s validatingwebhookconfiguration")
+		}
+
 		r, err := CreateResource(k.MqlRuntime, "k8s.admission.validatingwebhookconfiguration", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -126,13 +131,7 @@ func (k *mqlK8s) validatingWebhookConfigurations() ([]any, error) {
 			return nil, err
 		}
 
-		k := resource.(*unstructured.Unstructured)
-		webhookObj := admissionregistrationv1.ValidatingWebhookConfiguration{}
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(k.Object, &webhookObj); err != nil {
-			return nil, err
-		}
-
-		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).obj = &webhookObj
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).obj = vwc
 		return r, nil
 	})
 }
