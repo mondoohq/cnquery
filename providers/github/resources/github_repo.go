@@ -76,16 +76,16 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 	// repo.Owner can be nil on fork entries and some list responses. Skip the
 	// owner resource in that case rather than constructing a degenerate
 	// `github.user/0` that every nil-owner repo would share.
-	var owner plugin.Resource
+	ownerData := llx.NilData
 	if repo.Owner != nil && repo.GetOwner().GetLogin() != "" {
-		var err error
-		owner, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
+		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntData(repo.GetOwner().GetID()),
 			"login": llx.StringData(repo.GetOwner().GetLogin()),
 		})
 		if err != nil {
 			return nil, err
 		}
+		ownerData = llx.ResourceData(owner, "github.user")
 	}
 
 	res, err := CreateResource(runtime, "github.repository", map[string]*llx.RawData{
@@ -123,7 +123,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"defaultBranchName":                   llx.StringDataPtr(repo.DefaultBranch),
 		"cloneUrl":                            llx.StringData(repo.GetCloneURL()),
 		"sshUrl":                              llx.StringData(repo.GetSSHURL()),
-		"owner":                               llx.AnyData(owner),
+		"owner":                               ownerData,
 		"customProperties":                    llx.DictData(repo.CustomProperties),
 		"webCommitSignoffRequired":            llx.BoolDataPtr(repo.WebCommitSignoffRequired),
 		"advancedSecurityEnabled":             llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saAdvancedSecurity)),
@@ -375,7 +375,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		var owner plugin.Resource
+		ownerData := llx.NilData
 		if pr.User != nil {
 			ownerRes, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(pr.User.ID),
@@ -384,7 +384,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			owner = ownerRes
+			ownerData = llx.ResourceData(ownerRes, "github.user")
 		}
 
 		assigneesRes := []any{}
@@ -441,7 +441,7 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			"updatedAt":          llx.TimeDataPtr(githubTimestamp(pr.UpdatedAt)),
 			"closedAt":           llx.TimeDataPtr(githubTimestamp(pr.ClosedAt)),
 			"title":              llx.StringDataPtr(pr.Title),
-			"owner":              llx.AnyData(owner),
+			"owner":              ownerData,
 			"assignees":          llx.ArrayData(assigneesRes, types.Any),
 			"requestedReviewers": llx.ArrayData(requestedReviewers, types.Resource("github.user")),
 			"repoName":           llx.StringData(repoName),
