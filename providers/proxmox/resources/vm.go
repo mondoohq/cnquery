@@ -159,6 +159,7 @@ func (r *mqlProxmoxVm) serialPorts() ([]any, error) {
 		}
 		target := fmt.Sprintf("%v", val)
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.serialPort", map[string]*llx.RawData{
+			"__id":   llx.StringData(fmt.Sprintf("proxmox.vm.serialPort/%d/%s", r.Id.Data, key)),
 			"id":     llx.StringData(key),
 			"target": llx.StringData(target),
 		})
