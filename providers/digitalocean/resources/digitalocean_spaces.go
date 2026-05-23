@@ -114,7 +114,10 @@ func listSpacesBucketRefs(conn *connection.DigitaloceanConnection, regions []str
 
 // fetchSpacesBucketDetails runs newSpacesBucket per ref in parallel.
 // Results are written into an index-aligned slice so the final order
-// is stable.
+// is stable, then compacted to drop any nil entries — currently
+// newSpacesBucket never returns (nil, nil), but the slot stays nil
+// if a future variant ever filters a bucket without erroring, and we
+// don't want nil leaking into the user-facing list.
 func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface{}, error) {
 	results := make([]interface{}, len(refs))
 	jobs := make([]*jobpool.Job, 0, len(refs))
@@ -134,7 +137,13 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 	if pool.HasErrors() {
 		return nil, pool.GetErrors()
 	}
-	return results, nil
+	out := make([]interface{}, 0, len(results))
+	for _, res := range results {
+		if res != nil {
+			out = append(out, res)
+		}
+	}
+	return out, nil
 }
 
 // newSpacesBucket builds a single bucket resource by fanning out
