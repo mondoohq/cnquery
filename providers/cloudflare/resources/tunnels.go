@@ -122,7 +122,7 @@ func (c *mqlCloudflareTunnelRoute) id() (string, error) {
 	if c.TunnelId.Error != nil {
 		return "", c.TunnelId.Error
 	}
-	return fmt.Sprintf("tunnelRoute@%s@%s", c.Network.Data, c.TunnelId.Data), nil
+	return tunnelRouteID(c.Network.Data, c.TunnelId.Data, c.cacheVirtualNetworkID), nil
 }
 
 func tunnelRouteID(network, tunnelID, vnetID string) string {
