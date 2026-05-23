@@ -7819,7 +7819,7 @@ func (c *mqlProxmoxLvmThinPool) GetMetadataUsed() *plugin.TValue[int64] {
 type mqlProxmoxReplicationJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProxmoxReplicationJobInternal it will be used here
+	mqlProxmoxReplicationJobInternal
 	Id         plugin.TValue[string]
 	Vmid       plugin.TValue[int64]
 	Schedule   plugin.TValue[string]

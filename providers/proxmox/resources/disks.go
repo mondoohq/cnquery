@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/proxmox/connection"
 )
 
@@ -75,6 +76,7 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 		// a record with UNKNOWN health rather than failing the whole query.
 		if connection.IsAccessDeniedOrNotFound(r.smartErr) {
 			res, err := CreateResource(r.MqlRuntime, "proxmox.node.disk.smart", map[string]*llx.RawData{
+				"__id":       llx.StringData("proxmox.node.disk.smart/" + r.parentNode + "/" + r.DevPath.Data),
 				"health":     llx.StringData("UNKNOWN"),
 				"type":       llx.StringData(""),
 				"text":       llx.StringData(""),
@@ -91,6 +93,7 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 		return nil, r.smartErr
 	}
 	if r.smartData == nil {
+		r.Smart.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	attrs := make([]any, 0, len(r.smartData.Attributes))
@@ -107,6 +110,7 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 		})
 	}
 	res, err := CreateResource(r.MqlRuntime, "proxmox.node.disk.smart", map[string]*llx.RawData{
+		"__id":       llx.StringData("proxmox.node.disk.smart/" + r.parentNode + "/" + r.DevPath.Data),
 		"health":     llx.StringData(r.smartData.Health),
 		"type":       llx.StringData(r.smartData.Type),
 		"text":       llx.StringData(r.smartData.Text),
