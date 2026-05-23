@@ -1664,7 +1664,7 @@ private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['stor
   volumeMode() string
   // Resource requirements (requests, limits keyed by resource name)
   resources() dict
-  // Label selector for pre-existing PVs eligible to satisfy the claim
+  // Label selector for preexisting PVs eligible to satisfy the claim
   selector() dict
   // Data source for populating the volume (snapshot, PVC, custom resource)
   dataSource() dict
