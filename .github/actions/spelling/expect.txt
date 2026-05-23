@@ -265,6 +265,7 @@ gpu
 grafana
 groupname
 Groupsv
+grpcroute
 gsuite
 gua
 gvnic
@@ -283,6 +284,7 @@ hostedzone
 hostkeyalgorithms
 hpi
 hsts
+httproute
 Hudi
 hvm
 Iaa
@@ -569,6 +571,7 @@ Rdp
 readlines
 recordsets
 recrawl
+referencegrant
 regexmatchstatement
 regexpatternsetreferencestatement
 renv
