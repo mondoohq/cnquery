@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
@@ -239,6 +238,3 @@ func TestUserPrefetchGroup_NilSafe(t *testing.T) {
 	})
 	assert.Equal(t, "saml", u.detail.AuthModule)
 }
-
-// avoid an unused-import on plugin if the file gets pared down.
-var _ = plugin.NewService
