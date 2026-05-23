@@ -110,3 +110,121 @@ func (k *mqlK8sDaemonset) containers() ([]any, error) {
 	}
 	return getContainers(ds, &ds.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
+
+func (k *mqlK8sDaemonset) selector() (map[string]any, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(ds.Spec.Selector)
+}
+
+func (k *mqlK8sDaemonset) updateStrategy() (map[string]any, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(ds.Spec.UpdateStrategy)
+}
+
+func (k *mqlK8sDaemonset) revisionHistoryLimit() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	if ds.Spec.RevisionHistoryLimit == nil {
+		return 0, nil
+	}
+	return int64(*ds.Spec.RevisionHistoryLimit), nil
+}
+
+func (k *mqlK8sDaemonset) minReadySeconds() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Spec.MinReadySeconds), nil
+}
+
+func (k *mqlK8sDaemonset) currentNumberScheduled() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.CurrentNumberScheduled), nil
+}
+
+func (k *mqlK8sDaemonset) numberMisscheduled() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.NumberMisscheduled), nil
+}
+
+func (k *mqlK8sDaemonset) desiredNumberScheduled() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.DesiredNumberScheduled), nil
+}
+
+func (k *mqlK8sDaemonset) numberReady() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.NumberReady), nil
+}
+
+func (k *mqlK8sDaemonset) updatedNumberScheduled() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.UpdatedNumberScheduled), nil
+}
+
+func (k *mqlK8sDaemonset) numberAvailable() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.NumberAvailable), nil
+}
+
+func (k *mqlK8sDaemonset) numberUnavailable() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(ds.Status.NumberUnavailable), nil
+}
+
+func (k *mqlK8sDaemonset) observedGeneration() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	return ds.Status.ObservedGeneration, nil
+}
+
+func (k *mqlK8sDaemonset) collisionCount() (int64, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return 0, err
+	}
+	if ds.Status.CollisionCount == nil {
+		return 0, nil
+	}
+	return int64(*ds.Status.CollisionCount), nil
+}
+
+func (k *mqlK8sDaemonset) conditions() ([]any, error) {
+	ds, err := k.getDaemonSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(ds.Status.Conditions)
+}

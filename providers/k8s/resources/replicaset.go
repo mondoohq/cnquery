@@ -110,3 +110,78 @@ func (k *mqlK8sReplicaset) containers() ([]any, error) {
 	}
 	return getContainers(rs, &rs.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
+
+func (k *mqlK8sReplicaset) desiredReplicas() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	if rs.Spec.Replicas == nil {
+		return 1, nil
+	}
+	return int64(*rs.Spec.Replicas), nil
+}
+
+func (k *mqlK8sReplicaset) selector() (map[string]any, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(rs.Spec.Selector)
+}
+
+func (k *mqlK8sReplicaset) minReadySeconds() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(rs.Spec.MinReadySeconds), nil
+}
+
+func (k *mqlK8sReplicaset) replicas() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(rs.Status.Replicas), nil
+}
+
+func (k *mqlK8sReplicaset) fullyLabeledReplicas() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(rs.Status.FullyLabeledReplicas), nil
+}
+
+func (k *mqlK8sReplicaset) readyReplicas() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(rs.Status.ReadyReplicas), nil
+}
+
+func (k *mqlK8sReplicaset) availableReplicas() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(rs.Status.AvailableReplicas), nil
+}
+
+func (k *mqlK8sReplicaset) observedGeneration() (int64, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return 0, err
+	}
+	return rs.Status.ObservedGeneration, nil
+}
+
+func (k *mqlK8sReplicaset) conditions() ([]any, error) {
+	rs, err := k.getReplicaSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(rs.Status.Conditions)
+}

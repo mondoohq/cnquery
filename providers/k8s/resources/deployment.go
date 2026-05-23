@@ -110,3 +110,136 @@ func (k *mqlK8sDeployment) containers() ([]any, error) {
 	}
 	return getContainers(d, &d.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
+
+func (k *mqlK8sDeployment) desiredReplicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	if d.Spec.Replicas == nil {
+		// Defaults to 1 when unset.
+		return 1, nil
+	}
+	return int64(*d.Spec.Replicas), nil
+}
+
+func (k *mqlK8sDeployment) selector() (map[string]any, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(d.Spec.Selector)
+}
+
+func (k *mqlK8sDeployment) strategy() (map[string]any, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(d.Spec.Strategy)
+}
+
+func (k *mqlK8sDeployment) revisionHistoryLimit() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	if d.Spec.RevisionHistoryLimit == nil {
+		return 0, nil
+	}
+	return int64(*d.Spec.RevisionHistoryLimit), nil
+}
+
+func (k *mqlK8sDeployment) progressDeadlineSeconds() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	if d.Spec.ProgressDeadlineSeconds == nil {
+		return 0, nil
+	}
+	return int64(*d.Spec.ProgressDeadlineSeconds), nil
+}
+
+func (k *mqlK8sDeployment) paused() (bool, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return false, err
+	}
+	return d.Spec.Paused, nil
+}
+
+func (k *mqlK8sDeployment) minReadySeconds() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Spec.MinReadySeconds), nil
+}
+
+func (k *mqlK8sDeployment) replicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Status.Replicas), nil
+}
+
+func (k *mqlK8sDeployment) readyReplicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Status.ReadyReplicas), nil
+}
+
+func (k *mqlK8sDeployment) availableReplicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Status.AvailableReplicas), nil
+}
+
+func (k *mqlK8sDeployment) updatedReplicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Status.UpdatedReplicas), nil
+}
+
+func (k *mqlK8sDeployment) unavailableReplicas() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return int64(d.Status.UnavailableReplicas), nil
+}
+
+func (k *mqlK8sDeployment) observedGeneration() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	return d.Status.ObservedGeneration, nil
+}
+
+func (k *mqlK8sDeployment) collisionCount() (int64, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return 0, err
+	}
+	if d.Status.CollisionCount == nil {
+		return 0, nil
+	}
+	return int64(*d.Status.CollisionCount), nil
+}
+
+func (k *mqlK8sDeployment) conditions() ([]any, error) {
+	d, err := k.getDeployment()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(d.Status.Conditions)
+}

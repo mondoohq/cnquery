@@ -110,3 +110,167 @@ func (k *mqlK8sStatefulset) containers() ([]any, error) {
 	}
 	return getContainers(s, &s.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
+
+func (k *mqlK8sStatefulset) desiredReplicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	if s.Spec.Replicas == nil {
+		return 1, nil
+	}
+	return int64(*s.Spec.Replicas), nil
+}
+
+func (k *mqlK8sStatefulset) selector() (map[string]any, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(s.Spec.Selector)
+}
+
+func (k *mqlK8sStatefulset) serviceName() (string, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return "", err
+	}
+	return s.Spec.ServiceName, nil
+}
+
+func (k *mqlK8sStatefulset) podManagementPolicy() (string, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return "", err
+	}
+	return string(s.Spec.PodManagementPolicy), nil
+}
+
+func (k *mqlK8sStatefulset) updateStrategy() (map[string]any, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(s.Spec.UpdateStrategy)
+}
+
+func (k *mqlK8sStatefulset) revisionHistoryLimit() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	if s.Spec.RevisionHistoryLimit == nil {
+		return 0, nil
+	}
+	return int64(*s.Spec.RevisionHistoryLimit), nil
+}
+
+func (k *mqlK8sStatefulset) persistentVolumeClaimRetentionPolicy() (map[string]any, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(s.Spec.PersistentVolumeClaimRetentionPolicy)
+}
+
+func (k *mqlK8sStatefulset) minReadySeconds() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Spec.MinReadySeconds), nil
+}
+
+func (k *mqlK8sStatefulset) ordinalsStart() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	if s.Spec.Ordinals == nil {
+		return 0, nil
+	}
+	return int64(s.Spec.Ordinals.Start), nil
+}
+
+func (k *mqlK8sStatefulset) replicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Status.Replicas), nil
+}
+
+func (k *mqlK8sStatefulset) readyReplicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Status.ReadyReplicas), nil
+}
+
+func (k *mqlK8sStatefulset) currentReplicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Status.CurrentReplicas), nil
+}
+
+func (k *mqlK8sStatefulset) updatedReplicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Status.UpdatedReplicas), nil
+}
+
+func (k *mqlK8sStatefulset) availableReplicas() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Status.AvailableReplicas), nil
+}
+
+func (k *mqlK8sStatefulset) observedGeneration() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	return s.Status.ObservedGeneration, nil
+}
+
+func (k *mqlK8sStatefulset) currentRevision() (string, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return "", err
+	}
+	return s.Status.CurrentRevision, nil
+}
+
+func (k *mqlK8sStatefulset) updateRevision() (string, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return "", err
+	}
+	return s.Status.UpdateRevision, nil
+}
+
+func (k *mqlK8sStatefulset) collisionCount() (int64, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return 0, err
+	}
+	if s.Status.CollisionCount == nil {
+		return 0, nil
+	}
+	return int64(*s.Status.CollisionCount), nil
+}
+
+func (k *mqlK8sStatefulset) conditions() ([]any, error) {
+	s, err := k.getStatefulSet()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(s.Status.Conditions)
+}

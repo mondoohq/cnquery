@@ -851,6 +851,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
+	"k8s.deployment.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetDesiredReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.deployment.strategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetStrategy()).ToDataRes(types.Dict)
+	},
+	"k8s.deployment.revisionHistoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetRevisionHistoryLimit()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.progressDeadlineSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetProgressDeadlineSeconds()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.paused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetPaused()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.minReadySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetMinReadySeconds()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.replicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.readyReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetReadyReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.availableReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetAvailableReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.updatedReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUpdatedReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.unavailableReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUnavailableReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.observedGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetObservedGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.collisionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetCollisionCount()).ToDataRes(types.Int)
+	},
+	"k8s.deployment.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
 	"k8s.daemonset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetId()).ToDataRes(types.String)
 	},
@@ -889,6 +934,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.daemonset.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
+	},
+	"k8s.daemonset.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.daemonset.updateStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUpdateStrategy()).ToDataRes(types.Dict)
+	},
+	"k8s.daemonset.revisionHistoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetRevisionHistoryLimit()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.minReadySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetMinReadySeconds()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.currentNumberScheduled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetCurrentNumberScheduled()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.numberMisscheduled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetNumberMisscheduled()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.desiredNumberScheduled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetDesiredNumberScheduled()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.numberReady": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetNumberReady()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.updatedNumberScheduled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUpdatedNumberScheduled()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.numberAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetNumberAvailable()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.numberUnavailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetNumberUnavailable()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.observedGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetObservedGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.collisionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetCollisionCount()).ToDataRes(types.Int)
+	},
+	"k8s.daemonset.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.statefulset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetId()).ToDataRes(types.String)
@@ -929,6 +1016,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.statefulset.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
+	"k8s.statefulset.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetDesiredReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.statefulset.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetServiceName()).ToDataRes(types.String)
+	},
+	"k8s.statefulset.podManagementPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetPodManagementPolicy()).ToDataRes(types.String)
+	},
+	"k8s.statefulset.updateStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUpdateStrategy()).ToDataRes(types.Dict)
+	},
+	"k8s.statefulset.revisionHistoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetRevisionHistoryLimit()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.persistentVolumeClaimRetentionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetPersistentVolumeClaimRetentionPolicy()).ToDataRes(types.Dict)
+	},
+	"k8s.statefulset.minReadySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetMinReadySeconds()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.ordinalsStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetOrdinalsStart()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.replicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.readyReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetReadyReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.currentReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetCurrentReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.updatedReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUpdatedReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.availableReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetAvailableReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.observedGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetObservedGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.currentRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetCurrentRevision()).ToDataRes(types.String)
+	},
+	"k8s.statefulset.updateRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUpdateRevision()).ToDataRes(types.String)
+	},
+	"k8s.statefulset.collisionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetCollisionCount()).ToDataRes(types.Int)
+	},
+	"k8s.statefulset.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
 	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
 	},
@@ -967,6 +1111,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.replicaset.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
+	},
+	"k8s.replicaset.desiredReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetDesiredReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.replicaset.minReadySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetMinReadySeconds()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.replicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.fullyLabeledReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetFullyLabeledReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.readyReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetReadyReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.availableReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetAvailableReplicas()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.observedGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetObservedGeneration()).ToDataRes(types.Int)
+	},
+	"k8s.replicaset.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetId()).ToDataRes(types.String)
@@ -3215,6 +3386,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).DesiredReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.strategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Strategy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.revisionHistoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).RevisionHistoryLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.progressDeadlineSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ProgressDeadlineSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.paused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Paused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.minReadySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).MinReadySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.replicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Replicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.readyReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ReadyReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.availableReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).AvailableReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.updatedReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UpdatedReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.unavailableReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UnavailableReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.observedGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ObservedGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.collisionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).CollisionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).__id, ok = v.Value.(string)
 		return
@@ -3269,6 +3500,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.daemonset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.updateStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UpdateStrategy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.revisionHistoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).RevisionHistoryLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.minReadySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).MinReadySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.currentNumberScheduled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).CurrentNumberScheduled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.numberMisscheduled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).NumberMisscheduled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.desiredNumberScheduled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).DesiredNumberScheduled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.numberReady": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).NumberReady, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.updatedNumberScheduled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UpdatedNumberScheduled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.numberAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).NumberAvailable, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.numberUnavailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).NumberUnavailable, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.observedGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).ObservedGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.collisionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).CollisionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3327,6 +3614,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sStatefulset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.statefulset.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).DesiredReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.podManagementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).PodManagementPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.updateStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UpdateStrategy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.revisionHistoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).RevisionHistoryLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.persistentVolumeClaimRetentionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).PersistentVolumeClaimRetentionPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.minReadySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).MinReadySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.ordinalsStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).OrdinalsStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.replicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).Replicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.readyReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ReadyReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.currentReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).CurrentReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.updatedReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UpdatedReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.availableReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).AvailableReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.observedGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ObservedGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.currentRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).CurrentRevision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.updateRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UpdateRevision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.collisionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).CollisionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
 		return
@@ -3381,6 +3744,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.replicaset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.desiredReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).DesiredReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Selector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.minReadySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).MinReadySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.replicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Replicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.fullyLabeledReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).FullyLabeledReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.readyReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ReadyReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.availableReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).AvailableReplicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.observedGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ObservedGeneration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7453,19 +7852,34 @@ type mqlK8sDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sDeploymentInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	PodSpec         plugin.TValue[any]
-	InitContainers  plugin.TValue[[]any]
-	Containers      plugin.TValue[[]any]
+	Id                      plugin.TValue[string]
+	Uid                     plugin.TValue[string]
+	ResourceVersion         plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
+	Annotations             plugin.TValue[map[string]any]
+	Name                    plugin.TValue[string]
+	Namespace               plugin.TValue[string]
+	Kind                    plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Manifest                plugin.TValue[any]
+	PodSpec                 plugin.TValue[any]
+	InitContainers          plugin.TValue[[]any]
+	Containers              plugin.TValue[[]any]
+	DesiredReplicas         plugin.TValue[int64]
+	Selector                plugin.TValue[any]
+	Strategy                plugin.TValue[any]
+	RevisionHistoryLimit    plugin.TValue[int64]
+	ProgressDeadlineSeconds plugin.TValue[int64]
+	Paused                  plugin.TValue[bool]
+	MinReadySeconds         plugin.TValue[int64]
+	Replicas                plugin.TValue[int64]
+	ReadyReplicas           plugin.TValue[int64]
+	AvailableReplicas       plugin.TValue[int64]
+	UpdatedReplicas         plugin.TValue[int64]
+	UnavailableReplicas     plugin.TValue[int64]
+	ObservedGeneration      plugin.TValue[int64]
+	CollisionCount          plugin.TValue[int64]
+	Conditions              plugin.TValue[[]any]
 }
 
 // createK8sDeployment creates a new instance of this resource
@@ -7589,24 +8003,128 @@ func (c *mqlK8sDeployment) GetContainers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDeployment) GetDesiredReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DesiredReplicas, func() (int64, error) {
+		return c.desiredReplicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetSelector() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Selector, func() (any, error) {
+		return c.selector()
+	})
+}
+
+func (c *mqlK8sDeployment) GetStrategy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Strategy, func() (any, error) {
+		return c.strategy()
+	})
+}
+
+func (c *mqlK8sDeployment) GetRevisionHistoryLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RevisionHistoryLimit, func() (int64, error) {
+		return c.revisionHistoryLimit()
+	})
+}
+
+func (c *mqlK8sDeployment) GetProgressDeadlineSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ProgressDeadlineSeconds, func() (int64, error) {
+		return c.progressDeadlineSeconds()
+	})
+}
+
+func (c *mqlK8sDeployment) GetPaused() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Paused, func() (bool, error) {
+		return c.paused()
+	})
+}
+
+func (c *mqlK8sDeployment) GetMinReadySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinReadySeconds, func() (int64, error) {
+		return c.minReadySeconds()
+	})
+}
+
+func (c *mqlK8sDeployment) GetReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Replicas, func() (int64, error) {
+		return c.replicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetReadyReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadyReplicas, func() (int64, error) {
+		return c.readyReplicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetAvailableReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AvailableReplicas, func() (int64, error) {
+		return c.availableReplicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUpdatedReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UpdatedReplicas, func() (int64, error) {
+		return c.updatedReplicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUnavailableReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UnavailableReplicas, func() (int64, error) {
+		return c.unavailableReplicas()
+	})
+}
+
+func (c *mqlK8sDeployment) GetObservedGeneration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObservedGeneration, func() (int64, error) {
+		return c.observedGeneration()
+	})
+}
+
+func (c *mqlK8sDeployment) GetCollisionCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CollisionCount, func() (int64, error) {
+		return c.collisionCount()
+	})
+}
+
+func (c *mqlK8sDeployment) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		return c.conditions()
+	})
+}
+
 // mqlK8sDaemonset for the k8s.daemonset resource
 type mqlK8sDaemonset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sDaemonsetInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	PodSpec         plugin.TValue[any]
-	InitContainers  plugin.TValue[[]any]
-	Containers      plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Uid                    plugin.TValue[string]
+	ResourceVersion        plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	Annotations            plugin.TValue[map[string]any]
+	Name                   plugin.TValue[string]
+	Namespace              plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Created                plugin.TValue[*time.Time]
+	Manifest               plugin.TValue[any]
+	PodSpec                plugin.TValue[any]
+	InitContainers         plugin.TValue[[]any]
+	Containers             plugin.TValue[[]any]
+	Selector               plugin.TValue[any]
+	UpdateStrategy         plugin.TValue[any]
+	RevisionHistoryLimit   plugin.TValue[int64]
+	MinReadySeconds        plugin.TValue[int64]
+	CurrentNumberScheduled plugin.TValue[int64]
+	NumberMisscheduled     plugin.TValue[int64]
+	DesiredNumberScheduled plugin.TValue[int64]
+	NumberReady            plugin.TValue[int64]
+	UpdatedNumberScheduled plugin.TValue[int64]
+	NumberAvailable        plugin.TValue[int64]
+	NumberUnavailable      plugin.TValue[int64]
+	ObservedGeneration     plugin.TValue[int64]
+	CollisionCount         plugin.TValue[int64]
+	Conditions             plugin.TValue[[]any]
 }
 
 // createK8sDaemonset creates a new instance of this resource
@@ -7730,24 +8248,127 @@ func (c *mqlK8sDaemonset) GetContainers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDaemonset) GetSelector() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Selector, func() (any, error) {
+		return c.selector()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUpdateStrategy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.UpdateStrategy, func() (any, error) {
+		return c.updateStrategy()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetRevisionHistoryLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RevisionHistoryLimit, func() (int64, error) {
+		return c.revisionHistoryLimit()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetMinReadySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinReadySeconds, func() (int64, error) {
+		return c.minReadySeconds()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetCurrentNumberScheduled() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CurrentNumberScheduled, func() (int64, error) {
+		return c.currentNumberScheduled()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetNumberMisscheduled() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumberMisscheduled, func() (int64, error) {
+		return c.numberMisscheduled()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetDesiredNumberScheduled() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DesiredNumberScheduled, func() (int64, error) {
+		return c.desiredNumberScheduled()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetNumberReady() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumberReady, func() (int64, error) {
+		return c.numberReady()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUpdatedNumberScheduled() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UpdatedNumberScheduled, func() (int64, error) {
+		return c.updatedNumberScheduled()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetNumberAvailable() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumberAvailable, func() (int64, error) {
+		return c.numberAvailable()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetNumberUnavailable() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumberUnavailable, func() (int64, error) {
+		return c.numberUnavailable()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetObservedGeneration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObservedGeneration, func() (int64, error) {
+		return c.observedGeneration()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetCollisionCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CollisionCount, func() (int64, error) {
+		return c.collisionCount()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		return c.conditions()
+	})
+}
+
 // mqlK8sStatefulset for the k8s.statefulset resource
 type mqlK8sStatefulset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sStatefulsetInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	PodSpec         plugin.TValue[any]
-	InitContainers  plugin.TValue[[]any]
-	Containers      plugin.TValue[[]any]
+	Id                                   plugin.TValue[string]
+	Uid                                  plugin.TValue[string]
+	ResourceVersion                      plugin.TValue[string]
+	Labels                               plugin.TValue[map[string]any]
+	Annotations                          plugin.TValue[map[string]any]
+	Name                                 plugin.TValue[string]
+	Namespace                            plugin.TValue[string]
+	Kind                                 plugin.TValue[string]
+	Created                              plugin.TValue[*time.Time]
+	Manifest                             plugin.TValue[any]
+	PodSpec                              plugin.TValue[any]
+	InitContainers                       plugin.TValue[[]any]
+	Containers                           plugin.TValue[[]any]
+	DesiredReplicas                      plugin.TValue[int64]
+	Selector                             plugin.TValue[any]
+	ServiceName                          plugin.TValue[string]
+	PodManagementPolicy                  plugin.TValue[string]
+	UpdateStrategy                       plugin.TValue[any]
+	RevisionHistoryLimit                 plugin.TValue[int64]
+	PersistentVolumeClaimRetentionPolicy plugin.TValue[any]
+	MinReadySeconds                      plugin.TValue[int64]
+	OrdinalsStart                        plugin.TValue[int64]
+	Replicas                             plugin.TValue[int64]
+	ReadyReplicas                        plugin.TValue[int64]
+	CurrentReplicas                      plugin.TValue[int64]
+	UpdatedReplicas                      plugin.TValue[int64]
+	AvailableReplicas                    plugin.TValue[int64]
+	ObservedGeneration                   plugin.TValue[int64]
+	CurrentRevision                      plugin.TValue[string]
+	UpdateRevision                       plugin.TValue[string]
+	CollisionCount                       plugin.TValue[int64]
+	Conditions                           plugin.TValue[[]any]
 }
 
 // createK8sStatefulset creates a new instance of this resource
@@ -7871,24 +8492,147 @@ func (c *mqlK8sStatefulset) GetContainers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sStatefulset) GetDesiredReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DesiredReplicas, func() (int64, error) {
+		return c.desiredReplicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetSelector() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Selector, func() (any, error) {
+		return c.selector()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetServiceName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceName, func() (string, error) {
+		return c.serviceName()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetPodManagementPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodManagementPolicy, func() (string, error) {
+		return c.podManagementPolicy()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUpdateStrategy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.UpdateStrategy, func() (any, error) {
+		return c.updateStrategy()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetRevisionHistoryLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RevisionHistoryLimit, func() (int64, error) {
+		return c.revisionHistoryLimit()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetPersistentVolumeClaimRetentionPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PersistentVolumeClaimRetentionPolicy, func() (any, error) {
+		return c.persistentVolumeClaimRetentionPolicy()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetMinReadySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinReadySeconds, func() (int64, error) {
+		return c.minReadySeconds()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetOrdinalsStart() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.OrdinalsStart, func() (int64, error) {
+		return c.ordinalsStart()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Replicas, func() (int64, error) {
+		return c.replicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetReadyReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadyReplicas, func() (int64, error) {
+		return c.readyReplicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetCurrentReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CurrentReplicas, func() (int64, error) {
+		return c.currentReplicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUpdatedReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UpdatedReplicas, func() (int64, error) {
+		return c.updatedReplicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetAvailableReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AvailableReplicas, func() (int64, error) {
+		return c.availableReplicas()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetObservedGeneration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObservedGeneration, func() (int64, error) {
+		return c.observedGeneration()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetCurrentRevision() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CurrentRevision, func() (string, error) {
+		return c.currentRevision()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUpdateRevision() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UpdateRevision, func() (string, error) {
+		return c.updateRevision()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetCollisionCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CollisionCount, func() (int64, error) {
+		return c.collisionCount()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		return c.conditions()
+	})
+}
+
 // mqlK8sReplicaset for the k8s.replicaset resource
 type mqlK8sReplicaset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sReplicasetInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	PodSpec         plugin.TValue[any]
-	InitContainers  plugin.TValue[[]any]
-	Containers      plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	Uid                  plugin.TValue[string]
+	ResourceVersion      plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	Annotations          plugin.TValue[map[string]any]
+	Name                 plugin.TValue[string]
+	Namespace            plugin.TValue[string]
+	Kind                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Manifest             plugin.TValue[any]
+	PodSpec              plugin.TValue[any]
+	InitContainers       plugin.TValue[[]any]
+	Containers           plugin.TValue[[]any]
+	DesiredReplicas      plugin.TValue[int64]
+	Selector             plugin.TValue[any]
+	MinReadySeconds      plugin.TValue[int64]
+	Replicas             plugin.TValue[int64]
+	FullyLabeledReplicas plugin.TValue[int64]
+	ReadyReplicas        plugin.TValue[int64]
+	AvailableReplicas    plugin.TValue[int64]
+	ObservedGeneration   plugin.TValue[int64]
+	Conditions           plugin.TValue[[]any]
 }
 
 // createK8sReplicaset creates a new instance of this resource
@@ -8009,6 +8753,60 @@ func (c *mqlK8sReplicaset) GetContainers() *plugin.TValue[[]any] {
 		}
 
 		return c.containers()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetDesiredReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DesiredReplicas, func() (int64, error) {
+		return c.desiredReplicas()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetSelector() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Selector, func() (any, error) {
+		return c.selector()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetMinReadySeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinReadySeconds, func() (int64, error) {
+		return c.minReadySeconds()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Replicas, func() (int64, error) {
+		return c.replicas()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetFullyLabeledReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.FullyLabeledReplicas, func() (int64, error) {
+		return c.fullyLabeledReplicas()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetReadyReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadyReplicas, func() (int64, error) {
+		return c.readyReplicas()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetAvailableReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AvailableReplicas, func() (int64, error) {
+		return c.availableReplicas()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetObservedGeneration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObservedGeneration, func() (int64, error) {
+		return c.observedGeneration()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		return c.conditions()
 	})
 }
 

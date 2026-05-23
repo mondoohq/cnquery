@@ -343,7 +343,7 @@ private k8s.pod @defaults("namespace name created"){
 }
 
 // Kubernetes Deployment
-private k8s.deployment @defaults("namespace name created") {
+private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -370,10 +370,40 @@ private k8s.deployment @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Number of pods requested by the deployment
+  desiredReplicas() int
+  // Label selector that identifies pods owned by this deployment
+  selector() dict
+  // Rollout strategy (Recreate or RollingUpdate with maxSurge/maxUnavailable)
+  strategy() dict
+  // Number of old ReplicaSets retained to allow rollback
+  revisionHistoryLimit() int
+  // Maximum seconds for the deployment to make progress before being marked failed
+  progressDeadlineSeconds() int
+  // Whether the deployment rollout is paused
+  paused() bool
+  // Minimum seconds a newly created pod must be ready without crashes to be considered available
+  minReadySeconds() int
+  // Total non-terminated pods observed by the controller
+  replicas() int
+  // Number of ready pods
+  readyReplicas() int
+  // Number of pods available for at least minReadySeconds
+  availableReplicas() int
+  // Number of pods updated to the desired pod template
+  updatedReplicas() int
+  // Number of pods that are not available
+  unavailableReplicas() int
+  // Generation of the spec most recently observed by the controller
+  observedGeneration() int
+  // Count of ReplicaSet name hash collisions handled by the controller
+  collisionCount() int
+  // Status conditions (Available, Progressing, ReplicaFailure)
+  conditions() []dict
 }
 
 // Kubernetes DaemonSet
-private k8s.daemonset @defaults("namespace name created") {
+private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -400,10 +430,38 @@ private k8s.daemonset @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Label selector that identifies pods owned by this DaemonSet
+  selector() dict
+  // Update strategy (OnDelete or RollingUpdate with maxUnavailable/maxSurge)
+  updateStrategy() dict
+  // Number of old ControllerRevisions retained to allow rollback
+  revisionHistoryLimit() int
+  // Minimum seconds a newly created pod must be ready without crashes to be considered available
+  minReadySeconds() int
+  // Number of nodes running at least one daemon pod
+  currentNumberScheduled() int
+  // Number of nodes running a daemon pod that shouldn't be running one
+  numberMisscheduled() int
+  // Total number of nodes that should be running a daemon pod
+  desiredNumberScheduled() int
+  // Number of nodes that should be running the daemon pod with the pod in Ready state
+  numberReady() int
+  // Number of nodes running an updated daemon pod
+  updatedNumberScheduled() int
+  // Number of nodes whose daemon pod is available for at least minReadySeconds
+  numberAvailable() int
+  // Number of nodes whose daemon pod is not available
+  numberUnavailable() int
+  // Generation of the spec most recently observed by the controller
+  observedGeneration() int
+  // Count of ControllerRevision name hash collisions handled by the controller
+  collisionCount() int
+  // Status conditions
+  conditions() []dict
 }
 
 // Kubernetes StatefulSet
-private k8s.statefulset @defaults("namespace name created") {
+private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -430,10 +488,48 @@ private k8s.statefulset @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Number of pods requested by the StatefulSet
+  desiredReplicas() int
+  // Label selector that identifies pods owned by this StatefulSet
+  selector() dict
+  // Name of the governing headless service for the StatefulSet
+  serviceName() string
+  // Pod management policy (OrderedReady or Parallel)
+  podManagementPolicy() string
+  // Update strategy (OnDelete or RollingUpdate with partition/maxUnavailable)
+  updateStrategy() dict
+  // Number of old ControllerRevisions retained to allow rollback
+  revisionHistoryLimit() int
+  // Retention policy for PVCs across StatefulSet scale-down and deletion
+  persistentVolumeClaimRetentionPolicy() dict
+  // Minimum seconds a newly created pod must be ready without crashes to be considered available
+  minReadySeconds() int
+  // Starting ordinal for the StatefulSet's pod indices (defaults to 0)
+  ordinalsStart() int
+  // Total non-terminated pods observed by the controller
+  replicas() int
+  // Number of ready pods
+  readyReplicas() int
+  // Number of pods running the spec's current revision
+  currentReplicas() int
+  // Number of pods updated to the spec's update revision
+  updatedReplicas() int
+  // Number of pods available for at least minReadySeconds
+  availableReplicas() int
+  // Generation of the spec most recently observed by the controller
+  observedGeneration() int
+  // Revision hash of the StatefulSet's current configuration
+  currentRevision() string
+  // Revision hash of the StatefulSet's update configuration
+  updateRevision() string
+  // Count of ControllerRevision name hash collisions handled by the controller
+  collisionCount() int
+  // Status conditions
+  conditions() []dict
 }
 
 // Kubernetes ReplicaSet
-private k8s.replicaset @defaults("namespace name created") {
+private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -460,6 +556,24 @@ private k8s.replicaset @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained containers
   containers() []k8s.container
+  // Number of pods requested by the ReplicaSet
+  desiredReplicas() int
+  // Label selector that identifies pods owned by this ReplicaSet
+  selector() dict
+  // Minimum seconds a newly created pod must be ready without crashes to be considered available
+  minReadySeconds() int
+  // Total non-terminated pods observed by the controller
+  replicas() int
+  // Number of pods whose labels match the selector and have been fully labeled
+  fullyLabeledReplicas() int
+  // Number of ready pods
+  readyReplicas() int
+  // Number of pods available for at least minReadySeconds
+  availableReplicas() int
+  // Generation of the spec most recently observed by the controller
+  observedGeneration() int
+  // Status conditions (ReplicaFailure)
+  conditions() []dict
 }
 
 // Kubernetes Job
