@@ -8,19 +8,16 @@ import (
 	"time"
 )
 
-// daysUntil mirrors the math used by mqlProxmoxCertificate.daysUntilExpiry.
-// Pinning it here pins the rounding direction without binding the test
-// to the wall clock.
-func daysUntil(t time.Time, now time.Time) int64 {
-	return int64(t.Sub(now) / (24 * time.Hour))
-}
-
-func TestCertificateDaysUntilExpiryRounding(t *testing.T) {
+// TestDaysBetween pins the rounding direction of the shared helper
+// behind mqlProxmoxCertificate.daysUntilExpiry. The test calls the
+// production helper directly so a drift in the formula is caught
+// here rather than going unnoticed.
+func TestDaysBetween(t *testing.T) {
 	now := time.Date(2026, 6, 1, 12, 0, 0, 0, time.UTC)
 	tests := []struct {
-		name     string
-		notAfter time.Time
-		want     int64
+		name string
+		to   time.Time
+		want int64
 	}{
 		{"exactly-30-days", now.Add(30 * 24 * time.Hour), 30},
 		{"29-days-23-hours", now.Add(29*24*time.Hour + 23*time.Hour), 29},
@@ -32,9 +29,9 @@ func TestCertificateDaysUntilExpiryRounding(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := daysUntil(tt.notAfter, now)
+			got := daysBetween(now, tt.to)
 			if got != tt.want {
-				t.Errorf("daysUntil(%v) = %d, want %d", tt.notAfter, got, tt.want)
+				t.Errorf("daysBetween(now, %v) = %d, want %d", tt.to, got, tt.want)
 			}
 		})
 	}

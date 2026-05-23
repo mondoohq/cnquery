@@ -98,11 +98,9 @@ ceph
 certificatechains
 certificatesmanagement
 cetypes
-cfs
 chabc
 chatgpt
 chokepoint
-cicustom
 cifs
 cipassword
 ciscocatalyst
@@ -137,8 +135,6 @@ cosmosdb
 costexplorer
 cowlib
 cpe
-cpulimit
-cpuunits
 CPWn
 cpx
 CRDR
@@ -363,7 +359,6 @@ kts
 kty
 kubenet
 kustomization
-kversion
 KVM
 labelmatchstatement
 Laravel
@@ -423,7 +418,6 @@ minfree
 MINIMALUSER
 Mirrorings
 mkey
-mknod
 mlag
 mls
 Mnfz
@@ -444,7 +438,6 @@ mychart
 myproject
 myvendor
 naflags
-nameserver
 natgateway
 nativead
 ndp
@@ -554,6 +547,7 @@ proxmox
 PROXYV
 psc
 psr
+pti
 PTn
 pubspec
 pushconfig
@@ -626,7 +620,6 @@ scm
 sdn
 sdp
 seabios
-searchdomain
 SECRETID
 secretmanager
 SECRETVALUE
@@ -655,7 +648,6 @@ slo
 smbv
 snaptime
 snat
-snippets
 SNOWSQL
 SNYK
 softdep
@@ -670,7 +662,6 @@ sriov
 srp
 ssbd
 SSHFP
-sshkeys
 ssis
 sslv
 Sspr
@@ -695,7 +686,6 @@ swi
 syd
 SYMANTEC
 symfony
-sys
 tacacs
 tailnets
 tailscale

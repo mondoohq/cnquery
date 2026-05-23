@@ -18,6 +18,15 @@ type mqlProxmoxBackupJobInternal struct {
 	cfg           map[string]any
 	cfgErr        error
 	lock          sync.Mutex
+
+	// Target resolution hits /cluster/resources for both VMs and
+	// containers; cache the result so a query that reads both
+	// targetVms and targetContainers only pays the cost once.
+	targetsFetched bool
+	cachedVms      []any
+	cachedCts      []any
+	targetsErr     error
+	targetsLock    sync.Mutex
 }
 
 func (r *mqlProxmox) backupJobs() ([]any, error) {
@@ -103,8 +112,23 @@ func parseBackupVMIDs(raw string) []int64 {
 
 // resolveBackupTargets walks the cluster inventory once and returns the
 // VMs and containers selected by the job. `all` selects everything; a
-// non-empty `vmids` list selects only the matching guests.
+// non-empty `vmids` list selects only the matching guests. Results
+// are cached on the resource so the two accessors share one fetch.
 func (r *mqlProxmoxBackupJob) resolveBackupTargets() (vms, containers []any, err error) {
+	if r.targetsFetched {
+		return r.cachedVms, r.cachedCts, r.targetsErr
+	}
+	r.targetsLock.Lock()
+	defer r.targetsLock.Unlock()
+	if r.targetsFetched {
+		return r.cachedVms, r.cachedCts, r.targetsErr
+	}
+	r.cachedVms, r.cachedCts, r.targetsErr = r.resolveBackupTargetsUncached()
+	r.targetsFetched = true
+	return r.cachedVms, r.cachedCts, r.targetsErr
+}
+
+func (r *mqlProxmoxBackupJob) resolveBackupTargetsUncached() (vms, containers []any, err error) {
 	conn := r.MqlRuntime.Connection.(*connection.PveConnection)
 	all := r.All.Data
 	wanted := parseBackupVMIDs(r.Vmids.Data)

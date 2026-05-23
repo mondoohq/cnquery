@@ -177,16 +177,6 @@ func (r *mqlProxmoxNode) secureBoot() (bool, error) {
 	return r.nodeStatus.BootInfo.SecureBoot == 1, nil
 }
 
-func (r *mqlProxmoxCertificate) daysUntilExpiry() (int64, error) {
-	if r.NotAfter.Data == nil {
-		return 0, nil
-	}
-	// Integer-truncate toward zero so "5 hours from expiry" reports 0
-	// rather than 1 — the policy intent for `< 30 days` then triggers
-	// only when there's actually less than that left.
-	delta := r.NotAfter.Data.Sub(time.Now())
-	return int64(delta / (24 * time.Hour)), nil
-}
 
 func (r *mqlProxmoxNode) networks() ([]any, error) {
 	conn := nodeConn(r)
