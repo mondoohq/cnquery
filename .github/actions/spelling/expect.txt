@@ -82,6 +82,7 @@ blr
 breakglass
 broadwell
 Buildkit
+Burstable
 bumpable
 bwawxf
 BXdl
