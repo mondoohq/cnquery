@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -168,4 +169,399 @@ func (k *mqlK8sPod) node() (*mqlK8sNode, error) {
 	}
 
 	return node.(*mqlK8sNode), nil
+}
+
+func (k *mqlK8sPod) podSpecTyped() (*corev1.PodSpec, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return &pod.Spec, nil
+}
+
+func (k *mqlK8sPod) nodeName() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.NodeName, nil
+}
+
+func (k *mqlK8sPod) nodeSelector() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(spec.NodeSelector), nil
+}
+
+func (k *mqlK8sPod) tolerations() ([]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(spec.Tolerations)
+}
+
+func (k *mqlK8sPod) topologySpreadConstraints() ([]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(spec.TopologySpreadConstraints)
+}
+
+func (k *mqlK8sPod) affinity() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(spec.Affinity)
+}
+
+func (k *mqlK8sPod) priorityClassName() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.PriorityClassName, nil
+}
+
+func (k *mqlK8sPod) priorityClass() (*mqlK8sPriorityclass, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	if spec.PriorityClassName == "" {
+		k.PriorityClass.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	pc, err := NewResource(k.MqlRuntime, "k8s.priorityclass", map[string]*llx.RawData{
+		"name": llx.StringData(spec.PriorityClassName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return pc.(*mqlK8sPriorityclass), nil
+}
+
+func (k *mqlK8sPod) preemptionPolicy() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	if spec.PreemptionPolicy == nil {
+		return "", nil
+	}
+	return string(*spec.PreemptionPolicy), nil
+}
+
+func (k *mqlK8sPod) schedulerName() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.SchedulerName, nil
+}
+
+func (k *mqlK8sPod) runtimeClassName() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	if spec.RuntimeClassName == nil {
+		return "", nil
+	}
+	return *spec.RuntimeClassName, nil
+}
+
+func (k *mqlK8sPod) serviceAccountName() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.ServiceAccountName, nil
+}
+
+func (k *mqlK8sPod) serviceAccount() (*mqlK8sServiceaccount, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	if pod.Spec.ServiceAccountName == "" {
+		k.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	sa, err := NewResource(k.MqlRuntime, "k8s.serviceaccount", map[string]*llx.RawData{
+		"name":      llx.StringData(pod.Spec.ServiceAccountName),
+		"namespace": llx.StringData(pod.Namespace),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return sa.(*mqlK8sServiceaccount), nil
+}
+
+func (k *mqlK8sPod) automountServiceAccountToken() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	if spec.AutomountServiceAccountToken == nil {
+		// Defaults to true when unset.
+		return true, nil
+	}
+	return *spec.AutomountServiceAccountToken, nil
+}
+
+func (k *mqlK8sPod) hostNetwork() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	return spec.HostNetwork, nil
+}
+
+func (k *mqlK8sPod) hostPID() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	return spec.HostPID, nil
+}
+
+func (k *mqlK8sPod) hostIPC() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	return spec.HostIPC, nil
+}
+
+func (k *mqlK8sPod) shareProcessNamespace() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	if spec.ShareProcessNamespace == nil {
+		return false, nil
+	}
+	return *spec.ShareProcessNamespace, nil
+}
+
+func (k *mqlK8sPod) securityContext() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(spec.SecurityContext)
+}
+
+func (k *mqlK8sPod) dnsPolicy() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return string(spec.DNSPolicy), nil
+}
+
+func (k *mqlK8sPod) dnsConfig() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(spec.DNSConfig)
+}
+
+func (k *mqlK8sPod) hostname() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.Hostname, nil
+}
+
+func (k *mqlK8sPod) subdomain() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return spec.Subdomain, nil
+}
+
+func (k *mqlK8sPod) hostAliases() ([]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(spec.HostAliases)
+}
+
+func (k *mqlK8sPod) restartPolicy() (string, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return "", err
+	}
+	return string(spec.RestartPolicy), nil
+}
+
+func (k *mqlK8sPod) terminationGracePeriodSeconds() (int64, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return 0, err
+	}
+	if spec.TerminationGracePeriodSeconds == nil {
+		return 0, nil
+	}
+	return *spec.TerminationGracePeriodSeconds, nil
+}
+
+func (k *mqlK8sPod) activeDeadlineSeconds() (int64, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return 0, err
+	}
+	if spec.ActiveDeadlineSeconds == nil {
+		return 0, nil
+	}
+	return *spec.ActiveDeadlineSeconds, nil
+}
+
+func (k *mqlK8sPod) readinessGates() ([]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(spec.ReadinessGates)
+}
+
+func (k *mqlK8sPod) enableServiceLinks() (bool, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return false, err
+	}
+	if spec.EnableServiceLinks == nil {
+		// Defaults to true when unset.
+		return true, nil
+	}
+	return *spec.EnableServiceLinks, nil
+}
+
+func (k *mqlK8sPod) imagePullSecrets() ([]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(spec.ImagePullSecrets)
+}
+
+func (k *mqlK8sPod) overhead() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	if spec.Overhead == nil {
+		return map[string]any{}, nil
+	}
+	out := make(map[string]any, len(spec.Overhead))
+	for name, qty := range spec.Overhead {
+		out[string(name)] = qty.String()
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPod) os() (map[string]any, error) {
+	spec, err := k.podSpecTyped()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(spec.OS)
+}
+
+func (k *mqlK8sPod) phase() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return string(pod.Status.Phase), nil
+}
+
+func (k *mqlK8sPod) qosClass() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return string(pod.Status.QOSClass), nil
+}
+
+func (k *mqlK8sPod) podIP() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return pod.Status.PodIP, nil
+}
+
+func (k *mqlK8sPod) podIPs() ([]any, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, len(pod.Status.PodIPs))
+	for i, ip := range pod.Status.PodIPs {
+		out[i] = ip.IP
+	}
+	return out, nil
+}
+
+func (k *mqlK8sPod) hostIP() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return pod.Status.HostIP, nil
+}
+
+func (k *mqlK8sPod) nominatedNodeName() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return pod.Status.NominatedNodeName, nil
+}
+
+func (k *mqlK8sPod) startTime() (*time.Time, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	if pod.Status.StartTime == nil {
+		return nil, nil
+	}
+	t := pod.Status.StartTime.Time
+	return &t, nil
+}
+
+func (k *mqlK8sPod) conditions() ([]any, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(pod.Status.Conditions)
+}
+
+func (k *mqlK8sPod) reason() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return pod.Status.Reason, nil
+}
+
+func (k *mqlK8sPod) message() (string, error) {
+	pod, err := k.getPod()
+	if err != nil {
+		return "", err
+	}
+	return pod.Status.Message, nil
 }

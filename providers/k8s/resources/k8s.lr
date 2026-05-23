@@ -258,6 +258,88 @@ private k8s.pod @defaults("namespace name created"){
   containerStatuses() []k8s.containerStatus
   // Node the pod runs on
   node() k8s.node
+  // Name of the node the pod is bound to
+  nodeName() string
+  // Required node labels for scheduling this pod
+  nodeSelector() map[string]string
+  // Node taints this pod tolerates
+  tolerations() []dict
+  // Topology spread constraints
+  topologySpreadConstraints() []dict
+  // Node, pod, and pod anti-affinity rules
+  affinity() dict
+  // Name of the PriorityClass that controls scheduling priority
+  priorityClassName() string
+  // The PriorityClass that controls scheduling priority
+  priorityClass() k8s.priorityclass
+  // Preemption policy (PreemptLowerPriority or Never)
+  preemptionPolicy() string
+  // Name of the scheduler that handles this pod
+  schedulerName() string
+  // Name of the RuntimeClass that selects the container runtime
+  runtimeClassName() string
+  // Name of the ServiceAccount used to run the pod
+  serviceAccountName() string
+  // The ServiceAccount used to run the pod
+  serviceAccount() k8s.serviceaccount
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Whether containers in the pod share a single PID namespace
+  shareProcessNamespace() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // DNS policy (ClusterFirst, ClusterFirstWithHostNet, Default, None)
+  dnsPolicy() string
+  // DNS configuration when dnsPolicy is None (nameservers, searches, options)
+  dnsConfig() dict
+  // Pod hostname (defaults to metadata.name)
+  hostname() string
+  // Subdomain used to construct the pod's FQDN
+  subdomain() string
+  // Host alias entries added to /etc/hosts
+  hostAliases() []dict
+  // Restart policy for all containers (Always, OnFailure, Never)
+  restartPolicy() string
+  // Grace period in seconds before forceful termination
+  terminationGracePeriodSeconds() int
+  // Maximum number of seconds the pod may run before being terminated
+  activeDeadlineSeconds() int
+  // Additional readiness gates the pod must satisfy before being marked ready
+  readinessGates() []dict
+  // Whether environment variables for active services are injected into containers
+  enableServiceLinks() bool
+  // References to image-pull secrets in the same namespace
+  imagePullSecrets() []dict
+  // Resource overhead associated with the runtime (CPU, memory, etc.)
+  overhead() map[string]string
+  // OS the pod runs on (e.g., {name: "linux"})
+  os() dict
+  // Pod phase (Pending, Running, Succeeded, Failed, Unknown)
+  phase() string
+  // Quality-of-Service class assigned to the pod (Guaranteed, Burstable, BestEffort)
+  qosClass() string
+  // IP address allocated to the pod
+  podIP() string
+  // All IP addresses allocated to the pod (one per IP family)
+  podIPs() []string
+  // IP address of the host the pod is running on
+  hostIP() string
+  // Name of the node selected by the scheduler for preemption (when applicable)
+  nominatedNodeName() string
+  // Time at which the pod was acknowledged by the kubelet
+  startTime() time
+  // Pod-level status conditions (PodScheduled, ContainersReady, Initialized, Ready)
+  conditions() []dict
+  // Brief CamelCase reason for the pod's current phase
+  reason() string
+  // Human-readable message about the pod's current phase
+  message() string
 }
 
 // Kubernetes Deployment
@@ -638,6 +720,48 @@ private k8s.service @defaults("namespace name created") {
   manifest() dict
   // Service Spec
   spec() dict
+  // Service type (ClusterIP, NodePort, LoadBalancer, ExternalName)
+  type() string
+  // ClusterIP assigned to the service
+  clusterIP() string
+  // All cluster IPs allocated to the service (one per IP family)
+  clusterIPs() []string
+  // External IPs through which the service is exposed
+  externalIPs() []string
+  // External name the service maps to (for type ExternalName)
+  externalName() string
+  // External traffic policy (Cluster or Local)
+  externalTrafficPolicy() string
+  // Internal traffic policy (Cluster or Local)
+  internalTrafficPolicy() string
+  // Session affinity (ClientIP or None)
+  sessionAffinity() string
+  // Session affinity configuration (clientIP timeout)
+  sessionAffinityConfig() dict
+  // IP families backing the service (IPv4, IPv6)
+  ipFamilies() []string
+  // IP family policy (SingleStack, PreferDualStack, RequireDualStack)
+  ipFamilyPolicy() string
+  // Name of the load-balancer implementation that backs the service
+  loadBalancerClass() string
+  // CIDRs allowed to reach the load balancer
+  loadBalancerSourceRanges() []string
+  // Pre-allocated IP requested for the load balancer (deprecated in newer Kubernetes versions)
+  loadBalancerIP() string
+  // Whether node ports are automatically allocated for type LoadBalancer
+  allocateLoadBalancerNodePorts() bool
+  // Whether DNS records are published for not-yet-ready endpoints
+  publishNotReadyAddresses() bool
+  // Port that the LoadBalancer's health-check uses (type LoadBalancer with Local externalTrafficPolicy)
+  healthCheckNodePort() int
+  // Label selector for pods that back the service
+  selector() map[string]string
+  // Service ports (port, targetPort, protocol, nodePort, name, appProtocol)
+  ports() []dict
+  // Load-balancer ingress entries published in status (ip, hostname, ports)
+  loadBalancerIngress() []dict
+  // EndpointSlices that back this service (filtered by the kubernetes.io/service-name label)
+  endpointSlices() []k8s.endpointslice
 }
 
 // Kubernetes Ingress resource backend

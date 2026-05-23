@@ -92,3 +92,217 @@ func (k *mqlK8sService) labels() (map[string]any, error) {
 	}
 	return convert.MapToInterfaceMap(s.GetLabels()), nil
 }
+
+func (k *mqlK8sService) compute_type() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return string(s.Spec.Type), nil
+}
+
+func (k *mqlK8sService) clusterIP() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return s.Spec.ClusterIP, nil
+}
+
+func (k *mqlK8sService) clusterIPs() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(s.Spec.ClusterIPs), nil
+}
+
+func (k *mqlK8sService) externalIPs() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(s.Spec.ExternalIPs), nil
+}
+
+func (k *mqlK8sService) externalName() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return s.Spec.ExternalName, nil
+}
+
+func (k *mqlK8sService) externalTrafficPolicy() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return string(s.Spec.ExternalTrafficPolicy), nil
+}
+
+func (k *mqlK8sService) internalTrafficPolicy() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	if s.Spec.InternalTrafficPolicy == nil {
+		return "", nil
+	}
+	return string(*s.Spec.InternalTrafficPolicy), nil
+}
+
+func (k *mqlK8sService) sessionAffinity() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return string(s.Spec.SessionAffinity), nil
+}
+
+func (k *mqlK8sService) sessionAffinityConfig() (map[string]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(s.Spec.SessionAffinityConfig)
+}
+
+func (k *mqlK8sService) ipFamilies() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, len(s.Spec.IPFamilies))
+	for i, f := range s.Spec.IPFamilies {
+		out[i] = string(f)
+	}
+	return out, nil
+}
+
+func (k *mqlK8sService) ipFamilyPolicy() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	if s.Spec.IPFamilyPolicy == nil {
+		return "", nil
+	}
+	return string(*s.Spec.IPFamilyPolicy), nil
+}
+
+func (k *mqlK8sService) loadBalancerClass() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	if s.Spec.LoadBalancerClass == nil {
+		return "", nil
+	}
+	return *s.Spec.LoadBalancerClass, nil
+}
+
+func (k *mqlK8sService) loadBalancerSourceRanges() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(s.Spec.LoadBalancerSourceRanges), nil
+}
+
+func (k *mqlK8sService) loadBalancerIP() (string, error) {
+	s, err := k.getService()
+	if err != nil {
+		return "", err
+	}
+	return s.Spec.LoadBalancerIP, nil
+}
+
+func (k *mqlK8sService) allocateLoadBalancerNodePorts() (bool, error) {
+	s, err := k.getService()
+	if err != nil {
+		return false, err
+	}
+	if s.Spec.AllocateLoadBalancerNodePorts == nil {
+		// Defaults to true for type LoadBalancer.
+		return true, nil
+	}
+	return *s.Spec.AllocateLoadBalancerNodePorts, nil
+}
+
+func (k *mqlK8sService) publishNotReadyAddresses() (bool, error) {
+	s, err := k.getService()
+	if err != nil {
+		return false, err
+	}
+	return s.Spec.PublishNotReadyAddresses, nil
+}
+
+func (k *mqlK8sService) healthCheckNodePort() (int64, error) {
+	s, err := k.getService()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.Spec.HealthCheckNodePort), nil
+}
+
+func (k *mqlK8sService) selector() (map[string]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(s.Spec.Selector), nil
+}
+
+func (k *mqlK8sService) ports() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(s.Spec.Ports)
+}
+
+func (k *mqlK8sService) loadBalancerIngress() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(s.Status.LoadBalancer.Ingress)
+}
+
+func (k *mqlK8sService) endpointSlices() ([]any, error) {
+	s, err := k.getService()
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	slices := o.(*mqlK8s).GetEndpointSlices()
+	if slices.Error != nil {
+		return nil, slices.Error
+	}
+
+	out := []any{}
+	for i := range slices.Data {
+		es, ok := slices.Data[i].(*mqlK8sEndpointslice)
+		if !ok {
+			continue
+		}
+		if es.Namespace.Data != s.Namespace {
+			continue
+		}
+		labels := es.GetLabels()
+		if labels.Error != nil {
+			continue
+		}
+		svcName, _ := labels.Data["kubernetes.io/service-name"].(string)
+		if svcName != s.Name {
+			continue
+		}
+		out = append(out, es)
+	}
+	return out, nil
+}

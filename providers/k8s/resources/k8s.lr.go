@@ -689,6 +689,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
 	},
+	"k8s.pod.nodeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetNodeName()).ToDataRes(types.String)
+	},
+	"k8s.pod.nodeSelector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetNodeSelector()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.pod.tolerations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetTolerations()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.topologySpreadConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetTopologySpreadConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.affinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetAffinity()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.priorityClassName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPriorityClassName()).ToDataRes(types.String)
+	},
+	"k8s.pod.priorityClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPriorityClass()).ToDataRes(types.Resource("k8s.priorityclass"))
+	},
+	"k8s.pod.preemptionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPreemptionPolicy()).ToDataRes(types.String)
+	},
+	"k8s.pod.schedulerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetSchedulerName()).ToDataRes(types.String)
+	},
+	"k8s.pod.runtimeClassName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRuntimeClassName()).ToDataRes(types.String)
+	},
+	"k8s.pod.serviceAccountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetServiceAccountName()).ToDataRes(types.String)
+	},
+	"k8s.pod.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetServiceAccount()).ToDataRes(types.Resource("k8s.serviceaccount"))
+	},
+	"k8s.pod.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.shareProcessNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetShareProcessNamespace()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.dnsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetDnsPolicy()).ToDataRes(types.String)
+	},
+	"k8s.pod.dnsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetDnsConfig()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostname()).ToDataRes(types.String)
+	},
+	"k8s.pod.subdomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetSubdomain()).ToDataRes(types.String)
+	},
+	"k8s.pod.hostAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostAliases()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.restartPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRestartPolicy()).ToDataRes(types.String)
+	},
+	"k8s.pod.terminationGracePeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetTerminationGracePeriodSeconds()).ToDataRes(types.Int)
+	},
+	"k8s.pod.activeDeadlineSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetActiveDeadlineSeconds()).ToDataRes(types.Int)
+	},
+	"k8s.pod.readinessGates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetReadinessGates()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.enableServiceLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetEnableServiceLinks()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.imagePullSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetImagePullSecrets()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.overhead": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetOverhead()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.pod.os": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetOs()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.phase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPhase()).ToDataRes(types.String)
+	},
+	"k8s.pod.qosClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetQosClass()).ToDataRes(types.String)
+	},
+	"k8s.pod.podIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPodIP()).ToDataRes(types.String)
+	},
+	"k8s.pod.podIPs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPodIPs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.pod.hostIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHostIP()).ToDataRes(types.String)
+	},
+	"k8s.pod.nominatedNodeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetNominatedNodeName()).ToDataRes(types.String)
+	},
+	"k8s.pod.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetStartTime()).ToDataRes(types.Time)
+	},
+	"k8s.pod.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.pod.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetReason()).ToDataRes(types.String)
+	},
+	"k8s.pod.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetMessage()).ToDataRes(types.String)
+	},
 	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1180,6 +1303,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.service.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.service.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetType()).ToDataRes(types.String)
+	},
+	"k8s.service.clusterIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetClusterIP()).ToDataRes(types.String)
+	},
+	"k8s.service.clusterIPs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetClusterIPs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.service.externalIPs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetExternalIPs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.service.externalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetExternalName()).ToDataRes(types.String)
+	},
+	"k8s.service.externalTrafficPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetExternalTrafficPolicy()).ToDataRes(types.String)
+	},
+	"k8s.service.internalTrafficPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetInternalTrafficPolicy()).ToDataRes(types.String)
+	},
+	"k8s.service.sessionAffinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetSessionAffinity()).ToDataRes(types.String)
+	},
+	"k8s.service.sessionAffinityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetSessionAffinityConfig()).ToDataRes(types.Dict)
+	},
+	"k8s.service.ipFamilies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetIpFamilies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.service.ipFamilyPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetIpFamilyPolicy()).ToDataRes(types.String)
+	},
+	"k8s.service.loadBalancerClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetLoadBalancerClass()).ToDataRes(types.String)
+	},
+	"k8s.service.loadBalancerSourceRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetLoadBalancerSourceRanges()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.service.loadBalancerIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetLoadBalancerIP()).ToDataRes(types.String)
+	},
+	"k8s.service.allocateLoadBalancerNodePorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetAllocateLoadBalancerNodePorts()).ToDataRes(types.Bool)
+	},
+	"k8s.service.publishNotReadyAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetPublishNotReadyAddresses()).ToDataRes(types.Bool)
+	},
+	"k8s.service.healthCheckNodePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetHealthCheckNodePort()).ToDataRes(types.Int)
+	},
+	"k8s.service.selector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetSelector()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.service.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.service.loadBalancerIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetLoadBalancerIngress()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.service.endpointSlices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetEndpointSlices()).ToDataRes(types.Array(types.Resource("k8s.endpointslice")))
 	},
 	"k8s.ingressresourceref.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressresourceref).GetId()).ToDataRes(types.String)
@@ -2809,6 +2995,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.nodeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).NodeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.nodeSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).NodeSelector, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.tolerations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Tolerations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.topologySpreadConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).TopologySpreadConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.affinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Affinity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.priorityClassName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PriorityClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.priorityClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PriorityClass, ok = plugin.RawToTValue[*mqlK8sPriorityclass](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.preemptionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PreemptionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.schedulerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).SchedulerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.runtimeClassName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RuntimeClassName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.serviceAccountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ServiceAccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ServiceAccount, ok = plugin.RawToTValue[*mqlK8sServiceaccount](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.shareProcessNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ShareProcessNamespace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.dnsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).DnsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.dnsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).DnsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.subdomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Subdomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HostAliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.restartPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RestartPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.terminationGracePeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).TerminationGracePeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.activeDeadlineSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ActiveDeadlineSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.readinessGates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ReadinessGates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.enableServiceLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).EnableServiceLinks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.imagePullSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ImagePullSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.overhead": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Overhead, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Os, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.phase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Phase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.qosClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).QosClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.podIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PodIP, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.podIPs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PodIPs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hostIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HostIP, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.nominatedNodeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).NominatedNodeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
 		return
@@ -3515,6 +3865,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.service.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sService).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.clusterIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ClusterIP, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.clusterIPs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ClusterIPs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.externalIPs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ExternalIPs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.externalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ExternalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.externalTrafficPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ExternalTrafficPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.internalTrafficPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).InternalTrafficPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.sessionAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).SessionAffinity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.sessionAffinityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).SessionAffinityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.ipFamilies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).IpFamilies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.ipFamilyPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).IpFamilyPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.loadBalancerClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).LoadBalancerClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.loadBalancerSourceRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).LoadBalancerSourceRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.loadBalancerIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).LoadBalancerIP, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.service.allocateLoadBalancerNodePorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).AllocateLoadBalancerNodePorts, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.service.publishNotReadyAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).PublishNotReadyAddresses, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.service.healthCheckNodePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).HealthCheckNodePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.service.selector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).Selector, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.loadBalancerIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).LoadBalancerIngress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.endpointSlices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).EndpointSlices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6515,23 +6949,64 @@ type mqlK8sPod struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sPodInternal
-	Id                  plugin.TValue[string]
-	Uid                 plugin.TValue[string]
-	ResourceVersion     plugin.TValue[string]
-	Labels              plugin.TValue[map[string]any]
-	Annotations         plugin.TValue[map[string]any]
-	Name                plugin.TValue[string]
-	Namespace           plugin.TValue[string]
-	ApiVersion          plugin.TValue[string]
-	Kind                plugin.TValue[string]
-	Created             plugin.TValue[*time.Time]
-	Manifest            plugin.TValue[any]
-	PodSpec             plugin.TValue[any]
-	EphemeralContainers plugin.TValue[[]any]
-	InitContainers      plugin.TValue[[]any]
-	Containers          plugin.TValue[[]any]
-	ContainerStatuses   plugin.TValue[[]any]
-	Node                plugin.TValue[*mqlK8sNode]
+	Id                            plugin.TValue[string]
+	Uid                           plugin.TValue[string]
+	ResourceVersion               plugin.TValue[string]
+	Labels                        plugin.TValue[map[string]any]
+	Annotations                   plugin.TValue[map[string]any]
+	Name                          plugin.TValue[string]
+	Namespace                     plugin.TValue[string]
+	ApiVersion                    plugin.TValue[string]
+	Kind                          plugin.TValue[string]
+	Created                       plugin.TValue[*time.Time]
+	Manifest                      plugin.TValue[any]
+	PodSpec                       plugin.TValue[any]
+	EphemeralContainers           plugin.TValue[[]any]
+	InitContainers                plugin.TValue[[]any]
+	Containers                    plugin.TValue[[]any]
+	ContainerStatuses             plugin.TValue[[]any]
+	Node                          plugin.TValue[*mqlK8sNode]
+	NodeName                      plugin.TValue[string]
+	NodeSelector                  plugin.TValue[map[string]any]
+	Tolerations                   plugin.TValue[[]any]
+	TopologySpreadConstraints     plugin.TValue[[]any]
+	Affinity                      plugin.TValue[any]
+	PriorityClassName             plugin.TValue[string]
+	PriorityClass                 plugin.TValue[*mqlK8sPriorityclass]
+	PreemptionPolicy              plugin.TValue[string]
+	SchedulerName                 plugin.TValue[string]
+	RuntimeClassName              plugin.TValue[string]
+	ServiceAccountName            plugin.TValue[string]
+	ServiceAccount                plugin.TValue[*mqlK8sServiceaccount]
+	AutomountServiceAccountToken  plugin.TValue[bool]
+	HostNetwork                   plugin.TValue[bool]
+	HostPID                       plugin.TValue[bool]
+	HostIPC                       plugin.TValue[bool]
+	ShareProcessNamespace         plugin.TValue[bool]
+	SecurityContext               plugin.TValue[any]
+	DnsPolicy                     plugin.TValue[string]
+	DnsConfig                     plugin.TValue[any]
+	Hostname                      plugin.TValue[string]
+	Subdomain                     plugin.TValue[string]
+	HostAliases                   plugin.TValue[[]any]
+	RestartPolicy                 plugin.TValue[string]
+	TerminationGracePeriodSeconds plugin.TValue[int64]
+	ActiveDeadlineSeconds         plugin.TValue[int64]
+	ReadinessGates                plugin.TValue[[]any]
+	EnableServiceLinks            plugin.TValue[bool]
+	ImagePullSecrets              plugin.TValue[[]any]
+	Overhead                      plugin.TValue[map[string]any]
+	Os                            plugin.TValue[any]
+	Phase                         plugin.TValue[string]
+	QosClass                      plugin.TValue[string]
+	PodIP                         plugin.TValue[string]
+	PodIPs                        plugin.TValue[[]any]
+	HostIP                        plugin.TValue[string]
+	NominatedNodeName             plugin.TValue[string]
+	StartTime                     plugin.TValue[*time.Time]
+	Conditions                    plugin.TValue[[]any]
+	Reason                        plugin.TValue[string]
+	Message                       plugin.TValue[string]
 }
 
 // createK8sPod creates a new instance of this resource
@@ -6704,6 +7179,272 @@ func (c *mqlK8sPod) GetNode() *plugin.TValue[*mqlK8sNode] {
 		}
 
 		return c.node()
+	})
+}
+
+func (c *mqlK8sPod) GetNodeName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NodeName, func() (string, error) {
+		return c.nodeName()
+	})
+}
+
+func (c *mqlK8sPod) GetNodeSelector() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.NodeSelector, func() (map[string]any, error) {
+		return c.nodeSelector()
+	})
+}
+
+func (c *mqlK8sPod) GetTolerations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tolerations, func() ([]any, error) {
+		return c.tolerations()
+	})
+}
+
+func (c *mqlK8sPod) GetTopologySpreadConstraints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TopologySpreadConstraints, func() ([]any, error) {
+		return c.topologySpreadConstraints()
+	})
+}
+
+func (c *mqlK8sPod) GetAffinity() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Affinity, func() (any, error) {
+		return c.affinity()
+	})
+}
+
+func (c *mqlK8sPod) GetPriorityClassName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PriorityClassName, func() (string, error) {
+		return c.priorityClassName()
+	})
+}
+
+func (c *mqlK8sPod) GetPriorityClass() *plugin.TValue[*mqlK8sPriorityclass] {
+	return plugin.GetOrCompute[*mqlK8sPriorityclass](&c.PriorityClass, func() (*mqlK8sPriorityclass, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "priorityClass")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sPriorityclass), nil
+			}
+		}
+
+		return c.priorityClass()
+	})
+}
+
+func (c *mqlK8sPod) GetPreemptionPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PreemptionPolicy, func() (string, error) {
+		return c.preemptionPolicy()
+	})
+}
+
+func (c *mqlK8sPod) GetSchedulerName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SchedulerName, func() (string, error) {
+		return c.schedulerName()
+	})
+}
+
+func (c *mqlK8sPod) GetRuntimeClassName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RuntimeClassName, func() (string, error) {
+		return c.runtimeClassName()
+	})
+}
+
+func (c *mqlK8sPod) GetServiceAccountName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceAccountName, func() (string, error) {
+		return c.serviceAccountName()
+	})
+}
+
+func (c *mqlK8sPod) GetServiceAccount() *plugin.TValue[*mqlK8sServiceaccount] {
+	return plugin.GetOrCompute[*mqlK8sServiceaccount](&c.ServiceAccount, func() (*mqlK8sServiceaccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sServiceaccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlK8sPod) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sPod) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sPod) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sPod) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sPod) GetShareProcessNamespace() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ShareProcessNamespace, func() (bool, error) {
+		return c.shareProcessNamespace()
+	})
+}
+
+func (c *mqlK8sPod) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sPod) GetDnsPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DnsPolicy, func() (string, error) {
+		return c.dnsPolicy()
+	})
+}
+
+func (c *mqlK8sPod) GetDnsConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DnsConfig, func() (any, error) {
+		return c.dnsConfig()
+	})
+}
+
+func (c *mqlK8sPod) GetHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hostname, func() (string, error) {
+		return c.hostname()
+	})
+}
+
+func (c *mqlK8sPod) GetSubdomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Subdomain, func() (string, error) {
+		return c.subdomain()
+	})
+}
+
+func (c *mqlK8sPod) GetHostAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HostAliases, func() ([]any, error) {
+		return c.hostAliases()
+	})
+}
+
+func (c *mqlK8sPod) GetRestartPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestartPolicy, func() (string, error) {
+		return c.restartPolicy()
+	})
+}
+
+func (c *mqlK8sPod) GetTerminationGracePeriodSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TerminationGracePeriodSeconds, func() (int64, error) {
+		return c.terminationGracePeriodSeconds()
+	})
+}
+
+func (c *mqlK8sPod) GetActiveDeadlineSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ActiveDeadlineSeconds, func() (int64, error) {
+		return c.activeDeadlineSeconds()
+	})
+}
+
+func (c *mqlK8sPod) GetReadinessGates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReadinessGates, func() ([]any, error) {
+		return c.readinessGates()
+	})
+}
+
+func (c *mqlK8sPod) GetEnableServiceLinks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableServiceLinks, func() (bool, error) {
+		return c.enableServiceLinks()
+	})
+}
+
+func (c *mqlK8sPod) GetImagePullSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImagePullSecrets, func() ([]any, error) {
+		return c.imagePullSecrets()
+	})
+}
+
+func (c *mqlK8sPod) GetOverhead() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Overhead, func() (map[string]any, error) {
+		return c.overhead()
+	})
+}
+
+func (c *mqlK8sPod) GetOs() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Os, func() (any, error) {
+		return c.os()
+	})
+}
+
+func (c *mqlK8sPod) GetPhase() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase, func() (string, error) {
+		return c.phase()
+	})
+}
+
+func (c *mqlK8sPod) GetQosClass() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.QosClass, func() (string, error) {
+		return c.qosClass()
+	})
+}
+
+func (c *mqlK8sPod) GetPodIP() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodIP, func() (string, error) {
+		return c.podIP()
+	})
+}
+
+func (c *mqlK8sPod) GetPodIPs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PodIPs, func() ([]any, error) {
+		return c.podIPs()
+	})
+}
+
+func (c *mqlK8sPod) GetHostIP() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HostIP, func() (string, error) {
+		return c.hostIP()
+	})
+}
+
+func (c *mqlK8sPod) GetNominatedNodeName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NominatedNodeName, func() (string, error) {
+		return c.nominatedNodeName()
+	})
+}
+
+func (c *mqlK8sPod) GetStartTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.StartTime, func() (*time.Time, error) {
+		return c.startTime()
+	})
+}
+
+func (c *mqlK8sPod) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		return c.conditions()
+	})
+}
+
+func (c *mqlK8sPod) GetReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Reason, func() (string, error) {
+		return c.reason()
+	})
+}
+
+func (c *mqlK8sPod) GetMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Message, func() (string, error) {
+		return c.message()
 	})
 }
 
@@ -8252,17 +8993,38 @@ type mqlK8sService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sServiceInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	Spec            plugin.TValue[any]
+	Id                            plugin.TValue[string]
+	Uid                           plugin.TValue[string]
+	ResourceVersion               plugin.TValue[string]
+	Labels                        plugin.TValue[map[string]any]
+	Annotations                   plugin.TValue[map[string]any]
+	Name                          plugin.TValue[string]
+	Namespace                     plugin.TValue[string]
+	Kind                          plugin.TValue[string]
+	Created                       plugin.TValue[*time.Time]
+	Manifest                      plugin.TValue[any]
+	Spec                          plugin.TValue[any]
+	Type                          plugin.TValue[string]
+	ClusterIP                     plugin.TValue[string]
+	ClusterIPs                    plugin.TValue[[]any]
+	ExternalIPs                   plugin.TValue[[]any]
+	ExternalName                  plugin.TValue[string]
+	ExternalTrafficPolicy         plugin.TValue[string]
+	InternalTrafficPolicy         plugin.TValue[string]
+	SessionAffinity               plugin.TValue[string]
+	SessionAffinityConfig         plugin.TValue[any]
+	IpFamilies                    plugin.TValue[[]any]
+	IpFamilyPolicy                plugin.TValue[string]
+	LoadBalancerClass             plugin.TValue[string]
+	LoadBalancerSourceRanges      plugin.TValue[[]any]
+	LoadBalancerIP                plugin.TValue[string]
+	AllocateLoadBalancerNodePorts plugin.TValue[bool]
+	PublishNotReadyAddresses      plugin.TValue[bool]
+	HealthCheckNodePort           plugin.TValue[int64]
+	Selector                      plugin.TValue[map[string]any]
+	Ports                         plugin.TValue[[]any]
+	LoadBalancerIngress           plugin.TValue[[]any]
+	EndpointSlices                plugin.TValue[[]any]
 }
 
 // createK8sService creates a new instance of this resource
@@ -8351,6 +9113,142 @@ func (c *mqlK8sService) GetManifest() *plugin.TValue[any] {
 func (c *mqlK8sService) GetSpec() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
 		return c.spec()
+	})
+}
+
+func (c *mqlK8sService) GetType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Type, func() (string, error) {
+		return c.compute_type()
+	})
+}
+
+func (c *mqlK8sService) GetClusterIP() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClusterIP, func() (string, error) {
+		return c.clusterIP()
+	})
+}
+
+func (c *mqlK8sService) GetClusterIPs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterIPs, func() ([]any, error) {
+		return c.clusterIPs()
+	})
+}
+
+func (c *mqlK8sService) GetExternalIPs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalIPs, func() ([]any, error) {
+		return c.externalIPs()
+	})
+}
+
+func (c *mqlK8sService) GetExternalName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExternalName, func() (string, error) {
+		return c.externalName()
+	})
+}
+
+func (c *mqlK8sService) GetExternalTrafficPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExternalTrafficPolicy, func() (string, error) {
+		return c.externalTrafficPolicy()
+	})
+}
+
+func (c *mqlK8sService) GetInternalTrafficPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InternalTrafficPolicy, func() (string, error) {
+		return c.internalTrafficPolicy()
+	})
+}
+
+func (c *mqlK8sService) GetSessionAffinity() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SessionAffinity, func() (string, error) {
+		return c.sessionAffinity()
+	})
+}
+
+func (c *mqlK8sService) GetSessionAffinityConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SessionAffinityConfig, func() (any, error) {
+		return c.sessionAffinityConfig()
+	})
+}
+
+func (c *mqlK8sService) GetIpFamilies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpFamilies, func() ([]any, error) {
+		return c.ipFamilies()
+	})
+}
+
+func (c *mqlK8sService) GetIpFamilyPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IpFamilyPolicy, func() (string, error) {
+		return c.ipFamilyPolicy()
+	})
+}
+
+func (c *mqlK8sService) GetLoadBalancerClass() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LoadBalancerClass, func() (string, error) {
+		return c.loadBalancerClass()
+	})
+}
+
+func (c *mqlK8sService) GetLoadBalancerSourceRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancerSourceRanges, func() ([]any, error) {
+		return c.loadBalancerSourceRanges()
+	})
+}
+
+func (c *mqlK8sService) GetLoadBalancerIP() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LoadBalancerIP, func() (string, error) {
+		return c.loadBalancerIP()
+	})
+}
+
+func (c *mqlK8sService) GetAllocateLoadBalancerNodePorts() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllocateLoadBalancerNodePorts, func() (bool, error) {
+		return c.allocateLoadBalancerNodePorts()
+	})
+}
+
+func (c *mqlK8sService) GetPublishNotReadyAddresses() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PublishNotReadyAddresses, func() (bool, error) {
+		return c.publishNotReadyAddresses()
+	})
+}
+
+func (c *mqlK8sService) GetHealthCheckNodePort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.HealthCheckNodePort, func() (int64, error) {
+		return c.healthCheckNodePort()
+	})
+}
+
+func (c *mqlK8sService) GetSelector() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Selector, func() (map[string]any, error) {
+		return c.selector()
+	})
+}
+
+func (c *mqlK8sService) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		return c.ports()
+	})
+}
+
+func (c *mqlK8sService) GetLoadBalancerIngress() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancerIngress, func() ([]any, error) {
+		return c.loadBalancerIngress()
+	})
+}
+
+func (c *mqlK8sService) GetEndpointSlices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EndpointSlices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.service", c.__id, "endpointSlices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpointSlices()
 	})
 }
 
