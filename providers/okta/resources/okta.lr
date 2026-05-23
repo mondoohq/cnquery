@@ -32,6 +32,10 @@ okta {
   authenticators() []okta.authenticator
   // Okta API tokens
   apiTokens() []okta.api.token
+  // External identity providers federated with the Okta org (SAML2, OIDC, social)
+  identityProviders() []okta.identityProvider
+  // Custom OAuth 2.0 authorization servers defined in the Okta org
+  authorizationServers() []okta.authorizationServer
 }
 
 // Okta Organization
@@ -550,4 +554,332 @@ private okta.customRole @defaults("label") {
   description string
   // Role permissions
   permissions []string
+}
+
+// Okta Identity Provider
+//
+// Examine an external identity provider federated with your Okta organization.
+// Covers `id`, `name`, `type` (e.g., SAML2, OIDC, GOOGLE, FACEBOOK, LINKEDIN,
+// MICROSOFT, APPLE, X509), `status` (ACTIVE or INACTIVE), `issuerMode` (whether
+// the issuer URL is the Okta org URL, a custom URL domain, or dynamic), the
+// full `protocol` configuration (endpoints, credentials, algorithms, requested
+// scopes, relay state), the `policy` configuration (account link, provisioning,
+// subject matching, max clock skew), and lifecycle timestamps. `signingKeys`
+// returns the X.509/JWK signing credentials trusted for assertions or tokens
+// issued by this IdP — checking `expiresAt` catches expiring trust anchors.
+private okta.identityProvider @defaults("name type status") {
+  // Unique identifier of the identity provider
+  id string
+  // Display name of the identity provider
+  name string
+  // Type of identity provider
+  //
+  // One of SAML2, OIDC, OAUTH2, GOOGLE, FACEBOOK, LINKEDIN, MICROSOFT,
+  // APPLE, X509, or other social/federation types Okta exposes.
+  type string
+  // Status of the identity provider: ACTIVE or INACTIVE
+  status string
+  // Issuer mode for OIDC/SAML responses
+  //
+  // One of ORG_URL, CUSTOM_URL_DOMAIN, or DYNAMIC.
+  issuerMode string
+  // Protocol configuration
+  //
+  // Shape varies by `type`. Typical keys include:
+  //  - type: SAML2, OIDC, OAUTH2, MTLS
+  //  - endpoints: { authorization, token, userInfo, jwks, acs, sso, sloRedirect }
+  //  - credentials: { client, signing, trust }
+  //  - algorithms: { request, response } signing/encryption settings
+  //  - scopes: requested OAuth/OIDC scopes
+  //  - relayState: SAML relay-state format
+  //  - settings: protocol-specific settings (nameFormat, honorForce, etc.)
+  protocol dict
+  // Policy configuration
+  //
+  // Includes account link policy (filter, action), provisioning policy
+  // (action, profile master, group assignments, conditions), subject matching
+  // (matchType, matchAttribute, filter), and maxClockSkew.
+  policy dict
+  // Timestamp when the identity provider was created
+  created time
+  // Timestamp when the identity provider was last updated
+  lastUpdated time
+  // Signing key credentials trusted for assertions or tokens issued by this IdP
+  signingKeys() []okta.identityProvider.key
+}
+
+// Okta Identity Provider signing key (JsonWebKey)
+//
+// Examine a JsonWebKey trusted by Okta for verifying assertions or tokens
+// from a federated identity provider. Covers `kid`, `status`, signing
+// algorithm metadata (`alg`, `kty`, `use`, `keyOps`), the embedded X.509
+// certificate chain (`x5c`) and SHA-1/SHA-256 thumbprints (`x5t`, `x5tS256`),
+// the RSA modulus/exponent (`n`, `e`), and lifecycle timestamps. The
+// `expiresAt` timestamp marks when the certificate must be rotated to keep
+// federation working.
+private okta.identityProvider.key @defaults("kid status expiresAt") {
+  // ID of the identity provider this key belongs to
+  identityProviderId string
+  // Key ID
+  kid string
+  // Status of the key (e.g., ACTIVE, INACTIVE, EXPIRED)
+  status string
+  // Algorithm used (e.g., RS256)
+  alg string
+  // Key type (e.g., RSA)
+  kty string
+  // Public key use (e.g., sig)
+  use string
+  // Permitted key operations
+  keyOps []string
+  // Timestamp when the key was created
+  created time
+  // Timestamp when the key was last updated
+  lastUpdated time
+  // Timestamp when the key/certificate expires
+  expiresAt time
+  // X.509 certificate chain (PEM/DER without headers, base64-encoded)
+  x5c []string
+  // SHA-1 thumbprint of the X.509 certificate
+  x5t string
+  // SHA-256 thumbprint of the X.509 certificate
+  x5tS256 string
+  // RSA modulus
+  n string
+  // RSA exponent
+  e string
+}
+
+// Okta Custom Authorization Server
+//
+// Examine a custom OAuth 2.0 authorization server that mints access tokens
+// for APIs in your Okta organization. Covers identity and lifecycle fields
+// (`id`, `name`, `description`, `issuer`, `issuerMode`, `status`, `default`,
+// `audiences`, `created`, `lastUpdated`) and the active signing-key
+// configuration (`signingKid`, `signingRotationMode`, `signingLastRotated`,
+// `signingNextRotation`, `signingUse`). Computed methods expose `policies`
+// (which clients can request which scopes), `scopes` and `claims` (what
+// appears in issued tokens), and `keys` (the published JWKs used to verify
+// access tokens).
+private okta.authorizationServer @defaults("name status issuer") {
+  // Unique identifier of the authorization server
+  id string
+  // Display name of the authorization server
+  name string
+  // Description of the authorization server
+  description string
+  // Status of the authorization server: ACTIVE or INACTIVE
+  status string
+  // Whether this is the default authorization server for the org
+  default bool
+  // Issuer URL advertised in the OIDC discovery document
+  issuer string
+  // Issuer mode for tokens
+  //
+  // One of ORG_URL, CUSTOM_URL, or DYNAMIC.
+  issuerMode string
+  // Acceptable audiences for access tokens minted by this server
+  audiences []string
+  // Key ID of the active signing key
+  signingKid string
+  // Signing key rotation mode: AUTO or MANUAL
+  signingRotationMode string
+  // Timestamp when the signing key was last rotated
+  signingLastRotated time
+  // Timestamp of the next scheduled signing key rotation
+  signingNextRotation time
+  // Intended use of the signing key (e.g., sig)
+  signingUse string
+  // Timestamp when the authorization server was created
+  created time
+  // Timestamp when the authorization server was last updated
+  lastUpdated time
+  // Policies controlling which clients can request which scopes
+  policies() []okta.authorizationServer.policy
+  // OAuth 2.0 scopes defined on this authorization server
+  scopes() []okta.authorizationServer.scope
+  // Claims included in access or ID tokens issued by this server
+  claims() []okta.authorizationServer.claim
+  // Published signing keys for access tokens issued by this server
+  keys() []okta.authorizationServer.key
+}
+
+// Okta Authorization Server Policy
+//
+// Examine a policy on a custom authorization server. Policies grant specific
+// OAuth 2.0 clients access to specific scopes under specific conditions.
+// Covers `id`, `name`, `description`, `priority`, `status`, `system` (whether
+// admin-editable), `type`, and `conditions` (typically the client allowlist).
+// `rules` returns the ordered list of rules attached to the policy.
+private okta.authorizationServer.policy @defaults("name status priority") {
+  // ID of the authorization server this policy belongs to
+  authorizationServerId string
+  // Identifier of the policy
+  id string
+  // Name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Priority of the policy
+  priority int
+  // Status of the policy: ACTIVE or INACTIVE
+  status string
+  // Whether the policy is system-managed
+  system bool
+  // Policy type (typically OAUTH_AUTHORIZATION_POLICY)
+  type string
+  // Conditions: typically which clients the policy applies to
+  conditions dict
+  // Timestamp when the policy was created
+  created time
+  // Timestamp when the policy was last modified
+  lastUpdated time
+  // Rules attached to the policy
+  rules() []okta.authorizationServer.policyRule
+}
+
+// Okta Authorization Server Policy Rule
+//
+// Examine a rule on an authorization-server policy. Rules govern which OAuth
+// 2.0 grant types and scopes are permitted, the access-token and
+// refresh-token lifetimes, and the inline hook (if any) invoked when access
+// tokens are minted. Covers `id`, `name`, `priority`, `status`, `system`,
+// `type`, `actions` (token lifetimes, inline hook, granted scopes),
+// `conditions` (grant types, scopes, people), and lifecycle timestamps.
+private okta.authorizationServer.policyRule @defaults("name status priority") {
+  // ID of the authorization server this rule's policy belongs to
+  authorizationServerId string
+  // ID of the policy this rule belongs to
+  policyId string
+  // Identifier of the rule
+  id string
+  // Name of the rule
+  name string
+  // Priority of the rule
+  priority int
+  // Status of the rule: ACTIVE or INACTIVE
+  status string
+  // Whether the rule is system-managed
+  system bool
+  // Rule type (typically RESOURCE_ACCESS)
+  type string
+  // Actions: token lifetimes, inline hook, granted scopes
+  actions dict
+  // Conditions: grant types, scopes, people the rule applies to
+  conditions dict
+  // Timestamp when the rule was created
+  created time
+  // Timestamp when the rule was last updated
+  lastUpdated time
+}
+
+// Okta Authorization Server Scope
+//
+// Examine an OAuth 2.0 scope defined on a custom authorization server. Covers
+// `id`, `name` (the programmatic value sent in `scope=`), `displayName` and
+// `description` (shown on the consent prompt), `consent`, `default` (granted
+// without being requested), `metadataPublish` (whether the scope is published
+// in the `.well-known` discovery document), and `system` (built-in scope).
+private okta.authorizationServer.scope @defaults("name consent") {
+  // ID of the authorization server this scope belongs to
+  authorizationServerId string
+  // Identifier of the scope
+  id string
+  // Programmatic name (e.g., openid, email, profile, custom:read)
+  name string
+  // Display name shown on the consent prompt
+  displayName string
+  // Description shown on the consent prompt
+  description string
+  // Consent requirement
+  //
+  // One of REQUIRED, IMPLICIT, or FLEXIBLE.
+  consent string
+  // Whether the scope is granted by default
+  default bool
+  // Whether the scope is published in discovery metadata
+  //
+  // One of ALL_CLIENTS or NO_CLIENTS.
+  metadataPublish string
+  // Whether the scope is system-managed
+  system bool
+}
+
+// Okta Authorization Server Claim
+//
+// Examine a claim included in access or ID tokens issued by a custom
+// authorization server. Covers `id`, `name`, `status`, `claimType` (RESOURCE
+// claims appear in access tokens, IDENTITY claims in ID tokens), `valueType`
+// (EXPRESSION, GROUPS, or SYSTEM), `value` (Okta Expression Language source
+// or group filter pattern), `alwaysIncludeInToken` (vs. only when the
+// matching scope is granted), `groupFilterType` (for groups claims), the
+// `scopes` that must be granted for this claim to appear, and `system`
+// (built-in claim).
+private okta.authorizationServer.claim @defaults("name status claimType") {
+  // ID of the authorization server this claim belongs to
+  authorizationServerId string
+  // Identifier of the claim
+  id string
+  // Name of the claim
+  name string
+  // Status of the claim: ACTIVE or INACTIVE
+  status string
+  // Whether the claim is system-managed
+  system bool
+  // Claim type
+  //
+  // RESOURCE claims appear in access tokens; IDENTITY claims appear in ID tokens.
+  claimType string
+  // Value type
+  //
+  // One of EXPRESSION, GROUPS, or SYSTEM.
+  valueType string
+  // The Okta Expression Language source or group filter pattern
+  value string
+  // Whether the claim is included in tokens regardless of granted scopes
+  alwaysIncludeInToken bool
+  // For groups claims: STARTS_WITH, EQUALS, CONTAINS, or REGEX
+  groupFilterType string
+  // Scopes that must be granted for this claim to be included
+  scopes []string
+}
+
+// Okta Authorization Server signing key (JsonWebKey)
+//
+// Examine a JsonWebKey published by a custom authorization server for
+// verifying access tokens. Covers `kid`, `status` (ACTIVE, NEXT, or EXPIRED),
+// signing algorithm metadata (`alg`, `kty`, `use`, `keyOps`), the embedded
+// X.509 certificate chain (`x5c`) and SHA-1/SHA-256 thumbprints (`x5t`,
+// `x5tS256`), the RSA modulus/exponent (`n`, `e`), and lifecycle timestamps.
+private okta.authorizationServer.key @defaults("kid status") {
+  // ID of the authorization server this key belongs to
+  authorizationServerId string
+  // Key ID
+  kid string
+  // Status of the key (e.g., ACTIVE, NEXT, EXPIRED)
+  status string
+  // Algorithm used (e.g., RS256)
+  alg string
+  // Key type (e.g., RSA)
+  kty string
+  // Public key use (e.g., sig)
+  use string
+  // Permitted key operations
+  keyOps []string
+  // Timestamp when the key was created
+  created time
+  // Timestamp when the key was last updated
+  lastUpdated time
+  // Timestamp when the key/certificate expires
+  expiresAt time
+  // X.509 certificate chain (PEM/DER without headers, base64-encoded)
+  x5c []string
+  // SHA-1 thumbprint of the X.509 certificate
+  x5t string
+  // SHA-256 thumbprint of the X.509 certificate
+  x5tS256 string
+  // RSA modulus
+  n string
+  // RSA exponent
+  e string
 }
