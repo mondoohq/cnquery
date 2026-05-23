@@ -35,6 +35,7 @@ armcontainerregistry
 armcontainerregistrytasks
 armoperationalinsights
 arp
+artifacthub
 artifactregistry
 asdk
 ashburn
