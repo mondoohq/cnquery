@@ -166,7 +166,6 @@ func (r *mqlProxmoxVm) serialPorts() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxVmSerialPort).parentVmid = r.Id.Data
 		list = append(list, res)
 	}
 	return list, nil
@@ -211,11 +210,11 @@ func (r *mqlProxmoxVm) networks() ([]any, error) {
 		}
 		valStr := fmt.Sprintf("%v", val)
 		net := parseVMNetworkConfig(key, valStr)
+		net["__id"] = llx.StringData(fmt.Sprintf("proxmox.vm.network/%d/%s", r.Id.Data, key))
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.network", net)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxVmNetwork).parentVmid = r.Id.Data
 		list = append(list, res)
 	}
 	return list, nil
@@ -244,11 +243,11 @@ func (r *mqlProxmoxVm) disks() ([]any, error) {
 			continue
 		}
 		disk := parseVMDiskConfig(key, valStr)
+		disk["__id"] = llx.StringData(fmt.Sprintf("proxmox.vm.disk/%d/%s", r.Id.Data, key))
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.disk", disk)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxVmDisk).parentVmid = r.Id.Data
 		list = append(list, res)
 	}
 	return list, nil
@@ -263,6 +262,7 @@ func (r *mqlProxmoxVm) snapshots() ([]any, error) {
 	list := make([]any, len(snaps))
 	for i, s := range snaps {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.snapshot", map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("proxmox.vm.snapshot/vm/%d/%s", r.Id.Data, s.Name)),
 			"name":        llx.StringData(s.Name),
 			"description": llx.StringData(s.Description),
 			"parent":      llx.StringData(s.Parent),
@@ -272,7 +272,6 @@ func (r *mqlProxmoxVm) snapshots() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxVmSnapshot).parentVmid = r.Id.Data
 		list[i] = res
 	}
 	return list, nil
@@ -314,6 +313,7 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 	list := make([]any, len(updates))
 	for i, u := range updates {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.update", map[string]*llx.RawData{
+			"__id":             llx.StringData(fmt.Sprintf("proxmox.vm.update/%d/%s", r.Id.Data, u.Name)),
 			"name":             llx.StringData(u.Name),
 			"installedVersion": llx.StringData(u.InstalledVersion),
 			"newVersion":       llx.StringData(u.NewVersion),
@@ -323,7 +323,6 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxVmUpdate).parentVmid = r.Id.Data
 		list[i] = res
 	}
 	return list, nil

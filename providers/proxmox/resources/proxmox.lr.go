@@ -4668,7 +4668,7 @@ func (c *mqlProxmoxNode) GetContainers() *plugin.TValue[[]any] {
 type mqlProxmoxNodeUpdate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxNodeUpdateInternal
+	// optional: if you define mqlProxmoxNodeUpdateInternal it will be used here
 	Package          plugin.TValue[string]
 	InstalledVersion plugin.TValue[string]
 	NewVersion       plugin.TValue[string]
@@ -4686,12 +4686,7 @@ func createProxmoxNodeUpdate(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.node.update", res.__id)
@@ -5142,7 +5137,7 @@ func (c *mqlProxmoxVm) GetUpdates() *plugin.TValue[[]any] {
 type mqlProxmoxVmNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxVmNetworkInternal
+	// optional: if you define mqlProxmoxVmNetworkInternal it will be used here
 	Id         plugin.TValue[string]
 	Model      plugin.TValue[string]
 	MacAddress plugin.TValue[string]
@@ -5162,12 +5157,7 @@ func createProxmoxVmNetwork(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.vm.network", res.__id)
@@ -5216,7 +5206,7 @@ func (c *mqlProxmoxVmNetwork) GetFirewall() *plugin.TValue[bool] {
 type mqlProxmoxVmDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxVmDiskInternal
+	// optional: if you define mqlProxmoxVmDiskInternal it will be used here
 	Id         plugin.TValue[string]
 	Storage    plugin.TValue[string]
 	Size       plugin.TValue[int64]
@@ -5238,12 +5228,7 @@ func createProxmoxVmDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.vm.disk", res.__id)
@@ -5312,7 +5297,7 @@ func (c *mqlProxmoxVmDisk) GetStorageRef() *plugin.TValue[*mqlProxmoxStorage] {
 type mqlProxmoxVmSnapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxVmSnapshotInternal
+	// optional: if you define mqlProxmoxVmSnapshotInternal it will be used here
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
 	Parent      plugin.TValue[string]
@@ -5331,12 +5316,7 @@ func createProxmoxVmSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.vm.snapshot", res.__id)
@@ -5381,7 +5361,7 @@ func (c *mqlProxmoxVmSnapshot) GetVmstate() *plugin.TValue[bool] {
 type mqlProxmoxVmUpdate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxVmUpdateInternal
+	// optional: if you define mqlProxmoxVmUpdateInternal it will be used here
 	Name             plugin.TValue[string]
 	InstalledVersion plugin.TValue[string]
 	NewVersion       plugin.TValue[string]
@@ -5400,12 +5380,7 @@ func createProxmoxVmUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.vm.update", res.__id)
@@ -5608,7 +5583,7 @@ func (c *mqlProxmoxPool) GetComment() *plugin.TValue[string] {
 type mqlProxmoxNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxNetworkInternal
+	// optional: if you define mqlProxmoxNetworkInternal it will be used here
 	Iface       plugin.TValue[string]
 	Type        plugin.TValue[string]
 	Active      plugin.TValue[bool]
@@ -5633,12 +5608,7 @@ func createProxmoxNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.network", res.__id)
@@ -5707,7 +5677,7 @@ func (c *mqlProxmoxNetwork) GetComments() *plugin.TValue[string] {
 type mqlProxmoxDns struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxDnsInternal
+	// optional: if you define mqlProxmoxDnsInternal it will be used here
 	Search plugin.TValue[string]
 	Dns1   plugin.TValue[string]
 	Dns2   plugin.TValue[string]
@@ -5725,12 +5695,7 @@ func createProxmoxDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.dns", res.__id)
@@ -5771,7 +5736,7 @@ func (c *mqlProxmoxDns) GetDns3() *plugin.TValue[string] {
 type mqlProxmoxService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxServiceInternal
+	// optional: if you define mqlProxmoxServiceInternal it will be used here
 	Name          plugin.TValue[string]
 	State         plugin.TValue[string]
 	Description   plugin.TValue[string]
@@ -5789,12 +5754,7 @@ func createProxmoxService(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.service", res.__id)
@@ -5835,7 +5795,7 @@ func (c *mqlProxmoxService) GetUnitFileState() *plugin.TValue[string] {
 type mqlProxmoxCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxCertificateInternal
+	// optional: if you define mqlProxmoxCertificateInternal it will be used here
 	Filename      plugin.TValue[string]
 	Fingerprint   plugin.TValue[string]
 	Issuer        plugin.TValue[string]
@@ -5858,12 +5818,7 @@ func createProxmoxCertificate(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.certificate", res.__id)
@@ -5924,7 +5879,7 @@ func (c *mqlProxmoxCertificate) GetSubject() *plugin.TValue[string] {
 type mqlProxmoxSubscription struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxSubscriptionInternal
+	// optional: if you define mqlProxmoxSubscriptionInternal it will be used here
 	Status      plugin.TValue[string]
 	ServerId    plugin.TValue[string]
 	ProductName plugin.TValue[string]
@@ -5945,12 +5900,7 @@ func createProxmoxSubscription(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.subscription", res.__id)
@@ -6003,7 +5953,7 @@ func (c *mqlProxmoxSubscription) GetKey() *plugin.TValue[string] {
 type mqlProxmoxRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxRepositoryInternal
+	// optional: if you define mqlProxmoxRepositoryInternal it will be used here
 	Id         plugin.TValue[string]
 	Name       plugin.TValue[string]
 	Enabled    plugin.TValue[bool]
@@ -6025,12 +5975,7 @@ func createProxmoxRepository(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.repository", res.__id)
@@ -6786,12 +6731,7 @@ func createProxmoxFirewallOptions(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.firewall.options", res.__id)
@@ -6882,12 +6822,7 @@ func createProxmoxFirewallIpset(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.firewall.ipset", res.__id)
@@ -6957,12 +6892,7 @@ func createProxmoxFirewallIpsetEntry(runtime *plugin.Runtime, args map[string]*l
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.firewall.ipset.entry", res.__id)
@@ -7018,12 +6948,7 @@ func createProxmoxFirewallAlias(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.firewall.alias", res.__id)
@@ -7423,7 +7348,7 @@ func (c *mqlProxmoxContainer) GetAliases() *plugin.TValue[[]any] {
 type mqlProxmoxContainerNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxContainerNetworkInternal
+	// optional: if you define mqlProxmoxContainerNetworkInternal it will be used here
 	Id         plugin.TValue[string]
 	Name       plugin.TValue[string]
 	MacAddress plugin.TValue[string]
@@ -7447,12 +7372,7 @@ func createProxmoxContainerNetwork(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.container.network", res.__id)
@@ -7517,7 +7437,7 @@ func (c *mqlProxmoxContainerNetwork) GetGw6() *plugin.TValue[string] {
 type mqlProxmoxContainerMountPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxContainerMountPointInternal
+	// optional: if you define mqlProxmoxContainerMountPointInternal it will be used here
 	Id         plugin.TValue[string]
 	Storage    plugin.TValue[string]
 	Size       plugin.TValue[int64]
@@ -7540,12 +7460,7 @@ func createProxmoxContainerMountPoint(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.container.mountPoint", res.__id)
@@ -7877,12 +7792,7 @@ func createProxmoxNodeDisk(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.node.disk", res.__id)
@@ -7971,7 +7881,7 @@ func (c *mqlProxmoxNodeDisk) GetSmart() *plugin.TValue[*mqlProxmoxNodeDiskSmart]
 type mqlProxmoxNodeDiskSmart struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxNodeDiskSmartInternal
+	// optional: if you define mqlProxmoxNodeDiskSmartInternal it will be used here
 	Health     plugin.TValue[string]
 	Type       plugin.TValue[string]
 	Text       plugin.TValue[string]
@@ -7989,12 +7899,7 @@ func createProxmoxNodeDiskSmart(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.node.disk.smart", res.__id)
@@ -8060,12 +7965,7 @@ func createProxmoxZfsPool(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.zfs.pool", res.__id)
@@ -8160,12 +8060,7 @@ func createProxmoxLvmVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.lvm.volumeGroup", res.__id)
@@ -8226,12 +8121,7 @@ func createProxmoxLvmThinPool(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.lvm.thinPool", res.__id)
@@ -8735,7 +8625,7 @@ func (c *mqlProxmoxSdnSubnet) GetVnetRef() *plugin.TValue[*mqlProxmoxSdnVnet] {
 type mqlProxmoxVmSerialPort struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlProxmoxVmSerialPortInternal
+	// optional: if you define mqlProxmoxVmSerialPortInternal it will be used here
 	Id     plugin.TValue[string]
 	Target plugin.TValue[string]
 }
@@ -8751,12 +8641,7 @@ func createProxmoxVmSerialPort(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("proxmox.vm.serialPort", res.__id)

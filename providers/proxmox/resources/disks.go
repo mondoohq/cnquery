@@ -32,6 +32,7 @@ func (r *mqlProxmoxNode) disks() ([]any, error) {
 	list := make([]any, len(disks))
 	for i, d := range disks {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.node.disk", map[string]*llx.RawData{
+			"__id":     llx.StringData("proxmox.node.disk/" + r.Name.Data + "/" + d.DevPath),
 			"devPath":  llx.StringData(d.DevPath),
 			"model":    llx.StringData(d.Model),
 			"vendor":   llx.StringData(d.Vendor),
@@ -48,6 +49,9 @@ func (r *mqlProxmoxNode) disks() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// parentNode is read later by ensureSMART to call the per-node
+		// SMART endpoint, so the Internal field still needs populating
+		// even though __id no longer depends on it.
 		res.(*mqlProxmoxNodeDisk).parentNode = r.Name.Data
 		list[i] = res
 	}
@@ -85,10 +89,7 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 			if err != nil {
 				return nil, err
 			}
-			smartRes := res.(*mqlProxmoxNodeDiskSmart)
-			smartRes.parentNode = r.parentNode
-			smartRes.parentDev = r.DevPath.Data
-			return smartRes, nil
+			return res.(*mqlProxmoxNodeDiskSmart), nil
 		}
 		return nil, r.smartErr
 	}
@@ -119,10 +120,7 @@ func (r *mqlProxmoxNodeDisk) smart() (*mqlProxmoxNodeDiskSmart, error) {
 	if err != nil {
 		return nil, err
 	}
-	smartRes := res.(*mqlProxmoxNodeDiskSmart)
-	smartRes.parentNode = r.parentNode
-	smartRes.parentDev = r.DevPath.Data
-	return smartRes, nil
+	return res.(*mqlProxmoxNodeDiskSmart), nil
 }
 
 // ---------------------------------------------------------------------------
@@ -146,6 +144,7 @@ func (r *mqlProxmoxNode) zfsPools() ([]any, error) {
 	list := make([]any, len(pools))
 	for i, p := range pools {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.zfs.pool", map[string]*llx.RawData{
+			"__id":          llx.StringData("proxmox.zfs.pool/" + r.Name.Data + "/" + p.Name),
 			"name":          llx.StringData(p.Name),
 			"size":          llx.IntData(p.Size),
 			"alloc":         llx.IntData(p.Alloc),
@@ -157,6 +156,7 @@ func (r *mqlProxmoxNode) zfsPools() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// parentNode is read later by ensureDetail; keep populating it.
 		res.(*mqlProxmoxZfsPool).parentNode = r.Name.Data
 		list[i] = res
 	}
@@ -264,6 +264,7 @@ func (r *mqlProxmoxNode) volumeGroups() ([]any, error) {
 	list := make([]any, len(vgs))
 	for i, vg := range vgs {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.lvm.volumeGroup", map[string]*llx.RawData{
+			"__id":    llx.StringData("proxmox.lvm.volumeGroup/" + r.Name.Data + "/" + vg.Name),
 			"name":    llx.StringData(vg.Name),
 			"size":    llx.IntData(vg.Size),
 			"free":    llx.IntData(vg.Free),
@@ -272,7 +273,6 @@ func (r *mqlProxmoxNode) volumeGroups() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxLvmVolumeGroup).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil
@@ -287,6 +287,7 @@ func (r *mqlProxmoxNode) thinPools() ([]any, error) {
 	list := make([]any, len(pools))
 	for i, p := range pools {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.lvm.thinPool", map[string]*llx.RawData{
+			"__id":         llx.StringData("proxmox.lvm.thinPool/" + r.Name.Data + "/" + p.VG + "/" + p.LV),
 			"name":         llx.StringData(p.LV),
 			"volumeGroup":  llx.StringData(p.VG),
 			"size":         llx.IntData(p.LVSize),
@@ -297,7 +298,6 @@ func (r *mqlProxmoxNode) thinPools() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxLvmThinPool).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil

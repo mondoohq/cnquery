@@ -258,11 +258,11 @@ func (r *mqlProxmoxContainer) networks() ([]any, error) {
 		}
 		valStr := fmt.Sprintf("%v", val)
 		net := parseContainerNetworkConfig(key, valStr)
+		net["__id"] = llx.StringData(fmt.Sprintf("proxmox.container.network/%d/%s", r.Id.Data, key))
 		res, err := CreateResource(r.MqlRuntime, "proxmox.container.network", net)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxContainerNetwork).parentVmid = r.Id.Data
 		list = append(list, res)
 	}
 	return list, nil
@@ -298,11 +298,11 @@ func (r *mqlProxmoxContainer) mountPoints() ([]any, error) {
 		}
 		valStr := fmt.Sprintf("%v", val)
 		mp := parseContainerMountPoint(key, valStr)
+		mp["__id"] = llx.StringData(fmt.Sprintf("proxmox.container.mountPoint/%d/%s", r.Id.Data, key))
 		res, err := CreateResource(r.MqlRuntime, "proxmox.container.mountPoint", mp)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxContainerMountPoint).parentVmid = r.Id.Data
 		list = append(list, res)
 	}
 	return list, nil
@@ -316,7 +316,12 @@ func (r *mqlProxmoxContainer) snapshots() ([]any, error) {
 	}
 	list := make([]any, len(snaps))
 	for i, s := range snaps {
+		// Container snapshots share the proxmox.vm.snapshot resource
+		// type with VM snapshots, so the cache key needs a scope prefix
+		// to keep VM <id> and container <id> from colliding when they
+		// happen to use the same VMID for unrelated guests.
 		res, err := CreateResource(r.MqlRuntime, "proxmox.vm.snapshot", map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("proxmox.vm.snapshot/ct/%d/%s", r.Id.Data, s.Name)),
 			"name":        llx.StringData(s.Name),
 			"description": llx.StringData(s.Description),
 			"parent":      llx.StringData(s.Parent),
@@ -326,9 +331,6 @@ func (r *mqlProxmoxContainer) snapshots() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Container snapshots share the proxmox.vm.snapshot type, so
-		// reuse the same internal parentVmid for cache-key isolation.
-		res.(*mqlProxmoxVmSnapshot).parentVmid = r.Id.Data
 		list[i] = res
 	}
 	return list, nil

@@ -146,6 +146,7 @@ func (r *mqlProxmoxNode) networks() ([]any, error) {
 	list := make([]any, len(ifaces))
 	for i, ifc := range ifaces {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.network", map[string]*llx.RawData{
+			"__id":        llx.StringData("proxmox.network/" + r.Name.Data + "/" + ifc.Iface),
 			"iface":       llx.StringData(ifc.Iface),
 			"type":        llx.StringData(ifc.Type),
 			"active":      llx.BoolData(ifc.Active == 1),
@@ -161,7 +162,6 @@ func (r *mqlProxmoxNode) networks() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxNetwork).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil
@@ -174,6 +174,7 @@ func (r *mqlProxmoxNode) dns() (*mqlProxmoxDns, error) {
 		return nil, err
 	}
 	res, err := CreateResource(r.MqlRuntime, "proxmox.dns", map[string]*llx.RawData{
+		"__id":   llx.StringData("proxmox.dns/" + r.Name.Data),
 		"search": llx.StringData(d.Search),
 		"dns1":   llx.StringData(d.DNS1),
 		"dns2":   llx.StringData(d.DNS2),
@@ -182,9 +183,7 @@ func (r *mqlProxmoxNode) dns() (*mqlProxmoxDns, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlDns := res.(*mqlProxmoxDns)
-	mqlDns.parentNode = r.Name.Data
-	return mqlDns, nil
+	return res.(*mqlProxmoxDns), nil
 }
 
 func (r *mqlProxmoxNode) services() ([]any, error) {
@@ -196,6 +195,7 @@ func (r *mqlProxmoxNode) services() ([]any, error) {
 	list := make([]any, len(svcs))
 	for i, s := range svcs {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.service", map[string]*llx.RawData{
+			"__id":          llx.StringData("proxmox.service/" + r.Name.Data + "/" + s.Name),
 			"name":          llx.StringData(s.Name),
 			"state":         llx.StringData(s.State),
 			"description":   llx.StringData(s.Description),
@@ -204,7 +204,6 @@ func (r *mqlProxmoxNode) services() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxService).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil
@@ -241,6 +240,7 @@ func (r *mqlProxmoxNode) certificates() ([]any, error) {
 			san = append(san, s)
 		}
 		res, err := CreateResource(r.MqlRuntime, "proxmox.certificate", map[string]*llx.RawData{
+			"__id":          llx.StringData("proxmox.certificate/" + r.Name.Data + "/" + c.Fingerprint),
 			"filename":      llx.StringData(c.Filename),
 			"fingerprint":   llx.StringData(c.Fingerprint),
 			"issuer":        llx.StringData(c.Issuer),
@@ -254,7 +254,6 @@ func (r *mqlProxmoxNode) certificates() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxCertificate).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil
@@ -267,6 +266,7 @@ func (r *mqlProxmoxNode) subscription() (*mqlProxmoxSubscription, error) {
 		return nil, err
 	}
 	res, err := CreateResource(r.MqlRuntime, "proxmox.subscription", map[string]*llx.RawData{
+		"__id":        llx.StringData("proxmox.subscription/" + r.Name.Data + "/" + sub.ServerID),
 		"status":      llx.StringData(sub.Status),
 		"serverId":    llx.StringData(sub.ServerID),
 		"productName": llx.StringData(sub.ProductName),
@@ -278,9 +278,7 @@ func (r *mqlProxmoxNode) subscription() (*mqlProxmoxSubscription, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlSub := res.(*mqlProxmoxSubscription)
-	mqlSub.parentNode = r.Name.Data
-	return mqlSub, nil
+	return res.(*mqlProxmoxSubscription), nil
 }
 
 func (r *mqlProxmoxNode) repositories() ([]any, error) {
@@ -312,6 +310,7 @@ func (r *mqlProxmoxNode) repositories() ([]any, error) {
 				components = append(components, c)
 			}
 			res, err := CreateResource(r.MqlRuntime, "proxmox.repository", map[string]*llx.RawData{
+				"__id":       llx.StringData("proxmox.repository/" + r.Name.Data + "/" + repoID),
 				"id":         llx.StringData(repoID),
 				"name":       llx.StringData(name),
 				"enabled":    llx.BoolData(repo.Enabled),
@@ -324,7 +323,6 @@ func (r *mqlProxmoxNode) repositories() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res.(*mqlProxmoxRepository).parentNode = r.Name.Data
 			list = append(list, res)
 			idx++
 		}
@@ -348,6 +346,7 @@ func (r *mqlProxmoxNode) updates() ([]any, error) {
 			severity = "recommended"
 		}
 		res, err := CreateResource(r.MqlRuntime, "proxmox.node.update", map[string]*llx.RawData{
+			"__id":             llx.StringData("proxmox.node.update/" + r.Name.Data + "/" + u.Package),
 			"package":          llx.StringData(u.Package),
 			"installedVersion": llx.StringData(u.OldVersion),
 			"newVersion":       llx.StringData(u.NewVersion),
@@ -356,7 +355,6 @@ func (r *mqlProxmoxNode) updates() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlProxmoxNodeUpdate).parentNode = r.Name.Data
 		list[i] = res
 	}
 	return list, nil
