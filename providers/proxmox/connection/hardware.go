@@ -3,7 +3,10 @@
 
 package connection
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+)
 
 // ---------------------------------------------------------------------------
 // Node PCI devices
@@ -33,7 +36,7 @@ type NodePCIDevice struct {
 
 func (c *PveConnection) GetNodePCIDevices(node string) ([]NodePCIDevice, error) {
 	var devs []NodePCIDevice
-	path := fmt.Sprintf("/nodes/%s/hardware/pci", node)
+	path := fmt.Sprintf("/nodes/%s/hardware/pci", url.PathEscape(node))
 	if err := c.apiGet(path, &devs); err != nil {
 		return nil, fmt.Errorf("failed to list PCI devices on node %s: %w", node, err)
 	}
@@ -63,7 +66,7 @@ type NodeUSBDevice struct {
 
 func (c *PveConnection) GetNodeUSBDevices(node string) ([]NodeUSBDevice, error) {
 	var devs []NodeUSBDevice
-	path := fmt.Sprintf("/nodes/%s/hardware/usb", node)
+	path := fmt.Sprintf("/nodes/%s/hardware/usb", url.PathEscape(node))
 	if err := c.apiGet(path, &devs); err != nil {
 		return nil, fmt.Errorf("failed to list USB devices on node %s: %w", node, err)
 	}
@@ -90,7 +93,7 @@ func (c *PveConnection) GetClusterFirewallGroups() ([]FirewallGroupInfo, error) 
 
 func (c *PveConnection) GetClusterFirewallGroupRules(group string) ([]FirewallRule, error) {
 	var rules []FirewallRule
-	path := fmt.Sprintf("/cluster/firewall/groups/%s", group)
+	path := fmt.Sprintf("/cluster/firewall/groups/%s", url.PathEscape(group))
 	if err := c.apiGet(path, &rules); err != nil {
 		return nil, fmt.Errorf("failed to get rules for firewall group %s: %w", group, err)
 	}

@@ -1753,17 +1753,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.node.pciDevice.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxNodePciDevice).GetDeviceName()).ToDataRes(types.String)
 	},
-	"proxmox.node.pciDevice.subsystemVendor": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemVendor()).ToDataRes(types.String)
+	"proxmox.node.pciDevice.subVendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubVendor()).ToDataRes(types.String)
 	},
-	"proxmox.node.pciDevice.subsystemVendorName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemVendorName()).ToDataRes(types.String)
+	"proxmox.node.pciDevice.subVendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubVendorName()).ToDataRes(types.String)
 	},
-	"proxmox.node.pciDevice.subsystemDevice": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemDevice()).ToDataRes(types.String)
+	"proxmox.node.pciDevice.subDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubDevice()).ToDataRes(types.String)
 	},
-	"proxmox.node.pciDevice.subsystemDeviceName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxNodePciDevice).GetSubsystemDeviceName()).ToDataRes(types.String)
+	"proxmox.node.pciDevice.subDeviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxNodePciDevice).GetSubDeviceName()).ToDataRes(types.String)
 	},
 	"proxmox.node.pciDevice.iommuGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxNodePciDevice).GetIommuGroup()).ToDataRes(types.Int)
@@ -1816,8 +1816,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.vm.pciDevice.mapping": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmPciDevice).GetMapping()).ToDataRes(types.String)
 	},
-	"proxmox.vm.pciDevice.pcie": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxVmPciDevice).GetPcie()).ToDataRes(types.Bool)
+	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxVmPciDevice).GetPciExpress()).ToDataRes(types.Bool)
 	},
 	"proxmox.vm.pciDevice.romBar": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmPciDevice).GetRomBar()).ToDataRes(types.Bool)
@@ -1827,9 +1827,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"proxmox.vm.pciDevice.mdev": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmPciDevice).GetMdev()).ToDataRes(types.String)
-	},
-	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlProxmoxVmPciDevice).GetPciExpress()).ToDataRes(types.Bool)
 	},
 	"proxmox.vm.pciDevice.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxVmPciDevice).GetRaw()).ToDataRes(types.String)
@@ -3937,20 +3934,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxNodePciDevice).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"proxmox.node.pciDevice.subsystemVendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxNodePciDevice).SubsystemVendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"proxmox.node.pciDevice.subVendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubVendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"proxmox.node.pciDevice.subsystemVendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxNodePciDevice).SubsystemVendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"proxmox.node.pciDevice.subVendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubVendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"proxmox.node.pciDevice.subsystemDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxNodePciDevice).SubsystemDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"proxmox.node.pciDevice.subDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"proxmox.node.pciDevice.subsystemDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxNodePciDevice).SubsystemDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"proxmox.node.pciDevice.subDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxNodePciDevice).SubDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"proxmox.node.pciDevice.iommuGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4029,8 +4026,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlProxmoxVmPciDevice).Mapping, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"proxmox.vm.pciDevice.pcie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxVmPciDevice).Pcie, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxVmPciDevice).PciExpress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"proxmox.vm.pciDevice.romBar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4043,10 +4040,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.vm.pciDevice.mdev": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxVmPciDevice).Mdev, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"proxmox.vm.pciDevice.pciExpress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlProxmoxVmPciDevice).PciExpress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"proxmox.vm.pciDevice.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9468,19 +9461,19 @@ type mqlProxmoxNodePciDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlProxmoxNodePciDeviceInternal it will be used here
-	Id                  plugin.TValue[string]
-	Class               plugin.TValue[string]
-	ClassName           plugin.TValue[string]
-	Vendor              plugin.TValue[string]
-	VendorName          plugin.TValue[string]
-	Device              plugin.TValue[string]
-	DeviceName          plugin.TValue[string]
-	SubsystemVendor     plugin.TValue[string]
-	SubsystemVendorName plugin.TValue[string]
-	SubsystemDevice     plugin.TValue[string]
-	SubsystemDeviceName plugin.TValue[string]
-	IommuGroup          plugin.TValue[int64]
-	MdevSupported       plugin.TValue[bool]
+	Id            plugin.TValue[string]
+	Class         plugin.TValue[string]
+	ClassName     plugin.TValue[string]
+	Vendor        plugin.TValue[string]
+	VendorName    plugin.TValue[string]
+	Device        plugin.TValue[string]
+	DeviceName    plugin.TValue[string]
+	SubVendor     plugin.TValue[string]
+	SubVendorName plugin.TValue[string]
+	SubDevice     plugin.TValue[string]
+	SubDeviceName plugin.TValue[string]
+	IommuGroup    plugin.TValue[int64]
+	MdevSupported plugin.TValue[bool]
 }
 
 // createProxmoxNodePciDevice creates a new instance of this resource
@@ -9543,20 +9536,20 @@ func (c *mqlProxmoxNodePciDevice) GetDeviceName() *plugin.TValue[string] {
 	return &c.DeviceName
 }
 
-func (c *mqlProxmoxNodePciDevice) GetSubsystemVendor() *plugin.TValue[string] {
-	return &c.SubsystemVendor
+func (c *mqlProxmoxNodePciDevice) GetSubVendor() *plugin.TValue[string] {
+	return &c.SubVendor
 }
 
-func (c *mqlProxmoxNodePciDevice) GetSubsystemVendorName() *plugin.TValue[string] {
-	return &c.SubsystemVendorName
+func (c *mqlProxmoxNodePciDevice) GetSubVendorName() *plugin.TValue[string] {
+	return &c.SubVendorName
 }
 
-func (c *mqlProxmoxNodePciDevice) GetSubsystemDevice() *plugin.TValue[string] {
-	return &c.SubsystemDevice
+func (c *mqlProxmoxNodePciDevice) GetSubDevice() *plugin.TValue[string] {
+	return &c.SubDevice
 }
 
-func (c *mqlProxmoxNodePciDevice) GetSubsystemDeviceName() *plugin.TValue[string] {
-	return &c.SubsystemDeviceName
+func (c *mqlProxmoxNodePciDevice) GetSubDeviceName() *plugin.TValue[string] {
+	return &c.SubDeviceName
 }
 
 func (c *mqlProxmoxNodePciDevice) GetIommuGroup() *plugin.TValue[int64] {
@@ -9674,11 +9667,10 @@ type mqlProxmoxVmPciDevice struct {
 	Slot       plugin.TValue[string]
 	Address    plugin.TValue[string]
 	Mapping    plugin.TValue[string]
-	Pcie       plugin.TValue[bool]
+	PciExpress plugin.TValue[bool]
 	RomBar     plugin.TValue[bool]
 	XVga       plugin.TValue[bool]
 	Mdev       plugin.TValue[string]
-	PciExpress plugin.TValue[bool]
 	Raw        plugin.TValue[string]
 }
 
@@ -9726,8 +9718,8 @@ func (c *mqlProxmoxVmPciDevice) GetMapping() *plugin.TValue[string] {
 	return &c.Mapping
 }
 
-func (c *mqlProxmoxVmPciDevice) GetPcie() *plugin.TValue[bool] {
-	return &c.Pcie
+func (c *mqlProxmoxVmPciDevice) GetPciExpress() *plugin.TValue[bool] {
+	return &c.PciExpress
 }
 
 func (c *mqlProxmoxVmPciDevice) GetRomBar() *plugin.TValue[bool] {
@@ -9740,10 +9732,6 @@ func (c *mqlProxmoxVmPciDevice) GetXVga() *plugin.TValue[bool] {
 
 func (c *mqlProxmoxVmPciDevice) GetMdev() *plugin.TValue[string] {
 	return &c.Mdev
-}
-
-func (c *mqlProxmoxVmPciDevice) GetPciExpress() *plugin.TValue[bool] {
-	return &c.PciExpress
 }
 
 func (c *mqlProxmoxVmPciDevice) GetRaw() *plugin.TValue[string] {

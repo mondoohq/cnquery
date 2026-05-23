@@ -282,10 +282,10 @@ proxmox.node.pciDevice.deviceName 0.1.9
 proxmox.node.pciDevice.id 0.1.9
 proxmox.node.pciDevice.iommuGroup 0.1.9
 proxmox.node.pciDevice.mdevSupported 0.1.9
-proxmox.node.pciDevice.subsystemDevice 0.1.9
-proxmox.node.pciDevice.subsystemDeviceName 0.1.9
-proxmox.node.pciDevice.subsystemVendor 0.1.9
-proxmox.node.pciDevice.subsystemVendorName 0.1.9
+proxmox.node.pciDevice.subDevice 0.1.9
+proxmox.node.pciDevice.subDeviceName 0.1.9
+proxmox.node.pciDevice.subVendor 0.1.9
+proxmox.node.pciDevice.subVendorName 0.1.9
 proxmox.node.pciDevice.vendor 0.1.9
 proxmox.node.pciDevice.vendorName 0.1.9
 proxmox.node.pciDevices 0.1.9
@@ -501,7 +501,6 @@ proxmox.vm.pciDevice.address 0.1.9
 proxmox.vm.pciDevice.mapping 0.1.9
 proxmox.vm.pciDevice.mdev 0.1.9
 proxmox.vm.pciDevice.pciExpress 0.1.9
-proxmox.vm.pciDevice.pcie 0.1.9
 proxmox.vm.pciDevice.raw 0.1.9
 proxmox.vm.pciDevice.romBar 0.1.9
 proxmox.vm.pciDevice.slot 0.1.9

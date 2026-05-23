@@ -1335,7 +1335,7 @@ proxmox.cluster.haGroup @defaults("id restricted noFailback") {
 // `model`, `vendor`, `serial`, `wwn`, capacity (`size` in bytes),
 // rotational speed (`rpm`; 0 for SSDs/NVMe), `type` (hdd, ssd, nvme,
 // usb), and current `health` from SMART. The `used` field reports
-// which subsystem owns the disk (ZFS, LVM, partitions, or empty for
+// which volume manager owns the disk (ZFS, LVM, partitions, or empty for
 // unallocated). SMART attributes are available through `smart` when
 // the device exposes them.
 proxmox.node.disk @defaults("devPath model size health") {
@@ -1618,9 +1618,10 @@ proxmox.firewall.group @defaults("name") {
 // Examine a PCI device visible to a Proxmox node, identified by its
 // `id` (`<seg>:<bus>:<slot>.<func>`). Reports vendor and device IDs
 // alongside their human-readable names, the PCI `class` (eg `0x0300`
-// for VGA), the subsystem identifiers, `iommuGroup` (passthrough
-// granularity — devices in the same group must be passed through
-// together), and whether the device advertises mediated-device
+// for VGA), the secondary vendor/device IDs (`subVendor`,
+// `subDevice`) used to distinguish OEM variants, `iommuGroup`
+// (passthrough granularity — devices in the same group must be passed
+// through together), and whether the device advertises mediated-device
 // support via `mdevSupported`.
 proxmox.node.pciDevice @defaults("id deviceName iommuGroup") {
   // PCI address (e.g. 0000:01:00.0)
@@ -1637,14 +1638,14 @@ proxmox.node.pciDevice @defaults("id deviceName iommuGroup") {
   device string
   // Human-readable device name
   deviceName string
-  // Subsystem vendor ID
-  subsystemVendor string
-  // Human-readable subsystem vendor name
-  subsystemVendorName string
-  // Subsystem device ID
-  subsystemDevice string
-  // Human-readable subsystem device name
-  subsystemDeviceName string
+  // Secondary vendor ID
+  subVendor string
+  // Human-readable secondary vendor name
+  subVendorName string
+  // Secondary device ID
+  subDevice string
+  // Human-readable secondary device name
+  subDeviceName string
   // IOMMU group; devices that share a group must be passed through together
   iommuGroup int
   // Whether the device advertises mediated-device (vGPU) support
@@ -1692,10 +1693,9 @@ proxmox.node.usbDevice @defaults("vendorId productId product") {
 // PVE accepts two forms: a direct PCI address (`0000:01:00.0`, with
 // optional `.func` suffix for multi-function devices) or a named
 // `mapping=<name>` reference to a cluster-defined PCI mapping. The
-// extra knobs PVE exposes — PCIe vs legacy PCI, ROM-BAR visibility,
-// VGA tag, mdev type for vGPU, PCI-Express bus reset on detach —
-// are surfaced so audits can flag risky configurations
-// (e.g. `xVga = true` with no IOMMU isolation).
+// extra knobs PVE exposes — express vs legacy bus, ROM-BAR visibility,
+// VGA tag, mdev type for vGPU — are surfaced so audits can flag risky
+// configurations (e.g. `xVga = true` with no IOMMU isolation).
 proxmox.vm.pciDevice @defaults("slot address mapping") {
   // Config slot (`hostpci0` through `hostpci15`)
   slot string
@@ -1703,16 +1703,14 @@ proxmox.vm.pciDevice @defaults("slot address mapping") {
   address string
   // Cluster-defined PCI mapping name when configured by reference; empty otherwise
   mapping string
-  // Whether the device is exposed as PCIe (true) or legacy PCI (false)
-  pcie bool
+  // Whether the device is exposed as PCI Express (true) or legacy PCI (false)
+  pciExpress bool
   // Whether the ROM BAR is visible to the guest
   romBar bool
   // Whether this device is the primary VGA for the guest
   xVga bool
   // Mediated-device type for vGPU passthrough; empty for direct passthrough
   mdev string
-  // Whether PVE issues a bus reset when the device is detached
-  pciExpress bool
   // Raw `hostpci<n>` config line for any options not surfaced above
   raw string
 }
@@ -1749,7 +1747,7 @@ proxmox.vm.usbDevice @defaults("slot target") {
 proxmox.container.passthroughDevice @defaults("slot path mode") {
   // Config slot (`dev0` through `dev255`)
   slot string
-  // Host path being exposed (e.g. `/dev/dri/card0`)
+  // Host path being exposed (e.g. `/dev/kvm`)
   path string
   // UID owner inside the container; 0 when not overridden
   uid int

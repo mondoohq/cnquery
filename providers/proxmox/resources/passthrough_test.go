@@ -68,8 +68,8 @@ func TestParseHostPCIConfig_DirectAddress(t *testing.T) {
 	if v := getStr(args, "mapping"); v != "" {
 		t.Errorf("mapping = %q, want empty", v)
 	}
-	if !getBool(args, "pcie") {
-		t.Error("expected pcie=true")
+	if !getBool(args, "pciExpress") {
+		t.Error("expected pciExpress=true")
 	}
 	if getBool(args, "romBar") {
 		t.Error("expected romBar=false")
@@ -97,8 +97,8 @@ func TestParseHostPCIConfig_HostExplicitForm(t *testing.T) {
 	if v := getStr(args, "address"); v != "0000:00:1f.6" {
 		t.Errorf("address = %q, want %q", v, "0000:00:1f.6")
 	}
-	if !getBool(args, "pcie") {
-		t.Error("expected pcie=true")
+	if !getBool(args, "pciExpress") {
+		t.Error("expected pciExpress=true")
 	}
 }
 

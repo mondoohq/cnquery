@@ -186,7 +186,6 @@ dport
 dpu
 draid
 DRdf
-dri
 dscp
 dsse
 Duf
@@ -405,6 +404,7 @@ maxcpu
 maxdisk
 maxmem
 maxmemory
+Mbit
 mcp
 mcr
 mde
@@ -528,7 +528,6 @@ panos
 parallelquery
 PAYG
 pbs
-pcie
 pcnet
 PDB
 pdp
@@ -689,7 +688,6 @@ subkeys
 subnetted
 subports
 subscriptionfilter
-subsystem
 superusers
 SVI
 swi

@@ -24,20 +24,20 @@ func (r *mqlProxmoxNode) pciDevices() ([]any, error) {
 	list := make([]any, len(devs))
 	for i, d := range devs {
 		res, err := CreateResource(r.MqlRuntime, "proxmox.node.pciDevice", map[string]*llx.RawData{
-			"__id":                llx.StringData("proxmox.node.pciDevice/" + r.Name.Data + "/" + d.ID),
-			"id":                  llx.StringData(d.ID),
-			"class":               llx.StringData(d.Class),
-			"className":           llx.StringData(d.ClassName),
-			"vendor":              llx.StringData(d.Vendor),
-			"vendorName":          llx.StringData(d.VendorName),
-			"device":              llx.StringData(d.Device),
-			"deviceName":          llx.StringData(d.DeviceName),
-			"subsystemVendor":     llx.StringData(d.Subsystem.Vendor),
-			"subsystemVendorName": llx.StringData(d.Subsystem.VendorName),
-			"subsystemDevice":     llx.StringData(d.Subsystem.Device),
-			"subsystemDeviceName": llx.StringData(d.Subsystem.DeviceName),
-			"iommuGroup":          llx.IntData(int64(d.IOMMUGroup)),
-			"mdevSupported":       llx.BoolData(d.MdevSupp == 1),
+			"__id":          llx.StringData("proxmox.node.pciDevice/" + r.Name.Data + "/" + d.ID),
+			"id":            llx.StringData(d.ID),
+			"class":         llx.StringData(d.Class),
+			"className":     llx.StringData(d.ClassName),
+			"vendor":        llx.StringData(d.Vendor),
+			"vendorName":    llx.StringData(d.VendorName),
+			"device":        llx.StringData(d.Device),
+			"deviceName":    llx.StringData(d.DeviceName),
+			"subVendor":     llx.StringData(d.Subsystem.Vendor),
+			"subVendorName": llx.StringData(d.Subsystem.VendorName),
+			"subDevice":     llx.StringData(d.Subsystem.Device),
+			"subDeviceName": llx.StringData(d.Subsystem.DeviceName),
+			"iommuGroup":    llx.IntData(int64(d.IOMMUGroup)),
+			"mdevSupported": llx.BoolData(d.MdevSupp == 1),
 		})
 		if err != nil {
 			return nil, err
@@ -92,8 +92,6 @@ func (r *mqlProxmoxNode) usbDevices() ([]any, error) {
 // ---------------------------------------------------------------------------
 // Firewall security groups
 // ---------------------------------------------------------------------------
-
-type mqlProxmoxFirewallGroupInternal struct{}
 
 func (r *mqlProxmoxCluster) firewallGroups() ([]any, error) {
 	conn := clusterConn(r)

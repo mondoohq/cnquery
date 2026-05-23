@@ -46,7 +46,7 @@ func pciHostKey(key string) bool {
 // per-device tuning knobs PVE documents.
 func parseHostPCIConfig(slot, val string) map[string]*llx.RawData {
 	var address, mapping, mdev string
-	var pcie, romBar, xVga, pciExpress bool
+	var pciExpress, romBar, xVga bool
 	for i, part := range strings.Split(val, ",") {
 		part = strings.TrimSpace(part)
 		if part == "" {
@@ -71,16 +71,15 @@ func parseHostPCIConfig(slot, val string) map[string]*llx.RawData {
 			}
 		case "mapping":
 			mapping = value
-		case "pcie":
-			pcie = value == "1"
+		case "pcie", "pcie-express":
+			// PVE accepts both forms; either means "expose as PCI Express"
+			pciExpress = value == "1"
 		case "rombar":
 			romBar = value == "1"
 		case "x-vga":
 			xVga = value == "1"
 		case "mdev":
 			mdev = value
-		case "pcie-express":
-			pciExpress = value == "1"
 		}
 	}
 	return map[string]*llx.RawData{
@@ -88,11 +87,10 @@ func parseHostPCIConfig(slot, val string) map[string]*llx.RawData {
 		"slot":       llx.StringData(slot),
 		"address":    llx.StringData(address),
 		"mapping":    llx.StringData(mapping),
-		"pcie":       llx.BoolData(pcie),
+		"pciExpress": llx.BoolData(pciExpress),
 		"romBar":     llx.BoolData(romBar),
 		"xVga":       llx.BoolData(xVga),
 		"mdev":       llx.StringData(mdev),
-		"pciExpress": llx.BoolData(pciExpress),
 		"raw":        llx.StringData(val),
 	}
 }
