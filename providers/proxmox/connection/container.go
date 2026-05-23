@@ -3,7 +3,10 @@
 
 package connection
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // ---------------------------------------------------------------------------
 // Container listing
@@ -80,8 +83,10 @@ func (c *PveConnection) GetNodeContainers(node string) ([]ContainerInfo, error) 
 	}
 	out := make([]ContainerInfo, 0, len(entries))
 	for _, e := range entries {
-		var vmid int
-		fmt.Sscanf(e.VMID, "%d", &vmid)
+		vmid, err := strconv.Atoi(e.VMID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid VMID %q on node %s: %w", e.VMID, node, err)
+		}
 		out = append(out, ContainerInfo{
 			VMID:      vmid,
 			Name:      e.Name,
