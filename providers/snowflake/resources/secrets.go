@@ -132,12 +132,20 @@ func (r *mqlSnowflakeSecret) oauthAccessTokenExpiryTime() (*time.Time, error) {
 	if err := r.gatherDescribe(); err != nil {
 		return nil, err
 	}
+	if r.descAccessExp == nil {
+		r.OauthAccessTokenExpiryTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return r.descAccessExp, nil
 }
 
 func (r *mqlSnowflakeSecret) oauthRefreshTokenExpiryTime() (*time.Time, error) {
 	if err := r.gatherDescribe(); err != nil {
 		return nil, err
+	}
+	if r.descRefreshExp == nil {
+		r.OauthRefreshTokenExpiryTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return r.descRefreshExp, nil
 }
