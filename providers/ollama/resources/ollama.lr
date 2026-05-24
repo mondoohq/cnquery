@@ -19,7 +19,6 @@ ollama @defaults("host") {
   runningModels() []ollama.runningModel
 }
 
-
 // Ollama model
 //
 // Examine an installed Ollama model including its family, parameter

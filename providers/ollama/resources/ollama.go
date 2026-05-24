@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/ollama/ollama/api"
 	"go.mondoo.com/mql/v13/llx"
@@ -100,19 +101,30 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 }
 
 type mqlOllamaModelInternal struct {
-	showOnce sync.Once
-	show     *api.ShowResponse
-	showErr  error
+	fetched bool
+	show    *api.ShowResponse
+	lock    sync.Mutex
 }
 
 func (r *mqlOllamaModel) fetchShow() (*api.ShowResponse, error) {
-	r.showOnce.Do(func() {
-		conn := ollamaConn(r.MqlRuntime)
-		r.show, r.showErr = conn.Client().Show(context.Background(), &api.ShowRequest{
-			Model: r.GetName().Data,
-		})
+	if r.fetched {
+		return r.show, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return r.show, nil
+	}
+	conn := ollamaConn(r.MqlRuntime)
+	show, err := conn.Client().Show(context.Background(), &api.ShowRequest{
+		Model: r.GetName().Data,
 	})
-	return r.show, r.showErr
+	if err != nil {
+		return nil, err
+	}
+	r.show = show
+	r.fetched = true
+	return r.show, nil
 }
 
 func (r *mqlOllamaModel) id() (string, error) {
@@ -250,7 +262,7 @@ func getStringSlice(m map[string]any, key string) []interface{} {
 }
 
 func (r *mqlOllamaModelInfo) id() (string, error) {
-	return r.Architecture.Data + "/info", nil
+	return r.Architecture.Data + "/" + r.Basename.Data + "/" + r.SizeLabel.Data, nil
 }
 
 type mqlOllamaRunningModelInternal struct {
@@ -272,6 +284,8 @@ func (r *mqlOllamaRunningModel) model() (*mqlOllamaModel, error) {
 		"__id":              llx.StringData(r.cacheDigest),
 		"name":              llx.StringData(r.GetName().Data),
 		"model":             llx.StringData(r.GetName().Data),
+		"modifiedAt":        llx.TimeData(time.Time{}),
+		"size":              llx.IntData(0),
 		"digest":            llx.StringData(r.cacheDigest),
 		"format":            llx.StringData(r.cacheDetails.Format),
 		"family":            llx.StringData(r.cacheDetails.Family),
