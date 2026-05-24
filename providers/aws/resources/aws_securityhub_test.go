@@ -4,8 +4,12 @@
 package resources
 
 import (
+	"sync"
+	"sync/atomic"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,4 +48,95 @@ func TestStandardNameFromArn(t *testing.T) {
 		name := standardNameFromArn("arn:aws:securityhub:::standards/my-standard")
 		assert.Equal(t, "my-standard", name)
 	})
+}
+
+// TestSecurityHubEnabledStandardsUsesCache verifies that once
+// getEnabledStandards has populated its cache (standardsFetched == true),
+// subsequent calls return the cached slice without invoking the paginator.
+// This pins down the shared-cache behavior that lets enabledStandards and
+// standardSubscriptions both read from a single GetEnabledStandards fetch.
+func TestSecurityHubEnabledStandardsUsesCache(t *testing.T) {
+	cached := []types.StandardsSubscription{
+		{
+			StandardsArn:             aws.String("arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.4.0"),
+			StandardsSubscriptionArn: aws.String("arn:aws:securityhub:us-east-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.4.0"),
+			StandardsStatus:          types.StandardsStatusReady,
+		},
+		{
+			StandardsArn:             aws.String("arn:aws:securityhub:::ruleset/aws-foundational-security-best-practices/v/1.0.0"),
+			StandardsSubscriptionArn: aws.String("arn:aws:securityhub:us-east-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0"),
+			StandardsStatus:          types.StandardsStatusReady,
+		},
+	}
+
+	hub := &mqlAwsSecurityhubHub{
+		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
+			standardsFetched: true,
+			standards:        cached,
+		},
+	}
+
+	// Cache hit path: returns the pre-populated slice without touching the
+	// runtime. If this ever regresses to call MqlRuntime.Connection, the
+	// nil-deref panic on the zero-value hub will catch it.
+	got, err := hub.getEnabledStandards()
+	assert.NoError(t, err)
+	assert.Equal(t, cached, got)
+}
+
+// TestSecurityHubEnabledStandardsToDicts asserts that enabledStandards
+// converts the cached standards into the dict shape expected by MQL,
+// preserving the keys callers query by.
+func TestSecurityHubEnabledStandardsToDicts(t *testing.T) {
+	hub := &mqlAwsSecurityhubHub{
+		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
+			standardsFetched: true,
+			standards: []types.StandardsSubscription{
+				{
+					StandardsArn:             aws.String("arn:aws:securityhub:::ruleset/cis"),
+					StandardsSubscriptionArn: aws.String("arn:aws:securityhub:us-east-1:123:subscription/cis"),
+					StandardsStatus:          types.StandardsStatusReady,
+				},
+			},
+		},
+	}
+
+	out, err := hub.enabledStandards()
+	assert.NoError(t, err)
+	assert.Len(t, out, 1)
+
+	row, ok := out[0].(map[string]any)
+	assert.True(t, ok, "expected dict, got %T", out[0])
+	assert.Equal(t, "arn:aws:securityhub:::ruleset/cis", row["StandardsArn"])
+	assert.Equal(t, "arn:aws:securityhub:us-east-1:123:subscription/cis", row["StandardsSubscriptionArn"])
+	assert.Equal(t, string(types.StandardsStatusReady), row["StandardsStatus"])
+}
+
+// TestSecurityHubStandardsCacheConcurrentHits exercises the double-check
+// pattern: many concurrent callers on a cache-populated hub all read the
+// same slice with no data race (meaningful under `go test -race`).
+func TestSecurityHubStandardsCacheConcurrentHits(t *testing.T) {
+	hub := &mqlAwsSecurityhubHub{
+		mqlAwsSecurityhubHubInternal: mqlAwsSecurityhubHubInternal{
+			standardsFetched: true,
+			standards: []types.StandardsSubscription{
+				{StandardsArn: aws.String("arn:aws:securityhub:::ruleset/x")},
+			},
+		},
+	}
+
+	var wg sync.WaitGroup
+	var got int64
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			standards, err := hub.getEnabledStandards()
+			if err == nil && len(standards) == 1 {
+				atomic.AddInt64(&got, 1)
+			}
+		}()
+	}
+	wg.Wait()
+	assert.Equal(t, int64(50), got)
 }

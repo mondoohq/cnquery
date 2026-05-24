@@ -22,6 +22,30 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// esDescribeBatchSize is the maximum number of domain names accepted by a single
+// DescribeElasticsearchDomains call.
+const esDescribeBatchSize = 5
+
+// chunkStrings splits s into successive slices of at most size elements.
+// A non-positive size returns a single chunk containing all of s.
+func chunkStrings(s []string, size int) [][]string {
+	if len(s) == 0 {
+		return nil
+	}
+	if size <= 0 {
+		return [][]string{s}
+	}
+	out := make([][]string, 0, (len(s)+size-1)/size)
+	for i := 0; i < len(s); i += size {
+		end := i + size
+		if end > len(s) {
+			end = len(s)
+		}
+		out = append(out, s[i:end])
+	}
+	return out
+}
+
 type mqlAwsEsDomainInternal struct {
 	securityGroupIdHandler
 	region    string
@@ -89,13 +113,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 			}
 
 			// DescribeElasticsearchDomains accepts up to 5 domain names per call.
-			const batchSize = 5
-			for i := 0; i < len(names); i += batchSize {
-				end := i + batchSize
-				if end > len(names) {
-					end = len(names)
-				}
-				batch := names[i:end]
+			for _, batch := range chunkStrings(names, esDescribeBatchSize) {
 				resp, err := svc.DescribeElasticsearchDomains(ctx, &elasticsearchservice.DescribeElasticsearchDomainsInput{DomainNames: batch})
 				if err != nil {
 					if Is400AccessDeniedError(err) {
