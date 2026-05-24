@@ -551,6 +551,7 @@ gcp.project.bigqueryService.dataset.defaultCollation 13.1.2
 gcp.project.bigqueryService.dataset.defaultPartitionExpirationMs 13.1.2
 gcp.project.bigqueryService.dataset.defaultTableExpirationMs 11.6.6
 gcp.project.bigqueryService.dataset.description 9.0.0
+gcp.project.bigqueryService.dataset.externalDatasetReference 13.16.3
 gcp.project.bigqueryService.dataset.id 9.0.0
 gcp.project.bigqueryService.dataset.isCaseInsensitive 13.1.2
 gcp.project.bigqueryService.dataset.kmsKey 13.12.2

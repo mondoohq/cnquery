@@ -123,6 +123,14 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 			kmsName = metadata.DefaultEncryptionConfig.KMSKeyName
 		}
 
+		var externalDatasetReference any
+		if metadata.ExternalDatasetReference != nil {
+			externalDatasetReference = map[string]any{
+				"externalSource": metadata.ExternalDatasetReference.ExternalSource,
+				"connection":     metadata.ExternalDatasetReference.Connection,
+			}
+		}
+
 		access := make([]any, 0, len(metadata.Access))
 		for _, a := range metadata.Access {
 			var viewRef any
@@ -183,6 +191,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 			"defaultCollation":             llx.StringData(metadata.DefaultCollation),
 			"defaultPartitionExpirationMs": llx.IntData(metadata.DefaultPartitionExpiration.Milliseconds()),
 			"isCaseInsensitive":            llx.BoolData(metadata.IsCaseInsensitive),
+			"externalDatasetReference":     llx.DictData(externalDatasetReference),
 		})
 		if err != nil {
 			return nil, err

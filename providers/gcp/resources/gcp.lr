@@ -2750,6 +2750,15 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   defaultPartitionExpirationMs int
   // Whether field names are treated as case insensitive
   isCaseInsensitive bool
+  // External source backing this dataset
+  //
+  // For externally defined datasets (for example BigLake or Iceberg
+  // tables federated through AWS Glue), this dict has two keys:
+  // `externalSource` is the URI of the upstream system that backs the
+  // dataset, and `connection` is the Cloud connection used to reach it
+  // in the form `projects/{project_id}/locations/{location_id}/connections/{connection_id}`.
+  // Null for datasets stored natively in BigQuery.
+  externalDatasetReference dict
 }
 
 // Google Cloud (GCP) BigQuery dataset access entry

@@ -5122,6 +5122,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetIsCaseInsensitive()).ToDataRes(types.Bool)
 	},
+	"gcp.project.bigqueryService.dataset.externalDatasetReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetExternalDatasetReference()).ToDataRes(types.Dict)
+	},
 	"gcp.project.bigqueryService.dataset.accessEntry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry).GetId()).ToDataRes(types.String)
 	},
@@ -18777,6 +18780,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).IsCaseInsensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.dataset.externalDatasetReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceDataset).ExternalDatasetReference, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigqueryService.dataset.accessEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42913,6 +42920,7 @@ type mqlGcpProjectBigqueryServiceDataset struct {
 	DefaultCollation             plugin.TValue[string]
 	DefaultPartitionExpirationMs plugin.TValue[int64]
 	IsCaseInsensitive            plugin.TValue[bool]
+	ExternalDatasetReference     plugin.TValue[any]
 }
 
 // createGcpProjectBigqueryServiceDataset creates a new instance of this resource
@@ -43088,6 +43096,10 @@ func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultPartitionExpirationMs() 
 
 func (c *mqlGcpProjectBigqueryServiceDataset) GetIsCaseInsensitive() *plugin.TValue[bool] {
 	return &c.IsCaseInsensitive
+}
+
+func (c *mqlGcpProjectBigqueryServiceDataset) GetExternalDatasetReference() *plugin.TValue[any] {
+	return &c.ExternalDatasetReference
 }
 
 // mqlGcpProjectBigqueryServiceDatasetAccessEntry for the gcp.project.bigqueryService.dataset.accessEntry resource
