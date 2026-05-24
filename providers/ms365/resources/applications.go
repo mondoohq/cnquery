@@ -111,20 +111,52 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 		secrets = append(secrets, secret)
 	}
 
+	// Each conversion is checked individually — the previous code threaded a
+	// single err variable through all of them and only inspected the last one,
+	// silently dropping any earlier failures.
 	info, err := convert.JsonToDict(newAppInformationUrl(app.GetInfo()))
+	if err != nil {
+		return nil, err
+	}
 	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#api-attribute
 	apiInfo, err := convert.JsonToDict(newApiApplication(app.GetApi()))
+	if err != nil {
+		return nil, err
+	}
 	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#web-attribute
 	webInfo, err := convert.JsonToDict(newWebApplication(app.GetWeb()))
+	if err != nil {
+		return nil, err
+	}
 	// https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest#spa-attribute
 	spaInfo, err := convert.JsonToDict(newSpaApplication(app.GetSpa()))
-
+	if err != nil {
+		return nil, err
+	}
 	certification, err := convert.JsonToDict(newCertificationable(app.GetCertification()))
+	if err != nil {
+		return nil, err
+	}
 	optionalClaims, err := convert.JsonToDict(newOptionalClaimsable(app.GetOptionalClaims()))
+	if err != nil {
+		return nil, err
+	}
 	servicePrincipalLockConfiguration, err := convert.JsonToDict(newServicePrincipalLockConfiguration(app.GetServicePrincipalLockConfiguration()))
+	if err != nil {
+		return nil, err
+	}
 	requestSignatureVerification, err := convert.JsonToDict(newRequestSignatureVerification(app.GetRequestSignatureVerification()))
+	if err != nil {
+		return nil, err
+	}
 	parentalControlSettings, err := convert.JsonToDict(newParentalControlSettings(app.GetParentalControlSettings()))
+	if err != nil {
+		return nil, err
+	}
 	publicClient, err := convert.JsonToDict(newPublicClientApplication(app.GetPublicClient()))
+	if err != nil {
+		return nil, err
+	}
 	requiredResourceAccess, err := convert.JsonToDictSlice(newRequiredResourceAccessList(app.GetRequiredResourceAccess()))
 	if err != nil {
 		return nil, err
@@ -368,10 +400,14 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	owners, err := iterate[models.DirectoryObjectable](ctx, resp, graphClient.GetAdapter(), models.CreateDirectoryObjectCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for i := range resp.GetValue() {
-		ownerId := resp.GetValue()[i].GetId()
+	for _, owner := range owners {
+		ownerId := owner.GetId()
 		if ownerId == nil {
 			continue
 		}

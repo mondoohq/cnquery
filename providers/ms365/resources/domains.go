@@ -32,10 +32,13 @@ func (a *mqlMicrosoft) domains() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	allDomains, err := iterate[models.Domainable](ctx, resp, graphClient.GetAdapter(), models.CreateDomainCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	domains := resp.GetValue()
-	for _, domain := range domains {
+	for _, domain := range allDomains {
 		supportedServices := []any{}
 		for _, service := range domain.GetSupportedServices() {
 			supportedServices = append(supportedServices, service)
@@ -76,9 +79,12 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	records, err := iterate[models.DomainDnsRecordable](ctx, resp, graphClient.GetAdapter(), models.CreateDomainDnsRecordCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	records := resp.GetValue()
 	for _, record := range records {
 		properties := getDomainsDnsRecordProperties(record)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.domaindnsrecord",

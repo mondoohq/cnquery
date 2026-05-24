@@ -32,9 +32,12 @@ func (a *mqlMicrosoftSecurity) riskyUsers() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	users, err := iterate[models.RiskyUserable](ctx, resp, graphClient.GetAdapter(), models.CreateRiskyUserCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	users := resp.GetValue()
 	for i := range users {
 		riskyUser := users[i]
 		mqlResource, err := newMqlMicrosoftRiskyUser(a.MqlRuntime, riskyUser)

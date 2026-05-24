@@ -48,9 +48,13 @@ func (a *mqlMicrosoftGroup) members() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	members, err := iterate[models.DirectoryObjectable](ctx, resp, graphClient.GetAdapter(), models.CreateDirectoryObjectCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, member := range resp.GetValue() {
+	for _, member := range members {
 		memberId := member.GetId()
 		if memberId == nil {
 			continue
@@ -174,9 +178,13 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	allOwners, err := iterate[models.DirectoryObjectable](ctx, ownersResp, graphClient.GetAdapter(), models.CreateDirectoryObjectCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	var owners []any
-	for _, owner := range ownersResp.GetValue() {
+	for _, owner := range allOwners {
 		if owner.GetId() == nil {
 			continue
 		}

@@ -104,9 +104,12 @@ func (a *mqlMicrosoftSecurity) secureScores() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	scores, err := iterate[models.SecureScoreable](ctx, resp, graphClient.GetAdapter(), models.CreateSecureScoreCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	scores := resp.GetValue()
 	for i := range scores {
 		score := scores[i]
 		mqlResource, err := newMqlMicrosoftSecureScore(a.MqlRuntime, score)

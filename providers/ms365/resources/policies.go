@@ -62,7 +62,11 @@ func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
-	return convert.JsonToDictSlice(newPermissionGrantPolicies(resp.GetValue()))
+	grantPolicies, err := iterate[models.PermissionGrantPolicyable](ctx, resp, graphClient.GetAdapter(), models.CreatePermissionGrantPolicyCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(newPermissionGrantPolicies(grantPolicies))
 }
 
 // https://learn.microsoft.com/en-us/graph/api/groupsetting-get?view=graph-rest-1.0&tabs=http
@@ -76,13 +80,17 @@ func (a *mqlMicrosoftPolicies) consentPolicySettings() (any, error) {
 
 	ctx := context.Background()
 
-	groupSettings, err := graphClient.GroupSettings().Get(ctx, nil)
+	resp, err := graphClient.GroupSettings().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
+	groupSettings, err := iterate[models.GroupSettingable](ctx, resp, graphClient.GetAdapter(), models.CreateGroupSettingCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	actualSettingsMap := make(map[string]map[string]any)
-	for _, setting := range groupSettings.GetValue() {
+	for _, setting := range groupSettings {
 		displayName := setting.GetDisplayName()
 		if displayName != nil {
 			if _, exists := actualSettingsMap[*displayName]; !exists {
@@ -137,9 +145,13 @@ func (a *mqlMicrosoftPolicies) activityBasedTimeoutPolicies() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	timeoutPolicies, err := iterate[models.ActivityBasedTimeoutPolicyable](ctx, resp, graphClient.GetAdapter(), models.CreateActivityBasedTimeoutPolicyCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	var activityBasedTimeoutPolicies []any
-	for _, policy := range resp.GetValue() {
+	for _, policy := range timeoutPolicies {
 		mqlPolicy, err := CreateResource(a.MqlRuntime, "microsoft.policies.activityBasedTimeoutPolicy",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringDataPtr(policy.GetId()),
@@ -451,37 +463,42 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy(
 				"inboundAllowed":  llx.BoolDataPtr(consentSettings.GetInboundAllowed()),
 				"outboundAllowed": llx.BoolDataPtr(consentSettings.GetOutboundAllowed()),
 			})
-		if err == nil {
-			a.cachedAutomaticUserConsentSettings = consentResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings)
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedAutomaticUserConsentSettings = consentResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings)
 	}
 
 	if policy.GetB2bCollaborationInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationInbound(), a.__id+"-b2bCollaborationInbound")
-		if err == nil {
-			a.cachedB2bCollaborationInbound = b2bResource
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedB2bCollaborationInbound = b2bResource
 	}
 
 	if policy.GetB2bCollaborationOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bCollaborationOutbound(), a.__id+"-b2bCollaborationOutbound")
-		if err == nil {
-			a.cachedB2bCollaborationOutbound = b2bResource
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedB2bCollaborationOutbound = b2bResource
 	}
 
 	if policy.GetB2bDirectConnectInbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectInbound(), a.__id+"-b2bDirectConnectInbound")
-		if err == nil {
-			a.cachedB2bDirectConnectInbound = b2bResource
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedB2bDirectConnectInbound = b2bResource
 	}
 
 	if policy.GetB2bDirectConnectOutbound() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetB2bDirectConnectOutbound(), a.__id+"-b2bDirectConnectOutbound")
-		if err == nil {
-			a.cachedB2bDirectConnectOutbound = b2bResource
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedB2bDirectConnectOutbound = b2bResource
 	}
 
 	if policy.GetInvitationRedemptionIdentityProviderConfiguration() != nil {
@@ -501,9 +518,10 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy(
 				"fallbackIdentityProvider":               llx.StringData(fallbackProvider),
 				"primaryIdentityProviderPrecedenceOrder": llx.ArrayData(precedenceOrder, types.String),
 			})
-		if err == nil {
-			a.cachedInvitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration)
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedInvitationRedemptionIdentityProviderConfiguration = invResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultInvitationRedemptionIdentityProviderConfiguration)
 	}
 
 	if policy.GetInboundTrust() != nil {
@@ -515,16 +533,18 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy(
 				"isCompliantDeviceAccepted":           llx.BoolDataPtr(inboundTrustValue.GetIsCompliantDeviceAccepted()),
 				"isHybridAzureADJoinedDeviceAccepted": llx.BoolDataPtr(inboundTrustValue.GetIsHybridAzureADJoinedDeviceAccepted()),
 			})
-		if err == nil {
-			a.cachedInboundTrust = inboundTrustResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultInboundTrust)
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedInboundTrust = inboundTrustResource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultInboundTrust)
 	}
 
 	if policy.GetTenantRestrictions() != nil {
 		b2bResource, err := newB2BSetting(a.MqlRuntime, policy.GetTenantRestrictions(), a.__id+"-tenantRestrictions")
-		if err == nil {
-			a.cachedTenantRestrictions = b2bResource
+		if err != nil {
+			return errHandler(err)
 		}
+		a.cachedTenantRestrictions = b2bResource
 	}
 
 	return nil

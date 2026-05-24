@@ -41,30 +41,9 @@ func (a *mqlMicrosoftDevicemanagement) managedDevices() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
-
-	var allDevices []models.ManagedDeviceable
-
-	// Add first page results
-	if resp.GetValue() != nil {
-		allDevices = append(allDevices, resp.GetValue()...)
-	}
-
-	// Handle pagination
-	for resp.GetOdataNextLink() != nil {
-		nextLink := *resp.GetOdataNextLink()
-
-		// Create request from next link
-		nextResp, err := graphClient.DeviceManagement().ManagedDevices().WithUrl(nextLink).Get(ctx, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		// Add results from this page
-		if nextResp.GetValue() != nil {
-			allDevices = append(allDevices, nextResp.GetValue()...)
-		}
-
-		resp = nextResp
+	allDevices, err := iterate[models.ManagedDeviceable](ctx, resp, graphClient.GetAdapter(), models.CreateManagedDeviceCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
 	}
 
 	res := []any{}
@@ -179,8 +158,12 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]any, error) {
 		return nil, transformError(err)
 	}
 
+	configurations, err := iterate[models.DeviceConfigurationable](ctx, resp, graphClient.GetAdapter(), models.CreateDeviceConfigurationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+
 	res := []any{}
-	configurations := resp.GetValue()
 	for _, configuration := range configurations {
 		properties := getConfigurationProperties(configuration)
 		policyAssignments := []any{}
@@ -224,7 +207,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 	}
 
 	ctx := context.Background()
-	deviceEnrollmentConfigurations, err := graphClient.DeviceManagement().DeviceEnrollmentConfigurations().Get(ctx, &devicemanagement.DeviceEnrollmentConfigurationsRequestBuilderGetRequestConfiguration{
+	resp, err := graphClient.DeviceManagement().DeviceEnrollmentConfigurations().Get(ctx, &devicemanagement.DeviceEnrollmentConfigurationsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &devicemanagement.DeviceEnrollmentConfigurationsRequestBuilderGetQueryParameters{
 			Expand: []string{"assignments"},
 		},
@@ -232,8 +215,11 @@ func (a *mqlMicrosoftDevicemanagement) deviceEnrollmentConfigurations() ([]any, 
 	if err != nil {
 		return nil, transformError(err)
 	}
+	configs, err := iterate[models.DeviceEnrollmentConfigurationable](ctx, resp, graphClient.GetAdapter(), models.CreateDeviceEnrollmentConfigurationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
-	configs := deviceEnrollmentConfigurations.GetValue()
 	res := []any{}
 	for _, config := range configs {
 		policyAssignments := []any{}
@@ -288,8 +274,11 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 	if err != nil {
 		return nil, transformError(err)
 	}
+	compliancePolicies, err := iterate[models.DeviceCompliancePolicyable](ctx, resp, graphClient.GetAdapter(), models.CreateDeviceCompliancePolicyCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
-	compliancePolicies := resp.GetValue()
 	res := []any{}
 	for _, compliancePolicy := range compliancePolicies {
 		assignments, err := convert.JsonToDictSlice(newDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))

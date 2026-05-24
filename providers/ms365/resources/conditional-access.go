@@ -35,13 +35,17 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, erro
 	}
 
 	ctx := context.Background()
-	namedLocations, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
+	resp, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
+	namedLocations, err := iterate[models.NamedLocationable](ctx, resp, graphClient.GetAdapter(), models.CreateNamedLocationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	var locationDetails []any
-	for _, location := range namedLocations.GetValue() {
+	for _, location := range namedLocations {
 		if ipLocation, ok := location.(*models.IpNamedLocation); ok {
 			displayName := ipLocation.GetDisplayName()
 			isTrusted := ipLocation.GetIsTrusted()
@@ -88,13 +92,17 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any,
 	}
 
 	ctx := context.Background()
-	namedLocations, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
+	resp, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
+	namedLocations, err := iterate[models.NamedLocationable](ctx, resp, graphClient.GetAdapter(), models.CreateNamedLocationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	var locationDetails []any
-	for _, location := range namedLocations.GetValue() {
+	for _, location := range namedLocations {
 		if countryLocation, ok := location.(*models.CountryNamedLocation); ok {
 			displayName := countryLocation.GetDisplayName()
 			countryLookupMethod := countryLocation.GetCountryLookupMethod()
@@ -151,13 +159,17 @@ func (a *mqlMicrosoftConditionalAccess) policies() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	policies, err := graphClient.Identity().ConditionalAccess().Policies().Get(ctx, nil)
+	resp, err := graphClient.Identity().ConditionalAccess().Policies().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
+	policies, err := iterate[models.ConditionalAccessPolicyable](ctx, resp, graphClient.GetAdapter(), models.CreateConditionalAccessPolicyCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	var policyDetails []any
-	for _, policy := range policies.GetValue() {
+	for _, policy := range policies {
 		id := policy.GetId()
 		displayName := policy.GetDisplayName()
 

@@ -59,9 +59,12 @@ func (a *mqlMicrosoft) organizations() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	orgs, err := iterate[models.Organizationable](ctx, resp, graphClient.GetAdapter(), models.CreateOrganizationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	orgs := resp.GetValue()
 	for i := range orgs {
 		org := orgs[i]
 		mqlResource, err := newMicrosoftTenant(a.MqlRuntime, org)
@@ -169,13 +172,18 @@ func (a *mqlMicrosoftTenant) subscriptions() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := graphClient.Directory().Subscriptions().Get(context.Background(), &directory.SubscriptionsRequestBuilderGetRequestConfiguration{})
+	ctx := context.Background()
+	resp, err := graphClient.Directory().Subscriptions().Get(ctx, &directory.SubscriptionsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
+	subs, err := iterate[models.CompanySubscriptionable](ctx, resp, graphClient.GetAdapter(), models.CreateCompanySubscriptionCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, sub := range resp.GetValue() {
+	for _, sub := range subs {
 		res = append(res, newCompanySubscription(sub))
 	}
 
@@ -193,11 +201,15 @@ func (a *mqlMicrosoft) tenantDomainName() (string, error) {
 	if err != nil {
 		return "", transformError(err)
 	}
+	orgs, err := iterate[models.Organizationable](ctx, resp, graphClient.GetAdapter(), models.CreateOrganizationCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return "", err
+	}
 	tenantDomainName := ""
 
-	for _, org := range resp.GetValue() {
+	for _, org := range orgs {
 		for _, d := range org.GetVerifiedDomains() {
-			if *d.GetIsInitial() {
+			if d.GetIsInitial() != nil && *d.GetIsInitial() && d.GetName() != nil {
 				tenantDomainName = *d.GetName()
 			}
 		}

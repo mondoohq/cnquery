@@ -477,13 +477,16 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	appRolesAssignments, err := iterate[models.AppRoleAssignmentable](ctx, grantedApplicationRolesResp, graphClient.GetAdapter(), models.CreateAppRoleAssignmentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	list := []any{}
 	// track which app roles are granted, keyed by resourceSpId/roleId, and the
 	// display name of each resource service principal the application touches
 	grantedRoleKeys := map[string]bool{}
 	resourceSpNames := map[string]string{}
-	appRolesAssignments := grantedApplicationRolesResp.GetValue()
 	for _, roleAssignment := range appRolesAssignments {
 		assignmentID := roleAssignment.GetId()
 		spId := roleAssignment.GetResourceId()  // id of the service account
@@ -545,7 +548,13 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 	}
 
 	oauthResp, err := graphClient.ServicePrincipals().ByServicePrincipalId(servicePrincipalId).Oauth2PermissionGrants().Get(ctx, &serviceprincipals.ItemOauth2PermissionGrantsRequestBuilderGetRequestConfiguration{})
-	delegatedRolesAssignments := oauthResp.GetValue()
+	if err != nil {
+		return nil, transformError(err)
+	}
+	delegatedRolesAssignments, err := iterate[models.OAuth2PermissionGrantable](ctx, oauthResp, graphClient.GetAdapter(), models.CreateOAuth2PermissionGrantCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 	for _, roleAssignment := range delegatedRolesAssignments {
 
 		spId := roleAssignment.GetResourceId() // id of the service account

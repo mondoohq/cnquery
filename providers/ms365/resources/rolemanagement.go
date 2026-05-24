@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -76,9 +77,12 @@ func (a *mqlMicrosoftRoles) list() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	roles, err := iterate[models.UnifiedRoleDefinitionable](ctx, resp, graphClient.GetAdapter(), models.CreateUnifiedRoleDefinitionCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	roles := resp.GetValue()
 	for _, role := range roles {
 		rolePermissions, err := convert.JsonToDictSlice(newUnifiedRolePermissions(role.GetRolePermissions()))
 		if err != nil {
@@ -161,8 +165,11 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]any, error) 
 	if err != nil {
 		return nil, transformError(err)
 	}
+	roleAssignments, err := iterate[models.UnifiedRoleAssignmentable](ctx, resp, graphClient.GetAdapter(), models.CreateUnifiedRoleAssignmentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
-	roleAssignments := resp.GetValue()
 	res := []any{}
 	for _, roleAssignment := range roleAssignments {
 		principal, err := convert.JsonToDict(newDirectoryPrincipal(roleAssignment.GetPrincipal()))

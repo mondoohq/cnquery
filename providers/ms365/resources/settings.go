@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groupsettings"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/ms365/connection"
@@ -21,11 +22,15 @@ func (a *mqlMicrosoft) settings() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
-	return convert.JsonToDictSlice(newSettings(settings.GetValue()))
+	settings, err := iterate[models.GroupSettingable](ctx, resp, graphClient.GetAdapter(), models.CreateGroupSettingCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(newSettings(settings))
 }
 
 func (a *mqlMicrosoft) groupSettings() ([]any, error) {
@@ -36,13 +41,17 @@ func (a *mqlMicrosoft) groupSettings() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
+	settings, err := iterate[models.GroupSettingable](ctx, resp, graphClient.GetAdapter(), models.CreateGroupSettingCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	settingsList := []any{}
-	for _, setting := range settings.GetValue() {
+	for _, setting := range settings {
 		settingValues := make([]any, 0, len(setting.GetValues()))
 
 		for _, val := range setting.GetValues() {

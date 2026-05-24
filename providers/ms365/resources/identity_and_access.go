@@ -127,17 +127,21 @@ func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string, c
 		QueryParameters: requestParameters,
 	}
 
-	policies, err := graphClient.Policies().RoleManagementPolicies().Get(context.Background(), configuration)
+	ctx := context.Background()
+	resp, err := graphClient.Policies().RoleManagementPolicies().Get(ctx, configuration)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve role management policies with filter '%s': %w", requestFilter, err)
 	}
-
-	var policyResources []any
-	if policies == nil {
+	if resp == nil {
 		return nil, nil
 	}
+	policies, err := iterate[models.UnifiedRoleManagementPolicyable](ctx, resp, graphClient.GetAdapter(), models.CreateUnifiedRoleManagementPolicyCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
-	for _, policy := range policies.GetValue() {
+	var policyResources []any
+	for _, policy := range policies {
 		if policy.GetId() != nil && policy.GetDisplayName() != nil {
 			policyResource, err := createPolicy(runtime, policy)
 			if err != nil {
@@ -301,17 +305,21 @@ func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]an
 		return nil, err
 	}
 
-	roleEligibilityScheduleInstances, err := graphClient.RoleManagement().Directory().RoleEligibilityScheduleInstances().Get(context.Background(), nil)
+	ctx := context.Background()
+	resp, err := graphClient.RoleManagement().Directory().RoleEligibilityScheduleInstances().Get(ctx, nil)
 	if err != nil {
 		return nil, transformError(err)
 	}
-
-	if roleEligibilityScheduleInstances == nil {
+	if resp == nil {
 		return nil, nil
+	}
+	roleEligibilityScheduleInstances, err := iterate[models.UnifiedRoleEligibilityScheduleInstanceable](ctx, resp, graphClient.GetAdapter(), models.CreateUnifiedRoleEligibilityScheduleInstanceCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
 	}
 
 	var instances []any
-	for _, inst := range roleEligibilityScheduleInstances.GetValue() {
+	for _, inst := range roleEligibilityScheduleInstances {
 		if inst.GetId() == nil {
 			continue
 		}
@@ -452,21 +460,25 @@ func (a *mqlMicrosoftIdentityAndAccessAccessReviews) list() ([]any, error) {
 		}
 	}
 
-	definitions, err := graphClient.
+	ctx := context.Background()
+	resp, err := graphClient.
 		IdentityGovernance().
 		AccessReviews().
 		Definitions().
-		Get(context.Background(), configuration)
+		Get(ctx, configuration)
 	if err != nil {
 		return nil, transformError(err)
 	}
-
-	if definitions == nil {
+	if resp == nil {
 		return nil, nil
+	}
+	definitions, err := iterate[models.AccessReviewScheduleDefinitionable](ctx, resp, graphClient.GetAdapter(), models.CreateAccessReviewScheduleDefinitionCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
 	}
 
 	var accessReviewResources []any
-	for _, accessReviewSchedule := range definitions.GetValue() {
+	for _, accessReviewSchedule := range definitions {
 		if accessReviewSchedule.GetId() != nil {
 			reviewResource, err := newMqlAccessReviewDefinition(a.MqlRuntime, accessReviewSchedule)
 			if err != nil {
