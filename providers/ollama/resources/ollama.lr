@@ -22,9 +22,9 @@ ollama @defaults("host") {
 // Ollama model
 //
 // Examine an installed Ollama model including its family, parameter
-// size, quantization level, and license. Use `modelInfo` for raw
-// metadata from the model's configuration and `modelfile` for the
-// Modelfile used to create or pull this model.
+// size, quantization level, and license. Use `info` for structured
+// GGUF metadata from the model's configuration and `modelfile` for
+// the Modelfile used to create or pull this model.
 ollama.model @defaults("name family parameterSize") {
   // Model name (e.g., "llama3.1:latest")
   name string
