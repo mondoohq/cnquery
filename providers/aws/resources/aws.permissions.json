@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-23T00:26:47-07:00",
+  "generated_at": "2026-05-23T21:29:12-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -368,6 +368,7 @@
     "emr:ListStudios",
     "es:DescribeDomains",
     "es:DescribeElasticsearchDomain",
+    "es:DescribeElasticsearchDomains",
     "es:ListDomainNames",
     "es:ListTags",
     "events:DescribeApiDestination",
@@ -3109,6 +3110,12 @@
       "permission": "es:DescribeElasticsearchDomain",
       "service": "es",
       "action": "DescribeElasticsearchDomain",
+      "source_file": "aws_es.go"
+    },
+    {
+      "permission": "es:DescribeElasticsearchDomains",
+      "service": "es",
+      "action": "DescribeElasticsearchDomains",
       "source_file": "aws_es.go"
     },
     {
