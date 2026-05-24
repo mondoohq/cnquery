@@ -167,6 +167,48 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		return nil, err
 	}
 
+	ipFilter, err := convert.JsonToDict(bucket.IpFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	hierarchicalNamespace, err := convert.JsonToDict(bucket.HierarchicalNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	customPlacementConfig, err := convert.JsonToDict(bucket.CustomPlacementConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	logging, err := convert.JsonToDict(bucket.Logging)
+	if err != nil {
+		return nil, err
+	}
+
+	cors, err := convert.JsonToDictSlice(bucket.Cors)
+	if err != nil {
+		return nil, err
+	}
+
+	website, err := convert.JsonToDict(bucket.Website)
+	if err != nil {
+		return nil, err
+	}
+
+	billing, err := convert.JsonToDict(bucket.Billing)
+	if err != nil {
+		return nil, err
+	}
+
+	owner, err := convert.JsonToDict(bucket.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	softDeleteTime := parseTime(bucket.SoftDeleteTime)
+
 	mqlInstance, err := CreateResource(runtime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
 		"id":                    llx.StringData(bucket.Id),
 		"projectId":             llx.StringData(projectId),
@@ -190,13 +232,23 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		"defaultEventBasedHold":    llx.BoolData(bucket.DefaultEventBasedHold),
 		"rpo":                      llx.StringData(bucket.Rpo),
 		"satisfiesPZS":             llx.BoolData(bucket.SatisfiesPZS),
+		"satisfiesPZI":             llx.BoolData(bucket.SatisfiesPZI),
 		"versioningEnabled":        llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
 		"publicAccessPrevention":   llx.StringData(publicAccessPrevention),
 		"metageneration":           llx.IntData(bucket.Metageneration),
 		"uniformBucketLevelAccess": llx.DictData(uniformBucketLevelAccess),
 		"softDeletePolicy":         llx.DictData(softDeletePolicy),
+		"softDeleteTime":           llx.TimeDataPtr(softDeleteTime),
 		"objectRetentionMode":      llx.StringData(objectRetentionMode),
 		"autoclass":                llx.DictData(autoclass),
+		"ipFilter":                 llx.DictData(ipFilter),
+		"hierarchicalNamespace":    llx.DictData(hierarchicalNamespace),
+		"customPlacementConfig":    llx.DictData(customPlacementConfig),
+		"logging":                  llx.DictData(logging),
+		"cors":                     llx.ArrayData(cors, types.Dict),
+		"website":                  llx.DictData(website),
+		"billing":                  llx.DictData(billing),
+		"owner":                    llx.DictData(owner),
 	})
 	if err != nil {
 		return nil, err

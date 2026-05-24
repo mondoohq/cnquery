@@ -2111,7 +2111,15 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicyLocked bool
   // Whether bucket access logs are configured (logging.logBucket is set)
   loggingEnabled bool
-  // Customer-managed encryption configuration (CMEK key, default key, etc.)
+  // Encryption configuration
+  //
+  // Includes the default CMEK key (`defaultKmsKeyName`) and the per-type
+  // enforcement configs that gate which encryption types may be used for
+  // newly-written objects: `customerManagedEncryptionEnforcementConfig`,
+  // `customerSuppliedEncryptionEnforcementConfig`, and
+  // `googleManagedEncryptionEnforcementConfig`. Each enforcement entry has
+  // `effectiveTime` and `restrictionMode` (`NotRestricted` or
+  // `FullyRestricted`).
   encryption dict
   // Default Cloud KMS encryption key for new objects in this bucket
   defaultKmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -2123,6 +2131,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   rpo string
   // Whether the bucket satisfies Google's Protected Zone Separation requirements
   satisfiesPZS bool
+  // Whether the bucket satisfies Google's Protected Zone Isolation requirements
+  satisfiesPZI bool
   // Whether object versioning is enabled
   versioningEnabled bool
   // Public access prevention setting (inherited, enforced, unspecified)
@@ -2153,6 +2163,63 @@ private gcp.project.storageService.bucket @defaults("id") {
   //
   // Reports sensitivity score, risk level, and detected infoTypes. Null when discovery has not profiled this bucket or DLP is not enabled in the project.
   dlpDataProfile() gcp.project.dlpService.fileStoreDataProfile
+  // IP filter configuration
+  //
+  // Restricts which networks may access the bucket and its objects. Shape:
+  // `{mode, allowAllServiceAgentAccess, allowCrossOrgVpcs, publicNetworkSource, vpcNetworkSources}`.
+  // `mode` is `Enabled` or `Disabled` and the filter is only enforced when
+  // `Enabled`. `publicNetworkSource` lists allowed public CIDR ranges;
+  // `vpcNetworkSources` lists allowed VPC networks with their CIDR ranges.
+  ipFilter dict
+  // Hierarchical namespace configuration
+  //
+  // Shape: `{enabled}`. When enabled, the bucket uses folder-based filesystem
+  // semantics instead of flat object naming. Policies often want to flag
+  // hierarchical-namespace buckets because object and folder operations differ
+  // from a standard flat bucket.
+  hierarchicalNamespace dict
+  // Custom placement configuration for dual-region buckets
+  //
+  // Shape: `{dataLocations}`. `dataLocations` is the list of regional
+  // locations where data is replicated for this bucket's dual-region
+  // placement.
+  customPlacementConfig dict
+  // Access-log destination configuration
+  //
+  // Shape: `{logBucket, logObjectPrefix}`. `logBucket` is the destination
+  // bucket that receives this bucket's access logs; `logObjectPrefix` is an
+  // optional prefix applied to log object names. Use this to find where logs
+  // go; the `loggingEnabled` predicate is the simple is-it-on check.
+  logging dict
+  // Cross-Origin Resource Sharing (CORS) rules
+  //
+  // Each rule is shaped `{origin, method, responseHeader, maxAgeSeconds}`.
+  // `origin` and `method` lists permit `"*"` to mean any origin or method.
+  // Used to audit static-site buckets for overly permissive CORS.
+  cors []dict
+  // Static-website hosting configuration
+  //
+  // Shape: `{mainPageSuffix, notFoundPage}`. `mainPageSuffix` is appended to
+  // directory-like requests (typically `index.html`); `notFoundPage` is the
+  // object returned for 404 responses. Presence indicates the bucket is
+  // serving as a static website.
+  website dict
+  // Billing configuration
+  //
+  // Shape: `{requesterPays}`. When `requesterPays` is true, the caller (not
+  // the bucket owner) is billed for requests and egress.
+  billing dict
+  // Bucket owner
+  //
+  // Shape: `{entity, entityId}`. `entity` is typically
+  // `project-owner-<projectId>`; `entityId` is the entity's stable ID.
+  owner dict
+  // Effective soft-delete timestamp
+  //
+  // The time at which the bucket itself was soft-deleted, separate from
+  // `softDeletePolicy` which configures object-level soft-delete retention.
+  // Null on live buckets.
+  softDeleteTime time
 }
 
 // Google Cloud bucket's lifecycle configuration

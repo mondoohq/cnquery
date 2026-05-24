@@ -4459,6 +4459,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.satisfiesPZS": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetSatisfiesPZS()).ToDataRes(types.Bool)
 	},
+	"gcp.project.storageService.bucket.satisfiesPZI": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetSatisfiesPZI()).ToDataRes(types.Bool)
+	},
 	"gcp.project.storageService.bucket.versioningEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetVersioningEnabled()).ToDataRes(types.Bool)
 	},
@@ -4497,6 +4500,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.bucket.dlpDataProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetDlpDataProfile()).ToDataRes(types.Resource("gcp.project.dlpService.fileStoreDataProfile"))
+	},
+	"gcp.project.storageService.bucket.ipFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetIpFilter()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.hierarchicalNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetHierarchicalNamespace()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.customPlacementConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetCustomPlacementConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetLogging()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.cors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetCors()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.storageService.bucket.website": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetWebsite()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.billing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetBilling()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetOwner()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.softDeleteTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetSoftDeleteTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
@@ -17815,6 +17845,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).SatisfiesPZS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.satisfiesPZI": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).SatisfiesPZI, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.versioningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).VersioningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -17865,6 +17899,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.dlpDataProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).DlpDataProfile, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceFileStoreDataProfile](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).IpFilter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.hierarchicalNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).HierarchicalNamespace, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.customPlacementConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).CustomPlacementConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.cors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Cors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.website": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Website, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.billing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Billing, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Owner, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.softDeleteTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).SoftDeleteTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40762,6 +40832,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	DefaultEventBasedHold           plugin.TValue[bool]
 	Rpo                             plugin.TValue[string]
 	SatisfiesPZS                    plugin.TValue[bool]
+	SatisfiesPZI                    plugin.TValue[bool]
 	VersioningEnabled               plugin.TValue[bool]
 	PublicAccessPrevention          plugin.TValue[string]
 	Metageneration                  plugin.TValue[int64]
@@ -40775,6 +40846,15 @@ type mqlGcpProjectStorageServiceBucket struct {
 	DefaultObjectAcl                plugin.TValue[[]any]
 	Public                          plugin.TValue[bool]
 	DlpDataProfile                  plugin.TValue[*mqlGcpProjectDlpServiceFileStoreDataProfile]
+	IpFilter                        plugin.TValue[any]
+	HierarchicalNamespace           plugin.TValue[any]
+	CustomPlacementConfig           plugin.TValue[any]
+	Logging                         plugin.TValue[any]
+	Cors                            plugin.TValue[[]any]
+	Website                         plugin.TValue[any]
+	Billing                         plugin.TValue[any]
+	Owner                           plugin.TValue[any]
+	SoftDeleteTime                  plugin.TValue[*time.Time]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -40922,6 +41002,10 @@ func (c *mqlGcpProjectStorageServiceBucket) GetSatisfiesPZS() *plugin.TValue[boo
 	return &c.SatisfiesPZS
 }
 
+func (c *mqlGcpProjectStorageServiceBucket) GetSatisfiesPZI() *plugin.TValue[bool] {
+	return &c.SatisfiesPZI
+}
+
 func (c *mqlGcpProjectStorageServiceBucket) GetVersioningEnabled() *plugin.TValue[bool] {
 	return &c.VersioningEnabled
 }
@@ -40994,6 +41078,42 @@ func (c *mqlGcpProjectStorageServiceBucket) GetDlpDataProfile() *plugin.TValue[*
 
 		return c.dlpDataProfile()
 	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetIpFilter() *plugin.TValue[any] {
+	return &c.IpFilter
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetHierarchicalNamespace() *plugin.TValue[any] {
+	return &c.HierarchicalNamespace
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetCustomPlacementConfig() *plugin.TValue[any] {
+	return &c.CustomPlacementConfig
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetLogging() *plugin.TValue[any] {
+	return &c.Logging
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetCors() *plugin.TValue[[]any] {
+	return &c.Cors
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetWebsite() *plugin.TValue[any] {
+	return &c.Website
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetBilling() *plugin.TValue[any] {
+	return &c.Billing
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetOwner() *plugin.TValue[any] {
+	return &c.Owner
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetSoftDeleteTime() *plugin.TValue[*time.Time] {
+	return &c.SoftDeleteTime
 }
 
 // mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource
