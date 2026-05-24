@@ -182,8 +182,9 @@ func (a *mqlAwsSsmDocument) content() (string, error) {
 		return "", err
 	}
 
+	a.Content = plugin.TValue[string]{Data: convert.ToValue(resp.Content), State: plugin.StateIsSet}
 	a.contentFetched = true
-	return convert.ToValue(resp.Content), nil
+	return a.Content.Data, nil
 }
 
 func (a *mqlAwsSsmDocument) permissions() ([]any, error) {

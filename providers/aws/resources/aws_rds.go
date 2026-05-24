@@ -365,6 +365,10 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 			for paginator.HasMorePages() {
 				pendingMaintainanceList, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, resp := range pendingMaintainanceList.PendingMaintenanceActions {

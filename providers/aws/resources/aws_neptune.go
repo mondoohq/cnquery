@@ -77,9 +77,6 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 					}
 					return nil, err
 				}
-				if len(cluster.DBClusters) == 0 {
-					return nil, nil
-				}
 				for _, cluster := range cluster.DBClusters {
 					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
@@ -244,9 +241,6 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 						return res, nil
 					}
 					return nil, err
-				}
-				if len(cluster.DBInstances) == 0 {
-					return nil, nil
 				}
 				for _, instance := range cluster.DBInstances {
 					mqlNeptuneInstance, err := newMqlAwsNeptuneInstance(a.MqlRuntime, region, instance)

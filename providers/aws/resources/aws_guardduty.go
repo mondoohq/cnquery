@@ -542,41 +542,43 @@ func (a *mqlAwsGuarddutyDetector) ipSets() ([]any, error) {
 	svc := conn.Guardduty(region)
 	ctx := context.Background()
 
-	resp, err := svc.ListIPSets(ctx, &guardduty.ListIPSetsInput{
+	res := []any{}
+	paginator := guardduty.NewListIPSetsPaginator(svc, &guardduty.ListIPSetsInput{
 		DetectorId: &detectorId,
 	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return []any{}, nil
-		}
-		return nil, err
-	}
-
-	res := []any{}
-	for _, ipSetId := range resp.IpSetIds {
-		detail, err := svc.GetIPSet(ctx, &guardduty.GetIPSetInput{
-			DetectorId: &detectorId,
-			IpSetId:    &ipSetId,
-		})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		if err != nil {
-			log.Warn().Err(err).Str("ipSetId", ipSetId).Msg("could not get IP set details")
-			continue
-		}
-
-		mqlIpSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.ipSet",
-			map[string]*llx.RawData{
-				"__id":     llx.StringData(fmt.Sprintf("%s/ipSet/%s", detectorId, ipSetId)),
-				"id":       llx.StringData(ipSetId),
-				"name":     llx.StringDataPtr(detail.Name),
-				"format":   llx.StringData(string(detail.Format)),
-				"location": llx.StringDataPtr(detail.Location),
-				"status":   llx.StringData(string(detail.Status)),
-				"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
-			})
-		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
-		res = append(res, mqlIpSet)
+		for _, ipSetId := range resp.IpSetIds {
+			detail, err := svc.GetIPSet(ctx, &guardduty.GetIPSetInput{
+				DetectorId: &detectorId,
+				IpSetId:    &ipSetId,
+			})
+			if err != nil {
+				log.Warn().Err(err).Str("ipSetId", ipSetId).Msg("could not get IP set details")
+				continue
+			}
+
+			mqlIpSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.ipSet",
+				map[string]*llx.RawData{
+					"__id":     llx.StringData(fmt.Sprintf("%s/ipSet/%s", detectorId, ipSetId)),
+					"id":       llx.StringData(ipSetId),
+					"name":     llx.StringDataPtr(detail.Name),
+					"format":   llx.StringData(string(detail.Format)),
+					"location": llx.StringDataPtr(detail.Location),
+					"status":   llx.StringData(string(detail.Status)),
+					"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlIpSet)
+		}
 	}
 	return res, nil
 }
@@ -588,41 +590,43 @@ func (a *mqlAwsGuarddutyDetector) threatIntelSets() ([]any, error) {
 	svc := conn.Guardduty(region)
 	ctx := context.Background()
 
-	resp, err := svc.ListThreatIntelSets(ctx, &guardduty.ListThreatIntelSetsInput{
+	res := []any{}
+	paginator := guardduty.NewListThreatIntelSetsPaginator(svc, &guardduty.ListThreatIntelSetsInput{
 		DetectorId: &detectorId,
 	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return []any{}, nil
-		}
-		return nil, err
-	}
-
-	res := []any{}
-	for _, tiSetId := range resp.ThreatIntelSetIds {
-		detail, err := svc.GetThreatIntelSet(ctx, &guardduty.GetThreatIntelSetInput{
-			DetectorId:       &detectorId,
-			ThreatIntelSetId: &tiSetId,
-		})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		if err != nil {
-			log.Warn().Err(err).Str("threatIntelSetId", tiSetId).Msg("could not get threat intel set details")
-			continue
-		}
-
-		mqlTiSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.threatIntelSet",
-			map[string]*llx.RawData{
-				"__id":     llx.StringData(fmt.Sprintf("%s/threatIntelSet/%s", detectorId, tiSetId)),
-				"id":       llx.StringData(tiSetId),
-				"name":     llx.StringDataPtr(detail.Name),
-				"format":   llx.StringData(string(detail.Format)),
-				"location": llx.StringDataPtr(detail.Location),
-				"status":   llx.StringData(string(detail.Status)),
-				"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
-			})
-		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
-		res = append(res, mqlTiSet)
+		for _, tiSetId := range resp.ThreatIntelSetIds {
+			detail, err := svc.GetThreatIntelSet(ctx, &guardduty.GetThreatIntelSetInput{
+				DetectorId:       &detectorId,
+				ThreatIntelSetId: &tiSetId,
+			})
+			if err != nil {
+				log.Warn().Err(err).Str("threatIntelSetId", tiSetId).Msg("could not get threat intel set details")
+				continue
+			}
+
+			mqlTiSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.threatIntelSet",
+				map[string]*llx.RawData{
+					"__id":     llx.StringData(fmt.Sprintf("%s/threatIntelSet/%s", detectorId, tiSetId)),
+					"id":       llx.StringData(tiSetId),
+					"name":     llx.StringDataPtr(detail.Name),
+					"format":   llx.StringData(string(detail.Format)),
+					"location": llx.StringDataPtr(detail.Location),
+					"status":   llx.StringData(string(detail.Status)),
+					"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlTiSet)
+		}
 	}
 	return res, nil
 }

@@ -101,7 +101,9 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 					if err != nil {
 						return nil, err
 					}
-					mqlParam.(*mqlAwsSsmParameter).parameterCache = param
+					mqlSsmParam := mqlParam.(*mqlAwsSsmParameter)
+					mqlSsmParam.parameterCache = param
+					mqlSsmParam.region = region
 					res = append(res, mqlParam)
 				}
 			}

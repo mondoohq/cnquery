@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -123,6 +124,9 @@ func (a *mqlAwsTransferServer) fetchDetail() (*transfer.DescribeServerOutput, er
 	})
 	if err != nil {
 		return nil, err
+	}
+	if resp == nil || resp.Server == nil {
+		return nil, fmt.Errorf("describe server returned empty response for %q", serverId)
 	}
 	a.fetched = true
 	a.descResp = resp

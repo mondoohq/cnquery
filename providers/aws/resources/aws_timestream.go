@@ -85,9 +85,6 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 					}
 					return nil, err
 				}
-				if len(resp.Databases) == 0 {
-					return nil, nil
-				}
 				for _, database := range resp.Databases {
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.timestream.liveanalytics.database",
 						map[string]*llx.RawData{
@@ -201,9 +198,6 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 						return res, nil
 					}
 					return nil, err
-				}
-				if len(resp.Tables) == 0 {
-					return nil, nil
 				}
 				for _, table := range resp.Tables {
 					magneticStoreProperties, _ := convert.JsonToDictSlice(table.MagneticStoreWriteProperties)

@@ -228,7 +228,6 @@ func (a *mqlAwsSqsQueue) maxReceiveCount() (int64, error) {
 	if c == "" {
 		return 0, nil
 	}
-	log.Info().Msgf("redrive %v", c)
 	var r redrivePolicy
 	err = json.Unmarshal([]byte(c), &r)
 	if err != nil {

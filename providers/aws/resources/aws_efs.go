@@ -154,6 +154,9 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	efs := obj.(*mqlAwsEfs)
 	rawResources := efs.GetFilesystems()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {

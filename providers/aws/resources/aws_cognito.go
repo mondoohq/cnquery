@@ -137,10 +137,13 @@ func (a *mqlAwsCognitoUserPool) fetchDescribeUserPool() (*cognitoidentityprovide
 		UserPoolId: &poolId,
 	})
 	if err != nil {
-		log.Warn().Str("userPoolId", poolId).Err(err).Msg("could not describe Cognito user pool")
-		a.descFetched = true
-		a.descData = nil
-		return nil, nil
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("userPoolId", poolId).Err(err).Msg("access denied describing Cognito user pool")
+			a.descFetched = true
+			a.descData = nil
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	a.descFetched = true

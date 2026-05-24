@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -518,7 +519,12 @@ func (a *mqlAwsConfigDeliverychannel) deliveryFrequency() (string, error) {
 }
 
 func (a *mqlAwsConfigDeliverychannel) getDeliveryStatus() (*cstypes.DeliveryChannelStatus, error) {
-	if a.cachedDeliveryStatus != nil {
+	if a.deliveryStatusFetched {
+		return a.cachedDeliveryStatus, nil
+	}
+	a.deliveryStatusLock.Lock()
+	defer a.deliveryStatusLock.Unlock()
+	if a.deliveryStatusFetched {
 		return a.cachedDeliveryStatus, nil
 	}
 
@@ -532,15 +538,16 @@ func (a *mqlAwsConfigDeliverychannel) getDeliveryStatus() (*cstypes.DeliveryChan
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.deliveryStatusFetched = true
 			return nil, nil
 		}
 		return nil, err
 	}
 	if len(resp.DeliveryChannelsStatus) > 0 {
 		a.cachedDeliveryStatus = &resp.DeliveryChannelsStatus[0]
-		return a.cachedDeliveryStatus, nil
 	}
-	return nil, nil
+	a.deliveryStatusFetched = true
+	return a.cachedDeliveryStatus, nil
 }
 
 func (a *mqlAwsConfigDeliverychannel) lastSuccessfulDeliveryTime() (*time.Time, error) {
@@ -579,6 +586,8 @@ func (a *mqlAwsConfigDeliverychannel) lastDeliveryStatus() (string, error) {
 type mqlAwsConfigDeliverychannelInternal struct {
 	cachedDeliveryStatus   *cstypes.DeliveryChannelStatus
 	cacheDeliveryFrequency string
+	deliveryStatusFetched  bool
+	deliveryStatusLock     sync.Mutex
 }
 
 func (a *mqlAwsConfigDeliverychannel) snsTopic() (*mqlAwsSnsTopic, error) {

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -108,6 +109,9 @@ func (a *mqlAwsControltowerLandingZone) fetchDetail() (*controltower.GetLandingZ
 	})
 	if err != nil {
 		return nil, err
+	}
+	if resp == nil || resp.LandingZone == nil {
+		return nil, fmt.Errorf("get landing zone returned empty response for %q", arn)
 	}
 	a.fetched = true
 	a.detail = resp
