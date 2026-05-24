@@ -1829,10 +1829,10 @@ gcp.project.computeService.network @defaults("name") {
   networkProfile string
   // Legacy single-region IPv4 range for non-subnetted networks
   //
-  // Only present on legacy (pre-subnet-mode) networks. Subnet-mode
-  // VPC networks should leave this empty; a non-empty value flags
-  // a legacy network kept around for backward compatibility.
-  ipv4Range string
+  // Deprecated in favor of subnet-mode VPC networks. Only present on
+  // legacy (pre-subnet-mode) networks; a non-empty value flags a legacy
+  // network kept around for backward compatibility.
+  ipv4Range @maturity("deprecated") string
 }
 
 // Google Cloud VPC subnetwork
