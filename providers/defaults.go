@@ -486,6 +486,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"ollama": {
+		Provider: &plugin.Provider{
+			Name:            "ollama",
+			ID:              "go.mondoo.com/mql/providers/ollama",
+			ConnectionTypes: []string{"ollama"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "ollama",
+					Use:   "ollama",
+					Short: "an Ollama instance",
+				},
+			},
+		},
+	},
+
 	"okta": {
 		Provider: &plugin.Provider{
 			Name:            "okta",

@@ -1,0 +1,163 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/ollama"
+option go_package = "go.mondoo.com/mql/v13/providers/ollama/resources"
+
+// Ollama instance
+//
+// Use the `ollama` resource to examine an Ollama instance, including
+// installed models and currently running models. Supports both local
+// Ollama servers and Ollama Cloud via configurable host and optional
+// API token authentication.
+ollama @defaults("host") {
+  // Host address of the Ollama instance
+  host() string
+  // Installed models
+  models() []ollama.model
+  // Currently running models loaded in memory
+  runningModels() []ollama.runningModel
+}
+
+// Ollama model
+//
+// Examine an installed Ollama model including its family, parameter
+// size, quantization level, and license. Use `modelInfo` for raw
+// metadata from the model's configuration and `modelfile` for the
+// Modelfile used to create or pull this model.
+ollama.model @defaults("name family parameterSize") {
+  // Model name (e.g., "llama3.1:latest")
+  name string
+  // Canonical model identifier
+  model string
+  // Last modification time
+  modifiedAt time
+  // Total size in bytes
+  size int
+  // Content digest (SHA-256)
+  digest string
+  // Model format
+  //
+  // For example gguf.
+  format string
+  // Primary model family
+  //
+  // For example llama, gemma, or phi3.
+  family string
+  // All model families
+  families []string
+  // Human-readable parameter count
+  //
+  // For example "8.0B", "70.6B".
+  parameterSize string
+  // Quantization level
+  //
+  // For example Q4_0, Q8_0.
+  quantizationLevel string
+  // Parent model this was derived from
+  parentModel string
+  // License text
+  license() string
+  // Raw Modelfile content
+  modelfile() string
+  // System prompt
+  system() string
+  // Chat template
+  template() string
+  // Model capabilities
+  //
+  // For example completion, tools, vision, or thinking.
+  capabilities() []string
+  // Structured GGUF metadata extracted from the model's configuration
+  info() ollama.model.info
+}
+
+// Ollama model GGUF metadata
+//
+// Examine structured metadata from the GGUF model file, including
+// architecture details, training datasets, context window size, and
+// layer configuration. Fields are extracted from standardized GGUF
+// keys and normalized across architectures so that `contextLength`
+// works regardless of whether the underlying key is `llama.context_length`
+// or `qwen2.context_length`.
+private ollama.model.info @defaults("architecture parameterCount sizeLabel") {
+  // Model architecture
+  //
+  // For example llama, gemma, qwen2, phi3, or mistral.
+  architecture string
+  // Base model name before fine-tuning
+  basename string
+  // Fine-tune variant
+  //
+  // For example Instruct, Chat, or Code.
+  finetune string
+  // Human-readable size label
+  //
+  // For example 8B, 70B.
+  sizeLabel string
+  // GGUF-embedded license identifier
+  license string
+  // Model author or organization
+  author string
+  // Model description
+  description string
+  // Total parameter count
+  parameterCount int
+  // Training or supported languages
+  languages []string
+  // Model tags
+  tags []string
+  // Training datasets
+  datasets []string
+  // Context window length in tokens
+  contextLength int
+  // Token embedding dimension
+  embeddingLength int
+  // Number of transformer blocks (layers)
+  blockCount int
+  // Feed-forward network hidden dimension
+  feedForwardLength int
+  // Number of attention heads
+  headCount int
+  // Number of key-value attention heads (for GQA)
+  headCountKv int
+  // Vocabulary size
+  vocabSize int
+  // Number of experts (for MoE models, 0 otherwise)
+  expertCount int
+  // Number of active experts per token (for MoE models, 0 otherwise)
+  expertUsedCount int
+  // Tokenizer model type
+  //
+  // For example gpt2, llama, or sentencepiece.
+  tokenizerModel string
+}
+
+// Ollama running model
+//
+// Examine a model currently loaded in memory on the Ollama instance,
+// including its VRAM usage, context length, and expiration time.
+ollama.runningModel @defaults("name") {
+  // Model name (e.g., "llama3.1:latest")
+  name string
+  // Canonical model identifier
+  model string
+  // Total size in bytes
+  size int
+  // Content digest (SHA-256)
+  digest string
+  // Primary model family
+  family string
+  // All model families
+  families []string
+  // Human-readable parameter count
+  parameterSize string
+  // Quantization level
+  quantizationLevel string
+  // Time when the model will be unloaded from memory
+  expiresAt time
+  // VRAM usage in bytes
+  sizeVram int
+  // Context window length in tokens
+  contextLength int
+}

@@ -227,6 +227,7 @@ PROVIDERS := \
 	nmap \
 	oci \
 	okta \
+	ollama \
 	opcua \
 	openstack \
 	os \

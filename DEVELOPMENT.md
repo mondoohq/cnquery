@@ -224,6 +224,7 @@ use (
    ./mql/providers/nmap
    ./mql/providers/oci
    ./mql/providers/okta
+   ./mql/providers/ollama
    ./mql/providers/opcua
    ./mql/providers/openstack
    ./mql/providers/proxmox
