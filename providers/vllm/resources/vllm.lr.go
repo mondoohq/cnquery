@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,6 +17,7 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceVllm         string = "vllm"
+	ResourceVllmModel    string = "vllm.model"
 	ResourceVllmServer   string = "vllm.server"
 	ResourceVllmEndpoint string = "vllm.endpoint"
 	ResourceVllmMetrics  string = "vllm.metrics"
@@ -28,6 +30,10 @@ func init() {
 		"vllm": {
 			// to override args, implement: initVllm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVllm,
+		},
+		"vllm.model": {
+			// to override args, implement: initVllmModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVllmModel,
 		},
 		"vllm.server": {
 			// to override args, implement: initVllmServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -123,6 +129,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vllm.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVllm).GetVersion()).ToDataRes(types.String)
+	},
+	"vllm.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllm).GetModels()).ToDataRes(types.Array(types.Resource("vllm.model")))
+	},
+	"vllm.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetId()).ToDataRes(types.String)
+	},
+	"vllm.model.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetRoot()).ToDataRes(types.String)
+	},
+	"vllm.model.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetParent()).ToDataRes(types.String)
+	},
+	"vllm.model.maxModelLen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetMaxModelLen()).ToDataRes(types.Int)
+	},
+	"vllm.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"vllm.model.ownedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVllmModel).GetOwnedBy()).ToDataRes(types.String)
 	},
 	"vllm.server.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVllmServer).GetBaseUrl()).ToDataRes(types.String)
@@ -229,6 +256,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vllm.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVllm).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vllm.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllm).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vllm.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).__id, ok = v.Value.(string)
+		return
+	},
+	"vllm.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vllm.model.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).Root, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vllm.model.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vllm.model.maxModelLen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).MaxModelLen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vllm.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vllm.model.ownedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVllmModel).OwnedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vllm.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -376,6 +435,7 @@ type mqlVllm struct {
 	Endpoints plugin.TValue[[]any]
 	Metrics   plugin.TValue[*mqlVllmMetrics]
 	Version   plugin.TValue[string]
+	Models    plugin.TValue[[]any]
 }
 
 // createVllm creates a new instance of this resource
@@ -467,6 +527,96 @@ func (c *mqlVllm) GetVersion() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
 		return c.version()
 	})
+}
+
+func (c *mqlVllm) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vllm", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlVllmModel for the vllm.model resource
+type mqlVllmModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVllmModelInternal it will be used here
+	Id          plugin.TValue[string]
+	Root        plugin.TValue[string]
+	Parent      plugin.TValue[string]
+	MaxModelLen plugin.TValue[int64]
+	Created     plugin.TValue[*time.Time]
+	OwnedBy     plugin.TValue[string]
+}
+
+// createVllmModel creates a new instance of this resource
+func createVllmModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVllmModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vllm.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVllmModel) MqlName() string {
+	return "vllm.model"
+}
+
+func (c *mqlVllmModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVllmModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVllmModel) GetRoot() *plugin.TValue[string] {
+	return &c.Root
+}
+
+func (c *mqlVllmModel) GetParent() *plugin.TValue[string] {
+	return &c.Parent
+}
+
+func (c *mqlVllmModel) GetMaxModelLen() *plugin.TValue[int64] {
+	return &c.MaxModelLen
+}
+
+func (c *mqlVllmModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlVllmModel) GetOwnedBy() *plugin.TValue[string] {
+	return &c.OwnedBy
 }
 
 // mqlVllmServer for the vllm.server resource

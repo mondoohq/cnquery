@@ -17,6 +17,14 @@ vllm.metrics 13.0.1
 vllm.metrics.loadEndpointExposed 13.0.1
 vllm.metrics.loadTrackingVisible 13.0.1
 vllm.metrics.prometheusExposed 13.0.1
+vllm.model 13.0.7
+vllm.model.created 13.0.7
+vllm.model.id 13.0.7
+vllm.model.maxModelLen 13.0.7
+vllm.model.ownedBy 13.0.7
+vllm.model.parent 13.0.7
+vllm.model.root 13.0.7
+vllm.models 13.0.7
 vllm.server 13.0.1
 vllm.server.baseUrl 13.0.1
 vllm.server.corsAllowsAnyOrigin 13.0.1

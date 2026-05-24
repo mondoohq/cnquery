@@ -6,11 +6,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/vllm/resources"
 
 // vLLM inference server
 //
-// Examine the security posture of a remote vLLM HTTP inference server:
-// the server-level summary, the per-endpoint anonymous-access probe
-// results, the minimal metrics-exposure posture, and the reported
-// vLLM version. Used to find vLLM deployments that expose admin,
-// profiler, or metrics endpoints without authentication.
+// Examine the security posture and model inventory of a remote vLLM
+// HTTP inference server: the server-level summary, the per-endpoint
+// anonymous-access probe results, the minimal metrics-exposure posture,
+// the reported vLLM version, and the models loaded for serving.
 vllm {
   // Server-level HTTP posture summary
   server() vllm.server
@@ -20,6 +19,36 @@ vllm {
   metrics() vllm.metrics
   // vLLM server version, if the /version endpoint is observable
   version() string
+  // Models loaded for serving
+  models() []vllm.model
+}
+
+// vLLM served model
+//
+// Examine a model loaded for serving on the vLLM instance. The `id`
+// field is the model identifier as configured at launch (typically a
+// Hugging Face model path such as `meta-llama/Llama-3.1-8B-Instruct`).
+// The `root` field is the underlying model path, and `maxModelLen` is
+// the context window length in tokens configured for this deployment.
+vllm.model @defaults("id maxModelLen") {
+  // Model identifier
+  id string
+  // Underlying model path
+  //
+  // Typically the Hugging Face repository path or a local filesystem
+  // path. May differ from `id` when the model is served under an alias.
+  root string
+  // Parent model identifier
+  //
+  // Set for LoRA adapters to reference the base model they extend.
+  // Empty for base models.
+  parent string
+  // Maximum context window length in tokens
+  maxModelLen int
+  // Model creation timestamp as reported by the server
+  created time
+  // Entity that owns or manages the model
+  ownedBy string
 }
 
 // vLLM server-level HTTP posture

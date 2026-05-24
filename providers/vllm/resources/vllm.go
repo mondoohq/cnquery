@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -89,6 +90,41 @@ func (r *mqlVllm) version() (string, error) {
 		return "", nil
 	}
 	return version, nil
+}
+
+func (r *mqlVllm) models() ([]any, error) {
+	conn, err := vllmConnection(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	cards, err := conn.Models(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(cards))
+	for _, c := range cards {
+		mqlModel, err := CreateResource(r.MqlRuntime, "vllm.model", map[string]*llx.RawData{
+			"__id":        llx.StringData(conn.BaseURL() + "/model/" + c.ID),
+			"id":          llx.StringData(c.ID),
+			"root":        llx.StringData(c.Root),
+			"parent":      llx.StringData(c.Parent),
+			"maxModelLen": llx.IntData(c.MaxModelLen),
+			"created":     llx.TimeData(time.Unix(c.Created, 0)),
+			"ownedBy":     llx.StringData(c.OwnedBy),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlModel)
+	}
+
+	return res, nil
+}
+
+func (r *mqlVllmModel) id() (string, error) {
+	return r.Id.Data, nil
 }
 
 func (s *mqlVllmServer) id() (string, error) {

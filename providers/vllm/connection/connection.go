@@ -218,6 +218,38 @@ func (c *VllmConnection) Version(ctx context.Context) (string, error) {
 	return c.version, c.versionErr
 }
 
+type ModelCard struct {
+	ID          string `json:"id"`
+	Object      string `json:"object"`
+	Created     int64  `json:"created"`
+	OwnedBy     string `json:"owned_by"`
+	Root        string `json:"root"`
+	Parent      string `json:"parent"`
+	MaxModelLen int64  `json:"max_model_len"`
+}
+
+func (c *VllmConnection) Models(ctx context.Context) ([]ModelCard, error) {
+	resp, err := c.Request(ctx, http.MethodGet, "/v1/models", true, "")
+	if err != nil {
+		return nil, fmt.Errorf("vllm: failed to list models: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("vllm: /v1/models returned HTTP %d", resp.StatusCode)
+	}
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+	if err != nil {
+		return nil, err
+	}
+	var parsed struct {
+		Data []ModelCard `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return nil, fmt.Errorf("vllm: failed to parse /v1/models response: %w", err)
+	}
+	return parsed.Data, nil
+}
+
 func (c *VllmConnection) EndpointObservations(ctx context.Context) ([]EndpointObservation, error) {
 	c.endpointsOnce.Do(func() {
 		specs := DefaultEndpointSpecs()
