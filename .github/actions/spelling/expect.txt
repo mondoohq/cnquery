@@ -210,6 +210,7 @@ emerg
 encryptors
 endpointslice
 eni
+entraid
 erlang
 ERPCLOUD
 ethertype
@@ -563,6 +564,7 @@ privsep
 processingjob
 proxmox
 PROXYV
+psa
 psc
 psr
 pti
