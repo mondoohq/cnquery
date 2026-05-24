@@ -550,7 +550,7 @@ func (a *mqlAwsGuarddutyDetector) ipSets() ([]any, error) {
 		resp, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return []any{}, nil
+				return res, nil
 			}
 			return nil, err
 		}
@@ -598,7 +598,7 @@ func (a *mqlAwsGuarddutyDetector) threatIntelSets() ([]any, error) {
 		resp, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return []any{}, nil
+				return res, nil
 			}
 			return nil, err
 		}
