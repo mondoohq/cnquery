@@ -367,12 +367,15 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 	configId := pubsubConfigId(projectId, name)
 
 	var allowedRegions []string
+	var enforceInTransit bool
 	if cfg.MessageStoragePolicy != nil {
 		allowedRegions = cfg.MessageStoragePolicy.AllowedPersistenceRegions
+		enforceInTransit = cfg.MessageStoragePolicy.EnforceInTransit
 	}
 	messageStoragePolicy, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic.config.messagestoragepolicy", map[string]*llx.RawData{
 		"configId":                  llx.StringData(configId),
 		"allowedPersistenceRegions": llx.ArrayData(convert.SliceAnyToInterface(allowedRegions), types.String),
+		"enforceInTransit":          llx.BoolData(enforceInTransit),
 	})
 	if err != nil {
 		return nil, err
@@ -382,14 +385,34 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		return nil, err
 	}
 
+	var ingestionSettings any
+	if cfg.IngestionDataSourceSettings != nil {
+		ingestionSettings, err = convert.JsonToDict(cfg.IngestionDataSourceSettings)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	messageTransforms := make([]any, 0, len(cfg.MessageTransforms))
+	for _, mt := range cfg.MessageTransforms {
+		d, err := convert.JsonToDict(mt)
+		if err != nil {
+			return nil, err
+		}
+		messageTransforms = append(messageTransforms, d)
+	}
+
 	args := map[string]*llx.RawData{
-		"projectId":            llx.StringData(projectId),
-		"topicName":            llx.StringData(name),
-		"labels":               llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
-		"kmsKeyName":           llx.StringData(cfg.KmsKeyName),
-		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
-		"state":                llx.StringData(topicStateToString(cfg.State)),
-		"retentionDuration":    llx.TimeData(pbDurationToTime(cfg.MessageRetentionDuration)),
+		"projectId":                   llx.StringData(projectId),
+		"topicName":                   llx.StringData(name),
+		"labels":                      llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"kmsKeyName":                  llx.StringData(cfg.KmsKeyName),
+		"messageStoragePolicy":        llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
+		"state":                       llx.StringData(topicStateToString(cfg.State)),
+		"retentionDuration":           llx.TimeData(pbDurationToTime(cfg.MessageRetentionDuration)),
+		"satisfiesPzs":                llx.BoolData(cfg.SatisfiesPzs),
+		"ingestionDataSourceSettings": llx.DictData(ingestionSettings),
+		"messageTransforms":           llx.ArrayData(messageTransforms, types.Dict),
 	}
 	if schemaSettings != nil {
 		args["schemaSettings"] = llx.ResourceData(schemaSettings, "gcp.project.pubsubService.topic.config.schemaSettings")

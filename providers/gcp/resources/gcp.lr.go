@@ -6193,6 +6193,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.topic.config.schemaSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetSchemaSettings()).ToDataRes(types.Resource("gcp.project.pubsubService.topic.config.schemaSettings"))
 	},
+	"gcp.project.pubsubService.topic.config.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.pubsubService.topic.config.ingestionDataSourceSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetIngestionDataSourceSettings()).ToDataRes(types.Dict)
+	},
+	"gcp.project.pubsubService.topic.config.messageTransforms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetMessageTransforms()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.pubsubService.topic.config.schemaSettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings).GetId()).ToDataRes(types.String)
 	},
@@ -6216,6 +6225,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.allowedPersistenceRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).GetAllowedPersistenceRegions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.pubsubService.topic.config.messagestoragepolicy.enforceInTransit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).GetEnforceInTransit()).ToDataRes(types.Bool)
 	},
 	"gcp.project.pubsubService.subscription.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscription).GetProjectId()).ToDataRes(types.String)
@@ -20367,6 +20379,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceTopicConfig).SchemaSettings, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.topic.config.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopicConfig).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.topic.config.ingestionDataSourceSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopicConfig).IngestionDataSourceSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.topic.config.messageTransforms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopicConfig).MessageTransforms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.topic.config.schemaSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings).__id, ok = v.Value.(string)
 		return
@@ -20405,6 +20429,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.topic.config.messagestoragepolicy.allowedPersistenceRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).AllowedPersistenceRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.topic.config.messagestoragepolicy.enforceInTransit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy).EnforceInTransit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46814,15 +46842,18 @@ type mqlGcpProjectPubsubServiceTopicConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceTopicConfigInternal it will be used here
-	ProjectId            plugin.TValue[string]
-	TopicName            plugin.TValue[string]
-	Labels               plugin.TValue[map[string]any]
-	KmsKeyName           plugin.TValue[string]
-	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	MessageStoragePolicy plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy]
-	State                plugin.TValue[string]
-	RetentionDuration    plugin.TValue[*time.Time]
-	SchemaSettings       plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings]
+	ProjectId                   plugin.TValue[string]
+	TopicName                   plugin.TValue[string]
+	Labels                      plugin.TValue[map[string]any]
+	KmsKeyName                  plugin.TValue[string]
+	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	MessageStoragePolicy        plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy]
+	State                       plugin.TValue[string]
+	RetentionDuration           plugin.TValue[*time.Time]
+	SchemaSettings              plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings]
+	SatisfiesPzs                plugin.TValue[bool]
+	IngestionDataSourceSettings plugin.TValue[any]
+	MessageTransforms           plugin.TValue[[]any]
 }
 
 // createGcpProjectPubsubServiceTopicConfig creates a new instance of this resource
@@ -46908,6 +46939,18 @@ func (c *mqlGcpProjectPubsubServiceTopicConfig) GetRetentionDuration() *plugin.T
 
 func (c *mqlGcpProjectPubsubServiceTopicConfig) GetSchemaSettings() *plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings] {
 	return &c.SchemaSettings
+}
+
+func (c *mqlGcpProjectPubsubServiceTopicConfig) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectPubsubServiceTopicConfig) GetIngestionDataSourceSettings() *plugin.TValue[any] {
+	return &c.IngestionDataSourceSettings
+}
+
+func (c *mqlGcpProjectPubsubServiceTopicConfig) GetMessageTransforms() *plugin.TValue[[]any] {
+	return &c.MessageTransforms
 }
 
 // mqlGcpProjectPubsubServiceTopicConfigSchemaSettings for the gcp.project.pubsubService.topic.config.schemaSettings resource
@@ -47003,6 +47046,7 @@ type mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy struct {
 	// optional: if you define mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicyInternal it will be used here
 	ConfigId                  plugin.TValue[string]
 	AllowedPersistenceRegions plugin.TValue[[]any]
+	EnforceInTransit          plugin.TValue[bool]
 }
 
 // createGcpProjectPubsubServiceTopicConfigMessagestoragepolicy creates a new instance of this resource
@@ -47048,6 +47092,10 @@ func (c *mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy) GetConfigId(
 
 func (c *mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy) GetAllowedPersistenceRegions() *plugin.TValue[[]any] {
 	return &c.AllowedPersistenceRegions
+}
+
+func (c *mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy) GetEnforceInTransit() *plugin.TValue[bool] {
+	return &c.EnforceInTransit
 }
 
 // mqlGcpProjectPubsubServiceSubscription for the gcp.project.pubsubService.subscription resource

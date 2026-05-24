@@ -3778,6 +3778,20 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   retentionDuration time
   // Schema validation settings for published messages
   schemaSettings gcp.project.pubsubService.topic.config.schemaSettings
+  // Whether the topic satisfies Physical Zone Separation (PZS) compliance
+  satisfiesPzs bool
+  // Ingestion data source settings
+  //
+  // Configuration for ingesting messages into the topic from an external
+  // source. Supported sources include AWS Kinesis, AWS MSK, Azure Event Hubs,
+  // Confluent Cloud, and Apache Kafka on Cloud Storage. Null when no
+  // ingestion source is configured.
+  ingestionDataSourceSettings dict
+  // Message transformation pipeline
+  //
+  // Ordered list of transforms applied to messages published to the topic,
+  // each typically backed by a JavaScript user-defined function (UDF).
+  messageTransforms []dict
 }
 
 // Google Cloud (GCP) Pub/Sub topic schema settings
@@ -3802,6 +3816,12 @@ private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("a
   configId string
   // List of GCP regions where messages published to the topic can persist in storage
   allowedPersistenceRegions []string
+  // Whether allowedPersistenceRegions also restricts in-transit message routing
+  //
+  // When true, publish operations on the topic and subscribe operations on
+  // any of its subscriptions fail when invoked from a region not listed in
+  // allowedPersistenceRegions.
+  enforceInTransit bool
 }
 
 // Google Cloud (GCP) Pub/Sub subscription
