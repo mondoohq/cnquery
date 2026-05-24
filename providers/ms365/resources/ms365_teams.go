@@ -123,8 +123,14 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 	r.teamsReportLock.Lock()
 	defer r.teamsReportLock.Unlock()
 
+	// only fetch once
+	if r.fetched {
+		return r.fetchErr
+	}
+
 	errHandler := func(err error) error {
 		r.fetchErr = err
+		r.fetched = true
 		return err
 	}
 
@@ -256,6 +262,7 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		r.CsTeamsMessagingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]{State: plugin.StateIsSet, Error: errors.New("CsTeamsMessagingPolicy is nil")}
 	}
 
+	r.fetched = true
 	return nil
 }
 

@@ -9,8 +9,6 @@ import (
 	"fmt"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
-	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
 	"github.com/microsoftgraph/msgraph-sdk-go/devices"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/rs/zerolog/log"
@@ -52,13 +50,8 @@ func (a *mqlMicrosoftDevices) list() ([]any, error) {
 		return nil, err
 	}
 
-	betaClient, err := conn.BetaGraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	// Index of devices are stored inside the top level resource `microsoft`, just like
-	// MFA response. Here we create or get the resource to access those internals
+	// Index of devices are stored inside the top level resource `microsoft`, so
+	// we create or get the resource to access those internals.
 	mainResource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -112,36 +105,6 @@ func (a *mqlMicrosoftDevices) list() ([]any, error) {
 	)
 	if err != nil {
 		return nil, transformError(err)
-	}
-
-	detailsResp, err := betaClient.
-		Reports().
-		AuthenticationMethods().
-		UserRegistrationDetails().
-		Get(ctx,
-			&reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
-				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
-					Top: &top,
-				},
-			})
-	// we do not want to fail the device fetching here, this likely means the tenant does not have the right license
-	if err != nil {
-		microsoft.mfaResp = mfaResp{err: err}
-	} else {
-		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betamodels.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
-		// we do not want to fail the device fetching here, this likely means the tenant does not have the right license
-		if err != nil {
-			microsoft.mfaResp = mfaResp{err: err}
-		} else {
-			mfaMap := map[string]bool{}
-			for _, u := range userRegistrationDetails {
-				if u.GetId() == nil || u.GetIsMfaRegistered() == nil {
-					continue
-				}
-				mfaMap[*u.GetId()] = *u.GetIsMfaRegistered()
-			}
-			microsoft.mfaResp = mfaResp{mfaMap: mfaMap}
-		}
 	}
 
 	// construct the result
