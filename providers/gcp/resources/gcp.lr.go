@@ -3595,6 +3595,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.workloadIdentityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetWorkloadIdentityConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.computeService.instance.instanceEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetInstanceEncryptionKey()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.sourceMachineImageEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetSourceMachineImageEncryptionKey()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.advancedMachineFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetAdvancedMachineFeatures()).ToDataRes(types.Dict)
+	},
 	"gcp.project.computeService.instance.inventory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetInventory()).ToDataRes(types.Resource("gcp.project.computeService.instance.osInventory"))
 	},
@@ -3702,6 +3711,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.disk.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.computeService.disk.sourceImageEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceImageEncryptionKey()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.disk.sourceSnapshotEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceSnapshotEncryptionKey()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.disk.asyncPrimaryDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetAsyncPrimaryDisk()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.disk.asyncSecondaryDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetAsyncSecondaryDisks()).ToDataRes(types.Dict)
 	},
 	"gcp.project.computeService.disk.enableConfidentialCompute": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetEnableConfidentialCompute()).ToDataRes(types.Bool)
@@ -4060,6 +4081,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.network.firewallPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetFirewallPolicy()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.network.networkProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetNetworkProfile()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.ipv4Range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetIpv4Range()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.subnetwork.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetId()).ToDataRes(types.String)
 	},
@@ -4134,6 +4161,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.subnetwork.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.computeService.subnetwork.allowSubnetCidrRoutesOverlap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetAllowSubnetCidrRoutesOverlap()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.subnetwork.secondaryIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetSecondaryIpRanges()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.computeService.subnetwork.logConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).GetId()).ToDataRes(types.String)
@@ -16668,6 +16701,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstance).WorkloadIdentityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.instanceEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).InstanceEncryptionKey, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.sourceMachineImageEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).SourceMachineImageEncryptionKey, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.advancedMachineFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).AdvancedMachineFeatures, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.inventory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).Inventory, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceInstanceOsInventory](v.Value, v.Error)
 		return
@@ -16834,6 +16879,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.disk.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceDisk).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.sourceImageEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SourceImageEncryptionKey, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.sourceSnapshotEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SourceSnapshotEncryptionKey, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.asyncPrimaryDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).AsyncPrimaryDisk, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.asyncSecondaryDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).AsyncSecondaryDisks, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.disk.enableConfidentialCompute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17332,6 +17393,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceNetwork).FirewallPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.network.networkProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).NetworkProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.ipv4Range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).Ipv4Range, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.subnetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSubnetwork).__id, ok = v.Value.(string)
 		return
@@ -17434,6 +17503,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.subnetwork.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSubnetwork).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.subnetwork.allowSubnetCidrRoutesOverlap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSubnetwork).AllowSubnetCidrRoutesOverlap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.subnetwork.secondaryIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSubnetwork).SecondaryIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.subnetwork.logConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38220,6 +38297,9 @@ type mqlGcpProjectComputeServiceInstance struct {
 	SatisfiesPzi                    plugin.TValue[bool]
 	SatisfiesPzs                    plugin.TValue[bool]
 	WorkloadIdentityConfig          plugin.TValue[any]
+	InstanceEncryptionKey           plugin.TValue[any]
+	SourceMachineImageEncryptionKey plugin.TValue[any]
+	AdvancedMachineFeatures         plugin.TValue[any]
 	Inventory                       plugin.TValue[*mqlGcpProjectComputeServiceInstanceOsInventory]
 	VulnerabilityReport             plugin.TValue[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport]
 }
@@ -38487,6 +38567,18 @@ func (c *mqlGcpProjectComputeServiceInstance) GetSatisfiesPzs() *plugin.TValue[b
 
 func (c *mqlGcpProjectComputeServiceInstance) GetWorkloadIdentityConfig() *plugin.TValue[any] {
 	return &c.WorkloadIdentityConfig
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetInstanceEncryptionKey() *plugin.TValue[any] {
+	return &c.InstanceEncryptionKey
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetSourceMachineImageEncryptionKey() *plugin.TValue[any] {
+	return &c.SourceMachineImageEncryptionKey
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetAdvancedMachineFeatures() *plugin.TValue[any] {
+	return &c.AdvancedMachineFeatures
 }
 
 func (c *mqlGcpProjectComputeServiceInstance) GetInventory() *plugin.TValue[*mqlGcpProjectComputeServiceInstanceOsInventory] {
@@ -38821,38 +38913,42 @@ type mqlGcpProjectComputeServiceDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectComputeServiceDiskInternal
-	Id                        plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	Architecture              plugin.TValue[string]
-	Description               plugin.TValue[string]
-	GuestOsFeatures           plugin.TValue[[]any]
-	Labels                    plugin.TValue[map[string]any]
-	LastAttachTimestamp       plugin.TValue[*time.Time]
-	LastDetachTimestamp       plugin.TValue[*time.Time]
-	Licenses                  plugin.TValue[[]any]
-	LocationHint              plugin.TValue[string]
-	PhysicalBlockSizeBytes    plugin.TValue[int64]
-	ProvisionedIops           plugin.TValue[int64]
-	SizeGb                    plugin.TValue[int64]
-	Status                    plugin.TValue[string]
-	Zone                      plugin.TValue[*mqlGcpProjectComputeServiceZone]
-	Created                   plugin.TValue[*time.Time]
-	DiskEncryptionKey         plugin.TValue[any]
-	KmsKey                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	EnableConfidentialCompute plugin.TValue[bool]
-	Type                      plugin.TValue[string]
-	Users                     plugin.TValue[[]any]
-	AccessMode                plugin.TValue[string]
-	SourceImage               plugin.TValue[*mqlGcpProjectComputeServiceImage]
-	SourceSnapshot            plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
-	ProvisionedThroughput     plugin.TValue[int64]
-	StoragePool               plugin.TValue[*mqlGcpProjectComputeServiceStoragePool]
-	Region                    plugin.TValue[string]
-	ReplicaZones              plugin.TValue[[]any]
-	ResourcePolicies          plugin.TValue[[]any]
-	SatisfiesPzi              plugin.TValue[bool]
-	SatisfiesPzs              plugin.TValue[bool]
-	SourceDisk                plugin.TValue[*mqlGcpProjectComputeServiceDisk]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Architecture                plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	GuestOsFeatures             plugin.TValue[[]any]
+	Labels                      plugin.TValue[map[string]any]
+	LastAttachTimestamp         plugin.TValue[*time.Time]
+	LastDetachTimestamp         plugin.TValue[*time.Time]
+	Licenses                    plugin.TValue[[]any]
+	LocationHint                plugin.TValue[string]
+	PhysicalBlockSizeBytes      plugin.TValue[int64]
+	ProvisionedIops             plugin.TValue[int64]
+	SizeGb                      plugin.TValue[int64]
+	Status                      plugin.TValue[string]
+	Zone                        plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	Created                     plugin.TValue[*time.Time]
+	DiskEncryptionKey           plugin.TValue[any]
+	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	SourceImageEncryptionKey    plugin.TValue[any]
+	SourceSnapshotEncryptionKey plugin.TValue[any]
+	AsyncPrimaryDisk            plugin.TValue[any]
+	AsyncSecondaryDisks         plugin.TValue[any]
+	EnableConfidentialCompute   plugin.TValue[bool]
+	Type                        plugin.TValue[string]
+	Users                       plugin.TValue[[]any]
+	AccessMode                  plugin.TValue[string]
+	SourceImage                 plugin.TValue[*mqlGcpProjectComputeServiceImage]
+	SourceSnapshot              plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
+	ProvisionedThroughput       plugin.TValue[int64]
+	StoragePool                 plugin.TValue[*mqlGcpProjectComputeServiceStoragePool]
+	Region                      plugin.TValue[string]
+	ReplicaZones                plugin.TValue[[]any]
+	ResourcePolicies            plugin.TValue[[]any]
+	SatisfiesPzi                plugin.TValue[bool]
+	SatisfiesPzs                plugin.TValue[bool]
+	SourceDisk                  plugin.TValue[*mqlGcpProjectComputeServiceDisk]
 }
 
 // createGcpProjectComputeServiceDisk creates a new instance of this resource
@@ -38974,6 +39070,22 @@ func (c *mqlGcpProjectComputeServiceDisk) GetKmsKey() *plugin.TValue[*mqlGcpProj
 
 		return c.kmsKey()
 	})
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSourceImageEncryptionKey() *plugin.TValue[any] {
+	return &c.SourceImageEncryptionKey
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSourceSnapshotEncryptionKey() *plugin.TValue[any] {
+	return &c.SourceSnapshotEncryptionKey
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetAsyncPrimaryDisk() *plugin.TValue[any] {
+	return &c.AsyncPrimaryDisk
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetAsyncSecondaryDisks() *plugin.TValue[any] {
+	return &c.AsyncSecondaryDisks
 }
 
 func (c *mqlGcpProjectComputeServiceDisk) GetEnableConfidentialCompute() *plugin.TValue[bool] {
@@ -39828,6 +39940,8 @@ type mqlGcpProjectComputeServiceNetwork struct {
 	Subnetworks                           plugin.TValue[[]any]
 	InternalIpv6Range                     plugin.TValue[string]
 	FirewallPolicy                        plugin.TValue[string]
+	NetworkProfile                        plugin.TValue[string]
+	Ipv4Range                             plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceNetwork creates a new instance of this resource
@@ -39969,36 +40083,46 @@ func (c *mqlGcpProjectComputeServiceNetwork) GetFirewallPolicy() *plugin.TValue[
 	return &c.FirewallPolicy
 }
 
+func (c *mqlGcpProjectComputeServiceNetwork) GetNetworkProfile() *plugin.TValue[string] {
+	return &c.NetworkProfile
+}
+
+func (c *mqlGcpProjectComputeServiceNetwork) GetIpv4Range() *plugin.TValue[string] {
+	return &c.Ipv4Range
+}
+
 // mqlGcpProjectComputeServiceSubnetwork for the gcp.project.computeService.subnetwork resource
 type mqlGcpProjectComputeServiceSubnetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceSubnetworkInternal it will be used here
-	Id                      plugin.TValue[string]
-	ProjectId               plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Description             plugin.TValue[string]
-	EnableFlowLogs          plugin.TValue[bool]
-	ExternalIpv6Prefix      plugin.TValue[string]
-	Fingerprint             plugin.TValue[string]
-	GatewayAddress          plugin.TValue[string]
-	InternalIpv6Prefix      plugin.TValue[string]
-	IpCidrRange             plugin.TValue[string]
-	Ipv6AccessType          plugin.TValue[string]
-	Ipv6CidrRange           plugin.TValue[string]
-	LogConfig               plugin.TValue[*mqlGcpProjectComputeServiceSubnetworkLogConfig]
-	PrivateIpGoogleAccess   plugin.TValue[bool]
-	PrivateIpv6GoogleAccess plugin.TValue[string]
-	Purpose                 plugin.TValue[string]
-	Region                  plugin.TValue[*mqlGcpProjectComputeServiceRegion]
-	RegionUrl               plugin.TValue[string]
-	Role                    plugin.TValue[string]
-	StackType               plugin.TValue[string]
-	State                   plugin.TValue[string]
-	Created                 plugin.TValue[*time.Time]
-	ReservedInternalRange   plugin.TValue[string]
-	NetworkUrl              plugin.TValue[string]
-	Network                 plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Id                           plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	EnableFlowLogs               plugin.TValue[bool]
+	ExternalIpv6Prefix           plugin.TValue[string]
+	Fingerprint                  plugin.TValue[string]
+	GatewayAddress               plugin.TValue[string]
+	InternalIpv6Prefix           plugin.TValue[string]
+	IpCidrRange                  plugin.TValue[string]
+	Ipv6AccessType               plugin.TValue[string]
+	Ipv6CidrRange                plugin.TValue[string]
+	LogConfig                    plugin.TValue[*mqlGcpProjectComputeServiceSubnetworkLogConfig]
+	PrivateIpGoogleAccess        plugin.TValue[bool]
+	PrivateIpv6GoogleAccess      plugin.TValue[string]
+	Purpose                      plugin.TValue[string]
+	Region                       plugin.TValue[*mqlGcpProjectComputeServiceRegion]
+	RegionUrl                    plugin.TValue[string]
+	Role                         plugin.TValue[string]
+	StackType                    plugin.TValue[string]
+	State                        plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	ReservedInternalRange        plugin.TValue[string]
+	NetworkUrl                   plugin.TValue[string]
+	Network                      plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	AllowSubnetCidrRoutesOverlap plugin.TValue[bool]
+	SecondaryIpRanges            plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceSubnetwork creates a new instance of this resource
@@ -40160,6 +40284,14 @@ func (c *mqlGcpProjectComputeServiceSubnetwork) GetNetwork() *plugin.TValue[*mql
 
 		return c.network()
 	})
+}
+
+func (c *mqlGcpProjectComputeServiceSubnetwork) GetAllowSubnetCidrRoutesOverlap() *plugin.TValue[bool] {
+	return &c.AllowSubnetCidrRoutesOverlap
+}
+
+func (c *mqlGcpProjectComputeServiceSubnetwork) GetSecondaryIpRanges() *plugin.TValue[[]any] {
+	return &c.SecondaryIpRanges
 }
 
 // mqlGcpProjectComputeServiceSubnetworkLogConfig for the gcp.project.computeService.subnetwork.logConfig resource

@@ -1346,6 +1346,32 @@ gcp.project.computeService.instance @defaults("name id") {
   satisfiesPzs bool
   // Workload identity configuration for the instance
   workloadIdentityConfig dict
+  // Customer-supplied or KMS-backed encryption key for instance suspend state and Local SSDs
+  //
+  // Examines the key material that protects suspended data and Local
+  // SSD storage attached to the instance: `kmsKeyName` for
+  // customer-managed KMS keys, `kmsKeyServiceAccount` for the service
+  // account used against the KMS key, `rawKey` / `rsaEncryptedKey` for
+  // customer-supplied encryption keys (CSEK), and `sha256` of the
+  // supplied key. Null when the instance has no instance-level
+  // encryption key configured (Google-managed encryption).
+  instanceEncryptionKey dict
+  // Encryption key used to decrypt the source machine image when the instance was created from one
+  //
+  // Same shape as `instanceEncryptionKey`: `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
+  // Useful for tracking encryption lineage from the source machine
+  // image into the instance.
+  sourceMachineImageEncryptionKey dict
+  // Advanced machine features controlling BIOS-level behavior
+  //
+  // Surfaces options usually configured in a BIOS:
+  // `enableNestedVirtualization`, `enableUefiNetworking`,
+  // `threadsPerCore` (set to 1 to disable SMT), `visibleCoreCount`
+  // (number of physical cores exposed), and
+  // `performanceMonitoringUnit` (one of ARCHITECTURAL, ENHANCED,
+  // STANDARD, or PERFORMANCE_MONITORING_UNIT_UNSPECIFIED).
+  advancedMachineFeatures dict
   // VM Manager OS inventory of installed packages and operating system details
   inventory() gcp.project.computeService.instance.osInventory
   // VM Manager vulnerability report for the instance
@@ -1475,6 +1501,35 @@ private gcp.project.computeService.disk @defaults("name") {
   diskEncryptionKey dict
   // Customer-managed KMS key used for disk encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Encryption key used to decrypt the source image when the disk was created from one
+  //
+  // Same shape as `diskEncryptionKey`: `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
+  // Useful for auditing encryption lineage from the source image into
+  // the disk.
+  sourceImageEncryptionKey dict
+  // Encryption key used to decrypt the source snapshot when the disk was created from one
+  //
+  // Same shape as `diskEncryptionKey`: `kmsKeyName`,
+  // `kmsKeyServiceAccount`, `rawKey`, `rsaEncryptedKey`, `sha256`.
+  // Useful for auditing encryption lineage from the source snapshot
+  // into the disk.
+  sourceSnapshotEncryptionKey dict
+  // Primary of the async replication pair when this disk is a secondary
+  //
+  // Surfaces the replication primary for an asynchronously replicated
+  // disk: `disk` (the URL of the primary disk that replicates into
+  // this one), `consistencyGroupPolicy` (the disk consistency group
+  // policy URL when replication started as part of a group), and
+  // `consistencyGroupPolicyId`. Null when this disk is not an async
+  // replication secondary.
+  asyncPrimaryDisk dict
+  // Secondaries that this disk asynchronously replicates to, keyed by zone or region
+  //
+  // Map keyed by the destination scope (for example a zone URL); each
+  // value carries an `asyncReplicationDisk` entry with `disk`,
+  // `consistencyGroupPolicy`, and `consistencyGroupPolicyId`.
+  asyncSecondaryDisks dict
   // Whether the disk uses confidential compute mode encryption
   enableConfidentialCompute bool
   // URL of the disk type resource (e.g., pd-standard, pd-ssd, pd-balanced)
@@ -1770,6 +1825,14 @@ gcp.project.computeService.network @defaults("name") {
   internalIpv6Range string
   // URL of the firewall policy applied to this network
   firewallPolicy string
+  // URL of the network profile applied to this network
+  networkProfile string
+  // Legacy single-region IPv4 range for non-subnetted networks
+  //
+  // Only present on legacy (pre-subnet-mode) networks. Subnet-mode
+  // VPC networks should leave this empty; a non-empty value flags
+  // a legacy network kept around for backward compatibility.
+  ipv4Range string
 }
 
 // Google Cloud VPC subnetwork
@@ -1838,6 +1901,15 @@ gcp.project.computeService.subnetwork @defaults("name") {
   networkUrl @maturity("deprecated") string
   // Parent VPC network this subnetwork belongs to
   network() gcp.project.computeService.network
+  // Whether subnet CIDR routes are allowed to overlap with routes installed by other subnets
+  allowSubnetCidrRoutesOverlap bool
+  // Secondary IP ranges configured on the subnet for alias IP / IPv6 ranges
+  //
+  // Each entry carries `rangeName`, `ipCidrRange`, and
+  // `reservedInternalRange`. Secondary ranges are commonly used by GKE
+  // for Pods and Services and by other workloads that need additional
+  // alias IP allocations beyond the primary `ipCidrRange`.
+  secondaryIpRanges []dict
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration

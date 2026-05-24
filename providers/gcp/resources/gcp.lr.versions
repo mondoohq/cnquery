@@ -1373,6 +1373,8 @@ gcp.project.computeService.backendServices 9.0.0
 gcp.project.computeService.disk 9.0.0
 gcp.project.computeService.disk.accessMode 11.6.6
 gcp.project.computeService.disk.architecture 9.0.0
+gcp.project.computeService.disk.asyncPrimaryDisk 13.16.3
+gcp.project.computeService.disk.asyncSecondaryDisks 13.16.3
 gcp.project.computeService.disk.created 9.0.0
 gcp.project.computeService.disk.description 9.0.0
 gcp.project.computeService.disk.diskEncryptionKey 9.0.0
@@ -1397,7 +1399,9 @@ gcp.project.computeService.disk.satisfiesPzs 13.1.2
 gcp.project.computeService.disk.sizeGb 9.0.0
 gcp.project.computeService.disk.sourceDisk 13.1.2
 gcp.project.computeService.disk.sourceImage 11.6.6
+gcp.project.computeService.disk.sourceImageEncryptionKey 13.16.3
 gcp.project.computeService.disk.sourceSnapshot 11.6.6
+gcp.project.computeService.disk.sourceSnapshotEncryptionKey 13.16.3
 gcp.project.computeService.disk.status 9.0.0
 gcp.project.computeService.disk.storagePool 11.6.6
 gcp.project.computeService.disk.type 11.6.6
@@ -1556,6 +1560,7 @@ gcp.project.computeService.image.status 9.0.0
 gcp.project.computeService.image.storageLocations 13.1.2
 gcp.project.computeService.images 9.0.0
 gcp.project.computeService.instance 9.0.0
+gcp.project.computeService.instance.advancedMachineFeatures 13.16.3
 gcp.project.computeService.instance.blockProjectSshKeysEnabled 13.12.2
 gcp.project.computeService.instance.canIpForward 9.0.0
 gcp.project.computeService.instance.confidentialCompute 13.16.3
@@ -1577,6 +1582,7 @@ gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2
 gcp.project.computeService.instance.hasPublicIp 13.12.2
 gcp.project.computeService.instance.hostname 9.0.0
 gcp.project.computeService.instance.id 9.0.0
+gcp.project.computeService.instance.instanceEncryptionKey 13.16.3
 gcp.project.computeService.instance.inventory 13.15.1
 gcp.project.computeService.instance.keyRevocationActionType 9.0.0
 gcp.project.computeService.instance.labels 9.0.0
@@ -1611,6 +1617,7 @@ gcp.project.computeService.instance.shieldedInstanceConfig.enableVtpm 11.6.3
 gcp.project.computeService.instance.shieldedInstanceConfig.id 11.6.3
 gcp.project.computeService.instance.shieldedInstanceIntegrityPolicy 13.7.2
 gcp.project.computeService.instance.sourceMachineImage 9.0.0
+gcp.project.computeService.instance.sourceMachineImageEncryptionKey 13.16.3
 gcp.project.computeService.instance.startRestricted 9.0.0
 gcp.project.computeService.instance.status 9.0.0
 gcp.project.computeService.instance.statusMessage 9.0.0
@@ -1747,12 +1754,14 @@ gcp.project.computeService.network.firewallPolicy 11.6.6
 gcp.project.computeService.network.gatewayIPv4 9.0.0
 gcp.project.computeService.network.id 9.0.0
 gcp.project.computeService.network.internalIpv6Range 11.6.6
+gcp.project.computeService.network.ipv4Range 13.16.3
 gcp.project.computeService.network.legacy 13.12.2
 gcp.project.computeService.network.mode 9.0.0
 gcp.project.computeService.network.mtu 9.0.0
 gcp.project.computeService.network.name 9.0.0
 gcp.project.computeService.network.networkFirewallPolicyEnforcementOrder 9.0.0
 gcp.project.computeService.network.networkPeerings 11.6.6
+gcp.project.computeService.network.networkProfile 13.16.3
 gcp.project.computeService.network.peering 11.6.6
 gcp.project.computeService.network.peering.autoCreateRoutes 11.6.6
 gcp.project.computeService.network.peering.exchangeSubnetRoutes 11.6.6
@@ -2018,6 +2027,7 @@ gcp.project.computeService.storagePool.storagePoolType 11.6.6
 gcp.project.computeService.storagePool.zone 11.6.6
 gcp.project.computeService.storagePools 11.6.6
 gcp.project.computeService.subnetwork 9.0.0
+gcp.project.computeService.subnetwork.allowSubnetCidrRoutesOverlap 13.16.3
 gcp.project.computeService.subnetwork.created 9.0.0
 gcp.project.computeService.subnetwork.description 9.0.0
 gcp.project.computeService.subnetwork.enableFlowLogs 9.0.0
@@ -2048,6 +2058,7 @@ gcp.project.computeService.subnetwork.region 9.0.0
 gcp.project.computeService.subnetwork.regionUrl 9.0.0
 gcp.project.computeService.subnetwork.reservedInternalRange 11.6.6
 gcp.project.computeService.subnetwork.role 9.0.0
+gcp.project.computeService.subnetwork.secondaryIpRanges 13.16.3
 gcp.project.computeService.subnetwork.stackType 9.0.0
 gcp.project.computeService.subnetwork.state 9.0.0
 gcp.project.computeService.subnetworks 9.0.0

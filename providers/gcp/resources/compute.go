@@ -661,6 +661,20 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		}
 	}
 
+	mqlInstanceEncryptionKey := customerEncryptionKeyToDict(instance.InstanceEncryptionKey)
+	mqlSourceMachineImageEncryptionKey := customerEncryptionKeyToDict(instance.SourceMachineImageEncryptionKey)
+
+	var mqlAdvancedMachineFeatures map[string]any
+	if instance.AdvancedMachineFeatures != nil {
+		mqlAdvancedMachineFeatures = map[string]any{
+			"enableNestedVirtualization": instance.AdvancedMachineFeatures.EnableNestedVirtualization,
+			"enableUefiNetworking":       instance.AdvancedMachineFeatures.EnableUefiNetworking,
+			"threadsPerCore":             instance.AdvancedMachineFeatures.ThreadsPerCore,
+			"visibleCoreCount":           instance.AdvancedMachineFeatures.VisibleCoreCount,
+			"performanceMonitoringUnit":  instance.AdvancedMachineFeatures.PerformanceMonitoringUnit,
+		}
+	}
+
 	reservationAffinity, err := convert.JsonToDict(instance.ReservationAffinity)
 	if err != nil {
 		return nil, err
@@ -764,6 +778,9 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"satisfiesPzi":                    llx.BoolData(instance.SatisfiesPzi),
 		"satisfiesPzs":                    llx.BoolData(instance.SatisfiesPzs),
 		"workloadIdentityConfig":          llx.DictData(mqlWorkloadIdentityConfig),
+		"instanceEncryptionKey":           llx.DictData(mqlInstanceEncryptionKey),
+		"sourceMachineImageEncryptionKey": llx.DictData(mqlSourceMachineImageEncryptionKey),
+		"advancedMachineFeatures":         llx.DictData(mqlAdvancedMachineFeatures),
 	})
 	if err != nil {
 		return nil, err
@@ -956,6 +973,22 @@ func (g *mqlGcpProjectComputeServiceDisk) storagePool() (*mqlGcpProjectComputeSe
 	return res.(*mqlGcpProjectComputeServiceStoragePool), nil
 }
 
+// customerEncryptionKeyToDict converts a Compute Engine CustomerEncryptionKey to a dict
+// shape: {kmsKeyName, kmsKeyServiceAccount, rawKey, rsaEncryptedKey, sha256}. Returns
+// nil when the key is nil so the field surfaces as null in MQL.
+func customerEncryptionKeyToDict(key *compute.CustomerEncryptionKey) map[string]any {
+	if key == nil {
+		return nil
+	}
+	return map[string]any{
+		"kmsKeyName":           key.KmsKeyName,
+		"kmsKeyServiceAccount": key.KmsKeyServiceAccount,
+		"rawKey":               key.RawKey,
+		"rsaEncryptedKey":      key.RsaEncryptedKey,
+		"sha256":               key.Sha256,
+	}
+}
+
 func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
@@ -1016,45 +1049,69 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					guestOsFeatures = append(guestOsFeatures, entry.Type)
 				}
 
-				var mqlDiskEnc map[string]any
-				if disk.DiskEncryptionKey != nil {
-					mqlDiskEnc = map[string]any{
-						"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
-						"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
-						"rawKey":               disk.DiskEncryptionKey.RawKey,
-						"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
-						"sha256":               disk.DiskEncryptionKey.Sha256,
+				mqlDiskEnc := customerEncryptionKeyToDict(disk.DiskEncryptionKey)
+				mqlSourceImageEnc := customerEncryptionKeyToDict(disk.SourceImageEncryptionKey)
+				mqlSourceSnapshotEnc := customerEncryptionKeyToDict(disk.SourceSnapshotEncryptionKey)
+
+				var mqlAsyncPrimary map[string]any
+				if disk.AsyncPrimaryDisk != nil {
+					mqlAsyncPrimary = map[string]any{
+						"disk":                     disk.AsyncPrimaryDisk.Disk,
+						"consistencyGroupPolicy":   disk.AsyncPrimaryDisk.ConsistencyGroupPolicy,
+						"consistencyGroupPolicyId": disk.AsyncPrimaryDisk.ConsistencyGroupPolicyId,
+					}
+				}
+
+				var mqlAsyncSecondaries map[string]any
+				if len(disk.AsyncSecondaryDisks) > 0 {
+					mqlAsyncSecondaries = make(map[string]any, len(disk.AsyncSecondaryDisks))
+					for scope, entry := range disk.AsyncSecondaryDisks {
+						var inner map[string]any
+						if entry.AsyncReplicationDisk != nil {
+							inner = map[string]any{
+								"disk":                     entry.AsyncReplicationDisk.Disk,
+								"consistencyGroupPolicy":   entry.AsyncReplicationDisk.ConsistencyGroupPolicy,
+								"consistencyGroupPolicyId": entry.AsyncReplicationDisk.ConsistencyGroupPolicyId,
+							}
+						}
+						mqlAsyncSecondaries[scope] = map[string]any{
+							"asyncReplicationDisk": inner,
+						}
 					}
 				}
 
 				mqlDisk, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-					"id":                        llx.StringData(strconv.FormatUint(disk.Id, 10)),
-					"name":                      llx.StringData(disk.Name),
-					"architecture":              llx.StringData(disk.Architecture),
-					"description":               llx.StringData(disk.Description),
-					"guestOsFeatures":           llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
-					"labels":                    llx.MapData(convert.MapToInterfaceMap(disk.Labels), types.String),
-					"lastAttachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastAttachTimestamp)),
-					"lastDetachTimestamp":       llx.TimeDataPtr(parseTime(disk.LastDetachTimestamp)),
-					"locationHint":              llx.StringData(disk.LocationHint),
-					"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(disk.Licenses), types.String),
-					"physicalBlockSizeBytes":    llx.IntData(disk.PhysicalBlockSizeBytes),
-					"provisionedIops":           llx.IntData(disk.ProvisionedIops),
-					"region":                    llx.StringData(RegionNameFromRegionUrl(disk.Region)),
-					"replicaZones":              llx.ArrayData(zoneNamesFromUrls(disk.ReplicaZones), types.String),
-					"resourcePolicies":          llx.ArrayData(convert.SliceAnyToInterface(disk.ResourcePolicies), types.String),
-					"satisfiesPzi":              llx.BoolData(disk.SatisfiesPzi),
-					"satisfiesPzs":              llx.BoolData(disk.SatisfiesPzs),
-					"sizeGb":                    llx.IntData(disk.SizeGb),
-					"status":                    llx.StringData(disk.Status),
-					"zone":                      llx.ResourceData(zone, "gcp.project.computeService.zone"),
-					"created":                   llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
-					"diskEncryptionKey":         llx.DictData(mqlDiskEnc),
-					"enableConfidentialCompute": llx.BoolData(disk.EnableConfidentialCompute),
-					"type":                      llx.StringData(disk.Type),
-					"users":                     llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
-					"accessMode":                llx.StringData(disk.AccessMode),
-					"provisionedThroughput":     llx.IntData(disk.ProvisionedThroughput),
+					"id":                          llx.StringData(strconv.FormatUint(disk.Id, 10)),
+					"name":                        llx.StringData(disk.Name),
+					"architecture":                llx.StringData(disk.Architecture),
+					"description":                 llx.StringData(disk.Description),
+					"guestOsFeatures":             llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
+					"labels":                      llx.MapData(convert.MapToInterfaceMap(disk.Labels), types.String),
+					"lastAttachTimestamp":         llx.TimeDataPtr(parseTime(disk.LastAttachTimestamp)),
+					"lastDetachTimestamp":         llx.TimeDataPtr(parseTime(disk.LastDetachTimestamp)),
+					"locationHint":                llx.StringData(disk.LocationHint),
+					"licenses":                    llx.ArrayData(convert.SliceAnyToInterface(disk.Licenses), types.String),
+					"physicalBlockSizeBytes":      llx.IntData(disk.PhysicalBlockSizeBytes),
+					"provisionedIops":             llx.IntData(disk.ProvisionedIops),
+					"region":                      llx.StringData(RegionNameFromRegionUrl(disk.Region)),
+					"replicaZones":                llx.ArrayData(zoneNamesFromUrls(disk.ReplicaZones), types.String),
+					"resourcePolicies":            llx.ArrayData(convert.SliceAnyToInterface(disk.ResourcePolicies), types.String),
+					"satisfiesPzi":                llx.BoolData(disk.SatisfiesPzi),
+					"satisfiesPzs":                llx.BoolData(disk.SatisfiesPzs),
+					"sizeGb":                      llx.IntData(disk.SizeGb),
+					"status":                      llx.StringData(disk.Status),
+					"zone":                        llx.ResourceData(zone, "gcp.project.computeService.zone"),
+					"created":                     llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
+					"diskEncryptionKey":           llx.DictData(mqlDiskEnc),
+					"sourceImageEncryptionKey":    llx.DictData(mqlSourceImageEnc),
+					"sourceSnapshotEncryptionKey": llx.DictData(mqlSourceSnapshotEnc),
+					"asyncPrimaryDisk":            llx.DictData(mqlAsyncPrimary),
+					"asyncSecondaryDisks":         llx.DictData(mqlAsyncSecondaries),
+					"enableConfidentialCompute":   llx.BoolData(disk.EnableConfidentialCompute),
+					"type":                        llx.StringData(disk.Type),
+					"users":                       llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
+					"accessMode":                  llx.StringData(disk.AccessMode),
+					"provisionedThroughput":       llx.IntData(disk.ProvisionedThroughput),
 				})
 				if err != nil {
 					return err
@@ -1779,6 +1836,8 @@ func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
 				"peerings":                              llx.ArrayData(peerings, types.Dict),
 				"internalIpv6Range":                     llx.StringData(network.InternalIpv6Range),
 				"firewallPolicy":                        llx.StringData(network.FirewallPolicy),
+				"networkProfile":                        llx.StringData(network.NetworkProfile),
+				"ipv4Range":                             llx.StringData(network.IPv4Range),
 			})
 			if err != nil {
 				return err
@@ -2000,30 +2059,41 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 		}
 	}
 
+	secondaryIpRanges := make([]any, 0, len(subnetwork.GetSecondaryIpRanges()))
+	for _, r := range subnetwork.GetSecondaryIpRanges() {
+		secondaryIpRanges = append(secondaryIpRanges, map[string]any{
+			"rangeName":             r.GetRangeName(),
+			"ipCidrRange":           r.GetIpCidrRange(),
+			"reservedInternalRange": r.GetReservedInternalRange(),
+		})
+	}
+
 	args := map[string]*llx.RawData{
-		"id":                      llx.StringData(subnetId),
-		"projectId":               llx.StringData(projectId),
-		"name":                    llx.StringData(subnetwork.GetName()),
-		"description":             llx.StringData(subnetwork.GetDescription()),
-		"enableFlowLogs":          llx.BoolData(subnetwork.GetEnableFlowLogs()),
-		"externalIpv6Prefix":      llx.StringData(subnetwork.GetExternalIpv6Prefix()),
-		"fingerprint":             llx.StringData(subnetwork.GetFingerprint()),
-		"gatewayAddress":          llx.StringData(subnetwork.GetGatewayAddress()),
-		"internalIpv6Prefix":      llx.StringData(subnetwork.GetInternalIpv6Prefix()),
-		"ipCidrRange":             llx.StringData(subnetwork.GetIpCidrRange()),
-		"ipv6AccessType":          llx.StringData(subnetwork.GetIpv6AccessType()),
-		"ipv6CidrRange":           llx.StringData(subnetwork.GetIpv6CidrRange()),
-		"logConfig":               llx.ResourceData(mqlLogConfig, "gcp.project.computeService.subnetwork.logConfig"),
-		"privateIpGoogleAccess":   llx.BoolData(subnetwork.GetPrivateIpGoogleAccess()),
-		"privateIpv6GoogleAccess": llx.StringData(subnetwork.GetPrivateIpv6GoogleAccess()),
-		"purpose":                 llx.StringData(subnetwork.GetPurpose()),
-		"regionUrl":               llx.StringData(subnetwork.GetRegion()),
-		"role":                    llx.StringData(subnetwork.GetRole()),
-		"stackType":               llx.StringData(subnetwork.GetStackType()),
-		"state":                   llx.StringData(subnetwork.GetState()),
-		"created":                 llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
-		"reservedInternalRange":   llx.StringData(subnetwork.GetReservedInternalRange()),
-		"networkUrl":              llx.StringData(subnetwork.GetNetwork()),
+		"id":                           llx.StringData(subnetId),
+		"projectId":                    llx.StringData(projectId),
+		"name":                         llx.StringData(subnetwork.GetName()),
+		"description":                  llx.StringData(subnetwork.GetDescription()),
+		"enableFlowLogs":               llx.BoolData(subnetwork.GetEnableFlowLogs()),
+		"externalIpv6Prefix":           llx.StringData(subnetwork.GetExternalIpv6Prefix()),
+		"fingerprint":                  llx.StringData(subnetwork.GetFingerprint()),
+		"gatewayAddress":               llx.StringData(subnetwork.GetGatewayAddress()),
+		"internalIpv6Prefix":           llx.StringData(subnetwork.GetInternalIpv6Prefix()),
+		"ipCidrRange":                  llx.StringData(subnetwork.GetIpCidrRange()),
+		"ipv6AccessType":               llx.StringData(subnetwork.GetIpv6AccessType()),
+		"ipv6CidrRange":                llx.StringData(subnetwork.GetIpv6CidrRange()),
+		"logConfig":                    llx.ResourceData(mqlLogConfig, "gcp.project.computeService.subnetwork.logConfig"),
+		"privateIpGoogleAccess":        llx.BoolData(subnetwork.GetPrivateIpGoogleAccess()),
+		"privateIpv6GoogleAccess":      llx.StringData(subnetwork.GetPrivateIpv6GoogleAccess()),
+		"purpose":                      llx.StringData(subnetwork.GetPurpose()),
+		"regionUrl":                    llx.StringData(subnetwork.GetRegion()),
+		"role":                         llx.StringData(subnetwork.GetRole()),
+		"stackType":                    llx.StringData(subnetwork.GetStackType()),
+		"state":                        llx.StringData(subnetwork.GetState()),
+		"created":                      llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
+		"reservedInternalRange":        llx.StringData(subnetwork.GetReservedInternalRange()),
+		"networkUrl":                   llx.StringData(subnetwork.GetNetwork()),
+		"allowSubnetCidrRoutesOverlap": llx.BoolData(subnetwork.GetAllowSubnetCidrRoutesOverlap()),
+		"secondaryIpRanges":            llx.ArrayData(secondaryIpRanges, types.Dict),
 	}
 	if region != nil {
 		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")

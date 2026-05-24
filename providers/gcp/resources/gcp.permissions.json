@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.16.2",
-  "generated_at": "2026-05-22T08:27:51-07:00",
+  "generated_at": "2026-05-23T17:10:11-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -628,7 +628,7 @@
     {
       "permission": "compute.disks.list",
       "service": "compute",
-      "action": "Disks.List",
+      "action": "Disks.AggregatedList",
       "source_file": "compute.go"
     },
     {
@@ -694,7 +694,7 @@
     {
       "permission": "compute.instances.list",
       "service": "compute",
-      "action": "Instances.List",
+      "action": "Instances.AggregatedList",
       "source_file": "compute.go"
     },
     {
@@ -718,7 +718,7 @@
     {
       "permission": "compute.machineTypes.list",
       "service": "compute",
-      "action": "MachineTypes.List",
+      "action": "MachineTypes.AggregatedList",
       "source_file": "compute.go"
     },
     {
@@ -790,7 +790,7 @@
     {
       "permission": "compute.routers.list",
       "service": "compute",
-      "action": "Routers.List",
+      "action": "Routers.AggregatedList",
       "source_file": "compute.go"
     },
     {
