@@ -182,10 +182,23 @@ func (k *mqlK8sPod) node() (*mqlK8sNode, error) {
 		return nil, err
 	}
 
+	// Unscheduled pods have no node assigned yet.
+	if podSpec.NodeName == "" {
+		k.Node.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
 	node, err := NewResource(k.MqlRuntime, "k8s.node", map[string]*llx.RawData{
 		"name": llx.StringData(podSpec.NodeName),
 	})
 	if err != nil {
+		// Nodes are cluster-scoped, so they aren't loaded when queried
+		// from a namespace-scoped asset, and a scheduled node can also be
+		// drained or removed. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Node.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -261,6 +274,13 @@ func (k *mqlK8sPod) priorityClass() (*mqlK8sPriorityclass, error) {
 		"name": llx.StringData(spec.PriorityClassName),
 	})
 	if err != nil {
+		// PriorityClass is cluster-scoped, so it isn't loaded when queried
+		// from a namespace-scoped asset, and a referenced PriorityClass
+		// may have been deleted. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.PriorityClass.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return pc.(*mqlK8sPriorityclass), nil
@@ -318,6 +338,12 @@ func (k *mqlK8sPod) serviceAccount() (*mqlK8sServiceaccount, error) {
 		"namespace": llx.StringData(pod.Namespace),
 	})
 	if err != nil {
+		// A referenced ServiceAccount may have been deleted. Resolve to
+		// null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return sa.(*mqlK8sServiceaccount), nil
@@ -622,6 +648,12 @@ func (k *mqlK8sPod) replicaSet() (*mqlK8sReplicaset, error) {
 		"namespace": llx.StringData(ns),
 	})
 	if err != nil {
+		// Pods can survive their owner mid-deletion or be re-parented to a
+		// new ReplicaSet. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ReplicaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sReplicaset), nil
@@ -638,6 +670,10 @@ func (k *mqlK8sPod) statefulSet() (*mqlK8sStatefulset, error) {
 		"namespace": llx.StringData(ns),
 	})
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			k.StatefulSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sStatefulset), nil
@@ -654,6 +690,10 @@ func (k *mqlK8sPod) daemonSet() (*mqlK8sDaemonset, error) {
 		"namespace": llx.StringData(ns),
 	})
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			k.DaemonSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sDaemonset), nil
@@ -670,6 +710,10 @@ func (k *mqlK8sPod) job() (*mqlK8sJob, error) {
 		"namespace": llx.StringData(ns),
 	})
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Job.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sJob), nil
@@ -693,6 +737,14 @@ func (k *mqlK8sPod) deployment() (*mqlK8sDeployment, error) {
 				"namespace": llx.StringData(rsTyped.Namespace),
 			})
 			if err != nil {
+				// A Deployment can be deleted while its ReplicaSet and
+				// pods are still mid-cleanup. Resolve to null; surface
+				// other errors (per PR #7884, type-assertion failures
+				// inside getReplicaSet() above still propagate).
+				if errors.Is(err, ErrResourceNotFound) {
+					k.Deployment.State = plugin.StateIsSet | plugin.StateIsNull
+					return nil, nil
+				}
 				return nil, err
 			}
 			return r.(*mqlK8sDeployment), nil

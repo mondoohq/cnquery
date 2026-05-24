@@ -106,6 +106,12 @@ func (k *mqlK8sPersistentvolume) storageClass() (*mqlK8sStorageclass, error) {
 		"name": llx.StringData(k.obj.Spec.StorageClassName),
 	})
 	if err != nil {
+		// A referenced StorageClass can have been deleted. Resolve to null;
+		// surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.StorageClass.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sStorageclass), nil
@@ -146,6 +152,13 @@ func (k *mqlK8sPersistentvolume) claim() (*mqlK8sPersistentvolumeclaim, error) {
 		"namespace": llx.StringData(k.obj.Spec.ClaimRef.Namespace),
 	})
 	if err != nil {
+		// A PV with Retain reclaim policy outlives its PVC, so the
+		// referenced PVC can already be gone. Resolve to null; surface
+		// other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Claim.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sPersistentvolumeclaim), nil

@@ -97,6 +97,13 @@ func (k *mqlK8sRbacClusterrolebinding) clusterRole() (*mqlK8sRbacClusterrole, er
 		"name": llx.StringData(k.obj.RoleRef.Name),
 	})
 	if err != nil {
+		// A referenced ClusterRole can have been deleted while the
+		// ClusterRoleBinding remains. Resolve to null; surface other
+		// errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ClusterRole.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sRbacClusterrole), nil

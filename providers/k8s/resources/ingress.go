@@ -143,6 +143,13 @@ func (k *mqlK8sIngress) ingressClass() (*mqlK8sIngressclass, error) {
 		"name": llx.StringData(*ing.Spec.IngressClassName),
 	})
 	if err != nil {
+		// IngressClass is cluster-scoped, so it isn't loaded when queried
+		// from a namespace-scoped asset, and a referenced IngressClass can
+		// genuinely have been deleted. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.IngressClass.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return ic.(*mqlK8sIngressclass), nil

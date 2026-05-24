@@ -98,6 +98,13 @@ func (k *mqlK8sPersistentvolumeclaim) storageClass() (*mqlK8sStorageclass, error
 		"name": llx.StringData(*k.obj.Spec.StorageClassName),
 	})
 	if err != nil {
+		// StorageClass is cluster-scoped, so it isn't loaded when queried
+		// from a namespace-scoped asset, and a referenced StorageClass can
+		// genuinely have been deleted. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.StorageClass.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sStorageclass), nil
@@ -116,6 +123,13 @@ func (k *mqlK8sPersistentvolumeclaim) volume() (*mqlK8sPersistentvolume, error) 
 		"name": llx.StringData(k.obj.Spec.VolumeName),
 	})
 	if err != nil {
+		// PVs are cluster-scoped, so they aren't loaded when queried from a
+		// namespace-scoped asset, and the bound PV can legitimately be
+		// missing mid-deletion. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Volume.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sPersistentvolume), nil

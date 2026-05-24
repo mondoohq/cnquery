@@ -97,6 +97,12 @@ func (k *mqlK8sRbacRolebinding) role() (*mqlK8sRbacRole, error) {
 		"namespace": llx.StringData(k.obj.Namespace),
 	})
 	if err != nil {
+		// A referenced Role can be deleted while the RoleBinding remains.
+		// Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.Role.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sRbacRole), nil
@@ -111,6 +117,13 @@ func (k *mqlK8sRbacRolebinding) clusterRole() (*mqlK8sRbacClusterrole, error) {
 		"name": llx.StringData(k.obj.RoleRef.Name),
 	})
 	if err != nil {
+		// ClusterRole is cluster-scoped, so it isn't loaded when queried
+		// from a namespace-scoped asset, and a referenced ClusterRole can
+		// have been deleted. Resolve to null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ClusterRole.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sRbacClusterrole), nil

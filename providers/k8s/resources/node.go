@@ -56,7 +56,11 @@ func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	x, found := k8s.nodesByName[name]
 	k8s.lock.Unlock()
 	if !found {
-		return nil, nil, errors.New("cannot find node " + name)
+		// Wrap ErrResourceNotFound so callers can distinguish "node was
+		// deleted" from a transient error via errors.Is — the existing
+		// pod.node() accessor relies on this to resolve to null instead
+		// of failing the query.
+		return nil, nil, fmt.Errorf("cannot find node %s: %w", name, ErrResourceNotFound)
 	}
 
 	return nil, x, nil

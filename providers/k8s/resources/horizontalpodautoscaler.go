@@ -97,6 +97,12 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetDeployment() (*mqlK8sDeployme
 		"namespace": llx.StringData(k.obj.Namespace),
 	})
 	if err != nil {
+		// HPAs can survive their scale target mid-deletion. Resolve to
+		// null; surface other errors.
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ScaleTargetDeployment.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sDeployment), nil
@@ -112,6 +118,10 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetStatefulSet() (*mqlK8sStatefu
 		"namespace": llx.StringData(k.obj.Namespace),
 	})
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ScaleTargetStatefulSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sStatefulset), nil
@@ -127,6 +137,10 @@ func (k *mqlK8sHorizontalpodautoscaler) scaleTargetReplicaSet() (*mqlK8sReplicas
 		"namespace": llx.StringData(k.obj.Namespace),
 	})
 	if err != nil {
+		if errors.Is(err, ErrResourceNotFound) {
+			k.ScaleTargetReplicaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return r.(*mqlK8sReplicaset), nil
