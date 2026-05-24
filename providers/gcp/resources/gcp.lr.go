@@ -4753,6 +4753,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetEtag()).ToDataRes(types.String)
 	},
+	"gcp.project.sqlService.instance.dnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetDnsNames()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.sqlService.instance.scheduledMaintenance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetScheduledMaintenance()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.upgradableDatabaseVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetUpgradableDatabaseVersions()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.sqlService.instance.replicationCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetReplicationCluster()).ToDataRes(types.Dict)
+	},
 	"gcp.project.sqlService.instance.database.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceDatabase).GetProjectId()).ToDataRes(types.String)
 	},
@@ -4981,6 +4993,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.settings.userLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetUserLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"gcp.project.sqlService.instance.settings.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetEdition()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.dataCacheConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetDataCacheConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.settings.entraidConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetEntraidConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.settings.dataApiAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetDataApiAccess()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.enableGoogleMlIntegration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetEnableGoogleMlIntegration()).ToDataRes(types.Bool)
+	},
+	"gcp.project.sqlService.instance.settings.enableDataplexIntegration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettings).GetEnableDataplexIntegration()).ToDataRes(types.Bool)
+	},
 	"gcp.project.sqlService.instance.settings.activeDirectory.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).GetDomain()).ToDataRes(types.String)
 	},
@@ -5016,6 +5046,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.settings.backupconfiguration.transactionLogRetentionDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).GetTransactionLogRetentionDays()).ToDataRes(types.Int)
+	},
+	"gcp.project.sqlService.instance.settings.backupconfiguration.backupTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).GetBackupTier()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.backupconfiguration.transactionalLogStorageState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).GetTransactionalLogStorageState()).ToDataRes(types.String)
 	},
 	"gcp.project.sqlService.instance.settings.denyMaintenancePeriod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod).GetId()).ToDataRes(types.String)
@@ -5058,6 +5094,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetServerCaMode()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetServerCaPool()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.customSubjectAlternativeNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetCustomSubjectAlternativeNames()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCertificateRotationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetServerCertificateRotationMode()).ToDataRes(types.String)
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetPscConfig()).ToDataRes(types.Resource("gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"))
@@ -18341,6 +18386,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.dnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).DnsNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.scheduledMaintenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).ScheduledMaintenance, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.upgradableDatabaseVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).UpgradableDatabaseVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.replicationCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).ReplicationCluster, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceDatabase).__id, ok = v.Value.(string)
 		return
@@ -18669,6 +18730,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstanceSettings).UserLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.settings.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.dataCacheConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).DataCacheConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.entraidConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).EntraidConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.dataApiAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).DataApiAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.enableGoogleMlIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).EnableGoogleMlIntegration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.enableDataplexIntegration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettings).EnableDataplexIntegration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.activeDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory).__id, ok = v.Value.(string)
 		return
@@ -18723,6 +18808,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.settings.backupconfiguration.transactionLogRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).TransactionLogRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.backupconfiguration.backupTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).BackupTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.backupconfiguration.transactionalLogStorageState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration).TransactionalLogStorageState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.denyMaintenancePeriod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18787,6 +18880,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).ServerCaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.customSubjectAlternativeNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).CustomSubjectAlternativeNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCertificateRotationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).ServerCertificateRotationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41681,6 +41786,10 @@ type mqlGcpProjectSqlServiceInstance struct {
 	PscServiceAttachmentLink                   plugin.TValue[string]
 	CurrentDiskSize                            plugin.TValue[int64]
 	Etag                                       plugin.TValue[string]
+	DnsNames                                   plugin.TValue[[]any]
+	ScheduledMaintenance                       plugin.TValue[any]
+	UpgradableDatabaseVersions                 plugin.TValue[[]any]
+	ReplicationCluster                         plugin.TValue[any]
 }
 
 // createGcpProjectSqlServiceInstance creates a new instance of this resource
@@ -41996,6 +42105,22 @@ func (c *mqlGcpProjectSqlServiceInstance) GetCurrentDiskSize() *plugin.TValue[in
 
 func (c *mqlGcpProjectSqlServiceInstance) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetDnsNames() *plugin.TValue[[]any] {
+	return &c.DnsNames
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetScheduledMaintenance() *plugin.TValue[any] {
+	return &c.ScheduledMaintenance
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetUpgradableDatabaseVersions() *plugin.TValue[[]any] {
+	return &c.UpgradableDatabaseVersions
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetReplicationCluster() *plugin.TValue[any] {
+	return &c.ReplicationCluster
 }
 
 // mqlGcpProjectSqlServiceInstanceDatabase for the gcp.project.sqlService.instance.database resource
@@ -42483,6 +42608,12 @@ type mqlGcpProjectSqlServiceInstanceSettings struct {
 	Tier                        plugin.TValue[string]
 	TimeZone                    plugin.TValue[string]
 	UserLabels                  plugin.TValue[map[string]any]
+	Edition                     plugin.TValue[string]
+	DataCacheConfig             plugin.TValue[any]
+	EntraidConfig               plugin.TValue[any]
+	DataApiAccess               plugin.TValue[string]
+	EnableGoogleMlIntegration   plugin.TValue[bool]
+	EnableDataplexIntegration   plugin.TValue[bool]
 }
 
 // createGcpProjectSqlServiceInstanceSettings creates a new instance of this resource
@@ -42642,6 +42773,30 @@ func (c *mqlGcpProjectSqlServiceInstanceSettings) GetUserLabels() *plugin.TValue
 	return &c.UserLabels
 }
 
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetEdition() *plugin.TValue[string] {
+	return &c.Edition
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetDataCacheConfig() *plugin.TValue[any] {
+	return &c.DataCacheConfig
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetEntraidConfig() *plugin.TValue[any] {
+	return &c.EntraidConfig
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetDataApiAccess() *plugin.TValue[string] {
+	return &c.DataApiAccess
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetEnableGoogleMlIntegration() *plugin.TValue[bool] {
+	return &c.EnableGoogleMlIntegration
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettings) GetEnableDataplexIntegration() *plugin.TValue[bool] {
+	return &c.EnableDataplexIntegration
+}
+
 // mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory for the gcp.project.sqlService.instance.settings.activeDirectory resource
 type mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory struct {
 	MqlRuntime *plugin.Runtime
@@ -42706,14 +42861,16 @@ type mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsBackupconfigurationInternal it will be used here
-	Id                          plugin.TValue[string]
-	BackupRetentionSettings     plugin.TValue[any]
-	BinaryLogEnabled            plugin.TValue[bool]
-	Enabled                     plugin.TValue[bool]
-	Location                    plugin.TValue[string]
-	PointInTimeRecoveryEnabled  plugin.TValue[bool]
-	StartTime                   plugin.TValue[string]
-	TransactionLogRetentionDays plugin.TValue[int64]
+	Id                           plugin.TValue[string]
+	BackupRetentionSettings      plugin.TValue[any]
+	BinaryLogEnabled             plugin.TValue[bool]
+	Enabled                      plugin.TValue[bool]
+	Location                     plugin.TValue[string]
+	PointInTimeRecoveryEnabled   plugin.TValue[bool]
+	StartTime                    plugin.TValue[string]
+	TransactionLogRetentionDays  plugin.TValue[int64]
+	BackupTier                   plugin.TValue[string]
+	TransactionalLogStorageState plugin.TValue[string]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsBackupconfiguration creates a new instance of this resource
@@ -42783,6 +42940,14 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) GetStartTim
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) GetTransactionLogRetentionDays() *plugin.TValue[int64] {
 	return &c.TransactionLogRetentionDays
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) GetBackupTier() *plugin.TValue[string] {
+	return &c.BackupTier
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) GetTransactionalLogStorageState() *plugin.TValue[string] {
+	return &c.TransactionalLogStorageState
 }
 
 // mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod for the gcp.project.sqlService.instance.settings.denyMaintenancePeriod resource
@@ -42864,6 +43029,9 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	SslMode                                 plugin.TValue[string]
 	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
 	ServerCaMode                            plugin.TValue[string]
+	ServerCaPool                            plugin.TValue[string]
+	CustomSubjectAlternativeNames           plugin.TValue[[]any]
+	ServerCertificateRotationMode           plugin.TValue[string]
 	PscConfig                               plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig]
 }
 
@@ -42944,6 +43112,18 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetEnablePrivat
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetServerCaMode() *plugin.TValue[string] {
 	return &c.ServerCaMode
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetServerCaPool() *plugin.TValue[string] {
+	return &c.ServerCaPool
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetCustomSubjectAlternativeNames() *plugin.TValue[[]any] {
+	return &c.CustomSubjectAlternativeNames
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetServerCertificateRotationMode() *plugin.TValue[string] {
+	return &c.ServerCertificateRotationMode
 }
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetPscConfig() *plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig] {

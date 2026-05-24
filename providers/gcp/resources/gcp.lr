@@ -2491,6 +2491,24 @@ private gcp.project.sqlService.instance @defaults("name") {
   currentDiskSize int
   // ETag for optimistic locking
   etag string
+  // DNS names for this instance (`{name, connectionType, dnsScope, recordManager}`)
+  //
+  // Each entry exposes the DNS name, its connection type
+  // (PUBLIC, PRIVATE_SERVICES_ACCESS, PRIVATE_SERVICE_CONNECT), DNS scope
+  // (INSTANCE, CLUSTER), and record manager
+  // (CUSTOMER, CLOUD_SQL_AUTOMATION).
+  dnsNames []dict
+  // Upcoming scheduled maintenance window (`{startTime, canDefer, canReschedule, scheduleDeadlineTime}`)
+  scheduledMaintenance dict
+  // Database versions available for upgrade (`{name, majorVersion, displayName}`)
+  upgradableDatabaseVersions []dict
+  // Primary/DR replica pairing for the instance (`{drReplica, failoverDrReplicaName, psaWriteEndpoint}`)
+  //
+  // Cross-region DR replication is an Enterprise Plus feature for MySQL
+  // and PostgreSQL. `drReplica` is true on the DR replica side;
+  // `failoverDrReplicaName` is set on the primary to designate the DR
+  // replica.
+  replicationCluster dict
 }
 
 // Google Cloud (GCP) SQL instance database
@@ -2690,6 +2708,24 @@ private gcp.project.sqlService.instance.settings {
   timeZone string
   // User-provided labels
   userLabels map[string]string
+  // Edition type of the Cloud SQL instance
+  //
+  // One of EDITION_UNSPECIFIED, ENTERPRISE, ENTERPRISE_PLUS, or DEVELOPER.
+  edition string
+  // Data cache configuration (`{dataCacheEnabled}`); applicable to Enterprise Plus
+  dataCacheConfig dict
+  // Microsoft Entra ID configuration for SQL Server (`{applicationId, tenantId}`)
+  entraidConfig dict
+  // Whether ExecuteSql API access is allowed
+  //
+  // One of DATA_API_ACCESS_UNSPECIFIED, DISALLOW_DATA_API, or ALLOW_DATA_API.
+  // When ALLOW_DATA_API is set on a private-IP instance, authorized users can
+  // reach it from the public internet via the ExecuteSql API.
+  dataApiAccess string
+  // Whether Vertex AI integration is enabled (MySQL and PostgreSQL only)
+  enableGoogleMlIntegration bool
+  // Whether Dataplex schema extraction is enabled
+  enableDataplexIntegration bool
 }
 
 // Google Cloud (GCP) SQL instance Entra ID / Active Directory configuration
@@ -2732,6 +2768,16 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
   startTime string
   // Number of days of transaction logs retained for point-in-time restore
   transactionLogRetentionDays int
+  // Backup tier managing the backups for this instance
+  //
+  // One of BACKUP_TIER_UNSPECIFIED, STANDARD (managed by Cloud SQL), or
+  // ENHANCED (managed by Google Cloud Backup and DR Service).
+  backupTier string
+  // Storage location of the transactional logs used for point-in-time recovery
+  //
+  // One of TRANSACTIONAL_LOG_STORAGE_STATE_UNSPECIFIED, DISK,
+  // SWITCHING_TO_CLOUD_STORAGE, SWITCHED_TO_CLOUD_STORAGE, or CLOUD_STORAGE.
+  transactionalLogStorageState string
 }
 
 // Google Cloud (GCP) SQL instance settings deny maintenance period
@@ -2768,8 +2814,21 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   //
   // Controls connectivity to private IP instances from Google services, such as BigQuery.
   enablePrivatePathForGoogleCloudServices bool
-  // Specifies how the server CA certificate is signed (GOOGLE_MANAGED_INTERNAL_CA, GOOGLE_MANAGED_CAS_CA)
+  // Specifies how the server CA certificate is signed (GOOGLE_MANAGED_INTERNAL_CA, GOOGLE_MANAGED_CAS_CA, CUSTOMER_MANAGED_CAS_CA)
   serverCaMode string
+  // Resource name of the server CA pool when `serverCaMode` is `CUSTOMER_MANAGED_CAS_CA`
+  //
+  // Format: `projects/{PROJECT}/locations/{REGION}/caPools/{CA_POOL_ID}`.
+  serverCaPool string
+  // Custom Subject Alternative Names (SANs) presented on the instance server certificate
+  customSubjectAlternativeNames []string
+  // Server certificate auto-rotation mode
+  //
+  // Controls whether the server certificate is automatically rotated during
+  // Cloud SQL scheduled maintenance up to six months before it expires. Only
+  // settable when `serverCaMode` is `GOOGLE_MANAGED_CAS_CA` or
+  // `CUSTOMER_MANAGED_CAS_CA`.
+  serverCertificateRotationMode string
   // Private Service Connect configuration
   pscConfig gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig
 }

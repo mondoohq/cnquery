@@ -282,14 +282,16 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				}
 
 				mqlBackupCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.backupconfiguration", map[string]*llx.RawData{
-					"id":                          llx.StringData(fmt.Sprintf("%s/settings/backupConfiguration", instanceId)),
-					"backupRetentionSettings":     llx.DictData(mqlRetention),
-					"binaryLogEnabled":            llx.BoolData(s.BackupConfiguration.BinaryLogEnabled),
-					"enabled":                     llx.BoolData(s.BackupConfiguration.Enabled),
-					"location":                    llx.StringData(s.BackupConfiguration.Location),
-					"pointInTimeRecoveryEnabled":  llx.BoolData(s.BackupConfiguration.PointInTimeRecoveryEnabled),
-					"startTime":                   llx.StringData(s.BackupConfiguration.StartTime),
-					"transactionLogRetentionDays": llx.IntData(s.BackupConfiguration.TransactionLogRetentionDays),
+					"id":                           llx.StringData(fmt.Sprintf("%s/settings/backupConfiguration", instanceId)),
+					"backupRetentionSettings":      llx.DictData(mqlRetention),
+					"backupTier":                   llx.StringData(s.BackupConfiguration.BackupTier),
+					"binaryLogEnabled":             llx.BoolData(s.BackupConfiguration.BinaryLogEnabled),
+					"enabled":                      llx.BoolData(s.BackupConfiguration.Enabled),
+					"location":                     llx.StringData(s.BackupConfiguration.Location),
+					"pointInTimeRecoveryEnabled":   llx.BoolData(s.BackupConfiguration.PointInTimeRecoveryEnabled),
+					"startTime":                    llx.StringData(s.BackupConfiguration.StartTime),
+					"transactionLogRetentionDays":  llx.IntData(s.BackupConfiguration.TransactionLogRetentionDays),
+					"transactionalLogStorageState": llx.StringData(s.BackupConfiguration.TransactionalLogStorageState),
 				})
 				if err != nil {
 					return err
@@ -375,14 +377,17 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				mqlIpCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.ipConfiguration", map[string]*llx.RawData{
 					"allocatedIpRange":                        llx.StringData(s.IpConfiguration.AllocatedIpRange),
 					"authorizedNetworks":                      llx.ArrayData(mqlAclEntries, types.Dict),
+					"customSubjectAlternativeNames":           llx.ArrayData(convert.SliceAnyToInterface(s.IpConfiguration.CustomSubjectAlternativeNames), types.String),
 					"enablePrivatePathForGoogleCloudServices": llx.BoolData(s.IpConfiguration.EnablePrivatePathForGoogleCloudServices),
-					"id":             llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration", instanceId)),
-					"ipv4Enabled":    llx.BoolData(s.IpConfiguration.Ipv4Enabled),
-					"privateNetwork": llx.StringData(s.IpConfiguration.PrivateNetwork),
-					"requireSsl":     llx.BoolData(s.IpConfiguration.RequireSsl),
-					"sslMode":        llx.StringData(s.IpConfiguration.SslMode),
-					"serverCaMode":   llx.StringData(s.IpConfiguration.ServerCaMode),
-					"pscConfig":      llx.ResourceData(mqlPscCfg, "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"),
+					"id":                            llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration", instanceId)),
+					"ipv4Enabled":                   llx.BoolData(s.IpConfiguration.Ipv4Enabled),
+					"privateNetwork":                llx.StringData(s.IpConfiguration.PrivateNetwork),
+					"requireSsl":                    llx.BoolData(s.IpConfiguration.RequireSsl),
+					"sslMode":                       llx.StringData(s.IpConfiguration.SslMode),
+					"serverCaMode":                  llx.StringData(s.IpConfiguration.ServerCaMode),
+					"serverCaPool":                  llx.StringData(s.IpConfiguration.ServerCaPool),
+					"serverCertificateRotationMode": llx.StringData(s.IpConfiguration.ServerCertificateRotationMode),
+					"pscConfig":                     llx.ResourceData(mqlPscCfg, "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"),
 				})
 				if err != nil {
 					return err
@@ -452,6 +457,34 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				}
 			}
 
+			type mqlDataCacheCfg struct {
+				DataCacheEnabled bool `json:"dataCacheEnabled"`
+			}
+			var mqlDataCacheConfig map[string]any
+			if s.DataCacheConfig != nil {
+				mqlDataCacheConfig, err = convert.JsonToDict(mqlDataCacheCfg{
+					DataCacheEnabled: s.DataCacheConfig.DataCacheEnabled,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			type mqlEntraIdCfg struct {
+				ApplicationId string `json:"applicationId"`
+				TenantId      string `json:"tenantId"`
+			}
+			var mqlEntraIdConfig map[string]any
+			if s.EntraidConfig != nil {
+				mqlEntraIdConfig, err = convert.JsonToDict(mqlEntraIdCfg{
+					ApplicationId: s.EntraidConfig.ApplicationId,
+					TenantId:      s.EntraidConfig.TenantId,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			mqlSettings, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings", map[string]*llx.RawData{
 				"activationPolicy":            llx.StringData(s.ActivationPolicy),
 				"activeDirectoryConfig":       llx.DictData(mqlADCfg),
@@ -483,6 +516,12 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"tier":                        llx.StringData(s.Tier),
 				"timeZone":                    llx.StringData(s.TimeZone),
 				"userLabels":                  llx.MapData(convert.MapToInterfaceMap(s.UserLabels), types.String),
+				"edition":                     llx.StringData(s.Edition),
+				"dataCacheConfig":             llx.DictData(mqlDataCacheConfig),
+				"entraidConfig":               llx.DictData(mqlEntraIdConfig),
+				"dataApiAccess":               llx.StringData(s.DataApiAccess),
+				"enableGoogleMlIntegration":   llx.BoolData(s.EnableGoogleMlIntegration),
+				"enableDataplexIntegration":   llx.BoolData(s.EnableDataplexIntegration),
 			})
 			if err != nil {
 				return err
@@ -491,6 +530,86 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			replicaConfigDict, err := convert.JsonToDict(instance.ReplicaConfiguration)
 			if err != nil {
 				return err
+			}
+
+			type mqlDnsNameMapping struct {
+				Name           string `json:"name"`
+				ConnectionType string `json:"connectionType"`
+				DnsScope       string `json:"dnsScope"`
+				RecordManager  string `json:"recordManager"`
+			}
+			mqlDnsNames := make([]any, 0, len(instance.DnsNames))
+			for _, d := range instance.DnsNames {
+				if d == nil {
+					continue
+				}
+				entry, err := convert.JsonToDict(mqlDnsNameMapping{
+					Name:           d.Name,
+					ConnectionType: d.ConnectionType,
+					DnsScope:       d.DnsScope,
+					RecordManager:  d.RecordManager,
+				})
+				if err != nil {
+					return err
+				}
+				mqlDnsNames = append(mqlDnsNames, entry)
+			}
+
+			type mqlScheduledMaintenance struct {
+				StartTime            string `json:"startTime,omitempty"`
+				CanDefer             bool   `json:"canDefer"`
+				CanReschedule        bool   `json:"canReschedule"`
+				ScheduleDeadlineTime string `json:"scheduleDeadlineTime,omitempty"`
+			}
+			var mqlScheduledMaint map[string]any
+			if instance.ScheduledMaintenance != nil {
+				mqlScheduledMaint, err = convert.JsonToDict(mqlScheduledMaintenance{
+					StartTime:            instance.ScheduledMaintenance.StartTime,
+					CanDefer:             instance.ScheduledMaintenance.CanDefer,
+					CanReschedule:        instance.ScheduledMaintenance.CanReschedule,
+					ScheduleDeadlineTime: instance.ScheduledMaintenance.ScheduleDeadlineTime,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			type mqlAvailableDbVersion struct {
+				Name         string `json:"name"`
+				MajorVersion string `json:"majorVersion"`
+				DisplayName  string `json:"displayName"`
+			}
+			mqlUpgradableVersions := make([]any, 0, len(instance.UpgradableDatabaseVersions))
+			for _, v := range instance.UpgradableDatabaseVersions {
+				if v == nil {
+					continue
+				}
+				entry, err := convert.JsonToDict(mqlAvailableDbVersion{
+					Name:         v.Name,
+					MajorVersion: v.MajorVersion,
+					DisplayName:  v.DisplayName,
+				})
+				if err != nil {
+					return err
+				}
+				mqlUpgradableVersions = append(mqlUpgradableVersions, entry)
+			}
+
+			type mqlReplicationCluster struct {
+				DrReplica             bool   `json:"drReplica"`
+				FailoverDrReplicaName string `json:"failoverDrReplicaName,omitempty"`
+				PsaWriteEndpoint      string `json:"psaWriteEndpoint,omitempty"`
+			}
+			var mqlReplicationClusterDict map[string]any
+			if instance.ReplicationCluster != nil {
+				mqlReplicationClusterDict, err = convert.JsonToDict(mqlReplicationCluster{
+					DrReplica:             instance.ReplicationCluster.DrReplica,
+					FailoverDrReplicaName: instance.ReplicationCluster.FailoverDrReplicaName,
+					PsaWriteEndpoint:      instance.ReplicationCluster.PsaWriteEndpoint,
+				})
+				if err != nil {
+					return err
+				}
 			}
 
 			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance", map[string]*llx.RawData{
@@ -522,12 +641,16 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"sqlNetworkArchitecture":       llx.StringData(instance.SqlNetworkArchitecture),
 				"suspensionReason":             llx.ArrayData(convert.SliceAnyToInterface(instance.SuspensionReason), types.String),
 				"switchTransactionLogsToCloudStorageEnabled": llx.BoolData(instance.SwitchTransactionLogsToCloudStorageEnabled),
-				"primaryDnsName":           llx.StringData(instance.PrimaryDnsName),
-				"writeEndpoint":            llx.StringData(instance.WriteEndpoint),
-				"pscServiceAttachmentLink": llx.StringData(instance.PscServiceAttachmentLink),
-				"currentDiskSize":          llx.IntData(instance.CurrentDiskSize),
-				"etag":                     llx.StringData(instance.Etag),
-				"replicaConfiguration":     llx.DictData(replicaConfigDict),
+				"primaryDnsName":             llx.StringData(instance.PrimaryDnsName),
+				"writeEndpoint":              llx.StringData(instance.WriteEndpoint),
+				"pscServiceAttachmentLink":   llx.StringData(instance.PscServiceAttachmentLink),
+				"currentDiskSize":            llx.IntData(instance.CurrentDiskSize),
+				"etag":                       llx.StringData(instance.Etag),
+				"replicaConfiguration":       llx.DictData(replicaConfigDict),
+				"dnsNames":                   llx.ArrayData(mqlDnsNames, types.Dict),
+				"scheduledMaintenance":       llx.DictData(mqlScheduledMaint),
+				"upgradableDatabaseVersions": llx.ArrayData(mqlUpgradableVersions, types.Dict),
+				"replicationCluster":         llx.DictData(mqlReplicationClusterDict),
 			})
 			if err != nil {
 				return err

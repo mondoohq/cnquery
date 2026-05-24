@@ -4031,6 +4031,7 @@ gcp.project.sqlService.instance.databases 9.0.0
 gcp.project.sqlService.instance.diskEncryptionConfiguration 9.0.0
 gcp.project.sqlService.instance.diskEncryptionStatus 9.0.0
 gcp.project.sqlService.instance.dnsName 11.6.6
+gcp.project.sqlService.instance.dnsNames 13.16.3
 gcp.project.sqlService.instance.etag 13.1.2
 gcp.project.sqlService.instance.failoverReplica 9.0.0
 gcp.project.sqlService.instance.gceZone 9.0.0
@@ -4056,8 +4057,10 @@ gcp.project.sqlService.instance.publicIpEnabled 13.12.2
 gcp.project.sqlService.instance.region 9.0.0
 gcp.project.sqlService.instance.replicaConfiguration 13.7.2
 gcp.project.sqlService.instance.replicaNames 9.0.0
+gcp.project.sqlService.instance.replicationCluster 13.16.3
 gcp.project.sqlService.instance.satisfiesPzi 11.6.6
 gcp.project.sqlService.instance.satisfiesPzs 11.6.6
+gcp.project.sqlService.instance.scheduledMaintenance 13.16.3
 gcp.project.sqlService.instance.secondaryZone 11.6.6
 gcp.project.sqlService.instance.serviceAccountEmailAddress 9.0.0
 gcp.project.sqlService.instance.settings 9.0.0
@@ -4072,6 +4075,7 @@ gcp.project.sqlService.instance.settings.availabilityType 9.0.0
 gcp.project.sqlService.instance.settings.backupConfiguration 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.backupRetentionSettings 9.0.0
+gcp.project.sqlService.instance.settings.backupconfiguration.backupTier 13.16.3
 gcp.project.sqlService.instance.settings.backupconfiguration.binaryLogEnabled 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.enabled 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.id 9.0.0
@@ -4079,9 +4083,12 @@ gcp.project.sqlService.instance.settings.backupconfiguration.location 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.pointInTimeRecoveryEnabled 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.startTime 9.0.0
 gcp.project.sqlService.instance.settings.backupconfiguration.transactionLogRetentionDays 9.0.0
+gcp.project.sqlService.instance.settings.backupconfiguration.transactionalLogStorageState 13.16.3
 gcp.project.sqlService.instance.settings.collation 9.0.0
 gcp.project.sqlService.instance.settings.connectorEnforcement 9.0.0
 gcp.project.sqlService.instance.settings.crashSafeReplicationEnabled 9.0.0
+gcp.project.sqlService.instance.settings.dataApiAccess 13.16.3
+gcp.project.sqlService.instance.settings.dataCacheConfig 13.16.3
 gcp.project.sqlService.instance.settings.dataDiskSizeGb 9.0.0
 gcp.project.sqlService.instance.settings.dataDiskType 9.0.0
 gcp.project.sqlService.instance.settings.databaseFlags 9.0.0
@@ -4093,11 +4100,16 @@ gcp.project.sqlService.instance.settings.denyMaintenancePeriod.id 9.0.0
 gcp.project.sqlService.instance.settings.denyMaintenancePeriod.startDate 9.0.0
 gcp.project.sqlService.instance.settings.denyMaintenancePeriod.time 9.0.0
 gcp.project.sqlService.instance.settings.denyMaintenancePeriods 9.0.0
+gcp.project.sqlService.instance.settings.edition 13.16.3
+gcp.project.sqlService.instance.settings.enableDataplexIntegration 13.16.3
+gcp.project.sqlService.instance.settings.enableGoogleMlIntegration 13.16.3
+gcp.project.sqlService.instance.settings.entraidConfig 13.16.3
 gcp.project.sqlService.instance.settings.insightsConfig 9.0.0
 gcp.project.sqlService.instance.settings.instanceName 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.allocatedIpRange 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.authorizedNetworks 9.0.0
+gcp.project.sqlService.instance.settings.ipConfiguration.customSubjectAlternativeNames 13.16.3
 gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.hasOpenAuthorizedNetworks 13.12.2
 gcp.project.sqlService.instance.settings.ipConfiguration.id 9.0.0
@@ -4110,6 +4122,8 @@ gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscAutoConnec
 gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscEnabled 13.10.1
 gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode 13.2.3
+gcp.project.sqlService.instance.settings.ipConfiguration.serverCaPool 13.16.3
+gcp.project.sqlService.instance.settings.ipConfiguration.serverCertificateRotationMode 13.16.3
 gcp.project.sqlService.instance.settings.ipConfiguration.sslMode 9.0.0
 gcp.project.sqlService.instance.settings.locationPreference 9.0.0
 gcp.project.sqlService.instance.settings.maintenanceWindow 9.0.0
@@ -4149,6 +4163,7 @@ gcp.project.sqlService.instance.sslCerts 13.7.2
 gcp.project.sqlService.instance.state 9.0.0
 gcp.project.sqlService.instance.suspensionReason 11.6.6
 gcp.project.sqlService.instance.switchTransactionLogsToCloudStorageEnabled 11.6.6
+gcp.project.sqlService.instance.upgradableDatabaseVersions 13.16.3
 gcp.project.sqlService.instance.user 13.7.2
 gcp.project.sqlService.instance.user.databaseRoles 13.7.2
 gcp.project.sqlService.instance.user.dualPasswordType 13.7.2
