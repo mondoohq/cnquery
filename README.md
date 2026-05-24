@@ -125,6 +125,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Google Workspace              | `google-workspace`         | `mql shell google-workspace --customer-id CUSTOMER_ID --impersonated-user-email EMAIL --credentials-path JSON_FILE`                             |
 | Grafana organizations         | `grafana`                  | `mql shell grafana --url https://myorg.grafana.net --token TOKEN`                                                                               |
 | Hetzner Cloud projects        | `hetzner`                  | `mql shell hetzner --token API_TOKEN`                                                                                                           |
+| Hugging Face                  | `huggingface`              | `mql shell huggingface --token HF_TOKEN`                                                                                                        |
 | OPC UA IoT devices            | `opcua`                    | `mql shell opcua`                                                                                                                               |
 | IP address information        | `ipinfo`                   | `mql shell ipinfo`                                                                                                                              |
 | IPMI-enabled devices          | `ipmi`                     | `mql shell ipmi user@HOST`                                                                                                                      |

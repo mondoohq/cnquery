@@ -261,6 +261,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"huggingface": {
+		Provider: &plugin.Provider{
+			Name:            "huggingface",
+			ID:              "go.mondoo.com/mql/providers/huggingface",
+			ConnectionTypes: []string{"huggingface"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "huggingface",
+					Use:   "huggingface",
+					Short: "Hugging Face",
+				},
+			},
+		},
+	},
+
 	"github": {
 		Provider: &plugin.Provider{
 			Name:            "github",
