@@ -12,7 +12,6 @@ import (
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/auditlogs"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	"github.com/rs/zerolog/log"
@@ -61,11 +60,6 @@ func initMicrosoftUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 func (a *mqlMicrosoftUsers) list() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	betaClient, err := conn.BetaGraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -127,35 +121,9 @@ func (a *mqlMicrosoftUsers) list() ([]any, error) {
 		return nil, transformError(err)
 	}
 
-	detailsResp, err := betaClient.
-		Reports().
-		AuthenticationMethods().
-		UserRegistrationDetails().
-		Get(ctx,
-			&reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
-				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
-					Top: &top,
-				},
-			})
-	// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
-	if err != nil {
-		microsoft.mfaResp = mfaResp{err: err}
-	} else {
-		userRegistrationDetails, err := iterate[*betamodels.UserRegistrationDetails](ctx, detailsResp, betaClient.GetAdapter(), betamodels.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
-		// we do not want to fail the user fetching here, this likely means the tenant does not have the right license
-		if err != nil {
-			microsoft.mfaResp = mfaResp{err: err}
-		} else {
-			mfaMap := map[string]bool{}
-			for _, u := range userRegistrationDetails {
-				if u.GetId() == nil || u.GetIsMfaRegistered() == nil {
-					continue
-				}
-				mfaMap[*u.GetId()] = *u.GetIsMfaRegistered()
-			}
-			microsoft.mfaResp = mfaResp{mfaMap: mfaMap}
-		}
-	}
+	// prefetch the MFA map so per-user mfaEnabled() lookups hit cached data
+	// instead of triggering N+1 calls; lazy fallback lives on the loader.
+	microsoft.loadMfaResp()
 
 	// construct the result
 	res := []any{}
@@ -341,17 +309,14 @@ func (a *mqlMicrosoftUser) mfaEnabled() (bool, error) {
 		return false, err
 	}
 
-	microsoft := mql.(*mqlMicrosoft)
-	if microsoft.mfaResp.mfaMap == nil {
-		microsoft.mfaResp.mfaMap = make(map[string]bool)
-	}
-	if microsoft.mfaResp.err != nil {
-		a.MfaEnabled.Error = microsoft.mfaResp.err
+	resp := mql.(*mqlMicrosoft).loadMfaResp()
+	if resp.err != nil {
+		a.MfaEnabled.Error = resp.err
 		a.MfaEnabled.State = plugin.StateIsSet
-		return false, a.MfaEnabled.Error
+		return false, resp.err
 	}
 
-	a.MfaEnabled.Data = microsoft.mfaResp.mfaMap[a.Id.Data]
+	a.MfaEnabled.Data = resp.mfaMap[a.Id.Data]
 	a.MfaEnabled.State = plugin.StateIsSet
 	return a.MfaEnabled.Data, nil
 }

@@ -4,7 +4,12 @@
 package resources
 
 import (
+	"context"
 	"sync"
+
+	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
+	"go.mondoo.com/mql/v13/providers/ms365/connection"
 )
 
 var idxUsersById = &sync.RWMutex{}
@@ -22,8 +27,59 @@ type mqlMicrosoftInternal struct {
 	idxUsersById map[string]*mqlMicrosoftUser
 	// index devices by id
 	idxDevicesById map[string]*mqlMicrosoftDevice
+	// guards mfaResp; ensures the MFA registration fetch only runs once
+	mfaOnce sync.Once
 	// the response when asking for the user registration details
 	mfaResp mfaResp
+}
+
+// loadMfaResp lazily fetches user MFA registration details from the beta
+// Graph API and caches the result on a.mfaResp. Both microsoft.users.list
+// (eager batch) and microsoft.user.mfaEnabled (per-user lookup) call this
+// so the data is available regardless of which path was queried first.
+func (a *mqlMicrosoft) loadMfaResp() *mfaResp {
+	a.mfaOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+		betaClient, err := conn.BetaGraphClient()
+		if err != nil {
+			a.mfaResp = mfaResp{err: err}
+			return
+		}
+
+		ctx := context.Background()
+		top := int32(999)
+		resp, err := betaClient.
+			Reports().
+			AuthenticationMethods().
+			UserRegistrationDetails().
+			Get(ctx, &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
+				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
+					Top: &top,
+				},
+			})
+		// a failure here typically means the tenant lacks the required license;
+		// store the error so mfaEnabled can surface it but don't fail callers.
+		if err != nil {
+			a.mfaResp = mfaResp{err: err}
+			return
+		}
+
+		details, err := iterate[*betamodels.UserRegistrationDetails](ctx, resp, betaClient.GetAdapter(), betamodels.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
+		if err != nil {
+			a.mfaResp = mfaResp{err: err}
+			return
+		}
+
+		mfaMap := map[string]bool{}
+		for _, u := range details {
+			if u.GetId() == nil || u.GetIsMfaRegistered() == nil {
+				continue
+			}
+			mfaMap[*u.GetId()] = *u.GetIsMfaRegistered()
+		}
+		a.mfaResp = mfaResp{mfaMap: mfaMap}
+	})
+	return &a.mfaResp
 }
 
 // initIndex ensures the user indexes are initialized,

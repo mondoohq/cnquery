@@ -425,7 +425,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	fmtScript := fmt.Sprintf(exchangeReport, organization, conn.ClientId(), conn.TenantId(), outlookToken.Token)
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 	report := &ExchangeOnlineReport{}
 	if res.ExitStatus == 0 {
