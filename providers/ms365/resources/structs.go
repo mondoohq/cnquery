@@ -666,7 +666,7 @@ type AdminConsentRequestPolicy struct {
 }
 
 func newAdminConsentRequestPolicy(p models.AdminConsentRequestPolicyable) *AdminConsentRequestPolicy {
-	if p != nil {
+	if p == nil {
 		return nil
 	}
 

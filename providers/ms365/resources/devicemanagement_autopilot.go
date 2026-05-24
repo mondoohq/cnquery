@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	betadm "github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/ms365/connection"
@@ -23,7 +24,13 @@ func (a *mqlMicrosoftDevicemanagement) windowsAutopilotDeploymentProfiles() ([]a
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().WindowsAutopilotDeploymentProfiles().Get(ctx, nil)
+	// $expand=assignedDevices so the per-profile device count below is non-zero.
+	reqConfig := &betadm.WindowsAutopilotDeploymentProfilesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &betadm.WindowsAutopilotDeploymentProfilesRequestBuilderGetQueryParameters{
+			Expand: []string{"assignedDevices"},
+		},
+	}
+	resp, err := graphClient.DeviceManagement().WindowsAutopilotDeploymentProfiles().Get(ctx, reqConfig)
 	if err != nil {
 		return nil, transformError(err)
 	}

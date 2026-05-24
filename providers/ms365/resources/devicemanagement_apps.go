@@ -157,11 +157,14 @@ func newMobileAppResource(runtime *plugin.Runtime, app models.MobileAppable) (an
 		publishingState = v.String()
 	}
 	props := map[string]any{}
-	if v := app.GetOdataType(); v != nil {
-		props["@odata.type"] = trimOdataType(*v)
-	}
 	for k, v := range app.GetAdditionalData() {
 		props[k] = v
+	}
+	// Set @odata.type after the AdditionalData loop because that loop carries a
+	// raw "#microsoft.graph.<x>" value that would otherwise overwrite the trimmed
+	// form we set here. Trimmed is what callers expect.
+	if v := app.GetOdataType(); v != nil {
+		props["@odata.type"] = trimOdataType(*v)
 	}
 	return CreateResource(runtime, "microsoft.devicemanagement.mobileapp",
 		map[string]*llx.RawData{

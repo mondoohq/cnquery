@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	betadm "github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/ms365/connection"
@@ -99,7 +100,13 @@ func (a *mqlMicrosoftDevicemanagement) roleAssignments() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().RoleAssignments().Get(ctx, nil)
+	// $expand=roleDefinition so roleDefinitionId is populated from the nav property.
+	reqConfig := &betadm.RoleAssignmentsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &betadm.RoleAssignmentsRequestBuilderGetQueryParameters{
+			Expand: []string{"roleDefinition"},
+		},
+	}
+	resp, err := graphClient.DeviceManagement().RoleAssignments().Get(ctx, reqConfig)
 	if err != nil {
 		return nil, transformError(err)
 	}

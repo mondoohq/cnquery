@@ -94,12 +94,20 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 		return "", errors.New("no sharepoint url provided, unable to fetch sharepoint online report")
 	}
 
-	domainParts := strings.Split(spUrl, ".")
-	if len(domainParts) < 2 {
+	// Accept both bare ("contoso.onmicrosoft.com") and full URL
+	// ("https://contoso.sharepoint.com") forms.
+	host := spUrl
+	host = strings.TrimPrefix(host, "https://")
+	host = strings.TrimPrefix(host, "http://")
+	if i := strings.IndexByte(host, '/'); i >= 0 {
+		host = host[:i]
+	}
+
+	domainParts := strings.Split(host, ".")
+	if len(domainParts) < 2 || domainParts[0] == "" {
 		return "", fmt.Errorf("invalid sharepoint url: %s", spUrl)
 	}
 
-	// we only care about the tenant name, so we take the first part in the split domain
 	tenant := domainParts[0]
 	return tenant, nil
 }

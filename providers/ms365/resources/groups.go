@@ -214,7 +214,7 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 
 func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 	ownerType := a.OwnerType.Data
-	if ownerType != "user" {
+	if ownerType != "#microsoft.graph.user" {
 		return nil, errors.New("owner type is not a user")
 	}
 
@@ -231,7 +231,7 @@ func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 
 func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
 	ownerType := a.OwnerType.Data
-	if ownerType != "servicePrincipal" {
+	if ownerType != "#microsoft.graph.servicePrincipal" {
 		return nil, errors.New("owner type is not a service principal")
 	}
 

@@ -60,9 +60,9 @@ func (a *mqlMicrosoft) userById(id string) (*mqlMicrosoftUser, bool) {
 // indexDevice adds a device to the internal indexes
 func (a *mqlMicrosoft) indexDevice(device *mqlMicrosoftDevice) {
 	a.initIndex()
-	idxUsersById.Lock()
+	idxDevicesById.Lock()
 	a.idxDevicesById[device.Id.Data] = device
-	idxUsersById.Unlock()
+	idxDevicesById.Unlock()
 }
 
 // deviceById returns a device by id if it exists in the indexDevice

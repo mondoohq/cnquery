@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/url"
+	"strings"
 	"time"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
@@ -257,8 +257,9 @@ func fetchApplicationIdByName(runtime *plugin.Runtime, name string) (*string, er
 		return nil, err
 	}
 
-	// https://graph.microsoft.com/v1.0/servicePrincipals?$count=true&$search="displayName:teams"&$select=id,displayName
-	filter := fmt.Sprintf("displayName eq '%s'", url.QueryEscape(name))
+	// OData escapes embedded single quotes by doubling them, not URL-escaping;
+	// the SDK handles URL encoding of the final filter string.
+	filter := fmt.Sprintf("displayName eq '%s'", strings.ReplaceAll(name, "'", "''"))
 	ctx := context.Background()
 	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{
 		QueryParameters: &applications.ApplicationsRequestBuilderGetQueryParameters{
