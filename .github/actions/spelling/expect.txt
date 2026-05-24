@@ -89,6 +89,7 @@ bumpable
 bwawxf
 BXdl
 bytematchstatement
+CADVISOR
 cafd
 cavium
 cbf
@@ -164,6 +165,7 @@ datasource
 datastream
 DATAUSER
 DBfor
+DCGM
 ddl
 ddos
 DEAUTHORIZED
@@ -341,6 +343,7 @@ JFi
 jira
 jkl
 jobnum
+JOBSET
 jpi
 jql
 jre
