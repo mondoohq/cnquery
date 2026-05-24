@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -77,8 +76,6 @@ func (a *mqlAwsCodepipeline) getPipelines(conn *connection.AwsConnection) []*job
 			}
 
 			pipelines := make([]plugin.Resource, len(names))
-			var mu sync.Mutex
-			var firstErr error
 			g, _ := errgroup.WithContext(ctx)
 			g.SetLimit(10)
 			for i, name := range names {
@@ -89,20 +86,14 @@ func (a *mqlAwsCodepipeline) getPipelines(conn *connection.AwsConnection) []*job
 							log.Warn().Str("region", region).Str("pipeline", name).Msg("error accessing pipeline for AWS API")
 							return nil
 						}
-						mu.Lock()
-						if firstErr == nil {
-							firstErr = err
-						}
-						mu.Unlock()
-						return nil
+						return err
 					}
 					pipelines[i] = mqlPipeline
 					return nil
 				})
 			}
-			_ = g.Wait()
-			if firstErr != nil {
-				return nil, firstErr
+			if err := g.Wait(); err != nil {
+				return nil, err
 			}
 			for _, p := range pipelines {
 				if p == nil {
