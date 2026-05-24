@@ -78,29 +78,22 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(resp.Models))
 	for _, m := range resp.Models {
-		families := make([]interface{}, len(m.Details.Families))
-		for i, f := range m.Details.Families {
-			families[i] = f
-		}
-
-		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", map[string]*llx.RawData{
-			"__id":              llx.StringData(m.Digest),
-			"name":              llx.StringData(m.Name),
-			"model":             llx.StringData(m.Model),
-			"modifiedAt":        llx.TimeData(m.ExpiresAt),
-			"size":              llx.IntData(m.Size),
-			"digest":            llx.StringData(m.Digest),
-			"format":            llx.StringData(m.Details.Format),
-			"family":            llx.StringData(m.Details.Family),
-			"families":          llx.ArrayData(families, types.String),
-			"parameterSize":     llx.StringData(m.Details.ParameterSize),
-			"quantizationLevel": llx.StringData(m.Details.QuantizationLevel),
-			"parentModel":       llx.StringData(m.Details.ParentModel),
+		mqlRunning, err := CreateResource(r.MqlRuntime, "ollama.runningModel", map[string]*llx.RawData{
+			"__id":          llx.StringData("running/" + m.Digest),
+			"name":          llx.StringData(m.Name),
+			"expiresAt":     llx.TimeData(m.ExpiresAt),
+			"sizeVram":      llx.IntData(m.SizeVRAM),
+			"contextLength": llx.IntData(int64(m.ContextLength)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlModel)
+
+		rm := mqlRunning.(*mqlOllamaRunningModel)
+		rm.cacheDigest = m.Digest
+		rm.cacheDetails = m.Details
+
+		res = append(res, mqlRunning)
 	}
 
 	return res, nil
@@ -258,4 +251,37 @@ func getStringSlice(m map[string]any, key string) []interface{} {
 
 func (r *mqlOllamaModelInfo) id() (string, error) {
 	return r.Architecture.Data + "/info", nil
+}
+
+type mqlOllamaRunningModelInternal struct {
+	cacheDigest  string
+	cacheDetails api.ModelDetails
+}
+
+func (r *mqlOllamaRunningModel) id() (string, error) {
+	return "running/" + r.cacheDigest, nil
+}
+
+func (r *mqlOllamaRunningModel) model() (*mqlOllamaModel, error) {
+	families := make([]interface{}, len(r.cacheDetails.Families))
+	for i, f := range r.cacheDetails.Families {
+		families[i] = f
+	}
+
+	res, err := NewResource(r.MqlRuntime, "ollama.model", map[string]*llx.RawData{
+		"__id":              llx.StringData(r.cacheDigest),
+		"name":              llx.StringData(r.GetName().Data),
+		"model":             llx.StringData(r.GetName().Data),
+		"digest":            llx.StringData(r.cacheDigest),
+		"format":            llx.StringData(r.cacheDetails.Format),
+		"family":            llx.StringData(r.cacheDetails.Family),
+		"families":          llx.ArrayData(families, types.String),
+		"parameterSize":     llx.StringData(r.cacheDetails.ParameterSize),
+		"quantizationLevel": llx.StringData(r.cacheDetails.QuantizationLevel),
+		"parentModel":       llx.StringData(r.cacheDetails.ParentModel),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOllamaModel), nil
 }

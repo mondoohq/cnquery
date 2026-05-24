@@ -16,8 +16,9 @@ ollama @defaults("host") {
   // Installed models
   models() []ollama.model
   // Currently running models loaded in memory
-  runningModels() []ollama.model
+  runningModels() []ollama.runningModel
 }
+
 
 // Ollama model
 //
@@ -131,5 +132,24 @@ private ollama.model.info @defaults("architecture parameterCount sizeLabel") {
   //
   // For example gpt2, llama, or sentencepiece.
   tokenizerModel string
+}
+
+// Ollama running model
+//
+// Examine a model currently loaded in memory on the Ollama instance.
+// The `model` field provides a typed reference to the installed
+// `ollama.model` resource for full metadata access including license,
+// capabilities, and GGUF info.
+ollama.runningModel @defaults("name") {
+  // Model name (e.g., "llama3.1:latest")
+  name string
+  // Installed model with full metadata
+  model() ollama.model
+  // Time when the model will be unloaded from memory
+  expiresAt time
+  // VRAM usage in bytes
+  sizeVram int
+  // Active context window length in tokens
+  contextLength int
 }
 

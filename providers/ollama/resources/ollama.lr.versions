@@ -43,4 +43,10 @@ ollama.model.size 13.0.0
 ollama.model.system 13.0.0
 ollama.model.template 13.0.0
 ollama.models 13.0.0
+ollama.runningModel 13.0.0
+ollama.runningModel.contextLength 13.0.0
+ollama.runningModel.expiresAt 13.0.0
+ollama.runningModel.model 13.0.0
+ollama.runningModel.name 13.0.0
+ollama.runningModel.sizeVram 13.0.0
 ollama.runningModels 13.0.0
