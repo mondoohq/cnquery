@@ -17123,31 +17123,31 @@ private aws.apprunner.service @defaults("serviceName status region") {
   // Time the service was last updated
   updatedAt time
   // Time the service was deleted (null when not deleted)
-  deletedAt time
+  deletedAt() time
   // Region where the service exists
   region string
   // Source deployed to the service
   //
   // Shape varies by source type. Image sources carry `imageRepository: {imageIdentifier, imageRepositoryType: "ECR"|"ECR_PUBLIC", imageConfiguration: {port, runtimeEnvironmentVariables, runtimeEnvironmentSecrets, startCommand}}`. Code sources carry `codeRepository: {repositoryUrl, sourceCodeVersion: {type, value}, sourceDirectory, codeConfiguration}`. The top level also carries `authenticationConfiguration: {connectionArn, accessRoleArn}` and `autoDeploymentsEnabled`.
-  sourceConfiguration dict
+  sourceConfiguration() dict
   // Number of CPU units reserved for each instance (e.g., "1024", "1 vCPU")
-  instanceCpu string
+  instanceCpu() string
   // Amount of memory reserved for each instance (e.g., "2048", "2 GB")
-  instanceMemory string
+  instanceMemory() string
   // IAM role the application code assumes when calling AWS APIs
   instanceRole() aws.iam.role
   // Health check configuration
   //
   // Shape: `{protocol: "TCP"|"HTTP", path, interval, timeout, healthyThreshold, unhealthyThreshold}`.
-  healthCheckConfiguration dict
+  healthCheckConfiguration() dict
   // Egress type for outbound traffic: DEFAULT (public internet) or VPC (through a VPC connector)
-  egressType string
+  egressType() string
   // VPC connector used for egress when egressType is VPC, null otherwise
   vpcConnector() aws.apprunner.vpcConnector
   // Whether the service is reachable from the public internet
-  isPubliclyAccessible bool
+  isPubliclyAccessible() bool
   // IP address type of the service: IPV4 or DUAL_STACK
-  ipAddressType string
+  ipAddressType() string
   // Observability configuration bound to the service when observability is enabled, null otherwise
   observabilityConfiguration() aws.apprunner.observabilityConfiguration
   // Auto scaling configuration revision bound to the service
@@ -17174,19 +17174,19 @@ private aws.apprunner.autoScalingConfiguration @defaults("name revision status r
   // Revision number unique within the configuration name
   revision int
   // Whether this revision is the latest one for the configuration name
-  latest bool
+  latest() bool
   // Current state of the revision: ACTIVE or INACTIVE
   status string
   // Time the revision was created
   createdAt time
   // Time the revision was deleted (null when not deleted)
-  deletedAt time
+  deletedAt() time
   // Maximum number of concurrent requests an instance processes before App Runner scales out
-  maxConcurrency int
+  maxConcurrency() int
   // Minimum number of instances kept provisioned for a service using this revision
-  minSize int
+  minSize() int
   // Maximum number of instances a service using this revision scales up to
-  maxSize int
+  maxSize() int
   // Whether at least one App Runner service references this revision
   hasAssociatedService bool
   // Region where the revision exists
@@ -17263,17 +17263,17 @@ private aws.apprunner.observabilityConfiguration @defaults("name revision status
   // Revision number unique within the configuration name
   revision int
   // Whether this revision is the latest one for the configuration name
-  latest bool
+  latest() bool
   // Current state of the revision: ACTIVE or INACTIVE
-  status string
+  status() string
   // Time the revision was created
-  createdAt time
+  createdAt() time
   // Time the revision was deleted (null when not deleted)
-  deletedAt time
+  deletedAt() time
   // Tracing implementation provider configured for the revision, empty when tracing is not enabled
   //
   // Currently the only supported value is AWSXRAY.
-  traceConfigurationVendor string
+  traceConfigurationVendor() string
   // Region where the revision exists
   region string
 }
@@ -17289,21 +17289,21 @@ private aws.apprunner.vpcIngressConnection @defaults("name status domainName reg
   // ARN of the VPC ingress connection
   arn string
   // Customer-provided VPC ingress connection name
-  name string
+  name() string
   // Current state of the ingress connection
   //
   // One of AVAILABLE, PENDING_CREATION, PENDING_UPDATE, PENDING_DELETION, FAILED_CREATION, FAILED_UPDATE, FAILED_DELETION, DELETED.
-  status string
+  status() string
   // Time the ingress connection was created
-  createdAt time
+  createdAt() time
   // Time the ingress connection was deleted (null when not deleted)
-  deletedAt time
+  deletedAt() time
   // Domain name customers resolve to reach the service through the ingress endpoint
-  domainName string
+  domainName() string
   // VPC endpoint configuration the ingress connection terminates on
   //
   // Shape: `{vpcId, vpcEndpointId}`.
-  ingressVpcConfiguration dict
+  ingressVpcConfiguration() dict
   // App Runner service the ingress connection fronts
   service() aws.apprunner.service
   // Region where the ingress connection exists
@@ -20808,7 +20808,7 @@ private aws.cloudformation.stackSet @defaults("name status") {
   // Time of the most recent drift detection operation, or null if drift detection has never been run
   lastDriftCheckTimestamp time
   // Whether non-conflicting stack set operations run concurrently
-  managedExecutionActive bool
+  managedExecutionActive() bool
   // Whether auto deployment is enabled
   autoDeploymentEnabled() bool
   // IAM role in the management account used to deploy stack instances (SELF_MANAGED stack sets)

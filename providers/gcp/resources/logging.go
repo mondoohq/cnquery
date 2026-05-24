@@ -61,6 +61,31 @@ func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
 	return svc, nil
 }
 
+// Direct construction (e.g. `gcp.project.loggingservice.sinks`) bypasses
+// gcp.project.logging(), leaving projectId empty and serviceEnabled false —
+// accessors then short-circuit to empty silently. Delegate to the parent
+// project accessor so the resulting instance is fully initialized.
+func initGcpProjectLoggingservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["projectId"]; ok {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(conn.ResourceID()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc, err := proj.(*mqlGcpProject).logging()
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, svc, nil
+}
+
 func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 	if !g.serviceEnabled {
 		return nil, nil

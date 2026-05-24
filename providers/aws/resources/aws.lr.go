@@ -141497,7 +141497,9 @@ func (c *mqlAwsApprunnerService) GetUpdatedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsApprunnerService) GetDeletedAt() *plugin.TValue[*time.Time] {
-	return &c.DeletedAt
+	return plugin.GetOrCompute[*time.Time](&c.DeletedAt, func() (*time.Time, error) {
+		return c.deletedAt()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetRegion() *plugin.TValue[string] {
@@ -141505,15 +141507,21 @@ func (c *mqlAwsApprunnerService) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsApprunnerService) GetSourceConfiguration() *plugin.TValue[any] {
-	return &c.SourceConfiguration
+	return plugin.GetOrCompute[any](&c.SourceConfiguration, func() (any, error) {
+		return c.sourceConfiguration()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetInstanceCpu() *plugin.TValue[string] {
-	return &c.InstanceCpu
+	return plugin.GetOrCompute[string](&c.InstanceCpu, func() (string, error) {
+		return c.instanceCpu()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetInstanceMemory() *plugin.TValue[string] {
-	return &c.InstanceMemory
+	return plugin.GetOrCompute[string](&c.InstanceMemory, func() (string, error) {
+		return c.instanceMemory()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetInstanceRole() *plugin.TValue[*mqlAwsIamRole] {
@@ -141533,11 +141541,15 @@ func (c *mqlAwsApprunnerService) GetInstanceRole() *plugin.TValue[*mqlAwsIamRole
 }
 
 func (c *mqlAwsApprunnerService) GetHealthCheckConfiguration() *plugin.TValue[any] {
-	return &c.HealthCheckConfiguration
+	return plugin.GetOrCompute[any](&c.HealthCheckConfiguration, func() (any, error) {
+		return c.healthCheckConfiguration()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetEgressType() *plugin.TValue[string] {
-	return &c.EgressType
+	return plugin.GetOrCompute[string](&c.EgressType, func() (string, error) {
+		return c.egressType()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetVpcConnector() *plugin.TValue[*mqlAwsApprunnerVpcConnector] {
@@ -141557,11 +141569,15 @@ func (c *mqlAwsApprunnerService) GetVpcConnector() *plugin.TValue[*mqlAwsApprunn
 }
 
 func (c *mqlAwsApprunnerService) GetIsPubliclyAccessible() *plugin.TValue[bool] {
-	return &c.IsPubliclyAccessible
+	return plugin.GetOrCompute[bool](&c.IsPubliclyAccessible, func() (bool, error) {
+		return c.isPubliclyAccessible()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetIpAddressType() *plugin.TValue[string] {
-	return &c.IpAddressType
+	return plugin.GetOrCompute[string](&c.IpAddressType, func() (string, error) {
+		return c.ipAddressType()
+	})
 }
 
 func (c *mqlAwsApprunnerService) GetObservabilityConfiguration() *plugin.TValue[*mqlAwsApprunnerObservabilityConfiguration] {
@@ -141687,7 +141703,9 @@ func (c *mqlAwsApprunnerAutoScalingConfiguration) GetRevision() *plugin.TValue[i
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetLatest() *plugin.TValue[bool] {
-	return &c.Latest
+	return plugin.GetOrCompute[bool](&c.Latest, func() (bool, error) {
+		return c.latest()
+	})
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetStatus() *plugin.TValue[string] {
@@ -141699,19 +141717,27 @@ func (c *mqlAwsApprunnerAutoScalingConfiguration) GetCreatedAt() *plugin.TValue[
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetDeletedAt() *plugin.TValue[*time.Time] {
-	return &c.DeletedAt
+	return plugin.GetOrCompute[*time.Time](&c.DeletedAt, func() (*time.Time, error) {
+		return c.deletedAt()
+	})
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMaxConcurrency() *plugin.TValue[int64] {
-	return &c.MaxConcurrency
+	return plugin.GetOrCompute[int64](&c.MaxConcurrency, func() (int64, error) {
+		return c.maxConcurrency()
+	})
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMinSize() *plugin.TValue[int64] {
-	return &c.MinSize
+	return plugin.GetOrCompute[int64](&c.MinSize, func() (int64, error) {
+		return c.minSize()
+	})
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetMaxSize() *plugin.TValue[int64] {
-	return &c.MaxSize
+	return plugin.GetOrCompute[int64](&c.MaxSize, func() (int64, error) {
+		return c.maxSize()
+	})
 }
 
 func (c *mqlAwsApprunnerAutoScalingConfiguration) GetHasAssociatedService() *plugin.TValue[bool] {
@@ -141975,23 +142001,33 @@ func (c *mqlAwsApprunnerObservabilityConfiguration) GetRevision() *plugin.TValue
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetLatest() *plugin.TValue[bool] {
-	return &c.Latest
+	return plugin.GetOrCompute[bool](&c.Latest, func() (bool, error) {
+		return c.latest()
+	})
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetDeletedAt() *plugin.TValue[*time.Time] {
-	return &c.DeletedAt
+	return plugin.GetOrCompute[*time.Time](&c.DeletedAt, func() (*time.Time, error) {
+		return c.deletedAt()
+	})
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetTraceConfigurationVendor() *plugin.TValue[string] {
-	return &c.TraceConfigurationVendor
+	return plugin.GetOrCompute[string](&c.TraceConfigurationVendor, func() (string, error) {
+		return c.traceConfigurationVendor()
+	})
 }
 
 func (c *mqlAwsApprunnerObservabilityConfiguration) GetRegion() *plugin.TValue[string] {
@@ -142056,27 +142092,39 @@ func (c *mqlAwsApprunnerVpcIngressConnection) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetName() *plugin.TValue[string] {
-	return &c.Name
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetDeletedAt() *plugin.TValue[*time.Time] {
-	return &c.DeletedAt
+	return plugin.GetOrCompute[*time.Time](&c.DeletedAt, func() (*time.Time, error) {
+		return c.deletedAt()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetDomainName() *plugin.TValue[string] {
-	return &c.DomainName
+	return plugin.GetOrCompute[string](&c.DomainName, func() (string, error) {
+		return c.domainName()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetIngressVpcConfiguration() *plugin.TValue[any] {
-	return &c.IngressVpcConfiguration
+	return plugin.GetOrCompute[any](&c.IngressVpcConfiguration, func() (any, error) {
+		return c.ingressVpcConfiguration()
+	})
 }
 
 func (c *mqlAwsApprunnerVpcIngressConnection) GetService() *plugin.TValue[*mqlAwsApprunnerService] {
@@ -156706,7 +156754,9 @@ func (c *mqlAwsCloudformationStackSet) GetLastDriftCheckTimestamp() *plugin.TVal
 }
 
 func (c *mqlAwsCloudformationStackSet) GetManagedExecutionActive() *plugin.TValue[bool] {
-	return &c.ManagedExecutionActive
+	return plugin.GetOrCompute[bool](&c.ManagedExecutionActive, func() (bool, error) {
+		return c.managedExecutionActive()
+	})
 }
 
 func (c *mqlAwsCloudformationStackSet) GetAutoDeploymentEnabled() *plugin.TValue[bool] {

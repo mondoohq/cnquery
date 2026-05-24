@@ -66,7 +66,7 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return PolicyAssignments{}, errors.New("failed to fetch security contacts from " + urlPath + ": " + resp.Status)
+		return PolicyAssignments{}, errors.New("failed to fetch policy assignments from " + urlPath + ": " + resp.Status)
 	}
 
 	raw, err := io.ReadAll(resp.Body)
@@ -104,7 +104,7 @@ func getServerVulnAssessmentSettings(ctx context.Context, conn armSecurityConn) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return ServerVulnerabilityAssessmentsSettingsList{}, errors.New("failed to fetch security contacts from " + urlPath + ": " + resp.Status)
+		return ServerVulnerabilityAssessmentsSettingsList{}, errors.New("failed to fetch server vulnerability assessment settings from " + urlPath + ": " + resp.Status)
 	}
 
 	raw, err := io.ReadAll(resp.Body)

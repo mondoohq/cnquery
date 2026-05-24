@@ -78,6 +78,31 @@ func (g *mqlGcpProject) dataproc() (*mqlGcpProjectDataprocService, error) {
 	return res.(*mqlGcpProjectDataprocService), nil
 }
 
+// Direct construction (e.g. `gcp.project.dataprocService.regions`) bypasses
+// gcp.project.dataproc(), leaving projectId empty so regions() calls the
+// compute API with an empty project ID. Delegate to the parent project
+// accessor so projectId + enabled are both populated.
+func initGcpProjectDataprocService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["projectId"]; ok {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(conn.ResourceID()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc, err := proj.(*mqlGcpProject).dataproc()
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, svc, nil
+}
+
 func (g *mqlGcpProjectDataprocService) regions() ([]any, error) {
 	// no check whether DataProc service is enabled here, this uses a different service
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)

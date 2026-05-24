@@ -5,11 +5,13 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	filestore "cloud.google.com/go/filestore/apiv1"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -28,6 +30,31 @@ func (g *mqlGcpProject) filestore() (*mqlGcpProjectFilestoreService, error) {
 		return nil, err
 	}
 	return res.(*mqlGcpProjectFilestoreService), nil
+}
+
+// Direct construction (e.g. `gcp.project.filestoreService.instances`) bypasses
+// gcp.project.filestore(), leaving projectId empty so instances() raises a
+// malformed RESOURCE_PROJECT_INVALID instead of returning the proper
+// SERVICE_DISABLED message. Delegate to the parent project accessor.
+func initGcpProjectFilestoreService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["projectId"]; ok {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(conn.ResourceID()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc, err := proj.(*mqlGcpProject).filestore()
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, svc, nil
 }
 
 func (g *mqlGcpProjectFilestoreService) id() (string, error) {

@@ -82,6 +82,31 @@ func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
 	return svc, nil
 }
 
+// Direct construction (e.g. `gcp.project.iamService.serviceAccounts`) bypasses
+// gcp.project.iam(), so projectId stays empty and serviceEnabled stays false —
+// accessors then short-circuit and silently return empty. Delegate to the
+// parent project accessor so the resulting instance is fully initialized.
+func initGcpProjectIamService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["projectId"]; ok {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(conn.ResourceID()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc, err := proj.(*mqlGcpProject).iam()
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, svc, nil
+}
+
 func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
 	if g.UniqueId.Error != nil {
 		return "", g.UniqueId.Error

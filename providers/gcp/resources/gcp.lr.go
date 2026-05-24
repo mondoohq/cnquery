@@ -954,7 +954,7 @@ func init() {
 			Create: createGcpProjectApiKeyRestrictions,
 		},
 		"gcp.project.loggingservice": {
-			// to override args, implement: initGcpProjectLoggingservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectLoggingservice,
 			Create: createGcpProjectLoggingservice,
 		},
 		"gcp.project.loggingservice.bucket": {
@@ -982,7 +982,7 @@ func init() {
 			Create: createGcpProjectLoggingserviceExclusion,
 		},
 		"gcp.project.iamService": {
-			// to override args, implement: initGcpProjectIamService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectIamService,
 			Create: createGcpProjectIamService,
 		},
 		"gcp.project.iamService.role": {
@@ -1030,7 +1030,7 @@ func init() {
 			Create: createGcpProjectCloudFunctionV2EventTrigger,
 		},
 		"gcp.project.dataprocService": {
-			// to override args, implement: initGcpProjectDataprocService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectDataprocService,
 			Create: createGcpProjectDataprocService,
 		},
 		"gcp.project.dataprocService.cluster": {
@@ -1406,7 +1406,7 @@ func init() {
 			Create: createGcpRetryConfig,
 		},
 		"gcp.project.filestoreService": {
-			// to override args, implement: initGcpProjectFilestoreService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectFilestoreService,
 			Create: createGcpProjectFilestoreService,
 		},
 		"gcp.project.filestoreService.instance": {

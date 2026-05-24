@@ -326,7 +326,6 @@ func (a *mqlAwsCloudformation) getStackSets(conn *connection.AwsConnection) []*j
 								"permissionModel":         llx.StringData(string(ss.PermissionModel)),
 								"driftStatus":             llx.StringData(normalizeDriftStatus(string(ss.DriftStatus))),
 								"lastDriftCheckTimestamp": llx.TimeDataPtr(ss.LastDriftCheckTimestamp),
-								"managedExecutionActive":  llx.BoolData(managedExecutionActive(ss.ManagedExecution)),
 							})
 						if err != nil {
 							return nil, err
@@ -354,12 +353,13 @@ type mqlAwsCloudformationStackSetInternal struct {
 	cacheAutoDeployment *cf_types.AutoDeployment
 	cacheStatus         cf_types.StackSetStatus
 
-	detailsLock    sync.Mutex
-	detailsFetched bool
-	cacheTags      map[string]any
-	cacheAdminRole *string
-	cacheExecRole  *string
-	cacheOuIds     []string
+	detailsLock      sync.Mutex
+	detailsFetched   bool
+	cacheTags        map[string]any
+	cacheAdminRole   *string
+	cacheExecRole    *string
+	cacheOuIds       []string
+	cacheManagedExec *cf_types.ManagedExecution
 }
 
 func (a *mqlAwsCloudformationStackSet) autoDeploymentEnabled() (bool, error) {
@@ -409,9 +409,17 @@ func (a *mqlAwsCloudformationStackSet) fetchDetails() error {
 		a.cacheAdminRole = resp.StackSet.AdministrationRoleARN
 		a.cacheExecRole = resp.StackSet.ExecutionRoleName
 		a.cacheOuIds = resp.StackSet.OrganizationalUnitIds
+		a.cacheManagedExec = resp.StackSet.ManagedExecution
 	}
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsCloudformationStackSet) managedExecutionActive() (bool, error) {
+	if err := a.fetchDetails(); err != nil {
+		return false, err
+	}
+	return managedExecutionActive(a.cacheManagedExec), nil
 }
 
 func (a *mqlAwsCloudformationStackSet) tags() (map[string]any, error) {
