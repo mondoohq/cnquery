@@ -128,6 +128,9 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			return nil, err
 		}
 		for _, account := range page.Value {
+			if account == nil || account.ID == nil {
+				continue
+			}
 			properties, err := convert.JsonToDict(account.Properties)
 			if err != nil {
 				return nil, err
@@ -183,7 +186,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			}
 
 			virtualNetworkRules := []any{}
-			if account.ID != nil && account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
+			if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 				for _, rule := range account.Properties.VirtualNetworkRules {
 					if rule == nil {
 						continue
