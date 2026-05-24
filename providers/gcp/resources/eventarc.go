@@ -82,6 +82,14 @@ func (g *mqlGcpProjectEventarcServiceTrigger) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+// eventFilterID returns a cache-stable identifier for an Eventarc trigger
+// event filter. A trigger can declare multiple filters that share an
+// attribute key but match different values, so both must participate in
+// the id to avoid runtime-cache collisions.
+func eventFilterID(triggerName, attribute, value string) string {
+	return fmt.Sprintf("%s/eventFilters/%s/%s", triggerName, attribute, value)
+}
+
 func (g *mqlGcpProjectEventarcServiceTriggerEventFilter) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
@@ -130,7 +138,7 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 		eventFilters := make([]any, 0, len(trigger.EventFilters))
 		for _, ef := range trigger.EventFilters {
 			mqlEF, err := CreateResource(g.MqlRuntime, "gcp.project.eventarcService.trigger.eventFilter", map[string]*llx.RawData{
-				"id":        llx.StringData(fmt.Sprintf("%s/eventFilters/%s/%s", trigger.Name, ef.Attribute, ef.Value)),
+				"id":        llx.StringData(eventFilterID(trigger.Name, ef.Attribute, ef.Value)),
 				"attribute": llx.StringData(ef.Attribute),
 				"value":     llx.StringData(ef.Value),
 				"operator":  llx.StringData(ef.Operator),

@@ -96,6 +96,22 @@ func initGcpProjectSqlServiceInstance(runtime *plugin.Runtime, args map[string]*
 	return nil, nil, errors.New("SQL instance not found")
 }
 
+// sqlIPMappingID returns a cache-stable identifier for a Cloud SQL instance
+// IP address. A single instance can expose more than one IP of the same
+// Type (e.g., two PRIVATE IPs across distinct VPCs), so the address itself
+// must participate in the id to avoid runtime-cache collisions.
+func sqlIPMappingID(instanceId, ipType, ipAddress string) string {
+	return fmt.Sprintf("%s/ipAddresses/%s/%s", instanceId, ipType, ipAddress)
+}
+
+// sqlDenyMaintenancePeriodID returns a cache-stable identifier for a
+// Cloud SQL deny-maintenance period. Two periods can start on the same
+// date (e.g., recurring annual windows) but cover different end dates, so
+// both dates must participate in the id.
+func sqlDenyMaintenancePeriodID(instanceId, startDate, endDate string) string {
+	return fmt.Sprintf("%s/settings/denyMaintenancePeriod/%s/%s", instanceId, startDate, endDate)
+}
+
 func (g *mqlGcpProjectSqlService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -210,7 +226,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			mqlIpAddresses := make([]any, 0, len(instance.IpAddresses))
 			for _, a := range instance.IpAddresses {
 				mqlIpAddress, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.ipMapping", map[string]*llx.RawData{
-					"id":           llx.StringData(fmt.Sprintf("%s/ipAddresses/%s/%s", instanceId, a.Type, a.IpAddress)),
+					"id":           llx.StringData(sqlIPMappingID(instanceId, a.Type, a.IpAddress)),
 					"ipAddress":    llx.StringData(a.IpAddress),
 					"timeToRetire": llx.TimeDataPtr(parseTime(a.TimeToRetire)),
 					"type":         llx.StringData(a.Type),
@@ -283,7 +299,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			mqlDenyMaintenancePeriods := make([]any, 0, len(s.DenyMaintenancePeriods))
 			for _, p := range s.DenyMaintenancePeriods {
 				mqlPeriod, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.denyMaintenancePeriod", map[string]*llx.RawData{
-					"id":        llx.StringData(fmt.Sprintf("%s/settings/denyMaintenancePeriod/%s/%s", instanceId, p.StartDate, p.EndDate)),
+					"id":        llx.StringData(sqlDenyMaintenancePeriodID(instanceId, p.StartDate, p.EndDate)),
 					"endDate":   llx.StringData(p.EndDate),
 					"startDate": llx.StringData(p.StartDate),
 					"time":      llx.StringData(p.Time),

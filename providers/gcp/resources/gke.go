@@ -901,6 +901,14 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 	return res, nil
 }
 
+// nodeTaintID returns a cache-stable identifier for a node-pool taint.
+// Kubernetes taints are uniquely identified by (key, value, effect); a node
+// pool can carry sibling taints sharing any one of those, so all three must
+// participate in the id to avoid runtime-cache collisions.
+func nodeTaintID(nodePoolId, key, value, effect string) string {
+	return fmt.Sprintf("%s/taints/%s/%s/%s", nodePoolId, key, value, effect)
+}
+
 func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (plugin.Resource, error) {
 	cfg := np.Config
 	if cfg == nil {
@@ -919,7 +927,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	nodeTaints := make([]any, 0, len(cfg.Taints))
 	for _, taint := range cfg.Taints {
 		mqlNodeTaint, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.nodeTaint", map[string]*llx.RawData{
-			"id":     llx.StringData(fmt.Sprintf("%s/taints/%s/%s/%s", nodePoolId, taint.Key, taint.Value, taint.Effect.String())),
+			"id":     llx.StringData(nodeTaintID(nodePoolId, taint.Key, taint.Value, taint.Effect.String())),
 			"key":    llx.StringData(taint.Key),
 			"value":  llx.StringData(taint.Value),
 			"effect": llx.StringData(taint.Effect.String()),
