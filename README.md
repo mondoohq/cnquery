@@ -179,7 +179,7 @@ Our goal is to become the API for your entire infrastructure. Join our [communit
 
 ## Development
 
-See our [development documentation](docs/development.md) for information on building and contributing to MQL.
+See our [development documentation](DEVELOPMENT.md) for information on building and contributing to MQL.
 
 ## Legal
 
