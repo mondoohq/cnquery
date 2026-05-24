@@ -210,7 +210,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			mqlIpAddresses := make([]any, 0, len(instance.IpAddresses))
 			for _, a := range instance.IpAddresses {
 				mqlIpAddress, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.ipMapping", map[string]*llx.RawData{
-					"id":           llx.StringData(fmt.Sprintf("%s/ipAddresses/%s", instanceId, a.Type)),
+					"id":           llx.StringData(fmt.Sprintf("%s/ipAddresses/%s/%s", instanceId, a.Type, a.IpAddress)),
 					"ipAddress":    llx.StringData(a.IpAddress),
 					"timeToRetire": llx.TimeDataPtr(parseTime(a.TimeToRetire)),
 					"type":         llx.StringData(a.Type),
@@ -283,7 +283,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			mqlDenyMaintenancePeriods := make([]any, 0, len(s.DenyMaintenancePeriods))
 			for _, p := range s.DenyMaintenancePeriods {
 				mqlPeriod, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.denyMaintenancePeriod", map[string]*llx.RawData{
-					"id":        llx.StringData(fmt.Sprintf("%s/settings/denyMaintenancePeriod/%s", instanceId, p.StartDate)),
+					"id":        llx.StringData(fmt.Sprintf("%s/settings/denyMaintenancePeriod/%s/%s", instanceId, p.StartDate, p.EndDate)),
 					"endDate":   llx.StringData(p.EndDate),
 					"startDate": llx.StringData(p.StartDate),
 					"time":      llx.StringData(p.Time),
