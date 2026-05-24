@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -245,6 +246,11 @@ func newMqlAwsWorkspacesWorkspace(runtime *plugin.Runtime, region string, ws wor
 	return resource.(*mqlAwsWorkspacesWorkspace), nil
 }
 
+type mqlAwsWorkspacesWorkspaceInternal struct {
+	connStatusFetched bool
+	connStatusLock    sync.Mutex
+}
+
 func (a *mqlAwsWorkspacesWorkspace) id() (string, error) {
 	return "aws.workspaces.workspace/" + a.Region.Data + "/" + a.WorkspaceId.Data, nil
 }
@@ -270,6 +276,15 @@ func (a *mqlAwsWorkspacesWorkspace) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsWorkspacesWorkspace) fetchConnectionStatus() error {
+	if a.connStatusFetched {
+		return nil
+	}
+	a.connStatusLock.Lock()
+	defer a.connStatusLock.Unlock()
+	if a.connStatusFetched {
+		return nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Workspaces(a.Region.Data)
 	ctx := context.Background()
@@ -294,6 +309,7 @@ func (a *mqlAwsWorkspacesWorkspace) fetchConnectionStatus() error {
 	a.ConnectionState = plugin.TValue[string]{Data: connState, State: plugin.StateIsSet}
 	a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{Data: checkTimestamp, State: plugin.StateIsSet}
 	a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{Data: lastUserTimestamp, State: plugin.StateIsSet}
+	a.connStatusFetched = true
 	return nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -90,65 +91,83 @@ func (a *mqlAwsSecurityhubHub) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsSecurityhubHub) enabledStandards() ([]any, error) {
+type mqlAwsSecurityhubHubInternal struct {
+	standardsFetched bool
+	standardsLock    sync.Mutex
+	standards        []types.StandardsSubscription
+}
+
+func (a *mqlAwsSecurityhubHub) getEnabledStandards() ([]types.StandardsSubscription, error) {
+	if a.standardsFetched {
+		return a.standards, nil
+	}
+	a.standardsLock.Lock()
+	defer a.standardsLock.Unlock()
+	if a.standardsFetched {
+		return a.standards, nil
+	}
+
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Securityhub(region)
 	ctx := context.Background()
 
-	res := []any{}
+	var all []types.StandardsSubscription
 	paginator := securityhub.NewGetEnabledStandardsPaginator(svc, &securityhub.GetEnabledStandardsInput{})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return res, nil
+				a.standardsFetched = true
+				return nil, nil
 			}
 			return nil, err
 		}
-		for _, std := range page.StandardsSubscriptions {
-			d, err := convert.JsonToDict(std)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, d)
+		all = append(all, page.StandardsSubscriptions...)
+	}
+	a.standards = all
+	a.standardsFetched = true
+	return all, nil
+}
+
+func (a *mqlAwsSecurityhubHub) enabledStandards() ([]any, error) {
+	standards, err := a.getEnabledStandards()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(standards))
+	for _, std := range standards {
+		d, err := convert.JsonToDict(std)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, d)
 	}
 	return res, nil
 }
 
 func (a *mqlAwsSecurityhubHub) standardSubscriptions() ([]any, error) {
+	standards, err := a.getEnabledStandards()
+	if err != nil {
+		return nil, err
+	}
 	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Securityhub(region)
-	ctx := context.Background()
+	res := make([]any, 0, len(standards))
+	for _, std := range standards {
+		name := standardNameFromArn(convert.ToValue(std.StandardsArn))
 
-	res := []any{}
-	paginator := securityhub.NewGetEnabledStandardsPaginator(svc, &securityhub.GetEnabledStandardsInput{})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+		mqlStd, err := CreateResource(a.MqlRuntime, "aws.securityhub.standardSubscription",
+			map[string]*llx.RawData{
+				"arn":         llx.StringDataPtr(std.StandardsSubscriptionArn),
+				"standardArn": llx.StringDataPtr(std.StandardsArn),
+				"name":        llx.StringData(name),
+				"region":      llx.StringData(region),
+				"status":      llx.StringData(string(std.StandardsStatus)),
+			})
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return res, nil
-			}
 			return nil, err
 		}
-		for _, std := range page.StandardsSubscriptions {
-			name := standardNameFromArn(convert.ToValue(std.StandardsArn))
-
-			mqlStd, err := CreateResource(a.MqlRuntime, "aws.securityhub.standardSubscription",
-				map[string]*llx.RawData{
-					"arn":         llx.StringDataPtr(std.StandardsSubscriptionArn),
-					"standardArn": llx.StringDataPtr(std.StandardsArn),
-					"name":        llx.StringData(name),
-					"region":      llx.StringData(region),
-					"status":      llx.StringData(string(std.StandardsStatus)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlStd)
-		}
+		res = append(res, mqlStd)
 	}
 	return res, nil
 }

@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"sync"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdb_types "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -1512,6 +1514,7 @@ func (a *mqlAwsDocumentdb) getElasticClusters(conn *connection.AwsConnection) []
 			ctx := context.Background()
 			res := []any{}
 			paginator := docdbelastic.NewListClustersPaginator(svc, &docdbelastic.ListClustersInput{})
+			var arns []string
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -1522,23 +1525,39 @@ func (a *mqlAwsDocumentdb) getElasticClusters(conn *connection.AwsConnection) []
 					return nil, err
 				}
 				for _, summary := range page.Clusters {
-					if summary.ClusterArn == nil {
-						continue
+					if summary.ClusterArn != nil {
+						arns = append(arns, *summary.ClusterArn)
 					}
-					detail, err := svc.GetCluster(ctx, &docdbelastic.GetClusterInput{ClusterArn: summary.ClusterArn})
-					if err != nil {
-						log.Warn().Str("region", region).Str("clusterArn", *summary.ClusterArn).Err(err).Msg("get elastic cluster failed; skipping")
-						continue
-					}
-					if detail.Cluster == nil {
-						continue
-					}
-					mqlEc, err := newMqlAwsDocumentdbElasticCluster(a.MqlRuntime, region, conn.AccountId(), *detail.Cluster)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlEc)
 				}
+			}
+
+			details := make([]*docdbelastic_types.Cluster, len(arns))
+			g, gctx := errgroup.WithContext(ctx)
+			g.SetLimit(10)
+			for i, arn := range arns {
+				g.Go(func() error {
+					resp, err := svc.GetCluster(gctx, &docdbelastic.GetClusterInput{ClusterArn: &arn})
+					if err != nil {
+						log.Warn().Str("region", region).Str("clusterArn", arn).Err(err).Msg("get elastic cluster failed; skipping")
+						return nil
+					}
+					if resp != nil {
+						details[i] = resp.Cluster
+					}
+					return nil
+				})
+			}
+			_ = g.Wait()
+
+			for _, detail := range details {
+				if detail == nil {
+					continue
+				}
+				mqlEc, err := newMqlAwsDocumentdbElasticCluster(a.MqlRuntime, region, conn.AccountId(), *detail)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlEc)
 			}
 			return jobpool.JobResult(res), nil
 		}

@@ -1441,30 +1441,33 @@ func (a *mqlAwsIamRole) id() (string, error) {
 }
 
 func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
-	// ListRoles (used by roles()) does not populate PermissionsBoundary.
-	// We must call GetRole to get the real value.
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Iam("")
-	ctx := context.Background()
+	// roles() populates permissionsBoundaryArn directly from ListRoles, so prefer
+	// the cached value to avoid an extra GetRole per role. Only fall back to
+	// GetRole when this resource was constructed via NewResource without eager
+	// population (in which case the field's state flag will not be set).
+	boundaryArn := ""
+	if a.PermissionsBoundaryArn.IsSet() {
+		boundaryArn = a.PermissionsBoundaryArn.Data
+	} else {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Iam("")
+		ctx := context.Background()
 
-	roleName := a.Name.Data
-	resp, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
-	if err != nil {
-		return nil, err
-	}
-
-	var boundaryArn string
-	if resp.Role != nil && resp.Role.PermissionsBoundary != nil {
-		boundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
+		roleName := a.Name.Data
+		resp, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+		if err != nil {
+			return nil, err
+		}
+		if resp.Role != nil && resp.Role.PermissionsBoundary != nil {
+			boundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
+		}
+		a.PermissionsBoundaryArn = plugin.TValue[string]{Data: boundaryArn, State: plugin.StateIsSet}
 	}
 
 	if boundaryArn == "" {
 		a.PermissionsBoundary.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-
-	// Update the cached string field so it's consistent
-	a.PermissionsBoundaryArn = plugin.TValue[string]{Data: boundaryArn, State: plugin.StateIsSet}
 
 	mqlPolicy, err := NewResource(a.MqlRuntime, "aws.iam.policy",
 		map[string]*llx.RawData{"arn": llx.StringData(boundaryArn)})

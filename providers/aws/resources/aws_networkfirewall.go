@@ -7,6 +7,8 @@ import (
 	"context"
 	"sync"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	nftypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
@@ -54,6 +56,7 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 
 			res := []any{}
 			paginator := networkfirewall.NewListFirewallsPaginator(svc, &networkfirewall.ListFirewallsInput{})
+			var fwArns []*string
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -64,70 +67,89 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					return nil, err
 				}
 				for _, fw := range page.Firewalls {
-					// DescribeFirewall to get full details
-					detail, err := svc.DescribeFirewall(ctx, &networkfirewall.DescribeFirewallInput{
-						FirewallArn: fw.FirewallArn,
-					})
+					if fw.FirewallArn != nil {
+						fwArns = append(fwArns, fw.FirewallArn)
+					}
+				}
+			}
+
+			details := make([]*networkfirewall.DescribeFirewallOutput, len(fwArns))
+			g, gctx := errgroup.WithContext(ctx)
+			g.SetLimit(10)
+			for i, arn := range fwArns {
+				g.Go(func() error {
+					resp, err := svc.DescribeFirewall(gctx, &networkfirewall.DescribeFirewallInput{FirewallArn: arn})
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							continue
+							return nil
 						}
-						return nil, err
+						return err
 					}
-					f := detail.Firewall
-					subnetMappings := make([]any, 0, len(f.SubnetMappings))
-					subnetIds := make([]string, 0, len(f.SubnetMappings))
-					for _, sm := range f.SubnetMappings {
-						d, err := convert.JsonToDict(sm)
-						if err != nil {
-							log.Warn().Err(err).Msg("failed to convert subnet mapping")
-							continue
-						}
-						subnetMappings = append(subnetMappings, d)
-						if sm.SubnetId != nil {
-							subnetIds = append(subnetIds, *sm.SubnetId)
-						}
-					}
-					var encryptionType string
-					var kmsKeyId *string
-					var encryptionDict any
-					if f.EncryptionConfiguration != nil {
-						encryptionType = string(f.EncryptionConfiguration.Type)
-						kmsKeyId = f.EncryptionConfiguration.KeyId
-						// Populate the deprecated encryptionConfiguration dict so existing
-						// queries continue to resolve. New code should use the typed
-						// encryptionType and kmsKey fields.
-						if d, derr := convert.JsonToDict(f.EncryptionConfiguration); derr == nil {
-							encryptionDict = d
-						}
-					}
-					tags := nfTagsToMap(f.Tags)
+					details[i] = resp
+					return nil
+				})
+			}
+			if err := g.Wait(); err != nil {
+				return nil, err
+			}
 
-					mqlFirewall, err := CreateResource(a.MqlRuntime, "aws.networkfirewall.firewall",
-						map[string]*llx.RawData{
-							"arn":                            llx.StringDataPtr(f.FirewallArn),
-							"name":                           llx.StringDataPtr(f.FirewallName),
-							"description":                    llx.StringDataPtr(f.Description),
-							"region":                         llx.StringData(region),
-							"deleteProtection":               llx.BoolData(f.DeleteProtection),
-							"subnetChangeProtection":         llx.BoolData(f.SubnetChangeProtection),
-							"firewallPolicyChangeProtection": llx.BoolData(f.FirewallPolicyChangeProtection),
-							"firewallPolicyArn":              llx.StringDataPtr(f.FirewallPolicyArn),
-							"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
-							"encryptionType":                 llx.StringData(encryptionType),
-							"encryptionConfiguration":        llx.DictData(encryptionDict),
-							"tags":                           llx.MapData(tags, "string"),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlFw := mqlFirewall.(*mqlAwsNetworkfirewallFirewall)
-					mqlFw.cacheVpcId = f.VpcId
-					mqlFw.cacheSubnetIds = subnetIds
-					mqlFw.cacheKmsKeyId = kmsKeyId
-					mqlFw.cacheStatusVal = detail.FirewallStatus
-					res = append(res, mqlFirewall)
+			for _, detail := range details {
+				if detail == nil || detail.Firewall == nil {
+					continue
 				}
+				f := detail.Firewall
+				subnetMappings := make([]any, 0, len(f.SubnetMappings))
+				subnetIds := make([]string, 0, len(f.SubnetMappings))
+				for _, sm := range f.SubnetMappings {
+					d, err := convert.JsonToDict(sm)
+					if err != nil {
+						log.Warn().Err(err).Msg("failed to convert subnet mapping")
+						continue
+					}
+					subnetMappings = append(subnetMappings, d)
+					if sm.SubnetId != nil {
+						subnetIds = append(subnetIds, *sm.SubnetId)
+					}
+				}
+				var encryptionType string
+				var kmsKeyId *string
+				var encryptionDict any
+				if f.EncryptionConfiguration != nil {
+					encryptionType = string(f.EncryptionConfiguration.Type)
+					kmsKeyId = f.EncryptionConfiguration.KeyId
+					// Populate the deprecated encryptionConfiguration dict so existing
+					// queries continue to resolve. New code should use the typed
+					// encryptionType and kmsKey fields.
+					if d, derr := convert.JsonToDict(f.EncryptionConfiguration); derr == nil {
+						encryptionDict = d
+					}
+				}
+				tags := nfTagsToMap(f.Tags)
+
+				mqlFirewall, err := CreateResource(a.MqlRuntime, "aws.networkfirewall.firewall",
+					map[string]*llx.RawData{
+						"arn":                            llx.StringDataPtr(f.FirewallArn),
+						"name":                           llx.StringDataPtr(f.FirewallName),
+						"description":                    llx.StringDataPtr(f.Description),
+						"region":                         llx.StringData(region),
+						"deleteProtection":               llx.BoolData(f.DeleteProtection),
+						"subnetChangeProtection":         llx.BoolData(f.SubnetChangeProtection),
+						"firewallPolicyChangeProtection": llx.BoolData(f.FirewallPolicyChangeProtection),
+						"firewallPolicyArn":              llx.StringDataPtr(f.FirewallPolicyArn),
+						"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
+						"encryptionType":                 llx.StringData(encryptionType),
+						"encryptionConfiguration":        llx.DictData(encryptionDict),
+						"tags":                           llx.MapData(tags, "string"),
+					})
+				if err != nil {
+					return nil, err
+				}
+				mqlFw := mqlFirewall.(*mqlAwsNetworkfirewallFirewall)
+				mqlFw.cacheVpcId = f.VpcId
+				mqlFw.cacheSubnetIds = subnetIds
+				mqlFw.cacheKmsKeyId = kmsKeyId
+				mqlFw.cacheStatusVal = detail.FirewallStatus
+				res = append(res, mqlFirewall)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -408,6 +430,7 @@ func (a *mqlAwsNetworkfirewall) getPolicies(conn *connection.AwsConnection) []*j
 
 			res := []any{}
 			paginator := networkfirewall.NewListFirewallPoliciesPaginator(svc, &networkfirewall.ListFirewallPoliciesInput{})
+			var policyArns []*string
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -418,21 +441,41 @@ func (a *mqlAwsNetworkfirewall) getPolicies(conn *connection.AwsConnection) []*j
 					return nil, err
 				}
 				for _, pm := range page.FirewallPolicies {
-					detail, err := svc.DescribeFirewallPolicy(ctx, &networkfirewall.DescribeFirewallPolicyInput{
-						FirewallPolicyArn: pm.Arn,
-					})
+					if pm.Arn != nil {
+						policyArns = append(policyArns, pm.Arn)
+					}
+				}
+			}
+
+			details := make([]*networkfirewall.DescribeFirewallPolicyOutput, len(policyArns))
+			g, gctx := errgroup.WithContext(ctx)
+			g.SetLimit(10)
+			for i, arn := range policyArns {
+				g.Go(func() error {
+					resp, err := svc.DescribeFirewallPolicy(gctx, &networkfirewall.DescribeFirewallPolicyInput{FirewallPolicyArn: arn})
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							continue
+							return nil
 						}
-						return nil, err
+						return err
 					}
-					mqlPolicy, err := networkfirewallPolicyToMql(a.MqlRuntime, detail.FirewallPolicyResponse, detail.FirewallPolicy, region)
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlPolicy)
+					details[i] = resp
+					return nil
+				})
+			}
+			if err := g.Wait(); err != nil {
+				return nil, err
+			}
+
+			for _, detail := range details {
+				if detail == nil {
+					continue
 				}
+				mqlPolicy, err := networkfirewallPolicyToMql(a.MqlRuntime, detail.FirewallPolicyResponse, detail.FirewallPolicy, region)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlPolicy)
 			}
 			return jobpool.JobResult(res), nil
 		}

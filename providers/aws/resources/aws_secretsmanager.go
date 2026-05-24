@@ -63,25 +63,93 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, errors.New("arn required to fetch secretsmanager secret")
 	}
 
-	obj, err := CreateResource(runtime, ResourceAwsSecretsmanager, map[string]*llx.RawData{})
+	arnVal := args["arn"].Value.(string)
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Secretsmanager(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeSecret(ctx, &secretsmanager.DescribeSecretInput{SecretId: &arnVal})
 	if err != nil {
 		return nil, nil, err
 	}
-	sm := obj.(*mqlAwsSecretsmanager)
 
-	rawResources := sm.GetSecrets()
-	if rawResources.Error != nil {
-		return nil, nil, rawResources.Error
-	}
+	args["arn"] = llx.StringDataPtr(resp.ARN)
+	args["createdAt"] = llx.TimeDataPtr(resp.CreatedDate)
+	args["description"] = llx.StringDataPtr(resp.Description)
+	args["lastAccessedDate"] = llx.TimeDataPtr(resp.LastAccessedDate)
+	args["lastChangedDate"] = llx.TimeDataPtr(resp.LastChangedDate)
+	args["lastRotatedDate"] = llx.TimeDataPtr(resp.LastRotatedDate)
+	args["name"] = llx.StringDataPtr(resp.Name)
+	args["nextRotationDate"] = llx.TimeDataPtr(resp.NextRotationDate)
+	args["owningService"] = llx.StringDataPtr(resp.OwningService)
+	args["primaryRegion"] = llx.StringDataPtr(resp.PrimaryRegion)
+	args["rotationEnabled"] = llx.BoolData(convert.ToValue(resp.RotationEnabled))
+	args["tags"] = llx.MapData(secretTagsToMap(resp.Tags), types.String)
 
-	arnVal := args["arn"].Value.(string)
-	for _, rawResource := range rawResources.Data {
-		secret := rawResource.(*mqlAwsSecretsmanagerSecret)
-		if secret.Arn.Data == arnVal {
-			return args, secret, nil
+	if resp.KmsKeyId != nil {
+		mqlKey, err := NewResource(runtime, ResourceAwsKmsKey, map[string]*llx.RawData{
+			"arn":    llx.StringDataPtr(resp.KmsKeyId),
+			"region": llx.StringData(region),
+		})
+		if err != nil {
+			args["kmsKey"] = &llx.RawData{Type: types.Resource(ResourceAwsKmsKey), Error: err}
+		} else {
+			k := mqlKey.(*mqlAwsKmsKey)
+			args["kmsKey"] = llx.ResourceData(k, k.MqlName())
 		}
+	} else {
+		args["kmsKey"] = llx.NilData
 	}
-	return nil, nil, errors.New("secretsmanager secret does not exist")
+
+	if resp.RotationLambdaARN != nil {
+		mqlLambda, err := NewResource(runtime, ResourceAwsLambdaFunction, map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(resp.RotationLambdaARN),
+		})
+		if err != nil {
+			args["rotationLambda"] = &llx.RawData{Type: types.Resource(ResourceAwsLambdaFunction), Error: err}
+		} else {
+			l := mqlLambda.(*mqlAwsLambdaFunction)
+			args["rotationLambda"] = llx.ResourceData(l, l.MqlName())
+		}
+	} else {
+		args["rotationLambda"] = llx.NilData
+	}
+
+	if resp.RotationRules != nil {
+		var automaticallyAfterDays int64
+		if resp.RotationRules.AutomaticallyAfterDays != nil {
+			automaticallyAfterDays = *resp.RotationRules.AutomaticallyAfterDays
+		}
+		mqlRotationRules, err := CreateResource(runtime, ResourceAwsSecretsmanagerSecretRotationRules, map[string]*llx.RawData{
+			"__id":                   llx.StringData(convert.ToValue(resp.ARN) + "/rotationRules"),
+			"automaticallyAfterDays": llx.IntData(automaticallyAfterDays),
+			"duration":               llx.StringDataPtr(resp.RotationRules.Duration),
+			"scheduleExpression":     llx.StringDataPtr(resp.RotationRules.ScheduleExpression),
+		})
+		if err != nil {
+			args["rotationRules"] = &llx.RawData{Type: types.Resource(ResourceAwsSecretsmanagerSecretRotationRules), Error: err}
+		} else {
+			r := mqlRotationRules.(*mqlAwsSecretsmanagerSecretRotationRules)
+			args["rotationRules"] = llx.ResourceData(r, r.MqlName())
+		}
+	} else {
+		args["rotationRules"] = llx.NilData
+	}
+
+	mqlSecret, err := CreateResource(runtime, ResourceAwsSecretsmanagerSecret, args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
+	mqlSecretRes.cacheRegion = region
+	mqlSecretRes.cacheType = convert.ToValue(resp.Type)
+	mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: resp.DeletedDate, State: plugin.StateIsSet}
+	return args, mqlSecretRes, nil
 }
 
 func (a *mqlAwsSecretsmanagerSecret) kmsKey() (*mqlAwsKmsKey, error) {

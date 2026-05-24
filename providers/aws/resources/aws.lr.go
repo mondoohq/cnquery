@@ -95162,7 +95162,7 @@ func (c *mqlAwsSecurityhub) GetHubs() *plugin.TValue[[]any] {
 type mqlAwsSecurityhubHub struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSecurityhubHubInternal it will be used here
+	mqlAwsSecurityhubHubInternal
 	Arn                   plugin.TValue[string]
 	SubscribedAt          plugin.TValue[string]
 	Region                plugin.TValue[string]
@@ -144010,7 +144010,7 @@ func (c *mqlAwsWorkspaceswebUserSetting) GetRegion() *plugin.TValue[string] {
 type mqlAwsWorkspacesWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspacesWorkspaceInternal it will be used here
+	mqlAwsWorkspacesWorkspaceInternal
 	WorkspaceId                      plugin.TValue[string]
 	DirectoryId                      plugin.TValue[string]
 	UserName                         plugin.TValue[string]

@@ -6,7 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	cptypes "github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
@@ -55,6 +58,7 @@ func (a *mqlAwsCodepipeline) getPipelines(conn *connection.AwsConnection) []*job
 
 			res := []any{}
 			paginator := codepipeline.NewListPipelinesPaginator(svc, &codepipeline.ListPipelinesInput{})
+			var names []string
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -66,22 +70,45 @@ func (a *mqlAwsCodepipeline) getPipelines(conn *connection.AwsConnection) []*job
 				}
 				for i := range page.Pipelines {
 					summary := page.Pipelines[i]
-					if summary.Name == nil {
-						continue
+					if summary.Name != nil {
+						names = append(names, *summary.Name)
 					}
-					mqlPipeline, err := newMqlAwsCodepipelinePipeline(a.MqlRuntime, region, *summary.Name)
+				}
+			}
+
+			pipelines := make([]plugin.Resource, len(names))
+			var mu sync.Mutex
+			var firstErr error
+			g, _ := errgroup.WithContext(ctx)
+			g.SetLimit(10)
+			for i, name := range names {
+				g.Go(func() error {
+					mqlPipeline, err := newMqlAwsCodepipelinePipeline(a.MqlRuntime, region, name)
 					if err != nil {
 						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Str("pipeline", *summary.Name).Msg("error accessing pipeline for AWS API")
-							continue
+							log.Warn().Str("region", region).Str("pipeline", name).Msg("error accessing pipeline for AWS API")
+							return nil
 						}
-						return nil, err
+						mu.Lock()
+						if firstErr == nil {
+							firstErr = err
+						}
+						mu.Unlock()
+						return nil
 					}
-					if mqlPipeline == nil {
-						continue
-					}
-					res = append(res, mqlPipeline)
+					pipelines[i] = mqlPipeline
+					return nil
+				})
+			}
+			_ = g.Wait()
+			if firstErr != nil {
+				return nil, firstErr
+			}
+			for _, p := range pipelines {
+				if p == nil {
+					continue
 				}
+				res = append(res, p)
 			}
 			return jobpool.JobResult(res), nil
 		}
