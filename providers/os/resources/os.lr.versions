@@ -3,14 +3,21 @@
 
 ai 13.16.9
 ai.model 13.16.9
+ai.model.architecture 13.16.10
+ai.model.description 13.16.10
 ai.model.family 13.16.9
 ai.model.format 13.16.9
+ai.model.license 13.16.10
 ai.model.modifiedAt 13.16.9
 ai.model.name 13.16.9
+ai.model.parameterSize 13.16.10
 ai.model.path 13.16.9
+ai.model.quantization 13.16.10
 ai.model.size 13.16.9
 ai.model.source 13.16.9
+ai.model.tags 13.16.10
 ai.model.vendor 13.16.9
+ai.model.version 13.16.10
 ai.models 13.16.9
 antigravity 13.13.1
 antigravity.configPath 13.13.1

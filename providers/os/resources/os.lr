@@ -5336,6 +5336,26 @@ private ai.model @defaults("name source") @maturity("preview") {
   modifiedAt time
   // Model file format (gguf, safetensors, pytorch, h5, savedmodel, mlx, onnx, keras)
   format string
+  // Model version identifier (e.g., Ollama tag name, HuggingFace revision hash)
+  version string
+  // Quantization method or level
+  //
+  // For example Q4_K_M, Q8_0, F16, gptq, or awq.
+  quantization string
+  // Human-readable parameter count
+  //
+  // For example 7B, 13B, or 70B.
+  parameterSize string
+  // Model architecture
+  //
+  // For example LlamaForCausalLM, MistralForCausalLM, or llama.
+  architecture string
+  // License identifier if available (e.g., "apache-2.0", "llama3", "MIT")
+  license string
+  // Tags associated with the model
+  tags []string
+  // Short description of the model
+  description string
 }
 
 // Claude Code (Anthropic CLI agent) instance

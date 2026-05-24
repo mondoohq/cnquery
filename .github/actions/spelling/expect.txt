@@ -59,6 +59,7 @@ autoprovision
 autoreplace
 Autoscalers
 autotrim
+awq
 awsapps
 AWSCURRENT
 awsfirelens
@@ -288,6 +289,7 @@ gotchas
 gpc
 gpo
 gpt
+gptq
 gpu
 GQA
 grafana

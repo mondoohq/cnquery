@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/aimodel"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAi) id() (string, error) {
@@ -54,16 +55,28 @@ func targetOSFamily(conn shared.Connection) string {
 }
 
 func newAiModelResource(rt *plugin.Runtime, m aimodel.ModelInfo) (*mqlAiModel, error) {
+	tagsAny := make([]interface{}, len(m.Tags))
+	for i, t := range m.Tags {
+		tagsAny[i] = t
+	}
+
 	res, err := NewResource(rt, "ai.model", map[string]*llx.RawData{
-		"__id":       llx.StringData("ai.model/" + m.Source + "/" + m.Name),
-		"name":       llx.StringData(m.Name),
-		"source":     llx.StringData(m.Source),
-		"vendor":     llx.StringData(m.Vendor),
-		"family":     llx.StringData(m.Family),
-		"path":       llx.StringData(m.Path),
-		"size":       llx.IntData(m.Size),
-		"modifiedAt": llx.TimeData(m.ModifiedAt),
-		"format":     llx.StringData(m.Format),
+		"__id":          llx.StringData("ai.model/" + m.Source + "/" + m.Name),
+		"name":          llx.StringData(m.Name),
+		"source":        llx.StringData(m.Source),
+		"vendor":        llx.StringData(m.Vendor),
+		"family":        llx.StringData(m.Family),
+		"path":          llx.StringData(m.Path),
+		"size":          llx.IntData(m.Size),
+		"modifiedAt":    llx.TimeData(m.ModifiedAt),
+		"format":        llx.StringData(m.Format),
+		"version":       llx.StringData(m.Version),
+		"quantization":  llx.StringData(m.Quantization),
+		"parameterSize": llx.StringData(m.ParameterSize),
+		"architecture":  llx.StringData(m.Architecture),
+		"license":       llx.StringData(m.License),
+		"tags":          llx.ArrayData(tagsAny, types.String),
+		"description":   llx.StringData(m.Description),
 	})
 	if err != nil {
 		return nil, err

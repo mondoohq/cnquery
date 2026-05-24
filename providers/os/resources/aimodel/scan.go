@@ -5,25 +5,40 @@ package aimodel
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/spf13/afero"
+	"gopkg.in/yaml.v3"
 )
 
 // ModelInfo holds the metadata for a single discovered AI model cache entry.
 type ModelInfo struct {
-	Name       string
-	Source     string
-	Vendor     string
-	Family     string
-	Path       string
-	Size       int64
-	ModifiedAt time.Time
-	Format     string
+	Name          string
+	Source        string
+	Vendor        string
+	Family        string
+	Path          string
+	Size          int64
+	ModifiedAt    time.Time
+	Format        string
+	Version       string
+	Quantization  string
+	ParameterSize string
+	Architecture  string
+	License       string
+	Tags          []string
+	Description   string
 }
+
+var (
+	reQuantization = regexp.MustCompile(`(?i)(Q[0-9]+_[A-Z0-9_]+|F16|F32|FP16|FP32)`)
+	reParamSize    = regexp.MustCompile(`(?i)[-_: ](\d+\.?\d*)[bB](?:[-_. ]|$)`)
+)
 
 // ScanAll runs every scanner and returns the combined results.
 func ScanAll(afs *afero.Afero, home, osFamily string) []ModelInfo {
@@ -61,9 +76,12 @@ type ollamaLayer struct {
 	Size      int64  `json:"size"`
 }
 
-type ollamaConfig struct {
-	ModelFamily   string   `json:"model_family"`
-	ModelFamilies []string `json:"model_families"`
+type ollamaExtracted struct {
+	Family        string
+	Architecture  string
+	ParameterSize string
+	License       string
+	Quantization  string
 }
 
 // ollamaVendorPrefixes maps model name prefixes to vendor names.
@@ -208,17 +226,47 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 						totalSize += l.Size
 					}
 
-					family := readOllamaFamily(afs, modelsDir, manifest.Config.Digest)
+					extracted := readOllamaConfig(afs, modelsDir, manifest.Config.Digest)
+
+					version := tag.Name()
+
+					quant := extracted.Quantization
+					if quant == "" {
+						if m := reQuantization.FindString(tag.Name()); m != "" {
+							quant = strings.ToUpper(m)
+						}
+					}
+
+					paramSize := extracted.ParameterSize
+					if paramSize == "" {
+						if m := reParamSize.FindStringSubmatch(name); len(m) > 1 {
+							paramSize = m[1] + "B"
+						}
+					}
+
+					// Build tags from tag name parts (split on -)
+					var modelTags []string
+					for _, part := range strings.Split(tag.Name(), "-") {
+						if part != "" && part != "latest" {
+							modelTags = append(modelTags, part)
+						}
+					}
 
 					results = append(results, ModelInfo{
-						Name:       name,
-						Source:     "ollama",
-						Vendor:     ollamaVendor(modelBase),
-						Family:     family,
-						Path:       tagPath,
-						Size:       totalSize,
-						ModifiedAt: tag.ModTime(),
-						Format:     "gguf",
+						Name:          name,
+						Source:        "ollama",
+						Vendor:        ollamaVendor(modelBase),
+						Family:        extracted.Family,
+						Path:          tagPath,
+						Size:          totalSize,
+						ModifiedAt:    tag.ModTime(),
+						Format:        "gguf",
+						Version:       version,
+						Quantization:  quant,
+						ParameterSize: paramSize,
+						Architecture:  extracted.Architecture,
+						License:       extracted.License,
+						Tags:          modelTags,
 					})
 				}
 			}
@@ -227,25 +275,82 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 	return results
 }
 
-func readOllamaFamily(afs *afero.Afero, modelsDir string, digest string) string {
+func readOllamaConfig(afs *afero.Afero, modelsDir string, digest string) ollamaExtracted {
+	var result ollamaExtracted
 	if digest == "" {
-		return ""
+		return result
 	}
-	// Blob filenames use dash instead of colon: sha256-<hex>
 	blobName := strings.Replace(digest, ":", "-", 1)
 	blobPath := filepath.Join(modelsDir, "blobs", blobName)
 	data, err := afs.ReadFile(blobPath)
 	if err != nil {
-		return ""
+		return result
 	}
-	var cfg ollamaConfig
-	if json.Unmarshal(data, &cfg) != nil {
-		return ""
+
+	var raw map[string]any
+	if json.Unmarshal(data, &raw) != nil {
+		return result
 	}
-	return cfg.ModelFamily
+
+	if v, ok := raw["model_family"].(string); ok {
+		result.Family = v
+	}
+	// file_type holds quantization (e.g. "Q4_0", "Q8_0")
+	if v, ok := raw["file_type"].(string); ok {
+		result.Quantization = v
+	}
+	// model_type holds human-readable parameter size (e.g. "8.0B", "70B")
+	if v, ok := raw["model_type"].(string); ok && v != "" {
+		result.ParameterSize = v
+	}
+	if v, ok := raw["license"].(string); ok {
+		result.License = v
+	}
+	// general.architecture is the model arch in some blobs
+	if v, ok := raw["general.architecture"].(string); ok {
+		result.Architecture = v
+	}
+	// Fallback: use model_family as architecture if general.architecture is absent
+	// (don't use "architecture" — that's the platform arch like "amd64")
+	if result.Architecture == "" {
+		result.Architecture = result.Family
+	}
+
+	return result
+}
+
+func formatParamCount(count int64) string {
+	switch {
+	case count >= 1_000_000_000:
+		b := float64(count) / 1e9
+		if b == float64(int64(b)) {
+			return fmt.Sprintf("%dB", int64(b))
+		}
+		return fmt.Sprintf("%.1fB", b)
+	case count >= 1_000_000:
+		m := float64(count) / 1e6
+		if m == float64(int64(m)) {
+			return fmt.Sprintf("%dM", int64(m))
+		}
+		return fmt.Sprintf("%.1fM", m)
+	default:
+		return fmt.Sprintf("%d", count)
+	}
 }
 
 // --- Hugging Face Hub ---
+
+type hfConfig struct {
+	ModelType          string         `json:"model_type"`
+	Architectures      []string       `json:"architectures"`
+	QuantizationConfig map[string]any `json:"quantization_config"`
+}
+
+type hfReadmeMeta struct {
+	License     string   `yaml:"license"`
+	Tags        []string `yaml:"tags"`
+	PipelineTag string   `yaml:"pipeline_tag"`
+}
 
 func ScanHuggingFace(afs *afero.Afero, home string) []ModelInfo {
 	hubDir := filepath.Join(home, ".cache", "huggingface", "hub")
@@ -271,35 +376,54 @@ func ScanHuggingFace(afs *afero.Afero, home string) []ModelInfo {
 		blobsDir := filepath.Join(modelDir, "blobs")
 
 		totalSize, modTime := dirSizeAndLatestMtime(afs, blobsDir)
-		format, family := detectHuggingFaceFormatAndFamily(afs, modelDir)
+		meta := extractHuggingFaceMetadata(afs, modelDir)
+
+		paramSize := ""
+		if m := reParamSize.FindStringSubmatch(modelName); len(m) > 1 {
+			paramSize = m[1] + "B"
+		}
 
 		results = append(results, ModelInfo{
-			Name:       modelName,
-			Source:     "huggingface",
-			Vendor:     nameParts[1],
-			Family:     family,
-			Path:       modelDir,
-			Size:       totalSize,
-			ModifiedAt: modTime,
-			Format:     format,
+			Name:          modelName,
+			Source:        "huggingface",
+			Vendor:        nameParts[1],
+			Family:        meta.Family,
+			Path:          modelDir,
+			Size:          totalSize,
+			ModifiedAt:    modTime,
+			Format:        meta.Format,
+			Version:       meta.Version,
+			Quantization:  meta.Quantization,
+			ParameterSize: paramSize,
+			Architecture:  meta.Architecture,
+			License:       meta.License,
+			Tags:          meta.Tags,
+			Description:   meta.Description,
 		})
 	}
 	return results
 }
 
-type hfConfig struct {
-	ModelType string `json:"model_type"`
+type hfExtracted struct {
+	Format       string
+	Family       string
+	Version      string
+	Architecture string
+	Quantization string
+	License      string
+	Tags         []string
+	Description  string
 }
 
-func detectHuggingFaceFormatAndFamily(afs *afero.Afero, modelDir string) (string, string) {
+func extractHuggingFaceMetadata(afs *afero.Afero, modelDir string) hfExtracted {
+	var result hfExtracted
 	snapshotsDir := filepath.Join(modelDir, "snapshots")
 	snapshots, err := afs.ReadDir(snapshotsDir)
 	if err != nil || len(snapshots) == 0 {
-		return "unknown", ""
+		result.Format = "unknown"
+		return result
 	}
 
-	// Pick the most recently modified snapshot (commit hashes don't sort temporally).
-	// On SFTP, ModTime may be zero; in that case the first entry wins.
 	latest := snapshots[0]
 	for _, s := range snapshots[1:] {
 		if s.ModTime().After(latest.ModTime()) {
@@ -308,33 +432,91 @@ func detectHuggingFaceFormatAndFamily(afs *afero.Afero, modelDir string) (string
 	}
 	latestSnapshot := filepath.Join(snapshotsDir, latest.Name())
 
-	// Read model_type from config.json.
-	var family string
+	// Version = first 12 chars of snapshot dir name (revision hash)
+	rev := latest.Name()
+	if len(rev) > 12 {
+		rev = rev[:12]
+	}
+	result.Version = rev
+
+	// Read config.json
 	configPath := filepath.Join(latestSnapshot, "config.json")
 	if data, readErr := afs.ReadFile(configPath); readErr == nil {
 		var cfg hfConfig
 		if json.Unmarshal(data, &cfg) == nil {
-			family = cfg.ModelType
+			result.Family = cfg.ModelType
+			if len(cfg.Architectures) > 0 {
+				result.Architecture = cfg.Architectures[0]
+			}
+			if cfg.QuantizationConfig != nil {
+				if qt, ok := cfg.QuantizationConfig["quant_method"].(string); ok && qt != "" {
+					result.Quantization = qt
+				}
+			}
 		}
 	}
 
+	// README frontmatter
+	readme := parseHFReadmeFrontmatter(afs, latestSnapshot)
+	result.License = readme.License
+	result.Tags = readme.Tags
+	if readme.PipelineTag != "" && len(result.Tags) == 0 {
+		result.Tags = []string{readme.PipelineTag}
+	}
+
+	// Format detection
 	if f := detectFormatInDir(afs, latestSnapshot); f != "" {
-		return f, family
-	}
-	subdirs, _ := afs.ReadDir(latestSnapshot)
-	for _, d := range subdirs {
-		fullPath := filepath.Join(latestSnapshot, d.Name())
-		// Use Stat (follows symlinks) instead of d.IsDir() because SFTP
-		// ReadDir returns lstat info where symlinked dirs report IsDir()==false.
-		info, err := afs.Stat(fullPath)
-		if err != nil || !info.IsDir() {
-			continue
+		result.Format = f
+	} else {
+		subdirs, _ := afs.ReadDir(latestSnapshot)
+		for _, d := range subdirs {
+			fullPath := filepath.Join(latestSnapshot, d.Name())
+			info, err := afs.Stat(fullPath)
+			if err != nil || !info.IsDir() {
+				continue
+			}
+			if f := detectFormatInDir(afs, fullPath); f != "" {
+				result.Format = f
+				break
+			}
 		}
-		if f := detectFormatInDir(afs, fullPath); f != "" {
-			return f, family
+		if result.Format == "" {
+			result.Format = "unknown"
 		}
 	}
-	return "unknown", family
+
+	// Quantization fallback from filenames
+	if result.Quantization == "" {
+		files, _ := afs.ReadDir(latestSnapshot)
+		for _, f := range files {
+			if m := reQuantization.FindString(f.Name()); m != "" {
+				result.Quantization = strings.ToUpper(m)
+				break
+			}
+		}
+	}
+
+	return result
+}
+
+func parseHFReadmeFrontmatter(afs *afero.Afero, snapshotDir string) hfReadmeMeta {
+	var meta hfReadmeMeta
+	readmePath := filepath.Join(snapshotDir, "README.md")
+	data, err := afs.ReadFile(readmePath)
+	if err != nil {
+		return meta
+	}
+	content := string(data)
+	if !strings.HasPrefix(content, "---") {
+		return meta
+	}
+	end := strings.Index(content[3:], "---")
+	if end < 0 {
+		return meta
+	}
+	frontmatter := content[3 : 3+end]
+	_ = yaml.Unmarshal([]byte(frontmatter), &meta)
+	return meta
 }
 
 func detectFormatInDir(afs *afero.Afero, dir string) string {
@@ -397,16 +579,28 @@ func ScanLMStudio(afs *afero.Afero, home string) []ModelInfo {
 				}
 				seen[modelName] = true
 
-				models := findGGUFFiles(afs, repoDir)
-				for _, m := range models {
+				ggufFiles := findGGUFFiles(afs, repoDir)
+				for _, m := range ggufFiles {
+					filename := filepath.Base(m.path)
+					quant := ""
+					if match := reQuantization.FindString(filename); match != "" {
+						quant = strings.ToUpper(match)
+					}
+					paramSize := ""
+					if pm := reParamSize.FindStringSubmatch(modelName); len(pm) > 1 {
+						paramSize = pm[1] + "B"
+					}
+
 					results = append(results, ModelInfo{
-						Name:       modelName + "/" + filepath.Base(m.path),
-						Source:     "lmstudio",
-						Vendor:     publisher.Name(),
-						Path:       m.path,
-						Size:       m.size,
-						ModifiedAt: m.modTime,
-						Format:     "gguf",
+						Name:          modelName + "/" + filename,
+						Source:        "lmstudio",
+						Vendor:        publisher.Name(),
+						Path:          m.path,
+						Size:          m.size,
+						ModifiedAt:    m.modTime,
+						Format:        "gguf",
+						Quantization:  quant,
+						ParameterSize: paramSize,
 					})
 				}
 			}
@@ -472,13 +666,24 @@ func ScanGPT4All(afs *afero.Afero, home string, osFamily string) []ModelInfo {
 				format = "ggml"
 			}
 
+			quant := ""
+			if match := reQuantization.FindString(e.Name()); match != "" {
+				quant = strings.ToUpper(match)
+			}
+			paramSize := ""
+			if pm := reParamSize.FindStringSubmatch(e.Name()); len(pm) > 1 {
+				paramSize = pm[1] + "B"
+			}
+
 			results = append(results, ModelInfo{
-				Name:       e.Name(),
-				Source:     "gpt4all",
-				Path:       filepath.Join(dir, e.Name()),
-				Size:       e.Size(),
-				ModifiedAt: e.ModTime(),
-				Format:     format,
+				Name:          e.Name(),
+				Source:        "gpt4all",
+				Path:          filepath.Join(dir, e.Name()),
+				Size:          e.Size(),
+				ModifiedAt:    e.ModTime(),
+				Format:        format,
+				Quantization:  quant,
+				ParameterSize: paramSize,
 			})
 		}
 	}
@@ -642,11 +847,20 @@ func dirSizeRecursive(afs *afero.Afero, dir string) (int64, time.Time) {
 // --- Jan ---
 
 type janModelMeta struct {
-	Name      string            `json:"name"`
-	ID        string            `json:"id"`
-	Format    string            `json:"format"`
-	Metadata  janModelPublisher `json:"metadata"`
-	Publisher janModelPublisher `json:"publisher"`
+	Name        string            `json:"name"`
+	ID          string            `json:"id"`
+	Format      string            `json:"format"`
+	Version     string            `json:"version"`
+	Description string            `json:"description"`
+	License     string            `json:"license"`
+	Metadata    janModelMetadata  `json:"metadata"`
+	Publisher   janModelPublisher `json:"publisher"`
+}
+
+type janModelMetadata struct {
+	Author string   `json:"author"`
+	Name   string   `json:"name"`
+	Tags   []string `json:"tags"`
 }
 
 type janModelPublisher struct {
@@ -671,6 +885,10 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 		name := e.Name()
 		format := "unknown"
 		vendor := ""
+		version := ""
+		description := ""
+		license := ""
+		var tags []string
 
 		metaPath := filepath.Join(modelDir, "model.json")
 		if data, err := afs.ReadFile(metaPath); err == nil {
@@ -691,6 +909,10 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 				} else if meta.Metadata.Author != "" {
 					vendor = meta.Metadata.Author
 				}
+				version = meta.Version
+				description = meta.Description
+				license = meta.License
+				tags = meta.Metadata.Tags
 			}
 		}
 
@@ -698,16 +920,37 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 			format = detectDirModelFormat(afs, modelDir)
 		}
 
+		// Quantization from GGUF filenames in directory
+		quant := ""
+		dirEntries, _ := afs.ReadDir(modelDir)
+		for _, f := range dirEntries {
+			if match := reQuantization.FindString(f.Name()); match != "" {
+				quant = strings.ToUpper(match)
+				break
+			}
+		}
+
+		paramSize := ""
+		if pm := reParamSize.FindStringSubmatch(name); len(pm) > 1 {
+			paramSize = pm[1] + "B"
+		}
+
 		totalSize, modTime := dirSizeRecursive(afs, modelDir)
 
 		results = append(results, ModelInfo{
-			Name:       name,
-			Source:     "jan",
-			Vendor:     vendor,
-			Path:       modelDir,
-			Size:       totalSize,
-			ModifiedAt: modTime,
-			Format:     format,
+			Name:          name,
+			Source:        "jan",
+			Vendor:        vendor,
+			Path:          modelDir,
+			Size:          totalSize,
+			ModifiedAt:    modTime,
+			Format:        format,
+			Version:       version,
+			Quantization:  quant,
+			ParameterSize: paramSize,
+			License:       license,
+			Tags:          tags,
+			Description:   description,
 		})
 	}
 	return results

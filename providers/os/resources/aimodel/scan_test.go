@@ -39,7 +39,7 @@ func TestScanOllama(t *testing.T) {
 	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/llama3/latest")
 	writeJSON(t, fs, manifestPath, manifest)
 
-	configBlob := ollamaConfig{ModelFamily: "llama"}
+	configBlob := map[string]any{"model_family": "llama"}
 	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-abc123")
 	writeJSON(t, fs, configPath, configBlob)
 
@@ -53,6 +53,7 @@ func TestScanOllama(t *testing.T) {
 	assert.Equal(t, "llama", m.Family)
 	assert.Equal(t, int64(1200), m.Size)
 	assert.Equal(t, "gguf", m.Format)
+	assert.Equal(t, "latest", m.Version)
 }
 
 func TestScanOllama_MultipleModels(t *testing.T) {
@@ -74,7 +75,7 @@ func TestScanOllama_MultipleModels(t *testing.T) {
 		writeJSON(t, fs, manifestPath, manifest)
 
 		configPath := filepath.Join(home, ".ollama/models/blobs/sha256-"+tc.model)
-		writeJSON(t, fs, configPath, ollamaConfig{ModelFamily: tc.family})
+		writeJSON(t, fs, configPath, map[string]any{"model_family": tc.family})
 	}
 
 	results := ScanOllama(afs, home)
@@ -144,6 +145,80 @@ func TestScanOllama_NoManifestsDir(t *testing.T) {
 	assert.Nil(t, results)
 }
 
+func TestScanOllama_ExtractsNewFields(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:fullcfg"},
+		Layers: []ollamaLayer{{Size: 4000000000}},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/llama3/8b-q4_0")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configBlob := map[string]any{
+		"model_family": "llama",
+		"model_type":   "8.0B",
+		"file_type":    "Q4_0",
+		"license":      "llama3",
+	}
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-fullcfg")
+	writeJSON(t, fs, configPath, configBlob)
+
+	results := ScanOllama(afs, home)
+	require.Len(t, results, 1)
+
+	m := results[0]
+	assert.Equal(t, "llama3:8b-q4_0", m.Name)
+	assert.Equal(t, "8b-q4_0", m.Version)
+	assert.Equal(t, "Q4_0", m.Quantization)
+	assert.Equal(t, "8.0B", m.ParameterSize)
+	assert.Equal(t, "llama", m.Architecture)
+	assert.Equal(t, "llama3", m.License)
+	assert.Equal(t, []string{"8b", "q4_0"}, m.Tags)
+}
+
+func TestScanOllama_QuantizationFromTagFallback(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:noquant"},
+		Layers: []ollamaLayer{{Size: 100}},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/mistral/7b-Q4_K_M")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	// Config blob without quantization_level
+	configBlob := map[string]any{"model_family": "mistral"}
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-noquant")
+	writeJSON(t, fs, configPath, configBlob)
+
+	results := ScanOllama(afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "Q4_K_M", results[0].Quantization)
+}
+
+func TestScanOllama_ParameterSizeFromNameFallback(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:noparam"},
+		Layers: []ollamaLayer{{Size: 100}},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/llama3/70b")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configBlob := map[string]any{"model_family": "llama"}
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-noparam")
+	writeJSON(t, fs, configPath, configBlob)
+
+	results := ScanOllama(afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "70B", results[0].ParameterSize)
+}
+
 func TestOllamaVendor(t *testing.T) {
 	tests := []struct {
 		modelBase string
@@ -177,11 +252,11 @@ func TestScanHuggingFace(t *testing.T) {
 	home := "/home/testuser"
 
 	modelDir := filepath.Join(home, ".cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
-	snapshotDir := filepath.Join(modelDir, "snapshots/abc123def")
+	snapshotDir := filepath.Join(modelDir, "snapshots/abc123def456")
 
 	require.NoError(t, afero.WriteFile(fs, filepath.Join(snapshotDir, "model.safetensors"), make([]byte, 5000), 0644))
 
-	cfg := hfConfig{ModelType: "llama"}
+	cfg := hfConfig{ModelType: "llama", Architectures: []string{"LlamaForCausalLM"}}
 	writeJSON(t, fs, filepath.Join(snapshotDir, "config.json"), cfg)
 
 	require.NoError(t, afero.WriteFile(fs, filepath.Join(modelDir, "blobs/sha256abc"), make([]byte, 4000), 0644))
@@ -197,6 +272,9 @@ func TestScanHuggingFace(t *testing.T) {
 	assert.Equal(t, "llama", m.Family)
 	assert.Equal(t, int64(5000), m.Size)
 	assert.Equal(t, "safetensors", m.Format)
+	assert.Equal(t, "abc123def456"[:12], m.Version)
+	assert.Equal(t, "LlamaForCausalLM", m.Architecture)
+	assert.Equal(t, "7B", m.ParameterSize)
 }
 
 func TestScanHuggingFace_GGUFFormat(t *testing.T) {
@@ -211,6 +289,55 @@ func TestScanHuggingFace_GGUFFormat(t *testing.T) {
 	results := ScanHuggingFace(afs, home)
 	require.Len(t, results, 1)
 	assert.Equal(t, "gguf", results[0].Format)
+	assert.Equal(t, "Q4_K_M", results[0].Quantization)
+}
+
+func TestScanHuggingFace_QuantizationFromConfig(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	modelDir := filepath.Join(home, ".cache/huggingface/hub/models--org--model-gptq")
+	snapshotDir := filepath.Join(modelDir, "snapshots/rev1")
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(snapshotDir, "model.safetensors"), make([]byte, 100), 0644))
+
+	cfg := hfConfig{
+		ModelType:          "llama",
+		Architectures:      []string{"LlamaForCausalLM"},
+		QuantizationConfig: map[string]any{"quant_method": "gptq", "bits": float64(4)},
+	}
+	writeJSON(t, fs, filepath.Join(snapshotDir, "config.json"), cfg)
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(modelDir, "blobs/b1"), make([]byte, 100), 0644))
+
+	results := ScanHuggingFace(afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "gptq", results[0].Quantization)
+}
+
+func TestScanHuggingFace_ReadmeFrontmatter(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	modelDir := filepath.Join(home, ".cache/huggingface/hub/models--org--model-with-readme")
+	snapshotDir := filepath.Join(modelDir, "snapshots/rev1")
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(snapshotDir, "model.safetensors"), make([]byte, 100), 0644))
+
+	readme := `---
+license: apache-2.0
+tags:
+  - text-generation
+  - pytorch
+pipeline_tag: text-generation
+---
+# Model Card
+This is a great model.
+`
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(snapshotDir, "README.md"), []byte(readme), 0644))
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(modelDir, "blobs/b1"), make([]byte, 100), 0644))
+
+	results := ScanHuggingFace(afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "apache-2.0", results[0].License)
+	assert.Equal(t, []string{"text-generation", "pytorch"}, results[0].Tags)
 }
 
 func TestScanHuggingFace_ONNXInSubdir(t *testing.T) {
@@ -275,6 +402,65 @@ func TestScanHuggingFace_SkipsNonModelDirs(t *testing.T) {
 	assert.Empty(t, results)
 }
 
+func TestScanJan_ExtractsNewFields(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	modelDir := filepath.Join(home, "jan/models/llama-7b")
+	meta := janModelMeta{
+		Name:        "Llama 7B",
+		ID:          "llama-7b",
+		Format:      "gguf",
+		Version:     "1.0.0",
+		Description: "A great language model",
+		License:     "llama2",
+		Metadata:    janModelMetadata{Author: "Meta", Tags: []string{"llm", "chat"}},
+		Publisher:   janModelPublisher{Name: "Meta"},
+	}
+	writeJSON(t, fs, filepath.Join(modelDir, "model.json"), meta)
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(modelDir, "llama-7b-Q4_K_M.gguf"), make([]byte, 4000), 0644))
+
+	results := ScanJan(afs, home)
+	require.Len(t, results, 1)
+
+	m := results[0]
+	assert.Equal(t, "Llama 7B", m.Name)
+	assert.Equal(t, "jan", m.Source)
+	assert.Equal(t, "Meta", m.Vendor)
+	assert.Equal(t, "1.0.0", m.Version)
+	assert.Equal(t, "A great language model", m.Description)
+	assert.Equal(t, "llama2", m.License)
+	assert.Equal(t, []string{"llm", "chat"}, m.Tags)
+	assert.Equal(t, "Q4_K_M", m.Quantization)
+	assert.Equal(t, "7B", m.ParameterSize)
+}
+
+func TestScanLMStudio_QuantizationFromFilename(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	modelsDir := filepath.Join(home, ".lmstudio/models/TheBloke/Llama-2-13B-GGUF")
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(modelsDir, "llama-2-13b.Q5_K_S.gguf"), make([]byte, 9000), 0644))
+
+	results := ScanLMStudio(afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "Q5_K_S", results[0].Quantization)
+	assert.Equal(t, "13B", results[0].ParameterSize)
+}
+
+func TestScanGPT4All_QuantizationFromFilename(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	dir := filepath.Join(home, ".cache/gpt4all")
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(dir, "mistral-7b-instruct-v0.1.Q4_0.gguf"), make([]byte, 4000), 0644))
+
+	results := ScanGPT4All(afs, home, "linux")
+	require.Len(t, results, 1)
+	assert.Equal(t, "Q4_0", results[0].Quantization)
+	assert.Equal(t, "7B", results[0].ParameterSize)
+}
+
 func TestScanAll(t *testing.T) {
 	afs, fs := newTestAfs()
 	home := "/home/testuser"
@@ -284,7 +470,7 @@ func TestScanAll(t *testing.T) {
 		Layers: []ollamaLayer{{Size: 100}},
 	}
 	writeJSON(t, fs, filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/llama3/latest"), manifest)
-	writeJSON(t, fs, filepath.Join(home, ".ollama/models/blobs/sha256-cfg1"), ollamaConfig{ModelFamily: "llama"})
+	writeJSON(t, fs, filepath.Join(home, ".ollama/models/blobs/sha256-cfg1"), map[string]any{"model_family": "llama"})
 
 	modelDir := filepath.Join(home, ".cache/huggingface/hub/models--google--bert-base")
 	snapshotDir := filepath.Join(modelDir, "snapshots/rev1")
@@ -326,6 +512,74 @@ func TestDetectFormatInDir(t *testing.T) {
 				require.NoError(t, afero.WriteFile(fs, filepath.Join(dir, f), []byte("data"), 0644))
 			}
 			assert.Equal(t, tt.expected, detectFormatInDir(afs, dir))
+		})
+	}
+}
+
+func TestQuantizationRegex(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"llama-2-7b.Q4_K_M.gguf", "Q4_K_M"},
+		{"model-Q8_0.gguf", "Q8_0"},
+		{"model-F16.gguf", "F16"},
+		{"model-FP16.gguf", "FP16"},
+		{"model-F32.safetensors", "F32"},
+		{"model-Q5_K_S.gguf", "Q5_K_S"},
+		{"model-q4_0.gguf", "q4_0"},
+		{"no-quant-model.gguf", ""},
+		{"readme.txt", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := reQuantization.FindString(tt.input)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestParamSizeRegex(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"llama3:70b", "70"},
+		{"llama3-7b-instruct", "7"},
+		{"Llama-2-13B-GGUF", "13"},
+		{"mistral-7b-instruct-v0.1.Q4_0.gguf", "7"},
+		{"model-0.5b-chat", "0.5"},
+		{"no-params-here", ""},
+		{"bert-base", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			m := reParamSize.FindStringSubmatch(tt.input)
+			if tt.want == "" {
+				assert.True(t, len(m) < 2, "expected no match for %q", tt.input)
+			} else {
+				require.True(t, len(m) >= 2, "expected match for %q", tt.input)
+				assert.Equal(t, tt.want, m[1])
+			}
+		})
+	}
+}
+
+func TestFormatParamCount(t *testing.T) {
+	tests := []struct {
+		count int64
+		want  string
+	}{
+		{8_000_000_000, "8B"},
+		{70_000_000_000, "70B"},
+		{6_700_000_000, "6.7B"},
+		{350_000_000, "350M"},
+		{1_500_000_000, "1.5B"},
+		{100_000, "100000"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			assert.Equal(t, tt.want, formatParamCount(tt.count))
 		})
 	}
 }

@@ -6639,6 +6639,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ai.model.format": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAiModel).GetFormat()).ToDataRes(types.String)
 	},
+	"ai.model.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetVersion()).ToDataRes(types.String)
+	},
+	"ai.model.quantization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetQuantization()).ToDataRes(types.String)
+	},
+	"ai.model.parameterSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetParameterSize()).ToDataRes(types.String)
+	},
+	"ai.model.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetArchitecture()).ToDataRes(types.String)
+	},
+	"ai.model.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetLicense()).ToDataRes(types.String)
+	},
+	"ai.model.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"ai.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiModel).GetDescription()).ToDataRes(types.String)
+	},
 	"claude.code.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15130,6 +15151,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ai.model.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAiModel).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.quantization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).Quantization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.parameterSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).ParameterSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.model.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ai.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"claude.code.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41284,14 +41333,21 @@ type mqlAiModel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAiModelInternal it will be used here
-	Name       plugin.TValue[string]
-	Source     plugin.TValue[string]
-	Vendor     plugin.TValue[string]
-	Family     plugin.TValue[string]
-	Path       plugin.TValue[string]
-	Size       plugin.TValue[int64]
-	ModifiedAt plugin.TValue[*time.Time]
-	Format     plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Source        plugin.TValue[string]
+	Vendor        plugin.TValue[string]
+	Family        plugin.TValue[string]
+	Path          plugin.TValue[string]
+	Size          plugin.TValue[int64]
+	ModifiedAt    plugin.TValue[*time.Time]
+	Format        plugin.TValue[string]
+	Version       plugin.TValue[string]
+	Quantization  plugin.TValue[string]
+	ParameterSize plugin.TValue[string]
+	Architecture  plugin.TValue[string]
+	License       plugin.TValue[string]
+	Tags          plugin.TValue[[]any]
+	Description   plugin.TValue[string]
 }
 
 // createAiModel creates a new instance of this resource
@@ -41361,6 +41417,34 @@ func (c *mqlAiModel) GetModifiedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAiModel) GetFormat() *plugin.TValue[string] {
 	return &c.Format
+}
+
+func (c *mqlAiModel) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAiModel) GetQuantization() *plugin.TValue[string] {
+	return &c.Quantization
+}
+
+func (c *mqlAiModel) GetParameterSize() *plugin.TValue[string] {
+	return &c.ParameterSize
+}
+
+func (c *mqlAiModel) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlAiModel) GetLicense() *plugin.TValue[string] {
+	return &c.License
+}
+
+func (c *mqlAiModel) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlAiModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlClaudeCode for the claude.code resource
