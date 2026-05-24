@@ -90,12 +90,17 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 		}
 	}
 
+	return extractSharepointTenant(spUrl)
+}
+
+// extractSharepointTenant pulls the bare tenant name out of a user-provided
+// sharepoint url. Accepts both the bare form ("contoso.onmicrosoft.com") and
+// the full url form ("https://contoso.sharepoint.com[/...]").
+func extractSharepointTenant(spUrl string) (string, error) {
 	if spUrl == "" {
 		return "", errors.New("no sharepoint url provided, unable to fetch sharepoint online report")
 	}
 
-	// Accept both bare ("contoso.onmicrosoft.com") and full URL
-	// ("https://contoso.sharepoint.com") forms.
 	host := spUrl
 	host = strings.TrimPrefix(host, "https://")
 	host = strings.TrimPrefix(host, "http://")
@@ -108,8 +113,7 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 		return "", fmt.Errorf("invalid sharepoint url: %s", spUrl)
 	}
 
-	tenant := domainParts[0]
-	return tenant, nil
+	return domainParts[0], nil
 }
 
 func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
