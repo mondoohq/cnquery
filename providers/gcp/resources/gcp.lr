@@ -3112,12 +3112,19 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   name string
   // Optional description for the cluster
   description string
-  // The logging service the cluster should use to write logs
-  loggingService string
+  // Legacy logging service identifier
+  //
+  // Deprecated in favor of `loggingConfig`, which captures the per-component
+  // enable list (SYSTEM_COMPONENTS, WORKLOADS, APISERVER, SCHEDULER,
+  // CONTROLLER_MANAGER) used by modern GKE.
+  loggingService @maturity("deprecated") string
   // Whether cluster logging is enabled (loggingService is set and not "none")
   loggingEnabled() bool
-  // The monitoring service the cluster should use to write metrics
-  monitoringService string
+  // Legacy monitoring service identifier
+  //
+  // Deprecated in favor of `monitoringConfig`, which captures the per-component
+  // enable list plus the managed Prometheus configuration used by modern GKE.
+  monitoringService @maturity("deprecated") string
   // Whether cluster monitoring is enabled (monitoringService is set and not "none")
   monitoringEnabled() bool
   // The name of the Google Compute Engine network to which the cluster is connected
@@ -3160,28 +3167,133 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
   // Configuration for cluster networking
   networkConfig gcp.project.gkeService.cluster.networkConfig
-  // Binary authorization configuration
-  binaryAuthorization dict
-  // Whether Binary Authorization is enabled for the cluster (Enabled flag is true OR evaluationMode is anything other than DISABLED/UNSPECIFIED)
-  binaryAuthorizationEnabled bool
+  // Legacy binary authorization configuration dict
+  //
+  // Deprecated in favor of `binaryAuthorizationEvaluationMode`, which is the
+  // single field GKE now uses to drive Binary Authorization policy evaluation.
+  binaryAuthorization @maturity("deprecated") dict
+  // Whether Binary Authorization is enabled for the cluster
+  //
+  // Deprecated in favor of `binaryAuthorizationEvaluationMode`. True when the
+  // legacy boolean is set or `evaluationMode` is anything other than
+  // `DISABLED`/`UNSPECIFIED`.
+  binaryAuthorizationEnabled @maturity("deprecated") bool
+  // Binary Authorization policy evaluation mode
+  //
+  // One of `DISABLED`, `PROJECT_SINGLETON_POLICY_ENFORCE`, or `POLICY_BINDINGS`.
+  // Replaces the legacy boolean `binaryAuthorization.enabled` flag.
+  binaryAuthorizationEvaluationMode string
   // Legacy ABAC authorization configuration
   legacyAbac dict
   // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
   // Authentication information for accessing the master endpoint
   masterAuth dict
-  // Master authorized networks configuration
-  masterAuthorizedNetworksConfig dict
-  // Whether master authorized networks is enabled (restricts control plane access by source CIDR)
-  masterAuthorizedNetworksEnabled bool
+  // Legacy master authorized networks configuration
+  //
+  // Deprecated in favor of
+  // `controlPlaneEndpointsConfig.ipEndpointsConfig.authorizedNetworksConfig`,
+  // which is the modern home for restricting control plane access by source
+  // CIDR.
+  masterAuthorizedNetworksConfig @maturity("deprecated") dict
+  // Whether master authorized networks is enabled
+  //
+  // Deprecated in favor of
+  // `controlPlaneEndpointsConfig.ipEndpointsConfig.authorizedNetworksConfig.enabled`.
+  masterAuthorizedNetworksEnabled @maturity("deprecated") bool
   // Private cluster configuration
   privateClusterConfig dict
-  // Whether nodes have only private IPs (no public internet egress without NAT)
-  privateNodesEnabled bool
-  // Whether the cluster's control plane endpoint is private (no public master endpoint)
-  privateEndpointEnabled bool
-  // Whether the cluster's private control plane is reachable from any region (when private endpoint is enabled)
-  masterGlobalAccessEnabled bool
+  // Whether nodes have only private IPs
+  //
+  // Deprecated in favor of
+  // `controlPlaneEndpointsConfig.ipEndpointsConfig.enablePublicEndpoint`
+  // (which captures the modern equivalent inverted) and the broader private-node
+  // configuration on the cluster's node pool networking.
+  privateNodesEnabled @maturity("deprecated") bool
+  // Whether the cluster's control plane endpoint is private
+  //
+  // Deprecated in favor of
+  // `controlPlaneEndpointsConfig.ipEndpointsConfig.enablePublicEndpoint`
+  // (false means the public IP endpoint is disabled).
+  privateEndpointEnabled @maturity("deprecated") bool
+  // Whether the cluster's private control plane is reachable from any region
+  //
+  // Deprecated in favor of
+  // `controlPlaneEndpointsConfig.ipEndpointsConfig.enableGlobalAccess`.
+  masterGlobalAccessEnabled @maturity("deprecated") bool
+  // Control plane endpoints configuration
+  //
+  // Examine the modern, structured access-control configuration for the
+  // cluster's control plane — both DNS and IP endpoints. The
+  // `ipEndpointsConfig` sub-dict exposes the authorized-networks list,
+  // whether the public IP endpoint is enabled, and whether private endpoint
+  // global access is enabled. The `dnsEndpointConfig` sub-dict exposes the
+  // managed DNS endpoint URL and whether it is allowed. Replaces the legacy
+  // `masterAuthorizedNetworksConfig` and the access-related fields of
+  // `privateClusterConfig`.
+  controlPlaneEndpointsConfig dict
+  // Logging configuration
+  //
+  // Examine which logging components are enabled for the cluster. The
+  // `componentConfig.enableComponents` list contains members of
+  // `SYSTEM_COMPONENTS`, `WORKLOADS`, `APISERVER`, `SCHEDULER`, and
+  // `CONTROLLER_MANAGER`. Replaces the legacy `loggingService` string.
+  loggingConfig dict
+  // Monitoring configuration
+  //
+  // Examine which monitoring components are enabled for the cluster plus the
+  // managed Prometheus configuration. The `componentConfig.enableComponents`
+  // list contains members of `SYSTEM_COMPONENTS`, `APISERVER`, `SCHEDULER`,
+  // `CONTROLLER_MANAGER`, `STORAGE`, `HPA`, `POD`, `DAEMONSET`, `DEPLOYMENT`,
+  // `STATEFULSET`, `CADVISOR`, `KUBELET`, `DCGM`, and `JOBSET`. Replaces the
+  // legacy `monitoringService` string.
+  monitoringConfig dict
+  // Secret Manager configuration
+  //
+  // Configuration for the Secret Manager CSI driver — exposes whether the
+  // driver is `enabled` and the optional `rotationConfig` (enable flag plus
+  // rotation interval) used to refresh synced secrets.
+  secretManagerConfig dict
+  // User-managed keys configuration
+  //
+  // Customer-managed encryption-key (CMEK) references for cluster control
+  // plane storage and certificate authorities — cluster CA, etcd API CA,
+  // etcd peer CA, aggregation CA, service-account signing/verification keys,
+  // the control-plane disk encryption key, and the GKE-ops etcd backup
+  // encryption key.
+  userManagedKeysConfig dict
+  // Anonymous authentication configuration
+  //
+  // Controls whether anonymous access to non-health-check endpoints is
+  // permitted. `mode` is one of `LIMITED` (anonymous access restricted to the
+  // health-check endpoints) or `ENABLED` (anonymous access fully allowed).
+  anonymousAuthenticationConfig dict
+  // Fleet configuration
+  //
+  // Fleet membership information for the cluster — `project` (the fleet host
+  // project), `membership` (the full fleet membership resource name), and
+  // `preRegistered` (whether the cluster was registered through the fleet
+  // API).
+  fleet dict
+  // RBAC binding configuration
+  //
+  // Settings that govern which ClusterRoleBinding/RoleBinding subjects are
+  // permitted. `enableInsecureBindingSystemUnauthenticated` allows bindings
+  // to `system:anonymous` or `system:unauthenticated`;
+  // `enableInsecureBindingSystemAuthenticated` allows bindings to
+  // `system:authenticated`. Both default to disallowed.
+  rbacBindingConfig dict
+  // Status conditions
+  //
+  // Conditions that caused the current cluster state. Each entry has a
+  // `code`, a human-readable `message`, and a canonical `canonicalCode`
+  // (`google.rpc.Code` value). Provides more detail than the single `status`
+  // string.
+  conditions []dict
+  // Whether the cluster satisfies Physical Zone Isolation requirements
+  satisfiesPzi bool
+  // Whether the cluster satisfies Physical Zone Separation requirements
+  satisfiesPzs bool
   // Etcd encryption configuration
   databaseEncryption dict
   // Etcd encryption state (ENCRYPTED, DECRYPTED)

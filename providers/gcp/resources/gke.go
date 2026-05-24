@@ -512,6 +512,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 
 		var binAuth map[string]any
 		var binaryAuthorizationEnabled bool
+		var binaryAuthorizationEvaluationMode string
 		if c.BinaryAuthorization != nil {
 			binAuth = map[string]any{
 				"enabled":        c.BinaryAuthorization.Enabled,
@@ -522,6 +523,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			mode := c.BinaryAuthorization.EvaluationMode
 			binaryAuthorizationEnabled = c.BinaryAuthorization.Enabled ||
 				(mode != containerpb.BinaryAuthorization_EVALUATION_MODE_UNSPECIFIED && mode != containerpb.BinaryAuthorization_DISABLED)
+			binaryAuthorizationEvaluationMode = mode.String()
 		}
 
 		var legacyAbac map[string]any
@@ -708,69 +710,132 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			return nil, err
 		}
 
+		controlPlaneEndpointsConfig, err := protoToDict(c.ControlPlaneEndpointsConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		loggingConfig, err := protoToDict(c.LoggingConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		monitoringConfig, err := protoToDict(c.MonitoringConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		secretManagerConfig, err := protoToDict(c.SecretManagerConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		userManagedKeysConfig, err := protoToDict(c.UserManagedKeysConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		anonymousAuthenticationConfig, err := protoToDict(c.AnonymousAuthenticationConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		fleet, err := protoToDict(c.Fleet)
+		if err != nil {
+			return nil, err
+		}
+
+		rbacBindingConfig, err := protoToDict(c.RbacBindingConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		conditions := make([]any, 0, len(c.Conditions))
+		for _, cond := range c.Conditions {
+			condDict, err := protoToDict(cond)
+			if err != nil {
+				return nil, err
+			}
+			if condDict != nil {
+				conditions = append(conditions, condDict)
+			}
+		}
+
 		notificationConfig, err := buildGKENotificationConfig(g.MqlRuntime, c.Name, c.NotificationConfig)
 		if err != nil {
 			return nil, err
 		}
 
 		clusterArgs := map[string]*llx.RawData{
-			"projectId":                       llx.StringData(projectId),
-			"id":                              llx.StringData(c.Id),
-			"name":                            llx.StringData(c.Name),
-			"description":                     llx.StringData(c.Description),
-			"loggingService":                  llx.StringData(c.LoggingService),
-			"monitoringService":               llx.StringData(c.MonitoringService),
-			"network":                         llx.StringData(c.Network),
-			"clusterIpv4Cidr":                 llx.StringData(c.ClusterIpv4Cidr),
-			"subnetwork":                      llx.StringData(c.Subnetwork),
-			"nodePools":                       llx.ArrayData(nodePools, types.Resource("gcp.project.gkeService.cluster.nodepool")),
-			"locations":                       llx.ArrayData(convert.SliceAnyToInterface(c.Locations), types.String),
-			"enableKubernetesAlpha":           llx.BoolData(c.EnableKubernetesAlpha),
-			"autopilotEnabled":                llx.BoolData(autopilotEnabled),
-			"location":                        llx.StringData(c.Location),
-			"endpoint":                        llx.StringData(c.Endpoint),
-			"initialClusterVersion":           llx.StringData(c.InitialClusterVersion),
-			"currentMasterVersion":            llx.StringData(c.CurrentMasterVersion),
-			"status":                          llx.StringData(c.Status.String()),
-			"resourceLabels":                  llx.MapData(convert.MapToInterfaceMap(c.ResourceLabels), types.String),
-			"created":                         llx.TimeDataPtr(parseTime(c.CreateTime)),
-			"expirationTime":                  llx.TimeDataPtr(parseTime(c.ExpireTime)),
-			"addonsConfig":                    llx.ResourceData(addonsConfig, "gcp.project.gkeService.cluster.addonsConfig"),
-			"workloadIdentityConfig":          llx.DictData(workloadIdCfg),
-			"workloadIdentityEnabled":         llx.BoolData(workloadIdentityEnabled),
-			"ipAllocationPolicy":              llx.ResourceData(ipAllocPolicy, "gcp.project.gkeService.cluster.ipAllocationPolicy"),
-			"networkConfig":                   llx.ResourceData(networkConfig, "gcp.project.gkeService.cluster.networkConfig"),
-			"binaryAuthorization":             llx.DictData(binAuth),
-			"binaryAuthorizationEnabled":      llx.BoolData(binaryAuthorizationEnabled),
-			"legacyAbac":                      llx.DictData(legacyAbac),
-			"legacyAbacEnabled":               llx.BoolData(legacyAbacEnabled),
-			"masterAuth":                      llx.DictData(masterAuth),
-			"masterAuthorizedNetworksConfig":  llx.DictData(masterAuthorizedNetworksCfg),
-			"masterAuthorizedNetworksEnabled": llx.BoolData(masterAuthorizedNetworksEnabled),
-			"privateClusterConfig":            llx.DictData(privateClusterCfg),
-			"privateNodesEnabled":             llx.BoolData(privateNodesEnabled),
-			"privateEndpointEnabled":          llx.BoolData(privateEndpointEnabled),
-			"masterGlobalAccessEnabled":       llx.BoolData(masterGlobalAccessEnabled),
-			"databaseEncryption":              llx.DictData(databaseEncryption),
-			"databaseEncryptionState":         llx.StringData(databaseEncryptionState),
-			"shieldedNodesConfig":             llx.DictData(shieldedNodesConfig),
-			"shieldedNodesEnabled":            llx.BoolData(shieldedNodesEnabled),
-			"costManagementConfig":            llx.DictData(costManagementConfig),
-			"confidentialNodesConfig":         llx.DictData(confidentialNodesConfig),
-			"identityServiceConfig":           llx.DictData(identityServiceConfig),
-			"networkPolicyConfig":             llx.DictData(networkPolicyConfig),
-			"releaseChannel":                  llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
-			"enableTpu":                       llx.BoolData(c.EnableTpu),
-			"currentNodeCount":                llx.IntData(int64(c.CurrentNodeCount)),
-			"securityPostureConfig":           llx.ResourceData(secPostureConfig, "gcp.project.gkeService.cluster.securityPostureConfig"),
-			"maintenancePolicy":               llx.ResourceData(maintenancePolicy, "gcp.project.gkeService.cluster.maintenancePolicy"),
-			"etag":                            llx.StringData(c.Etag),
-			"initialNodeCount":                llx.IntData(int64(c.InitialNodeCount)),
-			"servicesIpv4Cidr":                llx.StringData(c.ServicesIpv4Cidr),
-			"nodeIpv4CidrSize":                llx.IntData(int64(c.NodeIpv4CidrSize)),
-			"tpuIpv4CidrBlock":                llx.StringData(c.TpuIpv4CidrBlock),
-			"enabledK8sBetaApis":              llx.ArrayData(enabledK8sBetaApis, types.String),
-			"meshCertificates":                llx.DictData(meshCertificates),
+			"projectId":                         llx.StringData(projectId),
+			"id":                                llx.StringData(c.Id),
+			"name":                              llx.StringData(c.Name),
+			"description":                       llx.StringData(c.Description),
+			"loggingService":                    llx.StringData(c.LoggingService),
+			"monitoringService":                 llx.StringData(c.MonitoringService),
+			"network":                           llx.StringData(c.Network),
+			"clusterIpv4Cidr":                   llx.StringData(c.ClusterIpv4Cidr),
+			"subnetwork":                        llx.StringData(c.Subnetwork),
+			"nodePools":                         llx.ArrayData(nodePools, types.Resource("gcp.project.gkeService.cluster.nodepool")),
+			"locations":                         llx.ArrayData(convert.SliceAnyToInterface(c.Locations), types.String),
+			"enableKubernetesAlpha":             llx.BoolData(c.EnableKubernetesAlpha),
+			"autopilotEnabled":                  llx.BoolData(autopilotEnabled),
+			"location":                          llx.StringData(c.Location),
+			"endpoint":                          llx.StringData(c.Endpoint),
+			"initialClusterVersion":             llx.StringData(c.InitialClusterVersion),
+			"currentMasterVersion":              llx.StringData(c.CurrentMasterVersion),
+			"status":                            llx.StringData(c.Status.String()),
+			"resourceLabels":                    llx.MapData(convert.MapToInterfaceMap(c.ResourceLabels), types.String),
+			"created":                           llx.TimeDataPtr(parseTime(c.CreateTime)),
+			"expirationTime":                    llx.TimeDataPtr(parseTime(c.ExpireTime)),
+			"addonsConfig":                      llx.ResourceData(addonsConfig, "gcp.project.gkeService.cluster.addonsConfig"),
+			"workloadIdentityConfig":            llx.DictData(workloadIdCfg),
+			"workloadIdentityEnabled":           llx.BoolData(workloadIdentityEnabled),
+			"ipAllocationPolicy":                llx.ResourceData(ipAllocPolicy, "gcp.project.gkeService.cluster.ipAllocationPolicy"),
+			"networkConfig":                     llx.ResourceData(networkConfig, "gcp.project.gkeService.cluster.networkConfig"),
+			"binaryAuthorization":               llx.DictData(binAuth),
+			"binaryAuthorizationEnabled":        llx.BoolData(binaryAuthorizationEnabled),
+			"binaryAuthorizationEvaluationMode": llx.StringData(binaryAuthorizationEvaluationMode),
+			"legacyAbac":                        llx.DictData(legacyAbac),
+			"legacyAbacEnabled":                 llx.BoolData(legacyAbacEnabled),
+			"masterAuth":                        llx.DictData(masterAuth),
+			"masterAuthorizedNetworksConfig":    llx.DictData(masterAuthorizedNetworksCfg),
+			"masterAuthorizedNetworksEnabled":   llx.BoolData(masterAuthorizedNetworksEnabled),
+			"privateClusterConfig":              llx.DictData(privateClusterCfg),
+			"privateNodesEnabled":               llx.BoolData(privateNodesEnabled),
+			"privateEndpointEnabled":            llx.BoolData(privateEndpointEnabled),
+			"masterGlobalAccessEnabled":         llx.BoolData(masterGlobalAccessEnabled),
+			"databaseEncryption":                llx.DictData(databaseEncryption),
+			"databaseEncryptionState":           llx.StringData(databaseEncryptionState),
+			"shieldedNodesConfig":               llx.DictData(shieldedNodesConfig),
+			"shieldedNodesEnabled":              llx.BoolData(shieldedNodesEnabled),
+			"costManagementConfig":              llx.DictData(costManagementConfig),
+			"confidentialNodesConfig":           llx.DictData(confidentialNodesConfig),
+			"identityServiceConfig":             llx.DictData(identityServiceConfig),
+			"networkPolicyConfig":               llx.DictData(networkPolicyConfig),
+			"releaseChannel":                    llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
+			"enableTpu":                         llx.BoolData(c.EnableTpu),
+			"currentNodeCount":                  llx.IntData(int64(c.CurrentNodeCount)),
+			"securityPostureConfig":             llx.ResourceData(secPostureConfig, "gcp.project.gkeService.cluster.securityPostureConfig"),
+			"maintenancePolicy":                 llx.ResourceData(maintenancePolicy, "gcp.project.gkeService.cluster.maintenancePolicy"),
+			"etag":                              llx.StringData(c.Etag),
+			"initialNodeCount":                  llx.IntData(int64(c.InitialNodeCount)),
+			"servicesIpv4Cidr":                  llx.StringData(c.ServicesIpv4Cidr),
+			"nodeIpv4CidrSize":                  llx.IntData(int64(c.NodeIpv4CidrSize)),
+			"tpuIpv4CidrBlock":                  llx.StringData(c.TpuIpv4CidrBlock),
+			"enabledK8sBetaApis":                llx.ArrayData(enabledK8sBetaApis, types.String),
+			"meshCertificates":                  llx.DictData(meshCertificates),
+			"controlPlaneEndpointsConfig":       llx.DictData(controlPlaneEndpointsConfig),
+			"loggingConfig":                     llx.DictData(loggingConfig),
+			"monitoringConfig":                  llx.DictData(monitoringConfig),
+			"secretManagerConfig":               llx.DictData(secretManagerConfig),
+			"userManagedKeysConfig":             llx.DictData(userManagedKeysConfig),
+			"anonymousAuthenticationConfig":     llx.DictData(anonymousAuthenticationConfig),
+			"fleet":                             llx.DictData(fleet),
+			"rbacBindingConfig":                 llx.DictData(rbacBindingConfig),
+			"conditions":                        llx.ArrayData(conditions, types.Dict),
+			"satisfiesPzi":                      llx.BoolDataPtr(c.SatisfiesPzi),
+			"satisfiesPzs":                      llx.BoolDataPtr(c.SatisfiesPzs),
 		}
 		if notificationConfig != nil {
 			clusterArgs["notificationConfig"] = llx.ResourceData(notificationConfig, "gcp.project.gkeService.cluster.notificationConfig")

@@ -5560,6 +5560,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.binaryAuthorizationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetBinaryAuthorizationEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.gkeService.cluster.binaryAuthorizationEvaluationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetBinaryAuthorizationEvaluationMode()).ToDataRes(types.String)
+	},
 	"gcp.project.gkeService.cluster.legacyAbac": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetLegacyAbac()).ToDataRes(types.Dict)
 	},
@@ -5586,6 +5589,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.masterGlobalAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterGlobalAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpointsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlaneEndpointsConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.loggingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetLoggingConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.monitoringConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetMonitoringConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.secretManagerConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetSecretManagerConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.userManagedKeysConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetUserManagedKeysConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.anonymousAuthenticationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetAnonymousAuthenticationConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.fleet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetFleet()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.rbacBindingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetRbacBindingConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.gkeService.cluster.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryption()).ToDataRes(types.Dict)
@@ -19411,6 +19447,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceCluster).BinaryAuthorizationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.binaryAuthorizationEvaluationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).BinaryAuthorizationEvaluationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.legacyAbac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).LegacyAbac, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -19445,6 +19485,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.masterGlobalAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).MasterGlobalAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpointsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ControlPlaneEndpointsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.loggingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).LoggingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.monitoringConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).MonitoringConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.secretManagerConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).SecretManagerConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.userManagedKeysConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).UserManagedKeysConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.anonymousAuthenticationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).AnonymousAuthenticationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.fleet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).Fleet, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.rbacBindingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).RbacBindingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44269,69 +44353,81 @@ type mqlGcpProjectGkeServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectGkeServiceClusterInternal
-	ProjectId                       plugin.TValue[string]
-	Id                              plugin.TValue[string]
-	Name                            plugin.TValue[string]
-	Description                     plugin.TValue[string]
-	LoggingService                  plugin.TValue[string]
-	LoggingEnabled                  plugin.TValue[bool]
-	MonitoringService               plugin.TValue[string]
-	MonitoringEnabled               plugin.TValue[bool]
-	Network                         plugin.TValue[string]
-	ClusterIpv4Cidr                 plugin.TValue[string]
-	Subnetwork                      plugin.TValue[string]
-	NodePools                       plugin.TValue[[]any]
-	Locations                       plugin.TValue[[]any]
-	EnableKubernetesAlpha           plugin.TValue[bool]
-	AutopilotEnabled                plugin.TValue[bool]
-	Location                        plugin.TValue[string]
-	Endpoint                        plugin.TValue[string]
-	InitialClusterVersion           plugin.TValue[string]
-	CurrentMasterVersion            plugin.TValue[string]
-	Status                          plugin.TValue[string]
-	ResourceLabels                  plugin.TValue[map[string]any]
-	Created                         plugin.TValue[*time.Time]
-	ExpirationTime                  plugin.TValue[*time.Time]
-	AddonsConfig                    plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
-	WorkloadIdentityConfig          plugin.TValue[any]
-	WorkloadIdentityEnabled         plugin.TValue[bool]
-	IpAllocationPolicy              plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
-	NetworkConfig                   plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
-	BinaryAuthorization             plugin.TValue[any]
-	BinaryAuthorizationEnabled      plugin.TValue[bool]
-	LegacyAbac                      plugin.TValue[any]
-	LegacyAbacEnabled               plugin.TValue[bool]
-	MasterAuth                      plugin.TValue[any]
-	MasterAuthorizedNetworksConfig  plugin.TValue[any]
-	MasterAuthorizedNetworksEnabled plugin.TValue[bool]
-	PrivateClusterConfig            plugin.TValue[any]
-	PrivateNodesEnabled             plugin.TValue[bool]
-	PrivateEndpointEnabled          plugin.TValue[bool]
-	MasterGlobalAccessEnabled       plugin.TValue[bool]
-	DatabaseEncryption              plugin.TValue[any]
-	DatabaseEncryptionState         plugin.TValue[string]
-	DatabaseEncryptionKey           plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	ShieldedNodesConfig             plugin.TValue[any]
-	ShieldedNodesEnabled            plugin.TValue[bool]
-	CostManagementConfig            plugin.TValue[any]
-	ConfidentialNodesConfig         plugin.TValue[any]
-	IdentityServiceConfig           plugin.TValue[any]
-	NetworkPolicyConfig             plugin.TValue[any]
-	NetworkPolicy                   plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkPolicy]
-	ReleaseChannel                  plugin.TValue[string]
-	ReleaseChannelManaged           plugin.TValue[bool]
-	EnableTpu                       plugin.TValue[bool]
-	CurrentNodeCount                plugin.TValue[int64]
-	SecurityPostureConfig           plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig]
-	MaintenancePolicy               plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy]
-	MeshCertificates                plugin.TValue[any]
-	NotificationConfig              plugin.TValue[*mqlGcpProjectGkeServiceClusterNotificationConfig]
-	Etag                            plugin.TValue[string]
-	InitialNodeCount                plugin.TValue[int64]
-	ServicesIpv4Cidr                plugin.TValue[string]
-	NodeIpv4CidrSize                plugin.TValue[int64]
-	TpuIpv4CidrBlock                plugin.TValue[string]
-	EnabledK8sBetaApis              plugin.TValue[[]any]
+	ProjectId                         plugin.TValue[string]
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Description                       plugin.TValue[string]
+	LoggingService                    plugin.TValue[string]
+	LoggingEnabled                    plugin.TValue[bool]
+	MonitoringService                 plugin.TValue[string]
+	MonitoringEnabled                 plugin.TValue[bool]
+	Network                           plugin.TValue[string]
+	ClusterIpv4Cidr                   plugin.TValue[string]
+	Subnetwork                        plugin.TValue[string]
+	NodePools                         plugin.TValue[[]any]
+	Locations                         plugin.TValue[[]any]
+	EnableKubernetesAlpha             plugin.TValue[bool]
+	AutopilotEnabled                  plugin.TValue[bool]
+	Location                          plugin.TValue[string]
+	Endpoint                          plugin.TValue[string]
+	InitialClusterVersion             plugin.TValue[string]
+	CurrentMasterVersion              plugin.TValue[string]
+	Status                            plugin.TValue[string]
+	ResourceLabels                    plugin.TValue[map[string]any]
+	Created                           plugin.TValue[*time.Time]
+	ExpirationTime                    plugin.TValue[*time.Time]
+	AddonsConfig                      plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
+	WorkloadIdentityConfig            plugin.TValue[any]
+	WorkloadIdentityEnabled           plugin.TValue[bool]
+	IpAllocationPolicy                plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
+	NetworkConfig                     plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
+	BinaryAuthorization               plugin.TValue[any]
+	BinaryAuthorizationEnabled        plugin.TValue[bool]
+	BinaryAuthorizationEvaluationMode plugin.TValue[string]
+	LegacyAbac                        plugin.TValue[any]
+	LegacyAbacEnabled                 plugin.TValue[bool]
+	MasterAuth                        plugin.TValue[any]
+	MasterAuthorizedNetworksConfig    plugin.TValue[any]
+	MasterAuthorizedNetworksEnabled   plugin.TValue[bool]
+	PrivateClusterConfig              plugin.TValue[any]
+	PrivateNodesEnabled               plugin.TValue[bool]
+	PrivateEndpointEnabled            plugin.TValue[bool]
+	MasterGlobalAccessEnabled         plugin.TValue[bool]
+	ControlPlaneEndpointsConfig       plugin.TValue[any]
+	LoggingConfig                     plugin.TValue[any]
+	MonitoringConfig                  plugin.TValue[any]
+	SecretManagerConfig               plugin.TValue[any]
+	UserManagedKeysConfig             plugin.TValue[any]
+	AnonymousAuthenticationConfig     plugin.TValue[any]
+	Fleet                             plugin.TValue[any]
+	RbacBindingConfig                 plugin.TValue[any]
+	Conditions                        plugin.TValue[[]any]
+	SatisfiesPzi                      plugin.TValue[bool]
+	SatisfiesPzs                      plugin.TValue[bool]
+	DatabaseEncryption                plugin.TValue[any]
+	DatabaseEncryptionState           plugin.TValue[string]
+	DatabaseEncryptionKey             plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	ShieldedNodesConfig               plugin.TValue[any]
+	ShieldedNodesEnabled              plugin.TValue[bool]
+	CostManagementConfig              plugin.TValue[any]
+	ConfidentialNodesConfig           plugin.TValue[any]
+	IdentityServiceConfig             plugin.TValue[any]
+	NetworkPolicyConfig               plugin.TValue[any]
+	NetworkPolicy                     plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkPolicy]
+	ReleaseChannel                    plugin.TValue[string]
+	ReleaseChannelManaged             plugin.TValue[bool]
+	EnableTpu                         plugin.TValue[bool]
+	CurrentNodeCount                  plugin.TValue[int64]
+	SecurityPostureConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig]
+	MaintenancePolicy                 plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy]
+	MeshCertificates                  plugin.TValue[any]
+	NotificationConfig                plugin.TValue[*mqlGcpProjectGkeServiceClusterNotificationConfig]
+	Etag                              plugin.TValue[string]
+	InitialNodeCount                  plugin.TValue[int64]
+	ServicesIpv4Cidr                  plugin.TValue[string]
+	NodeIpv4CidrSize                  plugin.TValue[int64]
+	TpuIpv4CidrBlock                  plugin.TValue[string]
+	EnabledK8sBetaApis                plugin.TValue[[]any]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -44495,6 +44591,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetBinaryAuthorizationEnabled() *plugin
 	return &c.BinaryAuthorizationEnabled
 }
 
+func (c *mqlGcpProjectGkeServiceCluster) GetBinaryAuthorizationEvaluationMode() *plugin.TValue[string] {
+	return &c.BinaryAuthorizationEvaluationMode
+}
+
 func (c *mqlGcpProjectGkeServiceCluster) GetLegacyAbac() *plugin.TValue[any] {
 	return &c.LegacyAbac
 }
@@ -44529,6 +44629,50 @@ func (c *mqlGcpProjectGkeServiceCluster) GetPrivateEndpointEnabled() *plugin.TVa
 
 func (c *mqlGcpProjectGkeServiceCluster) GetMasterGlobalAccessEnabled() *plugin.TValue[bool] {
 	return &c.MasterGlobalAccessEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetControlPlaneEndpointsConfig() *plugin.TValue[any] {
+	return &c.ControlPlaneEndpointsConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetLoggingConfig() *plugin.TValue[any] {
+	return &c.LoggingConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetMonitoringConfig() *plugin.TValue[any] {
+	return &c.MonitoringConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetSecretManagerConfig() *plugin.TValue[any] {
+	return &c.SecretManagerConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetUserManagedKeysConfig() *plugin.TValue[any] {
+	return &c.UserManagedKeysConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetAnonymousAuthenticationConfig() *plugin.TValue[any] {
+	return &c.AnonymousAuthenticationConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetFleet() *plugin.TValue[any] {
+	return &c.Fleet
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetRbacBindingConfig() *plugin.TValue[any] {
+	return &c.RbacBindingConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetConditions() *plugin.TValue[[]any] {
+	return &c.Conditions
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[any] {

@@ -2734,11 +2734,15 @@ gcp.project.gkeService.cluster.addonsConfig.id 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.kubernetesDashboard 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig 9.0.0
+gcp.project.gkeService.cluster.anonymousAuthenticationConfig 13.16.3
 gcp.project.gkeService.cluster.autopilotEnabled 9.0.0
 gcp.project.gkeService.cluster.binaryAuthorization 9.0.0
 gcp.project.gkeService.cluster.binaryAuthorizationEnabled 13.12.2
+gcp.project.gkeService.cluster.binaryAuthorizationEvaluationMode 13.16.3
 gcp.project.gkeService.cluster.clusterIpv4Cidr 9.0.0
+gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
+gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
 gcp.project.gkeService.cluster.costManagementConfig 9.0.0
 gcp.project.gkeService.cluster.created 9.0.0
 gcp.project.gkeService.cluster.currentMasterVersion 9.0.0
@@ -2753,6 +2757,7 @@ gcp.project.gkeService.cluster.enabledK8sBetaApis 13.1.2
 gcp.project.gkeService.cluster.endpoint 9.0.0
 gcp.project.gkeService.cluster.etag 13.1.2
 gcp.project.gkeService.cluster.expirationTime 9.0.0
+gcp.project.gkeService.cluster.fleet 13.16.3
 gcp.project.gkeService.cluster.id 9.0.0
 gcp.project.gkeService.cluster.identityServiceConfig 9.0.0
 gcp.project.gkeService.cluster.initialClusterVersion 9.0.0
@@ -2775,6 +2780,7 @@ gcp.project.gkeService.cluster.legacyAbac 9.0.0
 gcp.project.gkeService.cluster.legacyAbacEnabled 13.12.2
 gcp.project.gkeService.cluster.location 9.0.0
 gcp.project.gkeService.cluster.locations 9.0.0
+gcp.project.gkeService.cluster.loggingConfig 13.16.3
 gcp.project.gkeService.cluster.loggingEnabled 13.12.2
 gcp.project.gkeService.cluster.loggingService 9.0.0
 gcp.project.gkeService.cluster.maintenancePolicy 11.6.6
@@ -2791,6 +2797,7 @@ gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled 13.12.2
 gcp.project.gkeService.cluster.masterGlobalAccessEnabled 13.12.2
 gcp.project.gkeService.cluster.meshCertificates 13.7.2
+gcp.project.gkeService.cluster.monitoringConfig 13.16.3
 gcp.project.gkeService.cluster.monitoringEnabled 13.12.2
 gcp.project.gkeService.cluster.monitoringService 9.0.0
 gcp.project.gkeService.cluster.name 9.0.0
@@ -2930,9 +2937,13 @@ gcp.project.gkeService.cluster.privateClusterConfig 9.0.0
 gcp.project.gkeService.cluster.privateEndpointEnabled 13.12.2
 gcp.project.gkeService.cluster.privateNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.projectId 9.0.0
+gcp.project.gkeService.cluster.rbacBindingConfig 13.16.3
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
 gcp.project.gkeService.cluster.releaseChannelManaged 13.12.2
 gcp.project.gkeService.cluster.resourceLabels 9.0.0
+gcp.project.gkeService.cluster.satisfiesPzi 13.16.3
+gcp.project.gkeService.cluster.satisfiesPzs 13.16.3
+gcp.project.gkeService.cluster.secretManagerConfig 13.16.3
 gcp.project.gkeService.cluster.securityPostureConfig 11.6.6
 gcp.project.gkeService.cluster.securityPostureConfig.id 11.6.6
 gcp.project.gkeService.cluster.securityPostureConfig.mode 11.6.6
@@ -2943,6 +2954,7 @@ gcp.project.gkeService.cluster.shieldedNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.status 9.0.0
 gcp.project.gkeService.cluster.subnetwork 9.0.0
 gcp.project.gkeService.cluster.tpuIpv4CidrBlock 13.1.2
+gcp.project.gkeService.cluster.userManagedKeysConfig 13.16.3
 gcp.project.gkeService.cluster.workloadIdentityConfig 9.0.0
 gcp.project.gkeService.cluster.workloadIdentityEnabled 13.12.2
 gcp.project.gkeService.clusters 9.0.0
