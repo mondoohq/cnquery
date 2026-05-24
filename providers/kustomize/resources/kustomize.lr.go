@@ -34,7 +34,7 @@ func init() {
 			Create: createKustomize,
 		},
 		"kustomize.kustomization": {
-			// to override args, implement: initKustomizeKustomization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initKustomizeKustomization,
 			Create: createKustomizeKustomization,
 		},
 		"kustomize.patch": {

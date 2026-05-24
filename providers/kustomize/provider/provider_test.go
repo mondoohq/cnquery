@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -417,4 +418,69 @@ func TestConnect_MalformedKustomizationSurfaces(t *testing.T) {
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), "no kustomization.yaml found",
 		"a parse error must not be reported as 'no kustomization found'")
+}
+
+// initKustomizeKustomization lets users select a specific kustomization
+// by path (`kustomize.kustomization(path: "...")`) without first walking
+// `kustomize.kustomizations`. The resource it returns must have Internal
+// state populated so the field accessors (patches, images, replacements,
+// resources) work — previously they would nil-deref on a bare resource.
+func TestInitKustomizeKustomization_SelectorWorks(t *testing.T) {
+	srv, resp := newTestService("../testdata/multi-overlay")
+
+	createResp, err := srv.GetData(&plugin.DataReq{
+		Connection: resp.Id,
+		Resource:   "kustomize.kustomization",
+		Args: map[string]*llx.Primitive{
+			"path": llx.StringPrimitive("../testdata/multi-overlay/staging"),
+		},
+	})
+	require.NoError(t, err)
+	require.Empty(t, createResp.Error)
+	require.NotNil(t, createResp.Data)
+	kID := string(createResp.Data.Value)
+	require.NotEmpty(t, kID)
+
+	// The path field works (proves args were stamped).
+	pathResp := getData(t, srv, resp.Id, "kustomize.kustomization", kID, "path")
+	assert.Equal(t, "../testdata/multi-overlay/staging", string(pathResp.Data.Value))
+
+	// And — the regression we care about — a computed field that depends
+	// on Internal state (k.kustomization) resolves rather than panicking.
+	patchesResp := getData(t, srv, resp.Id, "kustomize.kustomization", kID, "patches")
+	require.NotNil(t, patchesResp.Data)
+
+	nsResp := getData(t, srv, resp.Id, "kustomize.kustomization", kID, "namespace")
+	assert.Equal(t, "staging", string(nsResp.Data.Value))
+}
+
+// A selector for a path the connection didn't load returns a bare resource
+// (matching the project's "bare resource is a valid empty state" rule);
+// computed field accessors then surface a clear error instead of panicking.
+func TestInitKustomizeKustomization_UnknownPathFieldsErrorCleanly(t *testing.T) {
+	srv, resp := newTestService("../testdata/basic")
+
+	createResp, err := srv.GetData(&plugin.DataReq{
+		Connection: resp.Id,
+		Resource:   "kustomize.kustomization",
+		Args: map[string]*llx.Primitive{
+			"path": llx.StringPrimitive("/does/not/exist"),
+		},
+	})
+	require.NoError(t, err)
+	require.Empty(t, createResp.Error)
+	kID := string(createResp.Data.Value)
+	require.NotEmpty(t, kID)
+
+	// Computed accessor that depends on Internal state should error
+	// (with a friendly message), not panic.
+	resp2, err := srv.GetData(&plugin.DataReq{
+		Connection: resp.Id,
+		Resource:   "kustomize.kustomization",
+		ResourceId: kID,
+		Field:      "patches",
+	})
+	require.NoError(t, err, "transport call must not fail")
+	assert.NotEmpty(t, resp2.Error, "unknown path should surface as a field error")
+	assert.Contains(t, resp2.Error, "no kustomization loaded")
 }

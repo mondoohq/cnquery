@@ -5,10 +5,13 @@ package connection
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
 // A directory with a kustomization.yaml that fails YAML parsing used
@@ -37,4 +40,80 @@ func TestLoadKustomizations_BasicFixtureStillWorks(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, entries, 1)
 	assert.Equal(t, "../testdata/basic", entries[0].Path)
+}
+
+// NewKustomizeConnection used to deref asset.Connections[0] unconditionally;
+// passing a nil asset or one with no connections now produces a clear error
+// instead of a runtime panic.
+func TestNewKustomizeConnection_NilAssetRejected(t *testing.T) {
+	_, err := NewKustomizeConnection(0, nil, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "at least one connection")
+}
+
+func TestNewKustomizeConnection_NoConnectionsRejected(t *testing.T) {
+	_, err := NewKustomizeConnection(0, &inventory.Asset{}, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "at least one connection")
+}
+
+// The cleaned-path discovery means entry.Path always matches conn.Path()
+// regardless of whether the caller passes "./foo", "./foo/", or "foo".
+func TestNewKustomizeConnection_PathIsCleaned(t *testing.T) {
+	cases := []string{
+		"../testdata/basic",
+		"../testdata/basic/",
+		"./../testdata/basic",
+	}
+	for _, in := range cases {
+		t.Run(in, func(t *testing.T) {
+			conn, err := NewKustomizeConnection(0, &inventory.Asset{
+				Connections: []*inventory.Config{
+					{Options: map[string]string{"path": in}},
+				},
+			}, nil)
+			require.NoError(t, err)
+			require.Len(t, conn.Kustomizations(), 1)
+			// conn.Path() and the entry path should always agree —
+			// they're both derived from the same cleaned input.
+			assert.Equal(t, conn.Path(), conn.Kustomizations()[0].Path,
+				"entry.Path must equal conn.Path() to keep cache keys stable")
+		})
+	}
+}
+
+// Subdir scan must skip hidden dirs (.git, .terraform) and a short list of
+// well-known noise dirs (node_modules, vendor, …). A misconfigured path at
+// a repo root would otherwise spend file handles on dirs that can't
+// contain a kustomization.
+func TestLoadKustomizations_SkipsHiddenAndNoiseDirs(t *testing.T) {
+	tmp := t.TempDir()
+	// Put no kustomization in the root so we trigger the subdir scan.
+	require.NoError(t, os.MkdirAll(filepath.Join(tmp, ".git"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmp, "node_modules"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(tmp, "vendor"), 0o755))
+	// Put a malformed kustomization.yaml in each — if the scan visited
+	// them, the warn log would fire. We can't assert log output directly,
+	// but we can assert the scan returns cleanly (no entries) without
+	// inspecting these dirs.
+	bad := []byte("not: [valid: yaml")
+	for _, name := range []string{".git", "node_modules", "vendor"} {
+		require.NoError(t, os.WriteFile(
+			filepath.Join(tmp, name, "kustomization.yaml"),
+			bad, 0o644))
+	}
+
+	// Add one legitimate subdir with a real kustomization so the scan
+	// has something to find — proves the skip-list only filters noise.
+	realDir := filepath.Join(tmp, "real")
+	require.NoError(t, os.MkdirAll(realDir, 0o755))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(realDir, "kustomization.yaml"),
+		[]byte("apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\n"),
+		0o644))
+
+	entries, err := loadKustomizations(tmp)
+	require.NoError(t, err)
+	require.Len(t, entries, 1, "only the real subdir should be discovered")
+	assert.Equal(t, realDir, entries[0].Path)
 }

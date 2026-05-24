@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -38,6 +39,10 @@ type KustomizationEntry struct {
 }
 
 func NewKustomizeConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*KustomizeConnection, error) {
+	if asset == nil || len(asset.Connections) == 0 {
+		return nil, errors.New("kustomize provider requires an asset with at least one connection")
+	}
+
 	conn := &KustomizeConnection{
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
@@ -51,12 +56,15 @@ func NewKustomizeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	}
 	conn.path = filepath.Clean(kustomizePath)
 
-	entries, err := loadKustomizations(kustomizePath)
+	// Discover from the cleaned path so entry.Path matches conn.path and
+	// downstream cache keys (kustomize.kustomization:<path>) are stable
+	// across "./foo" vs "./foo/" inputs.
+	entries, err := loadKustomizations(conn.path)
 	if err != nil {
 		return nil, err
 	}
 	if len(entries) == 0 {
-		return nil, errors.New("no kustomization.yaml found at " + kustomizePath)
+		return nil, errors.New("no kustomization.yaml found at " + conn.path)
 	}
 	conn.kustomizations = entries
 
@@ -84,6 +92,17 @@ var kustomizationFilenames = []string{
 	"kustomization.yaml",
 	"kustomization.yml",
 	"Kustomization",
+}
+
+// scanSkipDirs are subdir names that should not be scanned during
+// kustomization discovery. Hidden dirs (starting with `.`) are also
+// skipped — they're handled separately via the prefix check.
+var scanSkipDirs = map[string]struct{}{
+	"node_modules": {},
+	"vendor":       {},
+	"target":       {},
+	"dist":         {},
+	"build":        {},
 }
 
 // loadKustomizations finds and parses kustomization files from a path.
@@ -120,7 +139,18 @@ func loadKustomizations(kustomizePath string) ([]*KustomizationEntry, error) {
 		if !de.IsDir() {
 			continue
 		}
-		subPath := filepath.Join(kustomizePath, de.Name())
+		name := de.Name()
+		// Skip hidden dirs (.git, .terraform, .idea, etc.) and a
+		// short skip-list of well-known noise dirs. A misconfigured
+		// path on a repo root would otherwise spend file handles on
+		// directories that can't contain a kustomization.
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		if _, skip := scanSkipDirs[name]; skip {
+			continue
+		}
+		subPath := filepath.Join(kustomizePath, name)
 		entry, err := loadSingleKustomization(subPath)
 		if err == nil {
 			entries = append(entries, entry)
@@ -146,13 +176,13 @@ func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
 			continue
 		}
 
-		var k types.Kustomization
+		k := &types.Kustomization{}
 		if err := k.Unmarshal(data); err != nil {
 			return nil, err
 		}
 		return &KustomizationEntry{
 			Path:          dir,
-			Kustomization: &k,
+			Kustomization: k,
 		}, nil
 	}
 

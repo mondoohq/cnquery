@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -14,6 +15,11 @@ import (
 type mqlKustomizeReplacementInternal struct {
 	replacementTargets []*kustomizeTypes.TargetSelector
 	kustPath           string
+	// stampOnce guards the post-construction Internal-field write.
+	// CreateResource can return a cached instance to concurrent callers
+	// with the same __id; stampOnce keeps the write race-free under those
+	// goroutines and matches the pattern in newMqlKustomization.
+	stampOnce sync.Once
 }
 
 func newMqlKustomizeReplacement(runtime *plugin.Runtime, kustPath string, index int, r *kustomizeTypes.ReplacementField) (*mqlKustomizeReplacement, error) {
@@ -40,8 +46,10 @@ func newMqlKustomizeReplacement(runtime *plugin.Runtime, kustPath string, index 
 	}
 
 	mqlR := res.(*mqlKustomizeReplacement)
-	mqlR.kustPath = kustPath
-	mqlR.replacementTargets = r.Targets
+	mqlR.stampOnce.Do(func() {
+		mqlR.kustPath = kustPath
+		mqlR.replacementTargets = r.Targets
+	})
 	return mqlR, nil
 }
 

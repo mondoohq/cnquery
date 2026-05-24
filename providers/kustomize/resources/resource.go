@@ -39,6 +39,12 @@ func (k *mqlKustomizeKustomization) resources() ([]any, error) {
 }
 
 func (k *mqlKustomizeKustomization) fetchRendered() ([]map[string]any, error) {
+	// Trigger the same lazy-resolve path as the other accessors so the
+	// rendered fetch works on resources constructed via init (no Internal
+	// state set yet).
+	if _, _, err := k.resolveEntry(); err != nil {
+		return nil, err
+	}
 	k.renderedOnce.Do(func() {
 		fSys := filesys.MakeFsOnDisk()
 		kustomizer := krusty.MakeKustomizer(krusty.MakeDefaultOptions())

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -47,6 +48,9 @@ type mqlKustomizeKustomizationInternal struct {
 }
 
 func newMqlKustomization(runtime *plugin.Runtime, entry *connection.KustomizationEntry) (*mqlKustomizeKustomization, error) {
+	if entry == nil || entry.Kustomization == nil {
+		return nil, errors.New("kustomize: entry has no parsed kustomization")
+	}
 	k := entry.Kustomization
 
 	commonLabels := make(map[string]any, len(k.CommonLabels))
@@ -89,14 +93,82 @@ func newMqlKustomization(runtime *plugin.Runtime, entry *connection.Kustomizatio
 	return mqlK, nil
 }
 
+// initKustomizeKustomization handles selector-style lookups
+// (`kustomize.kustomization(path: "...")`). It locates the matching entry
+// on the connection and routes through newMqlKustomization so Internal
+// state stays populated — without this, field accessors would nil-deref
+// on a bare resource constructed only from the `path` arg.
+//
+// Returning `args, nil, nil` for an unknown / empty path matches the
+// "bare resource is a valid empty state" convention used elsewhere in
+// this repo; callers see a resource that satisfies the type but yields
+// errors from the accessors.
+func initKustomizeKustomization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) == 0 {
+		return args, nil, nil
+	}
+	pathArg, ok := args["path"]
+	if !ok || pathArg == nil {
+		return args, nil, nil
+	}
+	path, _ := pathArg.Value.(string)
+	if path == "" {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.KustomizeConnection)
+	if !ok {
+		return args, nil, nil
+	}
+	for _, entry := range conn.Kustomizations() {
+		if entry.Path == path {
+			mqlK, err := newMqlKustomization(runtime, entry)
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, mqlK, nil
+		}
+	}
+	return args, nil, nil
+}
+
 func (k *mqlKustomizeKustomization) id() (string, error) {
 	return "kustomize.kustomization:" + k.Path.Data, nil
 }
 
+// resolveEntry returns the parsed kustomization, repopulating Internal
+// state from the connection when needed (e.g., when the resource was
+// constructed without going through newMqlKustomization). Each accessor
+// calls this first instead of dereferencing k.kustomization directly.
+func (k *mqlKustomizeKustomization) resolveEntry() (*kustomizeTypes.Kustomization, string, error) {
+	if k.kustomization != nil {
+		return k.kustomization, k.kustPath, nil
+	}
+	conn, ok := k.MqlRuntime.Connection.(*connection.KustomizeConnection)
+	if !ok {
+		return nil, "", errors.New("kustomize: connection is not a KustomizeConnection")
+	}
+	path := k.Path.Data
+	for _, entry := range conn.Kustomizations() {
+		if entry.Path == path {
+			k.stampOnce.Do(func() {
+				k.kustomization = entry.Kustomization
+				k.kustPath = entry.Path
+			})
+			return k.kustomization, k.kustPath, nil
+		}
+	}
+	return nil, "", errors.New("kustomize: no kustomization loaded for path " + path)
+}
+
 func (k *mqlKustomizeKustomization) patches() ([]any, error) {
+	kust, kustPath, err := k.resolveEntry()
+	if err != nil {
+		return nil, err
+	}
 	var mqlPatches []any
-	for i, p := range k.kustomization.Patches {
-		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, k.kustPath, i, &p)
+	for i, p := range kust.Patches {
+		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, i, &p)
 		if err != nil {
 			return nil, err
 		}
@@ -106,17 +178,29 @@ func (k *mqlKustomizeKustomization) patches() ([]any, error) {
 }
 
 func (k *mqlKustomizeKustomization) configMapGenerators() ([]any, error) {
-	return newMqlConfigMapGenerators(k.MqlRuntime, k.kustPath, k.kustomization.ConfigMapGenerator)
+	kust, kustPath, err := k.resolveEntry()
+	if err != nil {
+		return nil, err
+	}
+	return newMqlConfigMapGenerators(k.MqlRuntime, kustPath, kust.ConfigMapGenerator)
 }
 
 func (k *mqlKustomizeKustomization) secretGenerators() ([]any, error) {
-	return newMqlSecretGenerators(k.MqlRuntime, k.kustPath, k.kustomization.SecretGenerator)
+	kust, kustPath, err := k.resolveEntry()
+	if err != nil {
+		return nil, err
+	}
+	return newMqlSecretGenerators(k.MqlRuntime, kustPath, kust.SecretGenerator)
 }
 
 func (k *mqlKustomizeKustomization) images() ([]any, error) {
+	kust, kustPath, err := k.resolveEntry()
+	if err != nil {
+		return nil, err
+	}
 	var mqlImages []any
-	for _, img := range k.kustomization.Images {
-		mqlImg, err := newMqlKustomizeImage(k.MqlRuntime, k.kustPath, img)
+	for _, img := range kust.Images {
+		mqlImg, err := newMqlKustomizeImage(k.MqlRuntime, kustPath, img)
 		if err != nil {
 			return nil, err
 		}
@@ -126,9 +210,13 @@ func (k *mqlKustomizeKustomization) images() ([]any, error) {
 }
 
 func (k *mqlKustomizeKustomization) replacements() ([]any, error) {
+	kust, kustPath, err := k.resolveEntry()
+	if err != nil {
+		return nil, err
+	}
 	var mqlReplacements []any
-	for i, r := range k.kustomization.Replacements {
-		mqlR, err := newMqlKustomizeReplacement(k.MqlRuntime, k.kustPath, i, &r)
+	for i, r := range kust.Replacements {
+		mqlR, err := newMqlKustomizeReplacement(k.MqlRuntime, kustPath, i, &r)
 		if err != nil {
 			return nil, err
 		}
