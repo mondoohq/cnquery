@@ -267,7 +267,7 @@ GENEVE
 geocode
 geomatchstatement
 Geopair
-GGUF
+gguf
 GHSA
 gistfile
 githubactions
@@ -445,7 +445,6 @@ Mnfz
 mno
 mobileapp
 modelarmor
-Modelfile
 modelfile
 mongodb
 Mpim
@@ -795,6 +794,7 @@ vnet
 VNI
 vnic
 vpus
+vram
 vrf
 vrrp
 vtpm
