@@ -16,7 +16,7 @@ ollama @defaults("host") {
   // Installed models
   models() []ollama.model
   // Currently running models loaded in memory
-  runningModels() []ollama.runningModel
+  runningModels() []ollama.model
 }
 
 // Ollama model
@@ -133,31 +133,3 @@ private ollama.model.info @defaults("architecture parameterCount sizeLabel") {
   tokenizerModel string
 }
 
-// Ollama running model
-//
-// Examine a model currently loaded in memory on the Ollama instance,
-// including its VRAM usage, context length, and expiration time.
-ollama.runningModel @defaults("name") {
-  // Model name (e.g., "llama3.1:latest")
-  name string
-  // Canonical model identifier
-  model string
-  // Total size in bytes
-  size int
-  // Content digest (SHA-256)
-  digest string
-  // Primary model family
-  family string
-  // All model families
-  families []string
-  // Human-readable parameter count
-  parameterSize string
-  // Quantization level
-  quantizationLevel string
-  // Time when the model will be unloaded from memory
-  expiresAt time
-  // VRAM usage in bytes
-  sizeVram int
-  // Context window length in tokens
-  contextLength int
-}

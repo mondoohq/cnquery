@@ -83,19 +83,19 @@ func (r *mqlOllama) runningModels() ([]interface{}, error) {
 			families[i] = f
 		}
 
-		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.runningModel", map[string]*llx.RawData{
-			"__id":              llx.StringData("running/" + m.Digest),
+		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", map[string]*llx.RawData{
+			"__id":              llx.StringData(m.Digest),
 			"name":              llx.StringData(m.Name),
 			"model":             llx.StringData(m.Model),
+			"modifiedAt":        llx.TimeData(m.ExpiresAt),
 			"size":              llx.IntData(m.Size),
 			"digest":            llx.StringData(m.Digest),
+			"format":            llx.StringData(m.Details.Format),
 			"family":            llx.StringData(m.Details.Family),
 			"families":          llx.ArrayData(families, types.String),
 			"parameterSize":     llx.StringData(m.Details.ParameterSize),
 			"quantizationLevel": llx.StringData(m.Details.QuantizationLevel),
-			"expiresAt":         llx.TimeData(m.ExpiresAt),
-			"sizeVram":          llx.IntData(m.SizeVRAM),
-			"contextLength":     llx.IntData(int64(m.ContextLength)),
+			"parentModel":       llx.StringData(m.Details.ParentModel),
 		})
 		if err != nil {
 			return nil, err
@@ -258,8 +258,4 @@ func getStringSlice(m map[string]any, key string) []interface{} {
 
 func (r *mqlOllamaModelInfo) id() (string, error) {
 	return r.Architecture.Data + "/info", nil
-}
-
-func (r *mqlOllamaRunningModel) id() (string, error) {
-	return "running/" + r.Digest.Data, nil
 }
