@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -24,6 +25,7 @@ func (m *mqlMacosMdm) id() (string, error) {
 type mqlMacosMdmInternal struct {
 	fetched bool
 	state   mdmEnrollment
+	lock    sync.Mutex
 }
 
 type mdmEnrollment struct {
@@ -34,6 +36,11 @@ type mdmEnrollment struct {
 }
 
 func (m *mqlMacosMdm) fetchEnrollment() (mdmEnrollment, error) {
+	if m.fetched {
+		return m.state, nil
+	}
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	if m.fetched {
 		return m.state, nil
 	}
@@ -67,6 +74,8 @@ func (m *mqlMacosMdm) fetchEnrollment() (mdmEnrollment, error) {
 func parseMdmEnrollment(out string) mdmEnrollment {
 	state := mdmEnrollment{}
 	for _, line := range strings.Split(out, "\n") {
+		// IndexByte(line, ':') splits at the first colon only, preserving any
+		// colons within the URL value (e.g., "ServerURL: https://mdm.example.com:443/...").
 		idx := strings.IndexByte(line, ':')
 		if idx <= 0 {
 			continue
