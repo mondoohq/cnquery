@@ -38,12 +38,30 @@ func (m *mqlMacosGatekeeper) fetchStatus() (string, error) {
 		return "", errors.New("spctl --status failed: " + cmd.GetStderr().Data)
 	}
 
-	// spctl --status outputs:
-	// "assessments enabled" (Gatekeeper on)
-	// "assessments disabled" (Gatekeeper off)
-	m.output = strings.TrimSpace(cmd.GetStdout().Data)
+	m.output = parseSpctlStatus(cmd.GetStdout().Data)
 	m.fetched = true
 	return m.output, nil
+}
+
+// parseSpctlStatus normalizes `spctl --status` output. The command prints a
+// single line such as "assessments enabled" or "assessments disabled"; trim
+// and use the first non-empty line so trailing newlines or stray banner
+// lines don't trip up downstream matchers.
+func parseSpctlStatus(raw string) string {
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
+}
+
+// isGatekeeperEnabled returns true only for the exact "assessments enabled"
+// marker. parseSpctlStatus has already trimmed and picked one line, so an
+// exact match is safer than a substring check against future spctl output.
+func isGatekeeperEnabled(status string) bool {
+	return status == "assessments enabled"
 }
 
 func (m *mqlMacosGatekeeper) status() (string, error) {
@@ -55,6 +73,5 @@ func (m *mqlMacosGatekeeper) enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	return strings.Contains(status, "assessments enabled"), nil
+	return isGatekeeperEnabled(status), nil
 }

@@ -38,17 +38,57 @@ func (m *mqlMacosFilevault) fetchStatus() (string, error) {
 		return "", errors.New("fdesetup status failed: " + cmd.GetStderr().Data)
 	}
 
-	// fdesetup status outputs lines like:
-	// "FileVault is On."
-	// "FileVault is Off."
-	// "Encryption in progress: Percent completed = 50.0"
-	// "Decryption in progress: Percent completed = 50.0"
-	output := strings.TrimSpace(cmd.GetStdout().Data)
-	lines := strings.SplitN(output, "\n", 2)
-
-	m.output = strings.TrimSpace(lines[0])
+	m.output = parseFdesetupStatus(cmd.GetStdout().Data)
 	m.fetched = true
 	return m.output, nil
+}
+
+// parseFdesetupStatus extracts the first non-empty line of `fdesetup status`
+// output, which is the status sentence we care about. fdesetup may print
+// additional lines (e.g. progress percentages, deferred-enablement notes);
+// callers only need the headline.
+//
+// Examples of the leading line:
+//
+//	"FileVault is On."
+//	"FileVault is Off."
+//	"Encryption in progress: Percent completed = 50.0"
+//	"Decryption in progress: Percent completed = 50.0"
+func parseFdesetupStatus(raw string) string {
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
+}
+
+// isFilevaultEnabled returns true for the "on" and "encrypting" states.
+// Decryption-in-progress is treated as not enabled because the volume is
+// transitioning to plaintext.
+func isFilevaultEnabled(status string) bool {
+	return strings.Contains(status, "FileVault is On") ||
+		strings.Contains(status, "Encryption in progress")
+}
+
+// parseFdesetupList turns `fdesetup list` output into a list of usernames.
+// Each line is "username,UUID"; blanks are skipped.
+func parseFdesetupList(raw string) []any {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return []any{}
+	}
+	users := []any{}
+	for _, line := range strings.Split(raw, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		name, _, _ := strings.Cut(line, ",")
+		users = append(users, name)
+	}
+	return users
 }
 
 func (m *mqlMacosFilevault) status() (string, error) {
@@ -60,9 +100,7 @@ func (m *mqlMacosFilevault) enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	return strings.Contains(status, "FileVault is On") ||
-		strings.Contains(status, "Encryption in progress"), nil
+	return isFilevaultEnabled(status), nil
 }
 
 func (m *mqlMacosFilevault) runFdesetup(subcmd string) (string, error) {
@@ -127,20 +165,5 @@ func (m *mqlMacosFilevault) users() ([]any, error) {
 		return nil, err
 	}
 
-	if output == "" {
-		return []any{}, nil
-	}
-
-	var users []any
-	for _, line := range strings.Split(output, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		// Each line is "username,UUID" — extract the username
-		parts := strings.SplitN(line, ",", 2)
-		users = append(users, parts[0])
-	}
-
-	return users, nil
+	return parseFdesetupList(output), nil
 }
