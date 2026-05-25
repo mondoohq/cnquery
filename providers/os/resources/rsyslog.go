@@ -5,6 +5,8 @@ package resources
 
 import (
 	"errors"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"go.mondoo.com/mql/v13/checksums"
@@ -52,22 +54,244 @@ func (s *mqlRsyslogConf) path() (string, error) {
 	return rsyslogConfPath(conn), nil
 }
 
+// rsyslogIncludeDirective matches the legacy `$IncludeConfig path` form,
+// case-insensitively. The path captured is everything after the directive
+// up to end-of-line.
+var rsyslogIncludeDirective = regexp.MustCompile(`(?i)^\s*\$IncludeConfig\s+(\S.*?)\s*$`)
+
+// rsyslogModernInclude matches the modern RainerScript `include(...)` block.
+// Inner args are parsed separately to handle key=value pairs in any order.
+var rsyslogModernInclude = regexp.MustCompile(`^\s*include\s*\((.*)\)\s*$`)
+
+// rsyslogIncludeFileKV pulls the file="..." (or unquoted) value out of a
+// modern include() argument list.
+var rsyslogIncludeFileKV = regexp.MustCompile(`\bfile\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))`)
+
+// parseRsyslogIncludes extracts file-glob patterns referenced by
+// $IncludeConfig (legacy) and include(file="...") (modern RainerScript)
+// directives from a single rsyslog config blob. Returned patterns are in
+// source order with duplicates removed. The include(text="...") form is
+// skipped because it inlines content rather than referencing a file.
+//
+// rsyslog itself ignores `#` comments anywhere on a line outside of quoted
+// strings. We strip everything from the first unquoted `#` to EOL before
+// matching, so a comment hanging off an include directive does not pollute
+// the pattern.
+func parseRsyslogIncludes(content string) []string {
+	var out []string
+	seen := map[string]bool{}
+
+	for _, raw := range strings.Split(content, "\n") {
+		line := stripRsyslogComment(raw)
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		var pat string
+		if m := rsyslogIncludeDirective.FindStringSubmatch(line); m != nil {
+			pat = strings.Trim(strings.TrimSpace(m[1]), `"'`)
+		} else if m := rsyslogModernInclude.FindStringSubmatch(line); m != nil {
+			if kv := rsyslogIncludeFileKV.FindStringSubmatch(m[1]); kv != nil {
+				// Exactly one of the three capture groups (quoted-double,
+				// quoted-single, unquoted) is non-empty.
+				for _, v := range kv[1:] {
+					if v != "" {
+						pat = v
+						break
+					}
+				}
+			}
+		}
+
+		if pat == "" || seen[pat] {
+			continue
+		}
+		seen[pat] = true
+		out = append(out, pat)
+	}
+
+	return out
+}
+
+// stripRsyslogComment removes everything from the first unquoted `#` to
+// end-of-line, mirroring rsyslog's own lexer behaviour. Quotes can be
+// double or single.
+func stripRsyslogComment(line string) string {
+	inDouble, inSingle := false, false
+	for i := 0; i < len(line); i++ {
+		switch line[i] {
+		case '"':
+			if !inSingle {
+				inDouble = !inDouble
+			}
+		case '\'':
+			if !inDouble {
+				inSingle = !inSingle
+			}
+		case '#':
+			if !inDouble && !inSingle {
+				return line[:i]
+			}
+		}
+	}
+	return line
+}
+
+// resolveRsyslogInclude turns a (possibly relative, possibly globbed) include
+// pattern into a directory + basename-regex pair suitable for passing to
+// files.find. The returned regex is anchored on both ends and matches the
+// basename only. A pattern with no glob meta-characters resolves to a regex
+// that matches that single name exactly.
+func resolveRsyslogInclude(parentDir, pattern string) (dir, nameRegex string) {
+	if !filepath.IsAbs(pattern) {
+		pattern = filepath.Join(parentDir, pattern)
+	}
+	dir = filepath.Dir(pattern)
+	base := filepath.Base(pattern)
+	return dir, "^" + globToRegex(base) + "$"
+}
+
+// globToRegex converts a shell glob (the only metas rsyslog needs in
+// practice are `*`, `?`, and character classes) into a regular expression
+// suitable for files.find's `name` parameter, which is compiled as regexp.
+// Glob `*` becomes `[^/]*`, `?` becomes `[^/]`, `[abc]` is passed through.
+// Everything else is regex-escaped.
+func globToRegex(glob string) string {
+	var b strings.Builder
+	b.Grow(len(glob) + 4)
+	inClass := false
+	for i := 0; i < len(glob); i++ {
+		c := glob[i]
+		switch {
+		case inClass:
+			b.WriteByte(c)
+			if c == ']' {
+				inClass = false
+			}
+		case c == '[':
+			b.WriteByte(c)
+			inClass = true
+		case c == '*':
+			b.WriteString(`[^/]*`)
+		case c == '?':
+			b.WriteString(`[^/]`)
+		default:
+			b.WriteString(regexp.QuoteMeta(string(c)))
+		}
+	}
+	return b.String()
+}
+
+// maxRsyslogIncludeDepth bounds how many levels of nested includes we
+// follow. rsyslog itself has no documented limit, but real configurations
+// rarely nest beyond two or three levels — a deeper chain is almost
+// certainly a misconfiguration or a self-reference we missed.
+const maxRsyslogIncludeDepth = 32
+
 func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 	if !strings.HasSuffix(path, ".conf") {
 		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
 	}
 
-	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(path),
-	})
-	if err != nil {
-		return nil, err
+	visited := map[string]bool{}
+	var out []any
+
+	type queued struct {
+		path  string
+		depth int
+	}
+	queue := []queued{{path: path, depth: 0}}
+
+	for len(queue) > 0 {
+		head := queue[0]
+		queue = queue[1:]
+
+		clean := filepath.Clean(head.path)
+		if visited[clean] {
+			continue
+		}
+		visited[clean] = true
+
+		f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(clean),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mf := f.(*mqlFile)
+		out = append(out, mf)
+
+		if head.depth >= maxRsyslogIncludeDepth {
+			continue
+		}
+
+		content := mf.GetContent()
+		if content.Error != nil {
+			if errors.Is(content.Error, resources.NotFoundError{}) {
+				continue
+			}
+			// Other read errors (permission denied, IO) are non-fatal here:
+			// the file is still listed via the resource, and the caller can
+			// inspect it for the error. Don't abort the whole walk.
+			continue
+		}
+
+		patterns := parseRsyslogIncludes(content.Data)
+		parentDir := filepath.Dir(clean)
+		for _, pat := range patterns {
+			matches, err := s.expandIncludePattern(parentDir, pat)
+			if err != nil {
+				continue
+			}
+			for _, m := range matches {
+				if !visited[filepath.Clean(m)] {
+					queue = append(queue, queued{path: m, depth: head.depth + 1})
+				}
+			}
+		}
 	}
 
+	// Legacy `.d` auto-discovery: configurations that rely on the
+	// distribution's default to drop fragments into `<conf>.d/` without
+	// an explicit `$IncludeConfig` should still surface those files.
+	// Skip entries already visited via include traversal so the list
+	// doesn't double-count when both paths reach the same fragment.
 	confD := path[0:len(path)-5] + ".d"
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
 		"from": llx.StringData(confD),
 		"type": llx.StringData("file"),
+	})
+	if err == nil {
+		list := o.(*mqlFilesFind).GetList()
+		if list.Error == nil {
+			for _, item := range list.Data {
+				mf, ok := item.(*mqlFile)
+				if !ok {
+					continue
+				}
+				if visited[filepath.Clean(mf.Path.Data)] {
+					continue
+				}
+				visited[filepath.Clean(mf.Path.Data)] = true
+				out = append(out, mf)
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// expandIncludePattern resolves a single include pattern (relative to
+// parentDir if not absolute) into the list of files it matches, using
+// files.find against the asset's filesystem.
+func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]string, error) {
+	dir, nameRegex := resolveRsyslogInclude(parentDir, pattern)
+
+	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
+		"from": llx.StringData(dir),
+		"type": llx.StringData("file"),
+		"name": llx.StringData(nameRegex),
 	})
 	if err != nil {
 		return nil, err
@@ -78,7 +302,13 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 		return nil, list.Error
 	}
 
-	return append([]any{f.(*mqlFile)}, list.Data...), nil
+	paths := make([]string, 0, len(list.Data))
+	for _, item := range list.Data {
+		if mf, ok := item.(*mqlFile); ok {
+			paths = append(paths, mf.Path.Data)
+		}
+	}
+	return paths, nil
 }
 
 func (s *mqlRsyslogConf) content(files []any) (string, error) {
@@ -109,9 +339,7 @@ func (s *mqlRsyslogConf) settings(content string) ([]any, error) {
 	var line string
 	for i := range lines {
 		line = lines[i]
-		if idx := strings.Index(line, "#"); idx >= 0 {
-			line = line[0:idx]
-		}
+		line = stripRsyslogComment(line)
 		line = strings.Trim(line, " \t\r")
 
 		if line != "" {

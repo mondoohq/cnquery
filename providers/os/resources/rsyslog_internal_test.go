@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,4 +38,236 @@ func TestRsyslogConfPath(t *testing.T) {
 		conn := &mockConn{asset: &inventory.Asset{}}
 		assert.Equal(t, "/etc/rsyslog.conf", rsyslogConfPath(conn))
 	})
+}
+
+func TestStripRsyslogComment(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"no comment", "$ModLoad imuxsock", "$ModLoad imuxsock"},
+		{"trailing comment", "$ModLoad imuxsock # load unix socket input", "$ModLoad imuxsock "},
+		{"whole line comment", "# this is a comment", ""},
+		{"comment in double-quoted string is preserved", `$Template foo,"hash#tag"`, `$Template foo,"hash#tag"`},
+		{"comment in single-quoted string is preserved", `$Template foo,'hash#tag'`, `$Template foo,'hash#tag'`},
+		{"comment after closing quote is stripped", `$Template foo,"value" # comment`, `$Template foo,"value" `},
+		{"blank line", "", ""},
+		{"escaped hash is NOT special (rsyslog rule, not shell)", `key=val#after`, `key=val`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, stripRsyslogComment(tt.in))
+		})
+	}
+}
+
+func TestParseRsyslogIncludes(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+		want    []string
+	}{
+		{
+			name:    "empty",
+			content: "",
+			want:    nil,
+		},
+		{
+			name:    "only directives unrelated to includes",
+			content: "$ModLoad imuxsock\n$ActionFileDefaultTemplate foo\n",
+			want:    nil,
+		},
+		{
+			name:    "legacy $IncludeConfig with glob",
+			content: "$IncludeConfig /etc/rsyslog.d/*.conf\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "legacy directive is case-insensitive",
+			content: "$includeconfig /etc/rsyslog.d/a.conf\n$INCLUDECONFIG /etc/rsyslog.d/b.conf\n",
+			want:    []string{"/etc/rsyslog.d/a.conf", "/etc/rsyslog.d/b.conf"},
+		},
+		{
+			name:    "legacy with trailing inline comment",
+			content: "$IncludeConfig /etc/rsyslog.d/*.conf # load fragments\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "legacy with quoted value",
+			content: `$IncludeConfig "/etc/rsyslog.d/*.conf"` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with file=",
+			content: `include(file="/etc/rsyslog.d/*.conf")` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with extra params",
+			content: `include(file="/etc/rsyslog.d/*.conf" mode="optional")` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with single-quoted value",
+			content: `include(file='/etc/rsyslog.d/*.conf')` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with unquoted value",
+			content: `include(file=/etc/rsyslog.d/local.conf)` + "\n",
+			want:    []string{"/etc/rsyslog.d/local.conf"},
+		},
+		{
+			name:    "modern include() with text= is skipped",
+			content: `include(text="ruleset(name=\"foo\") { /* ... */ }")` + "\n",
+			want:    nil,
+		},
+		{
+			name: "mixed legacy + modern + ignored directives",
+			content: `# rsyslog.conf
+$ModLoad imuxsock
+
+$IncludeConfig /etc/rsyslog.d/00-local.conf
+include(file="/etc/rsyslog.d/*.conf")
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+`,
+			want: []string{"/etc/rsyslog.d/00-local.conf", "/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "duplicates collapse, source order preserved",
+			content: `$IncludeConfig /a.conf
+$IncludeConfig /b.conf
+$IncludeConfig /a.conf
+include(file="/b.conf")
+`,
+			want: []string{"/a.conf", "/b.conf"},
+		},
+		{
+			name:    "false positive guard: $IncludeConfigSomething is not a match",
+			content: "$IncludeConfigSomething /tmp/x.conf\n",
+			want:    nil,
+		},
+		{
+			name:    "false positive guard: includes inside a comment are ignored",
+			content: "# example: $IncludeConfig /etc/rsyslog.d/*.conf\n",
+			want:    nil,
+		},
+		{
+			name:    "comment inside quoted include arg is preserved",
+			content: `include(file="/etc/rsyslog.d/has#hash.conf")` + "\n",
+			want:    []string{"/etc/rsyslog.d/has#hash.conf"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseRsyslogIncludes(tt.content)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGlobToRegex(t *testing.T) {
+	tests := []struct {
+		name  string
+		glob  string
+		want  string
+		match []string // basenames that should match the resulting regex (with anchors)
+		miss  []string // basenames that should NOT match
+	}{
+		{
+			name:  "star",
+			glob:  "*.conf",
+			want:  `[^/]*\.conf`,
+			match: []string{"foo.conf", "00-local.conf", ".conf"},
+			miss:  []string{"foo.conf.bak", "foo", "sub/foo.conf"},
+		},
+		{
+			name:  "question mark",
+			glob:  "0?-local.conf",
+			want:  `0[^/]-local\.conf`,
+			match: []string{"00-local.conf", "0a-local.conf"},
+			miss:  []string{"000-local.conf", "0-local.conf"},
+		},
+		{
+			name:  "character class passed through",
+			glob:  "[0-9]*.conf",
+			want:  `[0-9][^/]*\.conf`,
+			match: []string{"0foo.conf", "9.conf"},
+			miss:  []string{"afoo.conf"},
+		},
+		{
+			name:  "regex meta in literal portion is escaped",
+			glob:  "foo.bar+.conf",
+			want:  `foo\.bar\+\.conf`,
+			match: []string{"foo.bar+.conf"},
+			miss:  []string{"fooxbar+.conf", "foo.bar.conf"},
+		},
+		{
+			name:  "no metas",
+			glob:  "local.conf",
+			want:  `local\.conf`,
+			match: []string{"local.conf"},
+			miss:  []string{"localxconf"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := globToRegex(tt.glob)
+			assert.Equal(t, tt.want, got)
+			anchored := regexp.MustCompile("^" + got + "$")
+			for _, m := range tt.match {
+				assert.True(t, anchored.MatchString(m), "expected %q to match %q", m, "^"+got+"$")
+			}
+			for _, m := range tt.miss {
+				assert.False(t, anchored.MatchString(m), "expected %q NOT to match %q", m, "^"+got+"$")
+			}
+		})
+	}
+}
+
+func TestResolveRsyslogInclude(t *testing.T) {
+	tests := []struct {
+		name      string
+		parentDir string
+		pattern   string
+		wantDir   string
+		wantName  string
+	}{
+		{
+			name:      "absolute path with glob",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/*.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantName:  `^[^/]*\.conf$`,
+		},
+		{
+			name:      "absolute path with no glob",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/00-local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantName:  `^00-local\.conf$`,
+		},
+		{
+			name:      "relative path is anchored at parent dir",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantName:  `^local\.conf$`,
+		},
+		{
+			name:      "relative path with subdir",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "extras/local.conf",
+			wantDir:   "/etc/rsyslog.d/extras",
+			wantName:  `^local\.conf$`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir, name := resolveRsyslogInclude(tt.parentDir, tt.pattern)
+			assert.Equal(t, tt.wantDir, dir)
+			assert.Equal(t, tt.wantName, name)
+		})
+	}
 }
