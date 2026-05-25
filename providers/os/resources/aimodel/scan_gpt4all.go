@@ -1,0 +1,83 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package aimodel
+
+import (
+	"path/filepath"
+	"strings"
+
+	"github.com/spf13/afero"
+)
+
+// ScanGPT4All discovers models cached by GPT4All. It checks the shared cache
+// directory (~/.cache/gpt4all) and the platform-specific application data
+// directory (e.g. ~/Library/Application Support/nomic.ai/GPT4All on macOS).
+// Supports .gguf and .bin (legacy ggml) files. Quantization and parameter
+// size are extracted from filenames via regex.
+func ScanGPT4All(afs *afero.Afero, home string, osFamily string) []ModelInfo {
+	dirs := gpt4allDirs(home, osFamily)
+	seen := map[string]bool{}
+	var results []ModelInfo
+
+	for _, dir := range dirs {
+		entries, err := afs.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			lower := strings.ToLower(e.Name())
+			if !strings.HasSuffix(lower, ".gguf") && !strings.HasSuffix(lower, ".bin") {
+				continue
+			}
+			if seen[e.Name()] {
+				continue
+			}
+			seen[e.Name()] = true
+
+			format := "gguf"
+			if strings.HasSuffix(lower, ".bin") {
+				format = "ggml"
+			}
+
+			quant := ""
+			if match := reQuantization.FindString(e.Name()); match != "" {
+				quant = strings.ToUpper(match)
+			}
+			paramSize := ""
+			if pm := reParamSize.FindStringSubmatch(e.Name()); len(pm) > 1 {
+				paramSize = pm[1] + "B"
+			}
+
+			results = append(results, ModelInfo{
+				Name:          e.Name(),
+				Source:        "gpt4all",
+				Path:          filepath.Join(dir, e.Name()),
+				Size:          e.Size(),
+				ModifiedAt:    e.ModTime(),
+				Format:        format,
+				Quantization:  quant,
+				ParameterSize: paramSize,
+			})
+		}
+	}
+	return results
+}
+
+func gpt4allDirs(home string, osFamily string) []string {
+	dirs := []string{
+		filepath.Join(home, ".cache", "gpt4all"),
+	}
+	switch osFamily {
+	case "darwin":
+		dirs = append(dirs, filepath.Join(home, "Library", "Application Support", "nomic.ai", "GPT4All"))
+	case "linux":
+		dirs = append(dirs, filepath.Join(home, ".local", "share", "nomic.ai", "GPT4All"))
+	case "windows":
+		dirs = append(dirs, filepath.Join(home, "AppData", "Local", "nomic.ai", "GPT4All"))
+	}
+	return dirs
+}

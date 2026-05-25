@@ -1,0 +1,106 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package aimodel
+
+import (
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/spf13/afero"
+)
+
+// ScanLMStudio discovers GGUF models cached by LM Studio. It checks both
+// the legacy path (~/.lmstudio/models) and the newer cache path
+// (~/.cache/lm-studio/models). Models are organized as publisher/repo/file.gguf.
+// Quantization and parameter size are extracted from filenames via regex.
+func ScanLMStudio(afs *afero.Afero, home string) []ModelInfo {
+	dirs := []string{
+		filepath.Join(home, ".lmstudio", "models"),
+		filepath.Join(home, ".cache", "lm-studio", "models"),
+	}
+
+	seen := map[string]bool{}
+	var results []ModelInfo
+	for _, modelsDir := range dirs {
+		entries, err := afs.ReadDir(modelsDir)
+		if err != nil {
+			continue
+		}
+		for _, publisher := range entries {
+			if !publisher.IsDir() {
+				continue
+			}
+			publisherDir := filepath.Join(modelsDir, publisher.Name())
+			repos, err := afs.ReadDir(publisherDir)
+			if err != nil {
+				continue
+			}
+			for _, repo := range repos {
+				if !repo.IsDir() {
+					continue
+				}
+				repoDir := filepath.Join(publisherDir, repo.Name())
+				modelName := publisher.Name() + "/" + repo.Name()
+				if seen[modelName] {
+					continue
+				}
+				seen[modelName] = true
+
+				ggufFiles := findGGUFFiles(afs, repoDir)
+				for _, m := range ggufFiles {
+					filename := filepath.Base(m.path)
+					quant := ""
+					if match := reQuantization.FindString(filename); match != "" {
+						quant = strings.ToUpper(match)
+					}
+					paramSize := ""
+					if pm := reParamSize.FindStringSubmatch(modelName); len(pm) > 1 {
+						paramSize = pm[1] + "B"
+					}
+
+					results = append(results, ModelInfo{
+						Name:          modelName + "/" + filename,
+						Source:        "lmstudio",
+						Vendor:        publisher.Name(),
+						Path:          m.path,
+						Size:          m.size,
+						ModifiedAt:    m.modTime,
+						Format:        "gguf",
+						Quantization:  quant,
+						ParameterSize: paramSize,
+					})
+				}
+			}
+		}
+	}
+	return results
+}
+
+type fileEntry struct {
+	path    string
+	size    int64
+	modTime time.Time
+}
+
+func findGGUFFiles(afs *afero.Afero, dir string) []fileEntry {
+	entries, err := afs.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var results []fileEntry
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(strings.ToLower(e.Name()), ".gguf") {
+			results = append(results, fileEntry{
+				path:    filepath.Join(dir, e.Name()),
+				size:    e.Size(),
+				modTime: e.ModTime(),
+			})
+		}
+	}
+	return results
+}
