@@ -196,10 +196,6 @@ func (r *mqlClaude) skills() ([]interface{}, error) {
 
 // claude.vault
 
-type mqlClaudeVaultInternal struct {
-	cacheID string
-}
-
 func (r *mqlClaude) vaults() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
@@ -223,9 +219,6 @@ func (r *mqlClaude) vaults() ([]interface{}, error) {
 			return nil, err
 		}
 
-		vault := mqlVault.(*mqlClaudeVault)
-		vault.cacheID = v.ID
-
 		res = append(res, mqlVault)
 	}
 	if err := pager.Err(); err != nil {
@@ -239,12 +232,7 @@ func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
 	c := conn(r.MqlRuntime)
 	client := c.Client()
 
-	vaultID := r.cacheID
-	if vaultID == "" {
-		vaultID = r.GetId().Data
-	}
-
-	pager := client.Beta.Vaults.Credentials.ListAutoPaging(context.Background(), vaultID, anthropic.BetaVaultCredentialListParams{})
+	pager := client.Beta.Vaults.Credentials.ListAutoPaging(context.Background(), r.GetId().Data, anthropic.BetaVaultCredentialListParams{})
 
 	var res []interface{}
 	for pager.Next() {

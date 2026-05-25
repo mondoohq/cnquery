@@ -2244,7 +2244,7 @@ func (c *mqlClaudeSkill) GetType() *plugin.TValue[string] {
 type mqlClaudeVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlClaudeVaultInternal
+	// optional: if you define mqlClaudeVaultInternal it will be used here
 	Id          plugin.TValue[string]
 	DisplayName plugin.TValue[string]
 	CreatedAt   plugin.TValue[*time.Time]
