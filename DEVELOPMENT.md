@@ -219,6 +219,7 @@ use (
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/k8s
+   ./mql/providers/mistral
    ./mql/providers/mondoo
    ./mql/providers/ms365
    ./mql/providers/nmap

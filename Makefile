@@ -221,6 +221,7 @@ PROVIDERS := \
 	jamf \
 	k8s \
 	kustomize \
+	mistral \
 	mondoo \
 	ms365 \
 	network \

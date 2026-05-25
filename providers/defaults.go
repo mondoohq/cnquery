@@ -426,6 +426,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mistral": {
+		Provider: &plugin.Provider{
+			Name:            "mistral",
+			ID:              "go.mondoo.com/mql/providers/mistral",
+			ConnectionTypes: []string{"mistral"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mistral",
+					Use:   "mistral",
+					Short: "a Mistral AI account",
+				},
+			},
+		},
+	},
+
 	"ms365": {
 		Provider: &plugin.Provider{
 			Name:            "ms365",
