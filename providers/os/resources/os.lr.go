@@ -104,6 +104,8 @@ const (
 	ResourceKernelTaint                  string = "kernel.taint"
 	ResourceKernelLockdown               string = "kernel.lockdown"
 	ResourceKernelAslr                   string = "kernel.aslr"
+	ResourceCgroups                      string = "cgroups"
+	ResourceCgroup                       string = "cgroup"
 	ResourceDocker                       string = "docker"
 	ResourceDockerFile                   string = "docker.file"
 	ResourceDockerFileStage              string = "docker.file.stage"
@@ -729,6 +731,14 @@ func init() {
 		"kernel.aslr": {
 			// to override args, implement: initKernelAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKernelAslr,
+		},
+		"cgroups": {
+			// to override args, implement: initCgroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCgroups,
+		},
+		"cgroup": {
+			// to override args, implement: initCgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCgroup,
 		},
 		"docker": {
 			// to override args, implement: initDocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3180,6 +3190,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kernel.aslr.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelAslr).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cgroups.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroups).GetVersion()).ToDataRes(types.Int)
+	},
+	"cgroups.controllers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroups).GetControllers()).ToDataRes(types.Array(types.String))
+	},
+	"cgroups.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroups).GetRoot()).ToDataRes(types.Resource("cgroup"))
+	},
+	"cgroups.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroups).GetList()).ToDataRes(types.Array(types.Resource("cgroup")))
+	},
+	"cgroup.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetPath()).ToDataRes(types.String)
+	},
+	"cgroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetType()).ToDataRes(types.String)
+	},
+	"cgroup.controllers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetControllers()).ToDataRes(types.Array(types.String))
+	},
+	"cgroup.memoryMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetMemoryMax()).ToDataRes(types.Int)
+	},
+	"cgroup.memoryHigh": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetMemoryHigh()).ToDataRes(types.Int)
+	},
+	"cgroup.memoryCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetMemoryCurrent()).ToDataRes(types.Int)
+	},
+	"cgroup.memorySwapMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetMemorySwapMax()).ToDataRes(types.Int)
+	},
+	"cgroup.cpuMaxQuotaUSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetCpuMaxQuotaUSec()).ToDataRes(types.Int)
+	},
+	"cgroup.cpuMaxPeriodUSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetCpuMaxPeriodUSec()).ToDataRes(types.Int)
+	},
+	"cgroup.cpuWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetCpuWeight()).ToDataRes(types.Int)
+	},
+	"cgroup.pidsMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetPidsMax()).ToDataRes(types.Int)
+	},
+	"cgroup.pidsCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetPidsCurrent()).ToDataRes(types.Int)
+	},
+	"cgroup.pids": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetPids()).ToDataRes(types.Array(types.Int))
+	},
+	"cgroup.children": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetChildren()).ToDataRes(types.Array(types.Resource("cgroup")))
 	},
 	"docker.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDocker).GetImages()).ToDataRes(types.Array(types.Resource("docker.image")))
@@ -9772,6 +9836,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.aslr.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelAslr).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cgroups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroups).__id, ok = v.Value.(string)
+		return
+	},
+	"cgroups.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroups).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroups.controllers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroups).Controllers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cgroups.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroups).Root, ok = plugin.RawToTValue[*mqlCgroup](v.Value, v.Error)
+		return
+	},
+	"cgroups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroups).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).__id, ok = v.Value.(string)
+		return
+	},
+	"cgroup.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cgroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cgroup.controllers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).Controllers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cgroup.memoryMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).MemoryMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.memoryHigh": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).MemoryHigh, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.memoryCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).MemoryCurrent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.memorySwapMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).MemorySwapMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.cpuMaxQuotaUSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).CpuMaxQuotaUSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.cpuMaxPeriodUSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).CpuMaxPeriodUSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.cpuWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).CpuWeight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.pidsMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).PidsMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.pidsCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).PidsCurrent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cgroup.pids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).Pids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cgroup.children": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).Children, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"docker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24277,6 +24421,220 @@ func (c *mqlKernelAslr) GetLevel() *plugin.TValue[string] {
 
 func (c *mqlKernelAslr) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+// mqlCgroups for the cgroups resource
+type mqlCgroups struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCgroupsInternal
+	Version     plugin.TValue[int64]
+	Controllers plugin.TValue[[]any]
+	Root        plugin.TValue[*mqlCgroup]
+	List        plugin.TValue[[]any]
+}
+
+// createCgroups creates a new instance of this resource
+func createCgroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCgroups{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cgroups", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCgroups) MqlName() string {
+	return "cgroups"
+}
+
+func (c *mqlCgroups) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCgroups) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlCgroups) GetControllers() *plugin.TValue[[]any] {
+	return &c.Controllers
+}
+
+func (c *mqlCgroups) GetRoot() *plugin.TValue[*mqlCgroup] {
+	return plugin.GetOrCompute[*mqlCgroup](&c.Root, func() (*mqlCgroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cgroups", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCgroup), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlCgroups) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cgroups", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlCgroup for the cgroup resource
+type mqlCgroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCgroupInternal
+	Path             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Controllers      plugin.TValue[[]any]
+	MemoryMax        plugin.TValue[int64]
+	MemoryHigh       plugin.TValue[int64]
+	MemoryCurrent    plugin.TValue[int64]
+	MemorySwapMax    plugin.TValue[int64]
+	CpuMaxQuotaUSec  plugin.TValue[int64]
+	CpuMaxPeriodUSec plugin.TValue[int64]
+	CpuWeight        plugin.TValue[int64]
+	PidsMax          plugin.TValue[int64]
+	PidsCurrent      plugin.TValue[int64]
+	Pids             plugin.TValue[[]any]
+	Children         plugin.TValue[[]any]
+}
+
+// createCgroup creates a new instance of this resource
+func createCgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCgroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cgroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCgroup) MqlName() string {
+	return "cgroup"
+}
+
+func (c *mqlCgroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCgroup) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlCgroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlCgroup) GetControllers() *plugin.TValue[[]any] {
+	return &c.Controllers
+}
+
+func (c *mqlCgroup) GetMemoryMax() *plugin.TValue[int64] {
+	return &c.MemoryMax
+}
+
+func (c *mqlCgroup) GetMemoryHigh() *plugin.TValue[int64] {
+	return &c.MemoryHigh
+}
+
+func (c *mqlCgroup) GetMemoryCurrent() *plugin.TValue[int64] {
+	return &c.MemoryCurrent
+}
+
+func (c *mqlCgroup) GetMemorySwapMax() *plugin.TValue[int64] {
+	return &c.MemorySwapMax
+}
+
+func (c *mqlCgroup) GetCpuMaxQuotaUSec() *plugin.TValue[int64] {
+	return &c.CpuMaxQuotaUSec
+}
+
+func (c *mqlCgroup) GetCpuMaxPeriodUSec() *plugin.TValue[int64] {
+	return &c.CpuMaxPeriodUSec
+}
+
+func (c *mqlCgroup) GetCpuWeight() *plugin.TValue[int64] {
+	return &c.CpuWeight
+}
+
+func (c *mqlCgroup) GetPidsMax() *plugin.TValue[int64] {
+	return &c.PidsMax
+}
+
+func (c *mqlCgroup) GetPidsCurrent() *plugin.TValue[int64] {
+	return &c.PidsCurrent
+}
+
+func (c *mqlCgroup) GetPids() *plugin.TValue[[]any] {
+	return &c.Pids
+}
+
+func (c *mqlCgroup) GetChildren() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Children, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cgroup", c.__id, "children")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.children()
+	})
 }
 
 // mqlDocker for the docker resource

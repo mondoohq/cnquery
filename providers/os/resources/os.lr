@@ -1612,6 +1612,66 @@ private kernel.aslr @defaults("level enabled") {
   enabled bool
 }
 
+// Linux control groups (cgroup v2)
+//
+// Examine the cgroup hierarchy, available controllers, and the version
+// of cgroups in use. Modern Linux uses cgroup v2 (a single unified
+// hierarchy at /sys/fs/cgroup); v1 hosts and hybrid setups are
+// detected and reported via `version`, but per-controller hierarchies
+// are not modeled. Iterate `list` to query every cgroup on the host,
+// or walk down from `root` to traverse the hierarchy.
+cgroups @defaults("version controllers") {
+  // cgroup version in use: 2 (unified), 1 (legacy v1 only), or 0 if cgroups are not available
+  version int
+  // Controllers available on the host (e.g., memory, cpu, io, pids)
+  controllers []string
+  // The root cgroup
+  root() cgroup
+  // Flat list of every cgroup on the host
+  list() []cgroup
+}
+
+// Linux control group
+//
+// Examine a single cgroup v2 entry: its `path` relative to the cgroup
+// root, the systemd-inferred `type` (slice, scope, service, or other),
+// the controllers enabled on it, memory/CPU/PIDs limits and current
+// usage, and the process IDs assigned to the cgroup. Iterated from
+// `cgroups.list` or traversed via `children`. Limit fields use `-1`
+// to mean unlimited (the kernel's `max` literal).
+private cgroup @defaults("path type memoryMax") {
+  // Path relative to the cgroup root (e.g., /system.slice/docker-<id>.scope)
+  path string
+  // systemd unit kind inferred from the leaf name
+  //
+  // One of `slice`, `scope`, `service`, `root`, or `other`.
+  type string
+  // Controllers enabled on this cgroup (from cgroup.controllers)
+  controllers []string
+  // Memory hard limit in bytes; `-1` means unlimited
+  memoryMax int
+  // Memory soft limit / throttling watermark in bytes; `-1` means unlimited
+  memoryHigh int
+  // Current memory usage in bytes
+  memoryCurrent int
+  // Swap hard limit in bytes; `-1` means unlimited
+  memorySwapMax int
+  // CPU quota in microseconds per period; `-1` means unlimited
+  cpuMaxQuotaUSec int
+  // CPU accounting period in microseconds
+  cpuMaxPeriodUSec int
+  // Relative CPU weight (1-10000, default 100)
+  cpuWeight int
+  // PID hard limit; `-1` means unlimited
+  pidsMax int
+  // Current number of processes in this cgroup
+  pidsCurrent int
+  // Process IDs assigned to this cgroup
+  pids []int
+  // Child cgroups directly under this one
+  children() []cgroup
+}
+
 // Docker host
 //
 // Examine images and containers managed by the Docker daemon
