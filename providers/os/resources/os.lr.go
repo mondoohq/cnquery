@@ -39162,7 +39162,7 @@ func (c *mqlLvmVolumeGroup) GetSnapshotCount() *plugin.TValue[int64] {
 type mqlLvmLogicalVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlLvmLogicalVolumeInternal it will be used here
+	mqlLvmLogicalVolumeInternal
 	Name            plugin.TValue[string]
 	Path            plugin.TValue[string]
 	Uuid            plugin.TValue[string]
@@ -39240,7 +39240,9 @@ func (c *mqlLvmLogicalVolume) GetOrigin() *plugin.TValue[string] {
 }
 
 func (c *mqlLvmLogicalVolume) GetDataPercent() *plugin.TValue[float64] {
-	return &c.DataPercent
+	return plugin.GetOrCompute[float64](&c.DataPercent, func() (float64, error) {
+		return c.dataPercent()
+	})
 }
 
 func (c *mqlLvmLogicalVolume) GetPoolName() *plugin.TValue[string] {

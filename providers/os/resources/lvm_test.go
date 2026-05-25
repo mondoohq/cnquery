@@ -86,28 +86,31 @@ func TestParseLvmLVs(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, lvs, 4)
 
-	// Regular LV — data_percent is empty -> -1
+	// Regular LV — data_percent is empty -> nil
 	assert.Equal(t, "root", lvs[0].Name)
 	assert.Equal(t, "/dev/vg0/root", lvs[0].Path)
 	assert.Equal(t, "-wi-ao----", lvs[0].Attributes)
 	assert.Equal(t, int64(10737418240), lvs[0].SizeBytes)
 	assert.Equal(t, "", lvs[0].Origin)
-	assert.Equal(t, float64(-1), lvs[0].DataPercent)
+	assert.Nil(t, lvs[0].DataPercent)
 	assert.Equal(t, "", lvs[0].PoolName)
 
 	// Snapshot
 	assert.Equal(t, "snap", lvs[1].Name)
 	assert.Equal(t, "root", lvs[1].Origin)
-	assert.Equal(t, 12.5, lvs[1].DataPercent)
+	require.NotNil(t, lvs[1].DataPercent)
+	assert.Equal(t, 12.5, *lvs[1].DataPercent)
 
 	// Thin pool
 	assert.Equal(t, "pool", lvs[2].Name)
-	assert.Equal(t, 45.0, lvs[2].DataPercent)
+	require.NotNil(t, lvs[2].DataPercent)
+	assert.Equal(t, 45.0, *lvs[2].DataPercent)
 
 	// Thin volume
 	assert.Equal(t, "thindata", lvs[3].Name)
 	assert.Equal(t, "pool", lvs[3].PoolName)
-	assert.Equal(t, 30.25, lvs[3].DataPercent)
+	require.NotNil(t, lvs[3].DataPercent)
+	assert.Equal(t, 30.25, *lvs[3].DataPercent)
 }
 
 func TestParseLvmEmptyReport(t *testing.T) {
@@ -143,18 +146,20 @@ func TestParseLvmInt(t *testing.T) {
 }
 
 func TestParseLvmFloat(t *testing.T) {
-	// Empty stays as the "not applicable" sentinel.
+	// Empty is "not applicable" — nil pointer.
 	v, err := parseLvmFloat("data_percent", "")
 	require.NoError(t, err)
-	assert.Equal(t, float64(-1), v)
+	assert.Nil(t, v)
 
 	v, err = parseLvmFloat("data_percent", "12.5")
 	require.NoError(t, err)
-	assert.Equal(t, 12.5, v)
+	require.NotNil(t, v)
+	assert.Equal(t, 12.5, *v)
 
 	v, err = parseLvmFloat("data_percent", "100.00")
 	require.NoError(t, err)
-	assert.Equal(t, 100.0, v)
+	require.NotNil(t, v)
+	assert.Equal(t, 100.0, *v)
 
 	// Garbage values are surfaced as errors.
 	_, err = parseLvmFloat("data_percent", "nope")

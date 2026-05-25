@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func (l *mqlLvm) id() (string, error) {
@@ -107,12 +108,12 @@ func (l *mqlLvm) logicalVolumes() ([]any, error) {
 			"attributes":      llx.StringData(v.Attributes),
 			"sizeBytes":       llx.IntData(v.SizeBytes),
 			"origin":          llx.StringData(v.Origin),
-			"dataPercent":     llx.FloatData(v.DataPercent),
 			"poolName":        llx.StringData(v.PoolName),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlLV.(*mqlLvmLogicalVolume).cacheDataPercent = v.DataPercent
 		res = append(res, mqlLV)
 	}
 	return res, nil
@@ -177,10 +178,29 @@ func (l *mqlLvmLogicalVolume) id() (string, error) {
 	return "lvm.logicalVolume/" + l.VolumeGroupName.Data + "/" + l.Name.Data, nil
 }
 
+// mqlLvmLogicalVolumeInternal carries per-LV values that aren't directly
+// surfaced as schema fields. cacheDataPercent is nil when the lvs report
+// emitted an empty data_percent for this LV (e.g. a non-thin, non-snapshot
+// LV) — distinct from a real 0.0 reading on a thin pool with no data
+// written yet.
+type mqlLvmLogicalVolumeInternal struct {
+	cacheDataPercent *float64
+}
+
+func (l *mqlLvmLogicalVolume) dataPercent() (float64, error) {
+	if l.cacheDataPercent == nil {
+		l.DataPercent.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return *l.cacheDataPercent, nil
+}
+
 // LVM reporting commands print all values as strings, even with --nosuffix
-// and --units b. Numeric columns therefore need string-to-int/float parsing,
-// and empty strings (e.g. data_percent on a non-thin LV) are treated as
-// "not applicable".
+// and --units b. Numeric columns therefore need string-to-int/float parsing.
+// Empty strings on integer columns (e.g. snap_count on a brand-new VG) are
+// treated as zero; empty strings on float columns (e.g. data_percent on a
+// non-thin LV) are surfaced as nil so callers can distinguish "absent" from
+// a real 0.0 reading.
 
 type parsedLvmPV struct {
 	Name       string
@@ -204,14 +224,17 @@ type parsedLvmVG struct {
 }
 
 type parsedLvmLV struct {
-	Name        string
-	Path        string
-	UUID        string
-	VGName      string
-	Attributes  string
-	SizeBytes   int64
-	Origin      string
-	DataPercent float64
+	Name       string
+	Path       string
+	UUID       string
+	VGName     string
+	Attributes string
+	SizeBytes  int64
+	Origin     string
+	// DataPercent is nil when the column is empty (e.g. data_percent on a
+	// non-thin LV) — distinct from a real 0.0 reading on a thin pool that
+	// happens to have no data written yet.
+	DataPercent *float64
 	PoolName    string
 }
 
@@ -380,18 +403,18 @@ func parseLvmInt(field, s string) (int64, error) {
 }
 
 // parseLvmFloat parses a float column from an lvm report. Empty values
-// (e.g. data_percent on a non-thin LV) become -1 to signal "not applicable",
-// matching the rest of the codebase's convention for absent percentages.
-// Non-empty values that fail to parse are surfaced so a malformed report
-// doesn't get silently coerced to -1.
-func parseLvmFloat(field, s string) (float64, error) {
+// (e.g. data_percent on a non-thin LV) return nil to signal "not
+// applicable" — distinct from a real 0.0 reading. Non-empty values that
+// fail to parse are surfaced as errors so a malformed report doesn't get
+// silently coerced to nil.
+func parseLvmFloat(field, s string) (*float64, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return -1, nil
+		return nil, nil
 	}
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return 0, fmt.Errorf("lvm: parse %s=%q as float: %w", field, s, err)
+		return nil, fmt.Errorf("lvm: parse %s=%q as float: %w", field, s, err)
 	}
-	return v, nil
+	return &v, nil
 }

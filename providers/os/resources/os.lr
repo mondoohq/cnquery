@@ -4778,7 +4778,7 @@ private logrotate.entry @defaults("path") {
   config map[string]string
 }
 
-// LVM (Logical Volume Manager) physical volumes, volume groups, and logical volumes
+// Linux Logical Volume Manager
 //
 // Examine LVM block-device storage on Linux: physical volumes initialized
 // for LVM, volume groups that aggregate them, and the logical volumes
@@ -4875,8 +4875,8 @@ private lvm.logicalVolume @defaults("name volumeGroupName sizeBytes") {
   sizeBytes int
   // Origin LV name for snapshots, empty if not a snapshot
   origin string
-  // Data percentage used (for thin pools, thin volumes, snapshots, mirrors); -1 if not applicable
-  dataPercent float
+  // Data percentage used (for thin pools, thin volumes, snapshots, mirrors); null if not applicable
+  dataPercent() float
   // Pool name for thin volumes, empty if not a thin volume
   poolName string
 }
