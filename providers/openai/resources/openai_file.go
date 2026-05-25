@@ -65,7 +65,7 @@ func initOpenaiFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	conn := openaiConn(runtime)
 	client := conn.Client()
 	if client == nil {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("cannot fetch file %s: no project API key configured", fileID)
 	}
 	f, err := client.Files.Get(context.Background(), fileID)
 	if err != nil {

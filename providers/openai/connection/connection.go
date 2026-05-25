@@ -91,11 +91,15 @@ func NewOpenaiConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 
 	if token != "" {
 		if adminKey {
-			opts := append([]option.RequestOption{option.WithAdminAPIKey(token)}, sharedOpts...)
+			opts := make([]option.RequestOption, 0, len(sharedOpts)+1)
+			opts = append(opts, option.WithAdminAPIKey(token))
+			opts = append(opts, sharedOpts...)
 			c := openai.NewClient(opts...)
 			adminClient = &c
 		} else {
-			opts := append([]option.RequestOption{option.WithAPIKey(token)}, sharedOpts...)
+			opts := make([]option.RequestOption, 0, len(sharedOpts)+1)
+			opts = append(opts, option.WithAPIKey(token))
+			opts = append(opts, sharedOpts...)
 			c := openai.NewClient(opts...)
 			client = &c
 		}

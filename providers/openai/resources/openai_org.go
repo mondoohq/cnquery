@@ -136,6 +136,8 @@ func (r *mqlOpenai) auditLogs() ([]any, error) {
 			actorId = entry.Actor.Session.User.Email
 		case "api_key":
 			actorId = entry.Actor.APIKey.ID
+		default:
+			actorId = string(actorType)
 		}
 
 		mqlLog, err := CreateResource(r.MqlRuntime, "openai.auditLog", map[string]*llx.RawData{
