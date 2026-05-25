@@ -5,7 +5,6 @@ package aimodel
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -318,25 +317,6 @@ func readOllamaConfig(afs *afero.Afero, modelsDir string, digest string) ollamaE
 	}
 
 	return result
-}
-
-func formatParamCount(count int64) string {
-	switch {
-	case count >= 1_000_000_000:
-		b := float64(count) / 1e9
-		if b == float64(int64(b)) {
-			return fmt.Sprintf("%dB", int64(b))
-		}
-		return fmt.Sprintf("%.1fB", b)
-	case count >= 1_000_000:
-		m := float64(count) / 1e6
-		if m == float64(int64(m)) {
-			return fmt.Sprintf("%dM", int64(m))
-		}
-		return fmt.Sprintf("%.1fM", m)
-	default:
-		return fmt.Sprintf("%d", count)
-	}
 }
 
 // --- Hugging Face Hub ---

@@ -565,21 +565,3 @@ func TestParamSizeRegex(t *testing.T) {
 	}
 }
 
-func TestFormatParamCount(t *testing.T) {
-	tests := []struct {
-		count int64
-		want  string
-	}{
-		{8_000_000_000, "8B"},
-		{70_000_000_000, "70B"},
-		{6_700_000_000, "6.7B"},
-		{350_000_000, "350M"},
-		{1_500_000_000, "1.5B"},
-		{100_000, "100000"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.want, func(t *testing.T) {
-			assert.Equal(t, tt.want, formatParamCount(tt.count))
-		})
-	}
-}
