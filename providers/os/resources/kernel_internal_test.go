@@ -9,6 +9,156 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestParseModprobeConfig locks down the modprobe.d parser used by the
+// kernel.module {blacklisted, installBypass, disabled} accessors. The
+// shapes here are taken from CIS Linux benchmarks (cramfs, usb-storage,
+// freevxfs, jffs2, hfs) and from the in-the-wild quirks the parser has
+// to tolerate — `exec /bin/false`, leading whitespace, comments mid-line,
+// and unrelated directives (alias, options, softdep) that must be ignored
+// without poisoning a sibling module's rule.
+func TestParseModprobeConfig(t *testing.T) {
+	cases := []struct {
+		name    string
+		content string
+		want    map[string]modprobeRule
+	}{
+		{
+			name:    "simple blacklist",
+			content: "blacklist cramfs\n",
+			want: map[string]modprobeRule{
+				"cramfs": {blacklisted: true},
+			},
+		},
+		{
+			name:    "install short-circuit to /bin/true",
+			content: "install usb-storage /bin/true\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
+			name:    "install short-circuit to /bin/false",
+			content: "install usb-storage /bin/false\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
+			name:    "install via exec wrapper to /bin/false",
+			content: "install usb-storage exec /bin/false\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
+			name:    "install to real modprobe is not a bypass",
+			content: "install usb-storage /sbin/modprobe usb-storage-real\n",
+			want:    map[string]modprobeRule{},
+		},
+		{
+			name: "comments and blank lines are ignored",
+			content: `# CIS Linux Benchmark 1.1.1.1
+# Disable mounting of cramfs
+blacklist cramfs
+
+# Disable mounting of freevxfs
+
+blacklist freevxfs   # trailing comment
+`,
+			want: map[string]modprobeRule{
+				"cramfs":   {blacklisted: true},
+				"freevxfs": {blacklisted: true},
+			},
+		},
+		{
+			name: "multiple modules combine across lines",
+			content: `blacklist cramfs
+install usb-storage /bin/false
+blacklist freevxfs
+install jffs2 /bin/true
+`,
+			want: map[string]modprobeRule{
+				"cramfs":      {blacklisted: true},
+				"usb-storage": {installBypass: true},
+				"freevxfs":    {blacklisted: true},
+				"jffs2":       {installBypass: true},
+			},
+		},
+		{
+			name: "same module blacklisted and install-bypassed unions both flags",
+			content: `blacklist usb-storage
+install usb-storage /bin/false
+`,
+			want: map[string]modprobeRule{
+				"usb-storage": {blacklisted: true, installBypass: true},
+			},
+		},
+		{
+			name:    "leading whitespace, tabs, and mixed indentation tolerated",
+			content: "  blacklist cramfs\n\tinstall usb-storage\t/bin/false\n  \t blacklist  freevxfs \n",
+			want: map[string]modprobeRule{
+				"cramfs":      {blacklisted: true},
+				"usb-storage": {installBypass: true},
+				"freevxfs":    {blacklisted: true},
+			},
+		},
+		{
+			name: "alias / options / softdep / remove are ignored",
+			content: `alias net-pf-10 ipv6
+options ipv6 disable=1
+softdep nf_conntrack pre: nf_defrag_ipv4
+remove fuse /sbin/modprobe -r fuse
+blacklist cramfs
+`,
+			want: map[string]modprobeRule{
+				"cramfs": {blacklisted: true},
+			},
+		},
+		{
+			name:    "blacklist without a module name is dropped",
+			content: "blacklist\n",
+			want:    map[string]modprobeRule{},
+		},
+		{
+			name:    "install without a command is dropped",
+			content: "install usb-storage\n",
+			want:    map[string]modprobeRule{},
+		},
+		{
+			name:    "empty content yields empty map",
+			content: "",
+			want:    map[string]modprobeRule{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseModprobeConfig(tc.content)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+// TestStripModprobeComment guards the modprobe-flavoured comment stripper
+// against drift toward rsyslog's quote-aware shape — modprobe has no
+// string literals, so `#` always introduces a comment.
+func TestStripModprobeComment(t *testing.T) {
+	cases := []struct {
+		in  string
+		out string
+	}{
+		{"blacklist cramfs", "blacklist cramfs"},
+		{"blacklist cramfs # comment", "blacklist cramfs "},
+		{"# entire line is a comment", ""},
+		{"", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.Equal(t, tc.out, stripModprobeComment(tc.in))
+		})
+	}
+}
+
 // TestRpmKernelMatchesRunning is the unit-level reproducer for
 // customer-issues #178: AL2023's `kernel` rpm carries epoch 1, so
 // pkg.Version is "1:6.1.170-210.320.amzn2023" while /proc/version returns

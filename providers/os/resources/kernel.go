@@ -33,6 +33,13 @@ func initKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 type mqlKernelInternal struct {
 	moduleByName map[string]*mqlKernelModule
 	lock         sync.Mutex
+
+	// modprobe-rule cache. Populated lazily on first access via
+	// loadModprobeRules so the modprobe.d walk happens once per query
+	// regardless of how many kernel.module accessors consult it.
+	modprobeOnce  sync.Once
+	modprobeRules map[string]modprobeRule
+	modprobeErr   error
 }
 
 type KernelVersion struct {

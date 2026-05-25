@@ -3148,6 +3148,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kernel.module.loaded": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetLoaded()).ToDataRes(types.Bool)
 	},
+	"kernel.module.blacklisted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetBlacklisted()).ToDataRes(types.Bool)
+	},
+	"kernel.module.installBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetInstallBypass()).ToDataRes(types.Bool)
+	},
+	"kernel.module.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetDisabled()).ToDataRes(types.Bool)
+	},
 	"kernel.cmdline.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelCmdline).GetRaw()).ToDataRes(types.String)
 	},
@@ -9712,6 +9721,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.module.loaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).Loaded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.blacklisted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Blacklisted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.installBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).InstallBypass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"kernel.cmdline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23994,9 +24015,12 @@ type mqlKernelModule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlKernelModuleInternal it will be used here
-	Name   plugin.TValue[string]
-	Size   plugin.TValue[string]
-	Loaded plugin.TValue[bool]
+	Name          plugin.TValue[string]
+	Size          plugin.TValue[string]
+	Loaded        plugin.TValue[bool]
+	Blacklisted   plugin.TValue[bool]
+	InstallBypass plugin.TValue[bool]
+	Disabled      plugin.TValue[bool]
 }
 
 // createKernelModule creates a new instance of this resource
@@ -24046,6 +24070,24 @@ func (c *mqlKernelModule) GetSize() *plugin.TValue[string] {
 
 func (c *mqlKernelModule) GetLoaded() *plugin.TValue[bool] {
 	return &c.Loaded
+}
+
+func (c *mqlKernelModule) GetBlacklisted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Blacklisted, func() (bool, error) {
+		return c.blacklisted()
+	})
+}
+
+func (c *mqlKernelModule) GetInstallBypass() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InstallBypass, func() (bool, error) {
+		return c.installBypass()
+	})
+}
+
+func (c *mqlKernelModule) GetDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Disabled, func() (bool, error) {
+		return c.disabled()
+	})
 }
 
 // mqlKernelCmdline for the kernel.cmdline resource

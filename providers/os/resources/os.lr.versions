@@ -891,6 +891,9 @@ kernel.lockdown 13.16.10
 kernel.lockdown.enabled 13.16.10
 kernel.lockdown.mode 13.16.10
 kernel.module 9.0.0
+kernel.module.blacklisted 13.16.10
+kernel.module.disabled 13.16.10
+kernel.module.installBypass 13.16.10
 kernel.module.loaded 9.0.0
 kernel.module.name 9.0.0
 kernel.module.size 9.0.0

@@ -1522,6 +1522,9 @@ kernel @defaults("info") {
 // whether it is currently `loaded`. Initialize by name (e.g.,
 // `kernel.module(name: "nf_conntrack")`) to check a specific module,
 // or iterate from `kernel.modules()` to audit the full loaded-module list.
+// Use `blacklisted`, `installBypass`, and `disabled` to express CIS-style
+// "module must not load" controls without falling back to raw modprobe.d
+// file parsing.
 kernel.module @defaults("name loaded") {
   init(name string)
 
@@ -1531,6 +1534,28 @@ kernel.module @defaults("name loaded") {
   size string
   // Whether the module is loaded
   loaded bool
+  // Whether the module is blacklisted in modprobe configuration
+  //
+  // True when any modprobe configuration file declares `blacklist <name>`.
+  // Blacklisted modules will not auto-load (e.g., from udev or hotplug
+  // events) but root can still force-load them with `modprobe --force`
+  // or by writing to `/sys/module/...`. CIS macOS/Linux benchmarks check
+  // for this to ensure unused filesystems/protocols stay off.
+  blacklisted() bool
+  // Whether the module's load is short-circuited to /bin/true or /bin/false
+  //
+  // True when any modprobe configuration file declares
+  // `install <name> /bin/false` (or `/bin/true`). This is stronger than
+  // blacklisting: even an explicit `modprobe <name>` is replaced with
+  // the no-op binary, so the module cannot be loaded without overriding
+  // the install rule.
+  installBypass() bool
+  // Whether the module is effectively disabled
+  //
+  // True when the module is either blacklisted or has an install
+  // short-circuit rule. Use this as the canonical "module will not load
+  // without explicit override" predicate.
+  disabled() bool
 }
 
 // Linux kernel boot command line
