@@ -5347,6 +5347,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"macos.firewall.applications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosFirewall).GetApplications()).ToDataRes(types.Array(types.Resource("macos.firewall.app")))
 	},
+	"macos.firewall.managedByMDM": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetManagedByMDM()).ToDataRes(types.Bool)
+	},
 	"macos.firewall.app.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosFirewallApp).GetName()).ToDataRes(types.String)
 	},
@@ -13212,6 +13215,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.firewall.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosFirewall).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.managedByMDM": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).ManagedByMDM, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"macos.firewall.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35900,6 +35907,7 @@ type mqlMacosFirewall struct {
 	Exceptions              plugin.TValue[[]any]
 	ExplicitAuths           plugin.TValue[[]any]
 	Applications            plugin.TValue[[]any]
+	ManagedByMDM            plugin.TValue[bool]
 }
 
 // createMacosFirewall creates a new instance of this resource
@@ -36007,6 +36015,12 @@ func (c *mqlMacosFirewall) GetApplications() *plugin.TValue[[]any] {
 		}
 
 		return c.applications()
+	})
+}
+
+func (c *mqlMacosFirewall) GetManagedByMDM() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ManagedByMDM, func() (bool, error) {
+		return c.managedByMDM()
 	})
 }
 

@@ -3979,6 +3979,14 @@ macos.firewall @defaults("enabled stealthEnabled") {
   explicitAuths() []string
   // Applications with explicit firewall rules
   applications() []macos.firewall.app
+  // Whether an installed Configuration Profile manages the firewall
+  //
+  // True when any installed profile carries a payload of type
+  // `com.apple.security.firewall`. Enumerating Configuration Profiles
+  // requires root, so on an unprivileged session the field surfaces
+  // the underlying `profiles list` error rather than silently
+  // returning `false`.
+  managedByMDM() bool
 }
 
 // macOS firewall per-application rule

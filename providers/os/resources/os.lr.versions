@@ -1092,6 +1092,7 @@ macos.firewall.exceptions 13.3.1
 macos.firewall.explicitAuths 13.3.1
 macos.firewall.loggingDetail 13.3.1
 macos.firewall.loggingEnabled 13.3.1
+macos.firewall.managedByMDM 13.16.10
 macos.firewall.stealthEnabled 13.3.1
 macos.firewall.version 13.3.1
 macos.gatekeeper 13.5.1
