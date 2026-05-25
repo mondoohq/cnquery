@@ -98,6 +98,10 @@ const (
 	ResourceSystemdTimers                string = "systemd.timers"
 	ResourceSystemdSocket                string = "systemd.socket"
 	ResourceSystemdSockets               string = "systemd.sockets"
+	ResourceSystemdTarget                string = "systemd.target"
+	ResourceSystemdTargets               string = "systemd.targets"
+	ResourceSystemdResolved              string = "systemd.resolved"
+	ResourceSystemdTimesyncd             string = "systemd.timesyncd"
 	ResourceKernel                       string = "kernel"
 	ResourceKernelModule                 string = "kernel.module"
 	ResourceKernelCmdline                string = "kernel.cmdline"
@@ -705,6 +709,22 @@ func init() {
 		"systemd.sockets": {
 			// to override args, implement: initSystemdSockets(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSystemdSockets,
+		},
+		"systemd.target": {
+			// to override args, implement: initSystemdTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdTarget,
+		},
+		"systemd.targets": {
+			// to override args, implement: initSystemdTargets(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdTargets,
+		},
+		"systemd.resolved": {
+			// to override args, implement: initSystemdResolved(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdResolved,
+		},
+		"systemd.timesyncd": {
+			// to override args, implement: initSystemdTimesyncd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdTimesyncd,
 		},
 		"kernel": {
 			Init:   initKernel,
@@ -3114,6 +3134,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"systemd.sockets.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSystemdSockets).GetList()).ToDataRes(types.Array(types.Resource("systemd.socket")))
+	},
+	"systemd.target.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetName()).ToDataRes(types.String)
+	},
+	"systemd.target.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetDescription()).ToDataRes(types.String)
+	},
+	"systemd.target.loadState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetLoadState()).ToDataRes(types.String)
+	},
+	"systemd.target.activeState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetActiveState()).ToDataRes(types.String)
+	},
+	"systemd.target.subState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetSubState()).ToDataRes(types.String)
+	},
+	"systemd.target.unitFileState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetUnitFileState()).ToDataRes(types.String)
+	},
+	"systemd.target.fragmentPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetFragmentPath()).ToDataRes(types.String)
+	},
+	"systemd.target.wants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetWants()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.target.requires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetRequires()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.target.after": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetAfter()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.target.before": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTarget).GetBefore()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.targets.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTargets).GetList()).ToDataRes(types.Array(types.Resource("systemd.target")))
+	},
+	"systemd.resolved.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetActive()).ToDataRes(types.Bool)
+	},
+	"systemd.resolved.dns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetDns()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.resolved.fallbackDns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetFallbackDns()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.resolved.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetDomains()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.resolved.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetDnssec()).ToDataRes(types.String)
+	},
+	"systemd.resolved.dnsOverTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetDnsOverTls()).ToDataRes(types.String)
+	},
+	"systemd.resolved.llmnr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetLlmnr()).ToDataRes(types.String)
+	},
+	"systemd.resolved.multicastDns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetMulticastDns()).ToDataRes(types.String)
+	},
+	"systemd.resolved.resolvConfMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetResolvConfMode()).ToDataRes(types.String)
+	},
+	"systemd.resolved.cache": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetCache()).ToDataRes(types.Bool)
+	},
+	"systemd.timesyncd.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetActive()).ToDataRes(types.Bool)
+	},
+	"systemd.timesyncd.synchronized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetSynchronized()).ToDataRes(types.Bool)
+	},
+	"systemd.timesyncd.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetServers()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.timesyncd.fallbackServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetFallbackServers()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.timesyncd.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetServerName()).ToDataRes(types.String)
+	},
+	"systemd.timesyncd.serverAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetServerAddress()).ToDataRes(types.String)
+	},
+	"systemd.timesyncd.pollIntervalUSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetPollIntervalUSec()).ToDataRes(types.Int)
+	},
+	"systemd.timesyncd.leapStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimesyncd).GetLeapStatus()).ToDataRes(types.String)
 	},
 	"kernel.info": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetInfo()).ToDataRes(types.Dict)
@@ -9660,6 +9770,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"systemd.sockets.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSystemdSockets).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.target.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.loadState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).LoadState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.activeState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).ActiveState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.subState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).SubState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.unitFileState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).UnitFileState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.fragmentPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).FragmentPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.target.wants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).Wants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.target.requires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).Requires, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.target.after": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).After, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.target.before": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTarget).Before, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.targets.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTargets).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.targets.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTargets).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.resolved.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Dns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.fallbackDns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).FallbackDns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Dnssec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.dnsOverTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).DnsOverTls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.llmnr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Llmnr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.multicastDns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).MulticastDns, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.resolvConfMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).ResolvConfMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.cache": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).Cache, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.timesyncd.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.synchronized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).Synchronized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.fallbackServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).FallbackServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.serverAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).ServerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.pollIntervalUSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).PollIntervalUSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"systemd.timesyncd.leapStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimesyncd).LeapStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"kernel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23842,6 +24088,344 @@ func (c *mqlSystemdSockets) GetList() *plugin.TValue[[]any] {
 
 		return c.list()
 	})
+}
+
+// mqlSystemdTarget for the systemd.target resource
+type mqlSystemdTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdTargetInternal it will be used here
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	LoadState     plugin.TValue[string]
+	ActiveState   plugin.TValue[string]
+	SubState      plugin.TValue[string]
+	UnitFileState plugin.TValue[string]
+	FragmentPath  plugin.TValue[string]
+	Wants         plugin.TValue[[]any]
+	Requires      plugin.TValue[[]any]
+	After         plugin.TValue[[]any]
+	Before        plugin.TValue[[]any]
+}
+
+// createSystemdTarget creates a new instance of this resource
+func createSystemdTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdTarget) MqlName() string {
+	return "systemd.target"
+}
+
+func (c *mqlSystemdTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSystemdTarget) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSystemdTarget) GetLoadState() *plugin.TValue[string] {
+	return &c.LoadState
+}
+
+func (c *mqlSystemdTarget) GetActiveState() *plugin.TValue[string] {
+	return &c.ActiveState
+}
+
+func (c *mqlSystemdTarget) GetSubState() *plugin.TValue[string] {
+	return &c.SubState
+}
+
+func (c *mqlSystemdTarget) GetUnitFileState() *plugin.TValue[string] {
+	return &c.UnitFileState
+}
+
+func (c *mqlSystemdTarget) GetFragmentPath() *plugin.TValue[string] {
+	return &c.FragmentPath
+}
+
+func (c *mqlSystemdTarget) GetWants() *plugin.TValue[[]any] {
+	return &c.Wants
+}
+
+func (c *mqlSystemdTarget) GetRequires() *plugin.TValue[[]any] {
+	return &c.Requires
+}
+
+func (c *mqlSystemdTarget) GetAfter() *plugin.TValue[[]any] {
+	return &c.After
+}
+
+func (c *mqlSystemdTarget) GetBefore() *plugin.TValue[[]any] {
+	return &c.Before
+}
+
+// mqlSystemdTargets for the systemd.targets resource
+type mqlSystemdTargets struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdTargetsInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createSystemdTargets creates a new instance of this resource
+func createSystemdTargets(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdTargets{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.targets", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdTargets) MqlName() string {
+	return "systemd.targets"
+}
+
+func (c *mqlSystemdTargets) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdTargets) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("systemd.targets", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlSystemdResolved for the systemd.resolved resource
+type mqlSystemdResolved struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSystemdResolvedInternal
+	Active         plugin.TValue[bool]
+	Dns            plugin.TValue[[]any]
+	FallbackDns    plugin.TValue[[]any]
+	Domains        plugin.TValue[[]any]
+	Dnssec         plugin.TValue[string]
+	DnsOverTls     plugin.TValue[string]
+	Llmnr          plugin.TValue[string]
+	MulticastDns   plugin.TValue[string]
+	ResolvConfMode plugin.TValue[string]
+	Cache          plugin.TValue[bool]
+}
+
+// createSystemdResolved creates a new instance of this resource
+func createSystemdResolved(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdResolved{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.resolved", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdResolved) MqlName() string {
+	return "systemd.resolved"
+}
+
+func (c *mqlSystemdResolved) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdResolved) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlSystemdResolved) GetDns() *plugin.TValue[[]any] {
+	return &c.Dns
+}
+
+func (c *mqlSystemdResolved) GetFallbackDns() *plugin.TValue[[]any] {
+	return &c.FallbackDns
+}
+
+func (c *mqlSystemdResolved) GetDomains() *plugin.TValue[[]any] {
+	return &c.Domains
+}
+
+func (c *mqlSystemdResolved) GetDnssec() *plugin.TValue[string] {
+	return &c.Dnssec
+}
+
+func (c *mqlSystemdResolved) GetDnsOverTls() *plugin.TValue[string] {
+	return &c.DnsOverTls
+}
+
+func (c *mqlSystemdResolved) GetLlmnr() *plugin.TValue[string] {
+	return &c.Llmnr
+}
+
+func (c *mqlSystemdResolved) GetMulticastDns() *plugin.TValue[string] {
+	return &c.MulticastDns
+}
+
+func (c *mqlSystemdResolved) GetResolvConfMode() *plugin.TValue[string] {
+	return &c.ResolvConfMode
+}
+
+func (c *mqlSystemdResolved) GetCache() *plugin.TValue[bool] {
+	return &c.Cache
+}
+
+// mqlSystemdTimesyncd for the systemd.timesyncd resource
+type mqlSystemdTimesyncd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSystemdTimesyncdInternal
+	Active           plugin.TValue[bool]
+	Synchronized     plugin.TValue[bool]
+	Servers          plugin.TValue[[]any]
+	FallbackServers  plugin.TValue[[]any]
+	ServerName       plugin.TValue[string]
+	ServerAddress    plugin.TValue[string]
+	PollIntervalUSec plugin.TValue[int64]
+	LeapStatus       plugin.TValue[string]
+}
+
+// createSystemdTimesyncd creates a new instance of this resource
+func createSystemdTimesyncd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdTimesyncd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.timesyncd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdTimesyncd) MqlName() string {
+	return "systemd.timesyncd"
+}
+
+func (c *mqlSystemdTimesyncd) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdTimesyncd) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlSystemdTimesyncd) GetSynchronized() *plugin.TValue[bool] {
+	return &c.Synchronized
+}
+
+func (c *mqlSystemdTimesyncd) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlSystemdTimesyncd) GetFallbackServers() *plugin.TValue[[]any] {
+	return &c.FallbackServers
+}
+
+func (c *mqlSystemdTimesyncd) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlSystemdTimesyncd) GetServerAddress() *plugin.TValue[string] {
+	return &c.ServerAddress
+}
+
+func (c *mqlSystemdTimesyncd) GetPollIntervalUSec() *plugin.TValue[int64] {
+	return &c.PollIntervalUSec
+}
+
+func (c *mqlSystemdTimesyncd) GetLeapStatus() *plugin.TValue[string] {
+	return &c.LeapStatus
 }
 
 // mqlKernel for the kernel resource

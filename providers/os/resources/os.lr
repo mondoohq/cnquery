@@ -1494,6 +1494,107 @@ systemd.sockets {
   []systemd.socket
 }
 
+// systemd target unit
+//
+// Examine a single systemd target — load state, active state, the unit
+// file's enabled/disabled state, fragment path on disk, and the
+// dependency lists (`wants`, `requires`, `after`, `before`) that
+// determine which other units the target pulls in or orders around.
+// Iterated from `systemd.targets`.
+private systemd.target @defaults("name loadState activeState") {
+  // Name of the target unit (without .target suffix)
+  name string
+  // Target unit description
+  description string
+  // Load state (e.g., loaded, not-found, masked, error)
+  loadState string
+  // Active state (e.g., active, inactive, failed, activating, deactivating)
+  activeState string
+  // Sub state for the target (e.g., active, dead)
+  subState string
+  // Unit file state (e.g., enabled, disabled, static, masked, alias)
+  unitFileState string
+  // Path to the unit file on disk
+  fragmentPath string
+  // Units listed in Wants= (best-effort dependencies)
+  wants []string
+  // Units listed in Requires= (hard dependencies)
+  requires []string
+  // Units listed in After= (this target starts after them)
+  after []string
+  // Units listed in Before= (this target starts before them)
+  before []string
+}
+
+// All systemd target units on the system
+//
+// Iterate every target unit to audit boot ordering, default target, and
+// dependency wiring
+systemd.targets {
+  []systemd.target
+}
+
+// systemd-resolved DNS resolver state
+//
+// Examine the global DNS resolution configuration provided by
+// systemd-resolved: whether the daemon is `active`, the effective DNS
+// servers (`dns`) and `fallbackDns`, search `domains`, DNSSEC and
+// DNS-over-TLS modes, LLMNR and multicast-DNS settings, the
+// resolv.conf mode, and whether caching is enabled. Backed by
+// `resolvectl status` for the Global scope.
+systemd.resolved @defaults("active dns") {
+  // Whether the systemd-resolved daemon is currently active
+  active bool
+  // Effective DNS server addresses for the Global scope
+  dns []string
+  // Fallback DNS servers used when no Link or Global DNS is configured
+  fallbackDns []string
+  // DNS search domains
+  domains []string
+  // DNSSEC mode
+  //
+  // One of `yes`, `no`, or `allow-downgrade`. May appear as `no/unsupported`
+  // when the upstream resolver does not support DNSSEC.
+  dnssec string
+  // DNS-over-TLS mode (e.g., `yes`, `no`, `opportunistic`)
+  dnsOverTls string
+  // LLMNR mode (e.g., `yes`, `no`, `resolve`)
+  llmnr string
+  // Multicast DNS mode (e.g., `yes`, `no`, `resolve`)
+  multicastDns string
+  // /etc/resolv.conf management mode (e.g., `stub`, `static`, `uplink`, `foreign`)
+  resolvConfMode string
+  // Whether the resolver cache is enabled
+  cache bool
+}
+
+// systemd-timesyncd NTP client state
+//
+// Examine the SNTP client provided by systemd-timesyncd: whether the
+// daemon is `active`, whether the system clock is currently
+// `synchronized`, the configured `servers` and `fallbackServers`, the
+// currently selected NTP `serverName` and `serverAddress`, the current
+// poll interval, and the leap-second status. Backed by `timedatectl
+// show` and `timedatectl show-timesync`.
+systemd.timesyncd @defaults("active synchronized serverName") {
+  // Whether the systemd-timesyncd daemon is currently active
+  active bool
+  // Whether the system clock is synchronized to a time source
+  synchronized bool
+  // NTP servers from configuration (NTP= and DHCP)
+  servers []string
+  // Fallback NTP servers used when none of `servers` are reachable
+  fallbackServers []string
+  // Hostname of the currently selected NTP server
+  serverName string
+  // IP address of the currently selected NTP server
+  serverAddress string
+  // Current poll interval in microseconds
+  pollIntervalUSec int
+  // Leap second status (e.g., `normal`, `insert-second`, `delete-second`, `unknown`)
+  leapStatus string
+}
+
 // Running kernel and its modules
 //
 // Examine kernel info, sysctl parameters, loaded modules, and installed versions
