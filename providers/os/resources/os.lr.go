@@ -24479,11 +24479,15 @@ func (c *mqlCgroups) MqlID() string {
 }
 
 func (c *mqlCgroups) GetVersion() *plugin.TValue[int64] {
-	return &c.Version
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
 }
 
 func (c *mqlCgroups) GetControllers() *plugin.TValue[[]any] {
-	return &c.Controllers
+	return plugin.GetOrCompute[[]any](&c.Controllers, func() ([]any, error) {
+		return c.controllers()
+	})
 }
 
 func (c *mqlCgroups) GetRoot() *plugin.TValue[*mqlCgroup] {
