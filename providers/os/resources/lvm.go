@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -118,9 +119,10 @@ func (l *mqlLvm) logicalVolumes() ([]any, error) {
 }
 
 // runLvmReport executes an lvm reporting command via the command resource.
-// The second return value is false when lvm is not installed or no objects
-// of the requested kind exist on the host — both are treated as "empty list",
-// not an error, so a query against a non-LVM host succeeds with `[]`.
+// The second return value is false when lvm is not installed on the host —
+// treated as "empty list" so a query against a non-LVM host succeeds with `[]`.
+// Any other non-zero exit (permission denied, broken metadata, etc.) is
+// surfaced as an error rather than silently producing an empty result.
 func (l *mqlLvm) runLvmReport(cmdline string) (string, bool, error) {
 	o, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(cmdline),
@@ -129,10 +131,29 @@ func (l *mqlLvm) runLvmReport(cmdline string) (string, bool, error) {
 		return "", false, err
 	}
 	cmd := o.(*mqlCommand)
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
+	exit := cmd.GetExitcode()
+	if exit.Data == 0 {
+		return cmd.Stdout.Data, true, nil
+	}
+
+	stderr := cmd.Stderr.Data
+	if isLvmNotInstalled(exit.Data, stderr) {
 		return "", false, nil
 	}
-	return cmd.Stdout.Data, true, nil
+	return "", false, fmt.Errorf("lvm command failed (exit %d): %s", exit.Data, strings.TrimSpace(stderr))
+}
+
+// isLvmNotInstalled reports whether the failure of an lvm reporting command
+// indicates that lvm tooling is missing on the host. Shells signal "command
+// not found" with exit code 127; some environments instead emit a textual
+// hint on stderr — we accept both as "not installed".
+func isLvmNotInstalled(exitCode int64, stderr string) bool {
+	if exitCode == 127 {
+		return true
+	}
+	s := strings.ToLower(stderr)
+	return strings.Contains(s, "command not found") ||
+		strings.Contains(s, "no such file or directory")
 }
 
 func (l *mqlLvmPhysicalVolume) id() (string, error) {
@@ -238,14 +259,22 @@ func parseLvmPVs(stdout string) ([]parsedLvmPV, error) {
 	}
 	out := make([]parsedLvmPV, 0, len(rows))
 	for _, r := range rows {
+		size, err := parseLvmInt("pv_size", r.PvSize)
+		if err != nil {
+			return nil, err
+		}
+		free, err := parseLvmInt("pv_free", r.PvFree)
+		if err != nil {
+			return nil, err
+		}
 		out = append(out, parsedLvmPV{
 			Name:       r.PvName,
 			UUID:       r.PvUUID,
 			VGName:     r.VgName,
 			Format:     r.PvFmt,
 			Attributes: strings.TrimSpace(r.PvAttr),
-			SizeBytes:  parseLvmInt(r.PvSize),
-			FreeBytes:  parseLvmInt(r.PvFree),
+			SizeBytes:  size,
+			FreeBytes:  free,
 		})
 	}
 	return out, nil
@@ -258,15 +287,35 @@ func parseLvmVGs(stdout string) ([]parsedLvmVG, error) {
 	}
 	out := make([]parsedLvmVG, 0, len(rows))
 	for _, r := range rows {
+		size, err := parseLvmInt("vg_size", r.VgSize)
+		if err != nil {
+			return nil, err
+		}
+		free, err := parseLvmInt("vg_free", r.VgFree)
+		if err != nil {
+			return nil, err
+		}
+		pvCount, err := parseLvmInt("pv_count", r.PvCount)
+		if err != nil {
+			return nil, err
+		}
+		lvCount, err := parseLvmInt("lv_count", r.LvCount)
+		if err != nil {
+			return nil, err
+		}
+		snapCount, err := parseLvmInt("snap_count", r.SnapCount)
+		if err != nil {
+			return nil, err
+		}
 		out = append(out, parsedLvmVG{
 			Name:          r.VgName,
 			UUID:          r.VgUUID,
 			Attributes:    strings.TrimSpace(r.VgAttr),
-			SizeBytes:     parseLvmInt(r.VgSize),
-			FreeBytes:     parseLvmInt(r.VgFree),
-			PVCount:       parseLvmInt(r.PvCount),
-			LVCount:       parseLvmInt(r.LvCount),
-			SnapshotCount: parseLvmInt(r.SnapCount),
+			SizeBytes:     size,
+			FreeBytes:     free,
+			PVCount:       pvCount,
+			LVCount:       lvCount,
+			SnapshotCount: snapCount,
 		})
 	}
 	return out, nil
@@ -279,15 +328,23 @@ func parseLvmLVs(stdout string) ([]parsedLvmLV, error) {
 	}
 	out := make([]parsedLvmLV, 0, len(rows))
 	for _, r := range rows {
+		size, err := parseLvmInt("lv_size", r.LvSize)
+		if err != nil {
+			return nil, err
+		}
+		dataPercent, err := parseLvmFloat("data_percent", r.DataPercent)
+		if err != nil {
+			return nil, err
+		}
 		out = append(out, parsedLvmLV{
 			Name:        r.LvName,
 			Path:        r.LvPath,
 			UUID:        r.LvUUID,
 			VGName:      r.VgName,
 			Attributes:  strings.TrimSpace(r.LvAttr),
-			SizeBytes:   parseLvmInt(r.LvSize),
+			SizeBytes:   size,
 			Origin:      r.Origin,
-			DataPercent: parseLvmFloat(r.DataPercent),
+			DataPercent: dataPercent,
 			PoolName:    r.PoolLv,
 		})
 	}
@@ -306,26 +363,35 @@ func decodeLvmReport[T any](stdout, key string) ([]T, error) {
 	return rows, nil
 }
 
-func parseLvmInt(s string) int64 {
+// parseLvmInt parses an integer column from an lvm report. An empty string
+// is treated as zero (lvm omits values for columns that don't apply to a row,
+// e.g. snap_count on a brand-new VG), but any non-empty value that fails to
+// parse is surfaced so callers don't silently treat "0" as "unparseable".
+func parseLvmInt(field, s string) (int64, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return 0
+		return 0, nil
 	}
 	v, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("lvm: parse %s=%q as int: %w", field, s, err)
 	}
-	return v
+	return v, nil
 }
 
-func parseLvmFloat(s string) float64 {
+// parseLvmFloat parses a float column from an lvm report. Empty values
+// (e.g. data_percent on a non-thin LV) become -1 to signal "not applicable",
+// matching the rest of the codebase's convention for absent percentages.
+// Non-empty values that fail to parse are surfaced so a malformed report
+// doesn't get silently coerced to -1.
+func parseLvmFloat(field, s string) (float64, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return -1
+		return -1, nil
 	}
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return -1
+		return 0, fmt.Errorf("lvm: parse %s=%q as float: %w", field, s, err)
 	}
-	return v
+	return v, nil
 }

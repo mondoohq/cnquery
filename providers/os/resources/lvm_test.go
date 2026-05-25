@@ -119,16 +119,45 @@ func TestParseLvmEmptyReport(t *testing.T) {
 }
 
 func TestParseLvmInt(t *testing.T) {
-	assert.Equal(t, int64(0), parseLvmInt(""))
-	assert.Equal(t, int64(0), parseLvmInt("   "))
-	assert.Equal(t, int64(0), parseLvmInt("not a number"))
-	assert.Equal(t, int64(12345), parseLvmInt("12345"))
-	assert.Equal(t, int64(12345), parseLvmInt("  12345 "))
+	v, err := parseLvmInt("pv_size", "")
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), v)
+
+	v, err = parseLvmInt("pv_size", "   ")
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), v)
+
+	v, err = parseLvmInt("pv_size", "12345")
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), v)
+
+	v, err = parseLvmInt("pv_size", "  12345 ")
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), v)
+
+	// Garbage values are surfaced as errors so callers don't silently
+	// substitute 0 for an unparseable column.
+	_, err = parseLvmInt("pv_size", "not a number")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "pv_size")
 }
 
 func TestParseLvmFloat(t *testing.T) {
-	assert.Equal(t, float64(-1), parseLvmFloat(""))
-	assert.Equal(t, float64(-1), parseLvmFloat("nope"))
-	assert.Equal(t, 12.5, parseLvmFloat("12.5"))
-	assert.Equal(t, 100.0, parseLvmFloat("100.00"))
+	// Empty stays as the "not applicable" sentinel.
+	v, err := parseLvmFloat("data_percent", "")
+	require.NoError(t, err)
+	assert.Equal(t, float64(-1), v)
+
+	v, err = parseLvmFloat("data_percent", "12.5")
+	require.NoError(t, err)
+	assert.Equal(t, 12.5, v)
+
+	v, err = parseLvmFloat("data_percent", "100.00")
+	require.NoError(t, err)
+	assert.Equal(t, 100.0, v)
+
+	// Garbage values are surfaced as errors.
+	_, err = parseLvmFloat("data_percent", "nope")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "data_percent")
 }
