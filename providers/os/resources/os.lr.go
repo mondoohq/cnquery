@@ -100,6 +100,10 @@ const (
 	ResourceSystemdSockets               string = "systemd.sockets"
 	ResourceKernel                       string = "kernel"
 	ResourceKernelModule                 string = "kernel.module"
+	ResourceKernelCmdline                string = "kernel.cmdline"
+	ResourceKernelTaint                  string = "kernel.taint"
+	ResourceKernelLockdown               string = "kernel.lockdown"
+	ResourceKernelAslr                   string = "kernel.aslr"
 	ResourceDocker                       string = "docker"
 	ResourceDockerFile                   string = "docker.file"
 	ResourceDockerFileStage              string = "docker.file.stage"
@@ -695,6 +699,22 @@ func init() {
 		"kernel.module": {
 			Init:   initKernelModule,
 			Create: createKernelModule,
+		},
+		"kernel.cmdline": {
+			// to override args, implement: initKernelCmdline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKernelCmdline,
+		},
+		"kernel.taint": {
+			// to override args, implement: initKernelTaint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKernelTaint,
+		},
+		"kernel.lockdown": {
+			// to override args, implement: initKernelLockdown(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKernelLockdown,
+		},
+		"kernel.aslr": {
+			// to override args, implement: initKernelAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKernelAslr,
 		},
 		"docker": {
 			// to override args, implement: initDocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3037,6 +3057,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kernel.installed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetInstalled()).ToDataRes(types.Array(types.Dict))
 	},
+	"kernel.cmdline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetCmdline()).ToDataRes(types.Resource("kernel.cmdline"))
+	},
+	"kernel.taint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetTaint()).ToDataRes(types.Resource("kernel.taint"))
+	},
+	"kernel.lockdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetLockdown()).ToDataRes(types.Resource("kernel.lockdown"))
+	},
+	"kernel.aslr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetAslr()).ToDataRes(types.Resource("kernel.aslr"))
+	},
 	"kernel.module.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetName()).ToDataRes(types.String)
 	},
@@ -3045,6 +3077,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kernel.module.loaded": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetLoaded()).ToDataRes(types.Bool)
+	},
+	"kernel.cmdline.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelCmdline).GetRaw()).ToDataRes(types.String)
+	},
+	"kernel.cmdline.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelCmdline).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"kernel.cmdline.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelCmdline).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"kernel.taint.bitmask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelTaint).GetBitmask()).ToDataRes(types.Int)
+	},
+	"kernel.taint.tainted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelTaint).GetTainted()).ToDataRes(types.Bool)
+	},
+	"kernel.taint.reasons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelTaint).GetReasons()).ToDataRes(types.Array(types.String))
+	},
+	"kernel.lockdown.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelLockdown).GetMode()).ToDataRes(types.String)
+	},
+	"kernel.lockdown.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelLockdown).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"kernel.aslr.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelAslr).GetMode()).ToDataRes(types.Int)
+	},
+	"kernel.aslr.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelAslr).GetLevel()).ToDataRes(types.String)
+	},
+	"kernel.aslr.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelAslr).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"docker.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDocker).GetImages()).ToDataRes(types.Array(types.Resource("docker.image")))
@@ -9280,6 +9345,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKernel).Installed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"kernel.cmdline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Cmdline, ok = plugin.RawToTValue[*mqlKernelCmdline](v.Value, v.Error)
+		return
+	},
+	"kernel.taint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Taint, ok = plugin.RawToTValue[*mqlKernelTaint](v.Value, v.Error)
+		return
+	},
+	"kernel.lockdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Lockdown, ok = plugin.RawToTValue[*mqlKernelLockdown](v.Value, v.Error)
+		return
+	},
+	"kernel.aslr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Aslr, ok = plugin.RawToTValue[*mqlKernelAslr](v.Value, v.Error)
+		return
+	},
 	"kernel.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).__id, ok = v.Value.(string)
 		return
@@ -9294,6 +9375,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.module.loaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).Loaded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.cmdline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelCmdline).__id, ok = v.Value.(string)
+		return
+	},
+	"kernel.cmdline.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelCmdline).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.cmdline.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelCmdline).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"kernel.cmdline.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelCmdline).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kernel.taint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelTaint).__id, ok = v.Value.(string)
+		return
+	},
+	"kernel.taint.bitmask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelTaint).Bitmask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kernel.taint.tainted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelTaint).Tainted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.taint.reasons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelTaint).Reasons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kernel.lockdown.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelLockdown).__id, ok = v.Value.(string)
+		return
+	},
+	"kernel.lockdown.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelLockdown).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.lockdown.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelLockdown).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.aslr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelAslr).__id, ok = v.Value.(string)
+		return
+	},
+	"kernel.aslr.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelAslr).Mode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kernel.aslr.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelAslr).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.aslr.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelAslr).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"docker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22963,6 +23104,10 @@ type mqlKernel struct {
 	Parameters plugin.TValue[map[string]any]
 	Modules    plugin.TValue[[]any]
 	Installed  plugin.TValue[[]any]
+	Cmdline    plugin.TValue[*mqlKernelCmdline]
+	Taint      plugin.TValue[*mqlKernelTaint]
+	Lockdown   plugin.TValue[*mqlKernelLockdown]
+	Aslr       plugin.TValue[*mqlKernelAslr]
 }
 
 // createKernel creates a new instance of this resource
@@ -23031,6 +23176,70 @@ func (c *mqlKernel) GetInstalled() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlKernel) GetCmdline() *plugin.TValue[*mqlKernelCmdline] {
+	return plugin.GetOrCompute[*mqlKernelCmdline](&c.Cmdline, func() (*mqlKernelCmdline, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "cmdline")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKernelCmdline), nil
+			}
+		}
+
+		return c.cmdline()
+	})
+}
+
+func (c *mqlKernel) GetTaint() *plugin.TValue[*mqlKernelTaint] {
+	return plugin.GetOrCompute[*mqlKernelTaint](&c.Taint, func() (*mqlKernelTaint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "taint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKernelTaint), nil
+			}
+		}
+
+		return c.taint()
+	})
+}
+
+func (c *mqlKernel) GetLockdown() *plugin.TValue[*mqlKernelLockdown] {
+	return plugin.GetOrCompute[*mqlKernelLockdown](&c.Lockdown, func() (*mqlKernelLockdown, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "lockdown")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKernelLockdown), nil
+			}
+		}
+
+		return c.lockdown()
+	})
+}
+
+func (c *mqlKernel) GetAslr() *plugin.TValue[*mqlKernelAslr] {
+	return plugin.GetOrCompute[*mqlKernelAslr](&c.Aslr, func() (*mqlKernelAslr, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "aslr")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKernelAslr), nil
+			}
+		}
+
+		return c.aslr()
+	})
+}
+
 // mqlKernelModule for the kernel.module resource
 type mqlKernelModule struct {
 	MqlRuntime *plugin.Runtime
@@ -23088,6 +23297,237 @@ func (c *mqlKernelModule) GetSize() *plugin.TValue[string] {
 
 func (c *mqlKernelModule) GetLoaded() *plugin.TValue[bool] {
 	return &c.Loaded
+}
+
+// mqlKernelCmdline for the kernel.cmdline resource
+type mqlKernelCmdline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKernelCmdlineInternal it will be used here
+	Raw        plugin.TValue[string]
+	Parameters plugin.TValue[map[string]any]
+	Flags      plugin.TValue[[]any]
+}
+
+// createKernelCmdline creates a new instance of this resource
+func createKernelCmdline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelCmdline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.cmdline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelCmdline) MqlName() string {
+	return "kernel.cmdline"
+}
+
+func (c *mqlKernelCmdline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelCmdline) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+func (c *mqlKernelCmdline) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlKernelCmdline) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+// mqlKernelTaint for the kernel.taint resource
+type mqlKernelTaint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKernelTaintInternal it will be used here
+	Bitmask plugin.TValue[int64]
+	Tainted plugin.TValue[bool]
+	Reasons plugin.TValue[[]any]
+}
+
+// createKernelTaint creates a new instance of this resource
+func createKernelTaint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelTaint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.taint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelTaint) MqlName() string {
+	return "kernel.taint"
+}
+
+func (c *mqlKernelTaint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelTaint) GetBitmask() *plugin.TValue[int64] {
+	return &c.Bitmask
+}
+
+func (c *mqlKernelTaint) GetTainted() *plugin.TValue[bool] {
+	return &c.Tainted
+}
+
+func (c *mqlKernelTaint) GetReasons() *plugin.TValue[[]any] {
+	return &c.Reasons
+}
+
+// mqlKernelLockdown for the kernel.lockdown resource
+type mqlKernelLockdown struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKernelLockdownInternal it will be used here
+	Mode    plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createKernelLockdown creates a new instance of this resource
+func createKernelLockdown(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelLockdown{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.lockdown", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelLockdown) MqlName() string {
+	return "kernel.lockdown"
+}
+
+func (c *mqlKernelLockdown) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelLockdown) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlKernelLockdown) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlKernelAslr for the kernel.aslr resource
+type mqlKernelAslr struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKernelAslrInternal it will be used here
+	Mode    plugin.TValue[int64]
+	Level   plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createKernelAslr creates a new instance of this resource
+func createKernelAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelAslr{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.aslr", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelAslr) MqlName() string {
+	return "kernel.aslr"
+}
+
+func (c *mqlKernelAslr) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelAslr) GetMode() *plugin.TValue[int64] {
+	return &c.Mode
+}
+
+func (c *mqlKernelAslr) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlKernelAslr) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlDocker for the docker resource

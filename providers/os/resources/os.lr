@@ -1506,6 +1506,14 @@ kernel @defaults("info") {
   modules() []kernel.module
   // Installed versions
   installed() []dict
+  // Kernel boot command line (Linux only)
+  cmdline() kernel.cmdline
+  // Kernel taint status (Linux only)
+  taint() kernel.taint
+  // Kernel lockdown LSM mode (Linux only)
+  lockdown() kernel.lockdown
+  // Address Space Layout Randomization (ASLR) state (Linux only)
+  aslr() kernel.aslr
 }
 
 // System kernel module information
@@ -1523,6 +1531,85 @@ kernel.module @defaults("name loaded") {
   size string
   // Whether the module is loaded
   loaded bool
+}
+
+// Linux kernel boot command line
+//
+// Examine the kernel command line passed by the bootloader at boot
+// time (the contents of /proc/cmdline). Use `parameters` for
+// `key=value` directives and `flags` for bare tokens such as `ro`,
+// `quiet`, or `nosmt`. The `raw` string is preserved for direct
+// inspection or for callers that need to recover duplicate tokens.
+private kernel.cmdline @defaults("raw") {
+  // Raw contents of /proc/cmdline
+  raw string
+  // Parameters parsed from `key=value` tokens
+  //
+  // When a parameter appears multiple times on the command line
+  // (e.g. `console=tty0 console=ttyS0`), the last occurrence wins.
+  // Use `raw` for full-fidelity inspection.
+  parameters map[string]string
+  // Bare flags on the kernel command line (tokens without `=`)
+  flags []string
+}
+
+// Linux kernel taint status
+//
+// Examine kernel taint flags as reported by /proc/sys/kernel/tainted.
+// A non-zero bitmask indicates that the kernel has loaded
+// proprietary or out-of-tree modules, hit a hardware error, oopsed,
+// or otherwise entered a state that diverges from a clean reference
+// kernel. Use `tainted` for a boolean check and `reasons` for the
+// human-readable list of contributing bits.
+private kernel.taint @defaults("tainted reasons") {
+  // Raw taint bitmask from /proc/sys/kernel/tainted
+  bitmask int
+  // Whether any taint bit is set
+  tainted bool
+  // Human-readable taint reasons in bit order
+  //
+  // See the kernel.org "Tainted kernels" documentation for the full
+  // list of bit meanings (proprietary module, out-of-tree module,
+  // unsigned module, oops, soft lockup, live-patched, etc.).
+  reasons []string
+}
+
+// Linux kernel lockdown mode
+//
+// Examine the kernel lockdown LSM state from
+// /sys/kernel/security/lockdown. Lockdown restricts modifications to
+// a running kernel even from root: `integrity` blocks features that
+// could let userspace modify the kernel (kexec, /dev/mem, etc.) and
+// `confidentiality` additionally blocks features that expose kernel
+// memory contents. `mode` is `unavailable` when the kernel was built
+// without lockdown support.
+private kernel.lockdown @defaults("mode") {
+  // Active lockdown mode
+  //
+  // One of `none`, `integrity`, `confidentiality`, or `unavailable`.
+  mode string
+  // Whether lockdown is enforced (mode is `integrity` or `confidentiality`)
+  enabled bool
+}
+
+// Linux Address Space Layout Randomization (ASLR) state
+//
+// Examine the kernel's userspace ASLR setting from
+// /proc/sys/kernel/randomize_va_space. ASLR randomizes memory layout
+// to make memory-corruption exploits harder; CIS benchmarks require
+// `mode` 2 (full randomization).
+private kernel.aslr @defaults("level enabled") {
+  // Raw ASLR mode value from /proc/sys/kernel/randomize_va_space
+  //
+  // `0` disabled, `1` conservative (stack, libraries, vdso), `2`
+  // full (also heap/brk). `-1` when the file is unavailable.
+  mode int
+  // Human-readable level
+  //
+  // One of `disabled`, `conservative`, `full`, or `unknown`.
+  level string
+  // Whether ASLR is enabled (`mode > 0`)
+  enabled bool
 }
 
 // Docker host
