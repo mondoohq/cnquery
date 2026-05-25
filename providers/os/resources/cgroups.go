@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -45,7 +46,7 @@ const cgroupRoot = "/sys/fs/cgroup"
 
 type mqlCgroupsInternal struct {
 	lock     sync.Mutex
-	probed   bool
+	probed   atomic.Bool
 	detected *cgroupDetection
 	probeErr error
 }
@@ -66,16 +67,16 @@ func (c *mqlCgroups) id() (string, error) {
 }
 
 func (c *mqlCgroups) probe() (*cgroupDetection, error) {
-	if c.probed {
+	if c.probed.Load() {
 		return c.detected, c.probeErr
 	}
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	if c.probed {
+	if c.probed.Load() {
 		return c.detected, c.probeErr
 	}
 	c.detected, c.probeErr = c.doProbe()
-	c.probed = true
+	c.probed.Store(true)
 	return c.detected, c.probeErr
 }
 

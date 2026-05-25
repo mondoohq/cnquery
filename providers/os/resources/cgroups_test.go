@@ -31,14 +31,14 @@ func TestParentCgroupPath(t *testing.T) {
 		parentCgroupPath("/user.slice/user-1000.slice/session-c1.scope"))
 }
 
-func TestCgroupTypeFromPath(t *testing.T) {
-	assert.Equal(t, "root", cgroupTypeFromPath("/"))
-	assert.Equal(t, "slice", cgroupTypeFromPath("/system.slice"))
-	assert.Equal(t, "slice", cgroupTypeFromPath("/user.slice/user-1000.slice"))
-	assert.Equal(t, "scope", cgroupTypeFromPath("/system.slice/docker-abc123.scope"))
-	assert.Equal(t, "service", cgroupTypeFromPath("/system.slice/nginx.service"))
+func TestCgroupUnitTypeFromPath(t *testing.T) {
+	assert.Equal(t, "root", cgroupUnitTypeFromPath("/"))
+	assert.Equal(t, "slice", cgroupUnitTypeFromPath("/system.slice"))
+	assert.Equal(t, "slice", cgroupUnitTypeFromPath("/user.slice/user-1000.slice"))
+	assert.Equal(t, "scope", cgroupUnitTypeFromPath("/system.slice/docker-abc123.scope"))
+	assert.Equal(t, "service", cgroupUnitTypeFromPath("/system.slice/nginx.service"))
 	// Unrecognized leaves (e.g. raw kubelet/podman trees) fall through to "other".
-	assert.Equal(t, "other", cgroupTypeFromPath("/kubepods/burstable"))
+	assert.Equal(t, "other", cgroupUnitTypeFromPath("/kubepods/burstable"))
 }
 
 func TestParseCgroupMax(t *testing.T) {
