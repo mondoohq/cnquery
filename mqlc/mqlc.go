@@ -960,7 +960,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 			c.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
-				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
+				return true, types.Nil, errors.New("cannot call field '" + resource.Name + "." + id + "' with arguments yet (it is a field, not a resource)")
 			}
 
 			// this only happens when we call a field of a bridging resource,
