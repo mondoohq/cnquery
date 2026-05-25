@@ -4,7 +4,7 @@ replace go.mondoo.com/mql/v13 => ../..
 
 go 1.26.3
 
-require go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
+require go.mondoo.com/mql/v13 v13.11.0
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
