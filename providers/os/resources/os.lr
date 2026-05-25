@@ -3978,31 +3978,32 @@ macos.xprotect @defaults("version modified") {
 // SPSharingDataType`, so the values match exactly what the System
 // Settings UI displays.
 //
-// `macos.systemsetup.remoteLogin` and
-// `macos.systemsetup.remoteAppleEvents` cover the Remote Login (SSH)
-// and Remote Apple Events toggles via the `systemsetup` CLI — this
-// resource covers the rest of the panel.
+// `system_profiler SPSharingDataType` also reports `Remote Login`
+// and `Remote Apple Events`; those are intentionally not exposed
+// here because `macos.systemsetup.remoteLogin` and
+// `macos.systemsetup.remoteAppleEvents` already cover them via the
+// `systemsetup` CLI. This resource covers the rest of the panel.
 macos.sharing @defaults("screenSharing remoteManagement airplayReceiver") {
   // Whether Screen Sharing (VNC) is enabled
-  screenSharing bool
+  screenSharing() bool
   // Whether Apple Remote Desktop (Remote Management) is enabled
-  remoteManagement bool
+  remoteManagement() bool
   // Whether File Sharing (SMB/AFP) is enabled
-  fileSharing bool
+  fileSharing() bool
   // Whether Printer Sharing is enabled
-  printerSharing bool
+  printerSharing() bool
   // Whether Internet Sharing is enabled
-  internetSharing bool
+  internetSharing() bool
   // Whether Bluetooth Sharing is enabled
-  bluetoothSharing bool
+  bluetoothSharing() bool
   // Whether Media Sharing is enabled
-  mediaSharing bool
+  mediaSharing() bool
   // Whether Content Caching is enabled
-  contentCaching bool
+  contentCaching() bool
   // Whether AirPlay Receiver is enabled
-  airplayReceiver bool
+  airplayReceiver() bool
   // Whether DVD or CD Sharing is enabled
-  dvdSharing bool
+  dvdSharing() bool
 }
 
 // macOS Time Machine backup configuration

@@ -82,6 +82,7 @@ BINPACK
 bitmask
 blackhole
 blr
+bluetooth
 breakglass
 broadwell
 Buildkit
@@ -197,6 +198,7 @@ DRdf
 dscp
 dsse
 Duf
+dvd
 eas
 ecc
 Ecmp

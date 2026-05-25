@@ -82,7 +82,7 @@ func parseSharingOutput(stdout string) map[string]bool {
 		if line == "" {
 			continue
 		}
-		idx := strings.LastIndex(line, ": ")
+		idx := strings.Index(line, ": ")
 		if idx <= 0 {
 			continue
 		}

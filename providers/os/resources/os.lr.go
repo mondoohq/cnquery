@@ -35528,43 +35528,63 @@ func (c *mqlMacosSharing) MqlID() string {
 }
 
 func (c *mqlMacosSharing) GetScreenSharing() *plugin.TValue[bool] {
-	return &c.ScreenSharing
+	return plugin.GetOrCompute[bool](&c.ScreenSharing, func() (bool, error) {
+		return c.screenSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetRemoteManagement() *plugin.TValue[bool] {
-	return &c.RemoteManagement
+	return plugin.GetOrCompute[bool](&c.RemoteManagement, func() (bool, error) {
+		return c.remoteManagement()
+	})
 }
 
 func (c *mqlMacosSharing) GetFileSharing() *plugin.TValue[bool] {
-	return &c.FileSharing
+	return plugin.GetOrCompute[bool](&c.FileSharing, func() (bool, error) {
+		return c.fileSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetPrinterSharing() *plugin.TValue[bool] {
-	return &c.PrinterSharing
+	return plugin.GetOrCompute[bool](&c.PrinterSharing, func() (bool, error) {
+		return c.printerSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetInternetSharing() *plugin.TValue[bool] {
-	return &c.InternetSharing
+	return plugin.GetOrCompute[bool](&c.InternetSharing, func() (bool, error) {
+		return c.internetSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetBluetoothSharing() *plugin.TValue[bool] {
-	return &c.BluetoothSharing
+	return plugin.GetOrCompute[bool](&c.BluetoothSharing, func() (bool, error) {
+		return c.bluetoothSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetMediaSharing() *plugin.TValue[bool] {
-	return &c.MediaSharing
+	return plugin.GetOrCompute[bool](&c.MediaSharing, func() (bool, error) {
+		return c.mediaSharing()
+	})
 }
 
 func (c *mqlMacosSharing) GetContentCaching() *plugin.TValue[bool] {
-	return &c.ContentCaching
+	return plugin.GetOrCompute[bool](&c.ContentCaching, func() (bool, error) {
+		return c.contentCaching()
+	})
 }
 
 func (c *mqlMacosSharing) GetAirplayReceiver() *plugin.TValue[bool] {
-	return &c.AirplayReceiver
+	return plugin.GetOrCompute[bool](&c.AirplayReceiver, func() (bool, error) {
+		return c.airplayReceiver()
+	})
 }
 
 func (c *mqlMacosSharing) GetDvdSharing() *plugin.TValue[bool] {
-	return &c.DvdSharing
+	return plugin.GetOrCompute[bool](&c.DvdSharing, func() (bool, error) {
+		return c.dvdSharing()
+	})
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource
