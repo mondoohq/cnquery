@@ -123,6 +123,7 @@ func (w *mqlWindows) parseScheduledTaskFile(afs *afero.Afero, filePath string) (
 		taskPath = windows.TaskPathFromFilePath(windowsTasksRoot, filePath)
 	}
 	if taskPath == "" {
+		log.Debug().Str("path", filePath).Msg("skipping scheduled task with empty URI and no derivable path")
 		return nil, nil
 	}
 

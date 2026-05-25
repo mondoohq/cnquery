@@ -78,6 +78,8 @@ ctx
 datadog
 dedup
 defc
+Defrag
+deliverychannel
 depsdev
 dlp
 dlv

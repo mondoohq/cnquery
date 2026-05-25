@@ -5893,7 +5893,7 @@ windows {
   // Information about optional features in a Windows image.
   optionalFeatures() []windows.optionalFeature
 
-  // Registered Task Scheduler entries parsed from C:\Windows\System32\Tasks
+  // Registered Task Scheduler entries parsed from their on-disk XML definitions
   scheduledTasks() []windows.scheduledTask
 }
 
