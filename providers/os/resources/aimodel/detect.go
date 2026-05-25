@@ -13,7 +13,7 @@ import (
 )
 
 // ModelInfo holds the metadata for a single discovered AI model cache entry.
-// Each scanner populates what it can; fields left empty mean the source
+// Each detector populates what it can; fields left empty mean the source
 // doesn't provide that information.
 type ModelInfo struct {
 	Name          string
@@ -33,27 +33,44 @@ type ModelInfo struct {
 	Description   string
 }
 
+// DetectContext carries the shared state needed by every detector.
+type DetectContext struct {
+	Fs       *afero.Afero
+	Home     string
+	OSFamily string
+}
+
+// Detector discovers locally cached AI models from a single source.
+type Detector interface {
+	Detect(ctx DetectContext) []ModelInfo
+}
+
 var (
 	reQuantization = regexp.MustCompile(`(?i)(Q[0-9]+_[A-Z0-9_]+|F16|F32|FP16|FP32)`)
 	// Leading separator (dash, underscore, colon, space) avoids matching "b" inside words.
 	reParamSize = regexp.MustCompile(`(?i)[-_: ](\d+\.?\d*)[bB](?:[-_. ]|$)`)
 )
 
-// ScanAll runs every scanner and returns the combined results.
-func ScanAll(afs *afero.Afero, home, osFamily string) []ModelInfo {
-	var all []ModelInfo
-	scanners := []func(*afero.Afero, string) []ModelInfo{
-		ScanOllama,
-		ScanHuggingFace,
-		ScanLMStudio,
-		func(fs *afero.Afero, h string) []ModelInfo { return ScanGPT4All(fs, h, osFamily) },
-		ScanPyTorchHub,
-		ScanKeras,
-		ScanTFHub,
-		ScanJan,
+// Detectors returns all registered model detectors.
+func Detectors() []Detector {
+	return []Detector{
+		&OllamaDetector{},
+		&HuggingFaceDetector{},
+		&LMStudioDetector{},
+		&GPT4AllDetector{},
+		&PyTorchHubDetector{},
+		&KerasDetector{},
+		&TFHubDetector{},
+		&JanDetector{},
 	}
-	for _, scan := range scanners {
-		all = append(all, scan(afs, home)...)
+}
+
+// DetectAll runs every detector and returns the combined results.
+func DetectAll(afs *afero.Afero, home, osFamily string) []ModelInfo {
+	ctx := DetectContext{Fs: afs, Home: home, OSFamily: osFamily}
+	var all []ModelInfo
+	for _, d := range Detectors() {
+		all = append(all, d.Detect(ctx)...)
 	}
 	return all
 }

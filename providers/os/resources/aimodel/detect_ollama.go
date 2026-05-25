@@ -11,11 +11,12 @@ import (
 	"github.com/spf13/afero"
 )
 
-// ScanOllama discovers locally cached Ollama models by walking the manifest
+// OllamaDetector discovers locally cached Ollama models by walking the manifest
 // directory (~/.ollama/models/manifests). Each manifest JSON references a
 // config blob that contains the model family, quantization (file_type),
 // parameter size (model_type), architecture, and license. The vendor is
 // inferred from a prefix lookup table mapping model names to known publishers.
+type OllamaDetector struct{}
 
 type ollamaManifest struct {
 	Config ollamaDescriptor `json:"config"`
@@ -119,14 +120,14 @@ func ollamaVendor(modelBase string) string {
 	return ""
 }
 
-func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
-	modelsDir := filepath.Join(home, ".ollama", "models")
+func (d *OllamaDetector) Detect(ctx DetectContext) []ModelInfo {
+	modelsDir := filepath.Join(ctx.Home, ".ollama", "models")
 	manifestsDir := filepath.Join(modelsDir, "manifests")
 
 	// Ollama manifests follow a 4-level structure: registry/namespace/model/tag
 	// (e.g. registry.ollama.ai/library/llama3/latest).
 	// Walk each level explicitly to avoid unbounded traversal.
-	registries, err := afs.ReadDir(manifestsDir)
+	registries, err := ctx.Fs.ReadDir(manifestsDir)
 	if err != nil {
 		return nil
 	}
@@ -137,7 +138,7 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 			continue
 		}
 		registryDir := filepath.Join(manifestsDir, registry.Name())
-		namespaces, err := afs.ReadDir(registryDir)
+		namespaces, err := ctx.Fs.ReadDir(registryDir)
 		if err != nil {
 			continue
 		}
@@ -146,7 +147,7 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 				continue
 			}
 			nsDir := filepath.Join(registryDir, ns.Name())
-			models, err := afs.ReadDir(nsDir)
+			models, err := ctx.Fs.ReadDir(nsDir)
 			if err != nil {
 				continue
 			}
@@ -156,7 +157,7 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 				}
 				modelBase := model.Name()
 				modelDir := filepath.Join(nsDir, modelBase)
-				tags, err := afs.ReadDir(modelDir)
+				tags, err := ctx.Fs.ReadDir(modelDir)
 				if err != nil {
 					continue
 				}
@@ -165,7 +166,7 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 						continue
 					}
 					tagPath := filepath.Join(modelDir, tag.Name())
-					data, err := afs.ReadFile(tagPath)
+					data, err := ctx.Fs.ReadFile(tagPath)
 					if err != nil {
 						continue
 					}
@@ -182,7 +183,7 @@ func ScanOllama(afs *afero.Afero, home string) []ModelInfo {
 						totalSize += l.Size
 					}
 
-					extracted := readOllamaConfig(afs, modelsDir, manifest.Config.Digest)
+					extracted := readOllamaConfig(ctx.Fs, modelsDir, manifest.Config.Digest)
 
 					version := tag.Name()
 

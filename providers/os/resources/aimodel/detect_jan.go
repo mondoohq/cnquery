@@ -11,11 +11,12 @@ import (
 	"github.com/spf13/afero"
 )
 
-// ScanJan discovers models managed by Jan (~/jan/models). Each model lives
+// JanDetector discovers models managed by Jan (~/jan/models). Each model lives
 // in its own subdirectory and optionally contains a model.json with rich
 // metadata: name, version, description, license, tags, publisher, and format.
 // Quantization is extracted from GGUF filenames in the directory; parameter
 // size is extracted from the model name via regex.
+type JanDetector struct{}
 
 type janModelMeta struct {
 	Name        string            `json:"name"`
@@ -39,9 +40,9 @@ type janModelPublisher struct {
 	Name   string `json:"name"`
 }
 
-func ScanJan(afs *afero.Afero, home string) []ModelInfo {
-	modelsDir := filepath.Join(home, "jan", "models")
-	entries, err := afs.ReadDir(modelsDir)
+func (d *JanDetector) Detect(ctx DetectContext) []ModelInfo {
+	modelsDir := filepath.Join(ctx.Home, "jan", "models")
+	entries, err := ctx.Fs.ReadDir(modelsDir)
 	if err != nil {
 		return nil
 	}
@@ -62,7 +63,7 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 		var tags []string
 
 		metaPath := filepath.Join(modelDir, "model.json")
-		if data, err := afs.ReadFile(metaPath); err == nil {
+		if data, err := ctx.Fs.ReadFile(metaPath); err == nil {
 			var meta janModelMeta
 			if json.Unmarshal(data, &meta) == nil {
 				if meta.Name != "" {
@@ -88,12 +89,12 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 		}
 
 		if format == "unknown" {
-			format = detectDirModelFormat(afs, modelDir)
+			format = detectDirModelFormat(ctx.Fs, modelDir)
 		}
 
 		// Quantization from GGUF filenames in directory
 		quant := ""
-		dirEntries, _ := afs.ReadDir(modelDir)
+		dirEntries, _ := ctx.Fs.ReadDir(modelDir)
 		for _, f := range dirEntries {
 			if match := reQuantization.FindString(f.Name()); match != "" {
 				quant = strings.ToUpper(match)
@@ -106,7 +107,7 @@ func ScanJan(afs *afero.Afero, home string) []ModelInfo {
 			paramSize = pm[1] + "B"
 		}
 
-		totalSize, modTime := dirSizeRecursive(afs, modelDir)
+		totalSize, modTime := dirSizeRecursive(ctx.Fs, modelDir)
 
 		results = append(results, ModelInfo{
 			Name:          name,

@@ -6,17 +6,17 @@ package aimodel
 import (
 	"path/filepath"
 	"strings"
-
-	"github.com/spf13/afero"
 )
 
-// ScanPyTorchHub discovers models cached by PyTorch Hub
+// PyTorchHubDetector discovers models cached by PyTorch Hub
 // (~/.cache/torch/hub/checkpoints). These are typically .pth or .pt weight
 // files. The trailing hex hash is stripped from the filename to produce
-// a clean model name (e.g. "resnet50-0676ba61.pth" → "resnet50").
-func ScanPyTorchHub(afs *afero.Afero, home string) []ModelInfo {
-	checkpointsDir := filepath.Join(home, ".cache", "torch", "hub", "checkpoints")
-	entries, err := afs.ReadDir(checkpointsDir)
+// a clean model name (e.g. "resnet50-0676ba61.pth" -> "resnet50").
+type PyTorchHubDetector struct{}
+
+func (d *PyTorchHubDetector) Detect(ctx DetectContext) []ModelInfo {
+	checkpointsDir := filepath.Join(ctx.Home, ".cache", "torch", "hub", "checkpoints")
+	entries, err := ctx.Fs.ReadDir(checkpointsDir)
 	if err != nil {
 		return nil
 	}

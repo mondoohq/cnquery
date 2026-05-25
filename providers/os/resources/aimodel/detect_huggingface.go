@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ScanHuggingFace discovers models cached by the Hugging Face Hub client
+// HuggingFaceDetector discovers models cached by the Hugging Face Hub client
 // (~/.cache/huggingface/hub/models--*). For each model directory it reads:
 //   - config.json: model_type (family), architectures, quantization_config
 //   - README.md YAML frontmatter: license, tags, pipeline_tag
@@ -20,7 +20,8 @@ import (
 //   - File extensions to detect format (safetensors, gguf, onnx, mlx, pytorch)
 //
 // Parameter size is extracted from the model name via regex when present
-// (e.g. "meta-llama/Llama-2-7B" → "7B").
+// (e.g. "meta-llama/Llama-2-7B" -> "7B").
+type HuggingFaceDetector struct{}
 
 type hfConfig struct {
 	ModelType          string         `json:"model_type"`
@@ -34,9 +35,9 @@ type hfReadmeMeta struct {
 	PipelineTag string   `yaml:"pipeline_tag"`
 }
 
-func ScanHuggingFace(afs *afero.Afero, home string) []ModelInfo {
-	hubDir := filepath.Join(home, ".cache", "huggingface", "hub")
-	entries, err := afs.ReadDir(hubDir)
+func (d *HuggingFaceDetector) Detect(ctx DetectContext) []ModelInfo {
+	hubDir := filepath.Join(ctx.Home, ".cache", "huggingface", "hub")
+	entries, err := ctx.Fs.ReadDir(hubDir)
 	if err != nil {
 		return nil
 	}
@@ -57,8 +58,8 @@ func ScanHuggingFace(afs *afero.Afero, home string) []ModelInfo {
 		modelDir := filepath.Join(hubDir, entry.Name())
 		blobsDir := filepath.Join(modelDir, "blobs")
 
-		totalSize, modTime := dirSizeAndLatestMtime(afs, blobsDir)
-		meta := extractHuggingFaceMetadata(afs, modelDir)
+		totalSize, modTime := dirSizeAndLatestMtime(ctx.Fs, blobsDir)
+		meta := extractHuggingFaceMetadata(ctx.Fs, modelDir)
 
 		paramSize := ""
 		if m := reParamSize.FindStringSubmatch(modelName); len(m) > 1 {

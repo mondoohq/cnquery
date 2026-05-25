@@ -6,15 +6,15 @@ package aimodel
 import (
 	"path/filepath"
 	"strings"
-
-	"github.com/spf13/afero"
 )
 
-// ScanKeras discovers models cached by Keras (~/.keras/models).
+// KerasDetector discovers models cached by Keras (~/.keras/models).
 // Supports .h5 (HDF5) and .keras (native Keras v3) formats.
-func ScanKeras(afs *afero.Afero, home string) []ModelInfo {
-	modelsDir := filepath.Join(home, ".keras", "models")
-	entries, err := afs.ReadDir(modelsDir)
+type KerasDetector struct{}
+
+func (d *KerasDetector) Detect(ctx DetectContext) []ModelInfo {
+	modelsDir := filepath.Join(ctx.Home, ".keras", "models")
+	entries, err := ctx.Fs.ReadDir(modelsDir)
 	if err != nil {
 		return nil
 	}

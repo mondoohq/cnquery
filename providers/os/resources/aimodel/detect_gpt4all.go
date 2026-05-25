@@ -6,22 +6,22 @@ package aimodel
 import (
 	"path/filepath"
 	"strings"
-
-	"github.com/spf13/afero"
 )
 
-// ScanGPT4All discovers models cached by GPT4All. It checks the shared cache
-// directory (~/.cache/gpt4all) and the platform-specific application data
+// GPT4AllDetector discovers models cached by GPT4All. It checks the shared
+// cache directory (~/.cache/gpt4all) and the platform-specific application data
 // directory (e.g. ~/Library/Application Support/nomic.ai/GPT4All on macOS).
 // Supports .gguf and .bin (legacy ggml) files. Quantization and parameter
 // size are extracted from filenames via regex.
-func ScanGPT4All(afs *afero.Afero, home string, osFamily string) []ModelInfo {
-	dirs := gpt4allDirs(home, osFamily)
+type GPT4AllDetector struct{}
+
+func (d *GPT4AllDetector) Detect(ctx DetectContext) []ModelInfo {
+	dirs := gpt4allDirs(ctx.Home, ctx.OSFamily)
 	seen := map[string]bool{}
 	var results []ModelInfo
 
 	for _, dir := range dirs {
-		entries, err := afs.ReadDir(dir)
+		entries, err := ctx.Fs.ReadDir(dir)
 		if err != nil {
 			continue
 		}

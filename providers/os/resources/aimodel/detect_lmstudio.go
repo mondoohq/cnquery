@@ -11,20 +11,22 @@ import (
 	"github.com/spf13/afero"
 )
 
-// ScanLMStudio discovers GGUF models cached by LM Studio. It checks both
+// LMStudioDetector discovers GGUF models cached by LM Studio. It checks both
 // the legacy path (~/.lmstudio/models) and the newer cache path
 // (~/.cache/lm-studio/models). Models are organized as publisher/repo/file.gguf.
 // Quantization and parameter size are extracted from filenames via regex.
-func ScanLMStudio(afs *afero.Afero, home string) []ModelInfo {
+type LMStudioDetector struct{}
+
+func (d *LMStudioDetector) Detect(ctx DetectContext) []ModelInfo {
 	dirs := []string{
-		filepath.Join(home, ".lmstudio", "models"),
-		filepath.Join(home, ".cache", "lm-studio", "models"),
+		filepath.Join(ctx.Home, ".lmstudio", "models"),
+		filepath.Join(ctx.Home, ".cache", "lm-studio", "models"),
 	}
 
 	seen := map[string]bool{}
 	var results []ModelInfo
 	for _, modelsDir := range dirs {
-		entries, err := afs.ReadDir(modelsDir)
+		entries, err := ctx.Fs.ReadDir(modelsDir)
 		if err != nil {
 			continue
 		}
@@ -33,7 +35,7 @@ func ScanLMStudio(afs *afero.Afero, home string) []ModelInfo {
 				continue
 			}
 			publisherDir := filepath.Join(modelsDir, publisher.Name())
-			repos, err := afs.ReadDir(publisherDir)
+			repos, err := ctx.Fs.ReadDir(publisherDir)
 			if err != nil {
 				continue
 			}
@@ -48,7 +50,7 @@ func ScanLMStudio(afs *afero.Afero, home string) []ModelInfo {
 				}
 				seen[modelName] = true
 
-				ggufFiles := findGGUFFiles(afs, repoDir)
+				ggufFiles := findGGUFFiles(ctx.Fs, repoDir)
 				for _, m := range ggufFiles {
 					filename := filepath.Base(m.path)
 					quant := ""

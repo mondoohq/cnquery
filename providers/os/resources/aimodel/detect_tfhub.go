@@ -5,16 +5,16 @@ package aimodel
 
 import (
 	"path/filepath"
-
-	"github.com/spf13/afero"
 )
 
-// ScanTFHub discovers TensorFlow Hub modules cached at
+// TFHubDetector discovers TensorFlow Hub modules cached at
 // ~/.cache/tfhub_modules. Each module directory must contain a
 // saved_model.pb file to be recognized as a valid TF SavedModel.
-func ScanTFHub(afs *afero.Afero, home string) []ModelInfo {
-	modulesDir := filepath.Join(home, ".cache", "tfhub_modules")
-	entries, err := afs.ReadDir(modulesDir)
+type TFHubDetector struct{}
+
+func (d *TFHubDetector) Detect(ctx DetectContext) []ModelInfo {
+	modulesDir := filepath.Join(ctx.Home, ".cache", "tfhub_modules")
+	entries, err := ctx.Fs.ReadDir(modulesDir)
 	if err != nil {
 		return nil
 	}
@@ -28,11 +28,11 @@ func ScanTFHub(afs *afero.Afero, home string) []ModelInfo {
 
 		// TF Hub modules contain saved_model.pb
 		savedModel := filepath.Join(moduleDir, "saved_model.pb")
-		if exists, _ := afs.Exists(savedModel); !exists {
+		if exists, _ := ctx.Fs.Exists(savedModel); !exists {
 			continue
 		}
 
-		totalSize, modTime := dirSizeRecursive(afs, moduleDir)
+		totalSize, modTime := dirSizeRecursive(ctx.Fs, moduleDir)
 
 		results = append(results, ModelInfo{
 			Name:       e.Name(),
