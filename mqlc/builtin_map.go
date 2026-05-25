@@ -66,6 +66,7 @@ func compileDictQuery(c *compiler, typ types.Type, ref uint64, id string, call *
 			ref: blockCompiler.Binding.ref,
 			typ: valueType,
 		})
+		blockCompiler.bindingIsExplicit = true
 	}
 
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})
@@ -554,6 +555,7 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 			ref: blockCompiler.Binding.ref,
 			typ: valueType,
 		})
+		blockCompiler.bindingIsExplicit = true
 	}
 
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})

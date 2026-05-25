@@ -155,6 +155,13 @@ type compiler struct {
 	//   file(xyz).content == _     is not
 	standalone bool
 
+	// bindingIsExplicit is true when the block's binding was given an explicit
+	// name by the caller, e.g. `xs.map(p: p.foo)`. In that case bare identifiers
+	// resolve against the global namespace (resources, builtins, vars) instead
+	// of against the bound resource's fields. The bound resource is only
+	// reachable through its explicit name (`p`) or through `_`.
+	bindingIsExplicit bool
+
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
 
@@ -665,7 +672,14 @@ func (c *compiler) blockcompileOnResource(expressions []*parser.Expression, typ 
 			blockCompiler.standalone = false
 		},
 	}
+	// When the user supplies an explicit name (e.g. `.map(p: ...)`) the bound
+	// resource is reachable only through that name and through `_`. We also
+	// register `_` so the implicit-call form keeps working alongside the name.
 	blockCompiler.vars.add(bindingName, v)
+	if bindingName != "_" {
+		blockCompiler.vars.add("_", v)
+		blockCompiler.bindingIsExplicit = true
+	}
 	blockCompiler.Binding = &v
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -1159,10 +1173,17 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 			return nil, types.Nil, errors.New("not sure how to handle implicit calls around `_`")
 		}
 
-		found, typ, err = c.compileBoundIdentifier(id, callBinding, call)
-		if found {
-			c.standalone = false
-			return restCalls, typ, err
+		// When the block has an explicit named binding (e.g. `.map(p: ...)`),
+		// bare identifiers do NOT shadow the global namespace with the bound
+		// resource's fields. The user must write `p.foo` or `_.foo` to reach a
+		// field of the binding. This avoids the trap where a process field
+		// (e.g. `command`) hides a same-named top-level resource.
+		if !c.bindingIsExplicit {
+			found, typ, err = c.compileBoundIdentifier(id, callBinding, call)
+			if found {
+				c.standalone = false
+				return restCalls, typ, err
+			}
 		}
 	} // end bound functions
 

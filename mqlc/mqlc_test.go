@@ -971,6 +971,56 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 	})
 }
 
+// Named-binding blocks (e.g. `xs.map(p: ...)`) make the bound resource
+// reachable only through its name (`p`) or `_`. Bare identifiers inside the
+// block resolve against the global namespace — they do NOT shadow with the
+// bound resource's fields. This avoids the trap where a same-named field
+// (e.g. `process.command`) hides a top-level resource (e.g. `command`).
+func TestCompiler_NamedBindingScope(t *testing.T) {
+	// Bare `command` resolves to the top-level resource, not to
+	// `process.command`. Without the named-binding rule this fails with
+	// "cannot call field 'process.command' with arguments yet".
+	compileT(t, `processes.list.map(p: command("echo " + p.command))`, func(res *llx.CodeBundle) {
+		// The block body should invoke the global `command` resource. We don't
+		// pin the full chunk graph — just assert the call exists in some block.
+		found := false
+		for _, b := range res.CodeV2.Blocks {
+			for _, ch := range b.Chunks {
+				if ch.Id == "command" && ch.Call == llx.Chunk_FUNCTION {
+					found = true
+				}
+			}
+		}
+		assert.True(t, found, "expected a `command` resource call in compiled blocks")
+	})
+
+	// `_.command` still reaches the bound process's `command` field.
+	compileT(t, `processes.list.map(p: _.command)`, func(res *llx.CodeBundle) {
+		found := false
+		for _, b := range res.CodeV2.Blocks {
+			for _, ch := range b.Chunks {
+				if ch.Id == "command" && ch.Call == llx.Chunk_FUNCTION && ch.Function != nil && ch.Function.Type == string(types.String) {
+					found = true
+				}
+			}
+		}
+		assert.True(t, found, "expected the bound process.command field call in compiled blocks")
+	})
+
+	// Without a named binding the old shadowing rule still applies: bare
+	// `command` resolves to `process.command` (the field), not the global.
+	compileT(t, `processes.list.map(command)`, func(res *llx.CodeBundle) {
+		for _, b := range res.CodeV2.Blocks {
+			for _, ch := range b.Chunks {
+				if ch.Id == "command" && ch.Call == llx.Chunk_FUNCTION {
+					assert.Equal(t, string(types.String), ch.Function.Type,
+						"bare `command` inside an anonymous block should be the process.command string field, not the command resource")
+				}
+			}
+		}
+	})
+}
+
 func TestCompiler_ArrayContains(t *testing.T) {
 	compileT(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
