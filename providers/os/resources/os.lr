@@ -3940,6 +3940,34 @@ macos.sip @defaults("enabled status") {
   status() string
 }
 
+// macOS XProtect anti-malware bundle
+//
+// Examine the version and last-modified timestamp of the XProtect
+// signature bundle (and, when present, the legacy Malware Removal
+// Tool). CIS macOS benchmarks expect XProtect signatures to be
+// current; checking `modified` against the auditor's freshness
+// threshold catches devices that have stopped receiving updates.
+//
+// XProtect.bundle lives at
+// `/Library/Apple/System/Library/CoreServices/XProtect.bundle` on
+// modern macOS (with `/System/Library/CoreServices/XProtect.bundle`
+// as the legacy fallback). `mrtVersion` and `mrtModified` are empty
+// or null on macOS 13+ where MRT has been retired in favor of
+// XProtectRemediator.
+macos.xprotect @defaults("version modified") {
+  // XProtect bundle version (CFBundleShortVersionString)
+  version string
+  // Last modification time of the XProtect bundle
+  modified time
+  // MRT (Malware Removal Tool) bundle version
+  //
+  // Empty string when MRT.app is not installed (it was sunset in
+  // macOS 13; its work is now performed by XProtectRemediator).
+  mrtVersion string
+  // Last modification time of MRT.app, null when MRT is not installed
+  mrtModified time
+}
+
 // macOS Time Machine backup configuration
 //
 // Examine destinations, schedule, and exclusion preferences

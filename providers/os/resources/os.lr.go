@@ -242,6 +242,7 @@ const (
 	ResourceMacosFilevault               string = "macos.filevault"
 	ResourceMacosGatekeeper              string = "macos.gatekeeper"
 	ResourceMacosSip                     string = "macos.sip"
+	ResourceMacosXprotect                string = "macos.xprotect"
 	ResourceMacosTimemachine             string = "macos.timemachine"
 	ResourceMacosSystemsetup             string = "macos.systemsetup"
 	ResourceOpenBSMAudit                 string = "openBSMAudit"
@@ -1263,6 +1264,10 @@ func init() {
 		"macos.sip": {
 			// to override args, implement: initMacosSip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosSip,
+		},
+		"macos.xprotect": {
+			// to override args, implement: initMacosXprotect(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosXprotect,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5247,6 +5252,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.sip.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSip).GetStatus()).ToDataRes(types.String)
+	},
+	"macos.xprotect.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosXprotect).GetVersion()).ToDataRes(types.String)
+	},
+	"macos.xprotect.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosXprotect).GetModified()).ToDataRes(types.Time)
+	},
+	"macos.xprotect.mrtVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosXprotect).GetMrtVersion()).ToDataRes(types.String)
+	},
+	"macos.xprotect.mrtModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosXprotect).GetMrtModified()).ToDataRes(types.Time)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -12798,6 +12815,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.sip.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSip).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.xprotect.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosXprotect).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.xprotect.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosXprotect).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.xprotect.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosXprotect).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"macos.xprotect.mrtVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosXprotect).MrtVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.xprotect.mrtModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosXprotect).MrtModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35058,6 +35095,70 @@ func (c *mqlMacosSip) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
 	})
+}
+
+// mqlMacosXprotect for the macos.xprotect resource
+type mqlMacosXprotect struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosXprotectInternal
+	Version     plugin.TValue[string]
+	Modified    plugin.TValue[*time.Time]
+	MrtVersion  plugin.TValue[string]
+	MrtModified plugin.TValue[*time.Time]
+}
+
+// createMacosXprotect creates a new instance of this resource
+func createMacosXprotect(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosXprotect{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.xprotect", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosXprotect) MqlName() string {
+	return "macos.xprotect"
+}
+
+func (c *mqlMacosXprotect) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosXprotect) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMacosXprotect) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlMacosXprotect) GetMrtVersion() *plugin.TValue[string] {
+	return &c.MrtVersion
+}
+
+func (c *mqlMacosXprotect) GetMrtModified() *plugin.TValue[*time.Time] {
+	return &c.MrtModified
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource

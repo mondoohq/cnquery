@@ -1087,6 +1087,11 @@ macos.timemachine 9.0.1
 macos.timemachine.preferences 9.0.1
 macos.userHostPreferences 9.0.1
 macos.userPreferences 9.0.1
+macos.xprotect 13.16.10
+macos.xprotect.modified 13.16.10
+macos.xprotect.mrtModified 13.16.10
+macos.xprotect.mrtVersion 13.16.10
+macos.xprotect.version 13.16.10
 mdadm 13.1.2
 mdadm.array 13.1.2
 mdadm.array.activeDevices 13.1.2
