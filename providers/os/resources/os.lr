@@ -3239,6 +3239,109 @@ lsblk.entry {
   mountpoints  []string
 }
 
+// LUKS-encrypted volumes on the host
+//
+// Use this resource to enumerate block devices that carry a LUKS header,
+// inspect each volume's on-disk format version, cipher, and key-derivation
+// parameters, and audit every keyslot. Both LUKS1 and LUKS2 headers are
+// reported through the same schema; the `version` field on each volume
+// distinguishes them and version-specific fields (label, subsystem, and
+// tokens for LUKS2; AF-splitter stripes for LUKS1) are populated only
+// where they apply.
+luks {
+  // LUKS-formatted block devices on the host
+  volumes() []luks.volume
+}
+
+// LUKS-encrypted block device
+//
+// Examine a single LUKS-formatted block device — its header version,
+// label, master-key size and offset, cipher, and keyslots. Select a
+// volume by its `uuid` (e.g.,
+// `luks.volumes.where(uuid == "fd44f17a-...")`) or by the underlying
+// block device's `name`.
+luks.volume @defaults("name uuid version") {
+  // Path of the underlying block device (e.g., /dev/sda3)
+  name string
+  // LUKS header UUID
+  uuid string
+  // LUKS header version (1 or 2)
+  version int
+  // Label assigned in the LUKS2 header (empty on LUKS1)
+  label string
+  // Subsystem string from the LUKS2 header (empty on LUKS1)
+  subsystem string
+  // Master-key size in bits
+  masterKeyBits int
+  // Payload offset in 512-byte sectors
+  payloadOffset int
+  // Underlying lsblk block device
+  blockDevice() lsblk.entry
+  // Cipher protecting the master key
+  cipher() luks.volume.cipher
+  // Keyslots defined in the header
+  keyslots() []luks.keyslot
+  // LUKS2 tokens attached to the header (empty on LUKS1)
+  //
+  // Each entry carries the token id, type (e.g., luks2-keyring,
+  // systemd-tpm2, systemd-fido2, systemd-pkcs11), the keyslot indices
+  // the token unlocks, and any token-type-specific metadata.
+  tokens []dict
+}
+
+// LUKS cipher specification
+//
+// Examine the symmetric cipher protecting a LUKS volume's master key.
+// `name` is the cipher family, `mode` is the chaining mode, and `spec`
+// is the combined cryptsetup string (e.g., `aes-xts-plain64`). On
+// LUKS1, `hash` carries the AF-splitter hash; on LUKS2 it is the
+// integrity hash when sector integrity is configured.
+private luks.volume.cipher @defaults("spec keySize") {
+  // Cipher family (e.g., aes, serpent, twofish)
+  name string
+  // Cipher mode (e.g., xts-plain64, cbc-essiv:sha256)
+  mode string
+  // Combined cipher spec as cryptsetup reports it
+  spec string
+  // Master-key size in bits
+  keySize int
+  // Hash used by the AF splitter (LUKS1) or sector integrity (LUKS2)
+  hash string
+}
+
+// LUKS keyslot
+//
+// Examine one keyslot in a LUKS header — its index, state, and the
+// key-derivation parameters used to wrap the master key. Audit for
+// weak KDFs, low iteration or memory costs, and unexpectedly large
+// numbers of active slots.
+luks.keyslot @defaults("index state kdf") {
+  // Slot index (0–7 on LUKS1, 0–31 on LUKS2)
+  index int
+  // Slot state
+  //
+  // ENABLED or DISABLED on LUKS1; active or inactive on LUKS2.
+  state string
+  // KDF used for this slot
+  //
+  // One of pbkdf2, argon2i, or argon2id.
+  kdf string
+  // PBKDF2 iteration count (pbkdf2 only)
+  iterations int
+  // argon2 time cost (argon2* only)
+  time int
+  // argon2 memory cost in KiB (argon2* only)
+  memory int
+  // argon2 parallelism (argon2* only)
+  parallel int
+  // Hash used by the KDF (pbkdf2 only; e.g., sha256, sha512)
+  hash string
+  // AF-splitter stripe count (LUKS1 only)
+  stripes int
+  // Key-material offset in 512-byte sectors
+  keyMaterialOffset int
+}
+
 // AppArmor mandatory access control
 //
 // Examine status, loaded profiles, and processes under confinement

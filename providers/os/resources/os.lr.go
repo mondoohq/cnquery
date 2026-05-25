@@ -186,6 +186,10 @@ const (
 	ResourceSudoersAlias                 string = "sudoers.alias"
 	ResourceLsblk                        string = "lsblk"
 	ResourceLsblkEntry                   string = "lsblk.entry"
+	ResourceLuks                         string = "luks"
+	ResourceLuksVolume                   string = "luks.volume"
+	ResourceLuksVolumeCipher             string = "luks.volume.cipher"
+	ResourceLuksKeyslot                  string = "luks.keyslot"
 	ResourceApparmor                     string = "apparmor"
 	ResourceApparmorProfile              string = "apparmor.profile"
 	ResourceApparmorProcess              string = "apparmor.process"
@@ -1077,6 +1081,22 @@ func init() {
 		"lsblk.entry": {
 			// to override args, implement: initLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLsblkEntry,
+		},
+		"luks": {
+			// to override args, implement: initLuks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLuks,
+		},
+		"luks.volume": {
+			// to override args, implement: initLuksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLuksVolume,
+		},
+		"luks.volume.cipher": {
+			// to override args, implement: initLuksVolumeCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLuksVolumeCipher,
+		},
+		"luks.keyslot": {
+			// to override args, implement: initLuksKeyslot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLuksKeyslot,
 		},
 		"apparmor": {
 			// to override args, implement: initApparmor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4729,6 +4749,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"lsblk.entry.mountpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLsblkEntry).GetMountpoints()).ToDataRes(types.Array(types.String))
+	},
+	"luks.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuks).GetVolumes()).ToDataRes(types.Array(types.Resource("luks.volume")))
+	},
+	"luks.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetName()).ToDataRes(types.String)
+	},
+	"luks.volume.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetUuid()).ToDataRes(types.String)
+	},
+	"luks.volume.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetVersion()).ToDataRes(types.Int)
+	},
+	"luks.volume.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetLabel()).ToDataRes(types.String)
+	},
+	"luks.volume.subsystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetSubsystem()).ToDataRes(types.String)
+	},
+	"luks.volume.masterKeyBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetMasterKeyBits()).ToDataRes(types.Int)
+	},
+	"luks.volume.payloadOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetPayloadOffset()).ToDataRes(types.Int)
+	},
+	"luks.volume.blockDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetBlockDevice()).ToDataRes(types.Resource("lsblk.entry"))
+	},
+	"luks.volume.cipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetCipher()).ToDataRes(types.Resource("luks.volume.cipher"))
+	},
+	"luks.volume.keyslots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetKeyslots()).ToDataRes(types.Array(types.Resource("luks.keyslot")))
+	},
+	"luks.volume.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolume).GetTokens()).ToDataRes(types.Array(types.Dict))
+	},
+	"luks.volume.cipher.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolumeCipher).GetName()).ToDataRes(types.String)
+	},
+	"luks.volume.cipher.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolumeCipher).GetMode()).ToDataRes(types.String)
+	},
+	"luks.volume.cipher.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolumeCipher).GetSpec()).ToDataRes(types.String)
+	},
+	"luks.volume.cipher.keySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolumeCipher).GetKeySize()).ToDataRes(types.Int)
+	},
+	"luks.volume.cipher.hash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksVolumeCipher).GetHash()).ToDataRes(types.String)
+	},
+	"luks.keyslot.index": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetIndex()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetState()).ToDataRes(types.String)
+	},
+	"luks.keyslot.kdf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetKdf()).ToDataRes(types.String)
+	},
+	"luks.keyslot.iterations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetIterations()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetTime()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.memory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetMemory()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.parallel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetParallel()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.hash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetHash()).ToDataRes(types.String)
+	},
+	"luks.keyslot.stripes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetStripes()).ToDataRes(types.Int)
+	},
+	"luks.keyslot.keyMaterialOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuksKeyslot).GetKeyMaterialOffset()).ToDataRes(types.Int)
 	},
 	"apparmor.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApparmor).GetVersion()).ToDataRes(types.String)
@@ -12609,6 +12710,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"lsblk.entry.mountpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLsblkEntry).Mountpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"luks.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuks).__id, ok = v.Value.(string)
+		return
+	},
+	"luks.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuks).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"luks.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"luks.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.volume.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.subsystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Subsystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.masterKeyBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).MasterKeyBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.volume.payloadOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).PayloadOffset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.volume.blockDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).BlockDevice, ok = plugin.RawToTValue[*mqlLsblkEntry](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Cipher, ok = plugin.RawToTValue[*mqlLuksVolumeCipher](v.Value, v.Error)
+		return
+	},
+	"luks.volume.keyslots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Keyslots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"luks.volume.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolume).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).__id, ok = v.Value.(string)
+		return
+	},
+	"luks.volume.cipher.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).Spec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher.keySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).KeySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.volume.cipher.hash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksVolumeCipher).Hash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).__id, ok = v.Value.(string)
+		return
+	},
+	"luks.keyslot.index": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Index, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.kdf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Kdf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.iterations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Iterations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Time, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.memory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Memory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.parallel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Parallel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.hash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Hash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.stripes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).Stripes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"luks.keyslot.keyMaterialOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuksKeyslot).KeyMaterialOffset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"apparmor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32588,6 +32813,355 @@ func (c *mqlLsblkEntry) GetUuid() *plugin.TValue[string] {
 
 func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]any] {
 	return &c.Mountpoints
+}
+
+// mqlLuks for the luks resource
+type mqlLuks struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLuksInternal it will be used here
+	Volumes plugin.TValue[[]any]
+}
+
+// createLuks creates a new instance of this resource
+func createLuks(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuks{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("luks", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuks) MqlName() string {
+	return "luks"
+}
+
+func (c *mqlLuks) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuks) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("luks", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+// mqlLuksVolume for the luks.volume resource
+type mqlLuksVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlLuksVolumeInternal
+	Name          plugin.TValue[string]
+	Uuid          plugin.TValue[string]
+	Version       plugin.TValue[int64]
+	Label         plugin.TValue[string]
+	Subsystem     plugin.TValue[string]
+	MasterKeyBits plugin.TValue[int64]
+	PayloadOffset plugin.TValue[int64]
+	BlockDevice   plugin.TValue[*mqlLsblkEntry]
+	Cipher        plugin.TValue[*mqlLuksVolumeCipher]
+	Keyslots      plugin.TValue[[]any]
+	Tokens        plugin.TValue[[]any]
+}
+
+// createLuksVolume creates a new instance of this resource
+func createLuksVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuksVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("luks.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuksVolume) MqlName() string {
+	return "luks.volume"
+}
+
+func (c *mqlLuksVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuksVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLuksVolume) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLuksVolume) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlLuksVolume) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlLuksVolume) GetSubsystem() *plugin.TValue[string] {
+	return &c.Subsystem
+}
+
+func (c *mqlLuksVolume) GetMasterKeyBits() *plugin.TValue[int64] {
+	return &c.MasterKeyBits
+}
+
+func (c *mqlLuksVolume) GetPayloadOffset() *plugin.TValue[int64] {
+	return &c.PayloadOffset
+}
+
+func (c *mqlLuksVolume) GetBlockDevice() *plugin.TValue[*mqlLsblkEntry] {
+	return plugin.GetOrCompute[*mqlLsblkEntry](&c.BlockDevice, func() (*mqlLsblkEntry, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("luks.volume", c.__id, "blockDevice")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlLsblkEntry), nil
+			}
+		}
+
+		return c.blockDevice()
+	})
+}
+
+func (c *mqlLuksVolume) GetCipher() *plugin.TValue[*mqlLuksVolumeCipher] {
+	return plugin.GetOrCompute[*mqlLuksVolumeCipher](&c.Cipher, func() (*mqlLuksVolumeCipher, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("luks.volume", c.__id, "cipher")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlLuksVolumeCipher), nil
+			}
+		}
+
+		return c.cipher()
+	})
+}
+
+func (c *mqlLuksVolume) GetKeyslots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keyslots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("luks.volume", c.__id, "keyslots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyslots()
+	})
+}
+
+func (c *mqlLuksVolume) GetTokens() *plugin.TValue[[]any] {
+	return &c.Tokens
+}
+
+// mqlLuksVolumeCipher for the luks.volume.cipher resource
+type mqlLuksVolumeCipher struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLuksVolumeCipherInternal it will be used here
+	Name    plugin.TValue[string]
+	Mode    plugin.TValue[string]
+	Spec    plugin.TValue[string]
+	KeySize plugin.TValue[int64]
+	Hash    plugin.TValue[string]
+}
+
+// createLuksVolumeCipher creates a new instance of this resource
+func createLuksVolumeCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuksVolumeCipher{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("luks.volume.cipher", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuksVolumeCipher) MqlName() string {
+	return "luks.volume.cipher"
+}
+
+func (c *mqlLuksVolumeCipher) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuksVolumeCipher) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLuksVolumeCipher) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlLuksVolumeCipher) GetSpec() *plugin.TValue[string] {
+	return &c.Spec
+}
+
+func (c *mqlLuksVolumeCipher) GetKeySize() *plugin.TValue[int64] {
+	return &c.KeySize
+}
+
+func (c *mqlLuksVolumeCipher) GetHash() *plugin.TValue[string] {
+	return &c.Hash
+}
+
+// mqlLuksKeyslot for the luks.keyslot resource
+type mqlLuksKeyslot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLuksKeyslotInternal it will be used here
+	Index             plugin.TValue[int64]
+	State             plugin.TValue[string]
+	Kdf               plugin.TValue[string]
+	Iterations        plugin.TValue[int64]
+	Time              plugin.TValue[int64]
+	Memory            plugin.TValue[int64]
+	Parallel          plugin.TValue[int64]
+	Hash              plugin.TValue[string]
+	Stripes           plugin.TValue[int64]
+	KeyMaterialOffset plugin.TValue[int64]
+}
+
+// createLuksKeyslot creates a new instance of this resource
+func createLuksKeyslot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuksKeyslot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("luks.keyslot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuksKeyslot) MqlName() string {
+	return "luks.keyslot"
+}
+
+func (c *mqlLuksKeyslot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuksKeyslot) GetIndex() *plugin.TValue[int64] {
+	return &c.Index
+}
+
+func (c *mqlLuksKeyslot) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlLuksKeyslot) GetKdf() *plugin.TValue[string] {
+	return &c.Kdf
+}
+
+func (c *mqlLuksKeyslot) GetIterations() *plugin.TValue[int64] {
+	return &c.Iterations
+}
+
+func (c *mqlLuksKeyslot) GetTime() *plugin.TValue[int64] {
+	return &c.Time
+}
+
+func (c *mqlLuksKeyslot) GetMemory() *plugin.TValue[int64] {
+	return &c.Memory
+}
+
+func (c *mqlLuksKeyslot) GetParallel() *plugin.TValue[int64] {
+	return &c.Parallel
+}
+
+func (c *mqlLuksKeyslot) GetHash() *plugin.TValue[string] {
+	return &c.Hash
+}
+
+func (c *mqlLuksKeyslot) GetStripes() *plugin.TValue[int64] {
+	return &c.Stripes
+}
+
+func (c *mqlLuksKeyslot) GetKeyMaterialOffset() *plugin.TValue[int64] {
+	return &c.KeyMaterialOffset
 }
 
 // mqlApparmor for the apparmor resource
