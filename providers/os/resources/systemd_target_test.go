@@ -114,3 +114,40 @@ sysinit.target            loaded active active   System Initialization
 		[]string{"basic", "default", "multi-user", "graphical", "sysinit"},
 		names)
 }
+
+func TestSplitSystemctlShowBlocks(t *testing.T) {
+	// Two unit blocks separated by a single blank line, like `systemctl
+	// show --no-pager -- basic.target multi-user.target` emits.
+	input := `Description=Basic System
+LoadState=loaded
+ActiveState=active
+
+Description=Multi-User System
+LoadState=loaded
+ActiveState=active
+`
+	blocks := splitSystemctlShowBlocks(input)
+	require.Len(t, blocks, 2)
+	assert.Contains(t, blocks[0], "Description=Basic System")
+	assert.Contains(t, blocks[1], "Description=Multi-User System")
+
+	// Each block parses independently.
+	first := parseSystemdShowOutput(blocks[0])
+	second := parseSystemdShowOutput(blocks[1])
+	assert.Equal(t, "Basic System", first["Description"])
+	assert.Equal(t, "Multi-User System", second["Description"])
+
+	// Trailing blank lines (common from systemctl) don't produce an empty
+	// final block.
+	withTrailing := input + "\n\n"
+	assert.Len(t, splitSystemctlShowBlocks(withTrailing), 2)
+
+	// CRLF survives normalization.
+	crlf := strings.ReplaceAll(input, "\n", "\r\n")
+	crlfBlocks := splitSystemctlShowBlocks(crlf)
+	require.Len(t, crlfBlocks, 2)
+	assert.Contains(t, crlfBlocks[0], "Description=Basic System")
+
+	// Empty input returns no blocks.
+	assert.Empty(t, splitSystemctlShowBlocks(""))
+}

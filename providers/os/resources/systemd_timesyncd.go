@@ -6,6 +6,7 @@ package resources
 import (
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func (t *mqlSystemdTimesyncd) id() (string, error) {
@@ -13,7 +14,7 @@ func (t *mqlSystemdTimesyncd) id() (string, error) {
 }
 
 func (t *mqlSystemdTimesyncd) active() (bool, error) {
-	return isSystemdUnitActive(t.MqlRuntime, "systemd-timesyncd"), nil
+	return isSystemdUnitActive(t.MqlRuntime, "systemd-timesyncd")
 }
 
 type timesyncdState struct {
@@ -27,10 +28,21 @@ type timesyncdState struct {
 }
 
 func (t *mqlSystemdTimesyncd) resolveState() (*timesyncdState, error) {
-	if t.cachedState != nil {
+	if t.fetched {
 		return t.cachedState, nil
 	}
-	state := &timesyncdState{}
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if t.fetched {
+		return t.cachedState, nil
+	}
+	state := &timesyncdState{
+		// Default to an empty slice so callers that pass these through
+		// stringsToAny() get []any{} rather than nil when the binary is
+		// missing or both NTP server properties are absent.
+		servers:         []string{},
+		fallbackServers: []string{},
+	}
 
 	// Synchronized state lives in `timedatectl show` (the dbus-exposed
 	// org.freedesktop.timedate1 properties), not in show-timesync.
@@ -46,12 +58,17 @@ func (t *mqlSystemdTimesyncd) resolveState() (*timesyncdState, error) {
 		return nil, err
 	} else if ok {
 		props := parseSystemdShowOutput(stdout)
-		state.servers = strings.Fields(props["SystemNTPServers"])
+		servers := strings.Fields(props["SystemNTPServers"])
 		// Older systemd versions emit `LinkNTPServers` instead of including
 		// DHCP-provided servers in SystemNTPServers; fold them in so the
 		// effective list is what users get.
-		state.servers = append(state.servers, strings.Fields(props["LinkNTPServers"])...)
-		state.fallbackServers = strings.Fields(props["FallbackNTPServers"])
+		servers = append(servers, strings.Fields(props["LinkNTPServers"])...)
+		if servers != nil {
+			state.servers = servers
+		}
+		if fb := strings.Fields(props["FallbackNTPServers"]); fb != nil {
+			state.fallbackServers = fb
+		}
 		state.serverName = props["ServerName"]
 		state.serverAddress = props["ServerAddress"]
 		state.leapStatus = props["LeapStatus"]
@@ -60,6 +77,7 @@ func (t *mqlSystemdTimesyncd) resolveState() (*timesyncdState, error) {
 		}
 	}
 
+	t.fetched = true
 	t.cachedState = state
 	return state, nil
 }
@@ -122,4 +140,6 @@ func (t *mqlSystemdTimesyncd) leapStatus() (string, error) {
 
 type mqlSystemdTimesyncdInternal struct {
 	cachedState *timesyncdState
+	fetched     bool
+	lock        sync.Mutex
 }

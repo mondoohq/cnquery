@@ -6,6 +6,7 @@ package resources
 import (
 	"bufio"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,7 +17,7 @@ func (r *mqlSystemdResolved) id() (string, error) {
 }
 
 func (r *mqlSystemdResolved) active() (bool, error) {
-	return isSystemdUnitActive(r.MqlRuntime, "systemd-resolved"), nil
+	return isSystemdUnitActive(r.MqlRuntime, "systemd-resolved")
 }
 
 type resolvedGlobal struct {
@@ -32,7 +33,12 @@ type resolvedGlobal struct {
 }
 
 func (r *mqlSystemdResolved) resolveGlobal() (*resolvedGlobal, error) {
-	if r.cachedGlobal != nil {
+	if r.fetched {
+		return r.cachedGlobal, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
 		return r.cachedGlobal, nil
 	}
 	stdout, ok, err := runSystemctl(r.MqlRuntime, "resolvectl status --no-pager")
@@ -43,6 +49,7 @@ func (r *mqlSystemdResolved) resolveGlobal() (*resolvedGlobal, error) {
 	if ok {
 		parseResolvectlGlobal(stdout, g)
 	}
+	r.fetched = true
 	r.cachedGlobal = g
 	return g, nil
 }
@@ -121,6 +128,8 @@ func (r *mqlSystemdResolved) cache() (bool, error) {
 
 type mqlSystemdResolvedInternal struct {
 	cachedGlobal *resolvedGlobal
+	fetched      bool
+	lock         sync.Mutex
 }
 
 // parseResolvectlGlobal extracts the Global-scope fields from
@@ -226,16 +235,19 @@ func parseResolvectlProtocols(value string, g *resolvedGlobal) {
 }
 
 // isSystemdUnitActive returns true if `systemctl is-active <unit>` exits 0.
-// Any other outcome (binary missing, unit not loaded, inactive, failed)
-// returns false — we deliberately don't distinguish those at the resource
-// level; downstream queries can inspect the unit directly.
-func isSystemdUnitActive(runtime *plugin.Runtime, unit string) bool {
+// `systemctl is-active` exits non-zero for inactive/failed/unknown units —
+// those are not connection failures, so we surface them as (false, nil).
+// A genuine error from the command resource (failure to launch the
+// connection, missing binary in a way that produces an error rather than
+// a non-zero exit, etc.) propagates back to the caller so connectivity
+// problems aren't silently rendered as "inactive".
+func isSystemdUnitActive(runtime *plugin.Runtime, unit string) (bool, error) {
 	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("systemctl is-active " + shellQuoteUnit(unit)),
+		"command": llx.StringData("systemctl is-active -- " + shellQuoteUnit(unit)),
 	})
 	if err != nil {
-		return false
+		return false, err
 	}
 	cmd := o.(*mqlCommand)
-	return cmd.GetExitcode().Data == 0
+	return cmd.GetExitcode().Data == 0, nil
 }

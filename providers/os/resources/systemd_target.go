@@ -29,14 +29,22 @@ func (x *mqlSystemdTargets) list() ([]any, error) {
 		return []any{}, nil
 	}
 
+	// Batch every target's properties into a single `systemctl show`
+	// invocation. systemctl emits one block per unit separated by a blank
+	// line, in the same order we passed the unit names. This collapses
+	// what was previously N round-trips through the command resource into
+	// one — meaningful on remote/SSH connections where each command pays
+	// a full connection round-trip.
+	propsByName, err := showSystemdTargetPropertiesBatch(x.MqlRuntime, names)
+	if err != nil {
+		return nil, err
+	}
+
 	res := make([]any, 0, len(names))
 	for _, name := range names {
-		props, err := showSystemdTargetProperties(x.MqlRuntime, name)
-		if err != nil {
-			// `systemctl show` returns exit 0 with empty properties for an
-			// unknown unit. A genuine error here means systemctl itself is
-			// gone, so surface it instead of swallowing it for every target.
-			return nil, err
+		props := propsByName[name]
+		if props == nil {
+			props = map[string]string{}
 		}
 		mqlTarget, err := CreateResource(x.MqlRuntime, "systemd.target", map[string]*llx.RawData{
 			"name":          llx.StringData(name),
@@ -102,16 +110,72 @@ func listSystemdTargetNames(runtime *plugin.Runtime) ([]string, error) {
 	return names, nil
 }
 
-func showSystemdTargetProperties(runtime *plugin.Runtime, name string) (map[string]string, error) {
-	stdout, ok, err := runSystemctl(runtime,
-		"systemctl show "+shellQuoteUnit(name+".target")+" --no-pager")
+// showSystemdTargetPropertiesBatch runs a single `systemctl show` for
+// every target name in `names` and returns the per-target property maps,
+// keyed by the input name (no `.target` suffix). systemctl prints unit
+// blocks separated by a blank line in the same order the units were
+// passed, so we split on the blank line and zip blocks back to names.
+// On a system without systemctl we return an empty map and let the
+// caller render bare target shells.
+func showSystemdTargetPropertiesBatch(runtime *plugin.Runtime, names []string) (map[string]map[string]string, error) {
+	if len(names) == 0 {
+		return map[string]map[string]string{}, nil
+	}
+
+	// Build `systemctl show --no-pager -- a.target b.target ...`.
+	var b strings.Builder
+	b.WriteString("systemctl show --no-pager --")
+	for _, name := range names {
+		b.WriteByte(' ')
+		b.WriteString(shellQuoteUnit(name + ".target"))
+	}
+
+	stdout, ok, err := runSystemctl(runtime, b.String())
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		return map[string]string{}, nil
+		return map[string]map[string]string{}, nil
 	}
-	return parseSystemdShowOutput(stdout), nil
+
+	blocks := splitSystemctlShowBlocks(stdout)
+	out := make(map[string]map[string]string, len(names))
+	for i, name := range names {
+		if i >= len(blocks) {
+			break
+		}
+		out[name] = parseSystemdShowOutput(blocks[i])
+	}
+	return out, nil
+}
+
+// splitSystemctlShowBlocks splits `systemctl show` output for multiple
+// units into the per-unit blocks. Blocks are separated by a single blank
+// line; trailing blank lines are dropped.
+func splitSystemctlShowBlocks(stdout string) []string {
+	// Normalize line endings so we don't accidentally trip over CRLF that
+	// may leak in over some SSH channels.
+	stdout = strings.ReplaceAll(stdout, "\r\n", "\n")
+
+	var blocks []string
+	var cur strings.Builder
+	flush := func() {
+		if cur.Len() == 0 {
+			return
+		}
+		blocks = append(blocks, cur.String())
+		cur.Reset()
+	}
+	for _, line := range strings.Split(stdout, "\n") {
+		if line == "" {
+			flush()
+			continue
+		}
+		cur.WriteString(line)
+		cur.WriteByte('\n')
+	}
+	flush()
+	return blocks
 }
 
 // parseSystemdShowOutput consumes the `Key=Value` lines emitted by
