@@ -29,10 +29,16 @@ func (r *mqlClaudeOrganization) workspaces() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(workspaces))
 	for _, w := range workspaces {
-		createdAt, _ := time.Parse(time.RFC3339, w.CreatedAt)
+		createdAt, err := parseTime(w.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing workspace createdAt: %w", err)
+		}
 		var archivedAt time.Time
 		if w.ArchivedAt != nil {
-			archivedAt, _ = time.Parse(time.RFC3339, *w.ArchivedAt)
+			archivedAt, err = parseTime(*w.ArchivedAt)
+			if err != nil {
+				return nil, fmt.Errorf("parsing workspace archivedAt: %w", err)
+			}
 		}
 
 		var workspaceGeo, defaultInferenceGeo string
@@ -82,7 +88,10 @@ func (r *mqlClaudeOrganization) members() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(users))
 	for _, u := range users {
-		addedAt, _ := time.Parse(time.RFC3339, u.AddedAt)
+		addedAt, err := parseTime(u.AddedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing member addedAt: %w", err)
+		}
 
 		mqlMember, err := CreateResource(r.MqlRuntime, "claude.organization.member", map[string]*llx.RawData{
 			"__id":    llx.StringData(u.ID),
@@ -114,8 +123,14 @@ func (r *mqlClaudeOrganization) invites() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(invites))
 	for _, inv := range invites {
-		invitedAt, _ := time.Parse(time.RFC3339, inv.InvitedAt)
-		expiresAt, _ := time.Parse(time.RFC3339, inv.ExpiresAt)
+		invitedAt, err := parseTime(inv.InvitedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing invite invitedAt: %w", err)
+		}
+		expiresAt, err := parseTime(inv.ExpiresAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing invite expiresAt: %w", err)
+		}
 
 		mqlInvite, err := CreateResource(r.MqlRuntime, "claude.organization.invite", map[string]*llx.RawData{
 			"__id":      llx.StringData(inv.ID),
@@ -153,10 +168,16 @@ func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(keys))
 	for _, k := range keys {
-		createdAt, _ := time.Parse(time.RFC3339, k.CreatedAt)
+		createdAt, err := parseTime(k.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing apiKey createdAt: %w", err)
+		}
 		var expiresAt time.Time
 		if k.ExpiresAt != nil {
-			expiresAt, _ = time.Parse(time.RFC3339, *k.ExpiresAt)
+			expiresAt, err = parseTime(*k.ExpiresAt)
+			if err != nil {
+				return nil, fmt.Errorf("parsing apiKey expiresAt: %w", err)
+			}
 		}
 
 		mqlKey, err := CreateResource(r.MqlRuntime, "claude.organization.apiKey", map[string]*llx.RawData{
@@ -182,6 +203,7 @@ func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
 	return res, nil
 }
 
+// MQL caches CreateResource by __id and caches computed fields like members(), so repeated calls don't cause extra API requests.
 func (r *mqlClaudeOrganizationApiKey) createdBy() (*mqlClaudeOrganizationMember, error) {
 	if r.cacheCreatedByID == "" {
 		r.CreatedBy.State = plugin.StateIsNull | plugin.StateIsSet
@@ -337,8 +359,14 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 
 	var res []interface{}
 	for _, b := range buckets {
-		startingAt, _ := time.Parse(time.RFC3339, b.StartingAt)
-		endingAt, _ := time.Parse(time.RFC3339, b.EndingAt)
+		startingAt, err := parseTime(b.StartingAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing usage startingAt: %w", err)
+		}
+		endingAt, err := parseTime(b.EndingAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing usage endingAt: %w", err)
+		}
 
 		for _, result := range b.Results {
 			mqlEntry, err := CreateResource(r.MqlRuntime, "claude.organization.usageEntry", map[string]*llx.RawData{
@@ -377,8 +405,14 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 
 	var res []interface{}
 	for _, b := range buckets {
-		startingAt, _ := time.Parse(time.RFC3339, b.StartingAt)
-		endingAt, _ := time.Parse(time.RFC3339, b.EndingAt)
+		startingAt, err := parseTime(b.StartingAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing cost startingAt: %w", err)
+		}
+		endingAt, err := parseTime(b.EndingAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing cost endingAt: %w", err)
+		}
 
 		for _, result := range b.Results {
 			mqlEntry, err := CreateResource(r.MqlRuntime, "claude.organization.costEntry", map[string]*llx.RawData{
@@ -416,7 +450,10 @@ func (r *mqlClaudeOrganization) activities() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(activities))
 	for _, a := range activities {
-		createdAt, _ := time.Parse(time.RFC3339, a.CreatedAt)
+		createdAt, err := parseTime(a.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing activity createdAt: %w", err)
+		}
 
 		mqlActivity, err := CreateResource(r.MqlRuntime, "claude.organization.activity", map[string]*llx.RawData{
 			"__id":       llx.StringData(a.ID),

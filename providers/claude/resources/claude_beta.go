@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -61,9 +60,18 @@ func (r *mqlClaude) environments() ([]interface{}, error) {
 	for pager.Next() {
 		e := pager.Current()
 
-		createdAt, _ := time.Parse(time.RFC3339, e.CreatedAt)
-		updatedAt, _ := time.Parse(time.RFC3339, e.UpdatedAt)
-		archivedAt, _ := time.Parse(time.RFC3339, e.ArchivedAt)
+		createdAt, err := parseTime(e.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing environment createdAt: %w", err)
+		}
+		updatedAt, err := parseTime(e.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing environment updatedAt: %w", err)
+		}
+		archivedAt, err := parseTime(e.ArchivedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing environment archivedAt: %w", err)
+		}
 
 		mqlEnv, err := CreateResource(r.MqlRuntime, "claude.environment", map[string]*llx.RawData{
 			"__id":        llx.StringData(e.ID),
@@ -169,8 +177,14 @@ func (r *mqlClaude) skills() ([]interface{}, error) {
 	for pager.Next() {
 		s := pager.Current()
 
-		createdAt, _ := time.Parse(time.RFC3339, s.CreatedAt)
-		updatedAt, _ := time.Parse(time.RFC3339, s.UpdatedAt)
+		createdAt, err := parseTime(s.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing skill createdAt: %w", err)
+		}
+		updatedAt, err := parseTime(s.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parsing skill updatedAt: %w", err)
+		}
 
 		mqlSkill, err := CreateResource(r.MqlRuntime, "claude.skill", map[string]*llx.RawData{
 			"__id":          llx.StringData(s.ID),

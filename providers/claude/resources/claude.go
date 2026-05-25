@@ -7,12 +7,20 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/claude/connection"
 )
+
+func parseTime(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+	return time.Parse(time.RFC3339, s)
+}
 
 func conn(runtime *plugin.Runtime) *connection.ClaudeConnection {
 	return runtime.Connection.(*connection.ClaudeConnection)
