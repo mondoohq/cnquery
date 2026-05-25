@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -135,6 +136,7 @@ type accountInfo struct {
 	OrgName string
 }
 
+// fetchAccountInfo calls the undocumented /v1/me endpoint for best-effort org detection.
 func fetchAccountInfo(baseURL string, token string) (*accountInfo, error) {
 	req, err := http.NewRequest("GET", baseURL+"/v1/me", nil)
 	if err != nil {
@@ -142,7 +144,8 @@ func fetchAccountInfo(baseURL string, token string) (*accountInfo, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
