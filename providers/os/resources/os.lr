@@ -1544,34 +1544,34 @@ systemd.targets {
 // `resolvectl status` for the Global scope.
 systemd.resolved @defaults("active dns") {
   // Whether the systemd-resolved daemon is currently active
-  active bool
+  active() bool
   // Effective DNS server addresses for the Global scope
-  dns []string
+  dns() []string
   // DNS server currently in use for the Global scope
   //
   // resolvectl picks one server from the configured `dns` list at a time;
   // this is that selection. Empty when no global DNS server is active or
   // the line is not emitted (e.g., when only per-link DNS is configured).
-  currentDnsServer string
+  currentDnsServer() string
   // Fallback DNS servers used when no Link or Global DNS is configured
-  fallbackDns []string
+  fallbackDns() []string
   // DNS search domains
-  domains []string
+  domains() []string
   // DNSSEC mode
   //
   // One of `yes`, `no`, or `allow-downgrade`. May appear as `no/unsupported`
   // when the upstream resolver does not support DNSSEC.
-  dnssec string
+  dnssec() string
   // DNS-over-TLS mode (e.g., `yes`, `no`, `opportunistic`)
-  dnsOverTls string
+  dnsOverTls() string
   // LLMNR mode (e.g., `yes`, `no`, `resolve`)
-  llmnr string
+  llmnr() string
   // Multicast DNS mode (e.g., `yes`, `no`, `resolve`)
-  multicastDns string
+  multicastDns() string
   // /etc/resolv.conf management mode (e.g., `stub`, `static`, `uplink`, `foreign`)
-  resolvConfMode string
+  resolvConfMode() string
   // Whether the resolver cache is enabled
-  cache bool
+  cache() bool
 }
 
 // systemd-timesyncd NTP client state
@@ -1584,21 +1584,21 @@ systemd.resolved @defaults("active dns") {
 // show` and `timedatectl show-timesync`.
 systemd.timesyncd @defaults("active synchronized serverName") {
   // Whether the systemd-timesyncd daemon is currently active
-  active bool
+  active() bool
   // Whether the system clock is synchronized to a time source
-  synchronized bool
+  synchronized() bool
   // NTP servers from configuration (NTP= and DHCP)
-  servers []string
+  servers() []string
   // Fallback NTP servers used when none of `servers` are reachable
-  fallbackServers []string
+  fallbackServers() []string
   // Hostname of the currently selected NTP server
-  serverName string
+  serverName() string
   // IP address of the currently selected NTP server
-  serverAddress string
+  serverAddress() string
   // Current poll interval in microseconds
-  pollIntervalUSec int
+  pollIntervalUSec() int
   // Leap second status (e.g., `normal`, `insert-second`, `delete-second`, `unknown`)
-  leapStatus string
+  leapStatus() string
 }
 
 // Running kernel and its modules

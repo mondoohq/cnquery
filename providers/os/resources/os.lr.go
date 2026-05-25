@@ -24313,47 +24313,69 @@ func (c *mqlSystemdResolved) MqlID() string {
 }
 
 func (c *mqlSystemdResolved) GetActive() *plugin.TValue[bool] {
-	return &c.Active
+	return plugin.GetOrCompute[bool](&c.Active, func() (bool, error) {
+		return c.active()
+	})
 }
 
 func (c *mqlSystemdResolved) GetDns() *plugin.TValue[[]any] {
-	return &c.Dns
+	return plugin.GetOrCompute[[]any](&c.Dns, func() ([]any, error) {
+		return c.dns()
+	})
 }
 
 func (c *mqlSystemdResolved) GetCurrentDnsServer() *plugin.TValue[string] {
-	return &c.CurrentDnsServer
+	return plugin.GetOrCompute[string](&c.CurrentDnsServer, func() (string, error) {
+		return c.currentDnsServer()
+	})
 }
 
 func (c *mqlSystemdResolved) GetFallbackDns() *plugin.TValue[[]any] {
-	return &c.FallbackDns
+	return plugin.GetOrCompute[[]any](&c.FallbackDns, func() ([]any, error) {
+		return c.fallbackDns()
+	})
 }
 
 func (c *mqlSystemdResolved) GetDomains() *plugin.TValue[[]any] {
-	return &c.Domains
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		return c.domains()
+	})
 }
 
 func (c *mqlSystemdResolved) GetDnssec() *plugin.TValue[string] {
-	return &c.Dnssec
+	return plugin.GetOrCompute[string](&c.Dnssec, func() (string, error) {
+		return c.dnssec()
+	})
 }
 
 func (c *mqlSystemdResolved) GetDnsOverTls() *plugin.TValue[string] {
-	return &c.DnsOverTls
+	return plugin.GetOrCompute[string](&c.DnsOverTls, func() (string, error) {
+		return c.dnsOverTls()
+	})
 }
 
 func (c *mqlSystemdResolved) GetLlmnr() *plugin.TValue[string] {
-	return &c.Llmnr
+	return plugin.GetOrCompute[string](&c.Llmnr, func() (string, error) {
+		return c.llmnr()
+	})
 }
 
 func (c *mqlSystemdResolved) GetMulticastDns() *plugin.TValue[string] {
-	return &c.MulticastDns
+	return plugin.GetOrCompute[string](&c.MulticastDns, func() (string, error) {
+		return c.multicastDns()
+	})
 }
 
 func (c *mqlSystemdResolved) GetResolvConfMode() *plugin.TValue[string] {
-	return &c.ResolvConfMode
+	return plugin.GetOrCompute[string](&c.ResolvConfMode, func() (string, error) {
+		return c.resolvConfMode()
+	})
 }
 
 func (c *mqlSystemdResolved) GetCache() *plugin.TValue[bool] {
-	return &c.Cache
+	return plugin.GetOrCompute[bool](&c.Cache, func() (bool, error) {
+		return c.cache()
+	})
 }
 
 // mqlSystemdTimesyncd for the systemd.timesyncd resource
@@ -24409,35 +24431,51 @@ func (c *mqlSystemdTimesyncd) MqlID() string {
 }
 
 func (c *mqlSystemdTimesyncd) GetActive() *plugin.TValue[bool] {
-	return &c.Active
+	return plugin.GetOrCompute[bool](&c.Active, func() (bool, error) {
+		return c.active()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetSynchronized() *plugin.TValue[bool] {
-	return &c.Synchronized
+	return plugin.GetOrCompute[bool](&c.Synchronized, func() (bool, error) {
+		return c.synchronized()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetServers() *plugin.TValue[[]any] {
-	return &c.Servers
+	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
+		return c.servers()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetFallbackServers() *plugin.TValue[[]any] {
-	return &c.FallbackServers
+	return plugin.GetOrCompute[[]any](&c.FallbackServers, func() ([]any, error) {
+		return c.fallbackServers()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetServerName() *plugin.TValue[string] {
-	return &c.ServerName
+	return plugin.GetOrCompute[string](&c.ServerName, func() (string, error) {
+		return c.serverName()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetServerAddress() *plugin.TValue[string] {
-	return &c.ServerAddress
+	return plugin.GetOrCompute[string](&c.ServerAddress, func() (string, error) {
+		return c.serverAddress()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetPollIntervalUSec() *plugin.TValue[int64] {
-	return &c.PollIntervalUSec
+	return plugin.GetOrCompute[int64](&c.PollIntervalUSec, func() (int64, error) {
+		return c.pollIntervalUSec()
+	})
 }
 
 func (c *mqlSystemdTimesyncd) GetLeapStatus() *plugin.TValue[string] {
-	return &c.LeapStatus
+	return plugin.GetOrCompute[string](&c.LeapStatus, func() (string, error) {
+		return c.leapStatus()
+	})
 }
 
 // mqlKernel for the kernel resource
