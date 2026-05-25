@@ -378,6 +378,7 @@ kts
 kty
 kubenet
 kustomization
+KVCACHE
 KVM
 labelmatchstatement
 Laravel
@@ -692,6 +693,7 @@ sriov
 srp
 ssbd
 SSHFP
+sshleifer
 ssis
 sslv
 Sspr
@@ -769,6 +771,7 @@ vdev
 VDhir
 vdi
 vendored
+venv
 verifiedaccess
 vertexai
 Veth
