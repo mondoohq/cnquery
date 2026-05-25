@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -113,7 +114,7 @@ func scanBinaryForSquidVersion(fs *afero.Afero, path string) string {
 		}
 		active := buf[:carry+n]
 
-		idx := indexOf(active, tag)
+		idx := bytes.Index(active, tag)
 		if idx >= 0 {
 			start := idx + len(tag)
 			end := start
@@ -137,34 +138,6 @@ func scanBinaryForSquidVersion(fs *afero.Afero, path string) string {
 		}
 	}
 	return ""
-}
-
-// indexOf is a thin wrapper over bytes.Index that we keep local so this
-// file doesn't need an extra import for a single call.
-func indexOf(haystack []byte, needle []byte) int {
-	if len(needle) == 0 {
-		return 0
-	}
-	if len(needle) > len(haystack) {
-		return -1
-	}
-	first := needle[0]
-	for i := 0; i+len(needle) <= len(haystack); i++ {
-		if haystack[i] != first {
-			continue
-		}
-		match := true
-		for j := 1; j < len(needle); j++ {
-			if haystack[i+j] != needle[j] {
-				match = false
-				break
-			}
-		}
-		if match {
-			return i
-		}
-	}
-	return -1
 }
 
 type mqlSquidConfInternal struct {

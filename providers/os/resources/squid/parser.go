@@ -446,7 +446,10 @@ func parseCacheDir(args []string) CacheDir {
 	// `rock` and a few other schemes have no L1/L2; the next arg is
 	// already a key=value option. `ufs` / `aufs` / `diskd` take
 	// `<size> <L1> <L2> [options...]`.
-	rest := args[3:]
+	var rest []string
+	if len(args) > 3 {
+		rest = args[3:]
+	}
 	if len(rest) >= 2 && isNumeric(rest[0]) && isNumeric(rest[1]) {
 		if n, err := strconv.ParseInt(rest[0], 10, 64); err == nil {
 			d.L1 = n
@@ -553,7 +556,13 @@ func splitAndClean(content string) []string {
 		line = strings.TrimRight(line, "\r")
 		// Comments are determined after leading whitespace is trimmed.
 		trim := strings.TrimSpace(line)
-		if continued.Len() == 0 && (trim == "" || trim[0] == '#') {
+		// Always discard full-line comments, even mid-continuation: a `#`
+		// line interleaved between a backslash-continued directive and
+		// its tail is not part of the directive's tokens.
+		if trim != "" && trim[0] == '#' {
+			continue
+		}
+		if continued.Len() == 0 && trim == "" {
 			continue
 		}
 
