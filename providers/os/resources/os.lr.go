@@ -282,6 +282,10 @@ const (
 	ResourceVscodeExtension              string = "vscode.extension"
 	ResourceLogrotate                    string = "logrotate"
 	ResourceLogrotateEntry               string = "logrotate.entry"
+	ResourceLvm                          string = "lvm"
+	ResourceLvmPhysicalVolume            string = "lvm.physicalVolume"
+	ResourceLvmVolumeGroup               string = "lvm.volumeGroup"
+	ResourceLvmLogicalVolume             string = "lvm.logicalVolume"
 	ResourceMdadm                        string = "mdadm"
 	ResourceMdadmArray                   string = "mdadm.array"
 	ResourceMdadmDevice                  string = "mdadm.device"
@@ -1423,6 +1427,22 @@ func init() {
 		"logrotate.entry": {
 			// to override args, implement: initLogrotateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLogrotateEntry,
+		},
+		"lvm": {
+			// to override args, implement: initLvm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLvm,
+		},
+		"lvm.physicalVolume": {
+			// to override args, implement: initLvmPhysicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLvmPhysicalVolume,
+		},
+		"lvm.volumeGroup": {
+			// to override args, implement: initLvmVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLvmVolumeGroup,
+		},
+		"lvm.logicalVolume": {
+			// to override args, implement: initLvmLogicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLvmLogicalVolume,
 		},
 		"mdadm": {
 			// to override args, implement: initMdadm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6126,6 +6146,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"logrotate.entry.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogrotateEntry).GetConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"lvm.physicalVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvm).GetPhysicalVolumes()).ToDataRes(types.Array(types.Resource("lvm.physicalVolume")))
+	},
+	"lvm.volumeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvm).GetVolumeGroups()).ToDataRes(types.Array(types.Resource("lvm.volumeGroup")))
+	},
+	"lvm.logicalVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvm).GetLogicalVolumes()).ToDataRes(types.Array(types.Resource("lvm.logicalVolume")))
+	},
+	"lvm.physicalVolume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetName()).ToDataRes(types.String)
+	},
+	"lvm.physicalVolume.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetUuid()).ToDataRes(types.String)
+	},
+	"lvm.physicalVolume.volumeGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetVolumeGroupName()).ToDataRes(types.String)
+	},
+	"lvm.physicalVolume.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetFormat()).ToDataRes(types.String)
+	},
+	"lvm.physicalVolume.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetAttributes()).ToDataRes(types.String)
+	},
+	"lvm.physicalVolume.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"lvm.physicalVolume.freeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmPhysicalVolume).GetFreeBytes()).ToDataRes(types.Int)
+	},
+	"lvm.volumeGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetName()).ToDataRes(types.String)
+	},
+	"lvm.volumeGroup.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetUuid()).ToDataRes(types.String)
+	},
+	"lvm.volumeGroup.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetAttributes()).ToDataRes(types.String)
+	},
+	"lvm.volumeGroup.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"lvm.volumeGroup.freeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetFreeBytes()).ToDataRes(types.Int)
+	},
+	"lvm.volumeGroup.physicalVolumeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetPhysicalVolumeCount()).ToDataRes(types.Int)
+	},
+	"lvm.volumeGroup.logicalVolumeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetLogicalVolumeCount()).ToDataRes(types.Int)
+	},
+	"lvm.volumeGroup.snapshotCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmVolumeGroup).GetSnapshotCount()).ToDataRes(types.Int)
+	},
+	"lvm.logicalVolume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetName()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetPath()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetUuid()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.volumeGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetVolumeGroupName()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetAttributes()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"lvm.logicalVolume.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetOrigin()).ToDataRes(types.String)
+	},
+	"lvm.logicalVolume.dataPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetDataPercent()).ToDataRes(types.Float)
+	},
+	"lvm.logicalVolume.poolName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLvmLogicalVolume).GetPoolName()).ToDataRes(types.String)
 	},
 	"mdadm.arrays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMdadm).GetArrays()).ToDataRes(types.Array(types.Resource("mdadm.array")))
@@ -14130,6 +14231,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"logrotate.entry.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLogrotateEntry).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"lvm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvm).__id, ok = v.Value.(string)
+		return
+	},
+	"lvm.physicalVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvm).PhysicalVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvm).VolumeGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvm).LogicalVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"lvm.physicalVolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.volumeGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).VolumeGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).Attributes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.physicalVolume.freeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmPhysicalVolume).FreeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"lvm.volumeGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).Attributes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.freeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).FreeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.physicalVolumeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).PhysicalVolumeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.logicalVolumeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).LogicalVolumeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.volumeGroup.snapshotCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmVolumeGroup).SnapshotCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"lvm.logicalVolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.volumeGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).VolumeGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).Attributes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.dataPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).DataPercent, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"lvm.logicalVolume.poolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLvmLogicalVolume).PoolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mdadm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38673,6 +38898,353 @@ func (c *mqlLogrotateEntry) GetPath() *plugin.TValue[string] {
 
 func (c *mqlLogrotateEntry) GetConfig() *plugin.TValue[map[string]any] {
 	return &c.Config
+}
+
+// mqlLvm for the lvm resource
+type mqlLvm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLvmInternal it will be used here
+	PhysicalVolumes plugin.TValue[[]any]
+	VolumeGroups    plugin.TValue[[]any]
+	LogicalVolumes  plugin.TValue[[]any]
+}
+
+// createLvm creates a new instance of this resource
+func createLvm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLvm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lvm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLvm) MqlName() string {
+	return "lvm"
+}
+
+func (c *mqlLvm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLvm) GetPhysicalVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PhysicalVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lvm", c.__id, "physicalVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.physicalVolumes()
+	})
+}
+
+func (c *mqlLvm) GetVolumeGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VolumeGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lvm", c.__id, "volumeGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumeGroups()
+	})
+}
+
+func (c *mqlLvm) GetLogicalVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogicalVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lvm", c.__id, "logicalVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logicalVolumes()
+	})
+}
+
+// mqlLvmPhysicalVolume for the lvm.physicalVolume resource
+type mqlLvmPhysicalVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLvmPhysicalVolumeInternal it will be used here
+	Name            plugin.TValue[string]
+	Uuid            plugin.TValue[string]
+	VolumeGroupName plugin.TValue[string]
+	Format          plugin.TValue[string]
+	Attributes      plugin.TValue[string]
+	SizeBytes       plugin.TValue[int64]
+	FreeBytes       plugin.TValue[int64]
+}
+
+// createLvmPhysicalVolume creates a new instance of this resource
+func createLvmPhysicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLvmPhysicalVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lvm.physicalVolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLvmPhysicalVolume) MqlName() string {
+	return "lvm.physicalVolume"
+}
+
+func (c *mqlLvmPhysicalVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLvmPhysicalVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLvmPhysicalVolume) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLvmPhysicalVolume) GetVolumeGroupName() *plugin.TValue[string] {
+	return &c.VolumeGroupName
+}
+
+func (c *mqlLvmPhysicalVolume) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlLvmPhysicalVolume) GetAttributes() *plugin.TValue[string] {
+	return &c.Attributes
+}
+
+func (c *mqlLvmPhysicalVolume) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlLvmPhysicalVolume) GetFreeBytes() *plugin.TValue[int64] {
+	return &c.FreeBytes
+}
+
+// mqlLvmVolumeGroup for the lvm.volumeGroup resource
+type mqlLvmVolumeGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLvmVolumeGroupInternal it will be used here
+	Name                plugin.TValue[string]
+	Uuid                plugin.TValue[string]
+	Attributes          plugin.TValue[string]
+	SizeBytes           plugin.TValue[int64]
+	FreeBytes           plugin.TValue[int64]
+	PhysicalVolumeCount plugin.TValue[int64]
+	LogicalVolumeCount  plugin.TValue[int64]
+	SnapshotCount       plugin.TValue[int64]
+}
+
+// createLvmVolumeGroup creates a new instance of this resource
+func createLvmVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLvmVolumeGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lvm.volumeGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLvmVolumeGroup) MqlName() string {
+	return "lvm.volumeGroup"
+}
+
+func (c *mqlLvmVolumeGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLvmVolumeGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLvmVolumeGroup) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLvmVolumeGroup) GetAttributes() *plugin.TValue[string] {
+	return &c.Attributes
+}
+
+func (c *mqlLvmVolumeGroup) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlLvmVolumeGroup) GetFreeBytes() *plugin.TValue[int64] {
+	return &c.FreeBytes
+}
+
+func (c *mqlLvmVolumeGroup) GetPhysicalVolumeCount() *plugin.TValue[int64] {
+	return &c.PhysicalVolumeCount
+}
+
+func (c *mqlLvmVolumeGroup) GetLogicalVolumeCount() *plugin.TValue[int64] {
+	return &c.LogicalVolumeCount
+}
+
+func (c *mqlLvmVolumeGroup) GetSnapshotCount() *plugin.TValue[int64] {
+	return &c.SnapshotCount
+}
+
+// mqlLvmLogicalVolume for the lvm.logicalVolume resource
+type mqlLvmLogicalVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLvmLogicalVolumeInternal it will be used here
+	Name            plugin.TValue[string]
+	Path            plugin.TValue[string]
+	Uuid            plugin.TValue[string]
+	VolumeGroupName plugin.TValue[string]
+	Attributes      plugin.TValue[string]
+	SizeBytes       plugin.TValue[int64]
+	Origin          plugin.TValue[string]
+	DataPercent     plugin.TValue[float64]
+	PoolName        plugin.TValue[string]
+}
+
+// createLvmLogicalVolume creates a new instance of this resource
+func createLvmLogicalVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLvmLogicalVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lvm.logicalVolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLvmLogicalVolume) MqlName() string {
+	return "lvm.logicalVolume"
+}
+
+func (c *mqlLvmLogicalVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLvmLogicalVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLvmLogicalVolume) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlLvmLogicalVolume) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLvmLogicalVolume) GetVolumeGroupName() *plugin.TValue[string] {
+	return &c.VolumeGroupName
+}
+
+func (c *mqlLvmLogicalVolume) GetAttributes() *plugin.TValue[string] {
+	return &c.Attributes
+}
+
+func (c *mqlLvmLogicalVolume) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlLvmLogicalVolume) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlLvmLogicalVolume) GetDataPercent() *plugin.TValue[float64] {
+	return &c.DataPercent
+}
+
+func (c *mqlLvmLogicalVolume) GetPoolName() *plugin.TValue[string] {
+	return &c.PoolName
 }
 
 // mqlMdadm for the mdadm resource

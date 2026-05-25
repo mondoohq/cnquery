@@ -4778,6 +4778,109 @@ private logrotate.entry @defaults("path") {
   config map[string]string
 }
 
+// LVM (Logical Volume Manager) physical volumes, volume groups, and logical volumes
+//
+// Examine LVM block-device storage on Linux: physical volumes initialized
+// for LVM, volume groups that aggregate them, and the logical volumes
+// carved out of those groups. Iterate `physicalVolumes`, `volumeGroups`,
+// and `logicalVolumes` to audit LVM layout, free capacity, thin-pool
+// usage, and snapshot relationships.
+lvm @defaults("volumeGroups") {
+  // Physical volumes initialized for LVM
+  physicalVolumes() []lvm.physicalVolume
+  // Volume groups
+  volumeGroups() []lvm.volumeGroup
+  // Logical volumes across all volume groups
+  logicalVolumes() []lvm.logicalVolume
+}
+
+// LVM physical volume
+//
+// Examine a single block device initialized as an LVM physical volume:
+// device path (`name`), `uuid`, the volume group it belongs to
+// (`volumeGroupName`, empty if unassigned), on-disk `format`, attribute
+// flags, and total/free byte counts. Iterated from `lvm.physicalVolumes`.
+private lvm.physicalVolume @defaults("name volumeGroupName sizeBytes") {
+  // Physical volume device path (e.g., /dev/sda1)
+  name string
+  // UUID of the physical volume
+  uuid string
+  // Name of the volume group this PV belongs to (empty if unassigned)
+  volumeGroupName string
+  // PV on-disk format (typically "lvm2")
+  format string
+  // PV attribute flags
+  //
+  // Three-character status string. Common values include `a` (allocatable),
+  // `x` (exported), and `m` (missing). See lvm(8) `pv_attr` for the full set.
+  attributes string
+  // Total size in bytes
+  sizeBytes int
+  // Free space in bytes
+  freeBytes int
+}
+
+// LVM volume group
+//
+// Examine a single LVM volume group: `name`, `uuid`, attribute flags,
+// total and free byte counts, and the counts of physical volumes,
+// logical volumes, and snapshots it contains. Iterated from
+// `lvm.volumeGroups` to audit capacity and group-level policy.
+private lvm.volumeGroup @defaults("name sizeBytes freeBytes") {
+  // Volume group name
+  name string
+  // UUID of the volume group
+  uuid string
+  // VG attribute flags
+  //
+  // Six-character status string covering permissions, resizability,
+  // export state, partial state, allocation policy, and clustering.
+  // See lvm(8) `vg_attr` for the full set.
+  attributes string
+  // Total size in bytes
+  sizeBytes int
+  // Free space in bytes
+  freeBytes int
+  // Number of physical volumes in this group
+  physicalVolumeCount int
+  // Number of logical volumes in this group
+  logicalVolumeCount int
+  // Number of snapshots in this group
+  snapshotCount int
+}
+
+// LVM logical volume
+//
+// Examine a single LVM logical volume: `name`, full device `path`,
+// `uuid`, parent volume group (`volumeGroupName`), attribute flags,
+// size in bytes, snapshot `origin`, and thin-pool data usage. For
+// thin volumes, `poolName` is set; for snapshots, `origin` is the
+// source LV name. Iterated from `lvm.logicalVolumes`.
+private lvm.logicalVolume @defaults("name volumeGroupName sizeBytes") {
+  // Logical volume name
+  name string
+  // Full device path (e.g., /dev/vg0/data)
+  path string
+  // UUID of the logical volume
+  uuid string
+  // Name of the volume group this LV belongs to
+  volumeGroupName string
+  // LV attribute flags
+  //
+  // Ten-character status string covering volume type, permissions,
+  // allocation policy, fixed minor, state, open device, target type,
+  // zeroing, and skipped activation. See lvm(8) `lv_attr` for the full set.
+  attributes string
+  // Size in bytes
+  sizeBytes int
+  // Origin LV name for snapshots, empty if not a snapshot
+  origin string
+  // Data percentage used (for thin pools, thin volumes, snapshots, mirrors); -1 if not applicable
+  dataPercent float
+  // Pool name for thin volumes, empty if not a thin volume
+  poolName string
+}
+
 // Linux software RAID arrays (mdadm)
 //
 // Examine arrays with their RAID level, state, member devices, and resync progress
