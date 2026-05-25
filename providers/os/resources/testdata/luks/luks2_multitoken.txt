@@ -1,0 +1,66 @@
+LUKS header information
+Version:       	2
+Epoch:         	9
+Metadata area: 	16384 [bytes]
+Keyslots area: 	16744448 [bytes]
+UUID:          	aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+Label:         	data
+Subsystem:     	systemd
+Flags:       	(no flags)
+
+Data segments:
+  0: crypt
+	offset: 16777216 [bytes]
+	length: (whole device)
+	cipher: aes-xts-plain64
+	sector: 4096 [bytes]
+
+Keyslots:
+  0: luks2
+	Key:        512 bits
+	Priority:   normal
+	Cipher:     aes-xts-plain64
+	Cipher key: 512 bits
+	PBKDF:      argon2id
+	Time cost:  4
+	Memory:     524288
+	Threads:    2
+	Salt:       11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff 00
+	            11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff 00
+	AF stripes: 4000
+	AF hash:    sha256
+	Area offset:32768 [bytes]
+	Area length:258048 [bytes]
+	Digest ID:  0
+  2: luks2
+	Key:        512 bits
+	Priority:   normal
+	Cipher:     aes-xts-plain64
+	Cipher key: 512 bits
+	PBKDF:      argon2i
+	Time cost:  5
+	Memory:     262144
+	Threads:    1
+	AF stripes: 4000
+	AF hash:    sha256
+	Area offset:548864 [bytes]
+	Area length:258048 [bytes]
+	Digest ID:  0
+
+Tokens:
+  0: systemd-tpm2
+	Keyslot:    0
+  1: systemd-fido2
+	Keyslot:    2
+  2: systemd-recovery
+	Keyslot:    0
+	Keyslot:    2
+
+Digests:
+  0: pbkdf2
+	Hash:       sha256
+	Iterations: 200000
+	Salt:       ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00
+	            ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00
+	Digest:     00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
+	            00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff

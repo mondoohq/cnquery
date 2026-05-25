@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -14,39 +15,61 @@ import (
 )
 
 type mqlLuksVolumeInternal struct {
-	dump     luksDump
-	parsed   bool
-	blockDev *mqlLsblkEntry
+	dump   luksDump
+	parsed bool
 }
 
 func (l *mqlLuks) id() (string, error) {
 	return "luks", nil
 }
 
+// validDevicePath restricts the device strings we'll forward to
+// `cryptsetup luksDump`. lsblk's `--paths` output yields canonical
+// `/dev/...` paths and the kernel naming scheme allows only letters,
+// digits, dashes, underscores, slashes, and the bracket characters
+// LVM/dm uses (e.g. `/dev/mapper/vg-lv`, `/dev/disk/by-uuid/...`).
+// Rejecting anything outside that alphabet keeps shell metacharacters
+// out of the command line even if the kernel ever returns an
+// unexpected name.
+var validDevicePath = regexp.MustCompile(`^/dev/[A-Za-z0-9._/=:+@-]+$`)
+
 func (l *mqlLuks) volumes() ([]any, error) {
-	lsblkRes, err := CreateResource(l.MqlRuntime, "lsblk", map[string]*llx.RawData{})
+	// Walk the lsblk tree ourselves instead of reusing the `lsblk`
+	// resource: `lsblk.list` only enumerates direct children of each
+	// top-level disk, so whole-disk LUKS volumes (LUKS formatted
+	// directly on `/dev/sdb`, not on `/dev/sdb1`) would be missed.
+	o, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("lsblk --json --fs --paths"),
+	})
 	if err != nil {
 		return nil, err
 	}
-	list := lsblkRes.(*mqlLsblk).GetList()
-	if list.Error != nil {
-		return nil, list.Error
+	cmd := o.(*mqlCommand)
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		return nil, errors.New("lsblk failed: " + cmd.Stderr.Data)
 	}
 
+	parsed, err := parseBlockEntries([]byte(cmd.Stdout.Data))
+	if err != nil {
+		return nil, err
+	}
+
+	devices := collectLuksDevices(parsed.Blockdevices)
+
 	volumes := []any{}
-	for _, raw := range list.Data {
-		entry := raw.(*mqlLsblkEntry)
-		if !isLuksFstype(entry.Fstype.Data) {
+	for _, dev := range devices {
+		if !validDevicePath.MatchString(dev.Name) {
+			log.Warn().Str("device", dev.Name).Msg("luks: rejecting device with unexpected name")
 			continue
 		}
 
-		dump, err := runLuksDump(l.MqlRuntime, entry.Name.Data)
+		dump, err := runLuksDump(l.MqlRuntime, dev.Name)
 		if err != nil {
-			log.Debug().Err(err).Str("device", entry.Name.Data).Msg("luks: skipping device")
+			log.Debug().Err(err).Str("device", dev.Name).Msg("luks: skipping device")
 			continue
 		}
 
-		vol, err := newLuksVolume(l.MqlRuntime, entry, dump)
+		vol, err := newLuksVolume(l.MqlRuntime, dev.Name, dump)
 		if err != nil {
 			return nil, err
 		}
@@ -55,9 +78,31 @@ func (l *mqlLuks) volumes() ([]any, error) {
 	return volumes, nil
 }
 
+// collectLuksDevices walks the lsblk tree depth-first and returns every
+// device with fstype == "crypto_LUKS", at any depth. This covers
+// LUKS-on-partition (the common case), LUKS-on-whole-disk, and
+// LUKS-on-LVM topologies.
+func collectLuksDevices(devs []blockdevice) []blockdevice {
+	var out []blockdevice
+	var walk func([]blockdevice)
+	walk = func(devs []blockdevice) {
+		for _, d := range devs {
+			if isLuksFstype(d.Fstype) {
+				out = append(out, d)
+			}
+			walk(d.Children)
+		}
+	}
+	walk(devs)
+	return out
+}
+
 func runLuksDump(runtime *plugin.Runtime, device string) (luksDump, error) {
+	// device has already been validated against validDevicePath. The %q
+	// quoting is belt-and-braces in case the command resource shells
+	// out — it survives both shell-eval and exec-style invocation.
 	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("cryptsetup luksDump " + device),
+		"command": llx.StringData(fmt.Sprintf("cryptsetup luksDump %q", device)),
 	})
 	if err != nil {
 		return luksDump{}, err
@@ -69,9 +114,9 @@ func runLuksDump(runtime *plugin.Runtime, device string) (luksDump, error) {
 	return parseLuksDump(cmd.Stdout.Data)
 }
 
-func newLuksVolume(runtime *plugin.Runtime, entry *mqlLsblkEntry, dump luksDump) (*mqlLuksVolume, error) {
+func newLuksVolume(runtime *plugin.Runtime, device string, dump luksDump) (*mqlLuksVolume, error) {
 	res, err := CreateResource(runtime, "luks.volume", map[string]*llx.RawData{
-		"name":          llx.StringData(entry.Name.Data),
+		"name":          llx.StringData(device),
 		"uuid":          llx.StringData(dump.UUID),
 		"version":       llx.IntData(int64(dump.Version)),
 		"label":         llx.StringData(dump.Label),
@@ -86,13 +131,13 @@ func newLuksVolume(runtime *plugin.Runtime, entry *mqlLsblkEntry, dump luksDump)
 	vol := res.(*mqlLuksVolume)
 	vol.dump = dump
 	vol.parsed = true
-	vol.blockDev = entry
 	return vol, nil
 }
 
 // luksTokensToDicts converts parsed token maps to llx-compatible dict
 // values. The parser stores keyslot indices as []int64; llx dicts
-// expect []any for nested arrays.
+// expect []any for nested arrays. A fresh map is returned per token so
+// the caller's input is not mutated.
 func luksTokensToDicts(tokens []map[string]any) []any {
 	out := make([]any, 0, len(tokens))
 	for _, t := range tokens {
@@ -118,8 +163,23 @@ func (v *mqlLuksVolume) id() (string, error) {
 }
 
 func (v *mqlLuksVolume) blockDevice() (*mqlLsblkEntry, error) {
-	if v.blockDev != nil {
-		return v.blockDev, nil
+	// Best-effort lookup against the `lsblk` resource — works for the
+	// common LUKS-on-partition layout. For LUKS volumes that don't
+	// appear in lsblk's flattened list (whole-disk LUKS, some mapper
+	// targets), we report a null reference rather than fabricating one.
+	lsblkRes, err := CreateResource(v.MqlRuntime, "lsblk", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := lsblkRes.(*mqlLsblk).GetList()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	for _, raw := range list.Data {
+		entry := raw.(*mqlLsblkEntry)
+		if entry.Name.Data == v.Name.Data {
+			return entry, nil
+		}
 	}
 	v.BlockDevice.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil

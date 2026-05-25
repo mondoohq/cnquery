@@ -242,6 +242,7 @@ bwawxf
 bytematchstatement
 cafd
 cavium
+cbc
 cbf
 cce
 ccf
@@ -347,6 +348,7 @@ endpointslice
 eni
 entraid
 erlang
+essiv
 ethertype
 eula
 evals
@@ -482,10 +484,12 @@ junos
 jupyter
 jwk
 jwks
+kdf
 keras
 kerberoastable
 kexec
 keymanager
+keyslots
 kilocode
 kiro
 kmip
@@ -835,6 +839,7 @@ trainingjob
 transitgateway
 transitives
 truststore
+twofish
 uami
 udid
 uefi

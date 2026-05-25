@@ -115,6 +115,9 @@ func isSectionHeader(trimmed string) bool {
 	return false
 }
 
+// splitColon splits on the *first* colon only — important because LUKS
+// cipher-mode values can themselves contain colons (e.g.
+// `cbc-essiv:sha256`). Splitting on the last colon would corrupt those.
 func splitColon(line string) (string, string, bool) {
 	idx := strings.IndexByte(line, ':')
 	if idx < 0 {
@@ -158,7 +161,14 @@ func parseLuks1Keyslots(lines []string, d *luksDump) {
 			if err != nil {
 				continue
 			}
-			current = &luksKeyslotInfo{Index: n, State: state, KDF: "pbkdf2", Hash: d.Cipher.Hash}
+			current = &luksKeyslotInfo{Index: n, State: state}
+			// Only ENABLED slots carry KDF parameters; populate kdf/hash
+			// from the volume header so audits that filter by these
+			// fields don't false-positive on DISABLED slots.
+			if state == "ENABLED" {
+				current.KDF = "pbkdf2"
+				current.Hash = d.Cipher.Hash
+			}
 			continue
 		}
 

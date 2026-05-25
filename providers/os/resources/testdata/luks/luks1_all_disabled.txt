@@ -1,0 +1,22 @@
+LUKS header information for /dev/sdb1
+
+Version:       	1
+Cipher name:   	serpent
+Cipher mode:   	cbc-essiv:sha256
+Hash spec:     	sha512
+Payload offset:	4096
+MK bits:       	256
+MK digest:     	00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
+MK salt:       	ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00
+              	ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00
+MK iterations: 	42000
+UUID:          	11111111-2222-3333-4444-555555555555
+
+Key Slot 0: DISABLED
+Key Slot 1: DISABLED
+Key Slot 2: DISABLED
+Key Slot 3: DISABLED
+Key Slot 4: DISABLED
+Key Slot 5: DISABLED
+Key Slot 6: DISABLED
+Key Slot 7: DISABLED
