@@ -316,6 +316,7 @@ horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
 hostpci
+hotplug
 hpi
 hsts
 httproute
