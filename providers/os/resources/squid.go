@@ -133,7 +133,11 @@ func scanBinaryForSquidVersion(fs *afero.Afero, path string) string {
 			copy(buf, active[len(active)-overlap:])
 			carry = overlap
 		} else {
-			carry = 0
+			// Carry the whole active buffer forward — if the version
+			// tag straddles the boundary of a short final read, this
+			// keeps the prefix bytes available for the next iteration.
+			// `active` aliases `buf[:carry+n]`, so no copy is needed.
+			carry = len(active)
 		}
 
 		if err != nil {
