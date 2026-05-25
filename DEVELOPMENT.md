@@ -228,6 +228,7 @@ use (
    ./mql/providers/okta
    ./mql/providers/ollama
    ./mql/providers/opcua
+   ./mql/providers/openai
    ./mql/providers/openstack
    ./mql/providers/proxmox
    ./mql/providers/shodan

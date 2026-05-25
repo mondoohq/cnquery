@@ -231,6 +231,7 @@ PROVIDERS := \
 	okta \
 	ollama \
 	opcua \
+	openai \
 	openstack \
 	os \
 	proxmox \

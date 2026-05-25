@@ -561,6 +561,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"openai": {
+		Provider: &plugin.Provider{
+			Name:            "openai",
+			ID:              "go.mondoo.com/mql/providers/openai",
+			ConnectionTypes: []string{"openai"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "openai",
+					Use:   "openai [--token TOKEN]",
+					Short: "an OpenAI account",
+				},
+			},
+		},
+	},
+
 	"openstack": {
 		Provider: &plugin.Provider{
 			Name:            "openstack",
