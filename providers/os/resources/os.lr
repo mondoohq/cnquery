@@ -5892,6 +5892,9 @@ windows {
 
   // Information about optional features in a Windows image.
   optionalFeatures() []windows.optionalFeature
+
+  // Registered Task Scheduler entries parsed from C:\Windows\System32\Tasks
+  scheduledTasks() []windows.scheduledTask
 }
 
 // macOS system extension
@@ -6170,6 +6173,92 @@ private windows.optionalFeature @defaults("name") {
   enabled bool
   // Feature installation state
   state int
+}
+
+// Windows Task Scheduler entry
+//
+// Examine a single registered scheduled task parsed from its XML
+// definition under `C:\Windows\System32\Tasks`. The `path` selects the
+// task by its Task Scheduler URI — for example
+// `windows.scheduledTask(path: "\Microsoft\Windows\Defrag\ScheduledDefrag")`.
+// Fields include registration metadata (`author`, `description`, `uri`,
+// `source`, `date`), the security `principal` (`runAsUser`, `runLevel`,
+// `logonType`, `groupId`), the runtime `enabled` flag, and lifecycle
+// settings (`hidden`, `allowStartOnDemand`, `runOnlyIfNetworkAvailable`,
+// `stopIfGoingOnBatteries`, `disallowStartIfOnBatteries`,
+// `multipleInstancesPolicy`, `executionTimeLimit`, `priority`). The
+// heterogeneous `triggers` and `actions` arrays each carry a `type` key
+// (`BootTrigger`, `CalendarTrigger`, `EventTrigger`, `IdleTrigger`,
+// `LogonTrigger`, `RegistrationTrigger`, `TimeTrigger`,
+// `SessionStateChangeTrigger`; `Exec`, `ComHandler`, `SendEmail`,
+// `ShowMessage`) plus the element's own fields. The backing XML `file`
+// is exposed for audit-trail queries.
+windows.scheduledTask @defaults("path enabled runAsUser") {
+  init(path string)
+  // Task path from the Task Scheduler URI (e.g., "\Microsoft\Windows\Defrag\ScheduledDefrag")
+  path string
+  // Leaf task name (e.g., "ScheduledDefrag")
+  name string
+  // Author from RegistrationInfo
+  author string
+  // Human description from RegistrationInfo
+  description string
+  // Source string from RegistrationInfo (resource string reference when present)
+  source string
+  // Registration date from RegistrationInfo, when supplied by the task author
+  date time
+  // Principal UserId — typically a SID like "S-1-5-18" or a well-known account name
+  runAsUser string
+  // Principal RunLevel
+  //
+  // Either "LeastPrivilege" or "HighestAvailable" (empty when not specified).
+  runLevel string
+  // Principal LogonType
+  //
+  // One of "Password", "S4U", "InteractiveToken", "Group",
+  // "ServiceAccount", "InteractiveTokenOrPassword", or "None"; empty
+  // when not specified.
+  logonType string
+  // Principal GroupId (e.g., "S-1-5-32-544"), when the task runs as a group rather than a user
+  groupId string
+  // Whether the task is enabled
+  enabled bool
+  // Whether the task is hidden from the Task Scheduler UI
+  hidden bool
+  // Whether the task may be started on demand
+  allowStartOnDemand bool
+  // Whether the task runs only if a network connection is available
+  runOnlyIfNetworkAvailable bool
+  // Whether the task stops if the system switches to battery power
+  stopIfGoingOnBatteries bool
+  // Whether the task is prevented from starting on battery power
+  disallowStartIfOnBatteries bool
+  // Multiple-instances policy
+  //
+  // One of "IgnoreNew", "Parallel", "Queue", or "StopExisting".
+  multipleInstancesPolicy string
+  // Maximum task execution duration as an ISO 8601 duration (e.g., "PT72H", "P3D")
+  executionTimeLimit string
+  // Priority class
+  //
+  // Range 0–10; defaults to 7 when the task XML omits the element.
+  priority int
+  // Trigger entries
+  //
+  // Each entry has a "type" key naming the trigger element (BootTrigger,
+  // CalendarTrigger, EventTrigger, IdleTrigger, LogonTrigger,
+  // RegistrationTrigger, TimeTrigger, SessionStateChangeTrigger) plus
+  // type-specific fields (start/end boundary, enabled, repetition,
+  // schedule, subscription, etc.).
+  triggers []dict
+  // Action entries
+  //
+  // Each entry has a "type" key naming the action element (Exec,
+  // ComHandler, SendEmail, ShowMessage) plus type-specific fields
+  // (command, arguments, workingDirectory, classId, ...).
+  actions []dict
+  // Backing XML definition file under C:\Windows\System32\Tasks
+  file file
 }
 
 // Windows Firewall (Advanced Security)
