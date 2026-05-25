@@ -5,14 +5,17 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // rsyslogConfPaths maps platform names to their rsyslog.conf location.
@@ -447,4 +450,230 @@ func (s *mqlRsyslogConf) settings(content string) ([]any, error) {
 	}
 
 	return settings, nil
+}
+
+// parsedEntries walks every fragment in `files` and returns the unified
+// list of typed entries from all of them. The result is memoized on the
+// Internal struct so the four typed accessors share one parse pass per
+// resource instance.
+func (s *mqlRsyslogConf) parsedEntries(files []any) ([]rsyslogEntry, error) {
+	s.parsedLock.Lock()
+	defer s.parsedLock.Unlock()
+	if s.parsedDone {
+		return s.parsedCache, nil
+	}
+
+	var all []rsyslogEntry
+	for _, f := range files {
+		file := f.(*mqlFile)
+		path := file.Path.Data
+		c := file.GetContent()
+		if c.Error != nil {
+			if errors.Is(c.Error, resources.NotFoundError{}) {
+				continue
+			}
+			// Read errors on a single fragment shouldn't abort the whole
+			// parse — surface what we can and skip the unreadable file.
+			continue
+		}
+		all = append(all, parseRsyslogFile(path, c.Data)...)
+	}
+
+	s.parsedCache = all
+	s.parsedDone = true
+	return all, nil
+}
+
+// rsyslogEntryID builds a deterministic resource cache key for typed entries
+// scoped by kind, source file, and source line. Multi-selector rules and
+// the actions they fan out to share a sourceFile:sourceLine pair but get
+// disambiguated via an index suffix so each row has a unique __id.
+func rsyslogEntryID(kind string, e rsyslogEntry, idx int) string {
+	return fmt.Sprintf("%s/%s:%d/%d", kind, e.sourceFile, e.sourceLine, idx)
+}
+
+func (s *mqlRsyslogConf) modules(files []any) ([]any, error) {
+	entries, err := s.parsedEntries(files)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	idx := 0
+	for _, e := range entries {
+		if e.kind != rsyslogKindModule {
+			continue
+		}
+		res, err := CreateResource(s.MqlRuntime, "rsyslog.module", map[string]*llx.RawData{
+			"__id":       llx.StringData(rsyslogEntryID("module", e, idx)),
+			"name":       llx.StringData(e.moduleName),
+			"parameters": llx.DictData(anyMap(e.parameters)),
+			"sourceFile": llx.StringData(e.sourceFile),
+			"sourceLine": llx.IntData(int64(e.sourceLine)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+		idx++
+	}
+	return out, nil
+}
+
+func (s *mqlRsyslogConf) inputs(files []any) ([]any, error) {
+	entries, err := s.parsedEntries(files)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	idx := 0
+	for _, e := range entries {
+		if e.kind != rsyslogKindInput {
+			continue
+		}
+		res, err := CreateResource(s.MqlRuntime, "rsyslog.input", map[string]*llx.RawData{
+			"__id":             llx.StringData(rsyslogEntryID("input", e, idx)),
+			"type":             llx.StringData(e.moduleType),
+			"port":             llx.IntData(e.port),
+			"address":          llx.StringData(e.address),
+			"ruleset":          llx.StringData(e.ruleset),
+			"streamDriverMode": llx.StringData(e.streamDriverMode),
+			"parameters":       llx.DictData(anyMap(e.parameters)),
+			"sourceFile":       llx.StringData(e.sourceFile),
+			"sourceLine":       llx.IntData(int64(e.sourceLine)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+		idx++
+	}
+	return out, nil
+}
+
+func (s *mqlRsyslogConf) actions(files []any) ([]any, error) {
+	entries, err := s.parsedEntries(files)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	idx := 0
+	for _, e := range entries {
+		if e.kind != rsyslogKindAction {
+			continue
+		}
+		res, err := CreateResource(s.MqlRuntime, "rsyslog.action", map[string]*llx.RawData{
+			"__id":       llx.StringData(rsyslogEntryID("action", e, idx)),
+			"type":       llx.StringData(e.moduleType),
+			"target":     llx.StringData(e.target),
+			"protocol":   llx.StringData(e.protocol),
+			"tlsEnabled": llx.BoolData(e.tlsEnabled),
+			"template":   llx.StringData(e.template),
+			"queue":      llx.DictData(anyMap(e.queue)),
+			"parameters": llx.DictData(anyMap(e.parameters)),
+			"sourceFile": llx.StringData(e.sourceFile),
+			"sourceLine": llx.IntData(int64(e.sourceLine)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+		idx++
+	}
+	return out, nil
+}
+
+func (s *mqlRsyslogConf) rules(files []any) ([]any, error) {
+	entries, err := s.parsedEntries(files)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	idx := 0
+	for _, e := range entries {
+		if e.kind != rsyslogKindRule {
+			continue
+		}
+		mqlRule, err := CreateResource(s.MqlRuntime, "rsyslog.rule", map[string]*llx.RawData{
+			"__id":       llx.StringData(rsyslogEntryID("rule", e, idx)),
+			"facilities": llx.ArrayData(stringsToAny(e.facilities), types.String),
+			"severities": llx.ArrayData(stringsToAny(e.severities), types.String),
+			"target":     llx.StringData(e.target),
+			"negate":     llx.BoolData(e.negate),
+			"sourceFile": llx.StringData(e.sourceFile),
+			"sourceLine": llx.IntData(int64(e.sourceLine)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		rr := mqlRule.(*mqlRsyslogRule)
+		rr.target = e.target
+		rr.sourceFile = e.sourceFile
+		rr.sourceLine = e.sourceLine
+		out = append(out, mqlRule)
+		idx++
+	}
+	return out, nil
+}
+
+// action resolves the typed `rsyslog.rule.action()` accessor. The action
+// is synthesized from the rule's target — the same `selectorActionEntries`
+// path the unified parser uses — so the returned object matches what would
+// appear in `rsyslog.conf.actions()` for that target.
+//
+// We build a fresh action resource scoped by `(target, sourceFile,
+// sourceLine)` rather than reusing one from `actions()` so the runtime
+// caches the rule and its action consistently even when `actions()` has
+// not been resolved yet.
+func (r *mqlRsyslogRule) action() (*mqlRsyslogAction, error) {
+	moduleType, protocol := classifySelectorTarget(r.target)
+	res, err := CreateResource(r.MqlRuntime, "rsyslog.action", map[string]*llx.RawData{
+		"__id":       llx.StringData(fmt.Sprintf("rule-action/%s:%d/%s", r.sourceFile, r.sourceLine, r.target)),
+		"type":       llx.StringData(moduleType),
+		"target":     llx.StringData(r.target),
+		"protocol":   llx.StringData(protocol),
+		"tlsEnabled": llx.BoolData(false),
+		"template":   llx.StringData(""),
+		"queue":      llx.DictData(map[string]any{}),
+		"parameters": llx.DictData(map[string]any{}),
+		"sourceFile": llx.StringData(r.sourceFile),
+		"sourceLine": llx.IntData(int64(r.sourceLine)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlRsyslogAction), nil
+}
+
+// id methods for the typed sub-resources. The __id is set in the creator
+// so these just echo it back.
+func (m *mqlRsyslogModule) id() (string, error) { return m.__id, nil }
+func (i *mqlRsyslogInput) id() (string, error)  { return i.__id, nil }
+func (a *mqlRsyslogAction) id() (string, error) { return a.__id, nil }
+func (r *mqlRsyslogRule) id() (string, error)   { return r.__id, nil }
+
+// anyMap returns a value suitable for llx.DictData. It accepts a nil map
+// safely (DictData rejects untyped nil) and otherwise just returns the
+// argument as a generic map.
+func anyMap(m map[string]any) any {
+	if m == nil {
+		return map[string]any{}
+	}
+	return m
+}
+
+// mqlRsyslogConfInternal caches the unified parse across the four typed
+// accessors so each resource instance pays the parse cost only once.
+type mqlRsyslogConfInternal struct {
+	parsedLock  sync.Mutex
+	parsedDone  bool
+	parsedCache []rsyslogEntry
+}
+
+// mqlRsyslogRuleInternal stores the data needed to lazy-build the
+// rule's typed action() accessor without re-parsing or relying on
+// the resource's exposed fields.
+type mqlRsyslogRuleInternal struct {
+	target     string
+	sourceFile string
+	sourceLine int
 }
