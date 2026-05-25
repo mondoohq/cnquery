@@ -1547,6 +1547,12 @@ systemd.resolved @defaults("active dns") {
   active bool
   // Effective DNS server addresses for the Global scope
   dns []string
+  // DNS server currently in use for the Global scope
+  //
+  // resolvectl picks one server from the configured `dns` list at a time;
+  // this is that selection. Empty when no global DNS server is active or
+  // the line is not emitted (e.g., when only per-link DNS is configured).
+  currentDnsServer string
   // Fallback DNS servers used when no Link or Global DNS is configured
   fallbackDns []string
   // DNS search domains

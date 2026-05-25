@@ -26,6 +26,7 @@ Current DNS Server: 192.168.1.1
 	parseResolvectlGlobal(input, g)
 
 	assert.Equal(t, []string{"1.1.1.1", "1.0.0.1"}, g.dns)
+	assert.Equal(t, "1.1.1.1", g.currentDnsServer)
 	assert.Equal(t, []string{"corp.example.com", "~example.com"}, g.domains)
 	assert.Equal(t, "stub", g.resolvConfMode)
 	assert.Equal(t, "no/unsupported", g.dnssec)
@@ -38,6 +39,44 @@ Current DNS Server: 192.168.1.1
 	for _, addr := range g.dns {
 		assert.NotEqual(t, "192.168.1.1", addr)
 	}
+}
+
+func TestParseResolvectlGlobal_CacheDisabled(t *testing.T) {
+	// systemd versions that emit a `Cache:` line must override the default.
+	input := `Global
+         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+             Cache: no
+       DNS Servers: 1.1.1.1
+`
+	g := &resolvedGlobal{}
+	parseResolvectlGlobal(input, g)
+
+	assert.False(t, g.cache, "explicit `Cache: no` overrides default of true")
+}
+
+func TestParseResolvectlGlobal_CacheEnabledExplicit(t *testing.T) {
+	input := `Global
+             Cache: yes
+       DNS Servers: 1.1.1.1
+`
+	g := &resolvedGlobal{}
+	parseResolvectlGlobal(input, g)
+
+	assert.True(t, g.cache, "explicit `Cache: yes` matches the default")
+}
+
+func TestParseResolvectlGlobal_CurrentDnsServerOnly(t *testing.T) {
+	// Some hosts only have a Current DNS Server line (e.g., when no static
+	// global DNS is configured but resolvectl reports the active selection).
+	input := `Global
+         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+Current DNS Server: 9.9.9.9
+`
+	g := &resolvedGlobal{}
+	parseResolvectlGlobal(input, g)
+
+	assert.Equal(t, "9.9.9.9", g.currentDnsServer)
+	assert.Empty(t, g.dns, "no DNS Servers line means dns stays empty")
 }
 
 func TestParseResolvectlGlobal_PositiveProtocols(t *testing.T) {

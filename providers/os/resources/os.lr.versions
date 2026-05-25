@@ -1936,6 +1936,7 @@ sysrc.files 13.2.6
 systemd.resolved 13.16.10
 systemd.resolved.active 13.16.10
 systemd.resolved.cache 13.16.10
+systemd.resolved.currentDnsServer 13.16.10
 systemd.resolved.dns 13.16.10
 systemd.resolved.dnsOverTls 13.16.10
 systemd.resolved.dnssec 13.16.10

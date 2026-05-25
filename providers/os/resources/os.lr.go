@@ -3177,6 +3177,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"systemd.resolved.dns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSystemdResolved).GetDns()).ToDataRes(types.Array(types.String))
 	},
+	"systemd.resolved.currentDnsServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdResolved).GetCurrentDnsServer()).ToDataRes(types.String)
+	},
 	"systemd.resolved.fallbackDns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSystemdResolved).GetFallbackDns()).ToDataRes(types.Array(types.String))
 	},
@@ -9838,6 +9841,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"systemd.resolved.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSystemdResolved).Dns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.resolved.currentDnsServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdResolved).CurrentDnsServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"systemd.resolved.fallbackDns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24255,16 +24262,17 @@ type mqlSystemdResolved struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlSystemdResolvedInternal
-	Active         plugin.TValue[bool]
-	Dns            plugin.TValue[[]any]
-	FallbackDns    plugin.TValue[[]any]
-	Domains        plugin.TValue[[]any]
-	Dnssec         plugin.TValue[string]
-	DnsOverTls     plugin.TValue[string]
-	Llmnr          plugin.TValue[string]
-	MulticastDns   plugin.TValue[string]
-	ResolvConfMode plugin.TValue[string]
-	Cache          plugin.TValue[bool]
+	Active           plugin.TValue[bool]
+	Dns              plugin.TValue[[]any]
+	CurrentDnsServer plugin.TValue[string]
+	FallbackDns      plugin.TValue[[]any]
+	Domains          plugin.TValue[[]any]
+	Dnssec           plugin.TValue[string]
+	DnsOverTls       plugin.TValue[string]
+	Llmnr            plugin.TValue[string]
+	MulticastDns     plugin.TValue[string]
+	ResolvConfMode   plugin.TValue[string]
+	Cache            plugin.TValue[bool]
 }
 
 // createSystemdResolved creates a new instance of this resource
@@ -24310,6 +24318,10 @@ func (c *mqlSystemdResolved) GetActive() *plugin.TValue[bool] {
 
 func (c *mqlSystemdResolved) GetDns() *plugin.TValue[[]any] {
 	return &c.Dns
+}
+
+func (c *mqlSystemdResolved) GetCurrentDnsServer() *plugin.TValue[string] {
+	return &c.CurrentDnsServer
 }
 
 func (c *mqlSystemdResolved) GetFallbackDns() *plugin.TValue[[]any] {

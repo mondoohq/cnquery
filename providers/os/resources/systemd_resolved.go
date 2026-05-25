@@ -21,15 +21,16 @@ func (r *mqlSystemdResolved) active() (bool, error) {
 }
 
 type resolvedGlobal struct {
-	dns            []string
-	fallbackDns    []string
-	domains        []string
-	dnssec         string
-	dnsOverTls     string
-	llmnr          string
-	multicastDns   string
-	resolvConfMode string
-	cache          bool
+	dns              []string
+	currentDnsServer string
+	fallbackDns      []string
+	domains          []string
+	dnssec           string
+	dnsOverTls       string
+	llmnr            string
+	multicastDns     string
+	resolvConfMode   string
+	cache            bool
 }
 
 func (r *mqlSystemdResolved) resolveGlobal() (*resolvedGlobal, error) {
@@ -60,6 +61,14 @@ func (r *mqlSystemdResolved) dns() ([]any, error) {
 		return nil, err
 	}
 	return stringsToAny(g.dns), nil
+}
+
+func (r *mqlSystemdResolved) currentDnsServer() (string, error) {
+	g, err := r.resolveGlobal()
+	if err != nil {
+		return "", err
+	}
+	return g.currentDnsServer, nil
 }
 
 func (r *mqlSystemdResolved) fallbackDns() ([]any, error) {
@@ -183,12 +192,30 @@ func parseResolvectlGlobal(stdout string, g *resolvedGlobal) {
 			g.resolvConfMode = value
 		case "DNS Servers":
 			g.dns = strings.Fields(value)
+		case "Current DNS Server":
+			g.currentDnsServer = value
 		case "Fallback DNS Servers":
 			g.fallbackDns = strings.Fields(value)
 		case "DNS Domain":
 			g.domains = strings.Fields(value)
+		case "Cache":
+			g.cache = parseYesNo(value, true)
 		}
 	}
+}
+
+// parseYesNo interprets the small vocabulary of boolean tokens that
+// resolvectl/systemd output uses ("yes"/"no", and the variants "on"/"off"
+// and "true"/"false" used by adjacent tools). Unknown values fall back to
+// `fallback` so the caller's default semantics are preserved.
+func parseYesNo(value string, fallback bool) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "yes", "on", "true", "1":
+		return true
+	case "no", "off", "false", "0":
+		return false
+	}
+	return fallback
 }
 
 // parseResolvectlProtocols parses the `Protocols:` line from `resolvectl
