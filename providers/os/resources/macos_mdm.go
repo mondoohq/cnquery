@@ -10,13 +10,26 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 )
 
 // =============================================================================
 // macos.mdm — `profiles status -type enrollment`
 // =============================================================================
+
+// initMacosMdm guards the resource so that callers on non-macOS targets get a
+// clear error instead of a cryptic failure from invoking `profiles` on a
+// platform that doesn't ship the binary.
+func initMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(shared.Connection)
+	if !conn.Asset().Platform.IsFamily("darwin") {
+		return nil, nil, errors.New("macos.mdm is only available on macOS")
+	}
+	return args, nil, nil
+}
 
 func (m *mqlMacosMdm) id() (string, error) {
 	return "macos.mdm", nil
@@ -134,6 +147,17 @@ func (m *mqlMacosMdm) serverUrl() (string, error) {
 // macos.profiles — `profiles list -all -output stdout-xml`
 // =============================================================================
 
+// initMacosProfiles guards the resource so that callers on non-macOS targets
+// get a clear error instead of a cryptic failure from invoking `profiles` on
+// a platform that doesn't ship the binary.
+func initMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(shared.Connection)
+	if !conn.Asset().Platform.IsFamily("darwin") {
+		return nil, nil, errors.New("macos.profiles is only available on macOS")
+	}
+	return args, nil, nil
+}
+
 func (p *mqlMacosProfiles) id() (string, error) {
 	return "macos.profiles", nil
 }
@@ -147,13 +171,35 @@ func (p *mqlMacosProfiles) list() ([]any, error) {
 	}
 	cmd := res.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		// Non-zero exit is the common shape for "no profiles installed" or
-		// "user has no profiles" — surface an empty list rather than
-		// failing the whole query.
+		// `profiles list` exits non-zero on argument errors (missing
+		// action, unknown flag) — surface those as real errors so
+		// authors notice when the command shape changes upstream.
+		stderr := strings.TrimSpace(cmd.GetStderr().Data)
+		if stderr == "" {
+			stderr = strings.TrimSpace(cmd.GetStdout().Data)
+		}
+		return nil, errors.New("profiles list failed: " + stderr)
+	}
+
+	// `profiles list` exits 0 even when it can't actually enumerate
+	// system profiles — for example, without root it prints
+	// "profiles: this command requires root privileges" to stdout
+	// instead of failing. Detect that diagnostic up front so callers
+	// don't see a misleading XML parse error.
+	stdout := cmd.GetStdout().Data
+	trimmed := strings.TrimSpace(stdout)
+	if strings.HasPrefix(trimmed, "profiles:") {
+		return nil, errors.New("profiles list failed: " + trimmed)
+	}
+	// Some macOS versions emit "There are no configuration profiles
+	// installed" plain text (exit 0, no XML) when the user has no
+	// profiles. That's a benign empty state.
+	lowerTrimmed := strings.ToLower(trimmed)
+	if strings.HasPrefix(lowerTrimmed, "there are no configuration profiles") {
 		return []any{}, nil
 	}
 
-	parsed, err := parseMacosProfilesXML([]byte(cmd.GetStdout().Data))
+	parsed, err := parseMacosProfilesXML([]byte(stdout))
 	if err != nil {
 		return nil, err
 	}

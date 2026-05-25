@@ -1303,11 +1303,11 @@ func init() {
 			Create: createMacosSharing,
 		},
 		"macos.mdm": {
-			// to override args, implement: initMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosMdm,
 			Create: createMacosMdm,
 		},
 		"macos.profiles": {
-			// to override args, implement: initMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMacosProfiles,
 			Create: createMacosProfiles,
 		},
 		"macos.profile": {
