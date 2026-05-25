@@ -1591,16 +1591,25 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 			Type:    string(types.Array(types.Resource("file"))),
 			Binding: (2 << 32) | 1,
 		}, res.CodeV2.Blocks[1].Chunks[3])
+		assertFunction(t, "modules", &llx.Function{
+			Type:    string(types.Array(types.Resource("pam.module"))),
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[4])
 		assertFunction(t, "services", &llx.Function{
 			Type:    string(types.Map(types.String, types.Array(types.String))),
 			Binding: (2 << 32) | 1,
-		}, res.CodeV2.Blocks[1].Chunks[4])
+		}, res.CodeV2.Blocks[1].Chunks[5])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
 			Binding: (2 << 32) | 4,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
-		}, res.CodeV2.Blocks[1].Chunks[5])
-		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 6, (2 << 32) | 5},
+		}, res.CodeV2.Blocks[1].Chunks[6])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Array(types.Block)),
+			Binding: (2 << 32) | 5,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(4 << 32)},
+		}, res.CodeV2.Blocks[1].Chunks[7])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 7, (2 << 32) | 8, (2 << 32) | 6},
 			res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
