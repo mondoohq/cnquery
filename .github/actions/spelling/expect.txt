@@ -137,6 +137,7 @@ cocoapods
 codegen
 Codeium
 codeowners
+Codestral
 codeql
 compressratio
 computeagent
@@ -243,6 +244,7 @@ fhir
 filestore
 filesz
 filevault
+Fim
 finetune
 fips
 firefox
@@ -578,6 +580,7 @@ pgp
 phpipam
 phpunit
 pipefail
+Pixtral
 pki
 poddisruptionbudget
 podfile

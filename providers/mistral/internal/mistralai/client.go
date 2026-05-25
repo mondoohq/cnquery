@@ -50,11 +50,10 @@ func NewClient(token string, opts ...ClientOption) *Client {
 }
 
 func (c *Client) request(ctx context.Context, method, endpoint string, result any) error {
-	u, err := url.Parse(c.baseURL)
+	u, err := url.Parse(c.baseURL + endpoint)
 	if err != nil {
-		return fmt.Errorf("invalid base URL: %w", err)
+		return fmt.Errorf("invalid URL: %w", err)
 	}
-	u.Path = endpoint
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), nil)
 	if err != nil {
@@ -166,8 +165,7 @@ func IsAccessDenied(err error) bool {
 	if err == nil {
 		return false
 	}
-	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*APIError](err); ok {
 		return apiErr.StatusCode == 401 || apiErr.StatusCode == 403
 	}
 	return false
