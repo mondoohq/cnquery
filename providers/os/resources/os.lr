@@ -3956,16 +3956,16 @@ macos.sip @defaults("enabled status") {
 // XProtectRemediator.
 macos.xprotect @defaults("version modified") {
   // XProtect bundle version (CFBundleShortVersionString)
-  version string
+  version() string
   // Last modification time of the XProtect bundle
-  modified time
+  modified() time
   // MRT (Malware Removal Tool) bundle version
   //
   // Empty string when MRT.app is not installed (it was sunset in
   // macOS 13; its work is now performed by XProtectRemediator).
-  mrtVersion string
+  mrtVersion() string
   // Last modification time of MRT.app, null when MRT is not installed
-  mrtModified time
+  mrtModified() time
 }
 
 // macOS Time Machine backup configuration

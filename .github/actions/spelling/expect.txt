@@ -448,6 +448,7 @@ modelarmor
 modelfile
 mongodb
 Mpim
+mrt
 Mshv
 msk
 mtls
@@ -614,6 +615,7 @@ recrawl
 referencegrant
 regexmatchstatement
 regexpatternsetreferencestatement
+Remediator
 renv
 RESKEY
 resourcegroup
@@ -825,6 +827,7 @@ wwn
 Xff
 xks
 xlarge
+xprotect
 xssmatchstatement
 xts
 xxxxx

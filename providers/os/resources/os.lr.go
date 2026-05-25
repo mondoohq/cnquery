@@ -35146,19 +35146,27 @@ func (c *mqlMacosXprotect) MqlID() string {
 }
 
 func (c *mqlMacosXprotect) GetVersion() *plugin.TValue[string] {
-	return &c.Version
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
 }
 
 func (c *mqlMacosXprotect) GetModified() *plugin.TValue[*time.Time] {
-	return &c.Modified
+	return plugin.GetOrCompute[*time.Time](&c.Modified, func() (*time.Time, error) {
+		return c.modified()
+	})
 }
 
 func (c *mqlMacosXprotect) GetMrtVersion() *plugin.TValue[string] {
-	return &c.MrtVersion
+	return plugin.GetOrCompute[string](&c.MrtVersion, func() (string, error) {
+		return c.mrtVersion()
+	})
 }
 
 func (c *mqlMacosXprotect) GetMrtModified() *plugin.TValue[*time.Time] {
-	return &c.MrtModified
+	return plugin.GetOrCompute[*time.Time](&c.MrtModified, func() (*time.Time, error) {
+		return c.mrtModified()
+	})
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource
