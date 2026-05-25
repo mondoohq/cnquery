@@ -5498,7 +5498,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMacosSoftwareupdate).GetInstallSecurityResponses()).ToDataRes(types.Bool)
 	},
 	"macos.softwareupdate.lastSuccessfulCheck": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMacosSoftwareupdate).GetLastSuccessfulCheck()).ToDataRes(types.String)
+		return (r.(*mqlMacosSoftwareupdate).GetLastSuccessfulCheck()).ToDataRes(types.Time)
 	},
 	"macos.softwareupdate.updates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSoftwareupdate).GetUpdates()).ToDataRes(types.Array(types.Resource("macos.softwareupdate.entry")))
@@ -5513,7 +5513,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMacosSoftwareupdateEntry).GetVersion()).ToDataRes(types.String)
 	},
 	"macos.softwareupdate.entry.size": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMacosSoftwareupdateEntry).GetSize()).ToDataRes(types.String)
+		return (r.(*mqlMacosSoftwareupdateEntry).GetSize()).ToDataRes(types.Int)
 	},
 	"macos.softwareupdate.entry.recommended": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSoftwareupdateEntry).GetRecommended()).ToDataRes(types.Bool)
@@ -13459,7 +13459,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"macos.softwareupdate.lastSuccessfulCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMacosSoftwareupdate).LastSuccessfulCheck, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlMacosSoftwareupdate).LastSuccessfulCheck, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"macos.softwareupdate.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13483,7 +13483,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"macos.softwareupdate.entry.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMacosSoftwareupdateEntry).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlMacosSoftwareupdateEntry).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"macos.softwareupdate.entry.recommended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36736,7 +36736,7 @@ type mqlMacosSoftwareupdate struct {
 	AutoInstallMacOSUpdates  plugin.TValue[bool]
 	InstallSystemDataFiles   plugin.TValue[bool]
 	InstallSecurityResponses plugin.TValue[bool]
-	LastSuccessfulCheck      plugin.TValue[string]
+	LastSuccessfulCheck      plugin.TValue[*time.Time]
 	Updates                  plugin.TValue[[]any]
 }
 
@@ -36797,7 +36797,7 @@ func (c *mqlMacosSoftwareupdate) GetInstallSecurityResponses() *plugin.TValue[bo
 	return &c.InstallSecurityResponses
 }
 
-func (c *mqlMacosSoftwareupdate) GetLastSuccessfulCheck() *plugin.TValue[string] {
+func (c *mqlMacosSoftwareupdate) GetLastSuccessfulCheck() *plugin.TValue[*time.Time] {
 	return &c.LastSuccessfulCheck
 }
 
@@ -36825,7 +36825,7 @@ type mqlMacosSoftwareupdateEntry struct {
 	Label       plugin.TValue[string]
 	Title       plugin.TValue[string]
 	Version     plugin.TValue[string]
-	Size        plugin.TValue[string]
+	Size        plugin.TValue[int64]
 	Recommended plugin.TValue[bool]
 	Action      plugin.TValue[string]
 }
@@ -36879,7 +36879,7 @@ func (c *mqlMacosSoftwareupdateEntry) GetVersion() *plugin.TValue[string] {
 	return &c.Version
 }
 
-func (c *mqlMacosSoftwareupdateEntry) GetSize() *plugin.TValue[string] {
+func (c *mqlMacosSoftwareupdateEntry) GetSize() *plugin.TValue[int64] {
 	return &c.Size
 }
 

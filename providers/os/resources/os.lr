@@ -4207,9 +4207,9 @@ macos.softwareupdate @defaults("autoCheckEnabled autoInstallMacOSUpdates") {
   installSecurityResponses bool
   // Last successful check timestamp as reported by Software Update
   //
-  // Empty when no successful check has ever been recorded on this
+  // Null when no successful check has ever been recorded on this
   // device or when the field is unset by the policy file.
-  lastSuccessfulCheck string
+  lastSuccessfulCheck time
   // Available software updates as reported by `softwareupdate -l --no-scan`
   updates() []macos.softwareupdate.entry
 }
@@ -4229,8 +4229,8 @@ private macos.softwareupdate.entry @defaults("label title recommended") {
   title string
   // Update version
   version string
-  // Estimated download size as reported by `softwareupdate` (e.g. `132456K`)
-  size string
+  // Estimated download size in KiB as reported by `softwareupdate`
+  size int
   // Whether the update is marked recommended
   recommended bool
   // Post-install action required (`restart`, `shutdown`, or empty for none)

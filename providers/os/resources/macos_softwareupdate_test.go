@@ -5,6 +5,7 @@ package resources
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,9 @@ func TestParseSoftwareUpdateSettings_AllSet(t *testing.T) {
 	assert.True(t, s.autoInstallMacOSUpdates)
 	assert.True(t, s.installSystemDataFiles)
 	assert.True(t, s.installSecurityResponses)
-	assert.Equal(t, "2024-08-12T14:23:00Z", s.lastSuccessfulCheck)
+	require.NotNil(t, s.lastSuccessfulCheck)
+	expected, _ := time.Parse(time.RFC3339, "2024-08-12T14:23:00Z")
+	assert.True(t, s.lastSuccessfulCheck.Equal(expected))
 }
 
 func TestParseSoftwareUpdateSettings_AllUnset(t *testing.T) {
@@ -41,7 +44,7 @@ func TestParseSoftwareUpdateSettings_AllUnset(t *testing.T) {
 	assert.False(t, s.autoInstallMacOSUpdates)
 	assert.False(t, s.installSystemDataFiles)
 	assert.False(t, s.installSecurityResponses)
-	assert.Equal(t, "", s.lastSuccessfulCheck)
+	assert.Nil(t, s.lastSuccessfulCheck, "missing LastSuccessfulDate stays nil")
 }
 
 func TestParseSoftwareUpdateSettings_MixedBoolEncodings(t *testing.T) {
@@ -63,7 +66,7 @@ func TestParseSoftwareUpdateSettings_MixedBoolEncodings(t *testing.T) {
 }
 
 // =============================================================================
-// boolFromPlist / stringFromPlist
+// boolFromPlist / timeFromPlist
 // =============================================================================
 
 func TestBoolFromPlist(t *testing.T) {
@@ -94,14 +97,26 @@ func TestBoolFromPlist(t *testing.T) {
 	assert.False(t, boolFromPlist(d, "missing"), "absent key is false")
 }
 
-func TestStringFromPlist(t *testing.T) {
+func TestTimeFromPlist(t *testing.T) {
 	d := map[string]any{
-		"a": "hello",
-		"b": 42,
+		"good":  "2024-08-12T14:23:00Z",
+		"nano":  "2024-08-12T14:23:00.123456789Z",
+		"empty": "",
+		"junk":  "not-a-timestamp",
+		"wrong": 42,
 	}
-	assert.Equal(t, "hello", stringFromPlist(d, "a"))
-	assert.Equal(t, "", stringFromPlist(d, "b"))
-	assert.Equal(t, "", stringFromPlist(d, "missing"))
+	got := timeFromPlist(d, "good")
+	require.NotNil(t, got)
+	expected, _ := time.Parse(time.RFC3339, "2024-08-12T14:23:00Z")
+	assert.True(t, got.Equal(expected))
+
+	gotNano := timeFromPlist(d, "nano")
+	require.NotNil(t, gotNano, "nanosecond precision still parses")
+
+	assert.Nil(t, timeFromPlist(d, "empty"), "empty string is nil")
+	assert.Nil(t, timeFromPlist(d, "junk"), "unparseable value is nil")
+	assert.Nil(t, timeFromPlist(d, "wrong"), "non-string value is nil")
+	assert.Nil(t, timeFromPlist(d, "missing"), "absent key is nil")
 }
 
 // =============================================================================
@@ -135,7 +150,7 @@ func TestParseSoftwareUpdateList_TwoUpdates(t *testing.T) {
 	assert.Equal(t, "macOS Sonoma 14.5-23F79", macOS.label)
 	assert.Equal(t, "macOS Sonoma 14.5", macOS.title)
 	assert.Equal(t, "14.5", macOS.version)
-	assert.Equal(t, "7180348K", macOS.size)
+	assert.Equal(t, int64(7180348), macOS.size, "Size: 7180348K parses to 7180348 KiB")
 	assert.True(t, macOS.recommended)
 	assert.Equal(t, "restart", macOS.action, "macOS updates need a restart")
 
@@ -143,6 +158,7 @@ func TestParseSoftwareUpdateList_TwoUpdates(t *testing.T) {
 	assert.Equal(t, "Safari17.5MajorSU-17.5", safari.label)
 	assert.Equal(t, "Safari", safari.title)
 	assert.Equal(t, "17.5", safari.version)
+	assert.Equal(t, int64(138648), safari.size)
 	assert.True(t, safari.recommended)
 	assert.Equal(t, "", safari.action, "Safari update doesn't need a restart")
 }
@@ -157,7 +173,7 @@ func TestParseSoftwareUpdateList_NonRecommendedAndMissingFields(t *testing.T) {
 	assert.Equal(t, "SomeOptional-1.0", got[0].label)
 	assert.Equal(t, "Some Optional", got[0].title)
 	assert.Equal(t, "1.0", got[0].version)
-	assert.Equal(t, "", got[0].size, "missing Size stays at zero value")
+	assert.Equal(t, int64(0), got[0].size, "missing Size stays at zero value")
 	assert.False(t, got[0].recommended)
 	assert.Equal(t, "", got[0].action)
 }
@@ -172,7 +188,7 @@ func TestParseSoftwareUpdateList_UnknownMetadataIgnored(t *testing.T) {
 	assert.Equal(t, "Future-1.0", got[0].label)
 	assert.Equal(t, "Future Update", got[0].title)
 	assert.Equal(t, "1.0", got[0].version)
-	assert.Equal(t, "100K", got[0].size)
+	assert.Equal(t, int64(100), got[0].size)
 	assert.True(t, got[0].recommended)
 }
 
@@ -199,6 +215,43 @@ func TestParseSoftwareUpdateList_OrphanMetadataIgnored(t *testing.T) {
 
 func TestParseSoftwareUpdateList_Empty(t *testing.T) {
 	assert.Empty(t, parseSoftwareUpdateList(""))
+}
+
+// =============================================================================
+// parseSoftwareUpdateSize
+// =============================================================================
+
+func TestParseSoftwareUpdateSize(t *testing.T) {
+	cases := []struct {
+		in   string
+		want int64
+	}{
+		{"7180348K", 7180348},
+		{"138648K", 138648},
+		{"100k", 100},       // tolerate lowercase
+		{" 100K ", 100},     // tolerate surrounding whitespace
+		{"100", 100},        // tolerate missing suffix
+		{"", 0},             // missing size
+		{"K", 0},            // suffix only
+		{"not-a-number", 0}, // garbage
+		{"1234567890123", 1234567890123},
+	}
+	for _, tc := range cases {
+		assert.Equal(t, tc.want, parseSoftwareUpdateSize(tc.in), "input: %q", tc.in)
+	}
+}
+
+// =============================================================================
+// isSoftwareUpdateNoUpdatesSignal
+// =============================================================================
+
+func TestIsSoftwareUpdateNoUpdatesSignal(t *testing.T) {
+	assert.True(t, isSoftwareUpdateNoUpdatesSignal("No new software available.\n", ""))
+	assert.True(t, isSoftwareUpdateNoUpdatesSignal("", "No updates available.\n"))
+	assert.True(t, isSoftwareUpdateNoUpdatesSignal("", "NO NEW SOFTWARE AVAILABLE"), "case-insensitive")
+	assert.False(t, isSoftwareUpdateNoUpdatesSignal("", "Permission denied"))
+	assert.False(t, isSoftwareUpdateNoUpdatesSignal("", "softwareupdate: catalog unreachable"))
+	assert.False(t, isSoftwareUpdateNoUpdatesSignal("", ""), "blank output is not a no-updates signal")
 }
 
 // =============================================================================

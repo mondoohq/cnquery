@@ -6,9 +6,12 @@ package resources
 import (
 	"bytes"
 	"errors"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 )
@@ -34,7 +37,7 @@ type softwareupdateSettings struct {
 	autoInstallMacOSUpdates  bool
 	installSystemDataFiles   bool
 	installSecurityResponses bool
-	lastSuccessfulCheck      string
+	lastSuccessfulCheck      *time.Time
 }
 
 func (s *mqlMacosSoftwareupdate) id() (string, error) {
@@ -45,7 +48,7 @@ func (s *mqlMacosSoftwareupdate) id() (string, error) {
 // the parsed settings on the resource. Missing files (Mac on which no
 // SoftwareUpdate preference has ever been set, or a non-Darwin host)
 // leave the settings struct at its zero value — every accessor will
-// then read `false`/`""`, which is what an auditor wants for an
+// then read `false`/`nil`, which is what an auditor wants for an
 // un-policied device.
 func (s *mqlMacosSoftwareupdate) fetchSettings() (softwareupdateSettings, error) {
 	if s.settingsFetched {
@@ -75,8 +78,14 @@ func (s *mqlMacosSoftwareupdate) readSoftwareUpdatePlist() (softwareupdateSettin
 			return softwareupdateSettings{}, err
 		}
 		f := res.(*mqlFile)
+		if exists := f.GetExists(); !exists.Data {
+			continue
+		}
 		content := f.GetContent()
-		if content.Error != nil || content.Data == "" {
+		if content.Error != nil {
+			return softwareupdateSettings{}, content.Error
+		}
+		if content.Data == "" {
 			continue
 		}
 		data, err := plist.Decode(bytes.NewReader([]byte(content.Data)))
@@ -102,7 +111,7 @@ func parseSoftwareUpdateSettings(d map[string]any) softwareupdateSettings {
 		autoInstallMacOSUpdates:  boolFromPlist(d, "AutomaticallyInstallMacOSUpdates"),
 		installSystemDataFiles:   boolFromPlist(d, "ConfigDataInstall"),
 		installSecurityResponses: boolFromPlist(d, "CriticalUpdateInstall"),
-		lastSuccessfulCheck:      stringFromPlist(d, "LastSuccessfulDate"),
+		lastSuccessfulCheck:      timeFromPlist(d, "LastSuccessfulDate"),
 	}
 }
 
@@ -131,7 +140,7 @@ func (s *mqlMacosSoftwareupdate) installSecurityResponses() (bool, error) {
 	return v.installSecurityResponses, err
 }
 
-func (s *mqlMacosSoftwareupdate) lastSuccessfulCheck() (string, error) {
+func (s *mqlMacosSoftwareupdate) lastSuccessfulCheck() (*time.Time, error) {
 	v, err := s.fetchSettings()
 	return v.lastSuccessfulCheck, err
 }
@@ -151,20 +160,43 @@ func (s *mqlMacosSoftwareupdate) updates() ([]any, error) {
 		return nil, err
 	}
 	cmd := res.(*mqlCommand)
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		// On non-Darwin hosts or when softwareupdate is unavailable,
-		// surface an empty list rather than failing the whole query.
-		return []any{}, nil
+	exit := cmd.GetExitcode()
+	stdout := cmd.GetStdout().Data
+	stderr := cmd.GetStderr().Data
+	if exit.Data != 0 {
+		// softwareupdate exits non-zero on Darwin in two well-known
+		// "no updates" situations that should still return an empty
+		// list rather than fail the query:
+		//   * exit 1 with stderr "No new software available." (and
+		//     newer variants like "No updates available.")
+		//   * the binary missing on non-Darwin hosts (handled via the
+		//     surrounding command resource — stderr typically mentions
+		//     "command not found" or "executable file not found").
+		// Anything else is surfaced as an error so misconfiguration
+		// (missing entitlements, broken catalog) doesn't masquerade as
+		// a clean device.
+		if isSoftwareUpdateNoUpdatesSignal(stdout, stderr) {
+			log.Debug().
+				Int64("exitcode", exit.Data).
+				Str("stderr", stderr).
+				Msg("macos.softwareupdate: no updates available")
+			return []any{}, nil
+		}
+		log.Warn().
+			Int64("exitcode", exit.Data).
+			Str("stderr", stderr).
+			Msg("macos.softwareupdate: `softwareupdate -l --no-scan` failed")
+		return nil, errors.New("softwareupdate failed: " + strings.TrimSpace(stderr))
 	}
 
-	parsed := parseSoftwareUpdateList(cmd.GetStdout().Data)
+	parsed := parseSoftwareUpdateList(stdout)
 	out := make([]any, 0, len(parsed))
 	for _, u := range parsed {
 		entry, err := CreateResource(s.MqlRuntime, "macos.softwareupdate.entry", map[string]*llx.RawData{
 			"label":       llx.StringData(u.label),
 			"title":       llx.StringData(u.title),
 			"version":     llx.StringData(u.version),
-			"size":        llx.StringData(u.size),
+			"size":        llx.IntData(u.size),
 			"recommended": llx.BoolData(u.recommended),
 			"action":      llx.StringData(u.action),
 		})
@@ -174,6 +206,24 @@ func (s *mqlMacosSoftwareupdate) updates() ([]any, error) {
 		out = append(out, entry)
 	}
 	return out, nil
+}
+
+// isSoftwareUpdateNoUpdatesSignal reports whether a non-zero exit from
+// `softwareupdate -l --no-scan` actually means "nothing to install"
+// rather than a real failure. Apple has used a few different phrasings
+// over time; match them all case-insensitively against stdout+stderr.
+func isSoftwareUpdateNoUpdatesSignal(stdout, stderr string) bool {
+	combined := strings.ToLower(stdout + "\n" + stderr)
+	for _, marker := range []string{
+		"no new software available",
+		"no updates available",
+		"no new updates available",
+	} {
+		if strings.Contains(combined, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *mqlMacosSoftwareupdateEntry) id() (string, error) {
@@ -187,7 +237,7 @@ type parsedSoftwareUpdate struct {
 	label       string
 	title       string
 	version     string
-	size        string
+	size        int64 // in KiB, parsed from the `K`-suffixed token
 	recommended bool
 	action      string
 }
@@ -265,7 +315,7 @@ func applySoftwareUpdateMetadata(line string, u *parsedSoftwareUpdate) {
 		case "Version":
 			u.version = value
 		case "Size":
-			u.size = value
+			u.size = parseSoftwareUpdateSize(value)
 		case "Recommended":
 			// macOS emits YES/NO; be tolerant of casing.
 			u.recommended = strings.EqualFold(value, "YES")
@@ -283,6 +333,26 @@ func stripPrefix(s, prefix string) (string, bool) {
 		return s, false
 	}
 	return s[len(prefix):], true
+}
+
+// parseSoftwareUpdateSize parses a size token from `softwareupdate -l`
+// output. The tool reports sizes as a base-10 integer followed by a `K`
+// suffix (e.g. `132456K`), historically meaning kibibytes. Unknown or
+// missing values return 0 so callers can filter with `size > 0` without
+// having to handle a sentinel.
+func parseSoftwareUpdateSize(raw string) int64 {
+	s := strings.TrimSpace(raw)
+	s = strings.TrimSuffix(s, "K")
+	s = strings.TrimSuffix(s, "k")
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // =============================================================================
@@ -311,9 +381,25 @@ func boolFromPlist(d map[string]any, key string) bool {
 	return false
 }
 
-func stringFromPlist(d map[string]any, key string) string {
-	if v, ok := d[key].(string); ok {
-		return v
+// timeFromPlist parses an RFC3339 timestamp from a plist key. Plist
+// `<date>` values come through plist.Decode as strings after the JSON
+// round-trip — Go's `time.Time` MarshalJSON emits RFC3339. Missing,
+// empty, or unparseable values yield nil so the resource field stays
+// null rather than reporting `0001-01-01` to auditors.
+func timeFromPlist(d map[string]any, key string) *time.Time {
+	v, ok := d[key].(string)
+	if !ok || v == "" {
+		return nil
 	}
-	return ""
+	t, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		// Fall back to RFC3339 with sub-second precision — Go's parser
+		// accepts both via the same layout, but some encoders may use
+		// a slightly different shape (e.g. `Z` vs `+00:00`).
+		t, err = time.Parse(time.RFC3339Nano, v)
+		if err != nil {
+			return nil
+		}
+	}
+	return &t
 }

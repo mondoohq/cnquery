@@ -706,6 +706,7 @@ snat
 SNOWSQL
 SNYK
 softdep
+softwareupdate
 spdx
 sph
 splunk
