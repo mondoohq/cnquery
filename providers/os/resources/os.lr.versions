@@ -190,6 +190,7 @@ cgroup.pids 13.16.10
 cgroup.pidsCurrent 13.16.10
 cgroup.pidsMax 13.16.10
 cgroup.type 13.16.10
+cgroup.unitType 13.16.10
 cgroups 13.16.10
 cgroups.controllers 13.16.10
 cgroups.list 13.16.10

@@ -3209,6 +3209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cgroup.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCgroup).GetType()).ToDataRes(types.String)
 	},
+	"cgroup.unitType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCgroup).GetUnitType()).ToDataRes(types.String)
+	},
 	"cgroup.controllers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCgroup).GetControllers()).ToDataRes(types.Array(types.String))
 	},
@@ -9868,6 +9871,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cgroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCgroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cgroup.unitType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCgroup).UnitType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cgroup.controllers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24518,6 +24525,7 @@ type mqlCgroup struct {
 	mqlCgroupInternal
 	Path             plugin.TValue[string]
 	Type             plugin.TValue[string]
+	UnitType         plugin.TValue[string]
 	Controllers      plugin.TValue[[]any]
 	MemoryMax        plugin.TValue[int64]
 	MemoryHigh       plugin.TValue[int64]
@@ -24575,6 +24583,10 @@ func (c *mqlCgroup) GetPath() *plugin.TValue[string] {
 
 func (c *mqlCgroup) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlCgroup) GetUnitType() *plugin.TValue[string] {
+	return &c.UnitType
 }
 
 func (c *mqlCgroup) GetControllers() *plugin.TValue[[]any] {

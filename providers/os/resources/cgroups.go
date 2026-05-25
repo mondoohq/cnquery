@@ -23,12 +23,16 @@ const cgroupV2Probe = `if [ -r /sys/fs/cgroup/cgroup.controllers ]; then echo V2
 // cgroupV2Walk dumps the entire v2 cgroup tree in a single shell call.
 // Each cgroup directory is separated by a `===CGROUP===<path>` line,
 // followed by `key=value` pairs for the interesting attribute files.
+// `-maxdepth 4` bounds traversal on busy hosts (e.g., K8s nodes with
+// thousands of pod cgroups); the typical layout is
+// `slice/sub-slice/unit`, which fits comfortably within four levels.
 // The `tr '\n' ' '` collapses multi-line values (notably cgroup.procs,
-// which is one PID per line) into a single space-separated string.
-const cgroupV2Walk = `find /sys/fs/cgroup -name cgroup.controllers 2>/dev/null | while read f; do
+// which is one PID per line) into a single space-separated string; the
+// parser trims the trailing space that `tr` leaves behind.
+const cgroupV2Walk = `find /sys/fs/cgroup -maxdepth 4 -name cgroup.controllers 2>/dev/null | while read f; do
   d="${f%/cgroup.controllers}"
   echo "===CGROUP===$d"
-  for n in cgroup.controllers memory.max memory.current memory.high memory.swap.max cpu.max cpu.weight pids.max pids.current cgroup.procs; do
+  for n in cgroup.controllers cgroup.type memory.max memory.current memory.high memory.swap.max cpu.max cpu.weight pids.max pids.current cgroup.procs; do
     if [ -r "$d/$n" ]; then
       printf '%s=' "$n"
       tr '\n' ' ' < "$d/$n" 2>/dev/null
@@ -146,6 +150,13 @@ func (c *mqlCgroups) doProbe() (*cgroupDetection, error) {
 			}
 		}
 	}
+	// If the v2 probe matched but the root has no controllers, the
+	// unified hierarchy is effectively unusable from a query
+	// standpoint. Report version=0 so callers don't see a confusing
+	// "v2 with no controllers" state.
+	if det.root != nil && len(det.controllers) == 0 {
+		det.version = 0
+	}
 	return det, nil
 }
 
@@ -253,7 +264,8 @@ func buildCgroupResource(runtime *plugin.Runtime, relPath string, p parsedCgroup
 
 	resource, err := CreateResource(runtime, "cgroup", map[string]*llx.RawData{
 		"path":             llx.StringData(relPath),
-		"type":             llx.StringData(cgroupTypeFromPath(relPath)),
+		"type":             llx.StringData(strings.TrimSpace(p.attrs["cgroup.type"])),
+		"unitType":         llx.StringData(cgroupUnitTypeFromPath(relPath)),
 		"controllers":      llx.ArrayData(controllers, types.String),
 		"memoryMax":        llx.IntData(parseCgroupMax(p.attrs["memory.max"])),
 		"memoryHigh":       llx.IntData(parseCgroupMax(p.attrs["memory.high"])),
@@ -297,11 +309,12 @@ func parentCgroupPath(path string) string {
 	return path[:idx]
 }
 
-// cgroupTypeFromPath infers the systemd unit kind from the leaf name.
-// We don't model arbitrary cgroup directories created outside systemd
-// (e.g. Docker without systemd-cgroup) as a distinct kind — they get
-// `other`.
-func cgroupTypeFromPath(path string) string {
+// cgroupUnitTypeFromPath infers the systemd unit kind from the leaf
+// name. This is distinct from the kernel's `cgroup.type` (which
+// reports domain/threaded/etc.). We don't model arbitrary cgroup
+// directories created outside systemd (e.g. Docker without
+// systemd-cgroup) as a distinct kind — they get `other`.
+func cgroupUnitTypeFromPath(path string) string {
 	if path == "/" {
 		return "root"
 	}

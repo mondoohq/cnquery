@@ -1634,18 +1634,25 @@ cgroups @defaults("version controllers") {
 // Linux control group
 //
 // Examine a single cgroup v2 entry: its `path` relative to the cgroup
-// root, the systemd-inferred `type` (slice, scope, service, or other),
-// the controllers enabled on it, memory/CPU/PIDs limits and current
+// root, the kernel `type` (domain, threaded, etc.), the
+// systemd-inferred `unitType` (slice, scope, service, or other), the
+// controllers enabled on it, memory/CPU/PIDs limits and current
 // usage, and the process IDs assigned to the cgroup. Iterated from
 // `cgroups.list` or traversed via `children`. Limit fields use `-1`
 // to mean unlimited (the kernel's `max` literal).
-private cgroup @defaults("path type memoryMax") {
+private cgroup @defaults("path unitType memoryMax") {
   // Path relative to the cgroup root (e.g., /system.slice/docker-<id>.scope)
   path string
+  // Kernel cgroup type from `cgroup.type`
+  //
+  // One of `domain`, `domain_threaded`, `domain_invalid`, or
+  // `threaded`. Empty when the file is unreadable (typically the root
+  // cgroup, where `cgroup.type` does not exist).
+  type string
   // systemd unit kind inferred from the leaf name
   //
   // One of `slice`, `scope`, `service`, `root`, or `other`.
-  type string
+  unitType string
   // Controllers enabled on this cgroup (from cgroup.controllers)
   controllers []string
   // Memory hard limit in bytes; `-1` means unlimited
