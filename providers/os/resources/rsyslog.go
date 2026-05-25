@@ -61,7 +61,13 @@ var rsyslogIncludeDirective = regexp.MustCompile(`(?i)^\s*\$IncludeConfig\s+(\S.
 
 // rsyslogModernInclude matches the modern RainerScript `include(...)` block.
 // Inner args are parsed separately to handle key=value pairs in any order.
+// Multi-line blocks are pre-coalesced into a single line before matching,
+// so this anchored form sees the joined text.
 var rsyslogModernInclude = regexp.MustCompile(`^\s*include\s*\((.*)\)\s*$`)
+
+// rsyslogModernIncludeOpen recognizes a line that begins an `include(...)`
+// directive, used to detect the start of a possibly multi-line block.
+var rsyslogModernIncludeOpen = regexp.MustCompile(`^\s*include\s*\(`)
 
 // rsyslogIncludeFileKV pulls the file="..." (or unquoted) value out of a
 // modern include() argument list.
@@ -76,18 +82,13 @@ var rsyslogIncludeFileKV = regexp.MustCompile(`\bfile\s*=\s*(?:"([^"]*)"|'([^']*
 // rsyslog itself ignores `#` comments anywhere on a line outside of quoted
 // strings. We strip everything from the first unquoted `#` to EOL before
 // matching, so a comment hanging off an include directive does not pollute
-// the pattern.
+// the pattern. Multi-line include() blocks (common in Ansible-templated
+// configs) are coalesced into a single logical line before matching.
 func parseRsyslogIncludes(content string) []string {
 	var out []string
 	seen := map[string]bool{}
 
-	for _, raw := range strings.Split(content, "\n") {
-		line := stripRsyslogComment(raw)
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
+	for _, line := range coalesceIncludeBlocks(content) {
 		var pat string
 		if m := rsyslogIncludeDirective.FindStringSubmatch(line); m != nil {
 			pat = strings.Trim(strings.TrimSpace(m[1]), `"'`)
@@ -112,6 +113,94 @@ func parseRsyslogIncludes(content string) []string {
 	}
 
 	return out
+}
+
+// coalesceIncludeBlocks strips comments and trims each line, then joins
+// continuation lines inside an unterminated `include(...)` block into a
+// single logical line. Tools like Ansible templates routinely emit:
+//
+//	include(
+//	    file="/etc/rsyslog.d/*.conf"
+//	)
+//
+// which rsyslog accepts. Lines outside an open `include(` are returned
+// one per source line so the line-anchored `$IncludeConfig` regex still
+// matches correctly. Blank lines outside a block are dropped.
+func coalesceIncludeBlocks(content string) []string {
+	rawLines := strings.Split(content, "\n")
+	var out []string
+	var pending strings.Builder
+	openParens := 0
+
+	for _, raw := range rawLines {
+		line := stripRsyslogComment(raw)
+		line = strings.TrimSpace(line)
+		if line == "" && openParens == 0 {
+			continue
+		}
+
+		if openParens == 0 && rsyslogModernIncludeOpen.MatchString(line) {
+			openParens = countUnquotedParens(line)
+			if openParens == 0 {
+				// Single-line include(...) — emit as-is.
+				out = append(out, line)
+				continue
+			}
+			pending.WriteString(line)
+			continue
+		}
+		if openParens > 0 {
+			if pending.Len() > 0 {
+				pending.WriteByte(' ')
+			}
+			pending.WriteString(line)
+			openParens += countUnquotedParens(line)
+			if openParens <= 0 {
+				out = append(out, pending.String())
+				pending.Reset()
+				openParens = 0
+			}
+			continue
+		}
+		out = append(out, line)
+	}
+
+	// Unterminated block — emit what we have so the regex can still try
+	// to extract a pattern. rsyslog itself would reject this config at
+	// load time, so we surface whatever was given rather than silently
+	// dropping the directive.
+	if pending.Len() > 0 {
+		out = append(out, pending.String())
+	}
+	return out
+}
+
+// countUnquotedParens returns (# of `(`) - (# of `)`) on a line,
+// ignoring parens inside double- or single-quoted strings.
+func countUnquotedParens(line string) int {
+	count := 0
+	inDouble, inSingle := false, false
+	for i := 0; i < len(line); i++ {
+		switch line[i] {
+		case '"':
+			if !inSingle {
+				inDouble = !inDouble
+			}
+		case '\'':
+			if !inDouble {
+				inSingle = !inSingle
+			}
+		case '(':
+			if !inDouble && !inSingle {
+				count++
+			}
+		case ')':
+			if !inDouble && !inSingle {
+				count--
+			}
+		}
+	}
+	return count
 }
 
 // stripRsyslogComment removes everything from the first unquoted `#` to
@@ -257,6 +346,11 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 	// an explicit `$IncludeConfig` should still surface those files.
 	// Skip entries already visited via include traversal so the list
 	// doesn't double-count when both paths reach the same fragment.
+	//
+	// No depth bound here: distro packages drop fragments directly into
+	// `<conf>.d/` (no subdirs in practice), and this matches the original
+	// behaviour of the resource — narrowing it now would silently change
+	// the file list for callers relying on it.
 	confD := path[0:len(path)-5] + ".d"
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
 		"from": llx.StringData(confD),
@@ -285,13 +379,18 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 // expandIncludePattern resolves a single include pattern (relative to
 // parentDir if not absolute) into the list of files it matches, using
 // files.find against the asset's filesystem.
+//
+// depth=1 restricts the search to the immediate directory, matching
+// rsyslog's own glob(3) semantics: `$IncludeConfig /etc/rsyslog.d/*.conf`
+// does not pick up `/etc/rsyslog.d/nested/extra.conf`.
 func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]string, error) {
 	dir, nameRegex := resolveRsyslogInclude(parentDir, pattern)
 
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
-		"from": llx.StringData(dir),
-		"type": llx.StringData("file"),
-		"name": llx.StringData(nameRegex),
+		"from":  llx.StringData(dir),
+		"type":  llx.StringData("file"),
+		"name":  llx.StringData(nameRegex),
+		"depth": llx.IntData(1),
 	})
 	if err != nil {
 		return nil, err

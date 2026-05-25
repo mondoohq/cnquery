@@ -158,11 +158,109 @@ include(file="/b.conf")
 			content: `include(file="/etc/rsyslog.d/has#hash.conf")` + "\n",
 			want:    []string{"/etc/rsyslog.d/has#hash.conf"},
 		},
+		{
+			name: "modern include() multi-line block (Ansible-style)",
+			content: `include(
+    file="/etc/rsyslog.d/*.conf"
+)
+`,
+			want: []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "modern include() multi-line with mode after",
+			content: `include(
+    file="/etc/rsyslog.d/*.conf"
+    mode="optional"
+)
+`,
+			want: []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "modern include() opens and closes mid-line",
+			content: `include( file="/etc/rsyslog.d/a.conf" )
+include(file="/etc/rsyslog.d/b.conf"
+)
+`,
+			want: []string{"/etc/rsyslog.d/a.conf", "/etc/rsyslog.d/b.conf"},
+		},
+		{
+			// Unterminated blocks have no closing `)`, so the anchored
+			// regex won't match. Returning nil is correct — rsyslog itself
+			// would reject this config at load time. We surface nothing
+			// rather than guessing at a partial parse.
+			name: "unterminated include() block returns nothing",
+			content: `include(
+    file="/etc/rsyslog.d/orphan.conf"
+`,
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseRsyslogIncludes(tt.content)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestCoalesceIncludeBlocks(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want []string
+	}{
+		{
+			name: "blank lines outside blocks are dropped",
+			in:   "$ModLoad imuxsock\n\n\n$IncludeConfig /etc/rsyslog.d/x.conf\n",
+			want: []string{"$ModLoad imuxsock", "$IncludeConfig /etc/rsyslog.d/x.conf"},
+		},
+		{
+			name: "comments are stripped before coalescing",
+			in:   "include( # opens\n  file=\"/a.conf\" # path\n) # closes\n",
+			want: []string{`include( file="/a.conf" )`},
+		},
+		{
+			name: "parens inside quotes do not affect block tracking",
+			in:   `include(file="/a.conf"  text=")")` + "\n",
+			want: []string{`include(file="/a.conf"  text=")")`},
+		},
+		{
+			name: "non-include line with stray paren is not coalesced",
+			in:   "$Template foo,\"(literal)\"\n$IncludeConfig /a.conf\n",
+			want: []string{`$Template foo,"(literal)"`, "$IncludeConfig /a.conf"},
+		},
+		{
+			name: "blank lines INSIDE a block are kept as separators",
+			in:   "include(\n\n    file=\"/a.conf\"\n\n)\n",
+			want: []string{`include(  file="/a.conf"  )`},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := coalesceIncludeBlocks(tt.in)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestCountUnquotedParens(t *testing.T) {
+	tests := []struct {
+		in   string
+		want int
+	}{
+		{"include(", 1},
+		{`include(file="/a")`, 0},
+		{`include(file="/a"`, 1},
+		{"))))", -4},
+		{`"()()"`, 0},
+		{`'()'`, 0},
+		{`(text=")")`, 0},
+		{`(text="(")`, 0},
+		{`'(' "(" (`, 1}, // only the third `(` is unquoted
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, countUnquotedParens(tt.in))
 		})
 	}
 }
