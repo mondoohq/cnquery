@@ -4102,20 +4102,20 @@ macos.sharing @defaults("screenSharing remoteManagement airplayReceiver") {
 // to the device. Backed by `profiles status -type enrollment`.
 macos.mdm @defaults("enrolled serverUrl") {
   // Whether the device is enrolled in an MDM solution
-  enrolled bool
+  enrolled() bool
   // Whether the device is enrolled via Automated Device Enrollment (DEP/ADE)
   //
   // DEP-enrolled devices are pre-assigned to the organization through
   // Apple Business Manager / Apple School Manager and cannot be removed
   // from MDM by the user.
-  dep bool
+  dep() bool
   // Whether the MDM enrollment is user-approved
   //
   // User-approved MDM (UAMDM) is required for managing kernel
   // extensions, full disk access, and other privileged settings.
-  userApproved bool
+  userApproved() bool
   // URL of the MDM server (empty when not enrolled)
-  serverUrl string
+  serverUrl() string
 }
 
 // macOS configuration profiles installed on the system

@@ -36245,19 +36245,27 @@ func (c *mqlMacosMdm) MqlID() string {
 }
 
 func (c *mqlMacosMdm) GetEnrolled() *plugin.TValue[bool] {
-	return &c.Enrolled
+	return plugin.GetOrCompute[bool](&c.Enrolled, func() (bool, error) {
+		return c.enrolled()
+	})
 }
 
 func (c *mqlMacosMdm) GetDep() *plugin.TValue[bool] {
-	return &c.Dep
+	return plugin.GetOrCompute[bool](&c.Dep, func() (bool, error) {
+		return c.dep()
+	})
 }
 
 func (c *mqlMacosMdm) GetUserApproved() *plugin.TValue[bool] {
-	return &c.UserApproved
+	return plugin.GetOrCompute[bool](&c.UserApproved, func() (bool, error) {
+		return c.userApproved()
+	})
 }
 
 func (c *mqlMacosMdm) GetServerUrl() *plugin.TValue[string] {
-	return &c.ServerUrl
+	return plugin.GetOrCompute[string](&c.ServerUrl, func() (string, error) {
+		return c.serverUrl()
+	})
 }
 
 // mqlMacosProfiles for the macos.profiles resource
