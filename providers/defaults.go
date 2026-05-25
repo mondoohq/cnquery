@@ -132,6 +132,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"claude": {
+		Provider: &plugin.Provider{
+			Name:            "claude",
+			ID:              "go.mondoo.com/mql/providers/claude",
+			ConnectionTypes: []string{"claude"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "claude",
+					Use:   "claude",
+					Short: "a Claude AI platform account",
+				},
+			},
+		},
+	},
+
 	"cloudflare": {
 		Provider: &plugin.Provider{
 			Name:            "cloudflare",

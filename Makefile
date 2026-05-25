@@ -202,6 +202,7 @@ PROVIDERS := \
 	aws \
 	azure \
 	bicep \
+	claude \
 	cloudflare \
 	cloudformation \
 	datadog \

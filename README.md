@@ -99,6 +99,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Active Directory              | `activedirectory`          | `mql shell activedirectory --dc DC_HOST --user admin@corp.local --password PASSWORD`                                                            |
 | AI/MCP servers                | `mcp`                      | `mql shell mcp http http://localhost:8080/mcp`                                                                                                  |
+| Claude AI platform            | `claude`                   | `mql shell claude --token YOUR_API_KEY`                                                                                                         |
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |

@@ -1,0 +1,171 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package provider
+
+import (
+	"context"
+	"errors"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/providers/claude/connection"
+	"go.mondoo.com/mql/v13/providers/claude/resources"
+)
+
+const (
+	DefaultConnectionType = "claude"
+)
+
+type Service struct {
+	*plugin.Service
+}
+
+func Init() *Service {
+	return &Service{
+		Service: plugin.NewService(),
+	}
+}
+
+func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
+	flags := req.Flags
+	if flags == nil {
+		flags = map[string]*llx.Primitive{}
+	}
+
+	conf := &inventory.Config{
+		Type:    req.Connector,
+		Options: map[string]string{},
+	}
+
+	if token, ok := flags["token"]; ok {
+		conf.Options[connection.TokenOption] = string(token.Value)
+	}
+
+	if adminToken, ok := flags["admin-token"]; ok {
+		conf.Options[connection.AdminTokenOption] = string(adminToken.Value)
+	}
+
+	if v, ok := flags["identity-token-file"]; ok {
+		conf.Options[connection.IdentityTokenFileOption] = string(v.Value)
+	}
+	if v, ok := flags["federation-rule-id"]; ok {
+		conf.Options[connection.FederationRuleIDOption] = string(v.Value)
+	}
+	if v, ok := flags["organization-id"]; ok {
+		conf.Options[connection.OrganizationIDOption] = string(v.Value)
+	}
+	if v, ok := flags["service-account-id"]; ok {
+		conf.Options[connection.ServiceAccountIDOption] = string(v.Value)
+	}
+	if v, ok := flags["workspace-id"]; ok {
+		conf.Options[connection.WorkspaceIDOption] = string(v.Value)
+	}
+
+	asset := inventory.Asset{
+		Connections: []*inventory.Config{conf},
+	}
+
+	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	if req == nil || req.Asset == nil {
+		return nil, errors.New("no connection data provided")
+	}
+
+	conn, err := s.connect(req, callback)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Asset.Platform == nil {
+		if err := s.detect(req.Asset, conn); err != nil {
+			return nil, err
+		}
+	}
+
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin.ConnectRes{
+		Id:        conn.ID(),
+		Name:      conn.Name(),
+		Asset:     req.Asset,
+		Inventory: inv,
+	}, nil
+}
+
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.ClaudeConnection, error) {
+	if len(req.Asset.Connections) == 0 {
+		return nil, errors.New("no connection options for asset")
+	}
+
+	asset := req.Asset
+	conf := asset.Connections[0]
+	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
+		conn, err := connection.NewClaudeConnection(connId, asset, conf)
+		if err != nil {
+			return nil, err
+		}
+
+		var upstream *upstream.UpstreamClient
+		if req.Upstream != nil && !req.Upstream.Incognito {
+			upstream, err = req.Upstream.InitClient(context.Background())
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		asset.Connections[0].Id = conn.ID()
+		return plugin.NewRuntime(
+			conn,
+			callback,
+			req.HasRecording,
+			resources.CreateResource,
+			resources.NewResource,
+			resources.GetData,
+			resources.SetData,
+			upstream), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return runtime.Connection.(*connection.ClaudeConnection), nil
+}
+
+func (s *Service) detect(asset *inventory.Asset, conn *connection.ClaudeConnection) error {
+	orgID := conn.OrgID()
+	orgName := conn.OrgName()
+	workspaceID := conn.Conf.Options[connection.WorkspaceIDOption]
+
+	if workspaceID != "" && workspaceID != "default" {
+		asset.Name = "Claude Workspace " + workspaceID
+		asset.Platform = connection.NewClaudeWorkspacePlatform(orgID, workspaceID)
+		asset.PlatformIds = []string{connection.NewClaudeWorkspaceIdentifier(workspaceID)}
+	} else if orgID != "" {
+		name := "Claude Organization"
+		if orgName != "" {
+			name = "Claude Organization " + orgName
+		}
+		asset.Name = name
+		asset.Platform = connection.NewClaudeOrgPlatform(orgID)
+		asset.PlatformIds = []string{connection.NewClaudeOrgIdentifier(orgID)}
+	} else {
+		host := conn.Host()
+		asset.Name = "Claude (" + host + ")"
+		asset.Platform = connection.NewClaudeAPIPlatform(host)
+		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/claude/host/" + host}
+	}
+
+	return nil
+}
+
+func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	return nil, errors.New("mock connect not yet implemented")
+}

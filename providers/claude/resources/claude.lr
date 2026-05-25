@@ -1,0 +1,569 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/claude"
+option go_package = "go.mondoo.com/mql/v13/providers/claude/resources"
+
+// Claude AI platform
+//
+// Use the `claude` resource to examine models available through the
+// Claude API, audit managed agents, environments, sessions, files,
+// skills, vaults, memory stores, message batches, and user profiles.
+// When an admin API key is configured, also audit organizational
+// resources such as workspaces, members, invites, API keys, usage,
+// cost, and rate limits.
+claude @defaults("host") {
+  // API host address
+  host() string
+  // Available models
+  models() []claude.model
+  // Managed agents
+  agents() []claude.agent
+  // Execution environments
+  environments() []claude.environment
+  // Agent sessions
+  sessions() []claude.session
+  // Uploaded files
+  files() []claude.file
+  // Registered skills
+  skills() []claude.skill
+  // Secret vaults
+  vaults() []claude.vault
+  // Memory stores
+  memoryStores() []claude.memoryStore
+  // Message batches
+  messageBatches() []claude.messageBatch
+  // User profiles
+  userProfiles() []claude.userProfile
+}
+
+// Claude AI model
+//
+// Examine an AI model available through the Claude API including its
+// token limits and capability flags. The `id` field is the canonical
+// model identifier (e.g. `claude-opus-4-6`) and serves as the
+// selection key for `claude.model(id: "claude-opus-4-6")`.
+claude.model @defaults("id displayName") {
+  init(id string)
+  // Canonical model identifier
+  id string
+  // Human-readable display name
+  displayName string
+  // Model vendor
+  //
+  // Always "Anthropic" for models served through the Claude API.
+  vendor string
+  // Model family
+  //
+  // Parsed from the model identifier, for example opus, sonnet, or haiku.
+  family string
+  // Object type
+  //
+  // Always "model" for Claude model resources.
+  type string
+  // Model creation timestamp
+  createdAt time
+  // Maximum input context window size in tokens
+  maxInputTokens int
+  // Maximum output tokens
+  maxTokens int
+  // Whether batch processing is supported
+  batchSupported bool
+  // Whether citation extraction is supported
+  citationsSupported bool
+  // Whether code execution is supported
+  codeExecutionSupported bool
+  // Whether image input is supported
+  imageInputSupported bool
+  // Whether PDF input is supported
+  pdfInputSupported bool
+  // Whether structured output is supported
+  structuredOutputsSupported bool
+  // Whether extended thinking is supported
+  thinkingSupported bool
+}
+
+// Claude managed agent
+//
+// Examine a managed agent definition including its model
+// configuration, system prompt, skills, and version history. Managed
+// agents are created via the Beta Agents API and execute within
+// sessions.
+claude.agent @defaults("id name") {
+  // Agent identifier
+  id string
+  // Agent name
+  name string
+  // Agent description
+  description string
+  // System prompt
+  system string
+  // Model identifier used by this agent
+  model string
+  // Agent version number
+  version int
+  // Agent creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+}
+
+// Claude execution environment
+//
+// Examine an execution environment for agent sessions. Environments
+// define the compute context and visibility scope in which agents
+// run. The `scope` field is one of organization or account.
+claude.environment @defaults("id name") {
+  // Environment identifier
+  id string
+  // Environment name
+  name string
+  // Environment description
+  description string
+  // Visibility scope
+  //
+  // One of organization or account.
+  scope string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+}
+
+// Claude agent session
+//
+// Examine an agent session including its execution status, associated
+// environment, and lifecycle timestamps. The `status` field is one of
+// rescheduling, running, idle, or terminated.
+claude.session @defaults("id title status") {
+  // Session identifier
+  id string
+  // Session title
+  title string
+  // Session status
+  //
+  // One of rescheduling, running, idle, or terminated.
+  status string
+  // Environment identifier for this session
+  environmentId string
+  // Session creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+}
+
+// Claude uploaded file
+//
+// Examine an uploaded file including its name, MIME type, size, and
+// whether it can be downloaded. Files are managed through the Beta
+// Files API.
+claude.file @defaults("id filename") {
+  // File identifier
+  id string
+  // Original filename
+  filename string
+  // MIME type
+  mimeType string
+  // File size in bytes
+  sizeBytes int
+  // Whether the file can be downloaded
+  downloadable bool
+  // Upload timestamp
+  createdAt time
+  // Object type
+  type string
+}
+
+// Claude registered skill
+//
+// Examine a skill registered in the Claude platform. Skills extend
+// agent capabilities and can be Anthropic-provided or custom. The
+// `source` field is one of custom or anthropic.
+claude.skill @defaults("id displayTitle") {
+  // Skill identifier
+  id string
+  // Skill display title
+  displayTitle string
+  // Skill source
+  //
+  // One of custom or anthropic.
+  source string
+  // Latest version identifier
+  latestVersion string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Object type
+  type string
+}
+
+// Claude secret vault
+//
+// Examine a secret vault used to store credentials for agent
+// sessions. Vaults hold credentials that agents can access at
+// runtime without exposing secrets in prompts.
+claude.vault @defaults("id displayName") {
+  // Vault identifier
+  id string
+  // Vault display name
+  displayName string
+  // Vault creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+  // Credentials stored in this vault
+  credentials() []claude.vault.credential
+}
+
+// Claude vault credential
+//
+// Examine a credential stored in a Claude vault. Credentials provide
+// authentication details that agents can use during sessions without
+// exposing secrets in prompts or tool calls.
+claude.vault.credential @defaults("id displayName") {
+  // Credential identifier
+  id string
+  // Credential display name
+  displayName string
+  // Vault identifier this credential belongs to
+  vaultId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+}
+
+// Claude memory store
+//
+// Examine a memory store used to persist context across agent
+// sessions. Memory stores are mounted under `/mnt/memory/` in the
+// agent environment and their description is included in the system
+// prompt.
+claude.memoryStore @defaults("id name") {
+  // Memory store identifier
+  id string
+  // Memory store name
+  name string
+  // Memory store description
+  description string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Object type
+  type string
+}
+
+// Claude message batch
+//
+// Examine a message batch job including its processing status and
+// lifecycle timestamps. Message batches allow submitting multiple
+// message requests for asynchronous processing. The
+// `processingStatus` field is one of in_progress, canceling, or
+// ended.
+claude.messageBatch @defaults("id processingStatus") {
+  // Batch identifier
+  id string
+  // Processing status
+  //
+  // One of in_progress, canceling, or ended.
+  processingStatus string
+  // Batch creation timestamp
+  createdAt time
+  // Processing end timestamp, if applicable
+  endedAt time
+  // Batch expiration timestamp
+  expiresAt time
+  // Archive timestamp, if applicable
+  archivedAt time
+  // Cancellation initiation timestamp, if applicable
+  cancelInitiatedAt time
+  // Object type
+  type string
+}
+
+// Claude user profile
+//
+// Examine a user profile representing an entity that interacts with
+// the Claude platform. The `relationship` field describes how the
+// entity relates to the platform: one of external, resold, or
+// internal.
+claude.userProfile @defaults("id name relationship") {
+  // Profile identifier
+  id string
+  // Profile display name
+  name string
+  // Platform-provided external identifier
+  externalId string
+  // Relationship to the platform
+  //
+  // One of external, resold, or internal.
+  relationship string
+  // Profile creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Object type
+  type string
+}
+
+// Claude organization
+//
+// Examine organizational resources managed through the Claude Admin
+// API: identity, workspaces, members, pending invites, API keys, usage,
+// cost, and rate limits. Requires an admin API key configured via
+// `--admin-token` or the `ANTHROPIC_ADMIN_API_KEY` environment variable.
+claude.organization @defaults("id name") {
+  // Organization identifier
+  id string
+  // Organization display name
+  name string
+  // Workspaces in the organization
+  workspaces() []claude.organization.workspace
+  // Organization members
+  members() []claude.organization.member
+  // Pending invitations
+  invites() []claude.organization.invite
+  // API keys in the organization
+  apiKeys() []claude.organization.apiKey
+  // Organization-level rate limits
+  rateLimits() []claude.organization.rateLimit
+  // Token usage report entries
+  usageReport() []claude.organization.usageEntry
+  // Cost report entries
+  costReport() []claude.organization.costEntry
+  // Compliance activity log entries
+  activities() []claude.organization.activity
+}
+
+// Claude organization workspace
+//
+// Examine a workspace within the Claude organization including its
+// name, display color, creation date, archive status, data residency
+// configuration, and workspace-level members and rate limits.
+claude.organization.workspace @defaults("id name") {
+  // Workspace identifier
+  id string
+  // Workspace name
+  name string
+  // Hex display color for the console UI
+  displayColor string
+  // Workspace creation timestamp
+  createdAt time
+  // Timestamp when the workspace was archived, if applicable
+  archivedAt time
+  // Workspace geographic region
+  workspaceGeo string
+  // Default inference geographic region
+  defaultInferenceGeo string
+  // Allowed inference geographic regions
+  allowedInferenceGeos []string
+  // Members with access to this workspace
+  members() []claude.organization.workspace.member
+  // Workspace-level rate limit overrides
+  rateLimits() []claude.organization.rateLimit
+}
+
+// Claude organization workspace member
+//
+// Examine a member's access to a specific workspace. The
+// `workspaceRole` field is one of workspace_user, workspace_developer,
+// workspace_restricted_developer, workspace_admin, or
+// workspace_billing.
+claude.organization.workspace.member @defaults("userId workspaceRole") {
+  // User identifier
+  userId string
+  // Workspace identifier
+  workspaceId string
+  // Workspace-level role
+  //
+  // One of workspace_user, workspace_developer,
+  // workspace_restricted_developer, workspace_admin, or
+  // workspace_billing.
+  workspaceRole string
+}
+
+// Claude organization member
+//
+// Examine a member of the Claude organization including their role
+// assignment. The `role` field is one of user, developer, billing,
+// admin, or claude_code_user.
+claude.organization.member @defaults("id name email role") {
+  // User identifier
+  id string
+  // User display name
+  name string
+  // User email address
+  email string
+  // Organization role
+  //
+  // One of user, developer, billing, admin, or claude_code_user.
+  role string
+  // Timestamp when the user was added to the organization
+  addedAt time
+}
+
+// Claude organization invite
+//
+// Examine a pending invitation to the Claude organization. The
+// `status` field is one of pending, accepted, expired, or deleted.
+claude.organization.invite @defaults("id email role status") {
+  // Invite identifier
+  id string
+  // Invitee email address
+  email string
+  // Assigned role
+  //
+  // One of user, developer, billing, admin, or claude_code_user.
+  role string
+  // Invite status
+  //
+  // One of pending, accepted, expired, or deleted.
+  status string
+  // Timestamp when the invite was sent
+  invitedAt time
+  // Timestamp when the invite expires
+  expiresAt time
+}
+
+// Claude organization API key
+//
+// Examine an API key in the Claude organization including its
+// status, associated workspace, and creation metadata. The `status`
+// field is one of active, inactive, archived, or expired.
+claude.organization.apiKey @defaults("id name status") {
+  // API key identifier
+  id string
+  // API key display name
+  name string
+  // API key status
+  //
+  // One of active, inactive, archived, or expired.
+  status string
+  // Timestamp when the key was created
+  createdAt time
+  // Timestamp when the key expires, if applicable
+  expiresAt time
+  // Partial key hint for identification
+  partialKeyHint string
+  // User who created this key
+  createdBy() claude.organization.member
+  // Workspace this key belongs to
+  workspace() claude.organization.workspace
+}
+
+// Claude organization rate limit group
+//
+// Examine an organization-level or workspace-level rate limit group.
+// Each group covers a category of API usage such as model_group,
+// batch, web_search, or files, and lists the models it applies to
+// along with per-minute request and token limits.
+claude.organization.rateLimit @defaults("groupType") {
+  // Rate limit group type
+  //
+  // One of model_group, batch, token_count, files, skills, or web_search.
+  groupType string
+  // Models covered by this rate limit group
+  models []string
+  // Maximum requests per minute
+  requestsPerMinute int
+  // Maximum input tokens per minute (cache-aware)
+  inputTokensPerMinute int
+  // Maximum output tokens per minute
+  outputTokensPerMinute int
+}
+
+// Claude organization usage report bucket
+//
+// Examine a daily usage bucket from the Admin API usage report. Each
+// bucket covers a time window and contains per-model, per-workspace
+// token consumption breakdowns for the last seven days.
+claude.organization.usageEntry @defaults("startingAt") {
+  // Bucket start timestamp
+  startingAt time
+  // Bucket end timestamp
+  endingAt time
+  // Model identifier
+  model string
+  // Workspace identifier
+  workspaceId string
+  // API service tier
+  //
+  // One of standard, batch, priority, flex, or priority_on_demand.
+  serviceTier string
+  // Uncached input tokens consumed
+  uncachedInputTokens int
+  // Input tokens read from cache
+  cacheReadInputTokens int
+  // Output tokens produced
+  outputTokens int
+}
+
+// Claude organization cost report bucket
+//
+// Examine a daily cost bucket from the Admin API cost report. Each
+// bucket covers a time window with USD cost amounts broken down by
+// workspace and cost type.
+claude.organization.costEntry @defaults("startingAt costType") {
+  // Bucket start timestamp
+  startingAt time
+  // Bucket end timestamp
+  endingAt time
+  // Cost amount as a decimal string in USD cents
+  amount string
+  // Currency code
+  currency string
+  // Cost type
+  //
+  // One of tokens, web_search, code_execution, or session_usage.
+  costType string
+  // Model identifier
+  model string
+  // Workspace identifier
+  workspaceId string
+}
+
+// Claude organization compliance activity
+//
+// Examine an entry from the Claude compliance activity feed. The
+// activity feed captures security-relevant events such as logins,
+// permission changes, API key operations, and workspace modifications.
+// Requires either a Compliance Access Key or an Admin API key.
+claude.organization.activity @defaults("id type actorEmail") {
+  // Activity event identifier
+  id string
+  // Event type
+  //
+  // For example claude_chat_created, claude_file_uploaded, or
+  // organization.user.added.
+  type string
+  // Actor email address
+  actorEmail string
+  // Actor identifier
+  actorId string
+  // Timestamp when the activity was created
+  createdAt time
+}
