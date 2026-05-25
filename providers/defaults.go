@@ -693,6 +693,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"together": {
+		Provider: &plugin.Provider{
+			Name:            "together",
+			ID:              "go.mondoo.com/mql/providers/together",
+			ConnectionTypes: []string{"together"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "together",
+					Use:   "together",
+					Short: "a Together AI account",
+				},
+			},
+		},
+	},
+
 	"unifi": {
 		Provider: &plugin.Provider{
 			Name:            "unifi",

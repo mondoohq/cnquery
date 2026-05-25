@@ -156,6 +156,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Terraform HCL                 | `terraform`                | `mql shell terraform HCL_FILE_OR_PATH`                                                                                                          |
 | Terraform plan                | `terraform plan`           | `mql shell terraform plan plan.json`                                                                                                            |
 | Terraform state               | `terraform state`          | `mql shell terraform state state.json`                                                                                                          |
+| Together AI                   | `together`                 | `mql shell together --token TOKEN`                                                                                                              |
 | UniFi network controllers     | `unifi`                    | `mql shell unifi --hostname HOST --api-key YOUR_API_KEY`                                                                                        |
 | Vagrant virtual machines      | `vagrant`                  | `mql shell vagrant HOST`                                                                                                                        |
 | vLLM inference servers        | `vllm`                     | `mql shell vllm http://localhost:8000`                                                                                                          |

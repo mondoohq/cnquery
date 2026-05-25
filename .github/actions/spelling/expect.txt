@@ -162,7 +162,6 @@ customfield
 customfieldtypes
 customresources
 cwes
-cyclonedx
 dapr
 dast
 databricks
@@ -223,6 +222,7 @@ erlang
 ERPCLOUD
 ethertype
 eula
+evals
 evc
 eventarc
 eventhubs
@@ -521,6 +521,7 @@ nss
 nullgroup
 nullstring
 NUnit
+nvidia
 nvmxnet
 objectstorage
 OCIR
@@ -655,6 +656,7 @@ rstrip
 rtl
 rtsp
 Rtt
+RTX
 rubygems
 rulegroup
 rulegroupreferencestatement
@@ -673,9 +675,7 @@ scm
 sdn
 sdp
 seabios
-SECRETID
 secretmanager
-SECRETVALUE
 secureboot
 Selfharm
 selfservice
@@ -699,6 +699,7 @@ sizeconstraintstatement
 skaffold
 slaac
 slo
+SLURM
 smbv
 snaptime
 snat
@@ -737,6 +738,7 @@ subscriptionfilter
 superusers
 SVI
 swi
+SXM
 syd
 SYMANTEC
 symfony
@@ -788,7 +790,6 @@ USERPOOL
 userspace
 Utc
 valkey
-VAULTNAME
 VCores
 vcpus
 vdcs

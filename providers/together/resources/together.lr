@@ -1,0 +1,394 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/together"
+option go_package = "go.mondoo.com/mql/v13/providers/together/resources"
+
+// Together AI account
+//
+// Examine a Together AI account including available models, fine-tuning
+// jobs, dedicated endpoint deployments, container deployments, uploaded
+// files, GPU clusters, secrets, batch jobs, evaluation jobs, and
+// persistent volumes.
+together @defaults("organization") @maturity("preview") {
+  // Project identifier passed via --project flag
+  organization() string
+  // Available models in the Together AI catalog
+  models() []together.model
+  // Fine-tuning jobs
+  fineTunes() []together.fineTune
+  // Dedicated endpoint deployments
+  endpoints() []together.endpoint
+  // Container deployments
+  deployments() []together.deployment
+  // Uploaded files
+  files() []together.file
+  // GPU compute clusters
+  clusters() []together.cluster
+  // Managed secrets for deployments
+  secrets() []together.secret
+  // Batch inference jobs
+  batches() []together.batch
+  // Evaluation jobs
+  evals() []together.eval
+  // Persistent volumes for deployments
+  volumes() []together.volume
+}
+
+// Together AI model
+//
+// Examine an available model in the Together AI catalog including its
+// type, creator organization, license, context window length, and
+// pricing. Models span chat, language, code, image, embedding,
+// moderation, and rerank types. Use `together.models.where(type == "chat")`
+// to filter by capability. AIBOM-relevant fields (`family`,
+// `parameterSize`, `quantization`) are parsed from the model identifier.
+together.model @defaults("id type organization contextLength") @maturity("preview") {
+  // Model identifier (e.g., "meta-llama/Llama-3.3-70B-Instruct-Turbo")
+  id string
+  // Human-readable display name
+  displayName string
+  // Model type
+  //
+  // One of chat, language, code, image, embedding, moderation, or rerank.
+  type string
+  // Creator organization (e.g., "Meta", "Qwen", "Mistral")
+  organization string
+  // Model license
+  license string
+  // Maximum context window length in tokens
+  contextLength int
+  // Reference URL for model documentation
+  link string
+  // Model creation time
+  created time
+  // Per-input-token price in USD
+  pricingInput float
+  // Per-output-token price in USD
+  pricingOutput float
+  // Architecture family parsed from the model name (e.g., "Llama", "Qwen", "Mistral")
+  family() string
+  // Parameter count parsed from the model name (e.g., "70B", "8B", "7B")
+  parameterSize() string
+  // Quantization level parsed from the model name if present (e.g., "fp8", "int4")
+  quantization() string
+  // Model description derived from the display name
+  description() string
+}
+
+// Together AI fine-tuning job
+//
+// Examine a fine-tuning job including its status, base model, output model
+// name, training configuration, and cost. Use
+// `together.fineTunes.where(status == "running")` to find active jobs.
+together.fineTune @defaults("id status model") @maturity("preview") {
+  // Job identifier
+  id string
+  // Job status
+  //
+  // One of pending, queued, running, compressing, uploading, cancel_requested, cancelled, error, or completed.
+  status string
+  // Base model used for fine-tuning
+  model string
+  // Output model name after fine-tuning completes
+  modelOutputName string
+  // File ID of the training dataset
+  trainingFile string
+  // File ID of the validation dataset
+  validationFile string
+  // Job creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // Total estimated price
+  totalPrice int
+  // Number of tokens processed
+  tokenCount int
+  // Number of training epochs
+  epochs int
+  // Training learning rate
+  learningRate float
+  // Model name suffix
+  suffix string
+}
+
+// Together AI dedicated endpoint
+//
+// Examine a dedicated endpoint deployment including its state, hardware
+// allocation, autoscaling configuration, owner, and model served. Use
+// `together.endpoints.where(state == "STARTED")` to find active
+// endpoints.
+together.endpoint @defaults("name state model") @maturity("preview") {
+  // Endpoint identifier
+  id string
+  // Endpoint name
+  name string
+  // Model served by this endpoint
+  model string
+  // Endpoint state
+  //
+  // One of PENDING, STARTING, STARTED, STOPPING, STOPPED, or ERROR.
+  state string
+  // Owner identifier
+  owner string
+  // Endpoint type
+  //
+  // One of serverless or dedicated.
+  type string
+  // Endpoint creation time
+  createdAt time
+}
+
+// Together AI uploaded file
+//
+// Examine an uploaded file used for fine-tuning, evaluation, or batch
+// processing. Inspect `purpose` and `filename` to audit what training
+// data has been uploaded to the account.
+together.file @defaults("id filename purpose") @maturity("preview") {
+  // File identifier
+  id string
+  // Original filename
+  filename string
+  // File purpose
+  //
+  // One of fine-tune, eval, or batch-api.
+  purpose string
+  // File type
+  //
+  // One of csv, jsonl, or parquet.
+  fileType string
+  // File size in bytes
+  bytes int
+  // Whether the file has been processed
+  processed bool
+  // Upload time
+  createdAt time
+}
+
+// Together AI GPU compute cluster
+//
+// Examine a GPU compute cluster including its GPU type, node count,
+// region, billing type, and OIDC configuration. Use
+// `together.clusters.where(status == "RUNNING")` to find active
+// clusters or inspect `oidcIssuer` for identity federation auditing.
+together.cluster @defaults("name gpuType numGpus region status") @maturity("preview") {
+  // Cluster identifier
+  id string
+  // Cluster display name
+  name string
+  // Cluster type
+  //
+  // One of KUBERNETES or SLURM.
+  clusterType string
+  // GPU hardware type
+  //
+  // One of H100_SXM, H200_SXM, RTX_6000_PCI, L40_PCIE, B200_SXM, or H100_SXM_INF.
+  gpuType string
+  // Total number of GPUs in the cluster
+  numGpus int
+  // Cluster region
+  region string
+  // Cluster status
+  status string
+  // Billing type
+  //
+  // One of RESERVED, ON_DEMAND, or SCHEDULED_CAPACITY.
+  billingType string
+  // Project identifier
+  projectId string
+  // CUDA version installed
+  cudaVersion string
+  // NVIDIA driver version installed
+  nvidiaDriverVersion string
+  // Number of CPU workers
+  numCpuWorkers int
+  // OIDC issuer URL for identity federation
+  oidcIssuer string
+  // OIDC client ID
+  oidcClientId string
+  // Cluster creation time
+  createdAt time
+  // Reservation start time
+  reservationStartTime time
+  // Reservation end time
+  reservationEndTime time
+  // Persistent storage volumes attached to this cluster
+  storageVolumes() []together.clusterStorageVolume
+}
+
+// Together AI managed secret
+//
+// Examine a managed secret used in deployments. Secrets can be
+// referenced by environment variables in deployment configurations.
+// Inspect `name` and `createdBy` to audit secret ownership.
+together.secret @defaults("id name") @maturity("preview") {
+  // Secret identifier
+  id string
+  // Secret name
+  name string
+  // Secret description
+  description string
+  // User ID that created the secret
+  createdBy string
+  // User ID that last updated the secret
+  lastUpdatedBy string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Together AI cluster storage volume
+//
+// Examine a persistent storage volume attached to a GPU cluster. Inspect
+// `sizeTib` for capacity auditing and `status` for availability.
+private together.clusterStorageVolume @defaults("volumeName sizeTib status") @maturity("preview") {
+  // Volume identifier
+  volumeId string
+  // Volume name
+  volumeName string
+  // Volume size in TiB
+  sizeTib int
+  // Volume status
+  //
+  // One of scheduled, available, bound, provisioning, deleting, failed, access_revoked, or unknown.
+  status string
+}
+
+// Together AI container deployment
+//
+// Examine a container deployment (Jig) including its image, GPU allocation,
+// autoscaling configuration, environment variable names, and health check
+// settings. Deployments are full container workloads that can run custom
+// images with GPU acceleration. Use
+// `together.deployments.where(status == "Ready")` to find active deployments
+// or inspect `image` for container supply chain auditing.
+together.deployment @defaults("name status image gpuType") @maturity("preview") {
+  // Deployment identifier
+  id string
+  // Deployment name
+  name string
+  // Deployment description
+  description string
+  // Container image
+  image string
+  // Deployment status
+  //
+  // One of Updating, Scaling, Ready, Failed, or ScaledToZero.
+  status string
+  // GPU hardware type
+  //
+  // One of h100-80gb, h100-40gb-mig, h200-140gb, or b200-192gb.
+  gpuType string
+  // Number of GPUs allocated
+  gpuCount int
+  // CPU cores allocated
+  cpu float
+  // Memory allocated in GiB
+  memory float
+  // Storage allocated in MB
+  storage int
+  // Container port
+  port int
+  // Health check path
+  healthCheckPath string
+  // Desired number of replicas
+  desiredReplicas int
+  // Number of ready replicas
+  readyReplicas int
+  // Minimum replicas for autoscaling
+  minReplicas int
+  // Maximum replicas for autoscaling
+  maxReplicas int
+  // Names of environment variables configured on the deployment
+  environmentVariableNames []string
+  // Deployment creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Together AI batch inference job
+//
+// Examine a batch inference job including its status, model, progress, and
+// associated input/output files. Use
+// `together.batches.where(status == "IN_PROGRESS")` to find running jobs or
+// inspect `modelId` to audit which models are being used for batch inference.
+together.batch @defaults("id status modelId") @maturity("preview") {
+  // Job identifier
+  id string
+  // Job status
+  //
+  // One of VALIDATING, IN_PROGRESS, COMPLETED, FAILED, EXPIRED, or CANCELLED.
+  status string
+  // Model used for inference
+  modelId string
+  // API endpoint used for inference
+  endpoint string
+  // Input file identifier
+  inputFileId string
+  // Output file identifier
+  outputFileId string
+  // Error file identifier
+  errorFileId string
+  // Completion progress (0.0 to 100.0)
+  progress float
+  // Input file size in bytes
+  fileSizeBytes int
+  // User that created the job
+  userId string
+  // Job creation time
+  createdAt time
+  // Job completion time
+  completedAt time
+  // Job deadline
+  jobDeadline time
+}
+
+// Together AI evaluation job
+//
+// Examine an evaluation job including its type, status, and owner. Use
+// `together.evals.where(status == "running")` to find active evaluations or
+// inspect `type` to see what kind of evaluation was performed.
+together.eval @defaults("workflowId type status") @maturity("preview") {
+  // Evaluation workflow identifier
+  workflowId string
+  // Evaluation type
+  //
+  // One of classify, score, or compare.
+  type string
+  // Job status
+  //
+  // One of pending, queued, running, completed, error, or user_error.
+  status string
+  // Owner identifier
+  ownerId string
+  // Job creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Together AI persistent volume
+//
+// Examine a persistent volume used by container deployments. Volumes provide
+// file storage that persists across deployment restarts. Inspect `mountedBy`
+// to see which deployments use a volume or `type` for access mode auditing.
+together.volume @defaults("id name type") @maturity("preview") {
+  // Volume identifier
+  id string
+  // Volume name
+  name string
+  // Volume type
+  //
+  // One of readOnly.
+  type string
+  // Current content version
+  currentVersion int
+  // Deployment IDs that have this volume mounted
+  mountedBy []string
+  // Volume creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
