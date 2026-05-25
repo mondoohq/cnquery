@@ -138,8 +138,8 @@ cocoapods
 codegen
 Codeium
 codeowners
-Codestral
 codeql
+Codestral
 compressratio
 computeagent
 computerlevel
@@ -380,6 +380,7 @@ junos
 jupyter
 jwk
 jwks
+KEDA
 KENDRA
 keras
 kerberoastable
@@ -677,6 +678,7 @@ rubygems
 rulegroup
 rulegroupreferencestatement
 rxtx
+saas
 safetensors
 samesite
 sas

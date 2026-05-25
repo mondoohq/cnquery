@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -613,11 +612,3 @@ func splitCommaList(s string) []string {
 	return out
 }
 
-// rsyslogActionKey returns a deterministic key for an action entry so
-// rule resources can be linked back to the action they target. The key
-// is composed from (moduleType, target, sourceFile, sourceLine) so two
-// distinct rules sharing the same target on different lines each get a
-// distinct action object.
-func rsyslogActionKey(e rsyslogEntry) string {
-	return fmt.Sprintf("%s/%s/%s:%d", e.moduleType, e.target, e.sourceFile, e.sourceLine)
-}
