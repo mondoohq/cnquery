@@ -1078,6 +1078,17 @@ macos.hardware.physicalMemory 11.4.68
 macos.hardware.platformUUID 11.4.68
 macos.hardware.provisioningUDID 11.4.68
 macos.hardware.serialNumber 11.4.68
+macos.sharing 13.16.10
+macos.sharing.airplayReceiver 13.16.10
+macos.sharing.bluetoothSharing 13.16.10
+macos.sharing.contentCaching 13.16.10
+macos.sharing.dvdSharing 13.16.10
+macos.sharing.fileSharing 13.16.10
+macos.sharing.internetSharing 13.16.10
+macos.sharing.mediaSharing 13.16.10
+macos.sharing.printerSharing 13.16.10
+macos.sharing.remoteManagement 13.16.10
+macos.sharing.screenSharing 13.16.10
 macos.sip 13.5.1
 macos.sip.enabled 13.5.1
 macos.sip.status 13.5.1

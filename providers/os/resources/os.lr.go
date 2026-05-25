@@ -243,6 +243,7 @@ const (
 	ResourceMacosGatekeeper              string = "macos.gatekeeper"
 	ResourceMacosSip                     string = "macos.sip"
 	ResourceMacosXprotect                string = "macos.xprotect"
+	ResourceMacosSharing                 string = "macos.sharing"
 	ResourceMacosTimemachine             string = "macos.timemachine"
 	ResourceMacosSystemsetup             string = "macos.systemsetup"
 	ResourceOpenBSMAudit                 string = "openBSMAudit"
@@ -1272,6 +1273,10 @@ func init() {
 		"macos.xprotect": {
 			// to override args, implement: initMacosXprotect(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosXprotect,
+		},
+		"macos.sharing": {
+			// to override args, implement: initMacosSharing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSharing,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5284,6 +5289,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.xprotect.mrtModified": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosXprotect).GetMrtModified()).ToDataRes(types.Time)
+	},
+	"macos.sharing.screenSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetScreenSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.remoteManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetRemoteManagement()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.fileSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetFileSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.printerSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetPrinterSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.internetSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetInternetSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.bluetoothSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetBluetoothSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.mediaSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetMediaSharing()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.contentCaching": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetContentCaching()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.airplayReceiver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetAirplayReceiver()).ToDataRes(types.Bool)
+	},
+	"macos.sharing.dvdSharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSharing).GetDvdSharing()).ToDataRes(types.Bool)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -12936,6 +12971,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.xprotect.mrtModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosXprotect).MrtModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.sharing.screenSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).ScreenSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.remoteManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).RemoteManagement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.fileSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).FileSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.printerSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).PrinterSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.internetSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).InternetSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.bluetoothSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).BluetoothSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.mediaSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).MediaSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.contentCaching": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).ContentCaching, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.airplayReceiver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).AirplayReceiver, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sharing.dvdSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSharing).DvdSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35392,6 +35471,100 @@ func (c *mqlMacosXprotect) GetMrtModified() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.MrtModified, func() (*time.Time, error) {
 		return c.mrtModified()
 	})
+}
+
+// mqlMacosSharing for the macos.sharing resource
+type mqlMacosSharing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosSharingInternal
+	ScreenSharing    plugin.TValue[bool]
+	RemoteManagement plugin.TValue[bool]
+	FileSharing      plugin.TValue[bool]
+	PrinterSharing   plugin.TValue[bool]
+	InternetSharing  plugin.TValue[bool]
+	BluetoothSharing plugin.TValue[bool]
+	MediaSharing     plugin.TValue[bool]
+	ContentCaching   plugin.TValue[bool]
+	AirplayReceiver  plugin.TValue[bool]
+	DvdSharing       plugin.TValue[bool]
+}
+
+// createMacosSharing creates a new instance of this resource
+func createMacosSharing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSharing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.sharing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSharing) MqlName() string {
+	return "macos.sharing"
+}
+
+func (c *mqlMacosSharing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSharing) GetScreenSharing() *plugin.TValue[bool] {
+	return &c.ScreenSharing
+}
+
+func (c *mqlMacosSharing) GetRemoteManagement() *plugin.TValue[bool] {
+	return &c.RemoteManagement
+}
+
+func (c *mqlMacosSharing) GetFileSharing() *plugin.TValue[bool] {
+	return &c.FileSharing
+}
+
+func (c *mqlMacosSharing) GetPrinterSharing() *plugin.TValue[bool] {
+	return &c.PrinterSharing
+}
+
+func (c *mqlMacosSharing) GetInternetSharing() *plugin.TValue[bool] {
+	return &c.InternetSharing
+}
+
+func (c *mqlMacosSharing) GetBluetoothSharing() *plugin.TValue[bool] {
+	return &c.BluetoothSharing
+}
+
+func (c *mqlMacosSharing) GetMediaSharing() *plugin.TValue[bool] {
+	return &c.MediaSharing
+}
+
+func (c *mqlMacosSharing) GetContentCaching() *plugin.TValue[bool] {
+	return &c.ContentCaching
+}
+
+func (c *mqlMacosSharing) GetAirplayReceiver() *plugin.TValue[bool] {
+	return &c.AirplayReceiver
+}
+
+func (c *mqlMacosSharing) GetDvdSharing() *plugin.TValue[bool] {
+	return &c.DvdSharing
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource

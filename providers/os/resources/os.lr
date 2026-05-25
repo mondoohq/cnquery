@@ -3968,6 +3968,43 @@ macos.xprotect @defaults("version modified") {
   mrtModified() time
 }
 
+// macOS Sharing service state
+//
+// Examine the unified Sharing panel (System Settings > Sharing on
+// macOS Ventura+, System Preferences > Sharing on older versions).
+// Each field corresponds to one toggle in that panel. CIS macOS
+// benchmarks require most of these to be off unless the device
+// explicitly needs the service. Backed by `system_profiler
+// SPSharingDataType`, so the values match exactly what the System
+// Settings UI displays.
+//
+// `macos.systemsetup.remoteLogin` and
+// `macos.systemsetup.remoteAppleEvents` cover the Remote Login (SSH)
+// and Remote Apple Events toggles via the `systemsetup` CLI — this
+// resource covers the rest of the panel.
+macos.sharing @defaults("screenSharing remoteManagement airplayReceiver") {
+  // Whether Screen Sharing (VNC) is enabled
+  screenSharing bool
+  // Whether Apple Remote Desktop (Remote Management) is enabled
+  remoteManagement bool
+  // Whether File Sharing (SMB/AFP) is enabled
+  fileSharing bool
+  // Whether Printer Sharing is enabled
+  printerSharing bool
+  // Whether Internet Sharing is enabled
+  internetSharing bool
+  // Whether Bluetooth Sharing is enabled
+  bluetoothSharing bool
+  // Whether Media Sharing is enabled
+  mediaSharing bool
+  // Whether Content Caching is enabled
+  contentCaching bool
+  // Whether AirPlay Receiver is enabled
+  airplayReceiver bool
+  // Whether DVD or CD Sharing is enabled
+  dvdSharing bool
+}
+
 // macOS Time Machine backup configuration
 //
 // Examine destinations, schedule, and exclusion preferences
