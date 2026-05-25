@@ -55,9 +55,9 @@ func targetOSFamily(conn shared.Connection) string {
 }
 
 func newAiModelResource(rt *plugin.Runtime, m aimodel.ModelInfo) (*mqlAiModel, error) {
-	tagsAny := make([]interface{}, len(m.Tags))
-	for i, t := range m.Tags {
-		tagsAny[i] = t
+	var tagsAny []interface{}
+	for _, t := range m.Tags {
+		tagsAny = append(tagsAny, t)
 	}
 
 	res, err := NewResource(rt, "ai.model", map[string]*llx.RawData{

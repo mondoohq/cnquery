@@ -37,7 +37,8 @@ type ModelInfo struct {
 
 var (
 	reQuantization = regexp.MustCompile(`(?i)(Q[0-9]+_[A-Z0-9_]+|F16|F32|FP16|FP32)`)
-	reParamSize    = regexp.MustCompile(`(?i)[-_: ](\d+\.?\d*)[bB](?:[-_. ]|$)`)
+	// Leading separator (dash, underscore, colon, space) avoids matching "b" inside words.
+	reParamSize = regexp.MustCompile(`(?i)[-_: ](\d+\.?\d*)[bB](?:[-_. ]|$)`)
 )
 
 // ScanAll runs every scanner and returns the combined results.
