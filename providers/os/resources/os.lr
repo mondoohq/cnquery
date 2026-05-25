@@ -4185,6 +4185,58 @@ private macos.profile.payload @defaults("type displayName") {
   content dict
 }
 
+// macOS Software Update configuration and pending updates
+//
+// Examine automatic-update policy and the list of updates currently
+// available to install. Policy fields read from
+// `/Library/Preferences/com.apple.SoftwareUpdate.plist` (with
+// `/Library/Managed Preferences/` taking precedence when an MDM
+// configuration profile has been delivered). The `updates` list is
+// produced from `softwareupdate -l --no-scan` so it does not initiate
+// a network check.
+macos.softwareupdate @defaults("autoCheckEnabled autoInstallMacOSUpdates") {
+  // Whether `Software Update` is configured to automatically check for updates
+  autoCheckEnabled bool
+  // Whether updates are downloaded automatically in the background
+  autoDownloadEnabled bool
+  // Whether macOS updates (point releases and security updates) install automatically
+  autoInstallMacOSUpdates bool
+  // Whether system data files (XProtect, MRT definitions) install automatically
+  installSystemDataFiles bool
+  // Whether Rapid Security Responses install automatically
+  installSecurityResponses bool
+  // Last successful check timestamp as reported by Software Update
+  //
+  // Empty when no successful check has ever been recorded on this
+  // device or when the field is unset by the policy file.
+  lastSuccessfulCheck string
+  // Available software updates as reported by `softwareupdate -l --no-scan`
+  updates() []macos.softwareupdate.entry
+}
+
+// macOS Software Update entry
+//
+// Examine a single update offered by Software Update: its `label`
+// (the identifier accepted by `softwareupdate --install`), the
+// human-readable `title` and `version`, the estimated download
+// `size`, whether it is `recommended`, and any post-install `action`
+// such as `restart` or `shutdown`. Iterated from
+// `macos.softwareupdate.updates`.
+private macos.softwareupdate.entry @defaults("label title recommended") {
+  // Update label (the argument to `softwareupdate --install`)
+  label string
+  // Human-readable update title
+  title string
+  // Update version
+  version string
+  // Estimated download size as reported by `softwareupdate` (e.g. `132456K`)
+  size string
+  // Whether the update is marked recommended
+  recommended bool
+  // Post-install action required (`restart`, `shutdown`, or empty for none)
+  action string
+}
+
 // macOS Time Machine backup configuration
 //
 // Examine destinations, schedule, and exclusion preferences

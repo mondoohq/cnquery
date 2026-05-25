@@ -252,6 +252,8 @@ const (
 	ResourceMacosProfiles                string = "macos.profiles"
 	ResourceMacosProfile                 string = "macos.profile"
 	ResourceMacosProfilePayload          string = "macos.profile.payload"
+	ResourceMacosSoftwareupdate          string = "macos.softwareupdate"
+	ResourceMacosSoftwareupdateEntry     string = "macos.softwareupdate.entry"
 	ResourceMacosTimemachine             string = "macos.timemachine"
 	ResourceMacosSystemsetup             string = "macos.systemsetup"
 	ResourceOpenBSMAudit                 string = "openBSMAudit"
@@ -1319,6 +1321,14 @@ func init() {
 		"macos.profile.payload": {
 			// to override args, implement: initMacosProfilePayload(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosProfilePayload,
+		},
+		"macos.softwareupdate": {
+			// to override args, implement: initMacosSoftwareupdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSoftwareupdate,
+		},
+		"macos.softwareupdate.entry": {
+			// to override args, implement: initMacosSoftwareupdateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSoftwareupdateEntry,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5471,6 +5481,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.profile.payload.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosProfilePayload).GetContent()).ToDataRes(types.Dict)
+	},
+	"macos.softwareupdate.autoCheckEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetAutoCheckEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.autoDownloadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetAutoDownloadEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.autoInstallMacOSUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetAutoInstallMacOSUpdates()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.installSystemDataFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetInstallSystemDataFiles()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.installSecurityResponses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetInstallSecurityResponses()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.lastSuccessfulCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetLastSuccessfulCheck()).ToDataRes(types.String)
+	},
+	"macos.softwareupdate.updates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdate).GetUpdates()).ToDataRes(types.Array(types.Resource("macos.softwareupdate.entry")))
+	},
+	"macos.softwareupdate.entry.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetLabel()).ToDataRes(types.String)
+	},
+	"macos.softwareupdate.entry.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetTitle()).ToDataRes(types.String)
+	},
+	"macos.softwareupdate.entry.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetVersion()).ToDataRes(types.String)
+	},
+	"macos.softwareupdate.entry.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetSize()).ToDataRes(types.String)
+	},
+	"macos.softwareupdate.entry.recommended": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetRecommended()).ToDataRes(types.Bool)
+	},
+	"macos.softwareupdate.entry.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSoftwareupdateEntry).GetAction()).ToDataRes(types.String)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -13383,6 +13432,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.profile.payload.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosProfilePayload).Content, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.softwareupdate.autoCheckEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).AutoCheckEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.autoDownloadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).AutoDownloadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.autoInstallMacOSUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).AutoInstallMacOSUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.installSystemDataFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).InstallSystemDataFiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.installSecurityResponses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).InstallSecurityResponses, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.lastSuccessfulCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).LastSuccessfulCheck, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdate).Updates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.softwareupdate.entry.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.recommended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Recommended, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.softwareupdate.entry.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSoftwareupdateEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36615,6 +36724,171 @@ func (c *mqlMacosProfilePayload) GetDisplayName() *plugin.TValue[string] {
 
 func (c *mqlMacosProfilePayload) GetContent() *plugin.TValue[any] {
 	return &c.Content
+}
+
+// mqlMacosSoftwareupdate for the macos.softwareupdate resource
+type mqlMacosSoftwareupdate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosSoftwareupdateInternal
+	AutoCheckEnabled         plugin.TValue[bool]
+	AutoDownloadEnabled      plugin.TValue[bool]
+	AutoInstallMacOSUpdates  plugin.TValue[bool]
+	InstallSystemDataFiles   plugin.TValue[bool]
+	InstallSecurityResponses plugin.TValue[bool]
+	LastSuccessfulCheck      plugin.TValue[string]
+	Updates                  plugin.TValue[[]any]
+}
+
+// createMacosSoftwareupdate creates a new instance of this resource
+func createMacosSoftwareupdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSoftwareupdate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.softwareupdate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSoftwareupdate) MqlName() string {
+	return "macos.softwareupdate"
+}
+
+func (c *mqlMacosSoftwareupdate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSoftwareupdate) GetAutoCheckEnabled() *plugin.TValue[bool] {
+	return &c.AutoCheckEnabled
+}
+
+func (c *mqlMacosSoftwareupdate) GetAutoDownloadEnabled() *plugin.TValue[bool] {
+	return &c.AutoDownloadEnabled
+}
+
+func (c *mqlMacosSoftwareupdate) GetAutoInstallMacOSUpdates() *plugin.TValue[bool] {
+	return &c.AutoInstallMacOSUpdates
+}
+
+func (c *mqlMacosSoftwareupdate) GetInstallSystemDataFiles() *plugin.TValue[bool] {
+	return &c.InstallSystemDataFiles
+}
+
+func (c *mqlMacosSoftwareupdate) GetInstallSecurityResponses() *plugin.TValue[bool] {
+	return &c.InstallSecurityResponses
+}
+
+func (c *mqlMacosSoftwareupdate) GetLastSuccessfulCheck() *plugin.TValue[string] {
+	return &c.LastSuccessfulCheck
+}
+
+func (c *mqlMacosSoftwareupdate) GetUpdates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Updates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos.softwareupdate", c.__id, "updates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.updates()
+	})
+}
+
+// mqlMacosSoftwareupdateEntry for the macos.softwareupdate.entry resource
+type mqlMacosSoftwareupdateEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosSoftwareupdateEntryInternal it will be used here
+	Label       plugin.TValue[string]
+	Title       plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Size        plugin.TValue[string]
+	Recommended plugin.TValue[bool]
+	Action      plugin.TValue[string]
+}
+
+// createMacosSoftwareupdateEntry creates a new instance of this resource
+func createMacosSoftwareupdateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSoftwareupdateEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.softwareupdate.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSoftwareupdateEntry) MqlName() string {
+	return "macos.softwareupdate.entry"
+}
+
+func (c *mqlMacosSoftwareupdateEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetRecommended() *plugin.TValue[bool] {
+	return &c.Recommended
+}
+
+func (c *mqlMacosSoftwareupdateEntry) GetAction() *plugin.TValue[string] {
+	return &c.Action
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource
