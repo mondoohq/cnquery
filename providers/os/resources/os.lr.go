@@ -248,6 +248,10 @@ const (
 	ResourceMacosSip                     string = "macos.sip"
 	ResourceMacosXprotect                string = "macos.xprotect"
 	ResourceMacosSharing                 string = "macos.sharing"
+	ResourceMacosMdm                     string = "macos.mdm"
+	ResourceMacosProfiles                string = "macos.profiles"
+	ResourceMacosProfile                 string = "macos.profile"
+	ResourceMacosProfilePayload          string = "macos.profile.payload"
 	ResourceMacosTimemachine             string = "macos.timemachine"
 	ResourceMacosSystemsetup             string = "macos.systemsetup"
 	ResourceOpenBSMAudit                 string = "openBSMAudit"
@@ -1297,6 +1301,22 @@ func init() {
 		"macos.sharing": {
 			// to override args, implement: initMacosSharing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosSharing,
+		},
+		"macos.mdm": {
+			// to override args, implement: initMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosMdm,
+		},
+		"macos.profiles": {
+			// to override args, implement: initMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosProfiles,
+		},
+		"macos.profile": {
+			// to override args, implement: initMacosProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosProfile,
+		},
+		"macos.profile.payload": {
+			// to override args, implement: initMacosProfilePayload(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosProfilePayload,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5384,6 +5404,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.sharing.dvdSharing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSharing).GetDvdSharing()).ToDataRes(types.Bool)
+	},
+	"macos.mdm.enrolled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosMdm).GetEnrolled()).ToDataRes(types.Bool)
+	},
+	"macos.mdm.dep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosMdm).GetDep()).ToDataRes(types.Bool)
+	},
+	"macos.mdm.userApproved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosMdm).GetUserApproved()).ToDataRes(types.Bool)
+	},
+	"macos.mdm.serverUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosMdm).GetServerUrl()).ToDataRes(types.String)
+	},
+	"macos.profiles.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfiles).GetList()).ToDataRes(types.Array(types.Resource("macos.profile")))
+	},
+	"macos.profile.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetIdentifier()).ToDataRes(types.String)
+	},
+	"macos.profile.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetUuid()).ToDataRes(types.String)
+	},
+	"macos.profile.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetDisplayName()).ToDataRes(types.String)
+	},
+	"macos.profile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"macos.profile.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetOrganization()).ToDataRes(types.String)
+	},
+	"macos.profile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetType()).ToDataRes(types.String)
+	},
+	"macos.profile.removalDisallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetRemovalDisallowed()).ToDataRes(types.Bool)
+	},
+	"macos.profile.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetScope()).ToDataRes(types.String)
+	},
+	"macos.profile.payloads": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfile).GetPayloads()).ToDataRes(types.Array(types.Resource("macos.profile.payload")))
+	},
+	"macos.profile.payload.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfilePayload).GetUuid()).ToDataRes(types.String)
+	},
+	"macos.profile.payload.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfilePayload).GetType()).ToDataRes(types.String)
+	},
+	"macos.profile.payload.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfilePayload).GetIdentifier()).ToDataRes(types.String)
+	},
+	"macos.profile.payload.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfilePayload).GetDisplayName()).ToDataRes(types.String)
+	},
+	"macos.profile.payload.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosProfilePayload).GetContent()).ToDataRes(types.Dict)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -13156,6 +13233,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.sharing.dvdSharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosSharing).DvdSharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.mdm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosMdm).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.mdm.enrolled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosMdm).Enrolled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.mdm.dep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosMdm).Dep, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.mdm.userApproved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosMdm).UserApproved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.mdm.serverUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosMdm).ServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profiles.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfiles).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.profiles.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfiles).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.profile.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.removalDisallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).RemovalDisallowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.profile.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payloads": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfile).Payloads, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payload.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.profile.payload.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payload.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payload.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payload.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.profile.payload.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosProfilePayload).Content, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36025,6 +36194,289 @@ func (c *mqlMacosSharing) GetDvdSharing() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DvdSharing, func() (bool, error) {
 		return c.dvdSharing()
 	})
+}
+
+// mqlMacosMdm for the macos.mdm resource
+type mqlMacosMdm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosMdmInternal
+	Enrolled     plugin.TValue[bool]
+	Dep          plugin.TValue[bool]
+	UserApproved plugin.TValue[bool]
+	ServerUrl    plugin.TValue[string]
+}
+
+// createMacosMdm creates a new instance of this resource
+func createMacosMdm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosMdm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.mdm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosMdm) MqlName() string {
+	return "macos.mdm"
+}
+
+func (c *mqlMacosMdm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosMdm) GetEnrolled() *plugin.TValue[bool] {
+	return &c.Enrolled
+}
+
+func (c *mqlMacosMdm) GetDep() *plugin.TValue[bool] {
+	return &c.Dep
+}
+
+func (c *mqlMacosMdm) GetUserApproved() *plugin.TValue[bool] {
+	return &c.UserApproved
+}
+
+func (c *mqlMacosMdm) GetServerUrl() *plugin.TValue[string] {
+	return &c.ServerUrl
+}
+
+// mqlMacosProfiles for the macos.profiles resource
+type mqlMacosProfiles struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosProfilesInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createMacosProfiles creates a new instance of this resource
+func createMacosProfiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosProfiles{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.profiles", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosProfiles) MqlName() string {
+	return "macos.profiles"
+}
+
+func (c *mqlMacosProfiles) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosProfiles) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos.profiles", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlMacosProfile for the macos.profile resource
+type mqlMacosProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosProfileInternal it will be used here
+	Identifier        plugin.TValue[string]
+	Uuid              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Organization      plugin.TValue[string]
+	Type              plugin.TValue[string]
+	RemovalDisallowed plugin.TValue[bool]
+	Scope             plugin.TValue[string]
+	Payloads          plugin.TValue[[]any]
+}
+
+// createMacosProfile creates a new instance of this resource
+func createMacosProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosProfile) MqlName() string {
+	return "macos.profile"
+}
+
+func (c *mqlMacosProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosProfile) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlMacosProfile) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlMacosProfile) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMacosProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMacosProfile) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlMacosProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMacosProfile) GetRemovalDisallowed() *plugin.TValue[bool] {
+	return &c.RemovalDisallowed
+}
+
+func (c *mqlMacosProfile) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlMacosProfile) GetPayloads() *plugin.TValue[[]any] {
+	return &c.Payloads
+}
+
+// mqlMacosProfilePayload for the macos.profile.payload resource
+type mqlMacosProfilePayload struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosProfilePayloadInternal it will be used here
+	Uuid        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Identifier  plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Content     plugin.TValue[any]
+}
+
+// createMacosProfilePayload creates a new instance of this resource
+func createMacosProfilePayload(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosProfilePayload{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.profile.payload", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosProfilePayload) MqlName() string {
+	return "macos.profile.payload"
+}
+
+func (c *mqlMacosProfilePayload) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosProfilePayload) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlMacosProfilePayload) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMacosProfilePayload) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlMacosProfilePayload) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMacosProfilePayload) GetContent() *plugin.TValue[any] {
+	return &c.Content
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource

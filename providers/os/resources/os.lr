@@ -4093,6 +4093,98 @@ macos.sharing @defaults("screenSharing remoteManagement airplayReceiver") {
   dvdSharing() bool
 }
 
+// macOS MDM (Mobile Device Management) enrollment state
+//
+// Examine whether this Mac is enrolled in an MDM solution, the
+// enrollment server, and whether the enrollment was performed via
+// Automated Device Enrollment (formerly DEP) or user-approved. Use
+// `macos.profiles` to enumerate the configuration profiles delivered
+// to the device. Backed by `profiles status -type enrollment`.
+macos.mdm @defaults("enrolled serverUrl") {
+  // Whether the device is enrolled in an MDM solution
+  enrolled bool
+  // Whether the device is enrolled via Automated Device Enrollment (DEP/ADE)
+  //
+  // DEP-enrolled devices are pre-assigned to the organization through
+  // Apple Business Manager / Apple School Manager and cannot be removed
+  // from MDM by the user.
+  dep bool
+  // Whether the MDM enrollment is user-approved
+  //
+  // User-approved MDM (UAMDM) is required for managing kernel
+  // extensions, full disk access, and other privileged settings.
+  userApproved bool
+  // URL of the MDM server (empty when not enrolled)
+  serverUrl string
+}
+
+// macOS configuration profiles installed on the system
+//
+// Iterate every Configuration Profile delivered to the device — both
+// MDM-delivered and manually installed `.mobileconfig` payloads — to
+// audit what policies are actually in force. Backed by `profiles list
+// -all -output stdout-xml`; requires root to see system-level (`_computerlevel`)
+// profiles, otherwise only the current user's profiles are returned.
+macos.profiles @defaults("list.length") {
+  // All installed Configuration Profiles
+  list() []macos.profile
+}
+
+// macOS Configuration Profile
+//
+// Examine a single Configuration Profile: its `identifier`, `uuid`,
+// human-readable `displayName`, `description`, `organization`,
+// `type`, whether it is install-locked (`removalDisallowed`), the
+// scope it applies to (`scope`: `system` or `user`), and the
+// individual `payloads` that carry the actual policy directives.
+private macos.profile @defaults("identifier displayName type") {
+  // Reverse-DNS profile identifier
+  identifier string
+  // Profile UUID
+  uuid string
+  // Human-readable profile name
+  displayName string
+  // Profile description
+  description string
+  // Distributing organization
+  organization string
+  // Profile type (e.g. "Configuration", "Enrollment Profile")
+  type string
+  // Whether removal of this profile is disallowed by its install settings
+  removalDisallowed bool
+  // Scope this profile applies to
+  //
+  // `system` for `_computerlevel` profiles or `user` for per-user profiles.
+  scope string
+  // Payloads (policy directives) carried by this profile
+  payloads []macos.profile.payload
+}
+
+// macOS Configuration Profile payload
+//
+// Examine a single payload within a Configuration Profile: the
+// `type` (e.g. `com.apple.security.firewall`,
+// `com.apple.MCXFileVault2`), the payload's reverse-DNS
+// `identifier`, its `uuid`, and the raw policy `content` as a dict.
+// Iterated from `macos.profile.payloads` to audit specific policy
+// directives (e.g. firewall payload settings, FileVault policy).
+private macos.profile.payload @defaults("type displayName") {
+  // Payload UUID
+  uuid string
+  // Payload type (reverse-DNS, e.g. `com.apple.security.firewall`)
+  type string
+  // Reverse-DNS payload identifier
+  identifier string
+  // Human-readable payload name
+  displayName string
+  // Raw payload content as parsed from the profile plist
+  //
+  // The schema of `content` is payload-type specific — a firewall
+  // payload differs from a Wi-Fi payload differs from a FileVault
+  // payload. Inspect `type` to know what fields to expect.
+  content dict
+}
+
 // macOS Time Machine backup configuration
 //
 // Examine destinations, schedule, and exclusion preferences
