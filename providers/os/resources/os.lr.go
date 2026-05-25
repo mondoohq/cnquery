@@ -36778,27 +36778,39 @@ func (c *mqlMacosSoftwareupdate) MqlID() string {
 }
 
 func (c *mqlMacosSoftwareupdate) GetAutoCheckEnabled() *plugin.TValue[bool] {
-	return &c.AutoCheckEnabled
+	return plugin.GetOrCompute[bool](&c.AutoCheckEnabled, func() (bool, error) {
+		return c.autoCheckEnabled()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetAutoDownloadEnabled() *plugin.TValue[bool] {
-	return &c.AutoDownloadEnabled
+	return plugin.GetOrCompute[bool](&c.AutoDownloadEnabled, func() (bool, error) {
+		return c.autoDownloadEnabled()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetAutoInstallMacOSUpdates() *plugin.TValue[bool] {
-	return &c.AutoInstallMacOSUpdates
+	return plugin.GetOrCompute[bool](&c.AutoInstallMacOSUpdates, func() (bool, error) {
+		return c.autoInstallMacOSUpdates()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetInstallSystemDataFiles() *plugin.TValue[bool] {
-	return &c.InstallSystemDataFiles
+	return plugin.GetOrCompute[bool](&c.InstallSystemDataFiles, func() (bool, error) {
+		return c.installSystemDataFiles()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetInstallSecurityResponses() *plugin.TValue[bool] {
-	return &c.InstallSecurityResponses
+	return plugin.GetOrCompute[bool](&c.InstallSecurityResponses, func() (bool, error) {
+		return c.installSecurityResponses()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetLastSuccessfulCheck() *plugin.TValue[*time.Time] {
-	return &c.LastSuccessfulCheck
+	return plugin.GetOrCompute[*time.Time](&c.LastSuccessfulCheck, func() (*time.Time, error) {
+		return c.lastSuccessfulCheck()
+	})
 }
 
 func (c *mqlMacosSoftwareupdate) GetUpdates() *plugin.TValue[[]any] {

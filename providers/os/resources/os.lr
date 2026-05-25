@@ -4196,20 +4196,20 @@ private macos.profile.payload @defaults("type displayName") {
 // a network check.
 macos.softwareupdate @defaults("autoCheckEnabled autoInstallMacOSUpdates") {
   // Whether `Software Update` is configured to automatically check for updates
-  autoCheckEnabled bool
+  autoCheckEnabled() bool
   // Whether updates are downloaded automatically in the background
-  autoDownloadEnabled bool
+  autoDownloadEnabled() bool
   // Whether macOS updates (point releases and security updates) install automatically
-  autoInstallMacOSUpdates bool
+  autoInstallMacOSUpdates() bool
   // Whether system data files (XProtect, MRT definitions) install automatically
-  installSystemDataFiles bool
+  installSystemDataFiles() bool
   // Whether Rapid Security Responses install automatically
-  installSecurityResponses bool
+  installSecurityResponses() bool
   // Last successful check timestamp as reported by Software Update
   //
   // Null when no successful check has ever been recorded on this
   // device or when the field is unset by the policy file.
-  lastSuccessfulCheck time
+  lastSuccessfulCheck() time
   // Available software updates as reported by `softwareupdate -l --no-scan`
   updates() []macos.softwareupdate.entry
 }
