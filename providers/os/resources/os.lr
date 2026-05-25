@@ -963,6 +963,8 @@ pam.conf {
   services(files) @maturity("deprecated") map[string][]string
   // List of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
+  // All PAM modules loaded across every service (deduplicated by name)
+  modules(entries) []pam.module
 }
 
 // A single entry within a PAM service configuration
@@ -979,6 +981,50 @@ private pam.conf.serviceEntry @defaults("service module") {
   module string
   // Configuration options for pam service entry
   options []string
+}
+
+// PAM module aggregated view
+//
+// Examine a single PAM module across every service that loads it. The
+// `params` dict merges `key=value` options from every line that uses
+// this module (last-write-wins per key) so audits like
+// `pam.module("pam_faillock").params["deny"]` work without iterating
+// `pam.conf.entries`. `enabled` is true when any service entry loads
+// the module with a non-skip control.
+//
+// Initialize by module name (e.g. `pam.module(name: "pam_faillock")`)
+// or iterate `pam.modules()` for every distinct module name seen
+// across the parsed PAM configuration.
+private pam.module @defaults("name enabled entries.length") {
+  init(name string)
+  // Module name as it appears after `<type> <control>`
+  //
+  // Examples: `pam_unix`, `pam_faillock`, `pam_pwquality`. The `.so`
+  // suffix and any leading path are stripped so lookups by short name
+  // work consistently.
+  name string
+  // All key=value options aggregated across every service entry that loads this module
+  //
+  // The same option key appearing on multiple lines is last-write-wins
+  // in source order (matching how PAM itself evaluates duplicate flags
+  // — the later line wins). Bare options (no `=`) are present in the
+  // map with an empty string value so `params["use_authtok"] != null`
+  // works as an existence check.
+  params map[string]string
+  // Whether the module is loaded by any service with a non-skip control
+  //
+  // True when at least one service entry references this module with a
+  // control of `required`, `requisite`, `sufficient`, `optional`, or a
+  // typed control with `default=ok` / `success=ok`. Always false when
+  // every reference is part of a stub or commented-out line.
+  enabled bool
+  // Every service entry that loads this module
+  //
+  // The full list across all `/etc/pam.d/*` files, in source order.
+  // Each entry carries its originating `service`, `lineNumber`,
+  // `pamType`, `control`, and raw `options` so callers can drill back
+  // into the underlying line if `params` aggregation isn't enough.
+  entries []pam.conf.serviceEntry
 }
 
 // OpenSSH server (sshd) namespace

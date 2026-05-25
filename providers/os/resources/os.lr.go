@@ -68,6 +68,7 @@ const (
 	ResourcePackages                     string = "packages"
 	ResourcePamConf                      string = "pam.conf"
 	ResourcePamConfServiceEntry          string = "pam.conf.serviceEntry"
+	ResourcePamModule                    string = "pam.module"
 	ResourceSshd                         string = "sshd"
 	ResourceSshdConfig                   string = "sshd.config"
 	ResourceSshdConfigMatchBlock         string = "sshd.config.matchBlock"
@@ -585,6 +586,10 @@ func init() {
 		"pam.conf.serviceEntry": {
 			// to override args, implement: initPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPamConfServiceEntry,
+		},
+		"pam.module": {
+			Init:   initPamModule,
+			Create: createPamModule,
 		},
 		"sshd": {
 			// to override args, implement: initSshd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2605,6 +2610,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"pam.conf.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamConf).GetEntries()).ToDataRes(types.Map(types.String, types.Array(types.Resource("pam.conf.serviceEntry"))))
 	},
+	"pam.conf.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetModules()).ToDataRes(types.Array(types.Resource("pam.module")))
+	},
 	"pam.conf.serviceEntry.service": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamConfServiceEntry).GetService()).ToDataRes(types.String)
 	},
@@ -2622,6 +2630,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"pam.conf.serviceEntry.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamConfServiceEntry).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"pam.module.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamModule).GetName()).ToDataRes(types.String)
+	},
+	"pam.module.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamModule).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"pam.module.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamModule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"pam.module.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamModule).GetEntries()).ToDataRes(types.Array(types.Resource("pam.conf.serviceEntry")))
 	},
 	"sshd.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -8858,6 +8878,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPamConf).Entries, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"pam.conf.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Modules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"pam.conf.serviceEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConfServiceEntry).__id, ok = v.Value.(string)
 		return
@@ -8884,6 +8908,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"pam.conf.serviceEntry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConfServiceEntry).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"pam.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamModule).__id, ok = v.Value.(string)
+		return
+	},
+	"pam.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.module.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamModule).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"pam.module.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamModule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"pam.module.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamModule).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"sshd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20986,6 +21030,7 @@ type mqlPamConf struct {
 	Content  plugin.TValue[string]
 	Services plugin.TValue[map[string]any]
 	Entries  plugin.TValue[map[string]any]
+	Modules  plugin.TValue[[]any]
 }
 
 // createPamConf creates a new instance of this resource
@@ -21084,6 +21129,27 @@ func (c *mqlPamConf) GetEntries() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlPamConf) GetModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Modules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("pam.conf", c.__id, "modules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargEntries := c.GetEntries()
+		if vargEntries.Error != nil {
+			return nil, vargEntries.Error
+		}
+
+		return c.modules(vargEntries.Data)
+	})
+}
+
 // mqlPamConfServiceEntry for the pam.conf.serviceEntry resource
 type mqlPamConfServiceEntry struct {
 	MqlRuntime *plugin.Runtime
@@ -21156,6 +21222,70 @@ func (c *mqlPamConfServiceEntry) GetModule() *plugin.TValue[string] {
 
 func (c *mqlPamConfServiceEntry) GetOptions() *plugin.TValue[[]any] {
 	return &c.Options
+}
+
+// mqlPamModule for the pam.module resource
+type mqlPamModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPamModuleInternal it will be used here
+	Name    plugin.TValue[string]
+	Params  plugin.TValue[map[string]any]
+	Enabled plugin.TValue[bool]
+	Entries plugin.TValue[[]any]
+}
+
+// createPamModule creates a new instance of this resource
+func createPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPamModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("pam.module", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPamModule) MqlName() string {
+	return "pam.module"
+}
+
+func (c *mqlPamModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPamModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPamModule) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlPamModule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlPamModule) GetEntries() *plugin.TValue[[]any] {
+	return &c.Entries
 }
 
 // mqlSshd for the sshd resource

@@ -1583,6 +1583,7 @@ pam.conf 9.0.0
 pam.conf.content 9.0.0
 pam.conf.entries 9.0.0
 pam.conf.files 9.0.0
+pam.conf.modules 13.16.10
 pam.conf.serviceEntry 9.0.0
 pam.conf.serviceEntry.control 9.0.0
 pam.conf.serviceEntry.lineNumber 9.0.0
@@ -1591,6 +1592,11 @@ pam.conf.serviceEntry.options 9.0.0
 pam.conf.serviceEntry.pamType 9.0.0
 pam.conf.serviceEntry.service 9.0.0
 pam.conf.services 9.0.0
+pam.module 13.16.10
+pam.module.enabled 13.16.10
+pam.module.entries 13.16.10
+pam.module.name 13.16.10
+pam.module.params 13.16.10
 parse.certificates 9.0.1
 parse.certificates.content 9.0.1
 parse.certificates.file 9.0.1

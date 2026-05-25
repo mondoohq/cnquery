@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -173,6 +174,194 @@ func (s *mqlPamConf) services(files []any) (map[string]any, error) {
 	}
 
 	return services, nil
+}
+
+// canonicalizePamModuleName strips a leading path and `.so` suffix from a PAM
+// module reference so callers can look modules up by short name. Case is
+// preserved — PAM module names are conventionally lowercase, but we don't
+// fold them.
+func canonicalizePamModuleName(name string) string {
+	if idx := strings.LastIndex(name, "/"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	name = strings.TrimSuffix(name, ".so")
+	return name
+}
+
+// aggregatePamParams merges `key=value` options from one or more service
+// entries into a single dict. Bare options without `=` are stored with an
+// empty string value so `params["use_authtok"] != null` works as an
+// existence check. Later occurrences of the same key overwrite earlier
+// ones, matching how PAM itself evaluates duplicate flags.
+func aggregatePamParams(optionLists ...[]any) map[string]any {
+	params := map[string]any{}
+	for _, opts := range optionLists {
+		for _, raw := range opts {
+			token, ok := raw.(string)
+			if !ok {
+				continue
+			}
+			if token == "" {
+				continue
+			}
+			if idx := strings.Index(token, "="); idx >= 0 {
+				key := strings.ToLower(token[:idx])
+				value := token[idx+1:]
+				params[key] = value
+			} else {
+				params[strings.ToLower(token)] = ""
+			}
+		}
+	}
+	return params
+}
+
+// isPamControlEnabled reports whether a PAM control directive counts as
+// "the module is loaded". Bracketed controls that explicitly route the
+// module to ignore/skip don't count.
+func isPamControlEnabled(control string) bool {
+	c := strings.TrimSpace(control)
+	if c == "" {
+		return false
+	}
+	// Bracketed controls: `[default=ignore]` / `[default=skip]` mean the
+	// module is referenced but its result is discarded — treat as not
+	// enabled. Any other bracketed form (e.g. `[success=1 default=bad]`,
+	// `[default=die]`) is a real load.
+	if strings.HasPrefix(c, "[") {
+		lower := strings.ToLower(c)
+		if strings.Contains(lower, "default=ignore") || strings.Contains(lower, "default=skip") {
+			return false
+		}
+		return true
+	}
+	// Bare controls: required, requisite, sufficient, optional,
+	// substack, include — all count as loaded.
+	return true
+}
+
+func initPamModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok {
+		return nil, nil, errors.New("wrong type for 'name', it must be a string")
+	}
+	name = canonicalizePamModuleName(name)
+
+	conf, err := CreateResource(runtime, "pam.conf", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	pamConf := conf.(*mqlPamConf)
+
+	modules := pamConf.GetModules()
+	if modules.Error != nil {
+		return nil, nil, modules.Error
+	}
+
+	for _, m := range modules.Data {
+		mod, ok := m.(*mqlPamModule)
+		if !ok {
+			continue
+		}
+		if mod.Name.Data == name {
+			return nil, mod, nil
+		}
+	}
+
+	// Module is not referenced by any service — return an empty husk.
+	res, err := CreateResource(runtime, "pam.module", map[string]*llx.RawData{
+		"name":    llx.StringData(name),
+		"params":  llx.MapData(map[string]any{}, types.String),
+		"enabled": llx.BoolData(false),
+		"entries": llx.ArrayData([]any{}, types.Resource("pam.conf.serviceEntry")),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func (m *mqlPamModule) id() (string, error) {
+	return "pam.module/" + m.Name.Data, nil
+}
+
+func (s *mqlPamConf) modules(entries map[string]any) ([]any, error) {
+	// Collect entries grouped by canonical module name, preserving source
+	// order across files for last-write-wins option aggregation.
+	type moduleAgg struct {
+		name       string
+		entries    []any
+		optionSets [][]any
+		anyEnabled bool
+	}
+
+	byName := map[string]*moduleAgg{}
+	order := []string{}
+
+	// Iterate services in a stable order so the resulting []pam.module
+	// list is deterministic across calls.
+	serviceNames := make([]string, 0, len(entries))
+	for svc := range entries {
+		serviceNames = append(serviceNames, svc)
+	}
+	sort.Strings(serviceNames)
+
+	for _, svc := range serviceNames {
+		raw := entries[svc]
+		list, ok := raw.([]any)
+		if !ok {
+			continue
+		}
+		for _, e := range list {
+			entry, ok := e.(*mqlPamConfServiceEntry)
+			if !ok {
+				continue
+			}
+			rawModule := entry.Module.Data
+			if rawModule == "" {
+				// Skip @include lines and anything that doesn't reference
+				// a real module.
+				continue
+			}
+			name := canonicalizePamModuleName(rawModule)
+			agg, ok := byName[name]
+			if !ok {
+				agg = &moduleAgg{name: name}
+				byName[name] = agg
+				order = append(order, name)
+			}
+			agg.entries = append(agg.entries, entry)
+			agg.optionSets = append(agg.optionSets, entry.Options.Data)
+			if isPamControlEnabled(entry.Control.Data) {
+				agg.anyEnabled = true
+			}
+		}
+	}
+
+	out := make([]any, 0, len(order))
+	for _, name := range order {
+		agg := byName[name]
+		params := aggregatePamParams(agg.optionSets...)
+		res, err := CreateResource(s.MqlRuntime, "pam.module", map[string]*llx.RawData{
+			"name":    llx.StringData(agg.name),
+			"params":  llx.MapData(params, types.String),
+			"enabled": llx.BoolData(agg.anyEnabled),
+			"entries": llx.ArrayData(agg.entries, types.Resource("pam.conf.serviceEntry")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
