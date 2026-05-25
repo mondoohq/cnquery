@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 )
 
@@ -142,7 +143,18 @@ func (s *mqlMacosSoftwareupdate) installSecurityResponses() (bool, error) {
 
 func (s *mqlMacosSoftwareupdate) lastSuccessfulCheck() (*time.Time, error) {
 	v, err := s.fetchSettings()
-	return v.lastSuccessfulCheck, err
+	if err != nil {
+		return nil, err
+	}
+	if v.lastSuccessfulCheck == nil {
+		// No successful check has ever been recorded (or the key is
+		// missing from the plist). Mark the field as resolved-and-null
+		// so the runtime doesn't treat it as unresolved and re-invoke
+		// this accessor on every read.
+		s.LastSuccessfulCheck.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return v.lastSuccessfulCheck, nil
 }
 
 // =============================================================================
