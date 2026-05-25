@@ -42,6 +42,7 @@ artifacthub
 artifactregistry
 asdk
 ashburn
+aslr
 aspnet
 atapi
 atlassian
@@ -83,6 +84,7 @@ bitmask
 blackhole
 blr
 breakglass
+brk
 broadwell
 Buildkit
 bumpable
@@ -364,6 +366,7 @@ jupyter
 jwk
 KENDRA
 kerberoastable
+kexec
 keymanager
 KEYSTORE
 KEYTAB
@@ -491,6 +494,7 @@ nomatch
 NONSHARDED
 noreply
 Noreuse
+nosmt
 notebookinstancedetails
 notif
 npmjs
@@ -522,6 +526,7 @@ ondemand
 ONELOGIN
 oneof
 ontap
+oopsed
 opcplc
 openai
 openclaw
@@ -759,6 +764,7 @@ usb
 Usec
 userdata
 USERPOOL
+userspace
 Utc
 valkey
 VAULTNAME
@@ -768,6 +774,7 @@ vdcs
 vdev
 VDhir
 vdi
+vdso
 vendored
 verifiedaccess
 vertexai

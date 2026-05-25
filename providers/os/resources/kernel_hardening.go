@@ -17,9 +17,12 @@ import (
 // =============================================================================
 
 func (k *mqlKernel) cmdline() (*mqlKernelCmdline, error) {
-	raw, _, err := readKernelHardeningFile(k.MqlRuntime, "/proc/cmdline")
+	raw, ok, err := readKernelHardeningFile(k.MqlRuntime, "/proc/cmdline")
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		raw = ""
 	}
 	raw = strings.TrimRight(raw, "\n")
 
