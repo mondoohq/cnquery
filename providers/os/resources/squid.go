@@ -72,7 +72,10 @@ func (s *mqlSquid) version() (string, error) {
 		}
 	}
 
-	s.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	// Squid binary not found anywhere we looked. Return an empty string;
+	// the runtime stores that as the field value. Setting StateIsNull and
+	// then also returning a value is contradictory — the return value
+	// always wins, so we just return the empty string.
 	return "", nil
 }
 
@@ -211,9 +214,11 @@ func (s *mqlSquidConf) file() (*mqlFile, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	preferred := squidConfPath(conn)
+	seen := map[string]bool{preferred: true}
 	candidates := []string{preferred}
 	for _, p := range squidConfByFamily {
-		if p != preferred {
+		if !seen[p] {
+			seen[p] = true
 			candidates = append(candidates, p)
 		}
 	}
