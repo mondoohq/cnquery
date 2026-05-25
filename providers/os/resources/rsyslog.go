@@ -130,50 +130,10 @@ func parseRsyslogIncludes(content string) []string {
 // one per source line so the line-anchored `$IncludeConfig` regex still
 // matches correctly. Blank lines outside a block are dropped.
 func coalesceIncludeBlocks(content string) []string {
-	rawLines := strings.Split(content, "\n")
-	var out []string
-	var pending strings.Builder
-	openParens := 0
-
-	for _, raw := range rawLines {
-		line := stripRsyslogComment(raw)
-		line = strings.TrimSpace(line)
-		if line == "" && openParens == 0 {
-			continue
-		}
-
-		if openParens == 0 && rsyslogModernIncludeOpen.MatchString(line) {
-			openParens = countUnquotedParens(line)
-			if openParens == 0 {
-				// Single-line include(...) — emit as-is.
-				out = append(out, line)
-				continue
-			}
-			pending.WriteString(line)
-			continue
-		}
-		if openParens > 0 {
-			if pending.Len() > 0 {
-				pending.WriteByte(' ')
-			}
-			pending.WriteString(line)
-			openParens += countUnquotedParens(line)
-			if openParens <= 0 {
-				out = append(out, pending.String())
-				pending.Reset()
-				openParens = 0
-			}
-			continue
-		}
-		out = append(out, line)
-	}
-
-	// Unterminated block — emit what we have so the regex can still try
-	// to extract a pattern. rsyslog itself would reject this config at
-	// load time, so we surface whatever was given rather than silently
-	// dropping the directive.
-	if pending.Len() > 0 {
-		out = append(out, pending.String())
+	lines := coalesceParenBlocks("", content, rsyslogModernIncludeOpen.MatchString)
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = l.text
 	}
 	return out
 }

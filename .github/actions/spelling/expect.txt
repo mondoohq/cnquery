@@ -47,6 +47,7 @@ aspnet
 atapi
 atlassian
 auditlog
+authpriv
 Auths
 autoaccept
 autoclass
@@ -299,6 +300,7 @@ groupname
 Groupsv
 grpcroute
 gsuite
+gtls
 gua
 gvnic
 hadoop
@@ -335,7 +337,11 @@ IKEv
 ilb
 imds
 imei
+imfile
+imtcp
 IMtn
+imudp
+imuxsock
 ingresstls
 initrdefi
 INPROGRESS
@@ -374,7 +380,6 @@ junos
 jupyter
 jwk
 jwks
-KEDA
 KENDRA
 keras
 kerberoastable
@@ -459,6 +464,7 @@ mixtral
 mkey
 mlag
 mls
+mmnormalize
 Mnfz
 mno
 mobileapp
@@ -489,6 +495,7 @@ netbios
 netbox
 netin
 netout
+Netstream
 networkfirewall
 networkinterface
 newpath
@@ -536,6 +543,12 @@ oid
 oidc
 ollama
 OMA
+omfile
+omfwd
+omhttp
+omkafka
+ompipe
+omusrmsg
 onboarded
 onboot
 onbuild
@@ -664,7 +677,6 @@ rubygems
 rulegroup
 rulegroupreferencestatement
 rxtx
-saas
 safetensors
 samesite
 sas

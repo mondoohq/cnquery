@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -78,6 +77,17 @@ var rsyslogBlockKeywords = map[string]bool{
 // lines carry the source line number of the *opening* token so audits
 // can point at the directive head, not its closing paren.
 func coalesceRsyslogLines(sourceFile, content string) []rsyslogLine {
+	return coalesceParenBlocks(sourceFile, content, hasBlockKeyword)
+}
+
+// coalesceParenBlocks is the shared paren-block coalescer used by both
+// `coalesceRsyslogLines` (modern RainerScript module/input/action/global
+// blocks) and `coalesceIncludeBlocks` (modern `include(...)` blocks).
+// The `isBlockStart` predicate decides which leading tokens open a block;
+// every other line passes through one-per-source-line. Lines carry the
+// source file and the line number of the opening token so callers can
+// point findings at the directive head, not the closing paren.
+func coalesceParenBlocks(sourceFile, content string, isBlockStart func(string) bool) []rsyslogLine {
 	rawLines := strings.Split(content, "\n")
 	var out []rsyslogLine
 	var pending strings.Builder
@@ -92,7 +102,7 @@ func coalesceRsyslogLines(sourceFile, content string) []rsyslogLine {
 			continue
 		}
 
-		if openParens == 0 && hasBlockKeyword(line) {
+		if openParens == 0 && isBlockStart(line) {
 			openParens = countUnquotedParens(line)
 			if openParens == 0 {
 				out = append(out, rsyslogLine{text: line, sourceFile: sourceFile, sourceLine: ln})
@@ -611,9 +621,3 @@ func splitCommaList(s string) []string {
 func rsyslogActionKey(e rsyslogEntry) string {
 	return fmt.Sprintf("%s/%s/%s:%d", e.moduleType, e.target, e.sourceFile, e.sourceLine)
 }
-
-// errRsyslogTypedEntry is returned from typed accessors when a downstream
-// helper produces an error we can't recover from. Currently unused — all
-// helpers degrade silently — but kept so future error paths have a single
-// concrete error type to wrap.
-var errRsyslogTypedEntry = errors.New("rsyslog typed entry construction failed")
