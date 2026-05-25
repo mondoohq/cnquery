@@ -298,7 +298,11 @@ func (m *mqlMacosFirewall) managedByMDM() (bool, error) {
 			if !ok {
 				continue
 			}
-			if payload.GetType().Data == mdmFirewallPayloadType {
+			ptype := payload.GetType()
+			if ptype.Error != nil {
+				return false, ptype.Error
+			}
+			if ptype.Data == mdmFirewallPayloadType {
 				return true, nil
 			}
 		}
