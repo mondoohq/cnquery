@@ -1401,6 +1401,242 @@ private nginx.conf.location @defaults("path") {
   params map[string]string
 }
 
+// Squid caching proxy
+//
+// Examine the Squid proxy server version reported by the daemon binary.
+// Use `squid.conf` to inspect the full configuration including ACLs,
+// access rules, listen ports, cache peers, refresh patterns, and any
+// fragments pulled in by `include` directives (for example the contents
+// of `/etc/squid/conf.d/*.conf`).
+squid {
+  // Squid version (e.g., "5.7")
+  version() string
+}
+
+// Squid caching proxy configuration
+//
+// Examine directives, access control lists, listen ports, cache peers,
+// cache directories, refresh patterns, authentication parameters, and
+// access logs from `squid.conf` together with every fragment pulled in
+// by `include` directives. Files matched by glob patterns in include
+// lines (e.g. `include /etc/squid/conf.d/*.conf`) are walked recursively
+// and merged into a single logical configuration, so audits see the
+// flattened directive set the daemon actually runs with.
+squid.conf {
+  init(path? string)
+  // Primary configuration file
+  file() file
+  // All configuration files (main + included fragments)
+  files(file) []file
+  // Flat key-value directives across the merged configuration
+  //
+  // Directives that can repeat (acl, http_access, refresh_pattern, ...)
+  // have their values comma-joined in source order.
+  params(file) map[string]string
+  // http_port listen entries
+  httpPorts(file) []squid.conf.listen
+  // https_port listen entries
+  httpsPorts(file) []squid.conf.listen
+  // Defined ACLs, one entry per unique acl name (values across repeated `acl NAME` lines are merged)
+  acls(file) []squid.conf.acl
+  // Every *_access rule in source order
+  //
+  // Includes http_access, http_reply_access, adapted_http_access,
+  // icp_access, htcp_access, miss_access, cache, always_direct,
+  // never_direct, and the other access directives. Filter by kind to
+  // target one family: `.where(kind == "http_access")`.
+  accessRules(file) []squid.conf.accessRule
+  // cache_peer entries (parents and siblings)
+  cachePeers(file) []squid.conf.cachePeer
+  // cache_dir entries (on-disk cache storage)
+  cacheDirs(file) []squid.conf.cacheDir
+  // refresh_pattern entries (cache freshness rules) in source order
+  refreshPatterns(file) []squid.conf.refreshPattern
+  // auth_param entries grouped by scheme -> param -> value (e.g., authParams["basic"]["program"])
+  authParams(file) map[string]map[string]string
+  // access_log entries (each daemon target / format / acl pair)
+  accessLogs(file) []squid.conf.accessLog
+  // visible_hostname directive value
+  visibleHostname(params) string
+  // unique_hostname directive value
+  uniqueHostname(params) string
+  // cache_log directive value (path to the cache.log file)
+  cacheLog(params) string
+  // cache_store_log directive value (path or "none")
+  cacheStoreLog(params) string
+  // pid_filename directive value
+  pidFilename(params) string
+  // coredump_dir directive value
+  coredumpDir(params) string
+  // via directive value ("on" or "off")
+  via(params) string
+  // forwarded_for directive value (on, off, transparent, delete, truncate)
+  forwardedFor(params) string
+  // httpd_suppress_version_string directive value ("on" or "off")
+  httpdSuppressVersionString(params) string
+  // dns_v4_first directive value ("on" or "off")
+  dnsV4First(params) string
+  // cache_mem directive value (e.g., "256 MB")
+  cacheMem(params) string
+  // maximum_object_size directive value (e.g., "4 MB")
+  maximumObjectSize(params) string
+  // X.509 certificates parsed from cert= / tls-cert= paths declared on http_port and https_port entries
+  certificates() []network.certificate
+}
+
+// Squid listen port (http_port or https_port)
+//
+// Examine a single `http_port` or `https_port` directive: the bind
+// address, port number, parsed mode flags (transparent, intercept,
+// accel, ssl-bump, tproxy), and any `key=value` options including the
+// TLS material (`cert=`, `key=`, `tls-cert=`, `tls-key=`).
+private squid.conf.listen @defaults("port address tls") {
+  // Directive name this entry came from ("http_port" or "https_port")
+  directive string
+  // Bind address ("" when none was given, IPv4/IPv6 literal, or "unix:/path")
+  address string
+  // Numeric port (0 when the target is a unix socket)
+  port int
+  // Whether this entry serves TLS (https_port, or http_port with ssl-bump / tls-cert= / cert=)
+  tls bool
+  // Mode flags present on the directive (e.g., transparent, intercept, accel, ssl-bump, tproxy, ssl)
+  flags []string
+  // Path to the server certificate when set (`cert=` or `tls-cert=`)
+  cert string
+  // Path to the server private key when set (`key=` or `tls-key=`)
+  key string
+  // All `key=value` options on the directive
+  options map[string]string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
+// Squid Access Control List entry
+//
+// Examine an `acl` definition. ACLs are referenced by name from
+// `http_access`, `icp_access`, and the other *_access rules, so the
+// `values` field together with the rule list tells you which clients,
+// URLs, or methods Squid will allow or deny.
+private squid.conf.acl @defaults("name type") {
+  // ACL name (e.g., "localnet", "Safe_ports", "CONNECT")
+  name string
+  // ACL type (src, dst, port, srcdomain, url_regex, proto, method, proxy_auth, ...)
+  type string
+  // Modifier flags present on any of the acl lines (e.g., "-i" for case-insensitive)
+  flags []string
+  // All match values from every `acl NAME ...` line with this name, in source order
+  values []string
+}
+
+// Squid *_access rule
+//
+// Examine a single allow/deny rule from any of the access directives
+// (`http_access`, `http_reply_access`, `icp_access`, `miss_access`,
+// `cache`, `always_direct`, `never_direct`, etc.). Rules are evaluated
+// top-down by Squid, so the `index` field reflects source order across
+// the merged configuration.
+private squid.conf.accessRule @defaults("kind action acls") {
+  // Directive name (e.g., "http_access", "icp_access", "miss_access", "cache", "always_direct", "never_direct")
+  kind string
+  // 0-based position of this rule within `kind`, in source order across all included files
+  index int
+  // "allow" or "deny"
+  action string
+  // ACL names referenced by this rule, in argument order. An entry starting with "!" is a negated ACL.
+  acls []string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
+// Squid cache peer
+//
+// Examine a `cache_peer` entry — a parent or sibling cache Squid
+// forwards to. The `host`, `type`, and `httpPort` together identify the
+// peer; the `options` slice carries the remaining flags (`default`,
+// `no-query`, `proxy-only`, `login=...`, `weight=...`, ...).
+private squid.conf.cachePeer @defaults("host type httpPort") {
+  // Peer hostname or IP
+  host string
+  // Peer relationship ("parent", "sibling", or "multicast")
+  type string
+  // HTTP port on the peer
+  httpPort int
+  // ICP/HTCP query port on the peer (0 when disabled)
+  icpPort int
+  // Trailing options on the directive (e.g., default, no-query, proxy-only, login=NAME)
+  options []string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
+// Squid cache directory
+//
+// Examine a `cache_dir` entry — the on-disk cache storage backing the
+// proxy. Captures the storage `type` (ufs, aufs, diskd, rock), the
+// filesystem `path`, the cache size, the L1/L2 fan-out for hashed
+// stores, and any trailing `key=value` options (e.g., `max-size=`).
+private squid.conf.cacheDir @defaults("type path sizeMb") {
+  // Storage scheme (ufs, aufs, diskd, rock, ...)
+  type string
+  // Filesystem path of the cache
+  path string
+  // Cache size in megabytes
+  sizeMb int
+  // L1 subdirectory count (0 for rock and other single-file stores)
+  l1 int
+  // L2 subdirectory count (0 for rock and other single-file stores)
+  l2 int
+  // Trailing options on the directive (e.g., max-size=4194304, min-size=0)
+  options []string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
+// Squid refresh_pattern rule
+//
+// Examine a single `refresh_pattern` directive: the regex Squid uses to
+// match URLs, the freshness window (`min` / `percent` / `max`), and any
+// trailing flags. Audit hot spots include `ignore-private`,
+// `ignore-no-store`, `override-expire`, and `override-lastmod`, which
+// weaken cache safety guarantees.
+private squid.conf.refreshPattern @defaults("pattern min max") {
+  // Regex pattern this rule applies to
+  pattern string
+  // Whether the rule was declared case-insensitive (-i)
+  caseInsensitive bool
+  // Minimum freshness in minutes
+  min int
+  // Percent of last-modified age used to compute freshness
+  percent int
+  // Maximum freshness in minutes
+  max int
+  // Trailing flag options
+  //
+  // Common entries: override-expire, override-lastmod,
+  // ignore-no-store, ignore-private, ignore-reload, reload-into-ims,
+  // refresh-ims, store-stale, max-stale=N.
+  options []string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
+// Squid access_log entry
+//
+// Examine a single `access_log` directive: where requests are written
+// (file path, daemon module target, or "none"), which logformat is in
+// use, and which ACLs gate the log line. Multiple `access_log` lines
+// produce multiple entries in this list.
+private squid.conf.accessLog @defaults("target format") {
+  // Log target ("/var/log/squid/access.log", "daemon:/var/log/...", "stdio:/var/log/...", "syslog:...", or "none" to disable)
+  target string
+  // logformat name selecting the output format ("squid" when unspecified, or the name from a `logformat NAME ...` line)
+  format string
+  // Trailing ACL names that gate this log line, in argument order (an entry starting with "!" is a negated ACL)
+  acls []string
+  // Original directive arguments, joined by spaces
+  raw string
+}
+
 // systemd journald configuration
 //
 // Examine the [Journal] and other sections of journald.conf

@@ -90,6 +90,15 @@ const (
 	ResourceNginxConfServer              string = "nginx.conf.server"
 	ResourceNginxConfUpstream            string = "nginx.conf.upstream"
 	ResourceNginxConfLocation            string = "nginx.conf.location"
+	ResourceSquid                        string = "squid"
+	ResourceSquidConf                    string = "squid.conf"
+	ResourceSquidConfListen              string = "squid.conf.listen"
+	ResourceSquidConfAcl                 string = "squid.conf.acl"
+	ResourceSquidConfAccessRule          string = "squid.conf.accessRule"
+	ResourceSquidConfCachePeer           string = "squid.conf.cachePeer"
+	ResourceSquidConfCacheDir            string = "squid.conf.cacheDir"
+	ResourceSquidConfRefreshPattern      string = "squid.conf.refreshPattern"
+	ResourceSquidConfAccessLog           string = "squid.conf.accessLog"
 	ResourceJournaldConfig               string = "journald.config"
 	ResourceJournaldConfigSection        string = "journald.config.section"
 	ResourceJournaldConfigSectionParam   string = "journald.config.section.param"
@@ -684,6 +693,42 @@ func init() {
 		"nginx.conf.location": {
 			// to override args, implement: initNginxConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNginxConfLocation,
+		},
+		"squid": {
+			// to override args, implement: initSquid(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquid,
+		},
+		"squid.conf": {
+			Init:   initSquidConf,
+			Create: createSquidConf,
+		},
+		"squid.conf.listen": {
+			// to override args, implement: initSquidConfListen(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfListen,
+		},
+		"squid.conf.acl": {
+			// to override args, implement: initSquidConfAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfAcl,
+		},
+		"squid.conf.accessRule": {
+			// to override args, implement: initSquidConfAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfAccessRule,
+		},
+		"squid.conf.cachePeer": {
+			// to override args, implement: initSquidConfCachePeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfCachePeer,
+		},
+		"squid.conf.cacheDir": {
+			// to override args, implement: initSquidConfCacheDir(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfCacheDir,
+		},
+		"squid.conf.refreshPattern": {
+			// to override args, implement: initSquidConfRefreshPattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfRefreshPattern,
+		},
+		"squid.conf.accessLog": {
+			// to override args, implement: initSquidConfAccessLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSquidConfAccessLog,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -3070,6 +3115,210 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nginx.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNginxConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"squid.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquid).GetVersion()).ToDataRes(types.String)
+	},
+	"squid.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"squid.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"squid.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"squid.conf.httpPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetHttpPorts()).ToDataRes(types.Array(types.Resource("squid.conf.listen")))
+	},
+	"squid.conf.httpsPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetHttpsPorts()).ToDataRes(types.Array(types.Resource("squid.conf.listen")))
+	},
+	"squid.conf.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetAcls()).ToDataRes(types.Array(types.Resource("squid.conf.acl")))
+	},
+	"squid.conf.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetAccessRules()).ToDataRes(types.Array(types.Resource("squid.conf.accessRule")))
+	},
+	"squid.conf.cachePeers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCachePeers()).ToDataRes(types.Array(types.Resource("squid.conf.cachePeer")))
+	},
+	"squid.conf.cacheDirs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCacheDirs()).ToDataRes(types.Array(types.Resource("squid.conf.cacheDir")))
+	},
+	"squid.conf.refreshPatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetRefreshPatterns()).ToDataRes(types.Array(types.Resource("squid.conf.refreshPattern")))
+	},
+	"squid.conf.authParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetAuthParams()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"squid.conf.accessLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetAccessLogs()).ToDataRes(types.Array(types.Resource("squid.conf.accessLog")))
+	},
+	"squid.conf.visibleHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetVisibleHostname()).ToDataRes(types.String)
+	},
+	"squid.conf.uniqueHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetUniqueHostname()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCacheLog()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheStoreLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCacheStoreLog()).ToDataRes(types.String)
+	},
+	"squid.conf.pidFilename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetPidFilename()).ToDataRes(types.String)
+	},
+	"squid.conf.coredumpDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCoredumpDir()).ToDataRes(types.String)
+	},
+	"squid.conf.via": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetVia()).ToDataRes(types.String)
+	},
+	"squid.conf.forwardedFor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetForwardedFor()).ToDataRes(types.String)
+	},
+	"squid.conf.httpdSuppressVersionString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetHttpdSuppressVersionString()).ToDataRes(types.String)
+	},
+	"squid.conf.dnsV4First": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetDnsV4First()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheMem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCacheMem()).ToDataRes(types.String)
+	},
+	"squid.conf.maximumObjectSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetMaximumObjectSize()).ToDataRes(types.String)
+	},
+	"squid.conf.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConf).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"squid.conf.listen.directive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetDirective()).ToDataRes(types.String)
+	},
+	"squid.conf.listen.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetAddress()).ToDataRes(types.String)
+	},
+	"squid.conf.listen.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetPort()).ToDataRes(types.Int)
+	},
+	"squid.conf.listen.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetTls()).ToDataRes(types.Bool)
+	},
+	"squid.conf.listen.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.listen.cert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetCert()).ToDataRes(types.String)
+	},
+	"squid.conf.listen.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetKey()).ToDataRes(types.String)
+	},
+	"squid.conf.listen.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"squid.conf.listen.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfListen).GetRaw()).ToDataRes(types.String)
+	},
+	"squid.conf.acl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAcl).GetName()).ToDataRes(types.String)
+	},
+	"squid.conf.acl.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAcl).GetType()).ToDataRes(types.String)
+	},
+	"squid.conf.acl.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAcl).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.acl.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAcl).GetValues()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.accessRule.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessRule).GetKind()).ToDataRes(types.String)
+	},
+	"squid.conf.accessRule.index": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessRule).GetIndex()).ToDataRes(types.Int)
+	},
+	"squid.conf.accessRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessRule).GetAction()).ToDataRes(types.String)
+	},
+	"squid.conf.accessRule.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessRule).GetAcls()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.accessRule.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessRule).GetRaw()).ToDataRes(types.String)
+	},
+	"squid.conf.cachePeer.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetHost()).ToDataRes(types.String)
+	},
+	"squid.conf.cachePeer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetType()).ToDataRes(types.String)
+	},
+	"squid.conf.cachePeer.httpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetHttpPort()).ToDataRes(types.Int)
+	},
+	"squid.conf.cachePeer.icpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetIcpPort()).ToDataRes(types.Int)
+	},
+	"squid.conf.cachePeer.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.cachePeer.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCachePeer).GetRaw()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheDir.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetType()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheDir.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetPath()).ToDataRes(types.String)
+	},
+	"squid.conf.cacheDir.sizeMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetSizeMb()).ToDataRes(types.Int)
+	},
+	"squid.conf.cacheDir.l1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetL1()).ToDataRes(types.Int)
+	},
+	"squid.conf.cacheDir.l2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetL2()).ToDataRes(types.Int)
+	},
+	"squid.conf.cacheDir.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.cacheDir.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfCacheDir).GetRaw()).ToDataRes(types.String)
+	},
+	"squid.conf.refreshPattern.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetPattern()).ToDataRes(types.String)
+	},
+	"squid.conf.refreshPattern.caseInsensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetCaseInsensitive()).ToDataRes(types.Bool)
+	},
+	"squid.conf.refreshPattern.min": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetMin()).ToDataRes(types.Int)
+	},
+	"squid.conf.refreshPattern.percent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetPercent()).ToDataRes(types.Int)
+	},
+	"squid.conf.refreshPattern.max": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetMax()).ToDataRes(types.Int)
+	},
+	"squid.conf.refreshPattern.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.refreshPattern.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfRefreshPattern).GetRaw()).ToDataRes(types.String)
+	},
+	"squid.conf.accessLog.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessLog).GetTarget()).ToDataRes(types.String)
+	},
+	"squid.conf.accessLog.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessLog).GetFormat()).ToDataRes(types.String)
+	},
+	"squid.conf.accessLog.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessLog).GetAcls()).ToDataRes(types.Array(types.String))
+	},
+	"squid.conf.accessLog.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSquidConfAccessLog).GetRaw()).ToDataRes(types.String)
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -9824,6 +10073,314 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nginx.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNginxConfLocation).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"squid.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquid).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquid).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"squid.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.httpPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).HttpPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.httpsPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).HttpsPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CachePeers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDirs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CacheDirs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).RefreshPatterns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.authParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).AuthParams, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).AccessLogs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.visibleHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).VisibleHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.uniqueHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).UniqueHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CacheLog, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheStoreLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CacheStoreLog, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.pidFilename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).PidFilename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.coredumpDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CoredumpDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.via": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).Via, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.forwardedFor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).ForwardedFor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.httpdSuppressVersionString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).HttpdSuppressVersionString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.dnsV4First": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).DnsV4First, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheMem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).CacheMem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.maximumObjectSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).MaximumObjectSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConf).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.listen.directive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Directive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Tls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.cert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Cert, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.listen.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfListen).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAcl).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.acl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAcl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.acl.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAcl).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.acl.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAcl).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.acl.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAcl).Values, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.accessRule.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRule.index": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).Index, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRule.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessRule.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessRule).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.cachePeer.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.httpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).HttpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.icpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).IcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cachePeer.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCachePeer).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.cacheDir.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.sizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).SizeMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.l1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).L1, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.l2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).L2, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.cacheDir.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfCacheDir).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.refreshPattern.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.caseInsensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).CaseInsensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.min": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Min, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.percent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Percent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.max": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Max, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.refreshPattern.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfRefreshPattern).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessLog).__id, ok = v.Value.(string)
+		return
+	},
+	"squid.conf.accessLog.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessLog).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessLog.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessLog).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessLog.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessLog).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"squid.conf.accessLog.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSquidConfAccessLog).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24009,6 +24566,984 @@ func (c *mqlNginxConfLocation) GetFastcgiPass() *plugin.TValue[string] {
 
 func (c *mqlNginxConfLocation) GetParams() *plugin.TValue[map[string]any] {
 	return &c.Params
+}
+
+// mqlSquid for the squid resource
+type mqlSquid struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidInternal it will be used here
+	Version plugin.TValue[string]
+}
+
+// createSquid creates a new instance of this resource
+func createSquid(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquid{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquid) MqlName() string {
+	return "squid"
+}
+
+func (c *mqlSquid) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquid) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlSquidConf for the squid.conf resource
+type mqlSquidConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSquidConfInternal
+	File                       plugin.TValue[*mqlFile]
+	Files                      plugin.TValue[[]any]
+	Params                     plugin.TValue[map[string]any]
+	HttpPorts                  plugin.TValue[[]any]
+	HttpsPorts                 plugin.TValue[[]any]
+	Acls                       plugin.TValue[[]any]
+	AccessRules                plugin.TValue[[]any]
+	CachePeers                 plugin.TValue[[]any]
+	CacheDirs                  plugin.TValue[[]any]
+	RefreshPatterns            plugin.TValue[[]any]
+	AuthParams                 plugin.TValue[map[string]any]
+	AccessLogs                 plugin.TValue[[]any]
+	VisibleHostname            plugin.TValue[string]
+	UniqueHostname             plugin.TValue[string]
+	CacheLog                   plugin.TValue[string]
+	CacheStoreLog              plugin.TValue[string]
+	PidFilename                plugin.TValue[string]
+	CoredumpDir                plugin.TValue[string]
+	Via                        plugin.TValue[string]
+	ForwardedFor               plugin.TValue[string]
+	HttpdSuppressVersionString plugin.TValue[string]
+	DnsV4First                 plugin.TValue[string]
+	CacheMem                   plugin.TValue[string]
+	MaximumObjectSize          plugin.TValue[string]
+	Certificates               plugin.TValue[[]any]
+}
+
+// createSquidConf creates a new instance of this resource
+func createSquidConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConf) MqlName() string {
+	return "squid.conf"
+}
+
+func (c *mqlSquidConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlSquidConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetHttpPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HttpPorts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "httpPorts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.httpPorts(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetHttpsPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HttpsPorts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "httpsPorts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.httpsPorts(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetAcls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "acls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.acls(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "accessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.accessRules(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCachePeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CachePeers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "cachePeers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.cachePeers(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCacheDirs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CacheDirs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "cacheDirs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.cacheDirs(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetRefreshPatterns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RefreshPatterns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "refreshPatterns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.refreshPatterns(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetAuthParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AuthParams, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.authParams(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetAccessLogs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessLogs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "accessLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.accessLogs(vargFile.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetVisibleHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VisibleHostname, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.visibleHostname(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetUniqueHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UniqueHostname, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.uniqueHostname(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCacheLog() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheLog, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.cacheLog(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCacheStoreLog() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheStoreLog, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.cacheStoreLog(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetPidFilename() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PidFilename, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.pidFilename(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCoredumpDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CoredumpDir, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.coredumpDir(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetVia() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Via, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.via(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetForwardedFor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ForwardedFor, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.forwardedFor(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetHttpdSuppressVersionString() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HttpdSuppressVersionString, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.httpdSuppressVersionString(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetDnsV4First() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DnsV4First, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dnsV4First(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCacheMem() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheMem, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.cacheMem(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetMaximumObjectSize() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaximumObjectSize, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.maximumObjectSize(vargParams.Data)
+	})
+}
+
+func (c *mqlSquidConf) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("squid.conf", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+// mqlSquidConfListen for the squid.conf.listen resource
+type mqlSquidConfListen struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfListenInternal it will be used here
+	Directive plugin.TValue[string]
+	Address   plugin.TValue[string]
+	Port      plugin.TValue[int64]
+	Tls       plugin.TValue[bool]
+	Flags     plugin.TValue[[]any]
+	Cert      plugin.TValue[string]
+	Key       plugin.TValue[string]
+	Options   plugin.TValue[map[string]any]
+	Raw       plugin.TValue[string]
+}
+
+// createSquidConfListen creates a new instance of this resource
+func createSquidConfListen(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfListen{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.listen", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfListen) MqlName() string {
+	return "squid.conf.listen"
+}
+
+func (c *mqlSquidConfListen) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfListen) GetDirective() *plugin.TValue[string] {
+	return &c.Directive
+}
+
+func (c *mqlSquidConfListen) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlSquidConfListen) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlSquidConfListen) GetTls() *plugin.TValue[bool] {
+	return &c.Tls
+}
+
+func (c *mqlSquidConfListen) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlSquidConfListen) GetCert() *plugin.TValue[string] {
+	return &c.Cert
+}
+
+func (c *mqlSquidConfListen) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlSquidConfListen) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+func (c *mqlSquidConfListen) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlSquidConfAcl for the squid.conf.acl resource
+type mqlSquidConfAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfAclInternal it will be used here
+	Name   plugin.TValue[string]
+	Type   plugin.TValue[string]
+	Flags  plugin.TValue[[]any]
+	Values plugin.TValue[[]any]
+}
+
+// createSquidConfAcl creates a new instance of this resource
+func createSquidConfAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfAcl) MqlName() string {
+	return "squid.conf.acl"
+}
+
+func (c *mqlSquidConfAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfAcl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSquidConfAcl) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSquidConfAcl) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlSquidConfAcl) GetValues() *plugin.TValue[[]any] {
+	return &c.Values
+}
+
+// mqlSquidConfAccessRule for the squid.conf.accessRule resource
+type mqlSquidConfAccessRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfAccessRuleInternal it will be used here
+	Kind   plugin.TValue[string]
+	Index  plugin.TValue[int64]
+	Action plugin.TValue[string]
+	Acls   plugin.TValue[[]any]
+	Raw    plugin.TValue[string]
+}
+
+// createSquidConfAccessRule creates a new instance of this resource
+func createSquidConfAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfAccessRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.accessRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfAccessRule) MqlName() string {
+	return "squid.conf.accessRule"
+}
+
+func (c *mqlSquidConfAccessRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfAccessRule) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlSquidConfAccessRule) GetIndex() *plugin.TValue[int64] {
+	return &c.Index
+}
+
+func (c *mqlSquidConfAccessRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlSquidConfAccessRule) GetAcls() *plugin.TValue[[]any] {
+	return &c.Acls
+}
+
+func (c *mqlSquidConfAccessRule) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlSquidConfCachePeer for the squid.conf.cachePeer resource
+type mqlSquidConfCachePeer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfCachePeerInternal it will be used here
+	Host     plugin.TValue[string]
+	Type     plugin.TValue[string]
+	HttpPort plugin.TValue[int64]
+	IcpPort  plugin.TValue[int64]
+	Options  plugin.TValue[[]any]
+	Raw      plugin.TValue[string]
+}
+
+// createSquidConfCachePeer creates a new instance of this resource
+func createSquidConfCachePeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfCachePeer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.cachePeer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfCachePeer) MqlName() string {
+	return "squid.conf.cachePeer"
+}
+
+func (c *mqlSquidConfCachePeer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfCachePeer) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlSquidConfCachePeer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSquidConfCachePeer) GetHttpPort() *plugin.TValue[int64] {
+	return &c.HttpPort
+}
+
+func (c *mqlSquidConfCachePeer) GetIcpPort() *plugin.TValue[int64] {
+	return &c.IcpPort
+}
+
+func (c *mqlSquidConfCachePeer) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlSquidConfCachePeer) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlSquidConfCacheDir for the squid.conf.cacheDir resource
+type mqlSquidConfCacheDir struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfCacheDirInternal it will be used here
+	Type    plugin.TValue[string]
+	Path    plugin.TValue[string]
+	SizeMb  plugin.TValue[int64]
+	L1      plugin.TValue[int64]
+	L2      plugin.TValue[int64]
+	Options plugin.TValue[[]any]
+	Raw     plugin.TValue[string]
+}
+
+// createSquidConfCacheDir creates a new instance of this resource
+func createSquidConfCacheDir(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfCacheDir{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.cacheDir", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfCacheDir) MqlName() string {
+	return "squid.conf.cacheDir"
+}
+
+func (c *mqlSquidConfCacheDir) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfCacheDir) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlSquidConfCacheDir) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlSquidConfCacheDir) GetSizeMb() *plugin.TValue[int64] {
+	return &c.SizeMb
+}
+
+func (c *mqlSquidConfCacheDir) GetL1() *plugin.TValue[int64] {
+	return &c.L1
+}
+
+func (c *mqlSquidConfCacheDir) GetL2() *plugin.TValue[int64] {
+	return &c.L2
+}
+
+func (c *mqlSquidConfCacheDir) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlSquidConfCacheDir) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlSquidConfRefreshPattern for the squid.conf.refreshPattern resource
+type mqlSquidConfRefreshPattern struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfRefreshPatternInternal it will be used here
+	Pattern         plugin.TValue[string]
+	CaseInsensitive plugin.TValue[bool]
+	Min             plugin.TValue[int64]
+	Percent         plugin.TValue[int64]
+	Max             plugin.TValue[int64]
+	Options         plugin.TValue[[]any]
+	Raw             plugin.TValue[string]
+}
+
+// createSquidConfRefreshPattern creates a new instance of this resource
+func createSquidConfRefreshPattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfRefreshPattern{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.refreshPattern", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfRefreshPattern) MqlName() string {
+	return "squid.conf.refreshPattern"
+}
+
+func (c *mqlSquidConfRefreshPattern) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfRefreshPattern) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlSquidConfRefreshPattern) GetCaseInsensitive() *plugin.TValue[bool] {
+	return &c.CaseInsensitive
+}
+
+func (c *mqlSquidConfRefreshPattern) GetMin() *plugin.TValue[int64] {
+	return &c.Min
+}
+
+func (c *mqlSquidConfRefreshPattern) GetPercent() *plugin.TValue[int64] {
+	return &c.Percent
+}
+
+func (c *mqlSquidConfRefreshPattern) GetMax() *plugin.TValue[int64] {
+	return &c.Max
+}
+
+func (c *mqlSquidConfRefreshPattern) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlSquidConfRefreshPattern) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlSquidConfAccessLog for the squid.conf.accessLog resource
+type mqlSquidConfAccessLog struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSquidConfAccessLogInternal it will be used here
+	Target plugin.TValue[string]
+	Format plugin.TValue[string]
+	Acls   plugin.TValue[[]any]
+	Raw    plugin.TValue[string]
+}
+
+// createSquidConfAccessLog creates a new instance of this resource
+func createSquidConfAccessLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSquidConfAccessLog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("squid.conf.accessLog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSquidConfAccessLog) MqlName() string {
+	return "squid.conf.accessLog"
+}
+
+func (c *mqlSquidConfAccessLog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSquidConfAccessLog) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlSquidConfAccessLog) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlSquidConfAccessLog) GetAcls() *plugin.TValue[[]any] {
+	return &c.Acls
+}
+
+func (c *mqlSquidConfAccessLog) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
 }
 
 // mqlJournaldConfig for the journald.config resource
