@@ -9110,6 +9110,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.assessment.riskAttackPathReferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskAttackPathReferences()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.cloudDefenderService.assessment.riskAttackPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskAttackPaths()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.cloudDefenderService.assessment.riskIsContextual": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskIsContextual()).ToDataRes(types.Bool)
 	},
@@ -24128,6 +24131,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.assessment.riskAttackPathReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskAttackPathReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskAttackPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskAttackPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.assessment.riskIsContextual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55876,6 +55883,7 @@ type mqlAzureSubscriptionCloudDefenderServiceAssessment struct {
 	RiskLevel                plugin.TValue[string]
 	RiskFactors              plugin.TValue[[]any]
 	RiskAttackPathReferences plugin.TValue[[]any]
+	RiskAttackPaths          plugin.TValue[[]any]
 	RiskIsContextual         plugin.TValue[bool]
 	AssessmentType           plugin.TValue[string]
 	Categories               plugin.TValue[[]any]
@@ -55972,6 +55980,10 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskFactors() *p
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskAttackPathReferences() *plugin.TValue[[]any] {
 	return &c.RiskAttackPathReferences
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskAttackPaths() *plugin.TValue[[]any] {
+	return &c.RiskAttackPaths
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskIsContextual() *plugin.TValue[bool] {

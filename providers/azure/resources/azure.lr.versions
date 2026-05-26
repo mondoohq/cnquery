@@ -388,6 +388,7 @@ azure.subscription.cloudDefenderService.assessment.preview 13.14.1
 azure.subscription.cloudDefenderService.assessment.remediationDescription 13.14.1
 azure.subscription.cloudDefenderService.assessment.resourceId 13.11.3
 azure.subscription.cloudDefenderService.assessment.riskAttackPathReferences 13.14.1
+azure.subscription.cloudDefenderService.assessment.riskAttackPaths 13.14.1
 azure.subscription.cloudDefenderService.assessment.riskFactors 13.14.1
 azure.subscription.cloudDefenderService.assessment.riskIsContextual 13.14.1
 azure.subscription.cloudDefenderService.assessment.riskLevel 13.14.1

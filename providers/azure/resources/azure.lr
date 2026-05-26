@@ -6300,6 +6300,13 @@ private azure.subscription.cloudDefenderService.assessment @defaults("displayNam
   // References into the Defender attack-path graph; the same paths are
   // surfaced in the Microsoft Defender for Cloud portal.
   riskAttackPathReferences []string
+  // Attack-path graphs the finding contributes to
+  //
+  // Each entry is one attack path with shape `{id, nodes, edges}`: `nodes`
+  // are `{id, labels}` (the resources along the path) and `edges` are
+  // `{id, sourceId, targetId}` (the directed connections between nodes).
+  // Populated only when the subscription has a Defender CSPM plan enabled.
+  riskAttackPaths []dict
   // Whether the risk is contextual rather than static
   riskIsContextual bool
   // Origin of the assessment definition

@@ -1253,6 +1253,45 @@ func enumSliceToInterface[T ~string](in []*T) []any {
 	return out
 }
 
+// assessmentAttackPaths converts the Defender risk attack-path graph into a
+// slice of {id, nodes, edges} dicts. Each node is {id, labels} and each edge
+// is {id, sourceId, targetId}.
+func assessmentAttackPaths(paths []*armsecurity.AssessmentPropertiesBaseRiskPathsItem) []any {
+	out := make([]any, 0, len(paths))
+	for _, p := range paths {
+		if p == nil {
+			continue
+		}
+		nodes := make([]any, 0, len(p.Nodes))
+		for _, n := range p.Nodes {
+			if n == nil {
+				continue
+			}
+			nodes = append(nodes, map[string]any{
+				"id":     convert.ToValue(n.ID),
+				"labels": enumSliceToInterface(n.NodePropertiesLabel),
+			})
+		}
+		edges := make([]any, 0, len(p.Edges))
+		for _, e := range p.Edges {
+			if e == nil {
+				continue
+			}
+			edges = append(edges, map[string]any{
+				"id":       convert.ToValue(e.ID),
+				"sourceId": convert.ToValue(e.SourceID),
+				"targetId": convert.ToValue(e.TargetID),
+			})
+		}
+		out = append(out, map[string]any{
+			"id":    convert.ToValue(p.ID),
+			"nodes": nodes,
+			"edges": edges,
+		})
+	}
+	return out
+}
+
 // assessmentMetadataByName returns a map of assessment name to its catalog
 // metadata. Assessment list responses don't carry this metadata, so it is
 // joined in from the metadata catalog: built-in definitions come from the
@@ -1338,6 +1377,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			var riskLevel string
 			var riskIsContextual bool
 			riskFactors := []any{}
+			riskAttackPathRefs := []any{}
 			riskAttackPaths := []any{}
 
 			if props := item.Properties; props != nil {
@@ -1364,7 +1404,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					riskLevel = string(convert.ToValue(risk.Level))
 					riskIsContextual = convert.ToValue(risk.IsContextualRisk)
 					riskFactors = enumSliceToInterface(risk.RiskFactors)
-					riskAttackPaths = enumSliceToInterface(risk.AttackPathsReferences)
+					riskAttackPathRefs = enumSliceToInterface(risk.AttackPathsReferences)
+					riskAttackPaths = assessmentAttackPaths(risk.Paths)
 				}
 			}
 
@@ -1397,7 +1438,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"additionalData":           llx.DictData(additionalData),
 					"riskLevel":                llx.StringData(riskLevel),
 					"riskFactors":              llx.ArrayData(riskFactors, types.String),
-					"riskAttackPathReferences": llx.ArrayData(riskAttackPaths, types.String),
+					"riskAttackPathReferences": llx.ArrayData(riskAttackPathRefs, types.String),
+					"riskAttackPaths":          llx.ArrayData(riskAttackPaths, types.Dict),
 					"riskIsContextual":         llx.BoolData(riskIsContextual),
 					"assessmentType":           llx.StringData(meta.assessmentType),
 					"categories":               llx.ArrayData(meta.categories, types.String),
