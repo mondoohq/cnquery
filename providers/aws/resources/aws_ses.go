@@ -144,6 +144,24 @@ type mqlAwsSesIdentityInternal struct {
 	lock      sync.Mutex
 }
 
+// markIdentityDetailsNull marks every lazily fetched field as resolved-but-null
+// so the runtime treats them as known-unavailable (e.g. on access-denied)
+// rather than unresolved, which would otherwise re-trigger the accessor.
+func (a *mqlAwsSesIdentity) markIdentityDetailsNull() {
+	null := plugin.StateIsSet | plugin.StateIsNull
+	a.FeedbackForwardingEnabled = plugin.TValue[bool]{State: null}
+	a.DkimSigningEnabled = plugin.TValue[bool]{State: null}
+	a.DkimStatus = plugin.TValue[string]{State: null}
+	a.DkimSigningAttributesOrigin = plugin.TValue[string]{State: null}
+	a.DkimSigningKeyLength = plugin.TValue[string]{State: null}
+	a.DkimTokens = plugin.TValue[[]any]{State: null}
+	a.MailFromDomain = plugin.TValue[string]{State: null}
+	a.MailFromDomainStatus = plugin.TValue[string]{State: null}
+	a.MailFromBehaviorOnMxFailure = plugin.TValue[string]{State: null}
+	a.Policies = plugin.TValue[map[string]any]{State: null}
+	a.Tags = plugin.TValue[map[string]any]{State: null}
+}
+
 func (a *mqlAwsSesIdentity) fetchDetails() error {
 	if a.fetched {
 		return nil
@@ -164,6 +182,7 @@ func (a *mqlAwsSesIdentity) fetchDetails() error {
 	if err != nil {
 		if Is400AccessDeniedError(err) {
 			log.Warn().Str("identity", a.cacheName).Msg("access denied getting SES email identity")
+			a.markIdentityDetailsNull()
 			a.fetched = true
 			return nil
 		}
@@ -433,6 +452,22 @@ type mqlAwsSesConfigurationSetInternal struct {
 	lock      sync.Mutex
 }
 
+// markConfigurationSetDetailsNull marks every lazily fetched field as
+// resolved-but-null so the runtime treats them as known-unavailable (e.g. on
+// access-denied) rather than unresolved, which would otherwise re-trigger the
+// accessor.
+func (a *mqlAwsSesConfigurationSet) markConfigurationSetDetailsNull() {
+	null := plugin.StateIsSet | plugin.StateIsNull
+	a.TlsPolicy = plugin.TValue[string]{State: null}
+	a.SendingPoolName = plugin.TValue[string]{State: null}
+	a.SendingEnabled = plugin.TValue[bool]{State: null}
+	a.ReputationMetricsEnabled = plugin.TValue[bool]{State: null}
+	a.SuppressedReasons = plugin.TValue[[]any]{State: null}
+	a.TrackingRedirectDomain = plugin.TValue[string]{State: null}
+	a.TrackingHttpsPolicy = plugin.TValue[string]{State: null}
+	a.Tags = plugin.TValue[map[string]any]{State: null}
+}
+
 func (a *mqlAwsSesConfigurationSet) fetchDetails() error {
 	if a.fetched {
 		return nil
@@ -453,6 +488,7 @@ func (a *mqlAwsSesConfigurationSet) fetchDetails() error {
 	if err != nil {
 		if Is400AccessDeniedError(err) {
 			log.Warn().Str("configurationSet", a.cacheName).Msg("access denied getting SES configuration set")
+			a.markConfigurationSetDetailsNull()
 			a.fetched = true
 			return nil
 		}
