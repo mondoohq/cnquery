@@ -17,8 +17,13 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/python"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/pdmlock"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/pipfilelock"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/poetrylock"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/requirements"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/uvlock"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/python/wheelegg"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -121,14 +126,27 @@ func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
 	}
 	pyPath := r.Path.Data
 	if pyPath != "" {
-		// only search the specific path provided (if it was provided)
 		allResults, err := collectPythonPackages(r.MqlRuntime, fs, pyPath)
 		if err != nil {
 			return nil, err
 		}
+
+		// Also scan for source manifests (requirements.txt, lock files) in the path.
+		manifestResults := collectPythonManifestPackages(fs, pyPath)
+		allResults = mergePythonPackages(allResults, manifestResults)
+
 		return allResults, nil
 	} else {
-		return collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
+		installed, err := collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
+		if err != nil {
+			return nil, err
+		}
+
+		// Also scan common project directories for source manifests
+		manifestResults := collectPythonManifestPackages(fs, ".")
+		installed = mergePythonPackages(installed, manifestResults)
+
+		return installed, nil
 	}
 }
 
@@ -390,4 +408,150 @@ func (r *mqlPythonPackage) dependencies() ([]any, error) {
 		}
 	}
 	return deps, nil
+}
+
+// pythonManifestFiles maps manifest filenames to their extractor. Lock files
+// are listed first so they take priority (checked in order).
+var pythonManifestFiles = []struct {
+	name      string
+	extractor languages.Extractor
+}{
+	{"Pipfile.lock", &pipfilelock.Extractor{}},
+	{"poetry.lock", &poetrylock.Extractor{}},
+	{"uv.lock", &uvlock.Extractor{}},
+	{"pdm.lock", &pdmlock.Extractor{}},
+}
+
+// collectPythonManifestPackages scans a directory for Python source manifest
+// files (lock files and requirements.txt) and returns packages found in them.
+// It prioritises lock files over requirements.txt to avoid duplicates.
+func collectPythonManifestPackages(fs afero.Fs, dir string) []python.PackageDetails {
+	afs := &afero.Afero{Fs: fs}
+
+	// Try lock files first — if any succeeds, use it and skip requirements.txt.
+	for _, mf := range pythonManifestFiles {
+		p := filepath.Join(dir, mf.name)
+		f, err := afs.Open(p)
+		if err != nil {
+			continue
+		}
+		bom, err := mf.extractor.Parse(f, p)
+		f.Close()
+		if err != nil {
+			log.Debug().Err(err).Str("file", p).Msg("failed to parse python manifest")
+			continue
+		}
+		pkgs := bom.Transitive()
+		if len(pkgs) > 0 {
+			return languagePackagesToDetails(pkgs, p)
+		}
+	}
+
+	// Fall back to requirements.txt
+	if results := parseRequirementsTxtFile(afs, dir); len(results) > 0 {
+		return results
+	}
+
+	// Fall back to setup.py / setup.cfg
+	for _, name := range []string{"setup.py", "setup.cfg"} {
+		if results := parseSetupFile(afs, dir, name); len(results) > 0 {
+			return results
+		}
+	}
+
+	return nil
+}
+
+func parseRequirementsTxtFile(afs *afero.Afero, dir string) []python.PackageDetails {
+	reqPath := filepath.Join(dir, "requirements.txt")
+	f, err := afs.Open(reqPath)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	reqs, err := requirements.ParseRequirementsTxt(f)
+	if err != nil {
+		log.Debug().Err(err).Str("file", reqPath).Msg("failed to parse requirements.txt")
+		return nil
+	}
+
+	var results []python.PackageDetails
+	for _, req := range reqs {
+		if req.Name == "" {
+			continue
+		}
+		results = append(results, python.PackageDetails{
+			Name:    req.Name,
+			Version: req.Version,
+			File:    reqPath,
+			Purl:    python.NewPackageUrl(req.Name, req.Version),
+			Cpes:    python.NewCpes(req.Name, req.Version),
+		})
+	}
+	return results
+}
+
+func parseSetupFile(afs *afero.Afero, dir, name string) []python.PackageDetails {
+	p := filepath.Join(dir, name)
+	f, err := afs.Open(p)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	reqs, err := requirements.ParseSetupPy(f)
+	if err != nil {
+		log.Debug().Err(err).Str("file", p).Msg("failed to parse setup file")
+		return nil
+	}
+
+	var results []python.PackageDetails
+	for _, req := range reqs {
+		if req.Name == "" {
+			continue
+		}
+		results = append(results, python.PackageDetails{
+			Name:    req.Name,
+			Version: req.Version,
+			File:    p,
+			Purl:    python.NewPackageUrl(req.Name, req.Version),
+			Cpes:    python.NewCpes(req.Name, req.Version),
+		})
+	}
+	return results
+}
+
+// languagePackagesToDetails converts languages.Packages to python.PackageDetails.
+func languagePackagesToDetails(pkgs languages.Packages, file string) []python.PackageDetails {
+	results := make([]python.PackageDetails, 0, len(pkgs))
+	for _, pkg := range pkgs {
+		results = append(results, python.PackageDetails{
+			Name:    pkg.Name,
+			Version: pkg.Version,
+			File:    file,
+			Purl:    pkg.Purl,
+			Cpes:    pkg.Cpes,
+			License: pkg.License,
+			Author:  pkg.Author,
+		})
+	}
+	return results
+}
+
+// mergePythonPackages merges two slices of PackageDetails, deduplicating by name.
+// Packages from the primary slice take precedence.
+func mergePythonPackages(primary, secondary []python.PackageDetails) []python.PackageDetails {
+	if len(secondary) == 0 {
+		return primary
+	}
+	seen := make(map[string]bool, len(primary))
+	for _, p := range primary {
+		seen[strings.ToLower(p.Name)] = true
+	}
+	for _, p := range secondary {
+		if !seen[strings.ToLower(p.Name)] {
+			primary = append(primary, p)
+			seen[strings.ToLower(p.Name)] = true
+		}
+	}
+	return primary
 }
