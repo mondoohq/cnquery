@@ -455,7 +455,7 @@ func (a *mqlAzureSubscriptionPolicyComplianceSummary) fetchSummary() error {
 		return err
 	}
 
-	resp, err := client.SummarizeForSubscription(ctx, armpolicyinsights.PolicyStatesSummaryResourceTypeLatest, a.SubscriptionId.Data, nil, nil)
+	resp, err := client.SummarizeForSubscription(ctx, armpolicyinsights.PolicyStatesSummaryResourceTypeLatest, a.SubscriptionId.Data, nil)
 	if err != nil {
 		return err
 	}

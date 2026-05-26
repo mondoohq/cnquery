@@ -156,8 +156,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9 v9.0
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9 v9.0.0/go.mod h1:raqbEXrok4aycS74XoU6p9Hne1dliAFpHLizlp+qJoM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2 v2.0.2 h1:SFLbQmpdytToYZQJw5NqrZRwHPIGJmf5ZgjStbLfUuU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2 v2.0.2/go.mod h1:H3EFkhcVTisidszwtIkRDggjS2HmOIA26J3g8hDdHAY=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/policyinsights/armpolicyinsights v0.9.0 h1:VK9yyk+hLSM+9UHsemlsON7sqQqbCu9O349e0RG8kBg=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/policyinsights/armpolicyinsights v0.9.0/go.mod h1:FFXnZdOg5Gt9/Pfljm1IzcezNfmbm2ScWYT5KH7KiNc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/policyinsights/armpolicyinsights v0.10.0 h1:AzaqGJAacR0jIOJ8MQy3VZ1IHv00DW7bneMA7hx6PXk=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/policyinsights/armpolicyinsights v0.10.0/go.mod h1:Y3BNZfmBzYJ/f7zkpsl1DkP2gmxmZfU5Z8Hn6g8M8R4=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql v1.2.0 h1:0hXKrsbh2M6CQyW0TDC9Bsyd99vQmrOxiBTUfQHZjPA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql v1.2.0/go.mod h1:bvZZor36Jg9q9kouuMyfJ+ay77+qK+YUfThXH1FdXjU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5 v5.0.0 h1:S7K+MLPEYe+g9AX9dLKldBpYV03bPl7zeDaWhiNDqqs=
@@ -184,8 +184,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0/go.mod h1:TpiwjwnW/khS0LKs4vW5UmmT9OWcxaveS8U7+tlknzo=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/search/armsearch v1.4.0 h1:zBdabY8pMSMLPb1XJnFSEdJi9Bd0h+VMjh1uU8B6Yp8=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/search/armsearch v1.4.0/go.mod h1:Y2Q3nB3UfSnG9nALOpPAjflXPM3jL/n2ZmYIu2Occ9g=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.14.0 h1:JfjIyBJvEvQNP/9MEUo1/6eoiPkiag2OZImw32xakcc=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.14.0/go.mod h1:HakuHOrWlp2G1WlFvkL7JApTZAbxRJnRiz+w4SYak5s=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.15.0 h1:5tRv65ZzstkUCQYFAcw2XtXkqxJdJ0ut1T0gyU1JB34=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.15.0/go.mod h1:+ysYq16aHhv16EXlLgzTgbXvIQTCPdEblyyFad42JEo=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/securityinsights/armsecurityinsights v1.2.0 h1:6o3sVzt4nWIvNkOR93Lfm4itRGEJ+iw+Y884g4ZRSUs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/securityinsights/armsecurityinsights v1.2.0/go.mod h1:rfdyOaNT9XsqiUH5cKR2+pKzhVljDtOjNkLiPVKBnZY=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus v1.2.0 h1:jngSeKBnzC7qIk3rvbWHsLI7eeasEucORHWr2CHX0Yg=
@@ -200,8 +200,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/trafficmanager/armtrafficm
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/trafficmanager/armtrafficmanager v1.3.0/go.mod h1:Os5dq8Cvvz97rJauZhZJAfKHN+OEvF/0nVmHzF4aVys=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v1.4.0 h1:mtvR5ZXH5Ew6PSONd5lO5OXovWP1E3oAlgC8fpxor2Q=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v1.4.0/go.mod h1:u560+RFVfG0CBPzkXlDW43slESbBAQjgDGi3r6z+wk8=
-github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.4.0 h1:E4MgwLBGeVB5f2MdcIVD3ELVAWpr+WD6MUe1i+tM/PA=
-github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.4.0/go.mod h1:Y2b/1clN4zsAoUd/pgNAQHjLDnTis/6ROkUfyob6psM=
+github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.5.0 h1:MaKvxE6D0KkjOg6Wd9M00iqP5PR0kUxCfiezes4JweM=
+github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.5.0/go.mod h1:i2h9fsTFKZorh8RdV2IcSUf/Qj98GlTkrTvUbX/s8as=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.4.0 h1:/g8S6wk65vfC6m3FIxJ+i5QDyN9JWwXI8Hb0Img10hU=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.4.0/go.mod h1:gpl+q95AzZlKVI3xSoseF9QPrypk0hQqBiJYeB/cR/I=
 github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v1.2.0 h1:nCYfgcSyHZXJI8J0IWE5MsCGlb2xp9fJiXyxWgmOFg4=
