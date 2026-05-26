@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -352,6 +353,26 @@ func (t *AwsConnection) S3Control(region string) *s3control.Client {
 	client := s3control.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) CloudHsmV2(region string) *cloudhsmv2.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_cloudhsmv2_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cloudhsmv2 client")
+		return c.Data.(*cloudhsmv2.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := cloudhsmv2.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

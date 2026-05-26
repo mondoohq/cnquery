@@ -29,6 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.11
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.64.0
+	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.25
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.28.0",
-  "generated_at": "2026-05-26T13:43:06-07:00",
+  "generated_at": "2026-05-26T16:39:11-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -129,6 +129,8 @@
     "cloudfront:ListResponseHeadersPolicies",
     "cloudfront:ListTagsForResource",
     "cloudfront:ListTrustStores",
+    "cloudhsm:DescribeBackups",
+    "cloudhsm:DescribeClusters",
     "cloudtrail:DescribeTrails",
     "cloudtrail:GetChannel",
     "cloudtrail:GetEventDataStore",
@@ -1639,6 +1641,18 @@
       "service": "cloudfront",
       "action": "ListTrustStores",
       "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudhsm:DescribeBackups",
+      "service": "cloudhsm",
+      "action": "DescribeBackups",
+      "source_file": "aws_cloudhsm.go"
+    },
+    {
+      "permission": "cloudhsm:DescribeClusters",
+      "service": "cloudhsm",
+      "action": "DescribeClusters",
+      "source_file": "aws_cloudhsm.go"
     },
     {
       "permission": "cloudtrail:DescribeTrails",

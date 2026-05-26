@@ -9104,6 +9104,141 @@ private aws.cloudfront.fieldLevelEncryptionProfile @defaults("name lastModifiedT
   encryptionEntities []dict
 }
 
+// AWS CloudHSM
+//
+// Use the CloudHSM namespace to audit the dedicated hardware security
+// modules an account runs for key custody across all enabled regions.
+// Iterate `clusters()` for every CloudHSM cluster — each row surfaces the
+// operating mode (FIPS or non-FIPS), the cluster and HSM state, the VPC,
+// subnets, and security group the cluster runs in, the backup policy and
+// retention window, the cluster trust certificates, and the individual HSM
+// instances backing the cluster. Iterate `backups()` for every cluster
+// backup, including its state, source cluster and region, and whether it is
+// set to never expire.
+aws.cloudhsm {
+  // List of CloudHSM clusters
+  clusters() []aws.cloudhsm.cluster
+  // List of CloudHSM cluster backups
+  backups() []aws.cloudhsm.backup
+}
+
+// AWS CloudHSM cluster
+//
+// Examine a CloudHSM cluster — the group of hardware security modules that
+// store and use cryptographic keys on dedicated FIPS 140-2 validated
+// hardware. Each cluster is selected by its cluster ID — for example
+// `aws.cloudhsm.cluster(clusterId: "cluster-abcd1234")` — and exposes its
+// operating mode, lifecycle state, the VPC, subnets, and security group it
+// runs in, the backup policy and retention window, the trust certificates
+// established for the cluster, and the HSM instances that back it.
+private aws.cloudhsm.cluster @defaults("clusterId state mode region") {
+  // Cluster ID
+  clusterId string
+  // Region where the cluster is deployed
+  region string
+  // Cluster lifecycle state
+  //
+  // One of CREATE_IN_PROGRESS, UNINITIALIZED, INITIALIZE_IN_PROGRESS, INITIALIZED, ACTIVE, UPDATE_IN_PROGRESS, MODIFY_IN_PROGRESS, ROLLBACK_IN_PROGRESS, DELETE_IN_PROGRESS, DELETED, or DEGRADED.
+  state string
+  // Description of the cluster's current state
+  stateMessage string
+  // Operating mode of the cluster: FIPS or NON_FIPS
+  mode string
+  // HSM instance type used by the cluster (for example hsm1.medium or hsm2m.medium)
+  hsmType string
+  // Backup policy applied to the cluster: DEFAULT
+  backupPolicy string
+  // Number of days automatic backups are retained (set when the backup retention type is DAYS)
+  backupRetentionDays int
+  // VPC the cluster runs in
+  vpc() aws.vpc
+  // Subnets the cluster's HSMs are placed in, one per Availability Zone
+  subnets() []aws.vpc.subnet
+  // Security group that controls network access to the cluster's HSMs
+  securityGroup() aws.ec2.securitygroup
+  // Backup ID this cluster was created from, when restored from a backup (empty otherwise)
+  sourceBackupId string
+  // Trust certificates established for the cluster
+  //
+  // Shape: `{clusterCsr, clusterCertificate, hsmCertificate, awsHardwareCertificate, manufacturerHardwareCertificate}`. Values are PEM-encoded certificates; entries are empty until the cluster is initialized.
+  certificates dict
+  // HSM instances that back the cluster
+  hsms() []aws.cloudhsm.hsm
+  // Date the cluster was created
+  createTimestamp time
+  // Tags for the cluster
+  tags map[string]string
+}
+
+// AWS CloudHSM instance
+//
+// Examine a single hardware security module that backs a CloudHSM cluster.
+// Each HSM is selected by its HSM ID — for example
+// `aws.cloudhsm.hsm(hsmId: "hsm-abcd1234")` — and exposes its lifecycle
+// state, the cluster it belongs to, the Availability Zone and subnet it runs
+// in, and the elastic network interface that fronts it.
+private aws.cloudhsm.hsm @defaults("hsmId state availabilityZone") {
+  // HSM ID
+  hsmId string
+  // ID of the cluster this HSM belongs to
+  clusterId string
+  // HSM state: CREATE_IN_PROGRESS, ACTIVE, DEGRADED, DELETE_IN_PROGRESS, or DELETED
+  state string
+  // Description of the HSM's current state
+  stateMessage string
+  // Availability Zone the HSM runs in
+  availabilityZone string
+  // HSM instance type
+  hsmType string
+  // ID of the elastic network interface attached to the HSM
+  eniId string
+  // Private IP address of the HSM's elastic network interface
+  eniIp string
+  // Subnet the HSM runs in
+  subnet() aws.vpc.subnet
+}
+
+// AWS CloudHSM cluster backup
+//
+// Examine a backup of a CloudHSM cluster. Each backup is keyed by its ARN —
+// for example
+// `aws.cloudhsm.backup(arn: "arn:aws:cloudhsm:us-east-1:123456789012:backup/backup-abcd1234")` —
+// and exposes the originating cluster, its state, operating mode, whether it
+// is configured to never expire, and the source region and backup it was
+// copied from when applicable.
+private aws.cloudhsm.backup @defaults("backupId state clusterId region") {
+  // ARN of the backup
+  arn string
+  // Backup ID
+  backupId string
+  // Region where the backup is stored
+  region string
+  // ID of the cluster the backup was taken from
+  clusterId string
+  // Backup state: CREATE_IN_PROGRESS, READY, DELETED, or PENDING_DELETION
+  state string
+  // Operating mode of the backed-up cluster: FIPS or NON_FIPS
+  mode string
+  // HSM instance type of the backed-up cluster
+  hsmType string
+  // Whether the backup is configured to never expire
+  neverExpires bool
+  // Date the backup was created
+  createTimestamp time
+  // Date the backup was copied, when it originated from a cross-region copy
+  copyTimestamp time
+  // Scheduled deletion date, when the backup is pending deletion
+  deleteTimestamp time
+  // Region the backup was copied from, when it originated from a cross-region copy
+  sourceRegion string
+  // Backup ID this backup was copied from, when it originated from a cross-region copy
+  sourceBackupId string
+  // Cluster ID the backup was copied from, when it originated from a cross-region copy
+  sourceClusterId string
+  // Tags for the backup
+  tags map[string]string
+}
+
 // AWS CloudTrail
 //
 // Use the CloudTrail namespace to enumerate audit-trail coverage for the

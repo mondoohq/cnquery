@@ -385,6 +385,10 @@ const (
 	ResourceAwsCloudfrontKeyGroup                                               string = "aws.cloudfront.keyGroup"
 	ResourceAwsCloudfrontFieldLevelEncryptionConfig                             string = "aws.cloudfront.fieldLevelEncryptionConfig"
 	ResourceAwsCloudfrontFieldLevelEncryptionProfile                            string = "aws.cloudfront.fieldLevelEncryptionProfile"
+	ResourceAwsCloudhsm                                                         string = "aws.cloudhsm"
+	ResourceAwsCloudhsmCluster                                                  string = "aws.cloudhsm.cluster"
+	ResourceAwsCloudhsmHsm                                                      string = "aws.cloudhsm.hsm"
+	ResourceAwsCloudhsmBackup                                                   string = "aws.cloudhsm.backup"
 	ResourceAwsCloudtrail                                                       string = "aws.cloudtrail"
 	ResourceAwsCloudtrailTrail                                                  string = "aws.cloudtrail.trail"
 	ResourceAwsCloudtrailTrailEventSelector                                     string = "aws.cloudtrail.trail.eventSelector"
@@ -2345,6 +2349,22 @@ func init() {
 		"aws.cloudfront.fieldLevelEncryptionProfile": {
 			// to override args, implement: initAwsCloudfrontFieldLevelEncryptionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudfrontFieldLevelEncryptionProfile,
+		},
+		"aws.cloudhsm": {
+			// to override args, implement: initAwsCloudhsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudhsm,
+		},
+		"aws.cloudhsm.cluster": {
+			Init:   initAwsCloudhsmCluster,
+			Create: createAwsCloudhsmCluster,
+		},
+		"aws.cloudhsm.hsm": {
+			// to override args, implement: initAwsCloudhsmHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudhsmHsm,
+		},
+		"aws.cloudhsm.backup": {
+			Init:   initAwsCloudhsmBackup,
+			Create: createAwsCloudhsmBackup,
 		},
 		"aws.cloudtrail": {
 			// to override args, implement: initAwsCloudtrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -14403,6 +14423,132 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.fieldLevelEncryptionProfile.encryptionEntities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).GetEncryptionEntities()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cloudhsm.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsm).GetClusters()).ToDataRes(types.Array(types.Resource("aws.cloudhsm.cluster")))
+	},
+	"aws.cloudhsm.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsm).GetBackups()).ToDataRes(types.Array(types.Resource("aws.cloudhsm.backup")))
+	},
+	"aws.cloudhsm.cluster.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetClusterId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetState()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetMode()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.hsmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetHsmType()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetBackupPolicy()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.backupRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetBackupRetentionDays()).ToDataRes(types.Int)
+	},
+	"aws.cloudhsm.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.cloudhsm.cluster.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.cloudhsm.cluster.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.cloudhsm.cluster.sourceBackupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetSourceBackupId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.cluster.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetCertificates()).ToDataRes(types.Dict)
+	},
+	"aws.cloudhsm.cluster.hsms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetHsms()).ToDataRes(types.Array(types.Resource("aws.cloudhsm.hsm")))
+	},
+	"aws.cloudhsm.cluster.createTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetCreateTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudhsm.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cloudhsm.hsm.hsmId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetHsmId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetClusterId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetState()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.hsmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetHsmType()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.eniId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetEniId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.eniIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetEniIp()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.hsm.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
+	"aws.cloudhsm.backup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.backupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetBackupId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetClusterId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetState()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetMode()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.hsmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetHsmType()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.neverExpires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetNeverExpires()).ToDataRes(types.Bool)
+	},
+	"aws.cloudhsm.backup.createTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetCreateTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudhsm.backup.copyTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetCopyTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudhsm.backup.deleteTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetDeleteTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudhsm.backup.sourceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetSourceRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.sourceBackupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetSourceBackupId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.sourceClusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetSourceClusterId()).ToDataRes(types.String)
+	},
+	"aws.cloudhsm.backup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmBackup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.cloudtrail.trails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrail).GetTrails()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail")))
@@ -45215,6 +45361,190 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.fieldLevelEncryptionProfile.encryptionEntities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontFieldLevelEncryptionProfile).EncryptionEntities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsm).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudhsm.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsm).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsm).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudhsm.cluster.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.hsmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).HsmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.backupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).BackupPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.backupRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).BackupRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).SecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.sourceBackupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).SourceBackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Certificates, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.hsms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Hsms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.createTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).CreateTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudhsm.hsm.hsmId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).HsmId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.hsmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).HsmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.eniId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).EniId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.eniIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).EniIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.hsm.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudhsm.backup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.backupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).BackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.hsmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).HsmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.neverExpires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).NeverExpires, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.createTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).CreateTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.copyTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).CopyTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.deleteTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).DeleteTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.sourceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).SourceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.sourceBackupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).SourceBackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.sourceClusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).SourceClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudhsm.backup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmBackup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -108791,6 +109121,461 @@ func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetLastModifiedTime() *plu
 
 func (c *mqlAwsCloudfrontFieldLevelEncryptionProfile) GetEncryptionEntities() *plugin.TValue[[]any] {
 	return &c.EncryptionEntities
+}
+
+// mqlAwsCloudhsm for the aws.cloudhsm resource
+type mqlAwsCloudhsm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudhsmInternal it will be used here
+	Clusters plugin.TValue[[]any]
+	Backups  plugin.TValue[[]any]
+}
+
+// createAwsCloudhsm creates a new instance of this resource
+func createAwsCloudhsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudhsm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudhsm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudhsm) MqlName() string {
+	return "aws.cloudhsm"
+}
+
+func (c *mqlAwsCloudhsm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudhsm) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlAwsCloudhsm) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlAwsCloudhsmCluster for the aws.cloudhsm.cluster resource
+type mqlAwsCloudhsmCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCloudhsmClusterInternal
+	ClusterId           plugin.TValue[string]
+	Region              plugin.TValue[string]
+	State               plugin.TValue[string]
+	StateMessage        plugin.TValue[string]
+	Mode                plugin.TValue[string]
+	HsmType             plugin.TValue[string]
+	BackupPolicy        plugin.TValue[string]
+	BackupRetentionDays plugin.TValue[int64]
+	Vpc                 plugin.TValue[*mqlAwsVpc]
+	Subnets             plugin.TValue[[]any]
+	SecurityGroup       plugin.TValue[*mqlAwsEc2Securitygroup]
+	SourceBackupId      plugin.TValue[string]
+	Certificates        plugin.TValue[any]
+	Hsms                plugin.TValue[[]any]
+	CreateTimestamp     plugin.TValue[*time.Time]
+	Tags                plugin.TValue[map[string]any]
+}
+
+// createAwsCloudhsmCluster creates a new instance of this resource
+func createAwsCloudhsmCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudhsmCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudhsm.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudhsmCluster) MqlName() string {
+	return "aws.cloudhsm.cluster"
+}
+
+func (c *mqlAwsCloudhsmCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudhsmCluster) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlAwsCloudhsmCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCloudhsmCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsCloudhsmCluster) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsCloudhsmCluster) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsCloudhsmCluster) GetHsmType() *plugin.TValue[string] {
+	return &c.HsmType
+}
+
+func (c *mqlAwsCloudhsmCluster) GetBackupPolicy() *plugin.TValue[string] {
+	return &c.BackupPolicy
+}
+
+func (c *mqlAwsCloudhsmCluster) GetBackupRetentionDays() *plugin.TValue[int64] {
+	return &c.BackupRetentionDays
+}
+
+func (c *mqlAwsCloudhsmCluster) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsCloudhsmCluster) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.cluster", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsCloudhsmCluster) GetSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.SecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.cluster", c.__id, "securityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.securityGroup()
+	})
+}
+
+func (c *mqlAwsCloudhsmCluster) GetSourceBackupId() *plugin.TValue[string] {
+	return &c.SourceBackupId
+}
+
+func (c *mqlAwsCloudhsmCluster) GetCertificates() *plugin.TValue[any] {
+	return &c.Certificates
+}
+
+func (c *mqlAwsCloudhsmCluster) GetHsms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hsms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.cluster", c.__id, "hsms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hsms()
+	})
+}
+
+func (c *mqlAwsCloudhsmCluster) GetCreateTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreateTimestamp
+}
+
+func (c *mqlAwsCloudhsmCluster) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsCloudhsmHsm for the aws.cloudhsm.hsm resource
+type mqlAwsCloudhsmHsm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCloudhsmHsmInternal
+	HsmId            plugin.TValue[string]
+	ClusterId        plugin.TValue[string]
+	State            plugin.TValue[string]
+	StateMessage     plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
+	HsmType          plugin.TValue[string]
+	EniId            plugin.TValue[string]
+	EniIp            plugin.TValue[string]
+	Subnet           plugin.TValue[*mqlAwsVpcSubnet]
+}
+
+// createAwsCloudhsmHsm creates a new instance of this resource
+func createAwsCloudhsmHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudhsmHsm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudhsm.hsm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudhsmHsm) MqlName() string {
+	return "aws.cloudhsm.hsm"
+}
+
+func (c *mqlAwsCloudhsmHsm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudhsmHsm) GetHsmId() *plugin.TValue[string] {
+	return &c.HsmId
+}
+
+func (c *mqlAwsCloudhsmHsm) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlAwsCloudhsmHsm) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsCloudhsmHsm) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsCloudhsmHsm) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsCloudhsmHsm) GetHsmType() *plugin.TValue[string] {
+	return &c.HsmType
+}
+
+func (c *mqlAwsCloudhsmHsm) GetEniId() *plugin.TValue[string] {
+	return &c.EniId
+}
+
+func (c *mqlAwsCloudhsmHsm) GetEniIp() *plugin.TValue[string] {
+	return &c.EniIp
+}
+
+func (c *mqlAwsCloudhsmHsm) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.hsm", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+// mqlAwsCloudhsmBackup for the aws.cloudhsm.backup resource
+type mqlAwsCloudhsmBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudhsmBackupInternal it will be used here
+	Arn             plugin.TValue[string]
+	BackupId        plugin.TValue[string]
+	Region          plugin.TValue[string]
+	ClusterId       plugin.TValue[string]
+	State           plugin.TValue[string]
+	Mode            plugin.TValue[string]
+	HsmType         plugin.TValue[string]
+	NeverExpires    plugin.TValue[bool]
+	CreateTimestamp plugin.TValue[*time.Time]
+	CopyTimestamp   plugin.TValue[*time.Time]
+	DeleteTimestamp plugin.TValue[*time.Time]
+	SourceRegion    plugin.TValue[string]
+	SourceBackupId  plugin.TValue[string]
+	SourceClusterId plugin.TValue[string]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsCloudhsmBackup creates a new instance of this resource
+func createAwsCloudhsmBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudhsmBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudhsm.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudhsmBackup) MqlName() string {
+	return "aws.cloudhsm.backup"
+}
+
+func (c *mqlAwsCloudhsmBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudhsmBackup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudhsmBackup) GetBackupId() *plugin.TValue[string] {
+	return &c.BackupId
+}
+
+func (c *mqlAwsCloudhsmBackup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCloudhsmBackup) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlAwsCloudhsmBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsCloudhsmBackup) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsCloudhsmBackup) GetHsmType() *plugin.TValue[string] {
+	return &c.HsmType
+}
+
+func (c *mqlAwsCloudhsmBackup) GetNeverExpires() *plugin.TValue[bool] {
+	return &c.NeverExpires
+}
+
+func (c *mqlAwsCloudhsmBackup) GetCreateTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreateTimestamp
+}
+
+func (c *mqlAwsCloudhsmBackup) GetCopyTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CopyTimestamp
+}
+
+func (c *mqlAwsCloudhsmBackup) GetDeleteTimestamp() *plugin.TValue[*time.Time] {
+	return &c.DeleteTimestamp
+}
+
+func (c *mqlAwsCloudhsmBackup) GetSourceRegion() *plugin.TValue[string] {
+	return &c.SourceRegion
+}
+
+func (c *mqlAwsCloudhsmBackup) GetSourceBackupId() *plugin.TValue[string] {
+	return &c.SourceBackupId
+}
+
+func (c *mqlAwsCloudhsmBackup) GetSourceClusterId() *plugin.TValue[string] {
+	return &c.SourceClusterId
+}
+
+func (c *mqlAwsCloudhsmBackup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsCloudtrail for the aws.cloudtrail resource
