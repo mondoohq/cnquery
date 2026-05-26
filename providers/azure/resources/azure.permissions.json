@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.14.0",
-  "generated_at": "2026-05-26T13:43:06-07:00",
+  "generated_at": "2026-05-26T16:21:16-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -94,7 +94,7 @@
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.Logic/workflows/read",
-    "Microsoft.Machinelearning/workspaces/read",
+    "Microsoft.MachineLearningServices/workspaces/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Mongocluster/mongoClusters/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
@@ -765,8 +765,8 @@
       "source_file": "logic.go"
     },
     {
-      "permission": "Microsoft.Machinelearning/workspaces/read",
-      "service": "Microsoft.Machinelearning",
+      "permission": "Microsoft.MachineLearningServices/workspaces/read",
+      "service": "Microsoft.MachineLearningServices",
       "action": "NewListBySubscriptionPager",
       "source_file": "machinelearning.go"
     },

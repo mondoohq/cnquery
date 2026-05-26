@@ -1430,6 +1430,7 @@ var azureServiceToARMMap = map[string]string{
 	"hybridcompute":         "Microsoft.HybridCompute",
 	"appcontainers":         "Microsoft.App",
 	"containerinstance":     "Microsoft.ContainerInstance",
+	"machinelearning":       "Microsoft.MachineLearningServices",
 }
 
 func azureServiceToARM(service string) string {
