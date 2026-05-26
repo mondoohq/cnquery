@@ -139,7 +139,10 @@ func (s *mqlSudo) installed() (bool, error) {
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 	exists, err := afs.Exists(p.Data)
 	if err != nil {
-		return false, nil
+		// afero.Exists returns a non-nil error only for genuine FS faults
+		// (permission denied, broken mount) — plain absence yields (false, nil).
+		// Surface the fault rather than silently reporting sudo as missing.
+		return false, err
 	}
 	return exists, nil
 }
