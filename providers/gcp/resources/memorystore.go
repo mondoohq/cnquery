@@ -308,10 +308,12 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 	defer client.Close()
 
 	// Accept either the full resource path or a short name + location from
-	// the asset identifier driven discovery path.
-	fullName := name
-	projectId := conn.ResourceID()
-	if !strings.HasPrefix(name, "projects/") {
+	// the asset-identifier-driven discovery path.
+	var fullName, projectId string
+	if strings.HasPrefix(name, "projects/") {
+		fullName = name
+		projectId = parseProjectFromPath(name)
+	} else {
 		locRaw := args["location"]
 		projRaw := args["projectId"]
 		if locRaw == nil || projRaw == nil {

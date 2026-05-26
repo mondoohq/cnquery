@@ -717,19 +717,11 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 	}
 	name := nameRaw.Value.(string)
 
-	conn, ok := runtime.Connection.(*connection.GcpConnection)
-	if !ok {
-		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
-	}
-
-	// Build the full resource path. The asset identifier supplies a short
-	// name plus location; a direct user call may already pass the full path.
-	fullName := name
-	projectId := conn.ResourceID()
-	region := ""
+	var projectId, location string
 	if strings.HasPrefix(name, "projects/") {
 		projectId = parseProjectFromPath(name)
-		region = parseLocationFromPath(name)
+		location = parseLocationFromPath(name)
+		name = parseResourceName(name)
 	} else {
 		projRaw := args["projectId"]
 		locRaw := args["location"]
@@ -737,60 +729,31 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 			return nil, nil, errors.New("vertexai custom job init: projectId and location required when name is not a full resource path")
 		}
 		projectId = projRaw.Value.(string)
-		region = locRaw.Value.(string)
-		fullName = fmt.Sprintf("projects/%s/locations/%s/customJobs/%s", projectId, region, name)
+		location = locRaw.Value.(string)
 	}
 
-	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
-	if err != nil {
-		return nil, nil, err
-	}
-	ctx := context.Background()
-	client, err := aiplatform.NewJobClient(ctx,
-		option.WithCredentials(creds),
-		option.WithEndpoint(vertexaiEndpoint(region)),
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer client.Close()
-
-	job, err := client.GetCustomJob(ctx, &aiplatformpb.GetCustomJobRequest{Name: fullName})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	jobSpec, err := protoToDict(job.JobSpec)
-	if err != nil {
-		return nil, nil, err
-	}
-	encryptionSpec, err := protoToDict(job.EncryptionSpec)
-	if err != nil {
-		return nil, nil, err
-	}
-	errorDict, err := protoToDict(job.Error)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	res, err := CreateResource(runtime, "gcp.project.vertexaiService.customJob", map[string]*llx.RawData{
-		"name":           llx.StringData(job.Name),
-		"displayName":    llx.StringData(job.DisplayName),
-		"state":          llx.StringData(job.State.String()),
-		"jobSpec":        llx.DictData(jobSpec),
-		"labels":         llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-		"encryptionSpec": llx.DictData(encryptionSpec),
-		"error":          llx.DictData(errorDict),
-		"created":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
-		"updated":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
-		"startTime":      llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
-		"endTime":        llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+	obj, err := CreateResource(runtime, "gcp.project.vertexaiService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	delete(args, "location")
-	return args, res, nil
+	vertexaiSvc := obj.(*mqlGcpProjectVertexaiService)
+	jobs := vertexaiSvc.GetCustomJobs()
+	if jobs.Error != nil {
+		return nil, nil, jobs.Error
+	}
+
+	for _, j := range jobs.Data {
+		job := j.(*mqlGcpProjectVertexaiServiceCustomJob)
+		if parseResourceName(job.Name.Data) == name &&
+			parseLocationFromPath(job.Name.Data) == location {
+			delete(args, "location")
+			return args, job, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("vertexai custom job %q not found", name)
 }
 
 func (g *mqlGcpProjectVertexaiService) customJobs() ([]any, error) {
