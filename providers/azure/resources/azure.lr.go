@@ -52812,7 +52812,7 @@ func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetPrivateEndpointConnec
 type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionKeyVaultServiceVaultInternal it will be used here
+	mqlAzureSubscriptionKeyVaultServiceVaultInternal
 	Id                           plugin.TValue[string]
 	VaultName                    plugin.TValue[string]
 	Type                         plugin.TValue[string]
@@ -57011,7 +57011,7 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForResourceManager) Get
 type mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersInternal it will be used here
+	mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersInternal
 	SubscriptionId           plugin.TValue[string]
 	Enabled                  plugin.TValue[bool]
 	PricingTier              plugin.TValue[string]

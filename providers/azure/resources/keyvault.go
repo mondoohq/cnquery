@@ -78,6 +78,45 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionKeyVaultServiceVaultInternal struct {
+	fetchVaultOnce sync.Once
+	fetchVaultResp *keyvault.VaultsClientGetResponse
+	fetchVaultErr  error
+}
+
+// fetchVault retrieves the full vault from ARM. Cached with sync.Once so that
+// properties, privateEndpointConnections, accessPolicies, and networkAcls
+// share a single VaultsClient.Get per vault.
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) fetchVault() (*keyvault.VaultsClientGetResponse, error) {
+	a.fetchVaultOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		resourceID, err := ParseResourceID(a.Id.Data)
+		if err != nil {
+			a.fetchVaultErr = err
+			return
+		}
+		vaultName, err := resourceID.Component("vaults")
+		if err != nil {
+			a.fetchVaultErr = err
+			return
+		}
+		client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.fetchVaultErr = err
+			return
+		}
+		vault, err := client.Get(context.Background(), resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+		if err != nil {
+			a.fetchVaultErr = err
+			return
+		}
+		a.fetchVaultResp = &vault
+	})
+	return a.fetchVaultResp, a.fetchVaultErr
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) id() (string, error) {
 	return a.Kid.Data, nil
 }
@@ -135,31 +174,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) vaultUri() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-
-	resourceID, err := ParseResourceID(id)
+	vault, err := a.fetchVault()
 	if err != nil {
 		return nil, err
 	}
-
-	vaultName, err := resourceID.Component("vaults")
-	if err != nil {
-		return nil, err
-	}
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
 	return convert.JsonToDict(vault.Properties)
 }
 
@@ -507,26 +525,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, 
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	vaultName, err := resourceID.Component("vaults")
-	if err != nil {
-		return nil, err
-	}
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
-	if err != nil {
-		return nil, err
-	}
-
-	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+	vault, err := a.fetchVault()
 	if err != nil {
 		return nil, err
 	}
@@ -621,30 +620,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() 
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) accessPolicies() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
+	vault, err := a.fetchVault()
+	if err != nil {
+		return nil, err
+	}
 	id := a.Id.Data
-
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	vaultName, err := resourceID.Component("vaults")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
-	if err != nil {
-		return nil, err
-	}
-
-	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
 
 	var res []any
 	if vault.Properties == nil || vault.Properties.AccessPolicies == nil {
@@ -705,30 +685,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) accessPolicies() ([]any, erro
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) networkAcls() (*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
+	vault, err := a.fetchVault()
+	if err != nil {
+		return nil, err
+	}
 	id := a.Id.Data
-
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	vaultName, err := resourceID.Component("vaults")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{ClientOptions: conn.ClientOptions()})
-	if err != nil {
-		return nil, err
-	}
-
-	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
 
 	var bypass, defaultAction string
 	var ipRules, vnetSubnetIds []any
@@ -1471,26 +1432,48 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	res, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(conn.SubId()),
+
+	id := args["id"].Value.(string)
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	vaultName, err := resourceID.Component("vaults")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	kv := res.(*mqlAzureSubscriptionKeyVaultService)
-	vaults := kv.GetVaults()
-	if vaults.Error != nil {
-		return nil, nil, vaults.Error
-	}
-	id := args["id"].Value.(string)
-	for _, entry := range vaults.Data {
-		vault := entry.(*mqlAzureSubscriptionKeyVaultServiceVault)
-		if vault.Id.Data == id {
-			return args, vault, nil
-		}
+	vault, err := client.Get(context.Background(), resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return nil, nil, errors.New("azure key vault does not exist")
+	res, err := CreateResource(runtime, "azure.subscription.keyVaultService.vault",
+		map[string]*llx.RawData{
+			"id":        llx.StringData(id),
+			"vaultName": llx.StringDataPtr(vault.Name),
+			"type":      llx.StringDataPtr(vault.Type),
+			"location":  llx.StringDataPtr(vault.Location),
+			"tags":      llx.MapData(convert.PtrMapStrToInterface(vault.Tags), types.String),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Prime the fetchVault cache so subsequent property/networkAcls/etc.
+	// accesses reuse the response we already have in hand.
+	mqlVault := res.(*mqlAzureSubscriptionKeyVaultServiceVault)
+	mqlVault.fetchVaultOnce.Do(func() {
+		mqlVault.fetchVaultResp = &vault
+	})
+
+	return args, mqlVault, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) id() (string, error) {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -54,6 +56,43 @@ type mqlAzureSubscriptionStorageServiceAccountInternal struct {
 	cacheEncryptionKeyVaultURI string
 	cacheEncryptionKeyName     string
 	cacheEncryptionKeyVersion  string
+
+	fetchBlobSvcOnce sync.Once
+	fetchBlobSvcResp *storage.BlobServicesClientGetServicePropertiesResponse
+	fetchBlobSvcErr  error
+}
+
+// fetchBlobServiceProps retrieves BlobServicesClient.GetServiceProperties for
+// this storage account. Cached with sync.Once so blobProperties() and
+// dataProtection() share a single API call.
+func (a *mqlAzureSubscriptionStorageServiceAccount) fetchBlobServiceProps() (*storage.BlobServicesClientGetServicePropertiesResponse, error) {
+	a.fetchBlobSvcOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		resourceID, err := ParseResourceID(a.Id.Data)
+		if err != nil {
+			a.fetchBlobSvcErr = err
+			return
+		}
+		account, err := resourceID.Component("storageAccounts")
+		if err != nil {
+			a.fetchBlobSvcErr = err
+			return
+		}
+		client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.fetchBlobSvcErr = err
+			return
+		}
+		resp, err := client.GetServiceProperties(context.Background(), resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
+		if err != nil {
+			a.fetchBlobSvcErr = err
+			return
+		}
+		a.fetchBlobSvcResp = &resp
+	})
+	return a.fetchBlobSvcResp, a.fetchBlobSvcErr
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
@@ -157,19 +196,41 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			}
 			return nil, err
 		}
-		for _, container := range page.Value {
-			// The list-by-account API returns hasImmutabilityPolicy/hasLegalHold flags but not the
-			// nested ImmutabilityPolicy/LegalHold detail. Fetch the container individually when
-			// either flag is set so the detail fields are populated.
+
+		// The list-by-account API returns hasImmutabilityPolicy/hasLegalHold
+		// flags but not the nested ImmutabilityPolicy/LegalHold detail.
+		// When either flag is set, fan out the per-container Get calls in
+		// parallel — accounts with many locked containers (common in
+		// regulated environments) would otherwise serialize one Get per
+		// container in the listing hot path.
+		detailedProps := make([]*storage.ContainerProperties, len(page.Value))
+		g, gctx := errgroup.WithContext(ctx)
+		g.SetLimit(10)
+		for i, container := range page.Value {
 			containerProps := container.Properties
 			needsDetail := containerProps != nil &&
 				((containerProps.HasImmutabilityPolicy != nil && *containerProps.HasImmutabilityPolicy) ||
 					(containerProps.HasLegalHold != nil && *containerProps.HasLegalHold))
-			if needsDetail && container.Name != nil {
-				detail, err := client.Get(ctx, resourceID.ResourceGroup, account, *container.Name, nil)
+			if !needsDetail || container.Name == nil {
+				continue
+			}
+			i, name := i, *container.Name
+			g.Go(func() error {
+				detail, err := client.Get(gctx, resourceID.ResourceGroup, account, name, nil)
 				if err == nil && detail.BlobContainer.ContainerProperties != nil {
-					containerProps = detail.BlobContainer.ContainerProperties
+					detailedProps[i] = detail.BlobContainer.ContainerProperties
 				}
+				return nil
+			})
+		}
+		if err := g.Wait(); err != nil {
+			return nil, err
+		}
+
+		for i, container := range page.Value {
+			containerProps := container.Properties
+			if detailedProps[i] != nil {
+				containerProps = detailedProps[i]
 			}
 
 			properties, err := convert.JsonToDict(containerProps)
@@ -326,28 +387,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureS
 		return nil, nil
 	}
 
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	account, err := resourceID.Component("storageAccounts")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	blobProps, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
+	blobProps, err := a.fetchBlobServiceProps()
 	if err != nil {
 		if isFeatureNotSupportedForAccountError(err) {
 			a.BlobProperties.State = plugin.StateIsNull | plugin.StateIsSet
@@ -365,7 +405,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureS
 		return nil, err
 	}
 
-	return toMqlBlobServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, blobProps.BlobServiceProperties, "blob", id)
+	return toMqlBlobServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, blobProps.BlobServiceProperties, "blob", a.Id.Data)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureSubscriptionStorageServiceAccountDataProtection, error) {
@@ -375,27 +415,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 		return nil, nil
 	}
 
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	account, err := resourceID.Component("storageAccounts")
-	if err != nil {
-		return nil, err
-	}
-	client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	properties, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
+	properties, err := a.fetchBlobServiceProps()
 	if err != nil {
 		if isFeatureNotSupportedForAccountError(err) {
 			a.DataProtection.State = plugin.StateIsNull | plugin.StateIsSet
@@ -410,20 +430,16 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 	var containerRetentionDays *int32
 	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
 		blobSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Enabled)
-	}
-	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
 		blobRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Days
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
 		containerSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Enabled)
-	}
-	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
 		containerRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days
 	}
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountDataProtection,
 		map[string]*llx.RawData{
-			"storageAccountId":             llx.StringData(id),
+			"storageAccountId":             llx.StringData(a.Id.Data),
 			"blobSoftDeletionEnabled":      llx.BoolData(blobSoftDeletionEnabled),
 			"blobRetentionDays":            llx.IntDataDefault(blobRetentionDays, 0),
 			"containerSoftDeletionEnabled": llx.BoolData(containerSoftDeletionEnabled),

@@ -4,12 +4,14 @@
 package resources
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestCommonPricingArgs(t *testing.T) {
@@ -169,5 +171,28 @@ func TestArgsFromContactProperties(t *testing.T) {
 
 		args := argsFromContactProperties(props)
 		assert.Equal(t, false, args["isEnabled"].Value)
+	})
+}
+
+func TestSimpleDefenderDict(t *testing.T) {
+	t.Run("Enabled", func(t *testing.T) {
+		tv := &plugin.TValue[bool]{Data: true}
+		got, err := simpleDefenderDict(tv)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"enabled": true}, got)
+	})
+
+	t.Run("Disabled", func(t *testing.T) {
+		tv := &plugin.TValue[bool]{Data: false}
+		got, err := simpleDefenderDict(tv)
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"enabled": false}, got)
+	})
+
+	t.Run("Propagates underlying error", func(t *testing.T) {
+		want := errors.New("boom")
+		tv := &plugin.TValue[bool]{Error: want}
+		_, err := simpleDefenderDict(tv)
+		assert.ErrorIs(t, err, want)
 	})
 }

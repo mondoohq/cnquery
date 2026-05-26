@@ -26,6 +26,44 @@ type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	encryptionProtectorOnce sync.Once
 	encryptionProtectorResp *sql.EncryptionProtectorsClientGetResponse
 	encryptionProtectorErr  error
+
+	connectionPolicyOnce sync.Once
+	connectionPolicyResp *sql.ServerConnectionPoliciesClientGetResponse
+	connectionPolicyErr  error
+}
+
+// fetchConnectionPolicy retrieves the server-scoped ConnectionPolicy. Cached
+// with sync.Once so the server's connectionPolicy() accessor and per-database
+// connectionPolicy() accessors share a single API call (the policy is keyed
+// on the server, not the database — see Azure docs).
+func (a *mqlAzureSubscriptionSqlServiceServer) fetchConnectionPolicy() (*sql.ServerConnectionPoliciesClientGetResponse, error) {
+	a.connectionPolicyOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		resourceID, err := ParseResourceID(a.Id.Data)
+		if err != nil {
+			a.connectionPolicyErr = err
+			return
+		}
+		server, err := resourceID.Component("servers")
+		if err != nil {
+			a.connectionPolicyErr = err
+			return
+		}
+		client, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.connectionPolicyErr = err
+			return
+		}
+		resp, err := client.Get(context.Background(), resourceID.ResourceGroup, server, sql.ConnectionPolicyNameDefault, &sql.ServerConnectionPoliciesClientGetOptions{})
+		if err != nil {
+			a.connectionPolicyErr = err
+			return
+		}
+		a.connectionPolicyResp = &resp
+	})
+	return a.connectionPolicyResp, a.connectionPolicyErr
 }
 
 type mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal struct {
@@ -393,31 +431,10 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, e
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	policy, err := a.fetchConnectionPolicy()
 	if err != nil {
 		return nil, err
 	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := connectionClient.Get(ctx, resourceID.ResourceGroup, server, sql.ConnectionPolicyNameDefault, &sql.ServerConnectionPoliciesClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
 	return convert.JsonToDict(policy)
 }
 
@@ -732,31 +749,27 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (any, e
 }
 
 func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	resourceID, err := ParseResourceID(a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
+	serverName, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+	serverId := "/subscriptions/" + resourceID.SubscriptionID +
+		"/resourceGroups/" + resourceID.ResourceGroup +
+		"/providers/Microsoft.Sql/servers/" + serverName
 
-	server, err := resourceID.Component("servers")
+	serverRes, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService.server",
+		map[string]*llx.RawData{"id": llx.StringData(serverId)})
 	if err != nil {
 		return nil, err
 	}
-
-	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
+	policy, err := serverRes.(*mqlAzureSubscriptionSqlServiceServer).fetchConnectionPolicy()
 	if err != nil {
 		return nil, err
 	}
-	policy, err := connectionClient.Get(ctx, resourceID.ResourceGroup, server, sql.ConnectionPolicyNameDefault, &sql.ServerConnectionPoliciesClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
 	return convert.JsonToDict(policy.ServerConnectionPolicy.Properties)
 }
 
