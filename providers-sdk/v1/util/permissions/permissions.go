@@ -920,14 +920,17 @@ func walkSelectorChain(sel *ast.SelectorExpr) (string, []string) {
 }
 
 // findMeaningfulResource finds the meaningful resource name from a chain,
-// skipping common parent levels like "Projects", "Locations".
+// skipping common parent levels like "Projects", "Locations". The terminal
+// segment is always the resource the call operates on (e.g. the "Zones" in
+// dataplex's Lakes.Zones.List), so it's never skipped — the skip set only
+// applies to the parent levels that precede it.
 func findMeaningfulResource(chain []string) string {
 	skip := map[string]bool{
 		"Projects": true, "Locations": true, "Regions": true,
 		"Zones": true, "Global": true,
 	}
 	for i := len(chain) - 1; i >= 0; i-- {
-		if !skip[chain[i]] {
+		if i == len(chain)-1 || !skip[chain[i]] {
 			return chain[i]
 		}
 	}

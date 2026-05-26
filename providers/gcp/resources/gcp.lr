@@ -826,6 +826,8 @@ gcp.project @defaults("name number") {
   osConfig() gcp.project.osConfigService
   // GCP Network Security resources
   networkSecurity() gcp.project.networkSecurityService
+  // GCP Dataplex resources
+  dataplex() gcp.project.dataplexService
 }
 
 // Google Cloud service API
@@ -5192,6 +5194,184 @@ private gcp.project.cloudFunctionV2.eventTrigger @defaults("eventType") {
   retryPolicy string
   // Eventarc channel name
   channel string
+}
+
+// Google Cloud Dataplex
+//
+// Use this resource as the entry point for Dataplex in the project. It
+// hosts the data-management hierarchy: `lakes` group data across storage
+// systems into zones, and from each lake you can drill into its zones and
+// the Cloud Storage buckets and BigQuery datasets they govern. `enabled`
+// reports whether the Dataplex API is turned on for the project.
+private gcp.project.dataplexService @defaults("projectId") {
+  // Project ID
+  projectId string
+  // Whether the Dataplex API is enabled for the project
+  enabled bool
+  // Dataplex lakes across all locations in the project
+  lakes() []gcp.project.dataplexService.lake
+}
+
+// Google Cloud Dataplex lake
+//
+// Examine a Dataplex lake — the top-level container that organizes data
+// across storage systems into zones. Surfaces the lake's `location`,
+// lifecycle `state`, `serviceAccount` used to access managed resources,
+// the attached Dataproc Metastore service (`metastoreService`), and
+// aggregated asset counts (`activeAssets`,
+// `securityPolicyApplyingAssets`). Drill into `zones()` for the RAW and
+// CURATED zones, and from there into the buckets and datasets the lake
+// governs. Selected by its full resource name, for example
+// `projects/my-project/locations/us-central1/lakes/my-lake`.
+private gcp.project.dataplexService.lake @defaults("name state location") {
+  // Full resource name of the lake
+  id string
+  // Project ID
+  projectId string
+  // Location (region) where the lake resides
+  location string
+  // Short name of the lake
+  name string
+  // User-friendly display name
+  displayName string
+  // User-provided description of the lake
+  description string
+  // System-generated unique ID for the lake
+  uid string
+  // Lake lifecycle state
+  //
+  // One of ACTIVE, CREATING, DELETING, or ACTION_REQUIRED.
+  state string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+  // User-provided labels
+  labels map[string]string
+  // Service account associated with the lake, used to access managed resources
+  serviceAccount string
+  // Resource name of the attached Dataproc Metastore service, if any
+  metastoreService string
+  // Number of active assets in the lake
+  activeAssets int
+  // Number of assets still applying their security policy
+  securityPolicyApplyingAssets int
+  // Zones within the lake
+  zones() []gcp.project.dataplexService.lake.zone
+}
+
+// Google Cloud Dataplex zone
+//
+// Examine a zone within a Dataplex lake. A zone groups assets of a common
+// kind and exposes its `type` (RAW or CURATED), the `resourceLocationType`
+// governing where attached resources may live, the metadata-discovery
+// configuration (`discoveryEnabled`, `discoverySchedule`, and the include
+// and exclude path patterns), and lifecycle `state`. Drill into `assets()`
+// for the Cloud Storage buckets and BigQuery datasets attached to the
+// zone. Selected by its full resource name.
+private gcp.project.dataplexService.lake.zone @defaults("name type state") {
+  // Full resource name of the zone
+  id string
+  // Project ID
+  projectId string
+  // Location (region) of the parent lake
+  location string
+  // Short name of the zone
+  name string
+  // User-friendly display name
+  displayName string
+  // User-provided description of the zone
+  description string
+  // System-generated unique ID for the zone
+  uid string
+  // Zone lifecycle state
+  //
+  // One of ACTIVE, CREATING, DELETING, or ACTION_REQUIRED.
+  state string
+  // Zone kind
+  //
+  // One of RAW (raw, unstructured or semi-structured data) or CURATED
+  // (structured, query-ready data).
+  type string
+  // Placement constraint for resources attached to the zone
+  //
+  // One of SINGLE_REGION or MULTI_REGION.
+  resourceLocationType string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+  // User-provided labels
+  labels map[string]string
+  // Whether automatic metadata discovery is enabled for the zone
+  discoveryEnabled bool
+  // Cron schedule for periodic metadata discovery runs
+  discoverySchedule string
+  // Glob patterns of storage paths to include in discovery
+  discoveryIncludePatterns []string
+  // Glob patterns of storage paths to exclude from discovery
+  discoveryExcludePatterns []string
+  // Assets attached to the zone
+  assets() []gcp.project.dataplexService.lake.zone.asset
+}
+
+// Google Cloud Dataplex asset
+//
+// Examine an asset attached to a Dataplex zone. An asset binds an external
+// resource — a Cloud Storage bucket (`resourceType` STORAGE_BUCKET) or a
+// BigQuery dataset (BIGQUERY_DATASET) — into the zone. Surfaces the backing
+// `resourceName`, the `readAccessMode` (DIRECT or MANAGED), the state of
+// security-policy application to the resource (`securityStatusState`), the
+// metadata-discovery configuration, and lifecycle `state`. Selected by its
+// full resource name.
+private gcp.project.dataplexService.lake.zone.asset @defaults("name resourceType state") {
+  // Full resource name of the asset
+  id string
+  // Project ID
+  projectId string
+  // Location (region) of the parent lake
+  location string
+  // Short name of the asset
+  name string
+  // User-friendly display name
+  displayName string
+  // User-provided description of the asset
+  description string
+  // System-generated unique ID for the asset
+  uid string
+  // Asset lifecycle state
+  //
+  // One of ACTIVE, CREATING, DELETING, or ACTION_REQUIRED.
+  state string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+  // User-provided labels
+  labels map[string]string
+  // Kind of the attached resource
+  //
+  // One of STORAGE_BUCKET or BIGQUERY_DATASET.
+  resourceType string
+  // Relative resource name of the attached resource
+  //
+  // For example `projects/{project}/buckets/{bucket}` for a Cloud Storage
+  // bucket or `projects/{project}/datasets/{dataset}` for a BigQuery
+  // dataset.
+  resourceName string
+  // How Dataplex manages read access to the attached resource
+  //
+  // One of DIRECT (clients read the resource directly) or MANAGED
+  // (Dataplex brokers access to it).
+  readAccessMode string
+  // State of security-policy application to the attached resource
+  //
+  // One of READY, APPLYING, or ERROR.
+  securityStatusState string
+  // Whether automatic metadata discovery is enabled for the asset
+  discoveryEnabled bool
+  // Cron schedule for periodic metadata discovery runs
+  discoverySchedule string
 }
 
 // Google Cloud (GCP) Dataproc

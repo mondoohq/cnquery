@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.17.0",
-  "generated_at": "2026-05-26T12:04:42-07:00",
+  "version": "13.18.0",
+  "generated_at": "2026-05-26T13:43:06-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -116,6 +116,9 @@
     "container.clusters.list",
     "containeranalysis.occurrences.list",
     "dataflow.jobs.list",
+    "dataplex.assets.list",
+    "dataplex.lakes.list",
+    "dataplex.zones.list",
     "dataproc.autoscalingPolicies.list",
     "dataproc.clusters.list",
     "dataproc.jobs.list",
@@ -950,6 +953,24 @@
       "service": "dataflow",
       "action": "Jobs.Aggregated",
       "source_file": "dataflow.go"
+    },
+    {
+      "permission": "dataplex.assets.list",
+      "service": "dataplex",
+      "action": "Assets.List",
+      "source_file": "dataplex.go"
+    },
+    {
+      "permission": "dataplex.lakes.list",
+      "service": "dataplex",
+      "action": "Lakes.List",
+      "source_file": "dataplex.go"
+    },
+    {
+      "permission": "dataplex.zones.list",
+      "service": "dataplex",
+      "action": "Zones.List",
+      "source_file": "dataplex.go"
     },
     {
       "permission": "dataproc.autoscalingPolicies.list",

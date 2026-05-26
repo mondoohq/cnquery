@@ -166,6 +166,10 @@ const (
 	ResourceGcpProjectCloudFunctionV2BuildConfig                                       string = "gcp.project.cloudFunctionV2.buildConfig"
 	ResourceGcpProjectCloudFunctionV2ServiceConfig                                     string = "gcp.project.cloudFunctionV2.serviceConfig"
 	ResourceGcpProjectCloudFunctionV2EventTrigger                                      string = "gcp.project.cloudFunctionV2.eventTrigger"
+	ResourceGcpProjectDataplexService                                                  string = "gcp.project.dataplexService"
+	ResourceGcpProjectDataplexServiceLake                                              string = "gcp.project.dataplexService.lake"
+	ResourceGcpProjectDataplexServiceLakeZone                                          string = "gcp.project.dataplexService.lake.zone"
+	ResourceGcpProjectDataplexServiceLakeZoneAsset                                     string = "gcp.project.dataplexService.lake.zone.asset"
 	ResourceGcpProjectDataprocService                                                  string = "gcp.project.dataprocService"
 	ResourceGcpProjectDataprocServiceCluster                                           string = "gcp.project.dataprocService.cluster"
 	ResourceGcpProjectDataprocServiceClusterConfig                                     string = "gcp.project.dataprocService.cluster.config"
@@ -1028,6 +1032,22 @@ func init() {
 		"gcp.project.cloudFunctionV2.eventTrigger": {
 			// to override args, implement: initGcpProjectCloudFunctionV2EventTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectCloudFunctionV2EventTrigger,
+		},
+		"gcp.project.dataplexService": {
+			Init:   initGcpProjectDataplexService,
+			Create: createGcpProjectDataplexService,
+		},
+		"gcp.project.dataplexService.lake": {
+			// to override args, implement: initGcpProjectDataplexServiceLake(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDataplexServiceLake,
+		},
+		"gcp.project.dataplexService.lake.zone": {
+			// to override args, implement: initGcpProjectDataplexServiceLakeZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDataplexServiceLakeZone,
+		},
+		"gcp.project.dataplexService.lake.zone.asset": {
+			// to override args, implement: initGcpProjectDataplexServiceLakeZoneAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDataplexServiceLakeZoneAsset,
 		},
 		"gcp.project.dataprocService": {
 			Init:   initGcpProjectDataprocService,
@@ -3018,6 +3038,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.networkSecurity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetNetworkSecurity()).ToDataRes(types.Resource("gcp.project.networkSecurityService"))
+	},
+	"gcp.project.dataplex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetDataplex()).ToDataRes(types.Resource("gcp.project.dataplexService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -7401,6 +7424,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.channel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetChannel()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dataplexService.lakes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexService).GetLakes()).ToDataRes(types.Array(types.Resource("gcp.project.dataplexService.lake")))
+	},
+	"gcp.project.dataplexService.lake.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dataplexService.lake.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.metastoreService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetMetastoreService()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.activeAssets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetActiveAssets()).ToDataRes(types.Int)
+	},
+	"gcp.project.dataplexService.lake.securityPolicyApplyingAssets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetSecurityPolicyApplyingAssets()).ToDataRes(types.Int)
+	},
+	"gcp.project.dataplexService.lake.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetZones()).ToDataRes(types.Array(types.Resource("gcp.project.dataplexService.lake.zone")))
+	},
+	"gcp.project.dataplexService.lake.zone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.resourceLocationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetResourceLocationType()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.zone.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.zone.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDiscoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dataplexService.lake.zone.discoverySchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDiscoverySchedule()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryIncludePatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDiscoveryIncludePatterns()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryExcludePatterns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetDiscoveryExcludePatterns()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dataplexService.lake.zone.assets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZone).GetAssets()).ToDataRes(types.Array(types.Resource("gcp.project.dataplexService.lake.zone.asset")))
+	},
+	"gcp.project.dataplexService.lake.zone.asset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dataplexService.lake.zone.asset.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetResourceType()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetResourceName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.readAccessMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetReadAccessMode()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.securityStatusState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetSecurityStatusState()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.discoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetDiscoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dataplexService.lake.zone.asset.discoverySchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetDiscoverySchedule()).ToDataRes(types.String)
 	},
 	"gcp.project.dataprocService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocService).GetProjectId()).ToDataRes(types.String)
@@ -15938,6 +16123,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).NetworkSecurity, ok = plugin.RawToTValue[*mqlGcpProjectNetworkSecurityService](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataplex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Dataplex, ok = plugin.RawToTValue[*mqlGcpProjectDataplexService](v.Value, v.Error)
+		return
+	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpService).__id, ok = v.Value.(string)
 		return
@@ -22292,6 +22481,238 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.channel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).Channel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataplexService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lakes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexService).Lakes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataplexService.lake.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.metastoreService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).MetastoreService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.activeAssets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).ActiveAssets, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.securityPolicyApplyingAssets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).SecurityPolicyApplyingAssets, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.resourceLocationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).ResourceLocationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).DiscoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.discoverySchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).DiscoverySchedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryIncludePatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).DiscoveryIncludePatterns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.discoveryExcludePatterns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).DiscoveryExcludePatterns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.assets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZone).Assets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.readAccessMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).ReadAccessMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.securityStatusState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).SecurityStatusState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.discoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).DiscoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.zone.asset.discoverySchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).DiscoverySchedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35544,6 +35965,7 @@ type mqlGcpProject struct {
 	Healthcare               plugin.TValue[*mqlGcpProjectHealthcareService]
 	OsConfig                 plugin.TValue[*mqlGcpProjectOsConfigService]
 	NetworkSecurity          plugin.TValue[*mqlGcpProjectNetworkSecurityService]
+	Dataplex                 plugin.TValue[*mqlGcpProjectDataplexService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -36684,6 +37106,22 @@ func (c *mqlGcpProject) GetNetworkSecurity() *plugin.TValue[*mqlGcpProjectNetwor
 		}
 
 		return c.networkSecurity()
+	})
+}
+
+func (c *mqlGcpProject) GetDataplex() *plugin.TValue[*mqlGcpProjectDataplexService] {
+	return plugin.GetOrCompute[*mqlGcpProjectDataplexService](&c.Dataplex, func() (*mqlGcpProjectDataplexService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "dataplex")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDataplexService), nil
+			}
+		}
+
+		return c.dataplex()
 	})
 }
 
@@ -51406,6 +51844,473 @@ func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetRetryPolicy() *plugin.TVal
 
 func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetChannel() *plugin.TValue[string] {
 	return &c.Channel
+}
+
+// mqlGcpProjectDataplexService for the gcp.project.dataplexService resource
+type mqlGcpProjectDataplexService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataplexServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Enabled   plugin.TValue[bool]
+	Lakes     plugin.TValue[[]any]
+}
+
+// createGcpProjectDataplexService creates a new instance of this resource
+func createGcpProjectDataplexService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataplexService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataplexService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataplexService) MqlName() string {
+	return "gcp.project.dataplexService"
+}
+
+func (c *mqlGcpProjectDataplexService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataplexService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataplexService) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGcpProjectDataplexService) GetLakes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Lakes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataplexService", c.__id, "lakes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lakes()
+	})
+}
+
+// mqlGcpProjectDataplexServiceLake for the gcp.project.dataplexService.lake resource
+type mqlGcpProjectDataplexServiceLake struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataplexServiceLakeInternal it will be used here
+	Id                           plugin.TValue[string]
+	ProjectId                    plugin.TValue[string]
+	Location                     plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	State                        plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Updated                      plugin.TValue[*time.Time]
+	Labels                       plugin.TValue[map[string]any]
+	ServiceAccount               plugin.TValue[string]
+	MetastoreService             plugin.TValue[string]
+	ActiveAssets                 plugin.TValue[int64]
+	SecurityPolicyApplyingAssets plugin.TValue[int64]
+	Zones                        plugin.TValue[[]any]
+}
+
+// createGcpProjectDataplexServiceLake creates a new instance of this resource
+func createGcpProjectDataplexServiceLake(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataplexServiceLake{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataplexService.lake", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) MqlName() string {
+	return "gcp.project.dataplexService.lake"
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetMetastoreService() *plugin.TValue[string] {
+	return &c.MetastoreService
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetActiveAssets() *plugin.TValue[int64] {
+	return &c.ActiveAssets
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetSecurityPolicyApplyingAssets() *plugin.TValue[int64] {
+	return &c.SecurityPolicyApplyingAssets
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataplexService.lake", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+// mqlGcpProjectDataplexServiceLakeZone for the gcp.project.dataplexService.lake.zone resource
+type mqlGcpProjectDataplexServiceLakeZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataplexServiceLakeZoneInternal it will be used here
+	Id                       plugin.TValue[string]
+	ProjectId                plugin.TValue[string]
+	Location                 plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	DisplayName              plugin.TValue[string]
+	Description              plugin.TValue[string]
+	Uid                      plugin.TValue[string]
+	State                    plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	ResourceLocationType     plugin.TValue[string]
+	Created                  plugin.TValue[*time.Time]
+	Updated                  plugin.TValue[*time.Time]
+	Labels                   plugin.TValue[map[string]any]
+	DiscoveryEnabled         plugin.TValue[bool]
+	DiscoverySchedule        plugin.TValue[string]
+	DiscoveryIncludePatterns plugin.TValue[[]any]
+	DiscoveryExcludePatterns plugin.TValue[[]any]
+	Assets                   plugin.TValue[[]any]
+}
+
+// createGcpProjectDataplexServiceLakeZone creates a new instance of this resource
+func createGcpProjectDataplexServiceLakeZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataplexServiceLakeZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataplexService.lake.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) MqlName() string {
+	return "gcp.project.dataplexService.lake.zone"
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetResourceLocationType() *plugin.TValue[string] {
+	return &c.ResourceLocationType
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDiscoveryEnabled() *plugin.TValue[bool] {
+	return &c.DiscoveryEnabled
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDiscoverySchedule() *plugin.TValue[string] {
+	return &c.DiscoverySchedule
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDiscoveryIncludePatterns() *plugin.TValue[[]any] {
+	return &c.DiscoveryIncludePatterns
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetDiscoveryExcludePatterns() *plugin.TValue[[]any] {
+	return &c.DiscoveryExcludePatterns
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZone) GetAssets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataplexService.lake.zone", c.__id, "assets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assets()
+	})
+}
+
+// mqlGcpProjectDataplexServiceLakeZoneAsset for the gcp.project.dataplexService.lake.zone.asset resource
+type mqlGcpProjectDataplexServiceLakeZoneAsset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataplexServiceLakeZoneAssetInternal it will be used here
+	Id                  plugin.TValue[string]
+	ProjectId           plugin.TValue[string]
+	Location            plugin.TValue[string]
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Uid                 plugin.TValue[string]
+	State               plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	Updated             plugin.TValue[*time.Time]
+	Labels              plugin.TValue[map[string]any]
+	ResourceType        plugin.TValue[string]
+	ResourceName        plugin.TValue[string]
+	ReadAccessMode      plugin.TValue[string]
+	SecurityStatusState plugin.TValue[string]
+	DiscoveryEnabled    plugin.TValue[bool]
+	DiscoverySchedule   plugin.TValue[string]
+}
+
+// createGcpProjectDataplexServiceLakeZoneAsset creates a new instance of this resource
+func createGcpProjectDataplexServiceLakeZoneAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataplexServiceLakeZoneAsset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataplexService.lake.zone.asset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) MqlName() string {
+	return "gcp.project.dataplexService.lake.zone.asset"
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetReadAccessMode() *plugin.TValue[string] {
+	return &c.ReadAccessMode
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetSecurityStatusState() *plugin.TValue[string] {
+	return &c.SecurityStatusState
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDiscoveryEnabled() *plugin.TValue[bool] {
+	return &c.DiscoveryEnabled
+}
+
+func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDiscoverySchedule() *plugin.TValue[string] {
+	return &c.DiscoverySchedule
 }
 
 // mqlGcpProjectDataprocService for the gcp.project.dataprocService resource
