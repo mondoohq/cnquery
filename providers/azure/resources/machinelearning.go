@@ -190,7 +190,11 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) storageAccount() (
 		a.StorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, conn)
 }
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) applicationInsights() (*mqlAzureSubscriptionMonitorServiceApplicationInsight, error) {
