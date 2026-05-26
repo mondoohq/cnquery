@@ -403,7 +403,7 @@ test/go: mql/generate test/generate test/go/plain
 test/go/plain:
 	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/')
 
-test/go/plain-ci: prep/tools test/generate providers/build
+test/go/plain-ci: prep/tools test/generate
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/')
 
 test/integration:
