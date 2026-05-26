@@ -9292,6 +9292,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ses.identity.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSesIdentity).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.ses.configurationSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetArn()).ToDataRes(types.String)
+	},
 	"aws.ses.configurationSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSesConfigurationSet).GetName()).ToDataRes(types.String)
 	},
@@ -37644,6 +37647,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ses.configurationSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSesConfigurationSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.configurationSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ses.configurationSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -88590,6 +88597,7 @@ type mqlAwsSesConfigurationSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSesConfigurationSetInternal
+	Arn                      plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Region                   plugin.TValue[string]
 	TlsPolicy                plugin.TValue[string]
@@ -88632,6 +88640,10 @@ func (c *mqlAwsSesConfigurationSet) MqlName() string {
 
 func (c *mqlAwsSesConfigurationSet) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsSesConfigurationSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
 }
 
 func (c *mqlAwsSesConfigurationSet) GetName() *plugin.TValue[string] {

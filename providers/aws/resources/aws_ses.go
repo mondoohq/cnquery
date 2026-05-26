@@ -385,7 +385,7 @@ func (a *mqlAwsSes) getConfigurationSets(conn *connection.AwsConnection) []*jobp
 					return nil, err
 				}
 				for _, name := range page.ConfigurationSets {
-					mqlConfigSet, err := newMqlAwsSesConfigurationSet(a.MqlRuntime, region, name)
+					mqlConfigSet, err := newMqlAwsSesConfigurationSet(a.MqlRuntime, region, conn.AccountId(), name)
 					if err != nil {
 						return nil, err
 					}
@@ -403,10 +403,16 @@ func (a *mqlAwsSes) getConfigurationSets(conn *connection.AwsConnection) []*jobp
 	return tasks
 }
 
-func newMqlAwsSesConfigurationSet(runtime *plugin.Runtime, region string, name string) (*mqlAwsSesConfigurationSet, error) {
+func sesConfigurationSetArn(region, accountID, name string) string {
+	return fmt.Sprintf("arn:aws:ses:%s:%s:configuration-set/%s", region, accountID, name)
+}
+
+func newMqlAwsSesConfigurationSet(runtime *plugin.Runtime, region string, accountID string, name string) (*mqlAwsSesConfigurationSet, error) {
+	arn := sesConfigurationSetArn(region, accountID, name)
 	resource, err := CreateResource(runtime, "aws.ses.configurationSet",
 		map[string]*llx.RawData{
-			"__id":   llx.StringData(fmt.Sprintf("%s/%s", region, name)),
+			"__id":   llx.StringData(arn),
+			"arn":    llx.StringData(arn),
 			"name":   llx.StringData(name),
 			"region": llx.StringData(region),
 		})
@@ -561,13 +567,15 @@ func initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	if args["name"] == nil {
-		return nil, nil, errors.New("name required to fetch aws ses configuration set")
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch aws ses configuration set")
 	}
 
 	// Resolve to the configuration set already populated by
 	// `aws.ses.configurationSets` so the cached region/name used by lazy
-	// GetConfigurationSet calls are preserved.
+	// GetConfigurationSet calls are preserved. Matching by ARN is unambiguous;
+	// configuration-set names are only unique within a region, so a name-only
+	// lookup returns the first region whose set matches.
 	obj, err := CreateResource(runtime, "aws.ses", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -575,14 +583,24 @@ func initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.Ra
 	ses := obj.(*mqlAwsSes)
 	configSets := ses.GetConfigurationSets()
 	if configSets != nil && configSets.Error == nil {
-		nameVal, _ := args["name"].Value.(string)
+		var arnVal, nameVal string
+		if args["arn"] != nil {
+			arnVal, _ = args["arn"].Value.(string)
+		}
+		if args["name"] != nil {
+			nameVal, _ = args["name"].Value.(string)
+		}
 		for _, raw := range configSets.Data {
 			c := raw.(*mqlAwsSesConfigurationSet)
-			if c.Name.Data == nameVal {
+			if (arnVal != "" && c.Arn.Data == arnVal) || (nameVal != "" && c.Name.Data == nameVal) {
 				return args, c, nil
 			}
 		}
 	}
 
-	return nil, nil, errors.New("aws ses configuration set not found")
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws ses configuration set that is not in the configuration sets list")
+	}
+	args["__id"] = args["arn"]
+	return args, nil, nil
 }

@@ -8308,6 +8308,7 @@ aws.securitylake.subscriber.subscriberStatus 13.10.0
 aws.securitylake.subscribers 13.10.0
 aws.ses 13.28.1
 aws.ses.configurationSet 13.28.1
+aws.ses.configurationSet.arn 13.28.1
 aws.ses.configurationSet.name 13.28.1
 aws.ses.configurationSet.region 13.28.1
 aws.ses.configurationSet.reputationMetricsEnabled 13.28.1

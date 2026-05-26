@@ -4322,12 +4322,15 @@ private aws.ses.identity @defaults("name identityType verificationStatus verifie
 // SES configuration set
 //
 // Examine a configuration set — the reusable group of rules that can be
-// applied when sending email. Each configuration set is selected by its name —
-// for example `aws.ses.configurationSet(name: "my-config-set")` — and exposes
-// the minimum TLS policy enforced on delivery, whether sending and reputation
-// metrics are enabled, the open/click tracking redirect domain and its HTTPS
-// policy, and which suppression-list reasons (bounces, complaints) are active.
-private aws.ses.configurationSet @defaults("name tlsPolicy sendingEnabled region") {
+// applied when sending email. Each configuration set is keyed by its ARN — for
+// example `aws.ses.configurationSet(arn: "arn:aws:ses:us-east-1:123456789012:configuration-set/my-config-set")`,
+// and can also be looked up by `name` — and exposes the minimum TLS policy
+// enforced on delivery, whether sending and reputation metrics are enabled, the
+// open/click tracking redirect domain and its HTTPS policy, and which
+// suppression-list reasons (bounces, complaints) are active.
+private aws.ses.configurationSet @defaults("name region") {
+  // ARN of the configuration set
+  arn string
   // Configuration set name
   name string
   // Region where the configuration set is defined
