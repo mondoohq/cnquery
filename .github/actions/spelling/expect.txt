@@ -109,6 +109,7 @@ junos
 kqueue
 kts
 linuxbrew
+maproot
 maxcpu
 maxmem
 mcp
@@ -121,6 +122,7 @@ mtls
 myapp
 myproject
 myvendor
+netgroup
 newpath
 nio
 nmap

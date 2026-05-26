@@ -3520,6 +3520,82 @@ mount {
   []mount.point
 }
 
+// NFS service local state
+//
+// Examine the local NFS service from two angles: shares declared on
+// this host (`exports`) and NFS volumes the host has mounted
+// (`mounts`). `exports` is parsed from `/etc/exports` using the
+// platform-specific syntax for Linux, FreeBSD, macOS, and AIX; each
+// row is one `(path, client)` pair so audits like
+// `nfs.exports.where(noRootSquash)` work directly. `mounts` filters
+// the system mount table for NFS file systems and parses
+// NFS-specific options into typed fields (protocol `version`,
+// `security` flavor, `hardMount`, `readOnly`).
+nfs {
+  // NFS exports declared on this host
+  exports() []nfs.export
+  // NFS mounts currently active on this host
+  mounts() []nfs.mount
+}
+
+// NFS export entry for a single path and client
+//
+// Examine one row of the local NFS export table: the directory being
+// shared (`path`), the client specification it is shared with
+// (`client` — a hostname, IP address, CIDR, wildcard, netgroup, or
+// `*` meaning any client) and the effective export `options` as
+// parsed from `/etc/exports`. `readOnly` is true when the share is
+// exported read-only. `noRootSquash` is true when the share grants
+// remote uid 0 on the share — a classic NFS audit finding. Iterate
+// from `nfs.exports`.
+private nfs.export @defaults("path client readOnly noRootSquash") {
+  // Exported directory path on the local host
+  path string
+  // Client specification (hostname, IP, CIDR, wildcard, netgroup, or `*`)
+  client string
+  // Export options as parsed from /etc/exports
+  options []string
+  // Whether the share is exported read-only
+  readOnly bool
+  // Whether the share grants remote uid 0 (`no_root_squash`, `maproot=root`, or `root=`)
+  noRootSquash bool
+}
+
+// NFS client mount
+//
+// Examine a single NFS mount currently active on this host. `device`
+// is the NFS source as the kernel sees it (`server:/remote/path`),
+// split into `server` and `remotePath` for convenience.
+// `mountpoint` is where the share is attached locally. `version` is
+// the negotiated NFS protocol version (for example `3`, `4`, `4.1`,
+// `4.2`); empty when the kernel did not report one. `security` is
+// the authentication flavor — one of `sys`, `krb5`, `krb5i`,
+// `krb5p`, or `none`; empty when unspecified. `hardMount` is true
+// when the mount uses hard semantics (the `soft` option is not
+// set). `readOnly` is true when the mount is `ro`. `options` is the
+// full mount option list as reported by the system. Iterate from
+// `nfs.mounts`.
+private nfs.mount @defaults("server remotePath mountpoint version") {
+  // NFS source as the kernel sees it (server:/remote/path)
+  device string
+  // Local mount point path
+  mountpoint string
+  // NFS server hostname or IP
+  server string
+  // Remote path exported by the server
+  remotePath string
+  // NFS protocol version (for example `3`, `4`, `4.1`, `4.2`); empty when unknown
+  version string
+  // Security flavor: one of `sys`, `krb5`, `krb5i`, `krb5p`, or `none`; empty when unspecified
+  security string
+  // Whether the mount uses hard semantics (the `soft` option is not set)
+  hardMount bool
+  // Whether the mount is read-only
+  readOnly bool
+  // Full mount option list as reported by the system
+  options []string
+}
+
 // Unix mount point
 //
 // Examine a single mounted filesystem: the backing `device`, the `path`
