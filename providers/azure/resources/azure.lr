@@ -6266,7 +6266,7 @@ private azure.subscription.cloudDefenderService.regulatoryComplianceControl @def
 }
 
 // Microsoft Defender for Cloud security assessment
-private azure.subscription.cloudDefenderService.assessment @defaults("displayName status severity") {
+private azure.subscription.cloudDefenderService.assessment @defaults("displayName status severity riskLevel") {
   // Assessment resource ID
   id string
   // Assessment name (a globally unique identifier)
@@ -6285,6 +6285,56 @@ private azure.subscription.cloudDefenderService.assessment @defaults("displayNam
   resourceId string
   // Additional data describing the assessment result
   additionalData dict
+  // Risk level of the assessment finding
+  //
+  // Defender CSPM risk-based prioritization. One of Critical, High, Medium,
+  // Low, or None. Empty when the subscription has no Defender CSPM plan
+  // enabled, since risk prioritization is a CSPM feature.
+  riskLevel string
+  // Contributing factors that raise the risk level
+  riskFactors []string
+  // Attack-path identifiers this finding participates in
+  //
+  // References into the Defender attack-path graph; the same paths are
+  // surfaced in the Microsoft Defender for Cloud portal.
+  riskAttackPathReferences []string
+  // Whether the risk is contextual rather than static
+  riskIsContextual bool
+  // Origin of the assessment definition
+  //
+  // One of BuiltIn, BuiltInPolicy, Custom, CustomPolicy, CustomerManaged,
+  // DynamicBuiltIn, ManualBuiltIn, ManualBuiltInPolicy, ManualCustomPolicy,
+  // VerifiedPartner, or Unknown.
+  assessmentType string
+  // Security domains the assessment covers
+  //
+  // Values drawn from Compute, Networking, Data, IdentityAndAccess, IoT,
+  // Container, and AppServices.
+  categories []string
+  // Threat outcomes the assessment guards against
+  //
+  // One or more of accountBreach, dataExfiltration, dataSpillage,
+  // denialOfService, elevationOfPrivilege, maliciousInsider, missingCoverage,
+  // and threatResistance.
+  threats []string
+  // MITRE ATT&CK tactics associated with the assessment
+  tactics []string
+  // MITRE ATT&CK techniques associated with the assessment
+  techniques []string
+  // Effort required to remediate the finding
+  //
+  // One of Low, Moderate, or High.
+  implementationEffort string
+  // User impact of remediating the finding
+  //
+  // One of Low, Moderate, or High.
+  userImpact string
+  // Guidance describing how to remediate the finding
+  remediationDescription string
+  // Whether the assessment is in preview status
+  preview bool
+  // Description of what the assessment evaluates
+  description string
 }
 
 // Microsoft Defender for Cloud security alert

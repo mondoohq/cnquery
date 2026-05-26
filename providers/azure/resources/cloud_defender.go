@@ -1225,20 +1225,61 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) id() (string, error) {
 	return a.__id, nil
 }
 
-// assessmentSeverityByName returns a map of assessment name to its severity.
-// Assessment list responses don't carry severity, so it is joined in from the
-// metadata catalog: built-in definitions come from the global list, custom ones
-// from the subscription-scoped list.
-func assessmentSeverityByName(ctx context.Context, clientFactory *armsecurity.ClientFactory) map[string]string {
-	severities := map[string]string{}
+// assessmentMetadata holds the catalog metadata for a single assessment
+// definition, joined into the per-assessment list results by name.
+type assessmentMetadata struct {
+	severity               string
+	assessmentType         string
+	implementationEffort   string
+	userImpact             string
+	remediationDescription string
+	description            string
+	preview                bool
+	categories             []any
+	threats                []any
+	tactics                []any
+	techniques             []any
+}
+
+// enumSliceToInterface converts a slice of pointers to string-backed enum
+// values into a slice of plain strings for llx.ArrayData.
+func enumSliceToInterface[T ~string](in []*T) []any {
+	out := make([]any, 0, len(in))
+	for _, v := range in {
+		if v != nil {
+			out = append(out, string(*v))
+		}
+	}
+	return out
+}
+
+// assessmentMetadataByName returns a map of assessment name to its catalog
+// metadata. Assessment list responses don't carry this metadata, so it is
+// joined in from the metadata catalog: built-in definitions come from the
+// global list, custom ones from the subscription-scoped list.
+func assessmentMetadataByName(ctx context.Context, clientFactory *armsecurity.ClientFactory) map[string]assessmentMetadata {
+	metadata := map[string]assessmentMetadata{}
 	metadataClient := clientFactory.NewAssessmentsMetadataClient()
 
 	collect := func(items []*armsecurity.AssessmentMetadataResponse) {
 		for _, item := range items {
-			if item.Name == nil || item.Properties == nil || item.Properties.Severity == nil {
+			if item.Name == nil || item.Properties == nil {
 				continue
 			}
-			severities[*item.Name] = string(*item.Properties.Severity)
+			p := item.Properties
+			metadata[*item.Name] = assessmentMetadata{
+				severity:               string(convert.ToValue(p.Severity)),
+				assessmentType:         string(convert.ToValue(p.AssessmentType)),
+				implementationEffort:   string(convert.ToValue(p.ImplementationEffort)),
+				userImpact:             string(convert.ToValue(p.UserImpact)),
+				remediationDescription: convert.ToValue(p.RemediationDescription),
+				description:            convert.ToValue(p.Description),
+				preview:                convert.ToValue(p.Preview),
+				categories:             enumSliceToInterface(p.Categories),
+				threats:                enumSliceToInterface(p.Threats),
+				tactics:                enumSliceToInterface(p.Tactics),
+				techniques:             enumSliceToInterface(p.Techniques),
+			}
 		}
 	}
 
@@ -1246,7 +1287,7 @@ func assessmentSeverityByName(ctx context.Context, clientFactory *armsecurity.Cl
 	for builtinPager.More() {
 		page, err := builtinPager.NextPage(ctx)
 		if err != nil {
-			log.Debug().Err(err).Msg("could not list built-in assessment metadata for severities")
+			log.Debug().Err(err).Msg("could not list built-in assessment metadata")
 			break
 		}
 		collect(page.Value)
@@ -1256,13 +1297,13 @@ func assessmentSeverityByName(ctx context.Context, clientFactory *armsecurity.Cl
 	for subPager.More() {
 		page, err := subPager.NextPage(ctx)
 		if err != nil {
-			log.Debug().Err(err).Msg("could not list subscription assessment metadata for severities")
+			log.Debug().Err(err).Msg("could not list subscription assessment metadata")
 			break
 		}
 		collect(page.Value)
 	}
 
-	return severities
+	return metadata
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) {
@@ -1276,7 +1317,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 		return nil, err
 	}
 
-	severities := assessmentSeverityByName(ctx, clientFactory)
+	metaByName := assessmentMetadataByName(ctx, clientFactory)
 
 	pager := clientFactory.NewAssessmentsClient().NewListPager("/subscriptions/"+subId, nil)
 	res := []any{}
@@ -1293,6 +1334,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 		for _, item := range page.Value {
 			var displayName, status, statusCause, statusDescription string
 			additionalData := map[string]any{}
+
+			var riskLevel string
+			var riskIsContextual bool
+			riskFactors := []any{}
+			riskAttackPaths := []any{}
 
 			if props := item.Properties; props != nil {
 				if props.DisplayName != nil {
@@ -1314,6 +1360,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 						additionalData[k] = *v
 					}
 				}
+				if risk := props.Risk; risk != nil {
+					riskLevel = string(convert.ToValue(risk.Level))
+					riskIsContextual = convert.ToValue(risk.IsContextualRisk)
+					riskFactors = convert.SliceStrPtrToInterface(risk.RiskFactors)
+					riskAttackPaths = convert.SliceStrPtrToInterface(risk.AttackPathsReferences)
+				}
 			}
 
 			// The assessed resource is the segment of the assessment ID before the
@@ -1324,24 +1376,39 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 				id = *item.ID
 			}
 			resourceId := strings.SplitN(id, "/providers/Microsoft.Security/assessments/", 2)[0]
-			severity := ""
+
+			meta := assessmentMetadata{}
 			if item.Name != nil {
-				severity = severities[*item.Name]
+				meta = metaByName[*item.Name]
 			}
 
 			mqlResource, err := CreateResource(a.MqlRuntime,
 				"azure.subscription.cloudDefenderService.assessment",
 				map[string]*llx.RawData{
-					"__id":              llx.StringDataPtr(item.ID),
-					"id":                llx.StringDataPtr(item.ID),
-					"name":              llx.StringDataPtr(item.Name),
-					"displayName":       llx.StringData(displayName),
-					"status":            llx.StringData(status),
-					"statusCause":       llx.StringData(statusCause),
-					"statusDescription": llx.StringData(statusDescription),
-					"severity":          llx.StringData(severity),
-					"resourceId":        llx.StringData(resourceId),
-					"additionalData":    llx.DictData(additionalData),
+					"__id":                     llx.StringDataPtr(item.ID),
+					"id":                       llx.StringDataPtr(item.ID),
+					"name":                     llx.StringDataPtr(item.Name),
+					"displayName":              llx.StringData(displayName),
+					"status":                   llx.StringData(status),
+					"statusCause":              llx.StringData(statusCause),
+					"statusDescription":        llx.StringData(statusDescription),
+					"severity":                 llx.StringData(meta.severity),
+					"resourceId":               llx.StringData(resourceId),
+					"additionalData":           llx.DictData(additionalData),
+					"riskLevel":                llx.StringData(riskLevel),
+					"riskFactors":              llx.ArrayData(riskFactors, types.String),
+					"riskAttackPathReferences": llx.ArrayData(riskAttackPaths, types.String),
+					"riskIsContextual":         llx.BoolData(riskIsContextual),
+					"assessmentType":           llx.StringData(meta.assessmentType),
+					"categories":               llx.ArrayData(meta.categories, types.String),
+					"threats":                  llx.ArrayData(meta.threats, types.String),
+					"tactics":                  llx.ArrayData(meta.tactics, types.String),
+					"techniques":               llx.ArrayData(meta.techniques, types.String),
+					"implementationEffort":     llx.StringData(meta.implementationEffort),
+					"userImpact":               llx.StringData(meta.userImpact),
+					"remediationDescription":   llx.StringData(meta.remediationDescription),
+					"preview":                  llx.BoolData(meta.preview),
+					"description":              llx.StringData(meta.description),
 				})
 			if err != nil {
 				return nil, err

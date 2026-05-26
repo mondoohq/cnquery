@@ -9088,6 +9088,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.assessment.additionalData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetAdditionalData()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.cloudDefenderService.assessment.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskFactors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskFactors()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskAttackPathReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskAttackPathReferences()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskIsContextual": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRiskIsContextual()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.assessment.assessmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetAssessmentType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.threats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetThreats()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.tactics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetTactics()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.techniques": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetTechniques()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.assessment.implementationEffort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetImplementationEffort()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.userImpact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetUserImpact()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.remediationDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetRemediationDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.preview": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetPreview()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.assessment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetDescription()).ToDataRes(types.String)
+	},
 	"azure.subscription.cloudDefenderService.alert.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetId()).ToDataRes(types.String)
 	},
@@ -23961,6 +24003,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.assessment.additionalData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).AdditionalData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskFactors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskFactors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskAttackPathReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskAttackPathReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.riskIsContextual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RiskIsContextual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.assessmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).AssessmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.threats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Threats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.tactics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Tactics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.techniques": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Techniques, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.implementationEffort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).ImplementationEffort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.userImpact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).UserImpact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.remediationDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).RemediationDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.preview": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Preview, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55500,15 +55598,29 @@ type mqlAzureSubscriptionCloudDefenderServiceAssessment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceAssessmentInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	DisplayName       plugin.TValue[string]
-	Status            plugin.TValue[string]
-	StatusCause       plugin.TValue[string]
-	StatusDescription plugin.TValue[string]
-	Severity          plugin.TValue[string]
-	ResourceId        plugin.TValue[string]
-	AdditionalData    plugin.TValue[any]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	DisplayName              plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	StatusCause              plugin.TValue[string]
+	StatusDescription        plugin.TValue[string]
+	Severity                 plugin.TValue[string]
+	ResourceId               plugin.TValue[string]
+	AdditionalData           plugin.TValue[any]
+	RiskLevel                plugin.TValue[string]
+	RiskFactors              plugin.TValue[[]any]
+	RiskAttackPathReferences plugin.TValue[[]any]
+	RiskIsContextual         plugin.TValue[bool]
+	AssessmentType           plugin.TValue[string]
+	Categories               plugin.TValue[[]any]
+	Threats                  plugin.TValue[[]any]
+	Tactics                  plugin.TValue[[]any]
+	Techniques               plugin.TValue[[]any]
+	ImplementationEffort     plugin.TValue[string]
+	UserImpact               plugin.TValue[string]
+	RemediationDescription   plugin.TValue[string]
+	Preview                  plugin.TValue[bool]
+	Description              plugin.TValue[string]
 }
 
 // createAzureSubscriptionCloudDefenderServiceAssessment creates a new instance of this resource
@@ -55582,6 +55694,62 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetResourceId() *pl
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetAdditionalData() *plugin.TValue[any] {
 	return &c.AdditionalData
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskLevel() *plugin.TValue[string] {
+	return &c.RiskLevel
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskFactors() *plugin.TValue[[]any] {
+	return &c.RiskFactors
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskAttackPathReferences() *plugin.TValue[[]any] {
+	return &c.RiskAttackPathReferences
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRiskIsContextual() *plugin.TValue[bool] {
+	return &c.RiskIsContextual
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetAssessmentType() *plugin.TValue[string] {
+	return &c.AssessmentType
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetThreats() *plugin.TValue[[]any] {
+	return &c.Threats
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetTactics() *plugin.TValue[[]any] {
+	return &c.Tactics
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetTechniques() *plugin.TValue[[]any] {
+	return &c.Techniques
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetImplementationEffort() *plugin.TValue[string] {
+	return &c.ImplementationEffort
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetUserImpact() *plugin.TValue[string] {
+	return &c.UserImpact
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetRemediationDescription() *plugin.TValue[string] {
+	return &c.RemediationDescription
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetPreview() *plugin.TValue[bool] {
+	return &c.Preview
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceAlert for the azure.subscription.cloudDefenderService.alert resource
