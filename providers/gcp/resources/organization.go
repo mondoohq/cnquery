@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -22,6 +23,12 @@ import (
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
+
+type mqlGcpOrganizationInternal struct {
+	iamPolicyOnce  sync.Once
+	iamPolicyCache *cloudresourcemanager.Policy
+	iamPolicyErr   error
+}
 
 func (g *mqlGcpOrganization) id() (string, error) {
 	return g.Id.Data, g.Id.Error
@@ -94,36 +101,49 @@ func (g *mqlGcpOrganization) state() (string, error) {
 	return "", errors.New("not implemented")
 }
 
+func (g *mqlGcpOrganization) fetchIamPolicy() (string, *cloudresourcemanager.Policy, error) {
+	g.iamPolicyOnce.Do(func() {
+		conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+		client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+
+		ctx := context.Background()
+		svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+
+		orgId, err := conn.OrganizationID()
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+
+		name := "organizations/" + orgId
+		g.iamPolicyCache, g.iamPolicyErr = svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	})
+	if g.iamPolicyErr != nil {
+		return "", nil, g.iamPolicyErr
+	}
+	orgId, err := g.MqlRuntime.Connection.(*connection.GcpConnection).OrganizationID()
+	if err != nil {
+		return "", nil, err
+	}
+	return "organizations/" + orgId, g.iamPolicyCache, nil
+}
+
 func (g *mqlGcpOrganization) iamPolicy() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	name, policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	// determine org from project in transport
-	orgId, err := conn.OrganizationID()
-	if err != nil {
-		return nil, err
-	}
-
-	name := "organizations/" + orgId
-	orgpolicy, err := svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	res := []any{}
-	for i := range orgpolicy.Bindings {
-		b := orgpolicy.Bindings[i]
-
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
 		mqlServiceaccount, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
 			"id":      llx.StringData(name + "-" + strconv.Itoa(i)),
 			"role":    llx.StringData(b.Role),
@@ -180,26 +200,7 @@ func extractAuditConfigs(runtime *plugin.Runtime, parentId string, auditConfigs 
 }
 
 func (g *mqlGcpOrganization) auditConfig() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	orgId, err := conn.OrganizationID()
-	if err != nil {
-		return nil, err
-	}
-
-	name := "organizations/" + orgId
-	policy, err := svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	name, policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}

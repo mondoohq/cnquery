@@ -48,13 +48,16 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 		return nil, err
 	}
 
-	keys, err := apiKeysSvc.Projects.Locations.Keys.List(fmt.Sprintf("projects/%s/locations/global", projectId)).Do()
-	if err != nil {
+	var apiKeyItems []*apikeys.V2Key
+	if err := apiKeysSvc.Projects.Locations.Keys.List(fmt.Sprintf("projects/%s/locations/global", projectId)).Pages(ctx, func(page *apikeys.V2ListKeysResponse) error {
+		apiKeyItems = append(apiKeyItems, page.Keys...)
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
-	mqlKeys := make([]any, 0, len(keys.Keys))
-	for _, k := range keys.Keys {
+	mqlKeys := make([]any, 0, len(apiKeyItems))
+	for _, k := range apiKeyItems {
 		var mqlRestrictions plugin.Resource
 		if k.Restrictions != nil {
 			var mqlAndroidRestr any

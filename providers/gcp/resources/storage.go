@@ -106,18 +106,18 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 	}
 
 	projectID := conn.ResourceID()
-	buckets, err := storageSvc.Buckets.List(projectID).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]any, 0, len(buckets.Items))
-	for i := range buckets.Items {
-		mqlBucket, err := mqlBucketFromAPI(g.MqlRuntime, projectId, buckets.Items[i])
-		if err != nil {
-			return nil, err
+	var res []any
+	if err := storageSvc.Buckets.List(projectID).Pages(ctx, func(page *storage.Buckets) error {
+		for _, bucket := range page.Items {
+			mqlBucket, err := mqlBucketFromAPI(g.MqlRuntime, projectId, bucket)
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlBucket)
 		}
-		res = append(res, mqlBucket)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return res, nil
 }

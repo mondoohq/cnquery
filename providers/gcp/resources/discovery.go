@@ -1408,24 +1408,27 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*invent
 func (a *GcrImages) List() ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 
-	resSrv, err := cloudresourcemanager.NewService(context.Background())
+	ctx := context.Background()
+	resSrv, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	projectsResp, err := resSrv.Projects.List().Do()
-	if err != nil {
+	var projectNames []string
+	if err := resSrv.Projects.List().Pages(ctx, func(page *cloudresourcemanager.ListProjectsResponse) error {
+		for _, p := range page.Projects {
+			projectNames = append(projectNames, p.Name)
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
 	var wg sync.WaitGroup
-
-	wg.Add(len(projectsResp.Projects))
+	wg.Add(len(projectNames))
 	mux := &sync.Mutex{}
-	for i := range projectsResp.Projects {
-
-		project := projectsResp.Projects[i].Name
-		go func() {
+	for _, project := range projectNames {
+		go func(project string) {
 			repoAssets, err := a.ListRepository("gcr.io/"+project, true)
 			if err == nil && repoAssets != nil {
 				mux.Lock()
@@ -1433,7 +1436,7 @@ func (a *GcrImages) List() ([]*inventory.Asset, error) {
 				mux.Unlock()
 			}
 			wg.Done()
-		}()
+		}(project)
 	}
 
 	wg.Wait()

@@ -2336,242 +2336,244 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 		return nil, err
 	}
 
-	list, err := computeSvc.BackendServices.AggregatedList(projectId).Do()
-	if err != nil {
-		return nil, err
-	}
+	var res []any
+	req := computeSvc.BackendServices.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.BackendServiceAggregatedList) error {
+		for _, sb := range page.Items {
+			for _, b := range sb.BackendServices {
+				backendServiceId := strconv.FormatUint(b.Id, 10)
+				mqlBackends := make([]any, 0, len(b.Backends))
+				for _, backend := range b.Backends {
+					mqlBackend, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.backend", map[string]*llx.RawData{
+						"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%s", backendServiceId, backend.Group)),
+						"balancingMode":             llx.StringData(backend.BalancingMode),
+						"capacityScaler":            llx.FloatData(backend.CapacityScaler),
+						"description":               llx.StringData(backend.Description),
+						"failover":                  llx.BoolData(backend.Failover),
+						"groupUrl":                  llx.StringData(backend.Group),
+						"maxConnections":            llx.IntData(backend.MaxConnections),
+						"maxConnectionsPerEndpoint": llx.IntData(backend.MaxConnectionsPerEndpoint),
+						"maxConnectionsPerInstance": llx.IntData(backend.MaxConnectionsPerInstance),
+						"maxRate":                   llx.IntData(backend.MaxRate),
+						"maxRatePerEndpoint":        llx.FloatData(backend.MaxRatePerEndpoint),
+						"maxRatePerInstance":        llx.FloatData(backend.MaxRatePerInstance),
+						"maxUtilization":            llx.FloatData(backend.MaxUtilization),
+					})
+					if err != nil {
+						return err
+					}
+					mqlBackends = append(mqlBackends, mqlBackend)
+				}
 
-	res := make([]any, 0, len(list.Items))
-	for _, sb := range list.Items {
-		for _, b := range sb.BackendServices {
-			backendServiceId := strconv.FormatUint(b.Id, 10)
-			mqlBackends := make([]any, 0, len(b.Backends))
-			for _, backend := range b.Backends {
-				mqlBackend, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.backend", map[string]*llx.RawData{
-					"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%s", backendServiceId, backend.Group)),
-					"balancingMode":             llx.StringData(backend.BalancingMode),
-					"capacityScaler":            llx.FloatData(backend.CapacityScaler),
-					"description":               llx.StringData(backend.Description),
-					"failover":                  llx.BoolData(backend.Failover),
-					"groupUrl":                  llx.StringData(backend.Group),
-					"maxConnections":            llx.IntData(backend.MaxConnections),
-					"maxConnectionsPerEndpoint": llx.IntData(backend.MaxConnectionsPerEndpoint),
-					"maxConnectionsPerInstance": llx.IntData(backend.MaxConnectionsPerInstance),
-					"maxRate":                   llx.IntData(backend.MaxRate),
-					"maxRatePerEndpoint":        llx.FloatData(backend.MaxRatePerEndpoint),
-					"maxRatePerInstance":        llx.FloatData(backend.MaxRatePerInstance),
-					"maxUtilization":            llx.FloatData(backend.MaxUtilization),
+				var cdnPolicy plugin.Resource
+				if b.CdnPolicy != nil {
+					bypassCacheOnRequestHeaders := make([]any, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
+					for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
+						mqlH := map[string]any{"headerName": h.HeaderName}
+						bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
+					}
+
+					var mqlCacheKeyPolicy any
+					if b.CdnPolicy.CacheKeyPolicy != nil {
+						mqlCacheKeyPolicy = map[string]any{
+							"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
+							"includeHttpHeaders":   convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
+							"includeNamedCookies":  convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
+							"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
+							"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
+							"queryStringBlacklist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
+							"queryStringWhitelist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
+						}
+					}
+
+					mqlNegativeCachingPolicy := make([]any, 0, len(b.CdnPolicy.NegativeCachingPolicy))
+					for _, p := range b.CdnPolicy.NegativeCachingPolicy {
+						mqlP := map[string]any{
+							"code": p.Code,
+							"ttl":  p.Ttl,
+						}
+						mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
+					}
+
+					var err error
+					cdnPolicy, err = CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.cdnPolicy", map[string]*llx.RawData{
+						"id":                          llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId)),
+						"bypassCacheOnRequestHeaders": llx.ArrayData(bypassCacheOnRequestHeaders, types.Dict),
+						"cacheKeyPolicy":              llx.DictData(mqlCacheKeyPolicy),
+						"cacheMode":                   llx.StringData(b.CdnPolicy.CacheMode),
+						"clientTtl":                   llx.IntData(b.CdnPolicy.ClientTtl),
+						"defaultTtl":                  llx.IntData(b.CdnPolicy.DefaultTtl),
+						"maxTtl":                      llx.IntData(b.CdnPolicy.MaxTtl),
+						"negativeCaching":             llx.BoolData(b.CdnPolicy.NegativeCaching),
+						"negativeCachingPolicy":       llx.ArrayData(mqlNegativeCachingPolicy, types.Dict),
+						"requestCoalescing":           llx.BoolData(b.CdnPolicy.RequestCoalescing),
+						"serveWhileStale":             llx.IntData(b.CdnPolicy.ServeWhileStale),
+						"signedUrlCacheMaxAgeSec":     llx.IntData(b.CdnPolicy.SignedUrlCacheMaxAgeSec),
+						"signedUrlKeyNames":           llx.ArrayData(convert.SliceAnyToInterface(b.CdnPolicy.SignedUrlKeyNames), types.String),
+					})
+					if err != nil {
+						return err
+					}
+				}
+
+				var mqlCircuitBreakers any
+				if b.CircuitBreakers != nil {
+					mqlCircuitBreakers = map[string]any{
+						"maxConnections":           b.CircuitBreakers.MaxConnections,
+						"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
+						"maxRequests":              b.CircuitBreakers.MaxRequests,
+						"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
+						"maxRetries":               b.CircuitBreakers.MaxRetries,
+					}
+				}
+
+				var mqlConnectionDraining any
+				if b.ConnectionDraining != nil {
+					mqlConnectionDraining = map[string]any{
+						"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
+					}
+				}
+
+				var mqlConnectionTrackingPolicy any
+				if b.ConnectionTrackingPolicy != nil {
+					mqlConnectionTrackingPolicy = map[string]any{
+						"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
+						"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
+						"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
+						"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
+					}
+				}
+
+				var mqlConsistentHash any
+				if b.ConsistentHash != nil {
+					consistentHashMap := map[string]any{
+						"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
+						"minimumRingSize": b.ConsistentHash.MinimumRingSize,
+					}
+					if b.ConsistentHash.HttpCookie != nil {
+						cookieMap := map[string]any{
+							"name": b.ConsistentHash.HttpCookie.Name,
+							"path": b.ConsistentHash.HttpCookie.Path,
+						}
+						if b.ConsistentHash.HttpCookie.Ttl != nil {
+							cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
+						}
+						consistentHashMap["httpCookie"] = cookieMap
+					}
+					mqlConsistentHash = consistentHashMap
+				}
+
+				var mqlFailoverPolicy any
+				if b.FailoverPolicy != nil {
+					mqlFailoverPolicy = map[string]any{
+						"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
+						"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
+						"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
+					}
+				}
+
+				var mqlIap any
+				if b.Iap != nil {
+					mqlIap = map[string]any{
+						"serviceEnabled":           b.Iap.Enabled,
+						"oauth2ClientId":           b.Iap.Oauth2ClientId,
+						"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
+						"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
+					}
+				}
+
+				mqlLocalityLbPolicy := make([]any, 0, len(b.LocalityLbPolicies))
+				for _, p := range b.LocalityLbPolicies {
+					var mqlCustomPolicy any
+					if p.CustomPolicy != nil {
+						mqlCustomPolicy = map[string]any{
+							"data": p.CustomPolicy.Data,
+							"name": p.CustomPolicy.Name,
+						}
+					}
+
+					var mqlPolicy any
+					if p.Policy != nil {
+						mqlPolicy = map[string]any{
+							"name": p.Policy.Name,
+						}
+					}
+					mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]any{
+						"customPolicy": mqlCustomPolicy,
+						"policy":       mqlPolicy,
+					})
+				}
+
+				var mqlLogConfig any
+				if b.LogConfig != nil {
+					mqlLogConfig = map[string]any{
+						"enable":     b.LogConfig.Enable,
+						"sampleRate": b.LogConfig.SampleRate,
+					}
+				}
+
+				var mqlSecuritySettings any
+				if b.SecuritySettings != nil {
+					mqlSecuritySettings = map[string]any{
+						"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
+						"subjectAltNames": convert.SliceAnyToInterface(b.SecuritySettings.SubjectAltNames),
+					}
+				}
+
+				var maxStreamDuration *time.Time
+				if b.MaxStreamDuration != nil {
+					v := llx.DurationToTime(b.MaxStreamDuration.Seconds)
+					maxStreamDuration = &v
+				}
+
+				mqlB, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService", map[string]*llx.RawData{
+					"id":                       llx.StringData(backendServiceId),
+					"affinityCookieTtlSec":     llx.IntData(b.AffinityCookieTtlSec),
+					"backends":                 llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
+					"cdnPolicy":                llx.ResourceData(cdnPolicy, " gcp.project.computeService.backendService.cdnPolicy"),
+					"circuitBreakers":          llx.DictData(mqlCircuitBreakers),
+					"compressionMode":          llx.StringData(b.CompressionMode),
+					"connectionDraining":       llx.DictData(mqlConnectionDraining),
+					"connectionTrackingPolicy": llx.DictData(mqlConnectionTrackingPolicy),
+					"consistentHash":           llx.DictData(mqlConsistentHash),
+					"created":                  llx.TimeDataPtr(parseTime(b.CreationTimestamp)),
+					"customRequestHeaders":     llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
+					"customResponseHeaders":    llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
+					"description":              llx.StringData(b.Description),
+					"edgeSecurityPolicy":       llx.StringData(b.EdgeSecurityPolicy),
+					"enableCDN":                llx.BoolData(b.EnableCDN),
+					"failoverPolicy":           llx.DictData(mqlFailoverPolicy),
+					"healthChecks":             llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
+					"iap":                      llx.DictData(mqlIap),
+					"loadBalancingScheme":      llx.StringData(b.LoadBalancingScheme),
+					"localityLbPolicies":       llx.ArrayData(mqlLocalityLbPolicy, types.Dict),
+					"localityLbPolicy":         llx.StringData(b.LocalityLbPolicy),
+					"logConfig":                llx.DictData(mqlLogConfig),
+					"maxStreamDuration":        llx.TimeDataPtr(maxStreamDuration),
+					"name":                     llx.StringData(b.Name),
+					"networkUrl":               llx.StringData(b.Network),
+					"portName":                 llx.StringData(b.PortName),
+					"protocol":                 llx.StringData(b.Protocol),
+					"regionUrl":                llx.StringData(b.Region),
+					"securityPolicyUrl":        llx.StringData(b.SecurityPolicy),
+					"securitySettings":         llx.DictData(mqlSecuritySettings),
+					"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
+					"sessionAffinity":          llx.StringData(b.SessionAffinity),
+					"timeoutSec":               llx.IntData(b.TimeoutSec),
+					"port":                     llx.IntData(b.Port),
+					"serviceLbPolicy":          llx.StringData(b.ServiceLbPolicy),
+					"ipAddressSelectionPolicy": llx.StringData(b.IpAddressSelectionPolicy),
+					"fingerprint":              llx.StringData(b.Fingerprint),
 				})
 				if err != nil {
-					return nil, err
+					return err
 				}
-				mqlBackends = append(mqlBackends, mqlBackend)
+				res = append(res, mqlB)
 			}
-
-			var cdnPolicy plugin.Resource
-			if b.CdnPolicy != nil {
-				bypassCacheOnRequestHeaders := make([]any, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
-				for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
-					mqlH := map[string]any{"headerName": h.HeaderName}
-					bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
-				}
-
-				var mqlCacheKeyPolicy any
-				if b.CdnPolicy.CacheKeyPolicy != nil {
-					mqlCacheKeyPolicy = map[string]any{
-						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
-						"includeHttpHeaders":   convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
-						"includeNamedCookies":  convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
-						"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
-						"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
-						"queryStringBlacklist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
-						"queryStringWhitelist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
-					}
-				}
-
-				mqlNegativeCachingPolicy := make([]any, 0, len(b.CdnPolicy.NegativeCachingPolicy))
-				for _, p := range b.CdnPolicy.NegativeCachingPolicy {
-					mqlP := map[string]any{
-						"code": p.Code,
-						"ttl":  p.Ttl,
-					}
-					mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
-				}
-
-				cdnPolicy, err = CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.cdnPolicy", map[string]*llx.RawData{
-					"id":                          llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId)),
-					"bypassCacheOnRequestHeaders": llx.ArrayData(bypassCacheOnRequestHeaders, types.Dict),
-					"cacheKeyPolicy":              llx.DictData(mqlCacheKeyPolicy),
-					"cacheMode":                   llx.StringData(b.CdnPolicy.CacheMode),
-					"clientTtl":                   llx.IntData(b.CdnPolicy.ClientTtl),
-					"defaultTtl":                  llx.IntData(b.CdnPolicy.DefaultTtl),
-					"maxTtl":                      llx.IntData(b.CdnPolicy.MaxTtl),
-					"negativeCaching":             llx.BoolData(b.CdnPolicy.NegativeCaching),
-					"negativeCachingPolicy":       llx.ArrayData(mqlNegativeCachingPolicy, types.Dict),
-					"requestCoalescing":           llx.BoolData(b.CdnPolicy.RequestCoalescing),
-					"serveWhileStale":             llx.IntData(b.CdnPolicy.ServeWhileStale),
-					"signedUrlCacheMaxAgeSec":     llx.IntData(b.CdnPolicy.SignedUrlCacheMaxAgeSec),
-					"signedUrlKeyNames":           llx.ArrayData(convert.SliceAnyToInterface(b.CdnPolicy.SignedUrlKeyNames), types.String),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			var mqlCircuitBreakers any
-			if b.CircuitBreakers != nil {
-				mqlCircuitBreakers = map[string]any{
-					"maxConnections":           b.CircuitBreakers.MaxConnections,
-					"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
-					"maxRequests":              b.CircuitBreakers.MaxRequests,
-					"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
-					"maxRetries":               b.CircuitBreakers.MaxRetries,
-				}
-			}
-
-			var mqlConnectionDraining any
-			if b.ConnectionDraining != nil {
-				mqlConnectionDraining = map[string]any{
-					"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
-				}
-			}
-
-			var mqlConnectionTrackingPolicy any
-			if b.ConnectionTrackingPolicy != nil {
-				mqlConnectionTrackingPolicy = map[string]any{
-					"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
-					"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
-					"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
-					"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
-				}
-			}
-
-			var mqlConsistentHash any
-			if b.ConsistentHash != nil {
-				consistentHashMap := map[string]any{
-					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
-					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
-				}
-				if b.ConsistentHash.HttpCookie != nil {
-					cookieMap := map[string]any{
-						"name": b.ConsistentHash.HttpCookie.Name,
-						"path": b.ConsistentHash.HttpCookie.Path,
-					}
-					if b.ConsistentHash.HttpCookie.Ttl != nil {
-						cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
-					}
-					consistentHashMap["httpCookie"] = cookieMap
-				}
-				mqlConsistentHash = consistentHashMap
-			}
-
-			var mqlFailoverPolicy any
-			if b.FailoverPolicy != nil {
-				mqlFailoverPolicy = map[string]any{
-					"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
-					"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
-					"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
-				}
-			}
-
-			var mqlIap any
-			if b.Iap != nil {
-				mqlIap = map[string]any{
-					"serviceEnabled":           b.Iap.Enabled,
-					"oauth2ClientId":           b.Iap.Oauth2ClientId,
-					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
-					"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
-				}
-			}
-
-			mqlLocalityLbPolicy := make([]any, 0, len(b.LocalityLbPolicies))
-			for _, p := range b.LocalityLbPolicies {
-				var mqlCustomPolicy any
-				if p.CustomPolicy != nil {
-					mqlCustomPolicy = map[string]any{
-						"data": p.CustomPolicy.Data,
-						"name": p.CustomPolicy.Name,
-					}
-				}
-
-				var mqlPolicy any
-				if p.Policy != nil {
-					mqlPolicy = map[string]any{
-						"name": p.Policy.Name,
-					}
-				}
-				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]any{
-					"customPolicy": mqlCustomPolicy,
-					"policy":       mqlPolicy,
-				})
-			}
-
-			var mqlLogConfig any
-			if b.LogConfig != nil {
-				mqlLogConfig = map[string]any{
-					"enable":     b.LogConfig.Enable,
-					"sampleRate": b.LogConfig.SampleRate,
-				}
-			}
-
-			var mqlSecuritySettings any
-			if b.SecuritySettings != nil {
-				mqlSecuritySettings = map[string]any{
-					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
-					"subjectAltNames": convert.SliceAnyToInterface(b.SecuritySettings.SubjectAltNames),
-				}
-			}
-
-			var maxStreamDuration *time.Time
-			if b.MaxStreamDuration != nil {
-				v := llx.DurationToTime(b.MaxStreamDuration.Seconds)
-				maxStreamDuration = &v
-			}
-
-			mqlB, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService", map[string]*llx.RawData{
-				"id":                       llx.StringData(backendServiceId),
-				"affinityCookieTtlSec":     llx.IntData(b.AffinityCookieTtlSec),
-				"backends":                 llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
-				"cdnPolicy":                llx.ResourceData(cdnPolicy, " gcp.project.computeService.backendService.cdnPolicy"),
-				"circuitBreakers":          llx.DictData(mqlCircuitBreakers),
-				"compressionMode":          llx.StringData(b.CompressionMode),
-				"connectionDraining":       llx.DictData(mqlConnectionDraining),
-				"connectionTrackingPolicy": llx.DictData(mqlConnectionTrackingPolicy),
-				"consistentHash":           llx.DictData(mqlConsistentHash),
-				"created":                  llx.TimeDataPtr(parseTime(b.CreationTimestamp)),
-				"customRequestHeaders":     llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
-				"customResponseHeaders":    llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
-				"description":              llx.StringData(b.Description),
-				"edgeSecurityPolicy":       llx.StringData(b.EdgeSecurityPolicy),
-				"enableCDN":                llx.BoolData(b.EnableCDN),
-				"failoverPolicy":           llx.DictData(mqlFailoverPolicy),
-				"healthChecks":             llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
-				"iap":                      llx.DictData(mqlIap),
-				"loadBalancingScheme":      llx.StringData(b.LoadBalancingScheme),
-				"localityLbPolicies":       llx.ArrayData(mqlLocalityLbPolicy, types.Dict),
-				"localityLbPolicy":         llx.StringData(b.LocalityLbPolicy),
-				"logConfig":                llx.DictData(mqlLogConfig),
-				"maxStreamDuration":        llx.TimeDataPtr(maxStreamDuration),
-				"name":                     llx.StringData(b.Name),
-				"networkUrl":               llx.StringData(b.Network),
-				"portName":                 llx.StringData(b.PortName),
-				"protocol":                 llx.StringData(b.Protocol),
-				"regionUrl":                llx.StringData(b.Region),
-				"securityPolicyUrl":        llx.StringData(b.SecurityPolicy),
-				"securitySettings":         llx.DictData(mqlSecuritySettings),
-				"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
-				"sessionAffinity":          llx.StringData(b.SessionAffinity),
-				"timeoutSec":               llx.IntData(b.TimeoutSec),
-				"port":                     llx.IntData(b.Port),
-				"serviceLbPolicy":          llx.StringData(b.ServiceLbPolicy),
-				"ipAddressSelectionPolicy": llx.StringData(b.IpAddressSelectionPolicy),
-				"fingerprint":              llx.StringData(b.Fingerprint),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlB)
 		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return res, nil
 }
@@ -2626,37 +2628,39 @@ func (g *mqlGcpProjectComputeService) addresses() ([]any, error) {
 		return nil, err
 	}
 
-	list, err := computeSvc.Addresses.AggregatedList(projectId).Do()
-	if err != nil {
-		return nil, err
-	}
 	var mqlAddresses []any
-	for _, as := range list.Items {
-		for _, a := range as.Addresses {
-			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.address", map[string]*llx.RawData{
-				"id":               llx.StringData(fmt.Sprintf("%d", a.Id)),
-				"address":          llx.StringData(a.Address),
-				"addressType":      llx.StringData(a.AddressType),
-				"created":          llx.TimeDataPtr(parseTime(a.CreationTimestamp)),
-				"description":      llx.StringData(a.Description),
-				"ipVersion":        llx.StringData(a.IpVersion),
-				"ipv6EndpointType": llx.StringData(a.Ipv6EndpointType),
-				"name":             llx.StringData(a.Name),
-				"labels":           llx.MapData(convert.MapToInterfaceMap(a.Labels), types.String),
-				"networkUrl":       llx.StringData(a.Network),
-				"networkTier":      llx.StringData(a.NetworkTier),
-				"prefixLength":     llx.IntData(a.PrefixLength),
-				"purpose":          llx.StringData(a.Purpose),
-				"regionUrl":        llx.StringData(a.Region),
-				"status":           llx.StringData(a.Status),
-				"subnetworkUrl":    llx.StringData(a.Subnetwork),
-				"resourceUrls":     llx.ArrayData(convert.SliceAnyToInterface(a.Users), types.String),
-			})
-			if err != nil {
-				return nil, err
+	req := computeSvc.Addresses.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.AddressAggregatedList) error {
+		for _, as := range page.Items {
+			for _, a := range as.Addresses {
+				mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.address", map[string]*llx.RawData{
+					"id":               llx.StringData(fmt.Sprintf("%d", a.Id)),
+					"address":          llx.StringData(a.Address),
+					"addressType":      llx.StringData(a.AddressType),
+					"created":          llx.TimeDataPtr(parseTime(a.CreationTimestamp)),
+					"description":      llx.StringData(a.Description),
+					"ipVersion":        llx.StringData(a.IpVersion),
+					"ipv6EndpointType": llx.StringData(a.Ipv6EndpointType),
+					"name":             llx.StringData(a.Name),
+					"labels":           llx.MapData(convert.MapToInterfaceMap(a.Labels), types.String),
+					"networkUrl":       llx.StringData(a.Network),
+					"networkTier":      llx.StringData(a.NetworkTier),
+					"prefixLength":     llx.IntData(a.PrefixLength),
+					"purpose":          llx.StringData(a.Purpose),
+					"regionUrl":        llx.StringData(a.Region),
+					"status":           llx.StringData(a.Status),
+					"subnetworkUrl":    llx.StringData(a.Subnetwork),
+					"resourceUrls":     llx.ArrayData(convert.SliceAnyToInterface(a.Users), types.String),
+				})
+				if err != nil {
+					return err
+				}
+				mqlAddresses = append(mqlAddresses, mqlA)
 			}
-			mqlAddresses = append(mqlAddresses, mqlA)
 		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return mqlAddresses, nil
 }

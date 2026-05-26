@@ -328,18 +328,18 @@ func (g *mqlGcpProjects) children() ([]any, error) {
 		return nil, err
 	}
 
-	projects, err := svc.Projects.List().Parent(parentId).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	mqlProjects := make([]any, 0, len(projects.Projects))
-	for _, p := range projects.Projects {
-		mqlP, err := projectToMql(g.MqlRuntime, p)
-		if err != nil {
-			return nil, err
+	var mqlProjects []any
+	if err := svc.Projects.List().Parent(parentId).Pages(ctx, func(page *cloudresourcemanager.ListProjectsResponse) error {
+		for _, p := range page.Projects {
+			mqlP, err := projectToMql(g.MqlRuntime, p)
+			if err != nil {
+				return err
+			}
+			mqlProjects = append(mqlProjects, mqlP)
 		}
-		mqlProjects = append(mqlProjects, mqlP)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return mqlProjects, nil
 }
@@ -384,19 +384,20 @@ func (g *mqlGcpProjects) list() ([]any, error) {
 		return nil, err
 	}
 
-	projects, err := svc.Projects.Search().Do()
-	if err != nil {
-		return nil, err
-	}
-	mqlProjects := make([]any, 0, len(projects.Projects))
-	for _, p := range projects.Projects {
-		if _, ok := foldersMap[p.Parent]; ok {
-			mqlP, err := projectToMql(g.MqlRuntime, p)
-			if err != nil {
-				return nil, err
+	var mqlProjects []any
+	if err := svc.Projects.Search().Pages(ctx, func(page *cloudresourcemanager.SearchProjectsResponse) error {
+		for _, p := range page.Projects {
+			if _, ok := foldersMap[p.Parent]; ok {
+				mqlP, err := projectToMql(g.MqlRuntime, p)
+				if err != nil {
+					return err
+				}
+				mqlProjects = append(mqlProjects, mqlP)
 			}
-			mqlProjects = append(mqlProjects, mqlP)
 		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return mqlProjects, nil
 }

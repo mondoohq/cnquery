@@ -119,18 +119,18 @@ func (g *mqlGcpFolders) children() ([]any, error) {
 		return nil, err
 	}
 
-	folders, err := svc.Folders.List().Parent(parentId).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	mqlFolders := make([]any, 0, len(folders.Folders))
-	for _, f := range folders.Folders {
-		mqlF, err := folderToMql(g.MqlRuntime, f)
-		if err != nil {
-			return nil, err
+	var mqlFolders []any
+	if err := svc.Folders.List().Parent(parentId).Pages(ctx, func(page *cloudresourcemanager.ListFoldersResponse) error {
+		for _, f := range page.Folders {
+			mqlF, err := folderToMql(g.MqlRuntime, f)
+			if err != nil {
+				return err
+			}
+			mqlFolders = append(mqlFolders, mqlF)
 		}
-		mqlFolders = append(mqlFolders, mqlF)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return mqlFolders, nil
 }
@@ -154,12 +154,15 @@ func (g *mqlGcpFolders) list() ([]any, error) {
 		return nil, err
 	}
 
-	folders, err := svc.Folders.Search().Do()
-	if err != nil {
+	var allFolders []*cloudresourcemanager.Folder
+	if err := svc.Folders.Search().Pages(ctx, func(page *cloudresourcemanager.SearchFoldersResponse) error {
+		allFolders = append(allFolders, page.Folders...)
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
-	filteredFolders := getChildren(folders.Folders, parentId)
+	filteredFolders := getChildren(allFolders, parentId)
 	mqlFolders := make([]any, 0, len(filteredFolders))
 	for _, f := range filteredFolders {
 		mqlF, err := folderToMql(g.MqlRuntime, f)

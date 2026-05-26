@@ -33014,7 +33014,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlGcpOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpOrganizationInternal it will be used here
+	mqlGcpOrganizationInternal
 	Id                           plugin.TValue[string]
 	CustomerId                   plugin.TValue[string]
 	Name                         plugin.TValue[string]

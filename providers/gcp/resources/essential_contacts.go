@@ -43,25 +43,25 @@ func (g *mqlGcpProject) essentialContacts() ([]any, error) {
 		return nil, err
 	}
 
-	contacts, err := contactSvc.Projects.Contacts.List("projects/" + projectId).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	mqlContacts := make([]any, 0, len(contacts.Contacts))
-	for _, c := range contacts.Contacts {
-		mqlC, err := CreateResource(g.MqlRuntime, "gcp.essentialContact", map[string]*llx.RawData{
-			"resourcePath":           llx.StringData(c.Name),
-			"email":                  llx.StringData(c.Email),
-			"languageTag":            llx.StringData(c.LanguageTag),
-			"notificationCategories": llx.ArrayData(convert.SliceAnyToInterface(c.NotificationCategorySubscriptions), types.String),
-			"validated":              llx.TimeDataPtr(parseTime(c.ValidateTime)),
-			"validationState":        llx.StringData(c.ValidationState),
-		})
-		if err != nil {
-			return nil, err
+	var mqlContacts []any
+	if err := contactSvc.Projects.Contacts.List("projects/"+projectId).Pages(ctx, func(page *essentialcontacts.GoogleCloudEssentialcontactsV1ListContactsResponse) error {
+		for _, c := range page.Contacts {
+			mqlC, err := CreateResource(g.MqlRuntime, "gcp.essentialContact", map[string]*llx.RawData{
+				"resourcePath":           llx.StringData(c.Name),
+				"email":                  llx.StringData(c.Email),
+				"languageTag":            llx.StringData(c.LanguageTag),
+				"notificationCategories": llx.ArrayData(convert.SliceAnyToInterface(c.NotificationCategorySubscriptions), types.String),
+				"validated":              llx.TimeDataPtr(parseTime(c.ValidateTime)),
+				"validationState":        llx.StringData(c.ValidationState),
+			})
+			if err != nil {
+				return err
+			}
+			mqlContacts = append(mqlContacts, mqlC)
 		}
-		mqlContacts = append(mqlContacts, mqlC)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return mqlContacts, nil
 }
