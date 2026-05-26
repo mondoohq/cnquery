@@ -1,9 +1,10 @@
 {
   "provider": "gcp",
   "version": "13.17.0",
-  "generated_at": "2026-05-26T12:03:54-07:00",
+  "generated_at": "2026-05-26T12:04:42-07:00",
   "permissions": [
     "accessapproval.settings.get",
+    "aiplatform.customJobs.get",
     "aiplatform.customJobs.list",
     "aiplatform.datasets.list",
     "aiplatform.endpoints.list",
@@ -161,6 +162,7 @@
     "logging.exclusions.list",
     "logging.sinks.list",
     "logging.views.list",
+    "memcache.instances.get",
     "memcache.instances.list",
     "memorystore.backupCollections.get",
     "memorystore.backupCollections.list",
@@ -234,6 +236,12 @@
       "service": "accessapproval",
       "action": "GetAccessApprovalSettings",
       "source_file": "access_approval.go"
+    },
+    {
+      "permission": "aiplatform.customJobs.get",
+      "service": "aiplatform",
+      "action": "GetCustomJob",
+      "source_file": "vertexai.go"
     },
     {
       "permission": "aiplatform.customJobs.list",
@@ -1220,6 +1228,12 @@
       "source_file": "logging.go"
     },
     {
+      "permission": "memcache.instances.get",
+      "service": "memcache",
+      "action": "GetInstance",
+      "source_file": "memcache.go"
+    },
+    {
       "permission": "memcache.instances.list",
       "service": "memcache",
       "action": "ListInstances",
@@ -1469,7 +1483,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1509,7 +1523,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },

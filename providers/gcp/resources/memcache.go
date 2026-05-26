@@ -89,47 +89,44 @@ func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[str
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	// Accept either the full resource path or a short name + location.
-	projectId := conn.ResourceID()
-	location := ""
-	if !strings.HasPrefix(name, "projects/") {
+	// Accept either the full resource path or a short name + location from
+	// the asset-identifier-driven discovery path.
+	var fullName, projectId string
+	if strings.HasPrefix(name, "projects/") {
+		fullName = name
+		projectId = parseProjectFromPath(name)
+	} else {
 		locRaw := args["location"]
 		projRaw := args["projectId"]
 		if locRaw == nil || projRaw == nil {
 			return nil, nil, errors.New("memcache instance init: projectId and location required when name is not a full resource path")
 		}
 		projectId = projRaw.Value.(string)
-		location = locRaw.Value.(string)
-	} else {
-		projectId = parseProjectFromPath(name)
-		location = parseLocationFromPath(name)
-		name = parseResourceName(name)
+		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.memcacheService", map[string]*llx.RawData{
-		"projectId": llx.StringData(projectId),
-	})
+	creds, err := conn.Credentials(memcache.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
 	}
-	memcacheSvc := obj.(*mqlGcpProjectMemcacheService)
-	instances := memcacheSvc.GetInstances()
-	if instances.Error != nil {
-		return nil, nil, instances.Error
+	ctx := context.Background()
+	client, err := memcache.NewCloudMemcacheClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	inst, err := client.GetInstance(ctx, &memcachepb.GetInstanceRequest{Name: fullName})
+	if err != nil {
+		return nil, nil, err
 	}
 
-	for _, i := range instances.Data {
-		instance := i.(*mqlGcpProjectMemcacheServiceInstance)
-		// Memcache instance names are full resource paths; compare short
-		// segments + location to the asset identifier.
-		if parseResourceName(instance.Name.Data) == name &&
-			(location == "" || parseLocationFromPath(instance.Name.Data) == location) {
-			delete(args, "location")
-			return args, instance, nil
-		}
+	res, err := mqlMemcacheInstanceFromProto(runtime, projectId, inst)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	return nil, nil, fmt.Errorf("memcache instance %q not found", name)
+	delete(args, "location")
+	return args, res, nil
 }
 
 func (g *mqlGcpProjectMemcacheServiceInstanceNode) id() (string, error) {
@@ -203,86 +200,92 @@ func (g *mqlGcpProjectMemcacheService) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		var nodeCpu, nodeMem int64
-		if inst.NodeConfig != nil {
-			nodeCpu = int64(inst.NodeConfig.CpuCount)
-			nodeMem = int64(inst.NodeConfig.MemorySizeMb)
-		}
-
-		params, err := newMqlMemcacheParameters(g.MqlRuntime, projectId, inst.Name, inst.Parameters)
+		mqlInst, err := mqlMemcacheInstanceFromProto(g.MqlRuntime, projectId, inst)
 		if err != nil {
 			return nil, err
 		}
-
-		maintenancePolicy, err := protoToDict(inst.MaintenancePolicy)
-		if err != nil {
-			return nil, err
-		}
-		maintenanceSchedule, err := protoToDict(inst.MaintenanceSchedule)
-		if err != nil {
-			return nil, err
-		}
-
-		var createTime, updateTime *llx.RawData
-		if inst.CreateTime != nil {
-			createTime = llx.TimeData(inst.CreateTime.AsTime())
-		} else {
-			createTime = llx.NilData
-		}
-		if inst.UpdateTime != nil {
-			updateTime = llx.TimeData(inst.UpdateTime.AsTime())
-		} else {
-			updateTime = llx.NilData
-		}
-
-		instanceMessages := make([]any, 0, len(inst.InstanceMessages))
-		for _, msg := range inst.InstanceMessages {
-			if msg == nil {
-				continue
-			}
-			instanceMessages = append(instanceMessages, map[string]any{
-				"code":    msg.Code.String(),
-				"message": msg.Message,
-			})
-		}
-
-		nodes, err := buildMemcacheNodes(g.MqlRuntime, projectId, inst.Name, inst.MemcacheNodes)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlInst, err := CreateResource(g.MqlRuntime, "gcp.project.memcacheService.instance", map[string]*llx.RawData{
-			"projectId":           llx.StringData(projectId),
-			"name":                llx.StringData(inst.Name),
-			"displayName":         llx.StringData(inst.DisplayName),
-			"labels":              llx.MapData(convert.MapToInterfaceMap(inst.Labels), types.String),
-			"zones":               llx.ArrayData(convert.SliceAnyToInterface(inst.Zones), types.String),
-			"nodeCount":           llx.IntData(int64(inst.NodeCount)),
-			"nodeCpuCount":        llx.IntData(nodeCpu),
-			"nodeMemorySizeMb":    llx.IntData(nodeMem),
-			"memcacheVersion":     llx.StringData(inst.MemcacheVersion.String()),
-			"memcacheFullVersion": llx.StringData(inst.MemcacheFullVersion),
-			"parameters":          llx.ResourceData(params, "gcp.project.memcacheService.instance.parameters"),
-			"state":               llx.StringData(inst.State.String()),
-			"discoveryEndpoint":   llx.StringData(inst.DiscoveryEndpoint),
-			"instanceMessages":    llx.ArrayData(instanceMessages, types.Dict),
-			"maintenancePolicy":   llx.DictData(maintenancePolicy),
-			"maintenanceSchedule": llx.DictData(maintenanceSchedule),
-			"createTime":          createTime,
-			"updateTime":          updateTime,
-			"nodes":               llx.ArrayData(nodes, types.Resource("gcp.project.memcacheService.instance.node")),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mqlInstance := mqlInst.(*mqlGcpProjectMemcacheServiceInstance)
-		mqlInstance.cacheAuthorizedNetwork = inst.AuthorizedNetwork
-
-		res = append(res, mqlInstance)
+		res = append(res, mqlInst)
 	}
 
 	return res, nil
+}
+
+func mqlMemcacheInstanceFromProto(runtime *plugin.Runtime, projectId string, inst *memcachepb.Instance) (*mqlGcpProjectMemcacheServiceInstance, error) {
+	var nodeCpu, nodeMem int64
+	if inst.NodeConfig != nil {
+		nodeCpu = int64(inst.NodeConfig.CpuCount)
+		nodeMem = int64(inst.NodeConfig.MemorySizeMb)
+	}
+
+	params, err := newMqlMemcacheParameters(runtime, projectId, inst.Name, inst.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	maintenancePolicy, err := protoToDict(inst.MaintenancePolicy)
+	if err != nil {
+		return nil, err
+	}
+	maintenanceSchedule, err := protoToDict(inst.MaintenanceSchedule)
+	if err != nil {
+		return nil, err
+	}
+
+	var createTime, updateTime *llx.RawData
+	if inst.CreateTime != nil {
+		createTime = llx.TimeData(inst.CreateTime.AsTime())
+	} else {
+		createTime = llx.NilData
+	}
+	if inst.UpdateTime != nil {
+		updateTime = llx.TimeData(inst.UpdateTime.AsTime())
+	} else {
+		updateTime = llx.NilData
+	}
+
+	instanceMessages := make([]any, 0, len(inst.InstanceMessages))
+	for _, msg := range inst.InstanceMessages {
+		if msg == nil {
+			continue
+		}
+		instanceMessages = append(instanceMessages, map[string]any{
+			"code":    msg.Code.String(),
+			"message": msg.Message,
+		})
+	}
+
+	nodes, err := buildMemcacheNodes(runtime, projectId, inst.Name, inst.MemcacheNodes)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.memcacheService.instance", map[string]*llx.RawData{
+		"projectId":           llx.StringData(projectId),
+		"name":                llx.StringData(inst.Name),
+		"displayName":         llx.StringData(inst.DisplayName),
+		"labels":              llx.MapData(convert.MapToInterfaceMap(inst.Labels), types.String),
+		"zones":               llx.ArrayData(convert.SliceAnyToInterface(inst.Zones), types.String),
+		"nodeCount":           llx.IntData(int64(inst.NodeCount)),
+		"nodeCpuCount":        llx.IntData(nodeCpu),
+		"nodeMemorySizeMb":    llx.IntData(nodeMem),
+		"memcacheVersion":     llx.StringData(inst.MemcacheVersion.String()),
+		"memcacheFullVersion": llx.StringData(inst.MemcacheFullVersion),
+		"parameters":          llx.ResourceData(params, "gcp.project.memcacheService.instance.parameters"),
+		"state":               llx.StringData(inst.State.String()),
+		"discoveryEndpoint":   llx.StringData(inst.DiscoveryEndpoint),
+		"instanceMessages":    llx.ArrayData(instanceMessages, types.Dict),
+		"maintenancePolicy":   llx.DictData(maintenancePolicy),
+		"maintenanceSchedule": llx.DictData(maintenanceSchedule),
+		"createTime":          createTime,
+		"updateTime":          updateTime,
+		"nodes":               llx.ArrayData(nodes, types.Resource("gcp.project.memcacheService.instance.node")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlInstance := res.(*mqlGcpProjectMemcacheServiceInstance)
+	mqlInstance.cacheAuthorizedNetwork = inst.AuthorizedNetwork
+	return mqlInstance, nil
 }
 
 func newMqlMemcacheParameters(runtime *plugin.Runtime, projectId, instanceName string, p *memcachepb.MemcacheParameters) (*mqlGcpProjectMemcacheServiceInstanceParameters, error) {

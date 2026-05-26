@@ -700,7 +700,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				PlatformIds: []string{
 					connection.NewResourcePlatformID("memorystore", gcpProject.Id.Data, location, "instance", instanceName),
 				},
-				Name: instanceName,
+				// Short instance names are scoped per-location, so disambiguate
+				// the asset display name with the location.
+				Name: fmt.Sprintf("%s/%s", location, instanceName),
 				Platform: &inventory.Platform{
 					Name:                  "gcp-memorystore-instance",
 					Title:                 connection.GetTitleForPlatformName("gcp-memorystore-instance"),
@@ -735,7 +737,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				PlatformIds: []string{
 					connection.NewResourcePlatformID("artifactregistry", gcpProject.Id.Data, location, "repository", repoName),
 				},
-				Name: repoName,
+				// Repository names are scoped per-location, so disambiguate the
+				// asset display name with the location.
+				Name: fmt.Sprintf("%s/%s", location, repoName),
 				Platform: &inventory.Platform{
 					Name:                  "gcp-artifactregistry-repository",
 					Title:                 connection.GetTitleForPlatformName("gcp-artifactregistry-repository"),
@@ -769,7 +773,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				PlatformIds: []string{
 					connection.NewResourcePlatformID("memcache", gcpProject.Id.Data, location, "instance", instanceName),
 				},
-				Name: instanceName,
+				// Short instance names are scoped per-location, so disambiguate
+				// the asset display name with the location.
+				Name: fmt.Sprintf("%s/%s", location, instanceName),
 				Platform: &inventory.Platform{
 					Name:                  "gcp-memcache-instance",
 					Title:                 connection.GetTitleForPlatformName("gcp-memcache-instance"),
@@ -803,7 +809,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				PlatformIds: []string{
 					connection.NewResourcePlatformID("vertexai", gcpProject.Id.Data, location, "job", jobName),
 				},
-				Name: jobName,
+				// Custom job names are scoped per-region, so disambiguate the
+				// asset display name with the region.
+				Name: fmt.Sprintf("%s/%s", location, jobName),
 				Platform: &inventory.Platform{
 					Name:                  "gcp-vertexai-job",
 					Title:                 connection.GetTitleForPlatformName("gcp-vertexai-job"),

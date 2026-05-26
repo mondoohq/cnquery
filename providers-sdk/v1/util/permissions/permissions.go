@@ -1039,6 +1039,16 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		"GetInstance":         "memorystore.instances.get",
 		"GetBackupCollection": "memorystore.backupCollections.get",
 	},
+	"memcache": {
+		// CloudMemcacheClient.GetInstance → singular "instance" by default;
+		// the real IAM permission is the plural form.
+		"GetInstance": "memcache.instances.get",
+	},
+	"aiplatform": {
+		// JobClient.GetCustomJob → singular "customJob" by default; the real
+		// IAM permission is the plural form.
+		"GetCustomJob": "aiplatform.customJobs.get",
+	},
 	"pubsub": {
 		// SchemaClient.GetSchema → singular "schema" by default; real IAM
 		// permission is plural.
