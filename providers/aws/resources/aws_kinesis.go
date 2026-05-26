@@ -24,6 +24,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
 
+// firehoseDescribeConcurrency caps the per-region fan-out of
+// DescribeDeliveryStream calls. Firehose has no batch describe, so listing
+// streams costs 1 + N round-trips; fanning out shrinks the wall clock.
+const firehoseDescribeConcurrency = 10
+
 func (a *mqlAwsKinesis) id() (string, error) {
 	return "aws.kinesis", nil
 }
@@ -468,19 +473,39 @@ func (a *mqlAwsKinesis) getFirehoseDeliveryStreams(conn *connection.AwsConnectio
 					return nil, err
 				}
 
-				for _, streamName := range page.DeliveryStreamNames {
-					descResp, err := svc.DescribeDeliveryStream(ctx, &firehose.DescribeDeliveryStreamInput{
-						DeliveryStreamName: &streamName,
-					})
-					if err != nil {
-						log.Warn().Str("stream", streamName).Err(err).Msg("could not describe firehose delivery stream")
+				// Fan out the per-stream DescribeDeliveryStream calls. Firehose
+				// has no batch describe; up to firehoseDescribeConcurrency calls
+				// run at once to compress wall-clock latency for accounts with
+				// many streams.
+				descs := make([]*firehose_types.DeliveryStreamDescription, len(page.DeliveryStreamNames))
+				var wg sync.WaitGroup
+				sem := make(chan struct{}, firehoseDescribeConcurrency)
+				for i, streamName := range page.DeliveryStreamNames {
+					wg.Add(1)
+					go func(idx int, name string) {
+						defer wg.Done()
+						sem <- struct{}{}
+						defer func() { <-sem }()
+						descResp, err := svc.DescribeDeliveryStream(ctx, &firehose.DescribeDeliveryStreamInput{
+							DeliveryStreamName: &name,
+						})
+						if err != nil {
+							log.Warn().Str("stream", name).Err(err).Msg("could not describe firehose delivery stream")
+							return
+						}
+						if descResp.DeliveryStreamDescription == nil {
+							log.Warn().Str("stream", name).Msg("nil delivery stream description")
+							return
+						}
+						descs[idx] = descResp.DeliveryStreamDescription
+					}(i, streamName)
+				}
+				wg.Wait()
+				for _, desc := range descs {
+					if desc == nil {
 						continue
 					}
-					if descResp.DeliveryStreamDescription == nil {
-						log.Warn().Str("stream", streamName).Msg("nil delivery stream description")
-						continue
-					}
-					mqlStream, err := newMqlAwsKinesisFirehoseDeliveryStream(a.MqlRuntime, region, descResp.DeliveryStreamDescription)
+					mqlStream, err := newMqlAwsKinesisFirehoseDeliveryStream(a.MqlRuntime, region, desc)
 					if err != nil {
 						return nil, err
 					}

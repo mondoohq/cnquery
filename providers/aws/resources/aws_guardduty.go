@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -21,6 +22,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	mqlTypes "go.mondoo.com/mql/v13/types"
 )
+
+// guarddutyDetailConcurrency caps the per-detector fan-out of Describe/Get
+// calls for publishing destinations, IP sets, and threat-intel sets. There is
+// no batch API; fanning out shrinks the wall clock for detectors with many
+// children.
+const guarddutyDetailConcurrency = 10
 
 func (a *mqlAwsGuardduty) id() (string, error) {
 	return "aws.guardduty", nil
@@ -457,18 +464,34 @@ func (a *mqlAwsGuarddutyDetector) publishingDestinations() ([]any, error) {
 		return nil, err
 	}
 
+	details := make([]*guardduty.DescribePublishingDestinationOutput, len(resp.Destinations))
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, guarddutyDetailConcurrency)
+	for i, dest := range resp.Destinations {
+		wg.Add(1)
+		go func(idx int, destId *string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			detail, err := svc.DescribePublishingDestination(ctx, &guardduty.DescribePublishingDestinationInput{
+				DetectorId:    &detectorId,
+				DestinationId: destId,
+			})
+			if err != nil {
+				log.Warn().Err(err).Str("destinationId", convert.ToValue(destId)).Msg("could not describe publishing destination")
+				return
+			}
+			details[idx] = detail
+		}(i, dest.DestinationId)
+	}
+	wg.Wait()
+
 	res := []any{}
-	for _, dest := range resp.Destinations {
-		// Fetch full details for each destination
-		detail, err := svc.DescribePublishingDestination(ctx, &guardduty.DescribePublishingDestinationInput{
-			DetectorId:    &detectorId,
-			DestinationId: dest.DestinationId,
-		})
-		if err != nil {
-			log.Warn().Err(err).Str("destinationId", convert.ToValue(dest.DestinationId)).Msg("could not describe publishing destination")
+	for i, dest := range resp.Destinations {
+		detail := details[i]
+		if detail == nil {
 			continue
 		}
-
 		mqlDest, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.publishingDestination",
 			map[string]*llx.RawData{
 				"__id":            llx.StringData(fmt.Sprintf("%s/publishingDestination/%s", detectorId, convert.ToValue(dest.DestinationId))),
@@ -554,16 +577,33 @@ func (a *mqlAwsGuarddutyDetector) ipSets() ([]any, error) {
 			}
 			return nil, err
 		}
-		for _, ipSetId := range resp.IpSetIds {
-			detail, err := svc.GetIPSet(ctx, &guardduty.GetIPSetInput{
-				DetectorId: &detectorId,
-				IpSetId:    &ipSetId,
-			})
-			if err != nil {
-				log.Warn().Err(err).Str("ipSetId", ipSetId).Msg("could not get IP set details")
+		details := make([]*guardduty.GetIPSetOutput, len(resp.IpSetIds))
+		var wg sync.WaitGroup
+		sem := make(chan struct{}, guarddutyDetailConcurrency)
+		for i, ipSetId := range resp.IpSetIds {
+			wg.Add(1)
+			go func(idx int, id string) {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+				detail, err := svc.GetIPSet(ctx, &guardduty.GetIPSetInput{
+					DetectorId: &detectorId,
+					IpSetId:    &id,
+				})
+				if err != nil {
+					log.Warn().Err(err).Str("ipSetId", id).Msg("could not get IP set details")
+					return
+				}
+				details[idx] = detail
+			}(i, ipSetId)
+		}
+		wg.Wait()
+
+		for i, ipSetId := range resp.IpSetIds {
+			detail := details[i]
+			if detail == nil {
 				continue
 			}
-
 			mqlIpSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.ipSet",
 				map[string]*llx.RawData{
 					"__id":     llx.StringData(fmt.Sprintf("%s/ipSet/%s", detectorId, ipSetId)),
@@ -602,16 +642,33 @@ func (a *mqlAwsGuarddutyDetector) threatIntelSets() ([]any, error) {
 			}
 			return nil, err
 		}
-		for _, tiSetId := range resp.ThreatIntelSetIds {
-			detail, err := svc.GetThreatIntelSet(ctx, &guardduty.GetThreatIntelSetInput{
-				DetectorId:       &detectorId,
-				ThreatIntelSetId: &tiSetId,
-			})
-			if err != nil {
-				log.Warn().Err(err).Str("threatIntelSetId", tiSetId).Msg("could not get threat intel set details")
+		details := make([]*guardduty.GetThreatIntelSetOutput, len(resp.ThreatIntelSetIds))
+		var wg sync.WaitGroup
+		sem := make(chan struct{}, guarddutyDetailConcurrency)
+		for i, tiSetId := range resp.ThreatIntelSetIds {
+			wg.Add(1)
+			go func(idx int, id string) {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+				detail, err := svc.GetThreatIntelSet(ctx, &guardduty.GetThreatIntelSetInput{
+					DetectorId:       &detectorId,
+					ThreatIntelSetId: &id,
+				})
+				if err != nil {
+					log.Warn().Err(err).Str("threatIntelSetId", id).Msg("could not get threat intel set details")
+					return
+				}
+				details[idx] = detail
+			}(i, tiSetId)
+		}
+		wg.Wait()
+
+		for i, tiSetId := range resp.ThreatIntelSetIds {
+			detail := details[i]
+			if detail == nil {
 				continue
 			}
-
 			mqlTiSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.threatIntelSet",
 				map[string]*llx.RawData{
 					"__id":     llx.StringData(fmt.Sprintf("%s/threatIntelSet/%s", detectorId, tiSetId)),

@@ -511,25 +511,11 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						continue
 					}
 
-					args := map[string]*llx.RawData{
-						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), convert.ToValue(group.GroupId))),
-						"id":          llx.StringDataPtr(group.GroupId),
-						"name":        llx.StringDataPtr(group.GroupName),
-						"description": llx.StringDataPtr(group.Description),
-						"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(group.Tags)), types.String),
-						"region":      llx.StringData(region),
-					}
-
-					mqlEc2SecurityGroup, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Securitygroup, args)
+					mqlSG, err := buildSecurityGroupResource(a.MqlRuntime, region, conn.AccountId(), group)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlEc2SecurityGroup)
-					mqlEc2SecurityGroup.(*mqlAwsEc2Securitygroup).cacheIpPerms = group.IpPermissions
-					mqlEc2SecurityGroup.(*mqlAwsEc2Securitygroup).cacheIpPermsEgress = group.IpPermissionsEgress
-					mqlEc2SecurityGroup.(*mqlAwsEc2Securitygroup).groupId = *group.GroupId
-					mqlEc2SecurityGroup.(*mqlAwsEc2Securitygroup).region = region
-					mqlEc2SecurityGroup.(*mqlAwsEc2Securitygroup).cacheVpc = group.VpcId
+					res = append(res, mqlSG)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -1494,24 +1480,39 @@ func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 	conn := runtime.Connection.(*connection.AwsConnection)
 	if region == "" {
-		// Try all regions
+		// Region is required for a targeted DescribeNetworkInterfaces lookup, but
+		// it's not encoded in the ENI id itself. Fan out across regions in
+		// parallel and take the first hit instead of probing serially.
 		regions, err := conn.Regions()
 		if err != nil {
 			return nil, nil, err
 		}
+		type eniHit struct {
+			region string
+			eni    ec2types.NetworkInterface
+		}
+		hits := make(chan eniHit, len(regions))
+		var wg sync.WaitGroup
 		for _, r := range regions {
-			svc := conn.Ec2(r)
-			ctx := context.Background()
-			resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
-				NetworkInterfaceIds: []string{eniId},
-			})
-			if err != nil {
-				continue
-			}
-			if len(resp.NetworkInterfaces) > 0 {
-				region = r
-				return buildNetworkInterfaceResource(runtime, region, resp.NetworkInterfaces[0])
-			}
+			wg.Add(1)
+			go func(r string) {
+				defer wg.Done()
+				svc := conn.Ec2(r)
+				resp, err := svc.DescribeNetworkInterfaces(context.Background(), &ec2.DescribeNetworkInterfacesInput{
+					NetworkInterfaceIds: []string{eniId},
+				})
+				if err != nil {
+					return
+				}
+				if len(resp.NetworkInterfaces) > 0 {
+					hits <- eniHit{region: r, eni: resp.NetworkInterfaces[0]}
+				}
+			}(r)
+		}
+		wg.Wait()
+		close(hits)
+		for hit := range hits {
+			return buildNetworkInterfaceResource(runtime, hit.region, hit.eni)
 		}
 		return nil, nil, errors.New("network interface not found")
 	}
@@ -1917,6 +1918,28 @@ func (a *mqlAwsEc2Securitygroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func buildSecurityGroupResource(runtime *plugin.Runtime, region, accountID string, group ec2types.SecurityGroup) (*mqlAwsEc2Securitygroup, error) {
+	args := map[string]*llx.RawData{
+		"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, accountID, convert.ToValue(group.GroupId))),
+		"id":          llx.StringDataPtr(group.GroupId),
+		"name":        llx.StringDataPtr(group.GroupName),
+		"description": llx.StringDataPtr(group.Description),
+		"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(group.Tags)), types.String),
+		"region":      llx.StringData(region),
+	}
+	mqlSG, err := CreateResource(runtime, ResourceAwsEc2Securitygroup, args)
+	if err != nil {
+		return nil, err
+	}
+	sg := mqlSG.(*mqlAwsEc2Securitygroup)
+	sg.cacheIpPerms = group.IpPermissions
+	sg.cacheIpPermsEgress = group.IpPermissionsEgress
+	sg.groupId = convert.ToValue(group.GroupId)
+	sg.region = region
+	sg.cacheVpc = group.VpcId
+	return sg, nil
+}
+
 func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1933,27 +1956,63 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, errors.New("arn or id required to fetch aws security group")
 	}
 
-	// load all security groups
+	// Derive region + groupId for a single targeted DescribeSecurityGroups
+	// call instead of listing every SG in every region.
+	var region, groupId string
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		if parsed, err := arn.Parse(arnVal); err == nil {
+			region = parsed.Region
+			groupId = strings.TrimPrefix(parsed.Resource, "security-group/")
+		}
+	}
+	if args["id"] != nil && groupId == "" {
+		groupId = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+
+	if region != "" && groupId != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(region)
+		resp, err := svc.DescribeSecurityGroups(context.Background(), &ec2.DescribeSecurityGroupsInput{
+			GroupIds: []string{groupId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.SecurityGroups) > 0 {
+			sg, err := buildSecurityGroupResource(runtime, region, conn.AccountId(), resp.SecurityGroups[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, sg, nil
+		}
+		return nil, nil, errors.New("security group does not exist")
+	}
+
+	// Fallback: scan the cached list (e.g. when called with just an opaque id
+	// and no region hint).
 	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
-
 	rawResources := awsEc2.GetSecurityGroups()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
 
 	var match func(secGroup *mqlAwsEc2Securitygroup) bool
-
 	if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
 		match = func(secGroup *mqlAwsEc2Securitygroup) bool {
 			return secGroup.Arn.Data == arnVal
 		}
 	}
-
 	if args["id"] != nil {
 		idVal := args["id"].Value.(string)
 		match = func(secGroup *mqlAwsEc2Securitygroup) bool {
@@ -2164,32 +2223,10 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 						log.Debug().Interface("volume", vol.VolumeId).Msg("excluding volume due to filters")
 						continue
 					}
-					jsonAttachments, err := convert.JsonToDictSlice(vol.Attachments)
+					mqlVol, err := buildVolumeResource(a.MqlRuntime, region, conn.AccountId(), vol)
 					if err != nil {
 						return nil, err
 					}
-					mqlVol, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Volume,
-						map[string]*llx.RawData{
-							"arn":                llx.StringData(fmt.Sprintf(volumeArnPattern, region, conn.AccountId(), convert.ToValue(vol.VolumeId))),
-							"attachments":        llx.ArrayData(jsonAttachments, types.Any),
-							"availabilityZone":   llx.StringDataPtr(vol.AvailabilityZone),
-							"createTime":         llx.TimeDataPtr(vol.CreateTime),
-							"encrypted":          llx.BoolDataPtr(vol.Encrypted),
-							"id":                 llx.StringDataPtr(vol.VolumeId),
-							"iops":               llx.IntDataDefault(vol.Iops, 0),
-							"multiAttachEnabled": llx.BoolDataPtr(vol.MultiAttachEnabled),
-							"region":             llx.StringData(region),
-							"size":               llx.IntDataDefault(vol.Size, 0),
-							"state":              llx.StringData(string(vol.State)),
-							"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(vol.Tags)), types.String),
-							"throughput":         llx.IntDataDefault(vol.Throughput, 0),
-							"volumeType":         llx.StringData(string(vol.VolumeType)),
-							"sseType":            llx.StringData(string(vol.SseType)),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlVol.(*mqlAwsEc2Volume).cacheKmsKeyId = vol.KmsKeyId
 					res = append(res, mqlVol)
 				}
 			}
@@ -2214,36 +2251,77 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws volume")
 	}
+	arnVal := args["arn"].Value.(string)
 
-	// load all security groups
+	parsed, err := arn.Parse(arnVal)
+	if err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "volume/") {
+		volumeId := strings.TrimPrefix(parsed.Resource, "volume/")
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(parsed.Region)
+		resp, err := svc.DescribeVolumes(context.Background(), &ec2.DescribeVolumesInput{
+			VolumeIds: []string{volumeId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.Volumes) > 0 {
+			mqlVol, err := buildVolumeResource(runtime, parsed.Region, conn.AccountId(), resp.Volumes[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, mqlVol, nil
+		}
+		return nil, nil, errors.New("volume does not exist")
+	}
+
+	// Fallback: scan the cached list when the ARN is unparseable.
 	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
-
 	rawResources := awsEc2.GetVolumes()
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
-
-	var match func(secGroup *mqlAwsEc2Volume) bool
-
-	if args["arn"] != nil {
-		arnVal := args["arn"].Value.(string)
-		match = func(vol *mqlAwsEc2Volume) bool {
-			return vol.Arn.Data == arnVal
-		}
-	}
-
 	for _, rawResource := range rawResources.Data {
 		volume := rawResource.(*mqlAwsEc2Volume)
-		if match(volume) {
+		if volume.Arn.Data == arnVal {
 			return args, volume, nil
 		}
 	}
-
 	return nil, nil, errors.New("volume does not exist")
+}
+
+func buildVolumeResource(runtime *plugin.Runtime, region, accountID string, vol ec2types.Volume) (*mqlAwsEc2Volume, error) {
+	jsonAttachments, err := convert.JsonToDictSlice(vol.Attachments)
+	if err != nil {
+		return nil, err
+	}
+	mqlVol, err := CreateResource(runtime, ResourceAwsEc2Volume,
+		map[string]*llx.RawData{
+			"arn":                llx.StringData(fmt.Sprintf(volumeArnPattern, region, accountID, convert.ToValue(vol.VolumeId))),
+			"attachments":        llx.ArrayData(jsonAttachments, types.Any),
+			"availabilityZone":   llx.StringDataPtr(vol.AvailabilityZone),
+			"createTime":         llx.TimeDataPtr(vol.CreateTime),
+			"encrypted":          llx.BoolDataPtr(vol.Encrypted),
+			"id":                 llx.StringDataPtr(vol.VolumeId),
+			"iops":               llx.IntDataDefault(vol.Iops, 0),
+			"multiAttachEnabled": llx.BoolDataPtr(vol.MultiAttachEnabled),
+			"region":             llx.StringData(region),
+			"size":               llx.IntDataDefault(vol.Size, 0),
+			"state":              llx.StringData(string(vol.State)),
+			"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(vol.Tags)), types.String),
+			"throughput":         llx.IntDataDefault(vol.Throughput, 0),
+			"volumeType":         llx.StringData(string(vol.VolumeType)),
+			"sseType":            llx.StringData(string(vol.SseType)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	v := mqlVol.(*mqlAwsEc2Volume)
+	v.cacheKmsKeyId = vol.KmsKeyId
+	return v, nil
 }
 
 type mqlAwsEc2VolumeInternal struct {
@@ -2281,19 +2359,53 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch ec2 instance")
 	}
+	arnVal := args["arn"].Value.(string)
 
+	// Parse the ARN to extract region + instance id and target a single
+	// DescribeInstances call. Fall back to the cross-region list path only
+	// when the ARN is malformed.
+	parsed, err := arn.Parse(arnVal)
+	if err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "instance/") {
+		instanceId := strings.TrimPrefix(parsed.Resource, "instance/")
+		obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
+		if err != nil {
+			return nil, nil, err
+		}
+		mqlEc2 := obj.(*mqlAwsEc2)
+
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(parsed.Region)
+		resp, err := svc.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
+			InstanceIds: []string{instanceId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, reservation := range resp.Reservations {
+			if len(reservation.Instances) == 0 {
+				continue
+			}
+			res, err := mqlEc2.gatherInstanceInfo(reservation.Instances[:1], parsed.Region)
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(res) > 0 {
+				return args, res[0].(*mqlAwsEc2Instance), nil
+			}
+		}
+		return nil, nil, errors.New("ec2 instance does not exist")
+	}
+
+	// Fallback for unparseable ARNs: scan the cached list.
 	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
-	ec2 := obj.(*mqlAwsEc2)
-
-	rawResources := ec2.GetInstances()
+	mqlEc2 := obj.(*mqlAwsEc2)
+	rawResources := mqlEc2.GetInstances()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
-
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		instance := rawResource.(*mqlAwsEc2Instance)
 		if instance.Arn.Data == arnVal {
@@ -2301,6 +2413,30 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 	return nil, nil, errors.New("ec2 instance does not exist")
+}
+
+func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, snapshot ec2types.Snapshot) (*mqlAwsEc2Snapshot, error) {
+	mqlSnap, err := CreateResource(runtime, ResourceAwsEc2Snapshot,
+		map[string]*llx.RawData{
+			"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, region, accountID, convert.ToValue(snapshot.SnapshotId))),
+			"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
+			"description":    llx.StringDataPtr(snapshot.Description),
+			"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
+			"id":             llx.StringDataPtr(snapshot.SnapshotId),
+			"region":         llx.StringData(region),
+			"startTime":      llx.TimeDataPtr(snapshot.StartTime),
+			"state":          llx.StringData(string(snapshot.State)),
+			"storageTier":    llx.StringData(string(snapshot.StorageTier)),
+			"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(snapshot.Tags)), types.String),
+			"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
+			"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
+		})
+	if err != nil {
+		return nil, err
+	}
+	s := mqlSnap.(*mqlAwsEc2Snapshot)
+	s.cacheKmsKeyId = snapshot.KmsKeyId
+	return s, nil
 }
 
 func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -2314,44 +2450,64 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws snapshot")
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws snapshot")
 	}
 
-	// load all security groups
+	// Targeted path: arn carries the region and snapshot id.
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		if parsed, err := arn.Parse(arnVal); err == nil && parsed.Region != "" && strings.HasPrefix(parsed.Resource, "snapshot/") {
+			snapshotId := strings.TrimPrefix(parsed.Resource, "snapshot/")
+			conn := runtime.Connection.(*connection.AwsConnection)
+			svc := conn.Ec2(parsed.Region)
+			resp, err := svc.DescribeSnapshots(context.Background(), &ec2.DescribeSnapshotsInput{
+				SnapshotIds: []string{snapshotId},
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(resp.Snapshots) > 0 {
+				mqlSnap, err := buildSnapshotResource(runtime, parsed.Region, conn.AccountId(), resp.Snapshots[0])
+				if err != nil {
+					return nil, nil, err
+				}
+				return args, mqlSnap, nil
+			}
+			return nil, nil, errors.New("snapshot does not exist")
+		}
+	}
+
+	// Fallback: scan the cached list when only an opaque id was supplied or
+	// the arn was unparseable.
 	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
-
 	rawResources := awsEc2.GetSnapshots()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
 	var match func(snapshot *mqlAwsEc2Snapshot) bool
-
 	if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
 		match = func(snapshot *mqlAwsEc2Snapshot) bool {
 			return snapshot.Arn.Data == arnVal
 		}
 	}
-
 	if args["id"] != nil {
 		idVal := args["id"].Value.(string)
 		match = func(snap *mqlAwsEc2Snapshot) bool {
 			return snap.Id.Data == idVal
 		}
 	}
-
 	for _, rawResource := range rawResources.Data {
 		snapshot := rawResource.(*mqlAwsEc2Snapshot)
 		if match(snapshot) {
 			return args, snapshot, nil
 		}
 	}
-
 	return nil, nil, errors.New("snapshot does not exist")
 }
 
@@ -2473,25 +2629,10 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 						log.Debug().Interface("snapshot", snapshot.SnapshotId).Msg("excluding snapshot due to filters")
 						continue
 					}
-					mqlSnap, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Snapshot,
-						map[string]*llx.RawData{
-							"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, region, conn.AccountId(), convert.ToValue(snapshot.SnapshotId))),
-							"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
-							"description":    llx.StringDataPtr(snapshot.Description),
-							"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
-							"id":             llx.StringDataPtr(snapshot.SnapshotId),
-							"region":         llx.StringData(region),
-							"startTime":      llx.TimeDataPtr(snapshot.StartTime),
-							"state":          llx.StringData(string(snapshot.State)),
-							"storageTier":    llx.StringData(string(snapshot.StorageTier)),
-							"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(snapshot.Tags)), types.String),
-							"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
-							"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
-						})
+					mqlSnap, err := buildSnapshotResource(a.MqlRuntime, region, conn.AccountId(), snapshot)
 					if err != nil {
 						return nil, err
 					}
-					mqlSnap.(*mqlAwsEc2Snapshot).cacheKmsKeyId = snapshot.KmsKeyId
 					res = append(res, mqlSnap)
 				}
 			}

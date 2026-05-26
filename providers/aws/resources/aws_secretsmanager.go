@@ -149,7 +149,37 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	mqlSecretRes.cacheRegion = region
 	mqlSecretRes.cacheType = convert.ToValue(resp.Type)
 	mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: resp.DeletedDate, State: plugin.StateIsSet}
+
+	// We already have the replication status from DescribeSecret; populate
+	// ReplicaRegions directly to avoid a redundant DescribeSecret call.
+	replicaRegions, err := buildSecretReplicaRegions(runtime, convert.ToValue(resp.ARN), resp.ReplicationStatus)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlSecretRes.ReplicaRegions = plugin.TValue[[]any]{Data: replicaRegions, State: plugin.StateIsSet}
+
 	return args, mqlSecretRes, nil
+}
+
+func buildSecretReplicaRegions(runtime *plugin.Runtime, arn string, replicas []secretstypes.ReplicationStatusType) ([]any, error) {
+	res := make([]any, 0, len(replicas))
+	for _, replica := range replicas {
+		mqlReplica, err := CreateResource(runtime, "aws.secretsmanager.secret.replicaRegion",
+			map[string]*llx.RawData{
+				"__id":             llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
+				"id":               llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
+				"region":           llx.StringDataPtr(replica.Region),
+				"status":           llx.StringData(string(replica.Status)),
+				"statusMessage":    llx.StringDataPtr(replica.StatusMessage),
+				"kmsKeyId":         llx.StringDataPtr(replica.KmsKeyId),
+				"lastAccessedDate": llx.TimeDataPtr(replica.LastAccessedDate),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlReplica)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsSecretsmanagerSecret) kmsKey() (*mqlAwsKmsKey, error) {
@@ -304,24 +334,7 @@ func (a *mqlAwsSecretsmanagerSecret) replicaRegions() ([]any, error) {
 		return nil, err
 	}
 
-	res := []any{}
-	for _, replica := range resp.ReplicationStatus {
-		mqlReplica, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret.replicaRegion",
-			map[string]*llx.RawData{
-				"__id":             llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
-				"id":               llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
-				"region":           llx.StringDataPtr(replica.Region),
-				"status":           llx.StringData(string(replica.Status)),
-				"statusMessage":    llx.StringDataPtr(replica.StatusMessage),
-				"kmsKeyId":         llx.StringDataPtr(replica.KmsKeyId),
-				"lastAccessedDate": llx.TimeDataPtr(replica.LastAccessedDate),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlReplica)
-	}
-	return res, nil
+	return buildSecretReplicaRegions(a.MqlRuntime, arn, resp.ReplicationStatus)
 }
 
 type mqlAwsSecretsmanagerSecretInternal struct {
