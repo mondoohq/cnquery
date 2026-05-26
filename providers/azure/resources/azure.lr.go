@@ -672,7 +672,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceWatcherConnectionMonitor,
 		},
 		"azure.subscription.networkService.applicationGateway": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceApplicationGateway,
 			Create: createAzureSubscriptionNetworkServiceApplicationGateway,
 		},
 		"azure.subscription.networkService.applicationGateway.listener": {
@@ -1584,7 +1584,7 @@ func init() {
 			Create: createAzureSubscriptionFunctionsService,
 		},
 		"azure.subscription.functionsService.functionApp": {
-			// to override args, implement: initAzureSubscriptionFunctionsServiceFunctionApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionFunctionsServiceFunctionApp,
 			Create: createAzureSubscriptionFunctionsServiceFunctionApp,
 		},
 		"azure.subscription.functionsService.functionApp.appSetting": {
@@ -1740,7 +1740,7 @@ func init() {
 			Create: createAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate,
 		},
 		"azure.subscription.containerAppService.containerApp": {
-			// to override args, implement: initAzureSubscriptionContainerAppServiceContainerApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionContainerAppServiceContainerApp,
 			Create: createAzureSubscriptionContainerAppServiceContainerApp,
 		},
 		"azure.subscription.containerAppService.containerApp.container": {

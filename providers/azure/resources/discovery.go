@@ -54,6 +54,10 @@ const (
 	DiscoveryRecoveryServicesVaults  = "recovery-services-vaults"
 	DiscoverySynapseWorkspaces       = "synapse-workspaces"
 	DiscoveryDataFactories           = "data-factories"
+	DiscoveryFunctionApps            = "function-apps"
+	DiscoveryApplicationGateways     = "application-gateways"
+	DiscoveryFirewalls               = "firewalls"
+	DiscoveryContainerApps           = "container-apps"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -95,39 +99,68 @@ var AllAPIResources = []string{
 	DiscoveryRecoveryServicesVaults,
 	DiscoverySynapseWorkspaces,
 	DiscoveryDataFactories,
+	DiscoveryFunctionApps,
+	DiscoveryApplicationGateways,
+	DiscoveryFirewalls,
+	DiscoveryContainerApps,
 }
 
 // genericDiscoverySpec maps an ARM resource type to the discovery metadata
 // needed to build an inventory asset. Resources listed here are discovered via
 // a single armresources.Client.NewListPager call per subscription instead of
 // individual service-specific API calls.
+//
+// When multiple specs share the same `armType` (e.g. function apps and web
+// apps both live under "Microsoft.Web/sites"), `matchKind` distinguishes
+// between them based on the resource's `kind` value returned by ARM.
 type genericDiscoverySpec struct {
-	armType                string // ARM resource type, e.g. "Microsoft.Sql/servers"
-	discoveryTarget        string // discovery constant, e.g. DiscoverySqlServers
-	service                string // service label for azureObject
-	objectType             string // objectType label for azureObject
-	includeObjectTypeInUrl bool   // passed to mqlObjectToAsset
+	armType                string                 // ARM resource type, e.g. "Microsoft.Sql/servers"
+	discoveryTarget        string                 // discovery constant, e.g. DiscoverySqlServers
+	service                string                 // service label for azureObject
+	objectType             string                 // objectType label for azureObject
+	includeObjectTypeInUrl bool                   // passed to mqlObjectToAsset
+	matchKind              func(kind string) bool // optional: only match resources whose kind matches
+}
+
+// isFunctionAppKind reports whether an ARM "Microsoft.Web/sites" resource is
+// a Function App. Function app kinds are "functionapp", "functionapp,linux",
+// "functionapp,linux,container", "functionapp,workflowapp", etc.
+func isFunctionAppKind(kind string) bool {
+	return strings.Contains(strings.ToLower(kind), "functionapp")
+}
+
+// isWebAppKind reports whether an ARM "Microsoft.Web/sites" resource is a
+// regular web/API app (i.e., not a function app). Web app kinds include
+// "app", "app,linux", "api", etc. Anything containing "functionapp" is
+// routed to function-app discovery instead.
+func isWebAppKind(kind string) bool {
+	return !isFunctionAppKind(kind)
 }
 
 var genericDiscoverySpecs = []genericDiscoverySpec{
-	{"Microsoft.Sql/servers", DiscoverySqlServers, "sql", "server", false},
-	{"Microsoft.DBforMySQL/servers", DiscoveryMySqlServers, "mysql", "server", false},
-	{"Microsoft.DBforMySQL/flexibleServers", DiscoveryMySqlFlexibleServers, "mysql", "flexible-server", false},
-	{"Microsoft.DBforPostgreSQL/servers", DiscoveryPostgresServers, "postgresql", "server", false},
-	{"Microsoft.DBforPostgreSQL/flexibleServers", DiscoveryPostgresFlexibleServers, "postgresql", "flexible-server", false},
-	{"Microsoft.ContainerService/managedClusters", DiscoveryAksClusters, "aks", "cluster", false},
-	{"Microsoft.Web/sites", DiscoveryAppServiceApps, "app-service", "app", false},
-	{"Microsoft.Cache/Redis", DiscoveryCacheRedis, "cache", "redis", false},
-	{"Microsoft.Batch/batchAccounts", DiscoveryBatchAccounts, "batch", "account", false},
-	{"Microsoft.Storage/storageAccounts", DiscoveryStorageAccounts, "storage", "account", true},
-	{"Microsoft.Network/networkSecurityGroups", DiscoverySecurityGroups, "network", "security-group", true},
-	{"Microsoft.KeyVault/vaults", DiscoveryKeyVaults, "keyvault", "vault", false},
-	{"Microsoft.DocumentDB/databaseAccounts", DiscoveryCosmosDb, "cosmosdb", "account", false},
-	{"Microsoft.Network/virtualNetworks", DiscoveryVirtualNetworks, "network", "virtual-network", true},
-	{"Microsoft.ContainerRegistry/registries", DiscoveryContainerRegistries, "containerregistry", "registry", false},
-	{"Microsoft.RecoveryServices/vaults", DiscoveryRecoveryServicesVaults, "recoveryservices", "vault", false},
-	{"Microsoft.Synapse/workspaces", DiscoverySynapseWorkspaces, "synapse", "workspace", false},
-	{"Microsoft.DataFactory/factories", DiscoveryDataFactories, "datafactory", "factory", false},
+	{armType: "Microsoft.Sql/servers", discoveryTarget: DiscoverySqlServers, service: "sql", objectType: "server"},
+	{armType: "Microsoft.DBforMySQL/servers", discoveryTarget: DiscoveryMySqlServers, service: "mysql", objectType: "server"},
+	{armType: "Microsoft.DBforMySQL/flexibleServers", discoveryTarget: DiscoveryMySqlFlexibleServers, service: "mysql", objectType: "flexible-server"},
+	{armType: "Microsoft.DBforPostgreSQL/servers", discoveryTarget: DiscoveryPostgresServers, service: "postgresql", objectType: "server"},
+	{armType: "Microsoft.DBforPostgreSQL/flexibleServers", discoveryTarget: DiscoveryPostgresFlexibleServers, service: "postgresql", objectType: "flexible-server"},
+	{armType: "Microsoft.ContainerService/managedClusters", discoveryTarget: DiscoveryAksClusters, service: "aks", objectType: "cluster"},
+	// Microsoft.Web/sites is shared by web apps and function apps; disambiguate by kind.
+	{armType: "Microsoft.Web/sites", discoveryTarget: DiscoveryAppServiceApps, service: "app-service", objectType: "app", matchKind: isWebAppKind},
+	{armType: "Microsoft.Web/sites", discoveryTarget: DiscoveryFunctionApps, service: "functions", objectType: "app", matchKind: isFunctionAppKind},
+	{armType: "Microsoft.Cache/Redis", discoveryTarget: DiscoveryCacheRedis, service: "cache", objectType: "redis"},
+	{armType: "Microsoft.Batch/batchAccounts", discoveryTarget: DiscoveryBatchAccounts, service: "batch", objectType: "account"},
+	{armType: "Microsoft.Storage/storageAccounts", discoveryTarget: DiscoveryStorageAccounts, service: "storage", objectType: "account", includeObjectTypeInUrl: true},
+	{armType: "Microsoft.Network/networkSecurityGroups", discoveryTarget: DiscoverySecurityGroups, service: "network", objectType: "security-group", includeObjectTypeInUrl: true},
+	{armType: "Microsoft.Network/applicationGateways", discoveryTarget: DiscoveryApplicationGateways, service: "network", objectType: "application-gateway", includeObjectTypeInUrl: true},
+	{armType: "Microsoft.Network/azureFirewalls", discoveryTarget: DiscoveryFirewalls, service: "network", objectType: "firewall", includeObjectTypeInUrl: true},
+	{armType: "Microsoft.KeyVault/vaults", discoveryTarget: DiscoveryKeyVaults, service: "keyvault", objectType: "vault"},
+	{armType: "Microsoft.DocumentDB/databaseAccounts", discoveryTarget: DiscoveryCosmosDb, service: "cosmosdb", objectType: "account"},
+	{armType: "Microsoft.Network/virtualNetworks", discoveryTarget: DiscoveryVirtualNetworks, service: "network", objectType: "virtual-network", includeObjectTypeInUrl: true},
+	{armType: "Microsoft.ContainerRegistry/registries", discoveryTarget: DiscoveryContainerRegistries, service: "containerregistry", objectType: "registry"},
+	{armType: "Microsoft.RecoveryServices/vaults", discoveryTarget: DiscoveryRecoveryServicesVaults, service: "recoveryservices", objectType: "vault"},
+	{armType: "Microsoft.Synapse/workspaces", discoveryTarget: DiscoverySynapseWorkspaces, service: "synapse", objectType: "workspace"},
+	{armType: "Microsoft.DataFactory/factories", discoveryTarget: DiscoveryDataFactories, service: "datafactory", objectType: "factory"},
+	{armType: "Microsoft.App/containerApps", discoveryTarget: DiscoveryContainerApps, service: "containerapps", objectType: "app"},
 }
 
 type azureObject struct {
@@ -376,17 +409,25 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 		return nil, nil
 	}
 
-	// Build OR filter: "resourceType eq 'X' or resourceType eq 'Y' or ..."
-	clauses := make([]string, len(activeSpecs))
-	for i, s := range activeSpecs {
-		clauses[i] = fmt.Sprintf("resourceType eq '%s'", s.armType)
+	// Build OR filter on the de-duplicated set of ARM types (multiple specs may
+	// share an armType when disambiguated by `kind`).
+	seenTypes := make(map[string]struct{}, len(activeSpecs))
+	clauses := make([]string, 0, len(activeSpecs))
+	for _, s := range activeSpecs {
+		key := strings.ToLower(s.armType)
+		if _, ok := seenTypes[key]; ok {
+			continue
+		}
+		seenTypes[key] = struct{}{}
+		clauses = append(clauses, fmt.Sprintf("resourceType eq '%s'", s.armType))
 	}
 	filter := strings.Join(clauses, " or ")
 
-	// Build a lookup map: lowercase ARM type → spec
-	specByType := make(map[string]genericDiscoverySpec, len(activeSpecs))
+	// Group specs by lowercase ARM type to allow kind-based dispatch.
+	specsByType := make(map[string][]genericDiscoverySpec, len(activeSpecs))
 	for _, s := range activeSpecs {
-		specByType[strings.ToLower(s.armType)] = s
+		key := strings.ToLower(s.armType)
+		specsByType[key] = append(specsByType[key], s)
 	}
 
 	var assets []*inventory.Asset
@@ -409,7 +450,8 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 			}
 			for _, resource := range page.Value {
 				resType := strings.ToLower(derefStr(resource.Type))
-				spec, ok := specByType[resType]
+				kind := derefStr(resource.Kind)
+				spec, ok := matchSpec(specsByType[resType], kind)
 				if !ok {
 					continue
 				}
@@ -432,6 +474,17 @@ func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWith
 		}
 	}
 	return assets, nil
+}
+
+// matchSpec picks the first spec from the candidates list whose matchKind
+// accepts the given resource kind. Specs without a matchKind match anything.
+func matchSpec(candidates []genericDiscoverySpec, kind string) (genericDiscoverySpec, bool) {
+	for _, s := range candidates {
+		if s.matchKind == nil || s.matchKind(kind) {
+			return s, true
+		}
+	}
+	return genericDiscoverySpec{}, false
 }
 
 func derefStr(s *string) string {
@@ -653,6 +706,20 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		}
 		if azureObject.objectType == "virtual-network" {
 			return azureObjectPlatformInfo{title: "Azure Virtual Network", platform: "azure-virtual-network"}, nil
+		}
+		if azureObject.objectType == "application-gateway" {
+			return azureObjectPlatformInfo{title: "Azure Application Gateway", platform: "azure-application-gateway"}, nil
+		}
+		if azureObject.objectType == "firewall" {
+			return azureObjectPlatformInfo{title: "Azure Firewall", platform: "azure-firewall"}, nil
+		}
+	case "functions":
+		if azureObject.objectType == "app" {
+			return azureObjectPlatformInfo{title: "Azure Function App", platform: "azure-function-app"}, nil
+		}
+	case "containerapps":
+		if azureObject.objectType == "app" {
+			return azureObjectPlatformInfo{title: "Azure Container App", platform: "azure-container-app"}, nil
 		}
 	case "keyvault":
 		if azureObject.objectType == "vault" {

@@ -767,10 +767,16 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualHubVnetConnection) remoteVirtu
 	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
 }
 
-// init for firewall so virtualHub.azureFirewall() typed ref can resolve
+// init for firewall so virtualHub.azureFirewall() typed ref can resolve, and
+// so platform-discovered azure-firewall assets can be queried directly.
 func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
 	}
 	if args["id"] == nil {
 		return args, nil, nil
@@ -779,7 +785,10 @@ func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args m
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	id := args["id"].Value.(string)
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
 	azureId, err := ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
