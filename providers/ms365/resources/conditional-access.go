@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
@@ -27,19 +28,39 @@ func (a *mqlMicrosoftConditionalAccess) namedLocations() (*mqlMicrosoftCondition
 	return resource.(*mqlMicrosoftConditionalAccessNamedLocations), nil
 }
 
-func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
+type mqlMicrosoftConditionalAccessNamedLocationsInternal struct {
+	// guards the named-locations Graph fetch so both ipLocations() and
+	// countryLocations() share a single API call.
+	namedLocationsOnce sync.Once
+	namedLocations     []models.NamedLocationable
+	namedLocationsErr  error
+}
 
-	ctx := context.Background()
-	resp, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
-	if err != nil {
-		return nil, transformError(err)
-	}
-	namedLocations, err := iterate[models.NamedLocationable](ctx, resp, graphClient.GetAdapter(), models.CreateNamedLocationCollectionResponseFromDiscriminatorValue)
+// loadNamedLocations fetches the tenant's named locations once and caches
+// the result. Both ipLocations() and countryLocations() filter from the
+// same backing slice instead of issuing duplicate Graph calls.
+func (a *mqlMicrosoftConditionalAccessNamedLocations) loadNamedLocations() ([]models.NamedLocationable, error) {
+	a.namedLocationsOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+		graphClient, err := conn.GraphClient()
+		if err != nil {
+			a.namedLocationsErr = err
+			return
+		}
+
+		ctx := context.Background()
+		resp, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
+		if err != nil {
+			a.namedLocationsErr = transformError(err)
+			return
+		}
+		a.namedLocations, a.namedLocationsErr = iterate[models.NamedLocationable](ctx, resp, graphClient.GetAdapter(), models.CreateNamedLocationCollectionResponseFromDiscriminatorValue)
+	})
+	return a.namedLocations, a.namedLocationsErr
+}
+
+func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, error) {
+	namedLocations, err := a.loadNamedLocations()
 	if err != nil {
 		return nil, err
 	}
@@ -85,18 +106,7 @@ func (m *mqlMicrosoftConditionalAccessCountryNamedLocation) id() (string, error)
 }
 
 func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	resp, err := graphClient.Identity().ConditionalAccess().NamedLocations().Get(ctx, nil)
-	if err != nil {
-		return nil, transformError(err)
-	}
-	namedLocations, err := iterate[models.NamedLocationable](ctx, resp, graphClient.GetAdapter(), models.CreateNamedLocationCollectionResponseFromDiscriminatorValue)
+	namedLocations, err := a.loadNamedLocations()
 	if err != nil {
 		return nil, err
 	}

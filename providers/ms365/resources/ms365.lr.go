@@ -10749,7 +10749,7 @@ func (c *mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration) GetStat
 type mqlMicrosoftConditionalAccessNamedLocations struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftConditionalAccessNamedLocationsInternal it will be used here
+	mqlMicrosoftConditionalAccessNamedLocationsInternal
 	IpLocations      plugin.TValue[[]any]
 	CountryLocations plugin.TValue[[]any]
 }

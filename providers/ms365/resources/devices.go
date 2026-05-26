@@ -136,18 +136,6 @@ func initMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return args, nil, nil
 	}
 
-	var filter *string
-	if okId {
-		idFilter := fmt.Sprintf("id eq '%s'", rawId.Value.(string))
-		filter = &idFilter
-	} else if okDisplayName {
-		displayNameFilter := fmt.Sprintf("displayName eq '%s'", rawDisplayName.Value.(string))
-		filter = &displayNameFilter
-	}
-	if filter == nil {
-		return nil, nil, errors.New("no filter found")
-	}
-
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -155,9 +143,31 @@ func initMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	ctx := context.Background()
+
+	// Fast path: look up directly by id. Skips the redundant filter+get
+	// round-trip we'd otherwise pay for every microsoft.device(id: "...")
+	// reference.
+	if okId {
+		device, err := graphClient.Devices().ByDeviceId(rawId.Value.(string)).Get(ctx, &devices.DeviceItemRequestBuilderGetRequestConfiguration{
+			QueryParameters: &devices.DeviceItemRequestBuilderGetQueryParameters{
+				Select: deviceSelectFields,
+			},
+		})
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		mqlMsApp, err := newMqlMicrosoftDevice(runtime, device)
+		if err != nil {
+			return nil, nil, err
+		}
+		return nil, mqlMsApp, nil
+	}
+
+	displayNameFilter := fmt.Sprintf("displayName eq '%s'", rawDisplayName.Value.(string))
 	resp, err := graphClient.Devices().Get(ctx, &devices.DevicesRequestBuilderGetRequestConfiguration{
 		QueryParameters: &devices.DevicesRequestBuilderGetQueryParameters{
-			Filter: filter,
+			Filter: &displayNameFilter,
+			Select: deviceSelectFields,
 		},
 	})
 	if err != nil {
@@ -169,17 +179,10 @@ func initMicrosoftDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return nil, nil, errors.New("device not found")
 	}
 
-	deviceId := val[0].GetId()
-	if deviceId == nil {
-		return nil, nil, errors.New("device id not found")
-	}
-
-	// fetch devices by id
-	device, err := graphClient.Devices().ByDeviceId(*deviceId).Get(ctx, &devices.DeviceItemRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, nil, transformError(err)
-	}
-	mqlMsApp, err := newMqlMicrosoftDevice(runtime, device)
+	// Reuse the filter response directly — the requested Select carries
+	// every field newMqlMicrosoftDevice consumes, so a second Get by id
+	// would just return the same data.
+	mqlMsApp, err := newMqlMicrosoftDevice(runtime, val[0])
 	if err != nil {
 		return nil, nil, err
 	}

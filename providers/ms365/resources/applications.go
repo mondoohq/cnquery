@@ -393,9 +393,12 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 	}
 
 	ctx := context.Background()
+	// Select the same user fields used by initMicrosoftUser so accessing
+	// owner.displayName/mail/etc. is served from the owners response instead
+	// of triggering one Graph call per owner.
 	resp, err := graphClient.Applications().ByApplicationId(a.GetId().Data).Owners().Get(ctx, &applications.ItemOwnersRequestBuilderGetRequestConfiguration{
 		QueryParameters: &applications.ItemOwnersRequestBuilderGetQueryParameters{
-			Select: []string{"id"},
+			Select: userSelectFields,
 		},
 	})
 	if err != nil {
@@ -420,7 +423,21 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 			continue
 		}
 
-		// otherwise we create a new user resource
+		// When the owner is a user, build the resource from the data
+		// already on the response — avoids a second Graph round-trip via
+		// initMicrosoftUser when callers read common user fields.
+		if user, ok := owner.(models.Userable); ok {
+			newUser, err := newMqlMicrosoftUser(a.MqlRuntime, user)
+			if err != nil {
+				return nil, err
+			}
+			mqlMicrsoftResource.indexUser(newUser)
+			res = append(res, newUser)
+			continue
+		}
+
+		// non-user owners (groups, service principals) fall back to the
+		// lazy reference so the framework can resolve them on demand.
 		newUserResource, err := a.MqlRuntime.NewResource(a.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
 			"id": llx.StringDataPtr(ownerId),
 		})

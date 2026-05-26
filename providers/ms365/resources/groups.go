@@ -35,8 +35,13 @@ func (a *mqlMicrosoftGroup) members() ([]any, error) {
 	}
 	top := int32(200)
 
+	// Pull the same fields the rest of the user resource consumes so
+	// accessing member.displayName/mail/userPrincipalName is served from
+	// this single response instead of triggering initMicrosoftUser per
+	// member.
 	queryParams := &groups.ItemMembersRequestBuilderGetQueryParameters{
-		Top: &top,
+		Top:    &top,
+		Select: userSelectFields,
 	}
 	ctx := context.Background()
 	resp, err := graphClient.Groups().
@@ -68,6 +73,18 @@ func (a *mqlMicrosoftGroup) members() ([]any, error) {
 		userResource, ok := mqlMicrosoftResource.userById(*memberId)
 		if ok {
 			res = append(res, userResource)
+			continue
+		}
+
+		// When the member is a user, build it from the data already on the
+		// response — avoids a second Graph round-trip via initMicrosoftUser.
+		if user, ok := member.(models.Userable); ok {
+			newUser, err := newMqlMicrosoftUser(a.MqlRuntime, user)
+			if err != nil {
+				return nil, err
+			}
+			mqlMicrosoftResource.indexUser(newUser)
+			res = append(res, newUser)
 			continue
 		}
 

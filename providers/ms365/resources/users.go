@@ -154,21 +154,6 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	var filter *string
-	if okId {
-		idFilter := fmt.Sprintf("id eq '%s'", rawId.Value.(string))
-		filter = &idFilter
-	} else if okPrincipalName {
-		principalNameFilter := fmt.Sprintf("userPrincipalName eq '%s'", rawPrincipalName.Value.(string))
-		filter = &principalNameFilter
-	} else if okDisplayName {
-		displayNameFilter := fmt.Sprintf("displayName eq '%s'", rawDisplayName.Value.(string))
-		filter = &displayNameFilter
-	}
-	if filter == nil {
-		return nil, nil, errors.New("no filter found")
-	}
-
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -176,9 +161,37 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	ctx := context.Background()
+
+	// Fast path: look up directly by id. Skips the redundant filter+get
+	// round-trip we'd otherwise pay for every microsoft.user(id: "...")
+	// reference (most callers — owners, members, etc.).
+	if okId {
+		user, err := graphClient.Users().ByUserId(rawId.Value.(string)).Get(ctx, &users.UserItemRequestBuilderGetRequestConfiguration{
+			QueryParameters: &users.UserItemRequestBuilderGetQueryParameters{
+				Select: userSelectFields,
+			},
+		})
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		mqlMsApp, err := newMqlMicrosoftUser(runtime, user)
+		if err != nil {
+			return nil, nil, err
+		}
+		return nil, mqlMsApp, nil
+	}
+
+	var filter string
+	if okPrincipalName {
+		filter = fmt.Sprintf("userPrincipalName eq '%s'", rawPrincipalName.Value.(string))
+	} else if okDisplayName {
+		filter = fmt.Sprintf("displayName eq '%s'", rawDisplayName.Value.(string))
+	}
+
 	resp, err := graphClient.Users().Get(ctx, &users.UsersRequestBuilderGetRequestConfiguration{
 		QueryParameters: &users.UsersRequestBuilderGetQueryParameters{
-			Filter: filter,
+			Filter: &filter,
+			Select: userSelectFields,
 		},
 	})
 	if err != nil {
@@ -190,17 +203,10 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, errors.New("user not found")
 	}
 
-	userId := val[0].GetId()
-	if userId == nil {
-		return nil, nil, errors.New("user id not found")
-	}
-
-	// fetch user by id
-	user, err := graphClient.Users().ByUserId(*userId).Get(ctx, &users.UserItemRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, nil, transformError(err)
-	}
-	mqlMsApp, err := newMqlMicrosoftUser(runtime, user)
+	// Reuse the filter response directly — it already carries every
+	// userSelectFields field, so a second Get by id would return the
+	// same data.
+	mqlMsApp, err := newMqlMicrosoftUser(runtime, val[0])
 	if err != nil {
 		return nil, nil, err
 	}
