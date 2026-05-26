@@ -185,6 +185,10 @@ func (d *OllamaDetector) Detect(ctx DetectContext) []ModelInfo {
 
 					extracted := readOllamaConfig(ctx.Fs, modelsDir, manifest.Config.Digest)
 
+					if extracted.License == "" {
+						extracted.License = readOllamaLicenseLayer(ctx.Fs, modelsDir, manifest.Layers)
+					}
+
 					version := tag.Name()
 
 					quant := extracted.Quantization
@@ -230,6 +234,83 @@ func (d *OllamaDetector) Detect(ctx DetectContext) []ModelInfo {
 		}
 	}
 	return results
+}
+
+const ollamaLicenseMediaType = "application/vnd.ollama.image.license"
+
+func readOllamaLicenseLayer(afs *afero.Afero, modelsDir string, layers []ollamaLayer) string {
+	for _, l := range layers {
+		if l.MediaType != ollamaLicenseMediaType || l.Digest == "" {
+			continue
+		}
+		blobName := strings.Replace(l.Digest, ":", "-", 1)
+		blobPath := filepath.Join(modelsDir, "blobs", blobName)
+		data, err := afs.ReadFile(blobPath)
+		if err != nil {
+			continue
+		}
+		if id := identifyLicense(string(data)); id != "" {
+			return id
+		}
+	}
+	return ""
+}
+
+// identifyLicense extracts a short SPDX-like identifier from license text.
+func identifyLicense(text string) string {
+	upper := strings.ToUpper(text)
+	switch {
+	case strings.Contains(upper, "APACHE LICENSE") && strings.Contains(upper, "VERSION 2.0"):
+		return "Apache-2.0"
+	case strings.Contains(upper, "MIT LICENSE"):
+		return "MIT"
+	case strings.Contains(upper, "BSD 2-CLAUSE"):
+		return "BSD-2-Clause"
+	case strings.Contains(upper, "BSD 3-CLAUSE"):
+		return "BSD-3-Clause"
+	case strings.Contains(upper, "GNU GENERAL PUBLIC LICENSE") && strings.Contains(upper, "VERSION 3"):
+		return "GPL-3.0"
+	case strings.Contains(upper, "GNU GENERAL PUBLIC LICENSE") && strings.Contains(upper, "VERSION 2"):
+		return "GPL-2.0"
+	case strings.Contains(upper, "LLAMA 3.1 COMMUNITY LICENSE"):
+		return "Llama-3.1"
+	case strings.Contains(upper, "LLAMA 3 COMMUNITY LICENSE"):
+		return "Llama-3"
+	case strings.Contains(upper, "LLAMA 2 COMMUNITY LICENSE"):
+		return "Llama-2"
+	case strings.Contains(upper, "GEMMA TERMS OF USE"):
+		return "Gemma"
+	case strings.Contains(upper, "DEEPSEEK"):
+		return "DeepSeek"
+	case strings.Contains(upper, "MICROSOFT RESEARCH LICENSE"):
+		return "MS-Research"
+	case strings.Contains(upper, "CREATIVECOMMONS.ORG") || strings.Contains(upper, "CREATIVE COMMONS"):
+		if strings.Contains(upper, "BY-NC-SA") {
+			return "CC-BY-NC-SA-4.0"
+		}
+		if strings.Contains(upper, "BY-NC-ND") {
+			return "CC-BY-NC-ND-4.0"
+		}
+		if strings.Contains(upper, "BY-NC") {
+			return "CC-BY-NC-4.0"
+		}
+		if strings.Contains(upper, "BY-SA") {
+			return "CC-BY-SA-4.0"
+		}
+		if strings.Contains(upper, "BY-ND") {
+			return "CC-BY-ND-4.0"
+		}
+		return "CC-BY-4.0"
+	}
+
+	first := strings.TrimSpace(text)
+	if i := strings.IndexByte(first, '\n'); i > 0 {
+		first = strings.TrimSpace(first[:i])
+	}
+	if len(first) > 0 && len(first) <= 80 {
+		return first
+	}
+	return ""
 }
 
 func readOllamaConfig(afs *afero.Afero, modelsDir string, digest string) ollamaExtracted {

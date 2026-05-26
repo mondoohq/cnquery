@@ -6,6 +6,7 @@ package aimodel
 import (
 	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -180,6 +181,130 @@ func TestDetectOllama_ExtractsNewFields(t *testing.T) {
 	assert.Equal(t, "llama", m.Architecture)
 	assert.Equal(t, "llama3", m.License)
 	assert.Equal(t, []string{"8b", "q4_0"}, m.Tags)
+}
+
+func TestDetectOllama_LicenseFromLayer(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:cfg1"},
+		Layers: []ollamaLayer{
+			{MediaType: "application/vnd.ollama.image.model", Digest: "sha256:model1", Size: 1000},
+			{MediaType: "application/vnd.ollama.image.license", Digest: "sha256:lic1", Size: 500},
+		},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/llama3.1/latest")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-cfg1")
+	writeJSON(t, fs, configPath, map[string]any{"model_family": "llama"})
+
+	licenseText := "LLAMA 3.1 COMMUNITY LICENSE AGREEMENT\nLlama 3.1 Version Release Date: July 23, 2024\n..."
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(home, ".ollama/models/blobs/sha256-lic1"), []byte(licenseText), 0644))
+
+	results := detectWith(&OllamaDetector{}, afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "Llama-3.1", results[0].License)
+}
+
+func TestDetectOllama_LicenseApache(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:cfg2"},
+		Layers: []ollamaLayer{
+			{MediaType: "application/vnd.ollama.image.model", Digest: "sha256:model2", Size: 1000},
+			{MediaType: "application/vnd.ollama.image.license", Digest: "sha256:lic2", Size: 500},
+		},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/gemma/latest")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-cfg2")
+	writeJSON(t, fs, configPath, map[string]any{"model_family": "gemma"})
+
+	licenseText := "\n                                 Apache License\n                           Version 2.0, January 2004\n"
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(home, ".ollama/models/blobs/sha256-lic2"), []byte(licenseText), 0644))
+
+	results := detectWith(&OllamaDetector{}, afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "Apache-2.0", results[0].License)
+}
+
+func TestDetectOllama_LicenseMIT(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:cfg3"},
+		Layers: []ollamaLayer{
+			{MediaType: "application/vnd.ollama.image.model", Digest: "sha256:model3", Size: 1000},
+			{MediaType: "application/vnd.ollama.image.license", Digest: "sha256:lic3", Size: 200},
+		},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/deepseek-r1/7b")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-cfg3")
+	writeJSON(t, fs, configPath, map[string]any{"model_family": "deepseek2"})
+
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(home, ".ollama/models/blobs/sha256-lic3"), []byte("MIT License\n\nCopyright (c) 2024 DeepSeek"), 0644))
+
+	results := detectWith(&OllamaDetector{}, afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "MIT", results[0].License)
+}
+
+func TestDetectOllama_ConfigLicenseTakesPrecedence(t *testing.T) {
+	afs, fs := newTestAfs()
+	home := "/home/testuser"
+
+	manifest := ollamaManifest{
+		Config: ollamaDescriptor{Digest: "sha256:cfglic"},
+		Layers: []ollamaLayer{
+			{MediaType: "application/vnd.ollama.image.model", Digest: "sha256:model4", Size: 1000},
+			{MediaType: "application/vnd.ollama.image.license", Digest: "sha256:lic4", Size: 200},
+		},
+	}
+	manifestPath := filepath.Join(home, ".ollama/models/manifests/registry.ollama.ai/library/custom/latest")
+	writeJSON(t, fs, manifestPath, manifest)
+
+	configPath := filepath.Join(home, ".ollama/models/blobs/sha256-cfglic")
+	writeJSON(t, fs, configPath, map[string]any{"model_family": "custom", "license": "custom-license"})
+
+	require.NoError(t, afero.WriteFile(fs, filepath.Join(home, ".ollama/models/blobs/sha256-lic4"), []byte("MIT License"), 0644))
+
+	results := detectWith(&OllamaDetector{}, afs, home)
+	require.Len(t, results, 1)
+	assert.Equal(t, "custom-license", results[0].License)
+}
+
+func TestIdentifyLicense(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+		want string
+	}{
+		{"Apache-2.0", "\n                                 Apache License\n                           Version 2.0, January 2004\n", "Apache-2.0"},
+		{"MIT", "MIT License\n\nCopyright (c) 2024", "MIT"},
+		{"Llama-3.1", "LLAMA 3.1 COMMUNITY LICENSE AGREEMENT\nLlama 3.1 Version Release Date: July 23, 2024", "Llama-3.1"},
+		{"Llama-3", "LLAMA 3 COMMUNITY LICENSE AGREEMENT\nMeta Llama 3 Version Release Date: April 18, 2024", "Llama-3"},
+		{"Llama-2", "LLAMA 2 COMMUNITY LICENSE AGREEMENT\n", "Llama-2"},
+		{"Gemma", "Gemma Terms of Use\nLast modified: February 21, 2024", "Gemma"},
+		{"DeepSeek", "DeepSeek License Agreement\nVersion 1.0", "DeepSeek"},
+		{"BSD-3-Clause", "BSD 3-Clause License\n\nCopyright", "BSD-3-Clause"},
+		{"CC-BY-NC-SA-4.0", "Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0)", "CC-BY-NC-SA-4.0"},
+		{"short-first-line", "Custom Model License v1\nSome details...", "Custom Model License v1"},
+		{"empty", "", ""},
+		{"long-no-match", strings.Repeat("x", 100) + "\n", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, identifyLicense(tt.text))
+		})
+	}
 }
 
 func TestDetectOllama_QuantizationFromTagFallback(t *testing.T) {
