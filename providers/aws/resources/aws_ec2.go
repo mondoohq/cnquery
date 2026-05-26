@@ -1961,7 +1961,7 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	var region, groupId string
 	if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
-		if parsed, err := arn.Parse(arnVal); err == nil {
+		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "security-group/") {
 			region = parsed.Region
 			groupId = strings.TrimPrefix(parsed.Resource, "security-group/")
 		}
