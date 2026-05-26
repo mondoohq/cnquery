@@ -137,16 +137,7 @@ func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
 
 		return allResults, nil
 	} else {
-		installed, err := collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
-		if err != nil {
-			return nil, err
-		}
-
-		// Also scan common project directories for source manifests
-		manifestResults := collectPythonManifestPackages(fs, ".")
-		installed = mergePythonPackages(installed, manifestResults)
-
-		return installed, nil
+		return collectPythonPackagesInPaths(r.MqlRuntime, fs, defaultPythonPaths)
 	}
 }
 
@@ -486,6 +477,7 @@ func parseRequirementsTxtFile(afs *afero.Afero, dir string) []python.PackageDeta
 			File:    reqPath,
 			Purl:    python.NewPackageUrl(req.Name, req.Version),
 			Cpes:    python.NewCpes(req.Name, req.Version),
+			IsLeaf:  true,
 		})
 	}
 	return results
@@ -515,6 +507,7 @@ func parseSetupFile(afs *afero.Afero, dir, name string) []python.PackageDetails 
 			File:    p,
 			Purl:    python.NewPackageUrl(req.Name, req.Version),
 			Cpes:    python.NewCpes(req.Name, req.Version),
+			IsLeaf:  true,
 		})
 	}
 	return results
@@ -532,6 +525,7 @@ func languagePackagesToDetails(pkgs languages.Packages, file string) []python.Pa
 			Cpes:    pkg.Cpes,
 			License: pkg.License,
 			Author:  pkg.Author,
+			IsLeaf:  true,
 		})
 	}
 	return results

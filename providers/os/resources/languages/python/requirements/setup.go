@@ -14,12 +14,12 @@ import (
 //
 //	'pathlib3==2.2.0;python_version<"3.6"'
 //	"mypy==v0.770",
-var pinnedQuoted = regexp.MustCompile(`['"](\w[\w.\-]*)\s*==\s*([\w.\-]+)`)
+var pinnedQuoted = regexp.MustCompile(`['"]([a-zA-Z0-9][\w.\-]*)\s*==\s*([\w.\-]+)`)
 
 // pinnedUnquoted matches unquoted pinned dependencies, e.g.:
 //
 //	mypy == v0.770
-var pinnedUnquoted = regexp.MustCompile(`^\s*(\w[\w.\-]*)\s*==\s*([\w.\-]+)`)
+var pinnedUnquoted = regexp.MustCompile(`^\s*([a-zA-Z0-9][\w.\-]*)\s*==\s*([\w.\-]+)`)
 
 // ParseSetupPy scans a setup.py (or setup.cfg) file for pinned dependencies
 // (name==version). It extracts both quoted strings inside install_requires

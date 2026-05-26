@@ -81,7 +81,7 @@ func ParseRequirementsTxt(r io.Reader) ([]Requirement, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Strip trailing comments (but not inside quotes)
+		// Strip inline comments
 		if idx := strings.Index(line, "#"); idx >= 0 {
 			line = line[:idx]
 		}
