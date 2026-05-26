@@ -295,8 +295,10 @@ func TestIdentifyLicense(t *testing.T) {
 		{"Gemma", "Gemma Terms of Use\nLast modified: February 21, 2024", "Gemma"},
 		{"DeepSeek", "DeepSeek License Agreement\nVersion 1.0", "DeepSeek"},
 		{"BSD-3-Clause", "BSD 3-Clause License\n\nCopyright", "BSD-3-Clause"},
-		{"CC-BY-NC-SA-4.0", "Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0)", "CC-BY-NC-SA-4.0"},
-		{"short-first-line", "Custom Model License v1\nSome details...", "Custom Model License v1"},
+		{"CC-BY-NC-SA-4.0", "Creative Commons Attribution-NonCommercial-ShareAlike\nVersion 4.0 (CC BY-NC-SA)", "CC-BY-NC-SA-4.0"},
+		{"CC-BY-NC-3.0", "Creative Commons Attribution-NonCommercial (CC BY-NC)\nVersion 3.0", "CC-BY-NC-3.0"},
+		{"CC-BY-no-version", "Creative Commons Attribution License\nSome text", "CC-BY"},
+		{"short-first-line", "Custom Model License v1\nSome details...", "LicenseRef-Custom Model License v1"},
 		{"empty", "", ""},
 		{"long-no-match", strings.Repeat("x", 100) + "\n", ""},
 	}

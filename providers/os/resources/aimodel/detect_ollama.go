@@ -5,7 +5,9 @@ package aimodel
 
 import (
 	"encoding/json"
+	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -238,14 +240,26 @@ func (d *OllamaDetector) Detect(ctx DetectContext) []ModelInfo {
 
 const ollamaLicenseMediaType = "application/vnd.ollama.image.license"
 
+// maxLicenseRead is the maximum bytes to read from a license blob.
+// License headers are identifiable within the first few KB.
+const maxLicenseRead = 8 * 1024
+
 func readOllamaLicenseLayer(afs *afero.Afero, modelsDir string, layers []ollamaLayer) string {
 	for _, l := range layers {
 		if l.MediaType != ollamaLicenseMediaType || l.Digest == "" {
 			continue
 		}
+		if l.Size > 1<<20 {
+			continue
+		}
 		blobName := strings.Replace(l.Digest, ":", "-", 1)
 		blobPath := filepath.Join(modelsDir, "blobs", blobName)
-		data, err := afs.ReadFile(blobPath)
+		f, err := afs.Open(blobPath)
+		if err != nil {
+			continue
+		}
+		data, err := io.ReadAll(io.LimitReader(f, maxLicenseRead))
+		f.Close()
 		if err != nil {
 			continue
 		}
@@ -256,9 +270,16 @@ func readOllamaLicenseLayer(afs *afero.Afero, modelsDir string, layers []ollamaL
 	return ""
 }
 
+var reCCVersion = regexp.MustCompile(`(?i)VERSION\s+(\d+\.\d+)`)
+
 // identifyLicense extracts a short SPDX-like identifier from license text.
 func identifyLicense(text string) string {
-	upper := strings.ToUpper(text)
+	prefix := text
+	if len(prefix) > 4096 {
+		prefix = prefix[:4096]
+	}
+	upper := strings.ToUpper(prefix)
+
 	switch {
 	case strings.Contains(upper, "APACHE LICENSE") && strings.Contains(upper, "VERSION 2.0"):
 		return "Apache-2.0"
@@ -285,22 +306,7 @@ func identifyLicense(text string) string {
 	case strings.Contains(upper, "MICROSOFT RESEARCH LICENSE"):
 		return "MS-Research"
 	case strings.Contains(upper, "CREATIVECOMMONS.ORG") || strings.Contains(upper, "CREATIVE COMMONS"):
-		if strings.Contains(upper, "BY-NC-SA") {
-			return "CC-BY-NC-SA-4.0"
-		}
-		if strings.Contains(upper, "BY-NC-ND") {
-			return "CC-BY-NC-ND-4.0"
-		}
-		if strings.Contains(upper, "BY-NC") {
-			return "CC-BY-NC-4.0"
-		}
-		if strings.Contains(upper, "BY-SA") {
-			return "CC-BY-SA-4.0"
-		}
-		if strings.Contains(upper, "BY-ND") {
-			return "CC-BY-ND-4.0"
-		}
-		return "CC-BY-4.0"
+		return identifyCCLicense(prefix)
 	}
 
 	first := strings.TrimSpace(text)
@@ -308,9 +314,32 @@ func identifyLicense(text string) string {
 		first = strings.TrimSpace(first[:i])
 	}
 	if len(first) > 0 && len(first) <= 80 {
-		return first
+		return "LicenseRef-" + first
 	}
 	return ""
+}
+
+func identifyCCLicense(text string) string {
+	upper := strings.ToUpper(text)
+	var variant string
+	switch {
+	case strings.Contains(upper, "BY-NC-SA"):
+		variant = "CC-BY-NC-SA"
+	case strings.Contains(upper, "BY-NC-ND"):
+		variant = "CC-BY-NC-ND"
+	case strings.Contains(upper, "BY-NC"):
+		variant = "CC-BY-NC"
+	case strings.Contains(upper, "BY-SA"):
+		variant = "CC-BY-SA"
+	case strings.Contains(upper, "BY-ND"):
+		variant = "CC-BY-ND"
+	default:
+		variant = "CC-BY"
+	}
+	if m := reCCVersion.FindStringSubmatch(text); len(m) > 1 {
+		return variant + "-" + m[1]
+	}
+	return variant
 }
 
 func readOllamaConfig(afs *afero.Afero, modelsDir string, digest string) ollamaExtracted {
