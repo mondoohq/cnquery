@@ -1637,6 +1637,534 @@ private squid.conf.accessLog @defaults("target format") {
   raw string
 }
 
+// HAProxy load balancer
+//
+// Examine HAProxy version and configuration. The configuration covers
+// the global section, defaults blocks, frontends, backends, listens, the
+// servers behind each backend, and supporting sections (resolvers,
+// userlists, peers).
+haproxy {
+  // HAProxy version string extracted from the haproxy binary (e.g., "2.8.4-1")
+  version() string
+}
+
+// HAProxy configuration
+//
+// Examine the parsed haproxy.cfg, any `<configdir>/conf.d/*.cfg` fragments
+// next to it, and every file pulled in by `!include` / `!includeglob`
+// directives (HAProxy 2.4+). Pass `init(path: "...")` to point at a
+// non-default config file.
+haproxy.config {
+  init(path? string)
+  // Primary configuration file (defaults to /etc/haproxy/haproxy.cfg)
+  file() file
+  // All configuration files visited (root + conf.d/*.cfg fragments + !included files)
+  files(file) []file
+  // Global section
+  global(file) haproxy.config.global
+  // Defaults sections — one unnamed block in classic configs, possibly several named blocks in HAProxy 2.4+
+  defaults(file) []haproxy.config.defaultsSection
+  // Frontend sections
+  frontends(file) []haproxy.config.frontend
+  // Backend sections
+  backends(file) []haproxy.config.backend
+  // Listen sections (combined frontend + backend)
+  listens(file) []haproxy.config.listen
+  // Resolvers sections (DNS resolver pools)
+  resolvers(file) []haproxy.config.resolversSection
+  // Userlist sections (HTTP auth groups/users)
+  userlists(file) []haproxy.config.userlist
+  // Peers sections (stick-table replication)
+  peers(file) []haproxy.config.peersSection
+  // Every parsed section in source order, including types not exposed as typed resources
+  sections(file) []haproxy.config.section
+}
+
+// HAProxy configuration section (raw view)
+//
+// Examine an arbitrary section by type and name. Useful for sections we
+// don't model as typed resources (mailers, cache, program, ring,
+// http-errors, fcgi-app, crt-store) and for low-level audits that need
+// every directive in source order.
+private haproxy.config.section @defaults("type name") {
+  // Section keyword (global, defaults, frontend, backend, listen, resolvers, userlist, peers, mailers, cache, ...)
+  type string
+  // Section name (empty for global; may be empty for the classic unnamed defaults block)
+  name string
+  // `from <other>` argument when present on the section header (named-defaults inheritance)
+  inherits string
+  // Source file path
+  file string
+  // 1-based source line where the section header appears
+  startLine int
+  // 1-based source line of the last directive in the section
+  endLine int
+  // Flat directive map (name -> joined args; values comma-concatenated when the directive repeats)
+  params map[string]string
+  // Every directive in source order — entries: {name, args, line, file, raw}
+  directives []dict
+  // Raw text of the section including its header line
+  raw string
+}
+
+// HAProxy global section
+//
+// Examine the global section: process settings (daemon, user/group,
+// chroot, pidfile), connection limits, threading, the runtime stats
+// socket, default SSL options applied to every bind and server, and the
+// log destinations.
+private haproxy.config.global @defaults("daemon maxconn nbthread") {
+  // `daemon` directive present
+  daemon bool
+  // `master-worker` directive present
+  masterWorker bool
+  // `user` directive value (UNIX uid)
+  user string
+  // `group` directive value (UNIX gid)
+  group string
+  // `chroot` directory
+  chroot string
+  // `pidfile` path
+  pidfile string
+  // `maxconn` value (global connection limit)
+  maxconn int
+  // `nbthread` value (worker threads per process)
+  nbthread int
+  // `nbproc` value (legacy; replaced by nbthread in HAProxy 2.5+)
+  nbproc int
+  // `hard-stop-after` value (time string, e.g. "30s")
+  hardStopAfter string
+  // `stats socket` path (UNIX path or address)
+  statsSocket string
+  // `mode` arg on the stats socket line (octal as string)
+  statsSocketMode string
+  // `level` arg on the stats socket line (user, operator, admin)
+  statsSocketLevel string
+  // `user`/`group` arg on the stats socket line — UNIX uid/gid the socket is owned by
+  statsSocketUser string
+  // `stats timeout` value (string with time unit)
+  statsTimeout string
+  // `log` directives, one entry per line (e.g. "/dev/log local0")
+  log []string
+  // `ssl-default-bind-ciphers` value
+  sslDefaultBindCiphers string
+  // `ssl-default-bind-ciphersuites` value (TLS 1.3 cipher list)
+  sslDefaultBindCiphersuites string
+  // `ssl-default-bind-options` value (e.g., "ssl-min-ver TLSv1.2 no-tls-tickets")
+  sslDefaultBindOptions string
+  // `ssl-default-bind-curves` value
+  sslDefaultBindCurves string
+  // `ssl-default-server-ciphers` value
+  sslDefaultServerCiphers string
+  // `ssl-default-server-ciphersuites` value
+  sslDefaultServerCiphersuites string
+  // `ssl-default-server-options` value
+  sslDefaultServerOptions string
+  // `ssl-default-server-curves` value
+  sslDefaultServerCurves string
+  // `ca-base` value (base directory for `ca-file` relative paths)
+  caBase string
+  // `crt-base` value (base directory for `crt` relative paths)
+  crtBase string
+  // `tune.ssl.default-dh-param` value
+  tuneSslDefaultDhParam int
+  // Every `option <name> [args]` enabled in this section
+  options []string
+  // Every `no option <name>` disabled in this section
+  disabledOptions []string
+  // All directives within this section (name -> joined args, comma-concatenated when repeated)
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy defaults section
+//
+// Examine the inherited defaults applied to every frontend, backend, and
+// listen that doesn't override a setting locally. HAProxy 2.4+ supports
+// multiple named defaults blocks; `name` selects which one.
+private haproxy.config.defaultsSection @defaults("name mode") {
+  // Defaults section name (empty for the classic unnamed defaults block)
+  name string
+  // `from <other-defaults>` argument when present
+  inherits string
+  // `mode` value (tcp, http)
+  mode string
+  // `balance` algorithm value
+  balance string
+  // `retries` value
+  retries int
+  // `maxconn` value (per-frontend limit when inherited)
+  maxconn int
+  // `option <name> [args]` directives
+  options []string
+  // `no option <name>` directives
+  disabledOptions []string
+  // `timeout <kind> <value>` map keyed by kind (connect, client, server, http-request, queue, tunnel, ...)
+  timeouts map[string]string
+  // `log` directives, one entry per line
+  log []string
+  // All directives within this defaults section
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy frontend section
+//
+// Examine an inbound traffic acceptor: its `bind` listeners (with TLS
+// settings), ACL definitions, request routing rules, the default backend,
+// and the timeout/log/option set applied to client traffic.
+private haproxy.config.frontend @defaults("name mode") {
+  // Frontend name
+  name string
+  // `from <defaults>` argument when present
+  inherits string
+  // `mode` value (tcp, http)
+  mode string
+  // `bind` directives, broken out per address form (a comma-separated address list produces one entry per address)
+  binds []haproxy.config.bind
+  // `default_backend` value
+  defaultBackend string
+  // `acl` definitions — entries: {name, criterion, args, line, raw}
+  acls []dict
+  // `use_backend` rules — entries: {backend, condition, line, raw}
+  useBackends []dict
+  // `http-request <rule>` lines (raw arg strings, in source order)
+  httpRequestRules []string
+  // `http-response <rule>` lines
+  httpResponseRules []string
+  // `tcp-request <rule>` lines
+  tcpRequestRules []string
+  // `tcp-response <rule>` lines
+  tcpResponseRules []string
+  // `capture` lines (raw arg strings)
+  captures []string
+  // `redirect` lines
+  redirects []string
+  // `monitor-uri` value
+  monitorUri string
+  // `monitor fail` condition (everything after `monitor fail`)
+  monitorFail string
+  // `option <name> [args]` directives
+  options []string
+  // `no option <name>` directives
+  disabledOptions []string
+  // `timeout <kind> <value>` map keyed by kind
+  timeouts map[string]string
+  // `log` directives
+  log []string
+  // `maxconn` value (per-frontend limit)
+  maxconn int
+  // All directives within this frontend
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy backend section
+//
+// Examine a backend pool: the load-balancing algorithm, the servers
+// behind it, their TLS posture (ssl/verify/ca-file) and health-check
+// configuration (`option httpchk`/`http-check`), `default-server` defaults,
+// stick-table/cookie persistence, request mutators, and timeouts.
+private haproxy.config.backend @defaults("name mode balance") {
+  // Backend name
+  name string
+  // `from <defaults>` argument when present
+  inherits string
+  // `mode` value (tcp, http)
+  mode string
+  // `balance` algorithm (roundrobin, leastconn, source, uri, url_param, hdr, random, ...)
+  balance string
+  // `hash-type` value
+  hashType string
+  // Servers behind this backend
+  servers []haproxy.config.server
+  // `default-server` directive parsed as a flag bag (same shape as a server, minus name/address)
+  defaultServer dict
+  // `source` directive arguments (e.g., "0.0.0.0 usesrc clientip")
+  source string
+  // Consolidated HTTP health check — keys: {method, uri, version, send[], expect[], disabled}
+  httpCheck dict
+  // `stick-table` arguments (raw string)
+  stickTable string
+  // `stick on` value (raw expression)
+  stickOn string
+  // `cookie` directive arguments (name + flags)
+  cookie string
+  // `acl` definitions
+  acls []dict
+  // `http-request <rule>` lines
+  httpRequestRules []string
+  // `http-response <rule>` lines
+  httpResponseRules []string
+  // `tcp-request <rule>` lines
+  tcpRequestRules []string
+  // `tcp-response <rule>` lines
+  tcpResponseRules []string
+  // `option <name> [args]` directives
+  options []string
+  // `no option <name>` directives
+  disabledOptions []string
+  // `timeout <kind> <value>` map keyed by kind
+  timeouts map[string]string
+  // `log` directives
+  log []string
+  // `retries` value (defaults inherited; 0 means unset locally)
+  retries int
+  // All directives within this backend
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy listen section
+//
+// Examine a combined frontend+backend section. The same audit surface as
+// a backend (servers, balance, health checks) plus the frontend's
+// `bind` listeners and ACL/routing surface.
+private haproxy.config.listen @defaults("name mode") {
+  // Listen section name
+  name string
+  // `from <defaults>` argument when present
+  inherits string
+  // `mode` value (tcp, http)
+  mode string
+  // `bind` directives, broken out per address form
+  binds []haproxy.config.bind
+  // `balance` algorithm
+  balance string
+  // Backend servers
+  servers []haproxy.config.server
+  // `default-server` directive parsed as a flag bag
+  defaultServer dict
+  // `acl` definitions
+  acls []dict
+  // `use_backend` rules
+  useBackends []dict
+  // `http-request <rule>` lines
+  httpRequestRules []string
+  // `http-response <rule>` lines
+  httpResponseRules []string
+  // `tcp-request <rule>` lines
+  tcpRequestRules []string
+  // `tcp-response <rule>` lines
+  tcpResponseRules []string
+  // Consolidated HTTP health check
+  httpCheck dict
+  // `option <name> [args]` directives
+  options []string
+  // `no option <name>` directives
+  disabledOptions []string
+  // `timeout <kind> <value>` map keyed by kind
+  timeouts map[string]string
+  // `log` directives
+  log []string
+  // All directives within this listen
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy bind listener
+//
+// Examine one listener address produced by a `bind` directive. A
+// `bind a:1,b:2 ssl crt foo` directive expands into one of these per
+// address form; the shared parameters (ssl, crt, alpn, verify, etc.)
+// are copied onto each entry.
+private haproxy.config.bind @defaults("address port ssl") {
+  // Raw argument string after the `bind` keyword
+  raw string
+  // Address part: "*" for the wildcard, an IP literal, "[::]" for IPv6, "unix:/path" / "unix@..." / "abns@..." for unix sockets, or a hostname
+  address string
+  // TCP port for a single-port bind; 0 for unix sockets or port ranges
+  port int
+  // Start of a port range (e.g., `bind *:80-89`); 0 if not a range
+  portRangeStart int
+  // End of a port range; 0 if not a range
+  portRangeEnd int
+  // `ssl` flag present
+  ssl bool
+  // `alpn` argument (comma-separated protocols; e.g., "h2,http/1.1")
+  alpn string
+  // `ciphers` argument (TLS 1.0-1.2 cipher list)
+  ciphers string
+  // `ciphersuites` argument (TLS 1.3 cipher suite list)
+  ciphersuites string
+  // `curves` argument (named curve list)
+  curves string
+  // `crt` argument (certificate path or directory)
+  crt string
+  // `crt-list` argument (path to a crt-list file)
+  crtList string
+  // `ca-file` argument (CA bundle for client cert verification)
+  caFile string
+  // `verify` argument (none, optional, required)
+  verify string
+  // `ssl-min-ver` argument (e.g., "TLSv1.2")
+  sslMinVer string
+  // `ssl-max-ver` argument
+  sslMaxVer string
+  // `no-sslv3` flag
+  noSslv3 bool
+  // `no-tlsv10` flag
+  noTlsv10 bool
+  // `no-tlsv11` flag
+  noTlsv11 bool
+  // `no-tlsv12` flag
+  noTlsv12 bool
+  // `no-tlsv13` flag
+  noTlsv13 bool
+  // `accept-proxy` flag (require PROXY protocol header from client)
+  acceptProxy bool
+  // `transparent` flag
+  transparent bool
+  // `v4v6` flag (bind on both IPv4 and IPv6 when the socket supports it)
+  v4v6 bool
+  // `v6only` flag
+  v6only bool
+  // All key=value attributes on this bind line (catch-all including ones not surfaced as typed fields)
+  params map[string]string
+}
+
+// HAProxy backend server
+//
+// Examine one backend pool member. Captures the server identity
+// (name/address/port), TLS posture toward the backend (ssl, verify,
+// ca-file, sni, alpn), the health check tuning (inter/rise/fall/observe),
+// connection limits, and persistence hooks.
+private haproxy.config.server @defaults("name address port check ssl") {
+  // Server name
+  name string
+  // Server address: hostname, IPv4, "[IPv6]", "unix@/path", or "abns@..."
+  address string
+  // Server port (0 for unix sockets or address-only declarations)
+  port int
+  // `check` flag (active health checking enabled)
+  check bool
+  // `ssl` flag (use TLS to reach this server)
+  ssl bool
+  // `verify` argument (none, required)
+  verify string
+  // `ca-file` argument (CA bundle for backend cert verification)
+  caFile string
+  // `crt` argument (client cert presented to the backend)
+  crt string
+  // `sni` argument (SNI value to send)
+  sni string
+  // `alpn` argument
+  alpn string
+  // `weight` value (load-balancing weight; 0 means draining)
+  weight int
+  // `backup` flag (only used when no non-backup server is up)
+  backup bool
+  // `disabled` flag (admin-down)
+  disabled bool
+  // `maxconn` value (per-server concurrent connection cap)
+  maxconn int
+  // `maxqueue` value (queue cap before failing over)
+  maxqueue int
+  // `inter` value (regular health-check interval, e.g. "2s")
+  inter string
+  // `fastinter` value (interval immediately after a state change)
+  fastInter string
+  // `downinter` value (interval while marked down)
+  downInter string
+  // `rise` value (consecutive UP checks required to mark UP)
+  rise int
+  // `fall` value (consecutive failed checks required to mark DOWN)
+  fall int
+  // `slowstart` value
+  slowStart string
+  // `observe` value (passive observation: l4, l7)
+  observe string
+  // `on-error` value (action on observed errors: fastinter, fail-check, sudden-death, mark-down)
+  onError string
+  // `on-marked-up` value
+  onMarkedUp string
+  // `on-marked-down` value
+  onMarkedDown string
+  // `cookie` value (cookie identifier for stickiness)
+  cookie string
+  // `resolvers` name (resolvers section used for hostname resolution)
+  resolvers string
+  // `init-addr` value
+  initAddr string
+  // `send-proxy` flag (send PROXY v1 header to backend)
+  sendProxy bool
+  // `send-proxy-v2` flag (send PROXY v2 header to backend)
+  sendProxyV2 bool
+  // `agent-check` flag (enable external agent health check)
+  agentCheck bool
+  // `agent-port` value
+  agentPort int
+  // `agent-addr` value
+  agentAddr string
+  // `agent-inter` value
+  agentInter string
+  // All key=value flags on the server line (catch-all)
+  params map[string]string
+}
+
+// HAProxy resolvers section
+//
+// Examine a DNS resolver pool used by `server` directives that resolve
+// hostnames at runtime via `resolvers <name>`.
+private haproxy.config.resolversSection @defaults("name") {
+  // Resolvers section name
+  name string
+  // `nameserver <name> <addr>[:<port>]` entries — entries: {name, address, port}
+  nameservers []dict
+  // `resolve_retries` value
+  resolveRetries int
+  // `timeout <kind> <value>` map (resolve, retry)
+  timeouts map[string]string
+  // `accepted_payload_size` value (UDP DNS payload cap)
+  acceptedPayloadSize int
+  // `hold <state> <duration>` map keyed by state (valid, nx, refused, timeout, obsolete, other)
+  holds map[string]string
+  // All directives within this resolvers section
+  params map[string]string
+  // Source file path
+  file string
+}
+
+// HAProxy userlist section
+//
+// Examine an HTTP-auth userlist consumed by `http-request auth` /
+// `http-request deny unless { http_auth(<list>) }`. Captures users
+// (with hashing flag) and groups.
+private haproxy.config.userlist @defaults("name") {
+  // Userlist name
+  name string
+  // `user <name> (password|insecure-password) <secret> [groups <g1,g2>]` entries — entries: {name, password, hashed, groups}
+  users []dict
+  // `group <name> [users <u1,u2>]` entries — entries: {name, users}
+  groups []dict
+  // Source file path
+  file string
+}
+
+// HAProxy peers section
+//
+// Examine a peers section used for stick-table replication between
+// HAProxy instances.
+private haproxy.config.peersSection @defaults("name") {
+  // Peers section name
+  name string
+  // `bind` argument (raw — peers binds are simpler than frontend binds)
+  bind string
+  // `server <name> <addr>:<port>` entries (typed server resources, same shape as backend servers)
+  servers []haproxy.config.server
+  // `table <name> ...` entries — entries: {name, type, size, expire, store, raw}
+  tables []dict
+  // All directives within this peers section
+  params map[string]string
+  // Source file path
+  file string
+}
+
 // systemd journald configuration
 //
 // Examine the [Journal] and other sections of journald.conf

@@ -16,389 +16,402 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                        string = "asset"
-	ResourceAssetEol                     string = "asset.eol"
-	ResourceMondooEol                    string = "mondoo.eol"
-	ResourceVulnmgmt                     string = "vulnmgmt"
-	ResourceVulnCve                      string = "vuln.cve"
-	ResourceVulnAdvisory                 string = "vuln.advisory"
-	ResourceVulnPackage                  string = "vuln.package"
-	ResourcePlatformAdvisories           string = "platform.advisories"
-	ResourcePlatformCves                 string = "platform.cves"
-	ResourceAuditCvss                    string = "audit.cvss"
-	ResourceAuditAdvisory                string = "audit.advisory"
-	ResourceAuditCve                     string = "audit.cve"
-	ResourceMachine                      string = "machine"
-	ResourceMachineBios                  string = "machine.bios"
-	ResourceMachineSystem                string = "machine.system"
-	ResourceMachineBaseboard             string = "machine.baseboard"
-	ResourceMachineChassis               string = "machine.chassis"
-	ResourceMachineCpu                   string = "machine.cpu"
-	ResourceMachineSecureboot            string = "machine.secureboot"
-	ResourceOs                           string = "os"
-	ResourceOsDate                       string = "os.date"
-	ResourceOsUpdate                     string = "os.update"
-	ResourceOsBase                       string = "os.base"
-	ResourceOsUnix                       string = "os.unix"
-	ResourceOsLinux                      string = "os.linux"
-	ResourceOsRootCertificates           string = "os.rootCertificates"
-	ResourceCommand                      string = "command"
-	ResourcePowershell                   string = "powershell"
-	ResourceFile                         string = "file"
-	ResourceFileContext                  string = "file.context"
-	ResourceFilePermissions              string = "file.permissions"
-	ResourceFiles                        string = "files"
-	ResourceFilesFind                    string = "files.find"
-	ResourceParseIni                     string = "parse.ini"
-	ResourceParseJson                    string = "parse.json"
-	ResourceParseXml                     string = "parse.xml"
-	ResourceParsePlist                   string = "parse.plist"
-	ResourceParseYaml                    string = "parse.yaml"
-	ResourceParseCertificates            string = "parse.certificates"
-	ResourceParseOpenpgp                 string = "parse.openpgp"
-	ResourceUser                         string = "user"
-	ResourcePrivatekey                   string = "privatekey"
-	ResourceUsers                        string = "users"
-	ResourceAuthorizedkeys               string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry          string = "authorizedkeys.entry"
-	ResourceGroup                        string = "group"
-	ResourceGroups                       string = "groups"
-	ResourcePackage                      string = "package"
-	ResourcePkgFileInfo                  string = "pkgFileInfo"
-	ResourcePackages                     string = "packages"
-	ResourcePamConf                      string = "pam.conf"
-	ResourcePamConfServiceEntry          string = "pam.conf.serviceEntry"
-	ResourcePamModule                    string = "pam.module"
-	ResourceSshd                         string = "sshd"
-	ResourceSshdConfig                   string = "sshd.config"
-	ResourceSshdConfigMatchBlock         string = "sshd.config.matchBlock"
-	ResourceAuditdConfig                 string = "auditd.config"
-	ResourceAuditdRules                  string = "auditd.rules"
-	ResourceAuditdRule                   string = "auditd.rule"
-	ResourceAuditdRuleControl            string = "auditd.rule.control"
-	ResourceAuditdRuleFile               string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall            string = "auditd.rule.syscall"
-	ResourceApache2                      string = "apache2"
-	ResourceApache2Conf                  string = "apache2.conf"
-	ResourceApache2ConfEnvvars           string = "apache2.conf.envvars"
-	ResourceApache2ConfModule            string = "apache2.conf.module"
-	ResourceApache2ConfVirtualHost       string = "apache2.conf.virtualHost"
-	ResourceApache2ConfDirectory         string = "apache2.conf.directory"
-	ResourceApache2ConfLocation          string = "apache2.conf.location"
-	ResourceNginx                        string = "nginx"
-	ResourceNginxConf                    string = "nginx.conf"
-	ResourceNginxConfServer              string = "nginx.conf.server"
-	ResourceNginxConfUpstream            string = "nginx.conf.upstream"
-	ResourceNginxConfLocation            string = "nginx.conf.location"
-	ResourceSquid                        string = "squid"
-	ResourceSquidConf                    string = "squid.conf"
-	ResourceSquidConfListen              string = "squid.conf.listen"
-	ResourceSquidConfAcl                 string = "squid.conf.acl"
-	ResourceSquidConfAccessRule          string = "squid.conf.accessRule"
-	ResourceSquidConfCachePeer           string = "squid.conf.cachePeer"
-	ResourceSquidConfCacheDir            string = "squid.conf.cacheDir"
-	ResourceSquidConfRefreshPattern      string = "squid.conf.refreshPattern"
-	ResourceSquidConfAccessLog           string = "squid.conf.accessLog"
-	ResourceJournaldConfig               string = "journald.config"
-	ResourceJournaldConfigSection        string = "journald.config.section"
-	ResourceJournaldConfigSectionParam   string = "journald.config.section.param"
-	ResourceService                      string = "service"
-	ResourceServices                     string = "services"
-	ResourceSystemdTimer                 string = "systemd.timer"
-	ResourceSystemdTimers                string = "systemd.timers"
-	ResourceSystemdSocket                string = "systemd.socket"
-	ResourceSystemdSockets               string = "systemd.sockets"
-	ResourceSystemdTarget                string = "systemd.target"
-	ResourceSystemdTargets               string = "systemd.targets"
-	ResourceSystemdResolved              string = "systemd.resolved"
-	ResourceSystemdTimesyncd             string = "systemd.timesyncd"
-	ResourceKernel                       string = "kernel"
-	ResourceKernelModule                 string = "kernel.module"
-	ResourceKernelCmdline                string = "kernel.cmdline"
-	ResourceKernelTaint                  string = "kernel.taint"
-	ResourceKernelLockdown               string = "kernel.lockdown"
-	ResourceKernelAslr                   string = "kernel.aslr"
-	ResourceCgroups                      string = "cgroups"
-	ResourceCgroup                       string = "cgroup"
-	ResourceDocker                       string = "docker"
-	ResourceDockerFile                   string = "docker.file"
-	ResourceDockerFileStage              string = "docker.file.stage"
-	ResourceDockerFileArg                string = "docker.file.arg"
-	ResourceDockerFileEnv                string = "docker.file.env"
-	ResourceDockerFileUser               string = "docker.file.user"
-	ResourceDockerFileExpose             string = "docker.file.expose"
-	ResourceDockerFileFrom               string = "docker.file.from"
-	ResourceDockerFileRun                string = "docker.file.run"
-	ResourceDockerFileRunMount           string = "docker.file.run.mount"
-	ResourceDockerFileAdd                string = "docker.file.add"
-	ResourceDockerFileCopy               string = "docker.file.copy"
-	ResourceDockerFileHealthcheck        string = "docker.file.healthcheck"
-	ResourceDockerFileVolume             string = "docker.file.volume"
-	ResourceDockerFileShell              string = "docker.file.shell"
-	ResourceDockerFileWorkdir            string = "docker.file.workdir"
-	ResourceDockerFileStopsignal         string = "docker.file.stopsignal"
-	ResourceDockerFileOnbuild            string = "docker.file.onbuild"
-	ResourceDockerImage                  string = "docker.image"
-	ResourceDockerContainer              string = "docker.container"
-	ResourceContainerd                   string = "containerd"
-	ResourceContainerdContainer          string = "containerd.container"
-	ResourceIptables                     string = "iptables"
-	ResourceIp6tables                    string = "ip6tables"
-	ResourceIptablesTable                string = "iptables.table"
-	ResourceIptablesChain                string = "iptables.chain"
-	ResourceIptablesEntry                string = "iptables.entry"
-	ResourceNftables                     string = "nftables"
-	ResourceNftablesTable                string = "nftables.table"
-	ResourceNftablesChain                string = "nftables.chain"
-	ResourceNftablesRule                 string = "nftables.rule"
-	ResourceNftablesSet                  string = "nftables.set"
-	ResourceUfw                          string = "ufw"
-	ResourceUfwRule                      string = "ufw.rule"
-	ResourceUfwApplication               string = "ufw.application"
-	ResourceFirewalld                    string = "firewalld"
-	ResourceFirewalldZone                string = "firewalld.zone"
-	ResourceFirewalldRichrule            string = "firewalld.richrule"
-	ResourceFstab                        string = "fstab"
-	ResourceFstabEntry                   string = "fstab.entry"
-	ResourceGrubConfig                   string = "grub.config"
-	ResourceGrubConfigEntry              string = "grub.config.entry"
-	ResourceSysrc                        string = "sysrc"
-	ResourceSysrcEntry                   string = "sysrc.entry"
-	ResourceProcess                      string = "process"
-	ResourceProcesses                    string = "processes"
-	ResourcePort                         string = "port"
-	ResourcePorts                        string = "ports"
-	ResourceAuditpol                     string = "auditpol"
-	ResourceAuditpolEntry                string = "auditpol.entry"
-	ResourceSecpol                       string = "secpol"
-	ResourceNtpConf                      string = "ntp.conf"
-	ResourceRsyslogConf                  string = "rsyslog.conf"
-	ResourceRsyslogModule                string = "rsyslog.module"
-	ResourceRsyslogInput                 string = "rsyslog.input"
-	ResourceRsyslogAction                string = "rsyslog.action"
-	ResourceRsyslogRule                  string = "rsyslog.rule"
-	ResourceLogindefs                    string = "logindefs"
-	ResourceLimits                       string = "limits"
-	ResourceLimitsEntry                  string = "limits.entry"
-	ResourceSudoers                      string = "sudoers"
-	ResourceSudoersUserSpec              string = "sudoers.userSpec"
-	ResourceSudoersDefault               string = "sudoers.default"
-	ResourceSudoersAlias                 string = "sudoers.alias"
-	ResourceLsblk                        string = "lsblk"
-	ResourceLsblkEntry                   string = "lsblk.entry"
-	ResourceLuks                         string = "luks"
-	ResourceLuksVolume                   string = "luks.volume"
-	ResourceLuksVolumeCipher             string = "luks.volume.cipher"
-	ResourceLuksKeyslot                  string = "luks.keyslot"
-	ResourceApparmor                     string = "apparmor"
-	ResourceApparmorProfile              string = "apparmor.profile"
-	ResourceApparmorProcess              string = "apparmor.process"
-	ResourceSelinux                      string = "selinux"
-	ResourceSelinuxBoolean               string = "selinux.boolean"
-	ResourceSelinuxModule                string = "selinux.module"
-	ResourceModprobe                     string = "modprobe"
-	ResourceModprobeInstall              string = "modprobe.install"
-	ResourceModprobeRemove               string = "modprobe.remove"
-	ResourceModprobeBlacklist            string = "modprobe.blacklist"
-	ResourceModprobeOption               string = "modprobe.option"
-	ResourceModprobeAlias                string = "modprobe.alias"
-	ResourceModprobeSoftdep              string = "modprobe.softdep"
-	ResourceMount                        string = "mount"
-	ResourceNfs                          string = "nfs"
-	ResourceNfsExport                    string = "nfs.export"
-	ResourceNfsMount                     string = "nfs.mount"
-	ResourceMountPoint                   string = "mount.point"
-	ResourceShadow                       string = "shadow"
-	ResourceShadowEntry                  string = "shadow.entry"
-	ResourceYum                          string = "yum"
-	ResourceYumRepo                      string = "yum.repo"
-	ResourceRegistrykey                  string = "registrykey"
-	ResourceRegistrykeyProperty          string = "registrykey.property"
-	ResourceContainerImage               string = "container.image"
-	ResourceContainerRepository          string = "container.repository"
-	ResourceKubelet                      string = "kubelet"
-	ResourcePython                       string = "python"
-	ResourcePythonPackage                string = "python.package"
-	ResourceNpmPackages                  string = "npm.packages"
-	ResourceNpmPackage                   string = "npm.package"
-	ResourceGoPackages                   string = "go.packages"
-	ResourceGoPackage                    string = "go.package"
-	ResourceJavaPackages                 string = "java.packages"
-	ResourceJavaPackage                  string = "java.package"
-	ResourceRustPackages                 string = "rust.packages"
-	ResourceRustPackage                  string = "rust.package"
-	ResourceDotnetPackages               string = "dotnet.packages"
-	ResourceDotnetPackage                string = "dotnet.package"
-	ResourcePhpPackages                  string = "php.packages"
-	ResourcePhpPackage                   string = "php.package"
-	ResourceGithubactionsPackages        string = "githubactions.packages"
-	ResourceGithubactionsPackage         string = "githubactions.package"
-	ResourceSwiftPackages                string = "swift.packages"
-	ResourceSwiftPackage                 string = "swift.package"
-	ResourceTerraformPackages            string = "terraform.packages"
-	ResourceTerraformPackage             string = "terraform.package"
-	ResourceHomebrewPackages             string = "homebrew.packages"
-	ResourceHomebrewPackage              string = "homebrew.package"
-	ResourceChocolateyPackages           string = "chocolatey.packages"
-	ResourceChocolateyPackage            string = "chocolatey.package"
-	ResourceJenkinsPackages              string = "jenkins.packages"
-	ResourceJenkinsPackage               string = "jenkins.package"
-	ResourceWordpressPackages            string = "wordpress.packages"
-	ResourceWordpressPackage             string = "wordpress.package"
-	ResourceRubyPackages                 string = "ruby.packages"
-	ResourceRubyPackage                  string = "ruby.package"
-	ResourceDartPackages                 string = "dart.packages"
-	ResourceDartPackage                  string = "dart.package"
-	ResourceHaskellPackages              string = "haskell.packages"
-	ResourceHaskellPackage               string = "haskell.package"
-	ResourceElixirPackages               string = "elixir.packages"
-	ResourceElixirPackage                string = "elixir.package"
-	ResourceErlangPackages               string = "erlang.packages"
-	ResourceErlangPackage                string = "erlang.package"
-	ResourcePrologPackages               string = "prolog.packages"
-	ResourcePrologPackage                string = "prolog.package"
-	ResourceCondaPackages                string = "conda.packages"
-	ResourceCondaPackage                 string = "conda.package"
-	ResourceJuliaPackages                string = "julia.packages"
-	ResourceJuliaPackage                 string = "julia.package"
-	ResourceRPackages                    string = "r.packages"
-	ResourceRPackage                     string = "r.package"
-	ResourceLuaPackages                  string = "lua.packages"
-	ResourceLuaPackage                   string = "lua.package"
-	ResourceMacos                        string = "macos"
-	ResourceMacosHardware                string = "macos.hardware"
-	ResourceMacosAlf                     string = "macos.alf"
-	ResourceMacosFirewall                string = "macos.firewall"
-	ResourceMacosFirewallApp             string = "macos.firewall.app"
-	ResourceMacosFilevault               string = "macos.filevault"
-	ResourceMacosGatekeeper              string = "macos.gatekeeper"
-	ResourceMacosSip                     string = "macos.sip"
-	ResourceMacosXprotect                string = "macos.xprotect"
-	ResourceMacosSharing                 string = "macos.sharing"
-	ResourceMacosMdm                     string = "macos.mdm"
-	ResourceMacosProfiles                string = "macos.profiles"
-	ResourceMacosProfile                 string = "macos.profile"
-	ResourceMacosProfilePayload          string = "macos.profile.payload"
-	ResourceMacosSoftwareupdate          string = "macos.softwareupdate"
-	ResourceMacosSoftwareupdateEntry     string = "macos.softwareupdate.entry"
-	ResourceMacosTimemachine             string = "macos.timemachine"
-	ResourceMacosSystemsetup             string = "macos.systemsetup"
-	ResourceOpenBSMAudit                 string = "openBSMAudit"
-	ResourceWindows                      string = "windows"
-	ResourceMacosSystemExtension         string = "macos.systemExtension"
-	ResourceSafari                       string = "safari"
-	ResourceSafariExtension              string = "safari.extension"
-	ResourceLaunchd                      string = "launchd"
-	ResourceLaunchdJob                   string = "launchd.job"
-	ResourceWindowsHotfix                string = "windows.hotfix"
-	ResourceWindowsServerFeature         string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature       string = "windows.optionalFeature"
-	ResourceWindowsFirewall              string = "windows.firewall"
-	ResourceWindowsFirewallProfile       string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule          string = "windows.firewall.rule"
-	ResourceWindowsBitlocker             string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume       string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity              string = "windows.security"
-	ResourceWindowsSecurityProduct       string = "windows.security.product"
-	ResourceWindowsSecurityHealth        string = "windows.security.health"
-	ResourceCloud                        string = "cloud"
-	ResourceCloudInstance                string = "cloudInstance"
-	ResourceIpAddress                    string = "ipAddress"
-	ResourceNetwork                      string = "network"
-	ResourceNetworkInterface             string = "networkInterface"
-	ResourceNetworkRoutes                string = "networkRoutes"
-	ResourceNetworkRoute                 string = "networkRoute"
-	ResourceChrome                       string = "chrome"
-	ResourceChromeExtension              string = "chrome.extension"
-	ResourceChromeExtensionContentScript string = "chrome.extensionContentScript"
-	ResourceFirefox                      string = "firefox"
-	ResourceFirefoxAddon                 string = "firefox.addon"
-	ResourceUsb                          string = "usb"
-	ResourceUsbDevice                    string = "usb.device"
-	ResourceCrontab                      string = "crontab"
-	ResourceCrontabEntry                 string = "crontab.entry"
-	ResourceVscode                       string = "vscode"
-	ResourceVscodeExtension              string = "vscode.extension"
-	ResourceLogrotate                    string = "logrotate"
-	ResourceLogrotateEntry               string = "logrotate.entry"
-	ResourceLvm                          string = "lvm"
-	ResourceLvmPhysicalVolume            string = "lvm.physicalVolume"
-	ResourceLvmVolumeGroup               string = "lvm.volumeGroup"
-	ResourceLvmLogicalVolume             string = "lvm.logicalVolume"
-	ResourceMdadm                        string = "mdadm"
-	ResourceMdadmArray                   string = "mdadm.array"
-	ResourceMdadmDevice                  string = "mdadm.device"
-	ResourceZfs                          string = "zfs"
-	ResourceZfsPool                      string = "zfs.pool"
-	ResourceZfsPoolVdev                  string = "zfs.pool.vdev"
-	ResourceZfsDataset                   string = "zfs.dataset"
-	ResourceAi                           string = "ai"
-	ResourceAiModel                      string = "ai.model"
-	ResourceClaudeCode                   string = "claude.code"
-	ResourceClaudeCodePlugin             string = "claude.code.plugin"
-	ResourceClaudeCodeSkill              string = "claude.code.skill"
-	ResourceClaudeCodeProject            string = "claude.code.project"
-	ResourceClaudeCodeMcpServer          string = "claude.code.mcpServer"
-	ResourceOpenaiCodex                  string = "openai.codex"
-	ResourceOpenaiCodexPlugin            string = "openai.codex.plugin"
-	ResourceOpenaiCodexSkill             string = "openai.codex.skill"
-	ResourceOpenaiCodexMcpServer         string = "openai.codex.mcpServer"
-	ResourceOpenaiCodexConnector         string = "openai.codex.connector"
-	ResourceCursor                       string = "cursor"
-	ResourceCursorMcpServer              string = "cursor.mcpServer"
-	ResourceCursorRule                   string = "cursor.rule"
-	ResourceCursorSkill                  string = "cursor.skill"
-	ResourceGithubCopilot                string = "github.copilot"
-	ResourceGithubCopilotAccount         string = "github.copilot.account"
-	ResourceGithubCopilotMcpServer       string = "github.copilot.mcpServer"
-	ResourceGithubCopilotSkill           string = "github.copilot.skill"
-	ResourceGoose                        string = "goose"
-	ResourceGooseExtension               string = "goose.extension"
-	ResourceGooseSkill                   string = "goose.skill"
-	ResourceGemini                       string = "gemini"
-	ResourceGeminiMcpServer              string = "gemini.mcpServer"
-	ResourceGeminiSkill                  string = "gemini.skill"
-	ResourceWindsurf                     string = "windsurf"
-	ResourceWindsurfRule                 string = "windsurf.rule"
-	ResourceWindsurfMcpServer            string = "windsurf.mcpServer"
-	ResourceWindsurfSkill                string = "windsurf.skill"
-	ResourceZed                          string = "zed"
-	ResourceRoo                          string = "roo"
-	ResourceRooSkill                     string = "roo.skill"
-	ResourceCline                        string = "cline"
-	ResourceClineSkill                   string = "cline.skill"
-	ResourceKiro                         string = "kiro"
-	ResourceKiroSkill                    string = "kiro.skill"
-	ResourceContinuedev                  string = "continuedev"
-	ResourceContinuedevSkill             string = "continuedev.skill"
-	ResourceTrae                         string = "trae"
-	ResourceTraeSkill                    string = "trae.skill"
-	ResourceOpencode                     string = "opencode"
-	ResourceOpencodeSkill                string = "opencode.skill"
-	ResourcePi                           string = "pi"
-	ResourcePiSkill                      string = "pi.skill"
-	ResourceMistralVibe                  string = "mistral.vibe"
-	ResourceMistralVibeSkill             string = "mistral.vibe.skill"
-	ResourceAntigravity                  string = "antigravity"
-	ResourceAntigravitySkill             string = "antigravity.skill"
-	ResourceIbmBob                       string = "ibm.bob"
-	ResourceIbmBobSkill                  string = "ibm.bob.skill"
-	ResourceOpenclaw                     string = "openclaw"
-	ResourceOpenclawSkill                string = "openclaw.skill"
-	ResourceSnowflakeCortex              string = "snowflake.cortex"
-	ResourceSnowflakeCortexSkill         string = "snowflake.cortex.skill"
-	ResourceJunie                        string = "junie"
-	ResourceJunieSkill                   string = "junie.skill"
-	ResourceAugment                      string = "augment"
-	ResourceAugmentSkill                 string = "augment.skill"
-	ResourceWarp                         string = "warp"
-	ResourceWarpSkill                    string = "warp.skill"
-	ResourceKilocode                     string = "kilocode"
-	ResourceKilocodeSkill                string = "kilocode.skill"
-	ResourceOpenhands                    string = "openhands"
-	ResourceOpenhandsSkill               string = "openhands.skill"
-	ResourceQwenCode                     string = "qwen.code"
-	ResourceQwenCodeSkill                string = "qwen.code.skill"
+	ResourceAsset                         string = "asset"
+	ResourceAssetEol                      string = "asset.eol"
+	ResourceMondooEol                     string = "mondoo.eol"
+	ResourceVulnmgmt                      string = "vulnmgmt"
+	ResourceVulnCve                       string = "vuln.cve"
+	ResourceVulnAdvisory                  string = "vuln.advisory"
+	ResourceVulnPackage                   string = "vuln.package"
+	ResourcePlatformAdvisories            string = "platform.advisories"
+	ResourcePlatformCves                  string = "platform.cves"
+	ResourceAuditCvss                     string = "audit.cvss"
+	ResourceAuditAdvisory                 string = "audit.advisory"
+	ResourceAuditCve                      string = "audit.cve"
+	ResourceMachine                       string = "machine"
+	ResourceMachineBios                   string = "machine.bios"
+	ResourceMachineSystem                 string = "machine.system"
+	ResourceMachineBaseboard              string = "machine.baseboard"
+	ResourceMachineChassis                string = "machine.chassis"
+	ResourceMachineCpu                    string = "machine.cpu"
+	ResourceMachineSecureboot             string = "machine.secureboot"
+	ResourceOs                            string = "os"
+	ResourceOsDate                        string = "os.date"
+	ResourceOsUpdate                      string = "os.update"
+	ResourceOsBase                        string = "os.base"
+	ResourceOsUnix                        string = "os.unix"
+	ResourceOsLinux                       string = "os.linux"
+	ResourceOsRootCertificates            string = "os.rootCertificates"
+	ResourceCommand                       string = "command"
+	ResourcePowershell                    string = "powershell"
+	ResourceFile                          string = "file"
+	ResourceFileContext                   string = "file.context"
+	ResourceFilePermissions               string = "file.permissions"
+	ResourceFiles                         string = "files"
+	ResourceFilesFind                     string = "files.find"
+	ResourceParseIni                      string = "parse.ini"
+	ResourceParseJson                     string = "parse.json"
+	ResourceParseXml                      string = "parse.xml"
+	ResourceParsePlist                    string = "parse.plist"
+	ResourceParseYaml                     string = "parse.yaml"
+	ResourceParseCertificates             string = "parse.certificates"
+	ResourceParseOpenpgp                  string = "parse.openpgp"
+	ResourceUser                          string = "user"
+	ResourcePrivatekey                    string = "privatekey"
+	ResourceUsers                         string = "users"
+	ResourceAuthorizedkeys                string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry           string = "authorizedkeys.entry"
+	ResourceGroup                         string = "group"
+	ResourceGroups                        string = "groups"
+	ResourcePackage                       string = "package"
+	ResourcePkgFileInfo                   string = "pkgFileInfo"
+	ResourcePackages                      string = "packages"
+	ResourcePamConf                       string = "pam.conf"
+	ResourcePamConfServiceEntry           string = "pam.conf.serviceEntry"
+	ResourcePamModule                     string = "pam.module"
+	ResourceSshd                          string = "sshd"
+	ResourceSshdConfig                    string = "sshd.config"
+	ResourceSshdConfigMatchBlock          string = "sshd.config.matchBlock"
+	ResourceAuditdConfig                  string = "auditd.config"
+	ResourceAuditdRules                   string = "auditd.rules"
+	ResourceAuditdRule                    string = "auditd.rule"
+	ResourceAuditdRuleControl             string = "auditd.rule.control"
+	ResourceAuditdRuleFile                string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall             string = "auditd.rule.syscall"
+	ResourceApache2                       string = "apache2"
+	ResourceApache2Conf                   string = "apache2.conf"
+	ResourceApache2ConfEnvvars            string = "apache2.conf.envvars"
+	ResourceApache2ConfModule             string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost        string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory          string = "apache2.conf.directory"
+	ResourceApache2ConfLocation           string = "apache2.conf.location"
+	ResourceNginx                         string = "nginx"
+	ResourceNginxConf                     string = "nginx.conf"
+	ResourceNginxConfServer               string = "nginx.conf.server"
+	ResourceNginxConfUpstream             string = "nginx.conf.upstream"
+	ResourceNginxConfLocation             string = "nginx.conf.location"
+	ResourceSquid                         string = "squid"
+	ResourceSquidConf                     string = "squid.conf"
+	ResourceSquidConfListen               string = "squid.conf.listen"
+	ResourceSquidConfAcl                  string = "squid.conf.acl"
+	ResourceSquidConfAccessRule           string = "squid.conf.accessRule"
+	ResourceSquidConfCachePeer            string = "squid.conf.cachePeer"
+	ResourceSquidConfCacheDir             string = "squid.conf.cacheDir"
+	ResourceSquidConfRefreshPattern       string = "squid.conf.refreshPattern"
+	ResourceSquidConfAccessLog            string = "squid.conf.accessLog"
+	ResourceHaproxy                       string = "haproxy"
+	ResourceHaproxyConfig                 string = "haproxy.config"
+	ResourceHaproxyConfigSection          string = "haproxy.config.section"
+	ResourceHaproxyConfigGlobal           string = "haproxy.config.global"
+	ResourceHaproxyConfigDefaultsSection  string = "haproxy.config.defaultsSection"
+	ResourceHaproxyConfigFrontend         string = "haproxy.config.frontend"
+	ResourceHaproxyConfigBackend          string = "haproxy.config.backend"
+	ResourceHaproxyConfigListen           string = "haproxy.config.listen"
+	ResourceHaproxyConfigBind             string = "haproxy.config.bind"
+	ResourceHaproxyConfigServer           string = "haproxy.config.server"
+	ResourceHaproxyConfigResolversSection string = "haproxy.config.resolversSection"
+	ResourceHaproxyConfigUserlist         string = "haproxy.config.userlist"
+	ResourceHaproxyConfigPeersSection     string = "haproxy.config.peersSection"
+	ResourceJournaldConfig                string = "journald.config"
+	ResourceJournaldConfigSection         string = "journald.config.section"
+	ResourceJournaldConfigSectionParam    string = "journald.config.section.param"
+	ResourceService                       string = "service"
+	ResourceServices                      string = "services"
+	ResourceSystemdTimer                  string = "systemd.timer"
+	ResourceSystemdTimers                 string = "systemd.timers"
+	ResourceSystemdSocket                 string = "systemd.socket"
+	ResourceSystemdSockets                string = "systemd.sockets"
+	ResourceSystemdTarget                 string = "systemd.target"
+	ResourceSystemdTargets                string = "systemd.targets"
+	ResourceSystemdResolved               string = "systemd.resolved"
+	ResourceSystemdTimesyncd              string = "systemd.timesyncd"
+	ResourceKernel                        string = "kernel"
+	ResourceKernelModule                  string = "kernel.module"
+	ResourceKernelCmdline                 string = "kernel.cmdline"
+	ResourceKernelTaint                   string = "kernel.taint"
+	ResourceKernelLockdown                string = "kernel.lockdown"
+	ResourceKernelAslr                    string = "kernel.aslr"
+	ResourceCgroups                       string = "cgroups"
+	ResourceCgroup                        string = "cgroup"
+	ResourceDocker                        string = "docker"
+	ResourceDockerFile                    string = "docker.file"
+	ResourceDockerFileStage               string = "docker.file.stage"
+	ResourceDockerFileArg                 string = "docker.file.arg"
+	ResourceDockerFileEnv                 string = "docker.file.env"
+	ResourceDockerFileUser                string = "docker.file.user"
+	ResourceDockerFileExpose              string = "docker.file.expose"
+	ResourceDockerFileFrom                string = "docker.file.from"
+	ResourceDockerFileRun                 string = "docker.file.run"
+	ResourceDockerFileRunMount            string = "docker.file.run.mount"
+	ResourceDockerFileAdd                 string = "docker.file.add"
+	ResourceDockerFileCopy                string = "docker.file.copy"
+	ResourceDockerFileHealthcheck         string = "docker.file.healthcheck"
+	ResourceDockerFileVolume              string = "docker.file.volume"
+	ResourceDockerFileShell               string = "docker.file.shell"
+	ResourceDockerFileWorkdir             string = "docker.file.workdir"
+	ResourceDockerFileStopsignal          string = "docker.file.stopsignal"
+	ResourceDockerFileOnbuild             string = "docker.file.onbuild"
+	ResourceDockerImage                   string = "docker.image"
+	ResourceDockerContainer               string = "docker.container"
+	ResourceContainerd                    string = "containerd"
+	ResourceContainerdContainer           string = "containerd.container"
+	ResourceIptables                      string = "iptables"
+	ResourceIp6tables                     string = "ip6tables"
+	ResourceIptablesTable                 string = "iptables.table"
+	ResourceIptablesChain                 string = "iptables.chain"
+	ResourceIptablesEntry                 string = "iptables.entry"
+	ResourceNftables                      string = "nftables"
+	ResourceNftablesTable                 string = "nftables.table"
+	ResourceNftablesChain                 string = "nftables.chain"
+	ResourceNftablesRule                  string = "nftables.rule"
+	ResourceNftablesSet                   string = "nftables.set"
+	ResourceUfw                           string = "ufw"
+	ResourceUfwRule                       string = "ufw.rule"
+	ResourceUfwApplication                string = "ufw.application"
+	ResourceFirewalld                     string = "firewalld"
+	ResourceFirewalldZone                 string = "firewalld.zone"
+	ResourceFirewalldRichrule             string = "firewalld.richrule"
+	ResourceFstab                         string = "fstab"
+	ResourceFstabEntry                    string = "fstab.entry"
+	ResourceGrubConfig                    string = "grub.config"
+	ResourceGrubConfigEntry               string = "grub.config.entry"
+	ResourceSysrc                         string = "sysrc"
+	ResourceSysrcEntry                    string = "sysrc.entry"
+	ResourceProcess                       string = "process"
+	ResourceProcesses                     string = "processes"
+	ResourcePort                          string = "port"
+	ResourcePorts                         string = "ports"
+	ResourceAuditpol                      string = "auditpol"
+	ResourceAuditpolEntry                 string = "auditpol.entry"
+	ResourceSecpol                        string = "secpol"
+	ResourceNtpConf                       string = "ntp.conf"
+	ResourceRsyslogConf                   string = "rsyslog.conf"
+	ResourceRsyslogModule                 string = "rsyslog.module"
+	ResourceRsyslogInput                  string = "rsyslog.input"
+	ResourceRsyslogAction                 string = "rsyslog.action"
+	ResourceRsyslogRule                   string = "rsyslog.rule"
+	ResourceLogindefs                     string = "logindefs"
+	ResourceLimits                        string = "limits"
+	ResourceLimitsEntry                   string = "limits.entry"
+	ResourceSudoers                       string = "sudoers"
+	ResourceSudoersUserSpec               string = "sudoers.userSpec"
+	ResourceSudoersDefault                string = "sudoers.default"
+	ResourceSudoersAlias                  string = "sudoers.alias"
+	ResourceLsblk                         string = "lsblk"
+	ResourceLsblkEntry                    string = "lsblk.entry"
+	ResourceLuks                          string = "luks"
+	ResourceLuksVolume                    string = "luks.volume"
+	ResourceLuksVolumeCipher              string = "luks.volume.cipher"
+	ResourceLuksKeyslot                   string = "luks.keyslot"
+	ResourceApparmor                      string = "apparmor"
+	ResourceApparmorProfile               string = "apparmor.profile"
+	ResourceApparmorProcess               string = "apparmor.process"
+	ResourceSelinux                       string = "selinux"
+	ResourceSelinuxBoolean                string = "selinux.boolean"
+	ResourceSelinuxModule                 string = "selinux.module"
+	ResourceModprobe                      string = "modprobe"
+	ResourceModprobeInstall               string = "modprobe.install"
+	ResourceModprobeRemove                string = "modprobe.remove"
+	ResourceModprobeBlacklist             string = "modprobe.blacklist"
+	ResourceModprobeOption                string = "modprobe.option"
+	ResourceModprobeAlias                 string = "modprobe.alias"
+	ResourceModprobeSoftdep               string = "modprobe.softdep"
+	ResourceMount                         string = "mount"
+	ResourceNfs                           string = "nfs"
+	ResourceNfsExport                     string = "nfs.export"
+	ResourceNfsMount                      string = "nfs.mount"
+	ResourceMountPoint                    string = "mount.point"
+	ResourceShadow                        string = "shadow"
+	ResourceShadowEntry                   string = "shadow.entry"
+	ResourceYum                           string = "yum"
+	ResourceYumRepo                       string = "yum.repo"
+	ResourceRegistrykey                   string = "registrykey"
+	ResourceRegistrykeyProperty           string = "registrykey.property"
+	ResourceContainerImage                string = "container.image"
+	ResourceContainerRepository           string = "container.repository"
+	ResourceKubelet                       string = "kubelet"
+	ResourcePython                        string = "python"
+	ResourcePythonPackage                 string = "python.package"
+	ResourceNpmPackages                   string = "npm.packages"
+	ResourceNpmPackage                    string = "npm.package"
+	ResourceGoPackages                    string = "go.packages"
+	ResourceGoPackage                     string = "go.package"
+	ResourceJavaPackages                  string = "java.packages"
+	ResourceJavaPackage                   string = "java.package"
+	ResourceRustPackages                  string = "rust.packages"
+	ResourceRustPackage                   string = "rust.package"
+	ResourceDotnetPackages                string = "dotnet.packages"
+	ResourceDotnetPackage                 string = "dotnet.package"
+	ResourcePhpPackages                   string = "php.packages"
+	ResourcePhpPackage                    string = "php.package"
+	ResourceGithubactionsPackages         string = "githubactions.packages"
+	ResourceGithubactionsPackage          string = "githubactions.package"
+	ResourceSwiftPackages                 string = "swift.packages"
+	ResourceSwiftPackage                  string = "swift.package"
+	ResourceTerraformPackages             string = "terraform.packages"
+	ResourceTerraformPackage              string = "terraform.package"
+	ResourceHomebrewPackages              string = "homebrew.packages"
+	ResourceHomebrewPackage               string = "homebrew.package"
+	ResourceChocolateyPackages            string = "chocolatey.packages"
+	ResourceChocolateyPackage             string = "chocolatey.package"
+	ResourceJenkinsPackages               string = "jenkins.packages"
+	ResourceJenkinsPackage                string = "jenkins.package"
+	ResourceWordpressPackages             string = "wordpress.packages"
+	ResourceWordpressPackage              string = "wordpress.package"
+	ResourceRubyPackages                  string = "ruby.packages"
+	ResourceRubyPackage                   string = "ruby.package"
+	ResourceDartPackages                  string = "dart.packages"
+	ResourceDartPackage                   string = "dart.package"
+	ResourceHaskellPackages               string = "haskell.packages"
+	ResourceHaskellPackage                string = "haskell.package"
+	ResourceElixirPackages                string = "elixir.packages"
+	ResourceElixirPackage                 string = "elixir.package"
+	ResourceErlangPackages                string = "erlang.packages"
+	ResourceErlangPackage                 string = "erlang.package"
+	ResourcePrologPackages                string = "prolog.packages"
+	ResourcePrologPackage                 string = "prolog.package"
+	ResourceCondaPackages                 string = "conda.packages"
+	ResourceCondaPackage                  string = "conda.package"
+	ResourceJuliaPackages                 string = "julia.packages"
+	ResourceJuliaPackage                  string = "julia.package"
+	ResourceRPackages                     string = "r.packages"
+	ResourceRPackage                      string = "r.package"
+	ResourceLuaPackages                   string = "lua.packages"
+	ResourceLuaPackage                    string = "lua.package"
+	ResourceMacos                         string = "macos"
+	ResourceMacosHardware                 string = "macos.hardware"
+	ResourceMacosAlf                      string = "macos.alf"
+	ResourceMacosFirewall                 string = "macos.firewall"
+	ResourceMacosFirewallApp              string = "macos.firewall.app"
+	ResourceMacosFilevault                string = "macos.filevault"
+	ResourceMacosGatekeeper               string = "macos.gatekeeper"
+	ResourceMacosSip                      string = "macos.sip"
+	ResourceMacosXprotect                 string = "macos.xprotect"
+	ResourceMacosSharing                  string = "macos.sharing"
+	ResourceMacosMdm                      string = "macos.mdm"
+	ResourceMacosProfiles                 string = "macos.profiles"
+	ResourceMacosProfile                  string = "macos.profile"
+	ResourceMacosProfilePayload           string = "macos.profile.payload"
+	ResourceMacosSoftwareupdate           string = "macos.softwareupdate"
+	ResourceMacosSoftwareupdateEntry      string = "macos.softwareupdate.entry"
+	ResourceMacosTimemachine              string = "macos.timemachine"
+	ResourceMacosSystemsetup              string = "macos.systemsetup"
+	ResourceOpenBSMAudit                  string = "openBSMAudit"
+	ResourceWindows                       string = "windows"
+	ResourceMacosSystemExtension          string = "macos.systemExtension"
+	ResourceSafari                        string = "safari"
+	ResourceSafariExtension               string = "safari.extension"
+	ResourceLaunchd                       string = "launchd"
+	ResourceLaunchdJob                    string = "launchd.job"
+	ResourceWindowsHotfix                 string = "windows.hotfix"
+	ResourceWindowsServerFeature          string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
+	ResourceWindowsFirewall               string = "windows.firewall"
+	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
+	ResourceWindowsBitlocker              string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume        string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity               string = "windows.security"
+	ResourceWindowsSecurityProduct        string = "windows.security.product"
+	ResourceWindowsSecurityHealth         string = "windows.security.health"
+	ResourceCloud                         string = "cloud"
+	ResourceCloudInstance                 string = "cloudInstance"
+	ResourceIpAddress                     string = "ipAddress"
+	ResourceNetwork                       string = "network"
+	ResourceNetworkInterface              string = "networkInterface"
+	ResourceNetworkRoutes                 string = "networkRoutes"
+	ResourceNetworkRoute                  string = "networkRoute"
+	ResourceChrome                        string = "chrome"
+	ResourceChromeExtension               string = "chrome.extension"
+	ResourceChromeExtensionContentScript  string = "chrome.extensionContentScript"
+	ResourceFirefox                       string = "firefox"
+	ResourceFirefoxAddon                  string = "firefox.addon"
+	ResourceUsb                           string = "usb"
+	ResourceUsbDevice                     string = "usb.device"
+	ResourceCrontab                       string = "crontab"
+	ResourceCrontabEntry                  string = "crontab.entry"
+	ResourceVscode                        string = "vscode"
+	ResourceVscodeExtension               string = "vscode.extension"
+	ResourceLogrotate                     string = "logrotate"
+	ResourceLogrotateEntry                string = "logrotate.entry"
+	ResourceLvm                           string = "lvm"
+	ResourceLvmPhysicalVolume             string = "lvm.physicalVolume"
+	ResourceLvmVolumeGroup                string = "lvm.volumeGroup"
+	ResourceLvmLogicalVolume              string = "lvm.logicalVolume"
+	ResourceMdadm                         string = "mdadm"
+	ResourceMdadmArray                    string = "mdadm.array"
+	ResourceMdadmDevice                   string = "mdadm.device"
+	ResourceZfs                           string = "zfs"
+	ResourceZfsPool                       string = "zfs.pool"
+	ResourceZfsPoolVdev                   string = "zfs.pool.vdev"
+	ResourceZfsDataset                    string = "zfs.dataset"
+	ResourceAi                            string = "ai"
+	ResourceAiModel                       string = "ai.model"
+	ResourceClaudeCode                    string = "claude.code"
+	ResourceClaudeCodePlugin              string = "claude.code.plugin"
+	ResourceClaudeCodeSkill               string = "claude.code.skill"
+	ResourceClaudeCodeProject             string = "claude.code.project"
+	ResourceClaudeCodeMcpServer           string = "claude.code.mcpServer"
+	ResourceOpenaiCodex                   string = "openai.codex"
+	ResourceOpenaiCodexPlugin             string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill              string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer          string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector          string = "openai.codex.connector"
+	ResourceCursor                        string = "cursor"
+	ResourceCursorMcpServer               string = "cursor.mcpServer"
+	ResourceCursorRule                    string = "cursor.rule"
+	ResourceCursorSkill                   string = "cursor.skill"
+	ResourceGithubCopilot                 string = "github.copilot"
+	ResourceGithubCopilotAccount          string = "github.copilot.account"
+	ResourceGithubCopilotMcpServer        string = "github.copilot.mcpServer"
+	ResourceGithubCopilotSkill            string = "github.copilot.skill"
+	ResourceGoose                         string = "goose"
+	ResourceGooseExtension                string = "goose.extension"
+	ResourceGooseSkill                    string = "goose.skill"
+	ResourceGemini                        string = "gemini"
+	ResourceGeminiMcpServer               string = "gemini.mcpServer"
+	ResourceGeminiSkill                   string = "gemini.skill"
+	ResourceWindsurf                      string = "windsurf"
+	ResourceWindsurfRule                  string = "windsurf.rule"
+	ResourceWindsurfMcpServer             string = "windsurf.mcpServer"
+	ResourceWindsurfSkill                 string = "windsurf.skill"
+	ResourceZed                           string = "zed"
+	ResourceRoo                           string = "roo"
+	ResourceRooSkill                      string = "roo.skill"
+	ResourceCline                         string = "cline"
+	ResourceClineSkill                    string = "cline.skill"
+	ResourceKiro                          string = "kiro"
+	ResourceKiroSkill                     string = "kiro.skill"
+	ResourceContinuedev                   string = "continuedev"
+	ResourceContinuedevSkill              string = "continuedev.skill"
+	ResourceTrae                          string = "trae"
+	ResourceTraeSkill                     string = "trae.skill"
+	ResourceOpencode                      string = "opencode"
+	ResourceOpencodeSkill                 string = "opencode.skill"
+	ResourcePi                            string = "pi"
+	ResourcePiSkill                       string = "pi.skill"
+	ResourceMistralVibe                   string = "mistral.vibe"
+	ResourceMistralVibeSkill              string = "mistral.vibe.skill"
+	ResourceAntigravity                   string = "antigravity"
+	ResourceAntigravitySkill              string = "antigravity.skill"
+	ResourceIbmBob                        string = "ibm.bob"
+	ResourceIbmBobSkill                   string = "ibm.bob.skill"
+	ResourceOpenclaw                      string = "openclaw"
+	ResourceOpenclawSkill                 string = "openclaw.skill"
+	ResourceSnowflakeCortex               string = "snowflake.cortex"
+	ResourceSnowflakeCortexSkill          string = "snowflake.cortex.skill"
+	ResourceJunie                         string = "junie"
+	ResourceJunieSkill                    string = "junie.skill"
+	ResourceAugment                       string = "augment"
+	ResourceAugmentSkill                  string = "augment.skill"
+	ResourceWarp                          string = "warp"
+	ResourceWarpSkill                     string = "warp.skill"
+	ResourceKilocode                      string = "kilocode"
+	ResourceKilocodeSkill                 string = "kilocode.skill"
+	ResourceOpenhands                     string = "openhands"
+	ResourceOpenhandsSkill                string = "openhands.skill"
+	ResourceQwenCode                      string = "qwen.code"
+	ResourceQwenCodeSkill                 string = "qwen.code.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -736,6 +749,58 @@ func init() {
 		"squid.conf.accessLog": {
 			// to override args, implement: initSquidConfAccessLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSquidConfAccessLog,
+		},
+		"haproxy": {
+			// to override args, implement: initHaproxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxy,
+		},
+		"haproxy.config": {
+			Init:   initHaproxyConfig,
+			Create: createHaproxyConfig,
+		},
+		"haproxy.config.section": {
+			// to override args, implement: initHaproxyConfigSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigSection,
+		},
+		"haproxy.config.global": {
+			Init:   initHaproxyConfigGlobal,
+			Create: createHaproxyConfigGlobal,
+		},
+		"haproxy.config.defaultsSection": {
+			// to override args, implement: initHaproxyConfigDefaultsSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigDefaultsSection,
+		},
+		"haproxy.config.frontend": {
+			// to override args, implement: initHaproxyConfigFrontend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigFrontend,
+		},
+		"haproxy.config.backend": {
+			// to override args, implement: initHaproxyConfigBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigBackend,
+		},
+		"haproxy.config.listen": {
+			// to override args, implement: initHaproxyConfigListen(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigListen,
+		},
+		"haproxy.config.bind": {
+			// to override args, implement: initHaproxyConfigBind(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigBind,
+		},
+		"haproxy.config.server": {
+			// to override args, implement: initHaproxyConfigServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigServer,
+		},
+		"haproxy.config.resolversSection": {
+			// to override args, implement: initHaproxyConfigResolversSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigResolversSection,
+		},
+		"haproxy.config.userlist": {
+			// to override args, implement: initHaproxyConfigUserlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigUserlist,
+		},
+		"haproxy.config.peersSection": {
+			// to override args, implement: initHaproxyConfigPeersSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaproxyConfigPeersSection,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -3354,6 +3419,633 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"squid.conf.accessLog.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSquidConfAccessLog).GetRaw()).ToDataRes(types.String)
+	},
+	"haproxy.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxy).GetVersion()).ToDataRes(types.String)
+	},
+	"haproxy.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"haproxy.config.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"haproxy.config.global": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetGlobal()).ToDataRes(types.Resource("haproxy.config.global"))
+	},
+	"haproxy.config.defaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetDefaults()).ToDataRes(types.Array(types.Resource("haproxy.config.defaultsSection")))
+	},
+	"haproxy.config.frontends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetFrontends()).ToDataRes(types.Array(types.Resource("haproxy.config.frontend")))
+	},
+	"haproxy.config.backends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetBackends()).ToDataRes(types.Array(types.Resource("haproxy.config.backend")))
+	},
+	"haproxy.config.listens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetListens()).ToDataRes(types.Array(types.Resource("haproxy.config.listen")))
+	},
+	"haproxy.config.resolvers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetResolvers()).ToDataRes(types.Array(types.Resource("haproxy.config.resolversSection")))
+	},
+	"haproxy.config.userlists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetUserlists()).ToDataRes(types.Array(types.Resource("haproxy.config.userlist")))
+	},
+	"haproxy.config.peers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetPeers()).ToDataRes(types.Array(types.Resource("haproxy.config.peersSection")))
+	},
+	"haproxy.config.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfig).GetSections()).ToDataRes(types.Array(types.Resource("haproxy.config.section")))
+	},
+	"haproxy.config.section.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetType()).ToDataRes(types.String)
+	},
+	"haproxy.config.section.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.section.inherits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetInherits()).ToDataRes(types.String)
+	},
+	"haproxy.config.section.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.section.startLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetStartLine()).ToDataRes(types.Int)
+	},
+	"haproxy.config.section.endLine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetEndLine()).ToDataRes(types.Int)
+	},
+	"haproxy.config.section.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.section.directives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetDirectives()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.section.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigSection).GetRaw()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.daemon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetDaemon()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.global.masterWorker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetMasterWorker()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.global.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetUser()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetGroup()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.chroot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetChroot()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.pidfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetPidfile()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.maxconn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetMaxconn()).ToDataRes(types.Int)
+	},
+	"haproxy.config.global.nbthread": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetNbthread()).ToDataRes(types.Int)
+	},
+	"haproxy.config.global.nbproc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetNbproc()).ToDataRes(types.Int)
+	},
+	"haproxy.config.global.hardStopAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetHardStopAfter()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.statsSocket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetStatsSocket()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.statsSocketMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetStatsSocketMode()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.statsSocketLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetStatsSocketLevel()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.statsSocketUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetStatsSocketUser()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.statsTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetStatsTimeout()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetLog()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.global.sslDefaultBindCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultBindCiphers()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultBindCiphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultBindCiphersuites()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultBindOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultBindOptions()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultBindCurves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultBindCurves()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultServerCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultServerCiphers()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultServerCiphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultServerCiphersuites()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultServerOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultServerOptions()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.sslDefaultServerCurves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetSslDefaultServerCurves()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.caBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetCaBase()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.crtBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetCrtBase()).ToDataRes(types.String)
+	},
+	"haproxy.config.global.tuneSslDefaultDhParam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetTuneSslDefaultDhParam()).ToDataRes(types.Int)
+	},
+	"haproxy.config.global.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.global.disabledOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetDisabledOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.global.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.global.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigGlobal).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.defaultsSection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.defaultsSection.inherits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetInherits()).ToDataRes(types.String)
+	},
+	"haproxy.config.defaultsSection.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetMode()).ToDataRes(types.String)
+	},
+	"haproxy.config.defaultsSection.balance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetBalance()).ToDataRes(types.String)
+	},
+	"haproxy.config.defaultsSection.retries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetRetries()).ToDataRes(types.Int)
+	},
+	"haproxy.config.defaultsSection.maxconn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetMaxconn()).ToDataRes(types.Int)
+	},
+	"haproxy.config.defaultsSection.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.defaultsSection.disabledOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetDisabledOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.defaultsSection.timeouts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetTimeouts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.defaultsSection.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetLog()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.defaultsSection.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.defaultsSection.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigDefaultsSection).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.inherits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetInherits()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetMode()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.binds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetBinds()).ToDataRes(types.Array(types.Resource("haproxy.config.bind")))
+	},
+	"haproxy.config.frontend.defaultBackend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetDefaultBackend()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetAcls()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.frontend.useBackends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetUseBackends()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.frontend.httpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetHttpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.httpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetHttpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.tcpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetTcpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.tcpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetTcpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.captures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetCaptures()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.redirects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetRedirects()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.monitorUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetMonitorUri()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.monitorFail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetMonitorFail()).ToDataRes(types.String)
+	},
+	"haproxy.config.frontend.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.disabledOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetDisabledOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.timeouts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetTimeouts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.frontend.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetLog()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.frontend.maxconn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetMaxconn()).ToDataRes(types.Int)
+	},
+	"haproxy.config.frontend.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.frontend.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigFrontend).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.inherits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetInherits()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetMode()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.balance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetBalance()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.hashType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetHashType()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetServers()).ToDataRes(types.Array(types.Resource("haproxy.config.server")))
+	},
+	"haproxy.config.backend.defaultServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetDefaultServer()).ToDataRes(types.Dict)
+	},
+	"haproxy.config.backend.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetSource()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.httpCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetHttpCheck()).ToDataRes(types.Dict)
+	},
+	"haproxy.config.backend.stickTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetStickTable()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.stickOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetStickOn()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.cookie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetCookie()).ToDataRes(types.String)
+	},
+	"haproxy.config.backend.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetAcls()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.backend.httpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetHttpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.httpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetHttpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.tcpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetTcpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.tcpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetTcpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.disabledOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetDisabledOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.timeouts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetTimeouts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.backend.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetLog()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.backend.retries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetRetries()).ToDataRes(types.Int)
+	},
+	"haproxy.config.backend.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.backend.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBackend).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.listen.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.listen.inherits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetInherits()).ToDataRes(types.String)
+	},
+	"haproxy.config.listen.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetMode()).ToDataRes(types.String)
+	},
+	"haproxy.config.listen.binds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetBinds()).ToDataRes(types.Array(types.Resource("haproxy.config.bind")))
+	},
+	"haproxy.config.listen.balance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetBalance()).ToDataRes(types.String)
+	},
+	"haproxy.config.listen.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetServers()).ToDataRes(types.Array(types.Resource("haproxy.config.server")))
+	},
+	"haproxy.config.listen.defaultServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetDefaultServer()).ToDataRes(types.Dict)
+	},
+	"haproxy.config.listen.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetAcls()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.listen.useBackends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetUseBackends()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.listen.httpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetHttpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.httpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetHttpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.tcpRequestRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetTcpRequestRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.tcpResponseRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetTcpResponseRules()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.httpCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetHttpCheck()).ToDataRes(types.Dict)
+	},
+	"haproxy.config.listen.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.disabledOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetDisabledOptions()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.timeouts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetTimeouts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.listen.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetLog()).ToDataRes(types.Array(types.String))
+	},
+	"haproxy.config.listen.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.listen.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigListen).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetRaw()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetAddress()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetPort()).ToDataRes(types.Int)
+	},
+	"haproxy.config.bind.portRangeStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetPortRangeStart()).ToDataRes(types.Int)
+	},
+	"haproxy.config.bind.portRangeEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetPortRangeEnd()).ToDataRes(types.Int)
+	},
+	"haproxy.config.bind.ssl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetSsl()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.alpn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetAlpn()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCiphers()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.ciphersuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCiphersuites()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.curves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCurves()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.crt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCrt()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.crtList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCrtList()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.caFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetCaFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.verify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetVerify()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.sslMinVer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetSslMinVer()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.sslMaxVer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetSslMaxVer()).ToDataRes(types.String)
+	},
+	"haproxy.config.bind.noSslv3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetNoSslv3()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.noTlsv10": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetNoTlsv10()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.noTlsv11": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetNoTlsv11()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.noTlsv12": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetNoTlsv12()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.noTlsv13": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetNoTlsv13()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.acceptProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetAcceptProxy()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.transparent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetTransparent()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.v4v6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetV4v6()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.v6only": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetV6only()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.bind.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigBind).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.server.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAddress()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetPort()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.check": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetCheck()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.ssl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetSsl()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.verify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetVerify()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.caFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetCaFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.crt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetCrt()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.sni": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetSni()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.alpn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAlpn()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetWeight()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.backup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetBackup()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.maxconn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetMaxconn()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.maxqueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetMaxqueue()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.inter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetInter()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.fastInter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetFastInter()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.downInter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetDownInter()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.rise": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetRise()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.fall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetFall()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.slowStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetSlowStart()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.observe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetObserve()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.onError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetOnError()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.onMarkedUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetOnMarkedUp()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.onMarkedDown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetOnMarkedDown()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.cookie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetCookie()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.resolvers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetResolvers()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.initAddr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetInitAddr()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.sendProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetSendProxy()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.sendProxyV2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetSendProxyV2()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.agentCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAgentCheck()).ToDataRes(types.Bool)
+	},
+	"haproxy.config.server.agentPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAgentPort()).ToDataRes(types.Int)
+	},
+	"haproxy.config.server.agentAddr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAgentAddr()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.agentInter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetAgentInter()).ToDataRes(types.String)
+	},
+	"haproxy.config.server.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigServer).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.resolversSection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.resolversSection.nameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetNameservers()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.resolversSection.resolveRetries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetResolveRetries()).ToDataRes(types.Int)
+	},
+	"haproxy.config.resolversSection.timeouts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetTimeouts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.resolversSection.acceptedPayloadSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetAcceptedPayloadSize()).ToDataRes(types.Int)
+	},
+	"haproxy.config.resolversSection.holds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetHolds()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.resolversSection.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.resolversSection.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigResolversSection).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.userlist.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigUserlist).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.userlist.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigUserlist).GetUsers()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.userlist.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigUserlist).GetGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.userlist.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigUserlist).GetFile()).ToDataRes(types.String)
+	},
+	"haproxy.config.peersSection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetName()).ToDataRes(types.String)
+	},
+	"haproxy.config.peersSection.bind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetBind()).ToDataRes(types.String)
+	},
+	"haproxy.config.peersSection.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetServers()).ToDataRes(types.Array(types.Resource("haproxy.config.server")))
+	},
+	"haproxy.config.peersSection.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetTables()).ToDataRes(types.Array(types.Dict))
+	},
+	"haproxy.config.peersSection.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"haproxy.config.peersSection.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaproxyConfigPeersSection).GetFile()).ToDataRes(types.String)
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -10593,6 +11285,894 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"squid.conf.accessLog.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSquidConfAccessLog).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxy).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxy).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Global, ok = plugin.RawToTValue[*mqlHaproxyConfigGlobal](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Defaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Frontends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Backends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Listens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolvers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Resolvers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.userlists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Userlists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Peers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfig).Sections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.section.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.inherits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Inherits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.startLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).StartLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.endLine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).EndLine, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.directives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Directives, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.section.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigSection).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.global.daemon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Daemon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.masterWorker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).MasterWorker, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.chroot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Chroot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.pidfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Pidfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.maxconn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Maxconn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.nbthread": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Nbthread, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.nbproc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Nbproc, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.hardStopAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).HardStopAfter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.statsSocket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).StatsSocket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.statsSocketMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).StatsSocketMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.statsSocketLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).StatsSocketLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.statsSocketUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).StatsSocketUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.statsTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).StatsTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Log, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultBindCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultBindCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultBindCiphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultBindCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultBindOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultBindOptions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultBindCurves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultBindCurves, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultServerCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultServerCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultServerCiphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultServerCiphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultServerOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultServerOptions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.sslDefaultServerCurves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).SslDefaultServerCurves, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.caBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).CaBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.crtBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).CrtBase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.tuneSslDefaultDhParam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).TuneSslDefaultDhParam, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.disabledOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).DisabledOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.global.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigGlobal).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.defaultsSection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.inherits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Inherits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.balance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Balance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.retries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Retries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.maxconn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Maxconn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.disabledOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).DisabledOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.timeouts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Timeouts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Log, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.defaultsSection.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigDefaultsSection).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.frontend.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.inherits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Inherits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.binds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Binds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.defaultBackend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).DefaultBackend, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.useBackends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).UseBackends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.httpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).HttpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.httpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).HttpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.tcpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).TcpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.tcpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).TcpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.captures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Captures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.redirects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Redirects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.monitorUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).MonitorUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.monitorFail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).MonitorFail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.disabledOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).DisabledOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.timeouts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Timeouts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Log, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.maxconn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Maxconn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.frontend.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigFrontend).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.backend.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.inherits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Inherits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.balance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Balance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.hashType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).HashType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.defaultServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).DefaultServer, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.httpCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).HttpCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.stickTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).StickTable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.stickOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).StickOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.cookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Cookie, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.httpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).HttpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.httpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).HttpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.tcpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).TcpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.tcpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).TcpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.disabledOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).DisabledOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.timeouts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Timeouts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Log, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.retries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Retries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.backend.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBackend).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.listen.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.inherits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Inherits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.binds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Binds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.balance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Balance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.defaultServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).DefaultServer, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.useBackends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).UseBackends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.httpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).HttpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.httpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).HttpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.tcpRequestRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).TcpRequestRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.tcpResponseRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).TcpResponseRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.httpCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).HttpCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.disabledOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).DisabledOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.timeouts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Timeouts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Log, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.listen.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigListen).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.bind.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.portRangeStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).PortRangeStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.portRangeEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).PortRangeEnd, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.alpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Alpn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Ciphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.ciphersuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Ciphersuites, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.curves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Curves, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.crt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Crt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.crtList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).CrtList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.caFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).CaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.verify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Verify, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.sslMinVer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).SslMinVer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.sslMaxVer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).SslMaxVer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.noSslv3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).NoSslv3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.noTlsv10": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).NoTlsv10, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.noTlsv11": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).NoTlsv11, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.noTlsv12": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).NoTlsv12, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.noTlsv13": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).NoTlsv13, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.acceptProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).AcceptProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.transparent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Transparent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.v4v6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).V4v6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.v6only": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).V6only, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.bind.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigBind).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.server.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.check": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Check, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.verify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Verify, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.caFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).CaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.crt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Crt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.sni": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Sni, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.alpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Alpn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.backup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Backup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.maxconn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Maxconn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.maxqueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Maxqueue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.inter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Inter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.fastInter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).FastInter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.downInter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).DownInter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.rise": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Rise, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.fall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Fall, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.slowStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).SlowStart, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.observe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Observe, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.onError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).OnError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.onMarkedUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).OnMarkedUp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.onMarkedDown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).OnMarkedDown, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.cookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Cookie, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.resolvers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Resolvers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.initAddr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).InitAddr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.sendProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).SendProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.sendProxyV2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).SendProxyV2, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.agentCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).AgentCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.agentPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).AgentPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.agentAddr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).AgentAddr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.agentInter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).AgentInter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.server.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigServer).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.resolversSection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.nameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).Nameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.resolveRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).ResolveRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.timeouts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).Timeouts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.acceptedPayloadSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).AcceptedPayloadSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.holds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).Holds, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.resolversSection.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigResolversSection).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.userlist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigUserlist).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.userlist.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigUserlist).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.userlist.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigUserlist).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.userlist.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigUserlist).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.userlist.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigUserlist).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).__id, ok = v.Value.(string)
+		return
+	},
+	"haproxy.config.peersSection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.bind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).Bind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"haproxy.config.peersSection.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaproxyConfigPeersSection).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26020,6 +27600,1747 @@ func (c *mqlSquidConfAccessLog) GetAcls() *plugin.TValue[[]any] {
 
 func (c *mqlSquidConfAccessLog) GetRaw() *plugin.TValue[string] {
 	return &c.Raw
+}
+
+// mqlHaproxy for the haproxy resource
+type mqlHaproxy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyInternal it will be used here
+	Version plugin.TValue[string]
+}
+
+// createHaproxy creates a new instance of this resource
+func createHaproxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxy) MqlName() string {
+	return "haproxy"
+}
+
+func (c *mqlHaproxy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxy) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlHaproxyConfig for the haproxy.config resource
+type mqlHaproxyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHaproxyConfigInternal
+	File      plugin.TValue[*mqlFile]
+	Files     plugin.TValue[[]any]
+	Global    plugin.TValue[*mqlHaproxyConfigGlobal]
+	Defaults  plugin.TValue[[]any]
+	Frontends plugin.TValue[[]any]
+	Backends  plugin.TValue[[]any]
+	Listens   plugin.TValue[[]any]
+	Resolvers plugin.TValue[[]any]
+	Userlists plugin.TValue[[]any]
+	Peers     plugin.TValue[[]any]
+	Sections  plugin.TValue[[]any]
+}
+
+// createHaproxyConfig creates a new instance of this resource
+func createHaproxyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfig) MqlName() string {
+	return "haproxy.config"
+}
+
+func (c *mqlHaproxyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlHaproxyConfig) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetGlobal() *plugin.TValue[*mqlHaproxyConfigGlobal] {
+	return plugin.GetOrCompute[*mqlHaproxyConfigGlobal](&c.Global, func() (*mqlHaproxyConfigGlobal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "global")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHaproxyConfigGlobal), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.global(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Defaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "defaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.defaults(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetFrontends() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Frontends, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "frontends")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.frontends(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetBackends() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backends, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "backends")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.backends(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetListens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "listens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.listens(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetResolvers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resolvers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "resolvers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.resolvers(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetUserlists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Userlists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "userlists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.userlists(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetPeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Peers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "peers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.peers(vargFile.Data)
+	})
+}
+
+func (c *mqlHaproxyConfig) GetSections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haproxy.config", c.__id, "sections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.sections(vargFile.Data)
+	})
+}
+
+// mqlHaproxyConfigSection for the haproxy.config.section resource
+type mqlHaproxyConfigSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigSectionInternal it will be used here
+	Type       plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Inherits   plugin.TValue[string]
+	File       plugin.TValue[string]
+	StartLine  plugin.TValue[int64]
+	EndLine    plugin.TValue[int64]
+	Params     plugin.TValue[map[string]any]
+	Directives plugin.TValue[[]any]
+	Raw        plugin.TValue[string]
+}
+
+// createHaproxyConfigSection creates a new instance of this resource
+func createHaproxyConfigSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.section", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigSection) MqlName() string {
+	return "haproxy.config.section"
+}
+
+func (c *mqlHaproxyConfigSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigSection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlHaproxyConfigSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigSection) GetInherits() *plugin.TValue[string] {
+	return &c.Inherits
+}
+
+func (c *mqlHaproxyConfigSection) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlHaproxyConfigSection) GetStartLine() *plugin.TValue[int64] {
+	return &c.StartLine
+}
+
+func (c *mqlHaproxyConfigSection) GetEndLine() *plugin.TValue[int64] {
+	return &c.EndLine
+}
+
+func (c *mqlHaproxyConfigSection) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigSection) GetDirectives() *plugin.TValue[[]any] {
+	return &c.Directives
+}
+
+func (c *mqlHaproxyConfigSection) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+// mqlHaproxyConfigGlobal for the haproxy.config.global resource
+type mqlHaproxyConfigGlobal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigGlobalInternal it will be used here
+	Daemon                       plugin.TValue[bool]
+	MasterWorker                 plugin.TValue[bool]
+	User                         plugin.TValue[string]
+	Group                        plugin.TValue[string]
+	Chroot                       plugin.TValue[string]
+	Pidfile                      plugin.TValue[string]
+	Maxconn                      plugin.TValue[int64]
+	Nbthread                     plugin.TValue[int64]
+	Nbproc                       plugin.TValue[int64]
+	HardStopAfter                plugin.TValue[string]
+	StatsSocket                  plugin.TValue[string]
+	StatsSocketMode              plugin.TValue[string]
+	StatsSocketLevel             plugin.TValue[string]
+	StatsSocketUser              plugin.TValue[string]
+	StatsTimeout                 plugin.TValue[string]
+	Log                          plugin.TValue[[]any]
+	SslDefaultBindCiphers        plugin.TValue[string]
+	SslDefaultBindCiphersuites   plugin.TValue[string]
+	SslDefaultBindOptions        plugin.TValue[string]
+	SslDefaultBindCurves         plugin.TValue[string]
+	SslDefaultServerCiphers      plugin.TValue[string]
+	SslDefaultServerCiphersuites plugin.TValue[string]
+	SslDefaultServerOptions      plugin.TValue[string]
+	SslDefaultServerCurves       plugin.TValue[string]
+	CaBase                       plugin.TValue[string]
+	CrtBase                      plugin.TValue[string]
+	TuneSslDefaultDhParam        plugin.TValue[int64]
+	Options                      plugin.TValue[[]any]
+	DisabledOptions              plugin.TValue[[]any]
+	Params                       plugin.TValue[map[string]any]
+	File                         plugin.TValue[string]
+}
+
+// createHaproxyConfigGlobal creates a new instance of this resource
+func createHaproxyConfigGlobal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigGlobal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.global", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigGlobal) MqlName() string {
+	return "haproxy.config.global"
+}
+
+func (c *mqlHaproxyConfigGlobal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigGlobal) GetDaemon() *plugin.TValue[bool] {
+	return &c.Daemon
+}
+
+func (c *mqlHaproxyConfigGlobal) GetMasterWorker() *plugin.TValue[bool] {
+	return &c.MasterWorker
+}
+
+func (c *mqlHaproxyConfigGlobal) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlHaproxyConfigGlobal) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlHaproxyConfigGlobal) GetChroot() *plugin.TValue[string] {
+	return &c.Chroot
+}
+
+func (c *mqlHaproxyConfigGlobal) GetPidfile() *plugin.TValue[string] {
+	return &c.Pidfile
+}
+
+func (c *mqlHaproxyConfigGlobal) GetMaxconn() *plugin.TValue[int64] {
+	return &c.Maxconn
+}
+
+func (c *mqlHaproxyConfigGlobal) GetNbthread() *plugin.TValue[int64] {
+	return &c.Nbthread
+}
+
+func (c *mqlHaproxyConfigGlobal) GetNbproc() *plugin.TValue[int64] {
+	return &c.Nbproc
+}
+
+func (c *mqlHaproxyConfigGlobal) GetHardStopAfter() *plugin.TValue[string] {
+	return &c.HardStopAfter
+}
+
+func (c *mqlHaproxyConfigGlobal) GetStatsSocket() *plugin.TValue[string] {
+	return &c.StatsSocket
+}
+
+func (c *mqlHaproxyConfigGlobal) GetStatsSocketMode() *plugin.TValue[string] {
+	return &c.StatsSocketMode
+}
+
+func (c *mqlHaproxyConfigGlobal) GetStatsSocketLevel() *plugin.TValue[string] {
+	return &c.StatsSocketLevel
+}
+
+func (c *mqlHaproxyConfigGlobal) GetStatsSocketUser() *plugin.TValue[string] {
+	return &c.StatsSocketUser
+}
+
+func (c *mqlHaproxyConfigGlobal) GetStatsTimeout() *plugin.TValue[string] {
+	return &c.StatsTimeout
+}
+
+func (c *mqlHaproxyConfigGlobal) GetLog() *plugin.TValue[[]any] {
+	return &c.Log
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultBindCiphers() *plugin.TValue[string] {
+	return &c.SslDefaultBindCiphers
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultBindCiphersuites() *plugin.TValue[string] {
+	return &c.SslDefaultBindCiphersuites
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultBindOptions() *plugin.TValue[string] {
+	return &c.SslDefaultBindOptions
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultBindCurves() *plugin.TValue[string] {
+	return &c.SslDefaultBindCurves
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultServerCiphers() *plugin.TValue[string] {
+	return &c.SslDefaultServerCiphers
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultServerCiphersuites() *plugin.TValue[string] {
+	return &c.SslDefaultServerCiphersuites
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultServerOptions() *plugin.TValue[string] {
+	return &c.SslDefaultServerOptions
+}
+
+func (c *mqlHaproxyConfigGlobal) GetSslDefaultServerCurves() *plugin.TValue[string] {
+	return &c.SslDefaultServerCurves
+}
+
+func (c *mqlHaproxyConfigGlobal) GetCaBase() *plugin.TValue[string] {
+	return &c.CaBase
+}
+
+func (c *mqlHaproxyConfigGlobal) GetCrtBase() *plugin.TValue[string] {
+	return &c.CrtBase
+}
+
+func (c *mqlHaproxyConfigGlobal) GetTuneSslDefaultDhParam() *plugin.TValue[int64] {
+	return &c.TuneSslDefaultDhParam
+}
+
+func (c *mqlHaproxyConfigGlobal) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlHaproxyConfigGlobal) GetDisabledOptions() *plugin.TValue[[]any] {
+	return &c.DisabledOptions
+}
+
+func (c *mqlHaproxyConfigGlobal) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigGlobal) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigDefaultsSection for the haproxy.config.defaultsSection resource
+type mqlHaproxyConfigDefaultsSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigDefaultsSectionInternal it will be used here
+	Name            plugin.TValue[string]
+	Inherits        plugin.TValue[string]
+	Mode            plugin.TValue[string]
+	Balance         plugin.TValue[string]
+	Retries         plugin.TValue[int64]
+	Maxconn         plugin.TValue[int64]
+	Options         plugin.TValue[[]any]
+	DisabledOptions plugin.TValue[[]any]
+	Timeouts        plugin.TValue[map[string]any]
+	Log             plugin.TValue[[]any]
+	Params          plugin.TValue[map[string]any]
+	File            plugin.TValue[string]
+}
+
+// createHaproxyConfigDefaultsSection creates a new instance of this resource
+func createHaproxyConfigDefaultsSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigDefaultsSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.defaultsSection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) MqlName() string {
+	return "haproxy.config.defaultsSection"
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetInherits() *plugin.TValue[string] {
+	return &c.Inherits
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetBalance() *plugin.TValue[string] {
+	return &c.Balance
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetRetries() *plugin.TValue[int64] {
+	return &c.Retries
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetMaxconn() *plugin.TValue[int64] {
+	return &c.Maxconn
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetDisabledOptions() *plugin.TValue[[]any] {
+	return &c.DisabledOptions
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetTimeouts() *plugin.TValue[map[string]any] {
+	return &c.Timeouts
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetLog() *plugin.TValue[[]any] {
+	return &c.Log
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigDefaultsSection) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigFrontend for the haproxy.config.frontend resource
+type mqlHaproxyConfigFrontend struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigFrontendInternal it will be used here
+	Name              plugin.TValue[string]
+	Inherits          plugin.TValue[string]
+	Mode              plugin.TValue[string]
+	Binds             plugin.TValue[[]any]
+	DefaultBackend    plugin.TValue[string]
+	Acls              plugin.TValue[[]any]
+	UseBackends       plugin.TValue[[]any]
+	HttpRequestRules  plugin.TValue[[]any]
+	HttpResponseRules plugin.TValue[[]any]
+	TcpRequestRules   plugin.TValue[[]any]
+	TcpResponseRules  plugin.TValue[[]any]
+	Captures          plugin.TValue[[]any]
+	Redirects         plugin.TValue[[]any]
+	MonitorUri        plugin.TValue[string]
+	MonitorFail       plugin.TValue[string]
+	Options           plugin.TValue[[]any]
+	DisabledOptions   plugin.TValue[[]any]
+	Timeouts          plugin.TValue[map[string]any]
+	Log               plugin.TValue[[]any]
+	Maxconn           plugin.TValue[int64]
+	Params            plugin.TValue[map[string]any]
+	File              plugin.TValue[string]
+}
+
+// createHaproxyConfigFrontend creates a new instance of this resource
+func createHaproxyConfigFrontend(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigFrontend{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.frontend", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigFrontend) MqlName() string {
+	return "haproxy.config.frontend"
+}
+
+func (c *mqlHaproxyConfigFrontend) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigFrontend) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigFrontend) GetInherits() *plugin.TValue[string] {
+	return &c.Inherits
+}
+
+func (c *mqlHaproxyConfigFrontend) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHaproxyConfigFrontend) GetBinds() *plugin.TValue[[]any] {
+	return &c.Binds
+}
+
+func (c *mqlHaproxyConfigFrontend) GetDefaultBackend() *plugin.TValue[string] {
+	return &c.DefaultBackend
+}
+
+func (c *mqlHaproxyConfigFrontend) GetAcls() *plugin.TValue[[]any] {
+	return &c.Acls
+}
+
+func (c *mqlHaproxyConfigFrontend) GetUseBackends() *plugin.TValue[[]any] {
+	return &c.UseBackends
+}
+
+func (c *mqlHaproxyConfigFrontend) GetHttpRequestRules() *plugin.TValue[[]any] {
+	return &c.HttpRequestRules
+}
+
+func (c *mqlHaproxyConfigFrontend) GetHttpResponseRules() *plugin.TValue[[]any] {
+	return &c.HttpResponseRules
+}
+
+func (c *mqlHaproxyConfigFrontend) GetTcpRequestRules() *plugin.TValue[[]any] {
+	return &c.TcpRequestRules
+}
+
+func (c *mqlHaproxyConfigFrontend) GetTcpResponseRules() *plugin.TValue[[]any] {
+	return &c.TcpResponseRules
+}
+
+func (c *mqlHaproxyConfigFrontend) GetCaptures() *plugin.TValue[[]any] {
+	return &c.Captures
+}
+
+func (c *mqlHaproxyConfigFrontend) GetRedirects() *plugin.TValue[[]any] {
+	return &c.Redirects
+}
+
+func (c *mqlHaproxyConfigFrontend) GetMonitorUri() *plugin.TValue[string] {
+	return &c.MonitorUri
+}
+
+func (c *mqlHaproxyConfigFrontend) GetMonitorFail() *plugin.TValue[string] {
+	return &c.MonitorFail
+}
+
+func (c *mqlHaproxyConfigFrontend) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlHaproxyConfigFrontend) GetDisabledOptions() *plugin.TValue[[]any] {
+	return &c.DisabledOptions
+}
+
+func (c *mqlHaproxyConfigFrontend) GetTimeouts() *plugin.TValue[map[string]any] {
+	return &c.Timeouts
+}
+
+func (c *mqlHaproxyConfigFrontend) GetLog() *plugin.TValue[[]any] {
+	return &c.Log
+}
+
+func (c *mqlHaproxyConfigFrontend) GetMaxconn() *plugin.TValue[int64] {
+	return &c.Maxconn
+}
+
+func (c *mqlHaproxyConfigFrontend) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigFrontend) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigBackend for the haproxy.config.backend resource
+type mqlHaproxyConfigBackend struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigBackendInternal it will be used here
+	Name              plugin.TValue[string]
+	Inherits          plugin.TValue[string]
+	Mode              plugin.TValue[string]
+	Balance           plugin.TValue[string]
+	HashType          plugin.TValue[string]
+	Servers           plugin.TValue[[]any]
+	DefaultServer     plugin.TValue[any]
+	Source            plugin.TValue[string]
+	HttpCheck         plugin.TValue[any]
+	StickTable        plugin.TValue[string]
+	StickOn           plugin.TValue[string]
+	Cookie            plugin.TValue[string]
+	Acls              plugin.TValue[[]any]
+	HttpRequestRules  plugin.TValue[[]any]
+	HttpResponseRules plugin.TValue[[]any]
+	TcpRequestRules   plugin.TValue[[]any]
+	TcpResponseRules  plugin.TValue[[]any]
+	Options           plugin.TValue[[]any]
+	DisabledOptions   plugin.TValue[[]any]
+	Timeouts          plugin.TValue[map[string]any]
+	Log               plugin.TValue[[]any]
+	Retries           plugin.TValue[int64]
+	Params            plugin.TValue[map[string]any]
+	File              plugin.TValue[string]
+}
+
+// createHaproxyConfigBackend creates a new instance of this resource
+func createHaproxyConfigBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigBackend{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.backend", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigBackend) MqlName() string {
+	return "haproxy.config.backend"
+}
+
+func (c *mqlHaproxyConfigBackend) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigBackend) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigBackend) GetInherits() *plugin.TValue[string] {
+	return &c.Inherits
+}
+
+func (c *mqlHaproxyConfigBackend) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHaproxyConfigBackend) GetBalance() *plugin.TValue[string] {
+	return &c.Balance
+}
+
+func (c *mqlHaproxyConfigBackend) GetHashType() *plugin.TValue[string] {
+	return &c.HashType
+}
+
+func (c *mqlHaproxyConfigBackend) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlHaproxyConfigBackend) GetDefaultServer() *plugin.TValue[any] {
+	return &c.DefaultServer
+}
+
+func (c *mqlHaproxyConfigBackend) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlHaproxyConfigBackend) GetHttpCheck() *plugin.TValue[any] {
+	return &c.HttpCheck
+}
+
+func (c *mqlHaproxyConfigBackend) GetStickTable() *plugin.TValue[string] {
+	return &c.StickTable
+}
+
+func (c *mqlHaproxyConfigBackend) GetStickOn() *plugin.TValue[string] {
+	return &c.StickOn
+}
+
+func (c *mqlHaproxyConfigBackend) GetCookie() *plugin.TValue[string] {
+	return &c.Cookie
+}
+
+func (c *mqlHaproxyConfigBackend) GetAcls() *plugin.TValue[[]any] {
+	return &c.Acls
+}
+
+func (c *mqlHaproxyConfigBackend) GetHttpRequestRules() *plugin.TValue[[]any] {
+	return &c.HttpRequestRules
+}
+
+func (c *mqlHaproxyConfigBackend) GetHttpResponseRules() *plugin.TValue[[]any] {
+	return &c.HttpResponseRules
+}
+
+func (c *mqlHaproxyConfigBackend) GetTcpRequestRules() *plugin.TValue[[]any] {
+	return &c.TcpRequestRules
+}
+
+func (c *mqlHaproxyConfigBackend) GetTcpResponseRules() *plugin.TValue[[]any] {
+	return &c.TcpResponseRules
+}
+
+func (c *mqlHaproxyConfigBackend) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlHaproxyConfigBackend) GetDisabledOptions() *plugin.TValue[[]any] {
+	return &c.DisabledOptions
+}
+
+func (c *mqlHaproxyConfigBackend) GetTimeouts() *plugin.TValue[map[string]any] {
+	return &c.Timeouts
+}
+
+func (c *mqlHaproxyConfigBackend) GetLog() *plugin.TValue[[]any] {
+	return &c.Log
+}
+
+func (c *mqlHaproxyConfigBackend) GetRetries() *plugin.TValue[int64] {
+	return &c.Retries
+}
+
+func (c *mqlHaproxyConfigBackend) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigBackend) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigListen for the haproxy.config.listen resource
+type mqlHaproxyConfigListen struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigListenInternal it will be used here
+	Name              plugin.TValue[string]
+	Inherits          plugin.TValue[string]
+	Mode              plugin.TValue[string]
+	Binds             plugin.TValue[[]any]
+	Balance           plugin.TValue[string]
+	Servers           plugin.TValue[[]any]
+	DefaultServer     plugin.TValue[any]
+	Acls              plugin.TValue[[]any]
+	UseBackends       plugin.TValue[[]any]
+	HttpRequestRules  plugin.TValue[[]any]
+	HttpResponseRules plugin.TValue[[]any]
+	TcpRequestRules   plugin.TValue[[]any]
+	TcpResponseRules  plugin.TValue[[]any]
+	HttpCheck         plugin.TValue[any]
+	Options           plugin.TValue[[]any]
+	DisabledOptions   plugin.TValue[[]any]
+	Timeouts          plugin.TValue[map[string]any]
+	Log               plugin.TValue[[]any]
+	Params            plugin.TValue[map[string]any]
+	File              plugin.TValue[string]
+}
+
+// createHaproxyConfigListen creates a new instance of this resource
+func createHaproxyConfigListen(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigListen{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.listen", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigListen) MqlName() string {
+	return "haproxy.config.listen"
+}
+
+func (c *mqlHaproxyConfigListen) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigListen) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigListen) GetInherits() *plugin.TValue[string] {
+	return &c.Inherits
+}
+
+func (c *mqlHaproxyConfigListen) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHaproxyConfigListen) GetBinds() *plugin.TValue[[]any] {
+	return &c.Binds
+}
+
+func (c *mqlHaproxyConfigListen) GetBalance() *plugin.TValue[string] {
+	return &c.Balance
+}
+
+func (c *mqlHaproxyConfigListen) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlHaproxyConfigListen) GetDefaultServer() *plugin.TValue[any] {
+	return &c.DefaultServer
+}
+
+func (c *mqlHaproxyConfigListen) GetAcls() *plugin.TValue[[]any] {
+	return &c.Acls
+}
+
+func (c *mqlHaproxyConfigListen) GetUseBackends() *plugin.TValue[[]any] {
+	return &c.UseBackends
+}
+
+func (c *mqlHaproxyConfigListen) GetHttpRequestRules() *plugin.TValue[[]any] {
+	return &c.HttpRequestRules
+}
+
+func (c *mqlHaproxyConfigListen) GetHttpResponseRules() *plugin.TValue[[]any] {
+	return &c.HttpResponseRules
+}
+
+func (c *mqlHaproxyConfigListen) GetTcpRequestRules() *plugin.TValue[[]any] {
+	return &c.TcpRequestRules
+}
+
+func (c *mqlHaproxyConfigListen) GetTcpResponseRules() *plugin.TValue[[]any] {
+	return &c.TcpResponseRules
+}
+
+func (c *mqlHaproxyConfigListen) GetHttpCheck() *plugin.TValue[any] {
+	return &c.HttpCheck
+}
+
+func (c *mqlHaproxyConfigListen) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+func (c *mqlHaproxyConfigListen) GetDisabledOptions() *plugin.TValue[[]any] {
+	return &c.DisabledOptions
+}
+
+func (c *mqlHaproxyConfigListen) GetTimeouts() *plugin.TValue[map[string]any] {
+	return &c.Timeouts
+}
+
+func (c *mqlHaproxyConfigListen) GetLog() *plugin.TValue[[]any] {
+	return &c.Log
+}
+
+func (c *mqlHaproxyConfigListen) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigListen) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigBind for the haproxy.config.bind resource
+type mqlHaproxyConfigBind struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigBindInternal it will be used here
+	Raw            plugin.TValue[string]
+	Address        plugin.TValue[string]
+	Port           plugin.TValue[int64]
+	PortRangeStart plugin.TValue[int64]
+	PortRangeEnd   plugin.TValue[int64]
+	Ssl            plugin.TValue[bool]
+	Alpn           plugin.TValue[string]
+	Ciphers        plugin.TValue[string]
+	Ciphersuites   plugin.TValue[string]
+	Curves         plugin.TValue[string]
+	Crt            plugin.TValue[string]
+	CrtList        plugin.TValue[string]
+	CaFile         plugin.TValue[string]
+	Verify         plugin.TValue[string]
+	SslMinVer      plugin.TValue[string]
+	SslMaxVer      plugin.TValue[string]
+	NoSslv3        plugin.TValue[bool]
+	NoTlsv10       plugin.TValue[bool]
+	NoTlsv11       plugin.TValue[bool]
+	NoTlsv12       plugin.TValue[bool]
+	NoTlsv13       plugin.TValue[bool]
+	AcceptProxy    plugin.TValue[bool]
+	Transparent    plugin.TValue[bool]
+	V4v6           plugin.TValue[bool]
+	V6only         plugin.TValue[bool]
+	Params         plugin.TValue[map[string]any]
+}
+
+// createHaproxyConfigBind creates a new instance of this resource
+func createHaproxyConfigBind(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigBind{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.bind", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigBind) MqlName() string {
+	return "haproxy.config.bind"
+}
+
+func (c *mqlHaproxyConfigBind) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigBind) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+func (c *mqlHaproxyConfigBind) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlHaproxyConfigBind) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlHaproxyConfigBind) GetPortRangeStart() *plugin.TValue[int64] {
+	return &c.PortRangeStart
+}
+
+func (c *mqlHaproxyConfigBind) GetPortRangeEnd() *plugin.TValue[int64] {
+	return &c.PortRangeEnd
+}
+
+func (c *mqlHaproxyConfigBind) GetSsl() *plugin.TValue[bool] {
+	return &c.Ssl
+}
+
+func (c *mqlHaproxyConfigBind) GetAlpn() *plugin.TValue[string] {
+	return &c.Alpn
+}
+
+func (c *mqlHaproxyConfigBind) GetCiphers() *plugin.TValue[string] {
+	return &c.Ciphers
+}
+
+func (c *mqlHaproxyConfigBind) GetCiphersuites() *plugin.TValue[string] {
+	return &c.Ciphersuites
+}
+
+func (c *mqlHaproxyConfigBind) GetCurves() *plugin.TValue[string] {
+	return &c.Curves
+}
+
+func (c *mqlHaproxyConfigBind) GetCrt() *plugin.TValue[string] {
+	return &c.Crt
+}
+
+func (c *mqlHaproxyConfigBind) GetCrtList() *plugin.TValue[string] {
+	return &c.CrtList
+}
+
+func (c *mqlHaproxyConfigBind) GetCaFile() *plugin.TValue[string] {
+	return &c.CaFile
+}
+
+func (c *mqlHaproxyConfigBind) GetVerify() *plugin.TValue[string] {
+	return &c.Verify
+}
+
+func (c *mqlHaproxyConfigBind) GetSslMinVer() *plugin.TValue[string] {
+	return &c.SslMinVer
+}
+
+func (c *mqlHaproxyConfigBind) GetSslMaxVer() *plugin.TValue[string] {
+	return &c.SslMaxVer
+}
+
+func (c *mqlHaproxyConfigBind) GetNoSslv3() *plugin.TValue[bool] {
+	return &c.NoSslv3
+}
+
+func (c *mqlHaproxyConfigBind) GetNoTlsv10() *plugin.TValue[bool] {
+	return &c.NoTlsv10
+}
+
+func (c *mqlHaproxyConfigBind) GetNoTlsv11() *plugin.TValue[bool] {
+	return &c.NoTlsv11
+}
+
+func (c *mqlHaproxyConfigBind) GetNoTlsv12() *plugin.TValue[bool] {
+	return &c.NoTlsv12
+}
+
+func (c *mqlHaproxyConfigBind) GetNoTlsv13() *plugin.TValue[bool] {
+	return &c.NoTlsv13
+}
+
+func (c *mqlHaproxyConfigBind) GetAcceptProxy() *plugin.TValue[bool] {
+	return &c.AcceptProxy
+}
+
+func (c *mqlHaproxyConfigBind) GetTransparent() *plugin.TValue[bool] {
+	return &c.Transparent
+}
+
+func (c *mqlHaproxyConfigBind) GetV4v6() *plugin.TValue[bool] {
+	return &c.V4v6
+}
+
+func (c *mqlHaproxyConfigBind) GetV6only() *plugin.TValue[bool] {
+	return &c.V6only
+}
+
+func (c *mqlHaproxyConfigBind) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlHaproxyConfigServer for the haproxy.config.server resource
+type mqlHaproxyConfigServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigServerInternal it will be used here
+	Name         plugin.TValue[string]
+	Address      plugin.TValue[string]
+	Port         plugin.TValue[int64]
+	Check        plugin.TValue[bool]
+	Ssl          plugin.TValue[bool]
+	Verify       plugin.TValue[string]
+	CaFile       plugin.TValue[string]
+	Crt          plugin.TValue[string]
+	Sni          plugin.TValue[string]
+	Alpn         plugin.TValue[string]
+	Weight       plugin.TValue[int64]
+	Backup       plugin.TValue[bool]
+	Disabled     plugin.TValue[bool]
+	Maxconn      plugin.TValue[int64]
+	Maxqueue     plugin.TValue[int64]
+	Inter        plugin.TValue[string]
+	FastInter    plugin.TValue[string]
+	DownInter    plugin.TValue[string]
+	Rise         plugin.TValue[int64]
+	Fall         plugin.TValue[int64]
+	SlowStart    plugin.TValue[string]
+	Observe      plugin.TValue[string]
+	OnError      plugin.TValue[string]
+	OnMarkedUp   plugin.TValue[string]
+	OnMarkedDown plugin.TValue[string]
+	Cookie       plugin.TValue[string]
+	Resolvers    plugin.TValue[string]
+	InitAddr     plugin.TValue[string]
+	SendProxy    plugin.TValue[bool]
+	SendProxyV2  plugin.TValue[bool]
+	AgentCheck   plugin.TValue[bool]
+	AgentPort    plugin.TValue[int64]
+	AgentAddr    plugin.TValue[string]
+	AgentInter   plugin.TValue[string]
+	Params       plugin.TValue[map[string]any]
+}
+
+// createHaproxyConfigServer creates a new instance of this resource
+func createHaproxyConfigServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.server", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigServer) MqlName() string {
+	return "haproxy.config.server"
+}
+
+func (c *mqlHaproxyConfigServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigServer) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlHaproxyConfigServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlHaproxyConfigServer) GetCheck() *plugin.TValue[bool] {
+	return &c.Check
+}
+
+func (c *mqlHaproxyConfigServer) GetSsl() *plugin.TValue[bool] {
+	return &c.Ssl
+}
+
+func (c *mqlHaproxyConfigServer) GetVerify() *plugin.TValue[string] {
+	return &c.Verify
+}
+
+func (c *mqlHaproxyConfigServer) GetCaFile() *plugin.TValue[string] {
+	return &c.CaFile
+}
+
+func (c *mqlHaproxyConfigServer) GetCrt() *plugin.TValue[string] {
+	return &c.Crt
+}
+
+func (c *mqlHaproxyConfigServer) GetSni() *plugin.TValue[string] {
+	return &c.Sni
+}
+
+func (c *mqlHaproxyConfigServer) GetAlpn() *plugin.TValue[string] {
+	return &c.Alpn
+}
+
+func (c *mqlHaproxyConfigServer) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+func (c *mqlHaproxyConfigServer) GetBackup() *plugin.TValue[bool] {
+	return &c.Backup
+}
+
+func (c *mqlHaproxyConfigServer) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlHaproxyConfigServer) GetMaxconn() *plugin.TValue[int64] {
+	return &c.Maxconn
+}
+
+func (c *mqlHaproxyConfigServer) GetMaxqueue() *plugin.TValue[int64] {
+	return &c.Maxqueue
+}
+
+func (c *mqlHaproxyConfigServer) GetInter() *plugin.TValue[string] {
+	return &c.Inter
+}
+
+func (c *mqlHaproxyConfigServer) GetFastInter() *plugin.TValue[string] {
+	return &c.FastInter
+}
+
+func (c *mqlHaproxyConfigServer) GetDownInter() *plugin.TValue[string] {
+	return &c.DownInter
+}
+
+func (c *mqlHaproxyConfigServer) GetRise() *plugin.TValue[int64] {
+	return &c.Rise
+}
+
+func (c *mqlHaproxyConfigServer) GetFall() *plugin.TValue[int64] {
+	return &c.Fall
+}
+
+func (c *mqlHaproxyConfigServer) GetSlowStart() *plugin.TValue[string] {
+	return &c.SlowStart
+}
+
+func (c *mqlHaproxyConfigServer) GetObserve() *plugin.TValue[string] {
+	return &c.Observe
+}
+
+func (c *mqlHaproxyConfigServer) GetOnError() *plugin.TValue[string] {
+	return &c.OnError
+}
+
+func (c *mqlHaproxyConfigServer) GetOnMarkedUp() *plugin.TValue[string] {
+	return &c.OnMarkedUp
+}
+
+func (c *mqlHaproxyConfigServer) GetOnMarkedDown() *plugin.TValue[string] {
+	return &c.OnMarkedDown
+}
+
+func (c *mqlHaproxyConfigServer) GetCookie() *plugin.TValue[string] {
+	return &c.Cookie
+}
+
+func (c *mqlHaproxyConfigServer) GetResolvers() *plugin.TValue[string] {
+	return &c.Resolvers
+}
+
+func (c *mqlHaproxyConfigServer) GetInitAddr() *plugin.TValue[string] {
+	return &c.InitAddr
+}
+
+func (c *mqlHaproxyConfigServer) GetSendProxy() *plugin.TValue[bool] {
+	return &c.SendProxy
+}
+
+func (c *mqlHaproxyConfigServer) GetSendProxyV2() *plugin.TValue[bool] {
+	return &c.SendProxyV2
+}
+
+func (c *mqlHaproxyConfigServer) GetAgentCheck() *plugin.TValue[bool] {
+	return &c.AgentCheck
+}
+
+func (c *mqlHaproxyConfigServer) GetAgentPort() *plugin.TValue[int64] {
+	return &c.AgentPort
+}
+
+func (c *mqlHaproxyConfigServer) GetAgentAddr() *plugin.TValue[string] {
+	return &c.AgentAddr
+}
+
+func (c *mqlHaproxyConfigServer) GetAgentInter() *plugin.TValue[string] {
+	return &c.AgentInter
+}
+
+func (c *mqlHaproxyConfigServer) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlHaproxyConfigResolversSection for the haproxy.config.resolversSection resource
+type mqlHaproxyConfigResolversSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigResolversSectionInternal it will be used here
+	Name                plugin.TValue[string]
+	Nameservers         plugin.TValue[[]any]
+	ResolveRetries      plugin.TValue[int64]
+	Timeouts            plugin.TValue[map[string]any]
+	AcceptedPayloadSize plugin.TValue[int64]
+	Holds               plugin.TValue[map[string]any]
+	Params              plugin.TValue[map[string]any]
+	File                plugin.TValue[string]
+}
+
+// createHaproxyConfigResolversSection creates a new instance of this resource
+func createHaproxyConfigResolversSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigResolversSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.resolversSection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigResolversSection) MqlName() string {
+	return "haproxy.config.resolversSection"
+}
+
+func (c *mqlHaproxyConfigResolversSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetNameservers() *plugin.TValue[[]any] {
+	return &c.Nameservers
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetResolveRetries() *plugin.TValue[int64] {
+	return &c.ResolveRetries
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetTimeouts() *plugin.TValue[map[string]any] {
+	return &c.Timeouts
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetAcceptedPayloadSize() *plugin.TValue[int64] {
+	return &c.AcceptedPayloadSize
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetHolds() *plugin.TValue[map[string]any] {
+	return &c.Holds
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigResolversSection) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigUserlist for the haproxy.config.userlist resource
+type mqlHaproxyConfigUserlist struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigUserlistInternal it will be used here
+	Name   plugin.TValue[string]
+	Users  plugin.TValue[[]any]
+	Groups plugin.TValue[[]any]
+	File   plugin.TValue[string]
+}
+
+// createHaproxyConfigUserlist creates a new instance of this resource
+func createHaproxyConfigUserlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigUserlist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.userlist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigUserlist) MqlName() string {
+	return "haproxy.config.userlist"
+}
+
+func (c *mqlHaproxyConfigUserlist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigUserlist) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigUserlist) GetUsers() *plugin.TValue[[]any] {
+	return &c.Users
+}
+
+func (c *mqlHaproxyConfigUserlist) GetGroups() *plugin.TValue[[]any] {
+	return &c.Groups
+}
+
+func (c *mqlHaproxyConfigUserlist) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlHaproxyConfigPeersSection for the haproxy.config.peersSection resource
+type mqlHaproxyConfigPeersSection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaproxyConfigPeersSectionInternal it will be used here
+	Name    plugin.TValue[string]
+	Bind    plugin.TValue[string]
+	Servers plugin.TValue[[]any]
+	Tables  plugin.TValue[[]any]
+	Params  plugin.TValue[map[string]any]
+	File    plugin.TValue[string]
+}
+
+// createHaproxyConfigPeersSection creates a new instance of this resource
+func createHaproxyConfigPeersSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaproxyConfigPeersSection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haproxy.config.peersSection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaproxyConfigPeersSection) MqlName() string {
+	return "haproxy.config.peersSection"
+}
+
+func (c *mqlHaproxyConfigPeersSection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetBind() *plugin.TValue[string] {
+	return &c.Bind
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetTables() *plugin.TValue[[]any] {
+	return &c.Tables
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+func (c *mqlHaproxyConfigPeersSection) GetFile() *plugin.TValue[string] {
+	return &c.File
 }
 
 // mqlJournaldConfig for the journald.config resource
