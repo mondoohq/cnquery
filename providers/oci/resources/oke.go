@@ -126,6 +126,15 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 					upgrades = append(upgrades, u)
 				}
 
+				freeformTags := make(map[string]interface{}, len(cluster.FreeformTags))
+				for k, v := range cluster.FreeformTags {
+					freeformTags[k] = v
+				}
+				definedTags := make(map[string]interface{}, len(cluster.DefinedTags))
+				for k, v := range cluster.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.oke.cluster", map[string]*llx.RawData{
 					"id":                          llx.StringDataPtr(cluster.Id),
 					"name":                        llx.StringDataPtr(cluster.Name),
@@ -140,6 +149,8 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 					"isPodSecurityPolicyEnabled":  llx.BoolData(isPodSecurityPolicyEnabled),
 					"state":                       llx.StringData(string(cluster.LifecycleState)),
 					"created":                     llx.TimeDataPtr(created),
+					"freeformTags":                llx.MapData(freeformTags, types.String),
+					"definedTags":                 llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err

@@ -1482,6 +1482,10 @@ private oci.vault.secret @defaults("name") {
   secretVersions() []oci.vault.secretVersion
   // Creation time
   created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) vault secret version
@@ -1541,6 +1545,10 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   backendSets() []oci.loadBalancer.backendSet
   // Creation time
   created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) load balancer listener
@@ -1681,6 +1689,10 @@ private oci.oke.cluster @defaults("name") {
   nodePools() []oci.oke.nodePool
   // Creation time
   created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) OKE node pool

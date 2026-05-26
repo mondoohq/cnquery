@@ -2280,6 +2280,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.vault.secret.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVaultSecret).GetCreated()).ToDataRes(types.Time)
 	},
+	"oci.vault.secret.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVaultSecret).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.vault.secret.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVaultSecret).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
 	"oci.vault.secretVersion.secretId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVaultSecretVersion).GetSecretId()).ToDataRes(types.String)
 	},
@@ -2339,6 +2345,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.loadBalancer.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.loadBalancer.loadBalancer.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.loadBalancer.loadBalancer.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 	"oci.loadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetName()).ToDataRes(types.String)
@@ -2483,6 +2495,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.oke.cluster.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.oke.cluster.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeCluster).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.oke.cluster.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeCluster).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 	"oci.oke.nodePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetId()).ToDataRes(types.String)
@@ -6556,6 +6574,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciVaultSecret).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"oci.vault.secret.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVaultSecret).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.vault.secret.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVaultSecret).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"oci.vault.secretVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVaultSecretVersion).__id, ok = v.Value.(string)
 		return
@@ -6646,6 +6672,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.loadBalancer.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.loadBalancer.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.loadBalancer.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6866,6 +6900,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.oke.cluster.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeCluster).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.oke.cluster.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeCluster).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.oke.cluster.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeCluster).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.oke.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15788,6 +15830,8 @@ type mqlOciVaultSecret struct {
 	TimeOfCurrentVersionExpiry plugin.TValue[*time.Time]
 	SecretVersions             plugin.TValue[[]any]
 	Created                    plugin.TValue[*time.Time]
+	FreeformTags               plugin.TValue[map[string]any]
+	DefinedTags                plugin.TValue[map[string]any]
 }
 
 // createOciVaultSecret creates a new instance of this resource
@@ -15947,6 +15991,14 @@ func (c *mqlOciVaultSecret) GetSecretVersions() *plugin.TValue[[]any] {
 
 func (c *mqlOciVaultSecret) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlOciVaultSecret) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciVaultSecret) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }
 
 // mqlOciVaultSecretVersion for the oci.vault.secretVersion resource
@@ -16114,6 +16166,8 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	Listeners                 plugin.TValue[[]any]
 	BackendSets               plugin.TValue[[]any]
 	Created                   plugin.TValue[*time.Time]
+	FreeformTags              plugin.TValue[map[string]any]
+	DefinedTags               plugin.TValue[map[string]any]
 }
 
 // createOciLoadBalancerLoadBalancer creates a new instance of this resource
@@ -16215,6 +16269,14 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetBackendSets() *plugin.TValue[[]any] 
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }
 
 // mqlOciLoadBalancerListener for the oci.loadBalancer.listener resource
@@ -16726,6 +16788,8 @@ type mqlOciOkeCluster struct {
 	State                       plugin.TValue[string]
 	NodePools                   plugin.TValue[[]any]
 	Created                     plugin.TValue[*time.Time]
+	FreeformTags                plugin.TValue[map[string]any]
+	DefinedTags                 plugin.TValue[map[string]any]
 }
 
 // createOciOkeCluster creates a new instance of this resource
@@ -16863,6 +16927,14 @@ func (c *mqlOciOkeCluster) GetNodePools() *plugin.TValue[[]any] {
 
 func (c *mqlOciOkeCluster) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlOciOkeCluster) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciOkeCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }
 
 // mqlOciOkeNodePool for the oci.oke.nodePool resource

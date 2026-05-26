@@ -94,6 +94,15 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					created = &lb.TimeCreated.Time
 				}
 
+				freeformTags := make(map[string]interface{}, len(lb.FreeformTags))
+				for k, v := range lb.FreeformTags {
+					freeformTags[k] = v
+				}
+				definedTags := make(map[string]interface{}, len(lb.DefinedTags))
+				for k, v := range lb.DefinedTags {
+					definedTags[k] = v
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
 					"id":                        llx.StringDataPtr(lb.Id),
 					"name":                      llx.StringDataPtr(lb.DisplayName),
@@ -103,6 +112,8 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),
+					"freeformTags":              llx.MapData(freeformTags, types.String),
+					"definedTags":               llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err

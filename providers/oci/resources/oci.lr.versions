@@ -770,6 +770,8 @@ oci.loadBalancer.loadBalancer 13.0.6
 oci.loadBalancer.loadBalancer.backendSets 13.0.6
 oci.loadBalancer.loadBalancer.compartmentID 13.0.6
 oci.loadBalancer.loadBalancer.created 13.0.6
+oci.loadBalancer.loadBalancer.definedTags 13.7.2
+oci.loadBalancer.loadBalancer.freeformTags 13.7.2
 oci.loadBalancer.loadBalancer.id 13.0.6
 oci.loadBalancer.loadBalancer.isDeleteProtectionEnabled 13.0.6
 oci.loadBalancer.loadBalancer.isPrivate 13.0.6
@@ -978,6 +980,8 @@ oci.oke.cluster 13.0.6
 oci.oke.cluster.availableKubernetesUpgrades 13.0.6
 oci.oke.cluster.compartmentID 13.0.6
 oci.oke.cluster.created 13.0.6
+oci.oke.cluster.definedTags 13.7.2
+oci.oke.cluster.freeformTags 13.7.2
 oci.oke.cluster.id 13.0.6
 oci.oke.cluster.isImagePolicyEnabled 13.0.6
 oci.oke.cluster.isPodSecurityPolicyEnabled 13.0.6
@@ -1062,7 +1066,9 @@ oci.vault.secret 13.0.6
 oci.vault.secret.compartment 13.6.2
 oci.vault.secret.compartmentID 13.0.6
 oci.vault.secret.created 13.0.6
+oci.vault.secret.definedTags 13.7.2
 oci.vault.secret.description 13.0.6
+oci.vault.secret.freeformTags 13.7.2
 oci.vault.secret.id 13.0.6
 oci.vault.secret.isAutoGenerationEnabled 13.0.6
 oci.vault.secret.isScheduledRotationEnabled 13.1.1

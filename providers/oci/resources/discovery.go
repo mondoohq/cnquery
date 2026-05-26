@@ -254,7 +254,7 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				id:          lb.Id.Data,
 				service:     "loadbalancer",
 				objectType:  "loadBalancer",
-			}, lb.Name.Data, map[string]string{}, conn))
+			}, lb.Name.Data, tagsToLabels(lb.FreeformTags.Data), conn))
 		}
 	case DiscoveryRedisClusters:
 		res, err := NewResource(runtime, "oci.redis", map[string]*llx.RawData{})
@@ -296,7 +296,7 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				id:          s.Id.Data,
 				service:     "vault",
 				objectType:  "secret",
-			}, s.Name.Data, map[string]string{}, conn))
+			}, s.Name.Data, tagsToLabels(s.FreeformTags.Data), conn))
 		}
 	case DiscoveryOkeClusters:
 		res, err := NewResource(runtime, "oci.oke", map[string]*llx.RawData{})
@@ -317,7 +317,7 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				id:          c.Id.Data,
 				service:     "oke",
 				objectType:  "cluster",
-			}, c.Name.Data, map[string]string{}, conn))
+			}, c.Name.Data, tagsToLabels(c.FreeformTags.Data), conn))
 		}
 	default:
 		log.Warn().Str("target", target).Msg("oci discovery: unknown target; skipping")
