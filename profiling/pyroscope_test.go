@@ -60,6 +60,41 @@ func TestStartEnabledWithoutServerAddressErrors(t *testing.T) {
 	}
 }
 
+func TestReadIntEnv(t *testing.T) {
+	const env = "MONDOO_PYROSCOPE_TEST_INT"
+
+	t.Run("unset returns default", func(t *testing.T) {
+		t.Setenv(env, "")
+		got, err := readIntEnv(env, 42)
+		if err != nil || got != 42 {
+			t.Errorf("got (%d, %v), want (42, nil)", got, err)
+		}
+	})
+
+	t.Run("zero is honored, not replaced by default", func(t *testing.T) {
+		t.Setenv(env, "0")
+		got, err := readIntEnv(env, 42)
+		if err != nil || got != 0 {
+			t.Errorf("got (%d, %v), want (0, nil)", got, err)
+		}
+	})
+
+	t.Run("valid int", func(t *testing.T) {
+		t.Setenv(env, "1000")
+		got, err := readIntEnv(env, 42)
+		if err != nil || got != 1000 {
+			t.Errorf("got (%d, %v), want (1000, nil)", got, err)
+		}
+	})
+
+	t.Run("invalid int errors", func(t *testing.T) {
+		t.Setenv(env, "not-a-number")
+		if _, err := readIntEnv(env, 42); err == nil {
+			t.Error("expected error for non-integer value")
+		}
+	})
+}
+
 func TestIsEnabled(t *testing.T) {
 	cases := map[string]bool{
 		"":      false,

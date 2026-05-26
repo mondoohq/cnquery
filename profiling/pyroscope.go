@@ -21,17 +21,34 @@ import (
 )
 
 const (
-	EnvEnabled         = "MONDOO_PYROSCOPE_ENABLED"
-	EnvServerAddress   = "MONDOO_PYROSCOPE_SERVER_ADDRESS"
-	EnvAuthToken       = "MONDOO_PYROSCOPE_AUTH_TOKEN"
-	EnvBasicAuthUser   = "MONDOO_PYROSCOPE_BASIC_AUTH_USER"
-	EnvBasicAuthPass   = "MONDOO_PYROSCOPE_BASIC_AUTH_PASSWORD"
-	EnvTenantID        = "MONDOO_PYROSCOPE_TENANT_ID"
-	EnvHTTPHeaders     = "MONDOO_PYROSCOPE_HTTP_HEADERS"
-	EnvSampleRate      = "MONDOO_PYROSCOPE_SAMPLE_RATE"
-	EnvUploadRateSecs  = "MONDOO_PYROSCOPE_UPLOAD_RATE_SECONDS"
-	EnvTags            = "MONDOO_PYROSCOPE_TAGS"
-	EnvApplicationName = "MONDOO_PYROSCOPE_APPLICATION_NAME"
+	EnvEnabled              = "MONDOO_PYROSCOPE_ENABLED"
+	EnvServerAddress        = "MONDOO_PYROSCOPE_SERVER_ADDRESS"
+	EnvAuthToken            = "MONDOO_PYROSCOPE_AUTH_TOKEN"
+	EnvBasicAuthUser        = "MONDOO_PYROSCOPE_BASIC_AUTH_USER"
+	EnvBasicAuthPass        = "MONDOO_PYROSCOPE_BASIC_AUTH_PASSWORD"
+	EnvTenantID             = "MONDOO_PYROSCOPE_TENANT_ID"
+	EnvHTTPHeaders          = "MONDOO_PYROSCOPE_HTTP_HEADERS"
+	EnvSampleRate           = "MONDOO_PYROSCOPE_SAMPLE_RATE"
+	EnvUploadRateSecs       = "MONDOO_PYROSCOPE_UPLOAD_RATE_SECONDS"
+	EnvTags                 = "MONDOO_PYROSCOPE_TAGS"
+	EnvApplicationName      = "MONDOO_PYROSCOPE_APPLICATION_NAME"
+	EnvMutexProfileFraction = "MONDOO_PYROSCOPE_MUTEX_PROFILE_FRACTION"
+	EnvBlockProfileRateNs   = "MONDOO_PYROSCOPE_BLOCK_PROFILE_RATE_NS"
+)
+
+// Defaults for the runtime profilers that the Go runtime ships disabled.
+// Tuned for "always on" use rather than the aggressive 1-in-5 / 5ns example
+// values from pyroscope-go's README:
+//
+//   - 1-in-100 mutex events ≈ 1% sampling rate
+//   - 10µs block threshold skips the avalanche of sub-µs channel/mutex
+//     parks that dominate Go programs and would otherwise dwarf the
+//     genuinely slow waits in the profile.
+//
+// Set the env vars to 0 to disable either; set to 1 to record everything.
+const (
+	defaultMutexProfileFraction = 100
+	defaultBlockProfileRateNs   = 10_000
 )
 
 // Stopper is the subset of pyroscope.Profiler we expose so callers can
@@ -129,9 +146,19 @@ func Start(serviceName string, extraTags map[string]string) (Stopper, error) {
 	}
 
 	// Enable mutex and block profiles. Pyroscope can collect them, but the
-	// Go runtime only records samples once these knobs are set.
-	runtime.SetMutexProfileFraction(5)
-	runtime.SetBlockProfileRate(5)
+	// Go runtime only records samples once these knobs are set. Defaults
+	// are tuned to be safe for continuous use; override via env if you're
+	// hunting a specific contention bug.
+	mutexFrac, err := readIntEnv(EnvMutexProfileFraction, defaultMutexProfileFraction)
+	if err != nil {
+		return noopStopper{}, err
+	}
+	blockRate, err := readIntEnv(EnvBlockProfileRateNs, defaultBlockProfileRateNs)
+	if err != nil {
+		return noopStopper{}, err
+	}
+	runtime.SetMutexProfileFraction(mutexFrac)
+	runtime.SetBlockProfileRate(blockRate)
 
 	p, err := pyroscope.Start(cfg)
 	if err != nil {
@@ -144,6 +171,21 @@ func Start(serviceName string, extraTags map[string]string) (Stopper, error) {
 		Interface("tags", tags).
 		Msg("Pyroscope profiling started")
 	return p, nil
+}
+
+// readIntEnv returns the int value of the named env var, or def if unset.
+// Empty string is treated as "use the default", not "0", so an operator who
+// exports the var without a value doesn't silently disable a profile.
+func readIntEnv(name string, def int) (int, error) {
+	v := strings.TrimSpace(os.Getenv(name))
+	if v == "" {
+		return def, nil
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s=%q (want integer)", name, v)
+	}
+	return n, nil
 }
 
 func isEnabled() bool {
