@@ -382,7 +382,7 @@ func getPlatformName(obj ociObject) string {
 		}
 	case "loadbalancer":
 		if obj.objectType == "loadBalancer" {
-			return "oci-loadbalancer-loadBalancer"
+			return "oci-loadbalancer"
 		}
 	case "redis":
 		if obj.objectType == "cluster" {
@@ -413,7 +413,7 @@ func getPlatformTitle(platform string) string {
 		return "OCI Object Storage Bucket"
 	case "oci-apigateway-deployment":
 		return "OCI API Gateway Deployment"
-	case "oci-loadbalancer-loadBalancer":
+	case "oci-loadbalancer":
 		return "OCI Load Balancer"
 	case "oci-redis-cluster":
 		return "OCI Redis Cluster"
