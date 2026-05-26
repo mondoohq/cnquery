@@ -193,6 +193,10 @@ const (
 	ResourceLogindefs                     string = "logindefs"
 	ResourceLimits                        string = "limits"
 	ResourceLimitsEntry                   string = "limits.entry"
+	ResourceSudo                          string = "sudo"
+	ResourceSudoPlugin                    string = "sudo.plugin"
+	ResourceSudoValidation                string = "sudo.validation"
+	ResourceSudoValidationError           string = "sudo.validation.error"
 	ResourceSudoers                       string = "sudoers"
 	ResourceSudoersUserSpec               string = "sudoers.userSpec"
 	ResourceSudoersDefault                string = "sudoers.default"
@@ -1125,6 +1129,22 @@ func init() {
 		"limits.entry": {
 			// to override args, implement: initLimitsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLimitsEntry,
+		},
+		"sudo": {
+			// to override args, implement: initSudo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudo,
+		},
+		"sudo.plugin": {
+			// to override args, implement: initSudoPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoPlugin,
+		},
+		"sudo.validation": {
+			// to override args, implement: initSudoValidation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoValidation,
+		},
+		"sudo.validation.error": {
+			// to override args, implement: initSudoValidationError(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSudoValidationError,
 		},
 		"sudoers": {
 			Init:   initSudoers,
@@ -5405,6 +5425,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"limits.entry.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLimitsEntry).GetValue()).ToDataRes(types.String)
+	},
+	"sudo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetPath()).ToDataRes(types.String)
+	},
+	"sudo.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"sudo.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetVersion()).ToDataRes(types.String)
+	},
+	"sudo.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetPlugins()).ToDataRes(types.Array(types.Resource("sudo.plugin")))
+	},
+	"sudo.policyPlugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetPolicyPlugin()).ToDataRes(types.Resource("sudo.plugin"))
+	},
+	"sudo.ioPlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetIoPlugins()).ToDataRes(types.Array(types.Resource("sudo.plugin")))
+	},
+	"sudo.auditPlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetAuditPlugins()).ToDataRes(types.Array(types.Resource("sudo.plugin")))
+	},
+	"sudo.approvalPlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetApprovalPlugins()).ToDataRes(types.Array(types.Resource("sudo.plugin")))
+	},
+	"sudo.pythonSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetPythonSupport()).ToDataRes(types.Bool)
+	},
+	"sudo.validate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetValidate()).ToDataRes(types.Resource("sudo.validation"))
+	},
+	"sudo.sudoers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudo).GetSudoers()).ToDataRes(types.Resource("sudoers"))
+	},
+	"sudo.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoPlugin).GetName()).ToDataRes(types.String)
+	},
+	"sudo.plugin.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoPlugin).GetVersion()).ToDataRes(types.String)
+	},
+	"sudo.plugin.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoPlugin).GetPath()).ToDataRes(types.String)
+	},
+	"sudo.plugin.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoPlugin).GetType()).ToDataRes(types.String)
+	},
+	"sudo.validation.valid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoValidation).GetValid()).ToDataRes(types.Bool)
+	},
+	"sudo.validation.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoValidation).GetErrors()).ToDataRes(types.Array(types.Resource("sudo.validation.error")))
+	},
+	"sudo.validation.error.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoValidationError).GetFile()).ToDataRes(types.String)
+	},
+	"sudo.validation.error.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoValidationError).GetLine()).ToDataRes(types.Int)
+	},
+	"sudo.validation.error.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSudoValidationError).GetMessage()).ToDataRes(types.String)
 	},
 	"sudoers.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSudoers).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -14309,6 +14389,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"limits.entry.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLimitsEntry).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).__id, ok = v.Value.(string)
+		return
+	},
+	"sudo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sudo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudo.policyPlugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).PolicyPlugin, ok = plugin.RawToTValue[*mqlSudoPlugin](v.Value, v.Error)
+		return
+	},
+	"sudo.ioPlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).IoPlugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudo.auditPlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).AuditPlugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudo.approvalPlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).ApprovalPlugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudo.pythonSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).PythonSupport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sudo.validate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Validate, ok = plugin.RawToTValue[*mqlSudoValidation](v.Value, v.Error)
+		return
+	},
+	"sudo.sudoers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudo).Sudoers, ok = plugin.RawToTValue[*mqlSudoers](v.Value, v.Error)
+		return
+	},
+	"sudo.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoPlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"sudo.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoPlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.plugin.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoPlugin).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.plugin.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoPlugin).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.plugin.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoPlugin).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.validation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidation).__id, ok = v.Value.(string)
+		return
+	},
+	"sudo.validation.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidation).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sudo.validation.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidation).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sudo.validation.error.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidationError).__id, ok = v.Value.(string)
+		return
+	},
+	"sudo.validation.error.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidationError).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sudo.validation.error.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidationError).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"sudo.validation.error.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSudoValidationError).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"sudoers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36002,6 +36178,394 @@ func (c *mqlLimitsEntry) GetItem() *plugin.TValue[string] {
 
 func (c *mqlLimitsEntry) GetValue() *plugin.TValue[string] {
 	return &c.Value
+}
+
+// mqlSudo for the sudo resource
+type mqlSudo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSudoInternal
+	Path            plugin.TValue[string]
+	Installed       plugin.TValue[bool]
+	Version         plugin.TValue[string]
+	Plugins         plugin.TValue[[]any]
+	PolicyPlugin    plugin.TValue[*mqlSudoPlugin]
+	IoPlugins       plugin.TValue[[]any]
+	AuditPlugins    plugin.TValue[[]any]
+	ApprovalPlugins plugin.TValue[[]any]
+	PythonSupport   plugin.TValue[bool]
+	Validate        plugin.TValue[*mqlSudoValidation]
+	Sudoers         plugin.TValue[*mqlSudoers]
+}
+
+// createSudo creates a new instance of this resource
+func createSudo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudo) MqlName() string {
+	return "sudo"
+}
+
+func (c *mqlSudo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudo) GetPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Path, func() (string, error) {
+		return c.path()
+	})
+}
+
+func (c *mqlSudo) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlSudo) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlSudo) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
+func (c *mqlSudo) GetPolicyPlugin() *plugin.TValue[*mqlSudoPlugin] {
+	return plugin.GetOrCompute[*mqlSudoPlugin](&c.PolicyPlugin, func() (*mqlSudoPlugin, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "policyPlugin")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSudoPlugin), nil
+			}
+		}
+
+		vargPlugins := c.GetPlugins()
+		if vargPlugins.Error != nil {
+			return nil, vargPlugins.Error
+		}
+
+		return c.policyPlugin(vargPlugins.Data)
+	})
+}
+
+func (c *mqlSudo) GetIoPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IoPlugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "ioPlugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargPlugins := c.GetPlugins()
+		if vargPlugins.Error != nil {
+			return nil, vargPlugins.Error
+		}
+
+		return c.ioPlugins(vargPlugins.Data)
+	})
+}
+
+func (c *mqlSudo) GetAuditPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditPlugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "auditPlugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargPlugins := c.GetPlugins()
+		if vargPlugins.Error != nil {
+			return nil, vargPlugins.Error
+		}
+
+		return c.auditPlugins(vargPlugins.Data)
+	})
+}
+
+func (c *mqlSudo) GetApprovalPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApprovalPlugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "approvalPlugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargPlugins := c.GetPlugins()
+		if vargPlugins.Error != nil {
+			return nil, vargPlugins.Error
+		}
+
+		return c.approvalPlugins(vargPlugins.Data)
+	})
+}
+
+func (c *mqlSudo) GetPythonSupport() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PythonSupport, func() (bool, error) {
+		return c.pythonSupport()
+	})
+}
+
+func (c *mqlSudo) GetValidate() *plugin.TValue[*mqlSudoValidation] {
+	return plugin.GetOrCompute[*mqlSudoValidation](&c.Validate, func() (*mqlSudoValidation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "validate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSudoValidation), nil
+			}
+		}
+
+		return c.validate()
+	})
+}
+
+func (c *mqlSudo) GetSudoers() *plugin.TValue[*mqlSudoers] {
+	return plugin.GetOrCompute[*mqlSudoers](&c.Sudoers, func() (*mqlSudoers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sudo", c.__id, "sudoers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSudoers), nil
+			}
+		}
+
+		return c.sudoers()
+	})
+}
+
+// mqlSudoPlugin for the sudo.plugin resource
+type mqlSudoPlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoPluginInternal it will be used here
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Path    plugin.TValue[string]
+	Type    plugin.TValue[string]
+}
+
+// createSudoPlugin creates a new instance of this resource
+func createSudoPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoPlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudo.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoPlugin) MqlName() string {
+	return "sudo.plugin"
+}
+
+func (c *mqlSudoPlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoPlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSudoPlugin) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlSudoPlugin) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlSudoPlugin) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlSudoValidation for the sudo.validation resource
+type mqlSudoValidation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoValidationInternal it will be used here
+	Valid  plugin.TValue[bool]
+	Errors plugin.TValue[[]any]
+}
+
+// createSudoValidation creates a new instance of this resource
+func createSudoValidation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoValidation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudo.validation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoValidation) MqlName() string {
+	return "sudo.validation"
+}
+
+func (c *mqlSudoValidation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoValidation) GetValid() *plugin.TValue[bool] {
+	return &c.Valid
+}
+
+func (c *mqlSudoValidation) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+// mqlSudoValidationError for the sudo.validation.error resource
+type mqlSudoValidationError struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSudoValidationErrorInternal it will be used here
+	File    plugin.TValue[string]
+	Line    plugin.TValue[int64]
+	Message plugin.TValue[string]
+}
+
+// createSudoValidationError creates a new instance of this resource
+func createSudoValidationError(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSudoValidationError{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sudo.validation.error", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSudoValidationError) MqlName() string {
+	return "sudo.validation.error"
+}
+
+func (c *mqlSudoValidationError) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSudoValidationError) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+func (c *mqlSudoValidationError) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlSudoValidationError) GetMessage() *plugin.TValue[string] {
+	return &c.Message
 }
 
 // mqlSudoers for the sudoers resource

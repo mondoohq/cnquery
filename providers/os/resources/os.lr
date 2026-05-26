@@ -3731,6 +3731,75 @@ private limits.entry @defaults("domain item") {
   value string
 }
 
+// Sudo binary and runtime metadata
+//
+// Examine the installed `sudo` binary: where it lives on disk, the
+// version it reports under `sudo -V`, which plugins are loaded
+// (policy, I/O, audit, approval), whether the build supports
+// Python-based plugins, and the result of `visudo -c` against the
+// sudoers configuration. For sudoers configuration parsing, use the
+// `sudoers` resource directly, or access it via this resource's
+// `sudoers` field.
+sudo @defaults("version path") {
+  init(path? string)
+  // Path to the sudo binary
+  //
+  // Filesystem-resolved location of the `sudo` binary on the asset
+  // (e.g., `/usr/bin/sudo`). Empty when sudo is not installed; check
+  // `installed` rather than testing this field for emptiness.
+  path() string
+  // Whether sudo is installed and executable
+  installed() bool
+  // Version string reported by `sudo -V` (e.g., "1.9.5p3")
+  version() string
+  // All sudo plugins reported by `sudo -V`
+  plugins() []sudo.plugin
+  // Policy plugin (typically sudoers_policy). Null when none is loaded.
+  policyPlugin(plugins) sudo.plugin
+  // I/O plugins (e.g., sudoers_io for log_input / log_output)
+  ioPlugins(plugins) []sudo.plugin
+  // Audit plugins (sudo 1.9.3+)
+  auditPlugins(plugins) []sudo.plugin
+  // Approval plugins (sudo 1.9.1+)
+  approvalPlugins(plugins) []sudo.plugin
+  // Whether the build supports Python-based plugins
+  pythonSupport() bool
+  // Result of `visudo -c`. Null when sudoers files cannot be read (e.g., running unprivileged against a mode-0440 /etc/sudoers).
+  validate() sudo.validation
+  // Associated sudoers configuration
+  sudoers() sudoers
+}
+
+// A sudo plugin reported by `sudo -V`
+private sudo.plugin @defaults("name type version") {
+  // Plugin name (e.g., "sudoers_policy", "sudoers_io")
+  name string
+  // Plugin version
+  version string
+  // Full path to the plugin .so file when reported
+  path string
+  // Plugin type: "policy", "io", "audit", or "approval"
+  type string
+}
+
+// Result of validating sudoers configuration with `visudo -c`
+private sudo.validation @defaults("valid") {
+  // True if `visudo -c` exits 0 with no errors
+  valid bool
+  // Parse errors. Empty when valid is true.
+  errors []sudo.validation.error
+}
+
+// A single sudoers parse error reported by `visudo -c`
+private sudo.validation.error @defaults("file line") {
+  // File where the error was found
+  file string
+  // Line number of the error
+  line int
+  // Error message text
+  message string
+}
+
 // sudo authorization configuration
 //
 // Examine user specifications, defaults, and aliases across sudoers files
