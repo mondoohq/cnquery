@@ -4253,6 +4253,103 @@ private aws.sagemaker.lineageGroup @defaults("arn name") {
   tags() map[string]string
 }
 
+// Amazon Simple Email Service (SES)
+//
+// Use the SES namespace to audit the email-sending posture of an account
+// across all enabled regions. Iterate `identities()` for every verified
+// sending identity (domain or email address) — each row surfaces its
+// verification status, DKIM signing configuration, custom MAIL FROM domain,
+// and feedback-forwarding setting, the controls that determine whether mail
+// the account sends can be authenticated and trusted by recipients. Iterate
+// `configurationSets()` for every configuration set that can be applied to a
+// send — each row surfaces the minimum TLS policy enforced on delivery,
+// whether sending and reputation tracking are enabled, the open/click
+// tracking redirect domain, and which suppression-list reasons are active.
+aws.ses {
+  // List of SES email identities (verified domains and email addresses)
+  identities() []aws.ses.identity
+  // List of SES configuration sets
+  configurationSets() []aws.ses.configurationSet
+}
+
+// SES email identity
+//
+// Examine a verified sending identity — a domain, managed domain, or
+// individual email address — and the authentication controls attached to it.
+// Each identity is keyed by its ARN — for example
+// `aws.ses.identity(arn: "arn:aws:ses:us-east-1:123456789012:identity/example.com")`.
+// The `name`, `identityType`, `verificationStatus`, and `verifiedForSending`
+// fields come from the identity listing; the DKIM signing configuration,
+// custom MAIL FROM domain, feedback-forwarding setting, authorization
+// policies, and tags are read from the identity's full record.
+private aws.ses.identity @defaults("name identityType verificationStatus verifiedForSending region") {
+  // ARN of the identity
+  arn string
+  // Identity name — the verified domain or email address
+  name string
+  // Region where the identity is verified
+  region string
+  // Identity type: EMAIL_ADDRESS, DOMAIN, or MANAGED_DOMAIN
+  identityType string
+  // Verification status: PENDING, SUCCESS, FAILED, TEMPORARY_FAILURE, or NOT_STARTED
+  verificationStatus string
+  // Whether the identity is verified and eligible to send email
+  verifiedForSending bool
+  // Whether bounce and complaint notifications are forwarded as email to the identity's owner
+  feedbackForwardingEnabled() bool
+  // Whether Easy DKIM or BYODKIM signing is enabled for the identity
+  dkimSigningEnabled() bool
+  // DKIM verification status: PENDING, SUCCESS, FAILED, TEMPORARY_FAILURE, or NOT_STARTED
+  dkimStatus() string
+  // Origin of the DKIM signing key: AWS_SES (Easy DKIM), EXTERNAL (BYODKIM), or an AWS_SES_<region> value
+  dkimSigningAttributesOrigin() string
+  // Length of the current DKIM signing key: RSA_1024_BIT or RSA_2048_BIT
+  dkimSigningKeyLength() string
+  // CNAME tokens published to DNS to enable Easy DKIM signing
+  dkimTokens() []string
+  // Custom MAIL FROM domain configured for the identity (empty when not configured)
+  mailFromDomain() string
+  // Custom MAIL FROM domain status: PENDING, SUCCESS, FAILED, or TEMPORARY_FAILURE
+  mailFromDomainStatus() string
+  // Behavior when the MAIL FROM MX record cannot be read: USE_DEFAULT_VALUE or REJECT_MESSAGE
+  mailFromBehaviorOnMxFailure() string
+  // Identity authorization policies keyed by policy name (sending-authorization policy documents)
+  policies() map[string]string
+  // Tags for the identity
+  tags() map[string]string
+}
+
+// SES configuration set
+//
+// Examine a configuration set — the reusable group of rules that can be
+// applied when sending email. Each configuration set is selected by its name —
+// for example `aws.ses.configurationSet(name: "my-config-set")` — and exposes
+// the minimum TLS policy enforced on delivery, whether sending and reputation
+// metrics are enabled, the open/click tracking redirect domain and its HTTPS
+// policy, and which suppression-list reasons (bounces, complaints) are active.
+private aws.ses.configurationSet @defaults("name tlsPolicy sendingEnabled region") {
+  // Configuration set name
+  name string
+  // Region where the configuration set is defined
+  region string
+  // Minimum TLS policy enforced when delivering messages: REQUIRE or OPTIONAL
+  tlsPolicy() string
+  // Dedicated IP pool used to send messages with this configuration set (empty when none is associated)
+  sendingPoolName() string
+  // Whether sending is enabled for messages that use this configuration set
+  sendingEnabled() bool
+  // Whether reputation metrics (bounce and complaint rates) are tracked for this configuration set
+  reputationMetricsEnabled() bool
+  // Suppression-list reasons that automatically add recipients to the suppression list: BOUNCE, COMPLAINT
+  suppressedReasons() []string
+  // Custom domain used to rewrite open and click tracking links (empty when not configured)
+  trackingRedirectDomain() string
+  // HTTPS policy applied to tracking links: REQUIRE, REQUIRE_OPEN_ONLY, or OPTIONAL
+  trackingHttpsPolicy() string
+  // Tags for the configuration set
+  tags() map[string]string
+}
+
 // Amazon Simple Notification Service (SNS)
 //
 // Use the SNS namespace to enumerate publish/subscribe messaging topics

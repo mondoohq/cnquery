@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.27.1",
-  "generated_at": "2026-05-26T11:27:54-07:00",
+  "version": "13.28.0",
+  "generated_at": "2026-05-26T13:43:06-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -779,6 +779,10 @@
     "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
     "securitylake:ListSubscribers",
+    "ses:GetConfigurationSet",
+    "ses:GetEmailIdentity",
+    "ses:ListConfigurationSets",
+    "ses:ListEmailIdentities",
     "shield:DescribeDRTAccess",
     "shield:DescribeEmergencyContactSettings",
     "shield:DescribeSubscription",
@@ -5673,6 +5677,30 @@
       "service": "securitylake",
       "action": "ListSubscribers",
       "source_file": "aws_securitylake.go"
+    },
+    {
+      "permission": "ses:GetConfigurationSet",
+      "service": "ses",
+      "action": "GetConfigurationSet",
+      "source_file": "aws_ses.go"
+    },
+    {
+      "permission": "ses:GetEmailIdentity",
+      "service": "ses",
+      "action": "GetEmailIdentity",
+      "source_file": "aws_ses.go"
+    },
+    {
+      "permission": "ses:ListConfigurationSets",
+      "service": "ses",
+      "action": "ListConfigurationSets",
+      "source_file": "aws_ses.go"
+    },
+    {
+      "permission": "ses:ListEmailIdentities",
+      "service": "ses",
+      "action": "ListEmailIdentities",
+      "source_file": "aws_ses.go"
     },
     {
       "permission": "shield:DescribeDRTAccess",

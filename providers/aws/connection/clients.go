@@ -96,6 +96,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -942,6 +943,26 @@ func (t *AwsConnection) Mq(region string) *mq.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := mq.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Sesv2(region string) *sesv2.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_sesv2_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached sesv2 client")
+		return c.Data.(*sesv2.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := sesv2.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client

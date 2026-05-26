@@ -194,6 +194,9 @@ const (
 	ResourceAwsSagemakerHub                                                     string = "aws.sagemaker.hub"
 	ResourceAwsSagemakerHubContent                                              string = "aws.sagemaker.hubContent"
 	ResourceAwsSagemakerLineageGroup                                            string = "aws.sagemaker.lineageGroup"
+	ResourceAwsSes                                                              string = "aws.ses"
+	ResourceAwsSesIdentity                                                      string = "aws.ses.identity"
+	ResourceAwsSesConfigurationSet                                              string = "aws.ses.configurationSet"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -1578,6 +1581,18 @@ func init() {
 		"aws.sagemaker.lineageGroup": {
 			Init:   initAwsSagemakerLineageGroup,
 			Create: createAwsSagemakerLineageGroup,
+		},
+		"aws.ses": {
+			// to override args, implement: initAwsSes(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSes,
+		},
+		"aws.ses.identity": {
+			Init:   initAwsSesIdentity,
+			Create: createAwsSesIdentity,
+		},
+		"aws.ses.configurationSet": {
+			Init:   initAwsSesConfigurationSet,
+			Create: createAwsSesConfigurationSet,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9219,6 +9234,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.lineageGroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerLineageGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetIdentities()).ToDataRes(types.Array(types.Resource("aws.ses.identity")))
+	},
+	"aws.ses.configurationSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetConfigurationSets()).ToDataRes(types.Array(types.Resource("aws.ses.configurationSet")))
+	},
+	"aws.ses.identity.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetIdentityType()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.verificationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetVerificationStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.verifiedForSending": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetVerifiedForSending()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.feedbackForwardingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetFeedbackForwardingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.dkimSigningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimSigningEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.dkimStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.dkimSigningAttributesOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimSigningAttributesOrigin()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.dkimSigningKeyLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimSigningKeyLength()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.dkimTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimTokens()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ses.identity.mailFromDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetMailFromDomain()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.mailFromDomainStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetMailFromDomainStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.mailFromBehaviorOnMxFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetMailFromBehaviorOnMxFailure()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetPolicies()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.identity.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.configurationSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.tlsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTlsPolicy()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.sendingPoolName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetSendingPoolName()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.sendingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetSendingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.configurationSet.reputationMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetReputationMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.configurationSet.suppressedReasons": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetSuppressedReasons()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ses.configurationSet.trackingRedirectDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTrackingRedirectDomain()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.trackingHttpsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTrackingHttpsPolicy()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -37454,6 +37556,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.lineageGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerLineageGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).Identities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).ConfigurationSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.identity.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.verificationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).VerificationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.verifiedForSending": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).VerifiedForSending, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.feedbackForwardingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).FeedbackForwardingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimSigningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimSigningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimSigningAttributesOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimSigningAttributesOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimSigningKeyLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimSigningKeyLength, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.mailFromDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).MailFromDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.mailFromDomainStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).MailFromDomainStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.mailFromBehaviorOnMxFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).MailFromBehaviorOnMxFailure, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Policies, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.configurationSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.tlsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).TlsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.sendingPoolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).SendingPoolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.sendingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).SendingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.reputationMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).ReputationMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.suppressedReasons": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).SuppressedReasons, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.trackingRedirectDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).TrackingRedirectDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.trackingHttpsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).TrackingHttpsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -88126,6 +88356,335 @@ func (c *mqlAwsSagemakerLineageGroup) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsSagemakerLineageGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSes for the aws.ses resource
+type mqlAwsSes struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSesInternal it will be used here
+	Identities        plugin.TValue[[]any]
+	ConfigurationSets plugin.TValue[[]any]
+}
+
+// createAwsSes creates a new instance of this resource
+func createAwsSes(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSes{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSes) MqlName() string {
+	return "aws.ses"
+}
+
+func (c *mqlAwsSes) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSes) GetIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Identities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "identities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identities()
+	})
+}
+
+func (c *mqlAwsSes) GetConfigurationSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConfigurationSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "configurationSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurationSets()
+	})
+}
+
+// mqlAwsSesIdentity for the aws.ses.identity resource
+type mqlAwsSesIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSesIdentityInternal
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	IdentityType                plugin.TValue[string]
+	VerificationStatus          plugin.TValue[string]
+	VerifiedForSending          plugin.TValue[bool]
+	FeedbackForwardingEnabled   plugin.TValue[bool]
+	DkimSigningEnabled          plugin.TValue[bool]
+	DkimStatus                  plugin.TValue[string]
+	DkimSigningAttributesOrigin plugin.TValue[string]
+	DkimSigningKeyLength        plugin.TValue[string]
+	DkimTokens                  plugin.TValue[[]any]
+	MailFromDomain              plugin.TValue[string]
+	MailFromDomainStatus        plugin.TValue[string]
+	MailFromBehaviorOnMxFailure plugin.TValue[string]
+	Policies                    plugin.TValue[map[string]any]
+	Tags                        plugin.TValue[map[string]any]
+}
+
+// createAwsSesIdentity creates a new instance of this resource
+func createAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.identity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesIdentity) MqlName() string {
+	return "aws.ses.identity"
+}
+
+func (c *mqlAwsSesIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesIdentity) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSesIdentity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesIdentity) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesIdentity) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAwsSesIdentity) GetVerificationStatus() *plugin.TValue[string] {
+	return &c.VerificationStatus
+}
+
+func (c *mqlAwsSesIdentity) GetVerifiedForSending() *plugin.TValue[bool] {
+	return &c.VerifiedForSending
+}
+
+func (c *mqlAwsSesIdentity) GetFeedbackForwardingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FeedbackForwardingEnabled, func() (bool, error) {
+		return c.feedbackForwardingEnabled()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimSigningEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DkimSigningEnabled, func() (bool, error) {
+		return c.dkimSigningEnabled()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DkimStatus, func() (string, error) {
+		return c.dkimStatus()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimSigningAttributesOrigin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DkimSigningAttributesOrigin, func() (string, error) {
+		return c.dkimSigningAttributesOrigin()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimSigningKeyLength() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DkimSigningKeyLength, func() (string, error) {
+		return c.dkimSigningKeyLength()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DkimTokens, func() ([]any, error) {
+		return c.dkimTokens()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetMailFromDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MailFromDomain, func() (string, error) {
+		return c.mailFromDomain()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetMailFromDomainStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MailFromDomainStatus, func() (string, error) {
+		return c.mailFromDomainStatus()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetMailFromBehaviorOnMxFailure() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MailFromBehaviorOnMxFailure, func() (string, error) {
+		return c.mailFromBehaviorOnMxFailure()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetPolicies() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Policies, func() (map[string]any, error) {
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSesConfigurationSet for the aws.ses.configurationSet resource
+type mqlAwsSesConfigurationSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSesConfigurationSetInternal
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	TlsPolicy                plugin.TValue[string]
+	SendingPoolName          plugin.TValue[string]
+	SendingEnabled           plugin.TValue[bool]
+	ReputationMetricsEnabled plugin.TValue[bool]
+	SuppressedReasons        plugin.TValue[[]any]
+	TrackingRedirectDomain   plugin.TValue[string]
+	TrackingHttpsPolicy      plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAwsSesConfigurationSet creates a new instance of this resource
+func createAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesConfigurationSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.configurationSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesConfigurationSet) MqlName() string {
+	return "aws.ses.configurationSet"
+}
+
+func (c *mqlAwsSesConfigurationSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesConfigurationSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesConfigurationSet) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTlsPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsPolicy, func() (string, error) {
+		return c.tlsPolicy()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetSendingPoolName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SendingPoolName, func() (string, error) {
+		return c.sendingPoolName()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetSendingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendingEnabled, func() (bool, error) {
+		return c.sendingEnabled()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetReputationMetricsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReputationMetricsEnabled, func() (bool, error) {
+		return c.reputationMetricsEnabled()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetSuppressedReasons() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SuppressedReasons, func() ([]any, error) {
+		return c.suppressedReasons()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTrackingRedirectDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TrackingRedirectDomain, func() (string, error) {
+		return c.trackingRedirectDomain()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTrackingHttpsPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TrackingHttpsPolicy, func() (string, error) {
+		return c.trackingHttpsPolicy()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
