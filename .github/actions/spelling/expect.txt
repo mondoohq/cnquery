@@ -32,7 +32,6 @@ Stus
 TValue
 Twt
 URkuh
-Usec
 VDhir
 Wjki
 actioncable
@@ -107,7 +106,6 @@ jkl
 jpi
 jre
 junos
-jwks
 kqueue
 kts
 linuxbrew
