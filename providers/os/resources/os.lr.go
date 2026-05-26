@@ -4132,6 +4132,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nftables.chain.table": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesChain).GetTable()).ToDataRes(types.String)
 	},
+	"nftables.chain.tableRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetTableRef()).ToDataRes(types.Resource("nftables.table"))
+	},
 	"nftables.chain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesChain).GetName()).ToDataRes(types.String)
 	},
@@ -4162,8 +4165,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nftables.rule.table": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesRule).GetTable()).ToDataRes(types.String)
 	},
+	"nftables.rule.tableRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetTableRef()).ToDataRes(types.Resource("nftables.table"))
+	},
 	"nftables.rule.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesRule).GetChain()).ToDataRes(types.String)
+	},
+	"nftables.rule.chainRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetChainRef()).ToDataRes(types.Resource("nftables.chain"))
 	},
 	"nftables.rule.handle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesRule).GetHandle()).ToDataRes(types.Int)
@@ -4179,6 +4188,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nftables.set.table": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesSet).GetTable()).ToDataRes(types.String)
+	},
+	"nftables.set.tableRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesSet).GetTableRef()).ToDataRes(types.Resource("nftables.table"))
 	},
 	"nftables.set.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesSet).GetName()).ToDataRes(types.String)
@@ -11744,6 +11756,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNftablesChain).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"nftables.chain.tableRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).TableRef, ok = plugin.RawToTValue[*mqlNftablesTable](v.Value, v.Error)
+		return
+	},
 	"nftables.chain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftablesChain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -11788,8 +11804,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNftablesRule).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"nftables.rule.tableRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).TableRef, ok = plugin.RawToTValue[*mqlNftablesTable](v.Value, v.Error)
+		return
+	},
 	"nftables.rule.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftablesRule).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.chainRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).ChainRef, ok = plugin.RawToTValue[*mqlNftablesChain](v.Value, v.Error)
 		return
 	},
 	"nftables.rule.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11814,6 +11838,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nftables.set.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftablesSet).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.set.tableRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesSet).TableRef, ok = plugin.RawToTValue[*mqlNftablesTable](v.Value, v.Error)
 		return
 	},
 	"nftables.set.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29665,6 +29693,7 @@ type mqlNftablesChain struct {
 	// optional: if you define mqlNftablesChainInternal it will be used here
 	Family      plugin.TValue[string]
 	Table       plugin.TValue[string]
+	TableRef    plugin.TValue[*mqlNftablesTable]
 	Name        plugin.TValue[string]
 	Handle      plugin.TValue[int64]
 	Type        plugin.TValue[string]
@@ -29720,6 +29749,22 @@ func (c *mqlNftablesChain) GetTable() *plugin.TValue[string] {
 	return &c.Table
 }
 
+func (c *mqlNftablesChain) GetTableRef() *plugin.TValue[*mqlNftablesTable] {
+	return plugin.GetOrCompute[*mqlNftablesTable](&c.TableRef, func() (*mqlNftablesTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables.chain", c.__id, "tableRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftablesTable), nil
+			}
+		}
+
+		return c.tableRef()
+	})
+}
+
 func (c *mqlNftablesChain) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -29757,12 +29802,14 @@ type mqlNftablesRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNftablesRuleInternal it will be used here
-	Family  plugin.TValue[string]
-	Table   plugin.TValue[string]
-	Chain   plugin.TValue[string]
-	Handle  plugin.TValue[int64]
-	Expr    plugin.TValue[[]any]
-	Comment plugin.TValue[string]
+	Family   plugin.TValue[string]
+	Table    plugin.TValue[string]
+	TableRef plugin.TValue[*mqlNftablesTable]
+	Chain    plugin.TValue[string]
+	ChainRef plugin.TValue[*mqlNftablesChain]
+	Handle   plugin.TValue[int64]
+	Expr     plugin.TValue[[]any]
+	Comment  plugin.TValue[string]
 }
 
 // createNftablesRule creates a new instance of this resource
@@ -29810,8 +29857,40 @@ func (c *mqlNftablesRule) GetTable() *plugin.TValue[string] {
 	return &c.Table
 }
 
+func (c *mqlNftablesRule) GetTableRef() *plugin.TValue[*mqlNftablesTable] {
+	return plugin.GetOrCompute[*mqlNftablesTable](&c.TableRef, func() (*mqlNftablesTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables.rule", c.__id, "tableRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftablesTable), nil
+			}
+		}
+
+		return c.tableRef()
+	})
+}
+
 func (c *mqlNftablesRule) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+func (c *mqlNftablesRule) GetChainRef() *plugin.TValue[*mqlNftablesChain] {
+	return plugin.GetOrCompute[*mqlNftablesChain](&c.ChainRef, func() (*mqlNftablesChain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables.rule", c.__id, "chainRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftablesChain), nil
+			}
+		}
+
+		return c.chainRef()
+	})
 }
 
 func (c *mqlNftablesRule) GetHandle() *plugin.TValue[int64] {
@@ -29833,6 +29912,7 @@ type mqlNftablesSet struct {
 	// optional: if you define mqlNftablesSetInternal it will be used here
 	Family    plugin.TValue[string]
 	Table     plugin.TValue[string]
+	TableRef  plugin.TValue[*mqlNftablesTable]
 	Name      plugin.TValue[string]
 	Handle    plugin.TValue[int64]
 	KeyType   plugin.TValue[string]
@@ -29886,6 +29966,22 @@ func (c *mqlNftablesSet) GetFamily() *plugin.TValue[string] {
 
 func (c *mqlNftablesSet) GetTable() *plugin.TValue[string] {
 	return &c.Table
+}
+
+func (c *mqlNftablesSet) GetTableRef() *plugin.TValue[*mqlNftablesTable] {
+	return plugin.GetOrCompute[*mqlNftablesTable](&c.TableRef, func() (*mqlNftablesTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables.set", c.__id, "tableRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftablesTable), nil
+			}
+		}
+
+		return c.tableRef()
+	})
 }
 
 func (c *mqlNftablesSet) GetName() *plugin.TValue[string] {

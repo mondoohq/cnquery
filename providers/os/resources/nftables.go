@@ -259,6 +259,41 @@ func (s *mqlNftablesSet) id() (string, error) {
 	return s.Family.Data + "/" + s.Table.Data + "/" + s.Name.Data, nil
 }
 
+func (c *mqlNftablesChain) tableRef() (*mqlNftablesTable, error) {
+	return nftLookupTable(c.MqlRuntime, c.Family.Data, c.Table.Data)
+}
+
+func (r *mqlNftablesRule) tableRef() (*mqlNftablesTable, error) {
+	return nftLookupTable(r.MqlRuntime, r.Family.Data, r.Table.Data)
+}
+
+func (r *mqlNftablesRule) chainRef() (*mqlNftablesChain, error) {
+	raw, err := NewResource(r.MqlRuntime, "nftables.chain", map[string]*llx.RawData{
+		"family": llx.StringData(r.Family.Data),
+		"table":  llx.StringData(r.Table.Data),
+		"name":   llx.StringData(r.Chain.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return raw.(*mqlNftablesChain), nil
+}
+
+func (s *mqlNftablesSet) tableRef() (*mqlNftablesTable, error) {
+	return nftLookupTable(s.MqlRuntime, s.Family.Data, s.Table.Data)
+}
+
+func nftLookupTable(runtime *plugin.Runtime, family, name string) (*mqlNftablesTable, error) {
+	raw, err := NewResource(runtime, "nftables.table", map[string]*llx.RawData{
+		"family": llx.StringData(family),
+		"name":   llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return raw.(*mqlNftablesTable), nil
+}
+
 // fetchRuleset lazily fetches and caches the nft JSON ruleset.
 func (n *mqlNftables) fetchRuleset() (*nftRuleset, error) {
 	if n.fetched {

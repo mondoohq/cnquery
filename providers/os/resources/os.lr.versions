@@ -1378,15 +1378,18 @@ nftables.chain.policy 11.8.14
 nftables.chain.prio 11.8.14
 nftables.chain.rules 11.8.14
 nftables.chain.table 11.8.14
+nftables.chain.tableRef 13.17.1
 nftables.chain.type 11.8.14
 nftables.chains 13.2.9
 nftables.rule 11.8.14
 nftables.rule.chain 11.8.14
+nftables.rule.chainRef 13.17.1
 nftables.rule.comment 11.8.14
 nftables.rule.expr 11.8.14
 nftables.rule.family 11.8.14
 nftables.rule.handle 11.8.14
 nftables.rule.table 11.8.14
+nftables.rule.tableRef 13.17.1
 nftables.rules 13.2.9
 nftables.set 13.2.9
 nftables.set.elements 13.2.9
@@ -1397,6 +1400,7 @@ nftables.set.isMap 13.2.9
 nftables.set.keyType 13.2.9
 nftables.set.name 13.2.9
 nftables.set.table 13.2.9
+nftables.set.tableRef 13.17.1
 nftables.set.timeout 13.2.9
 nftables.set.valueType 13.2.9
 nftables.sets 13.2.9

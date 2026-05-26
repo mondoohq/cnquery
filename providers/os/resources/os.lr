@@ -2563,8 +2563,10 @@ private nftables.table @defaults("family name") {
 private nftables.chain @defaults("family table name") {
   // Address family
   family string
-  // Table this chain belongs to
+  // Name of the table this chain belongs to
   table string
+  // Table this chain belongs to
+  tableRef() nftables.table
   // Chain name
   name string
   // Chain handle number
@@ -2587,10 +2589,14 @@ private nftables.chain @defaults("family table name") {
 private nftables.rule @defaults("family table chain handle") {
   // Address family
   family string
-  // Table this rule belongs to
+  // Name of the table this rule belongs to
   table string
-  // Chain this rule belongs to
+  // Table this rule belongs to
+  tableRef() nftables.table
+  // Name of the chain this rule belongs to
   chain string
+  // Chain this rule belongs to
+  chainRef() nftables.chain
   // Rule handle number
   handle int
   // Rule expressions as structured data
@@ -2603,8 +2609,10 @@ private nftables.rule @defaults("family table chain handle") {
 private nftables.set @defaults("family table name") {
   // Address family
   family string
-  // Table this set belongs to
+  // Name of the table this set belongs to
   table string
+  // Table this set belongs to
+  tableRef() nftables.table
   // Set name
   name string
   // Set handle number
