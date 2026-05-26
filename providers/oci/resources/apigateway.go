@@ -399,6 +399,48 @@ func (o *mqlOciApigatewayDeployment) id() (string, error) {
 	return "oci.apigateway.deployment/" + o.Id.Data, nil
 }
 
+// initOciApigatewayDeployment resolves a single deployment from the scan
+// asset's PlatformId when policies reference `oci.apigateway.deployment` on a
+// discovered oci-apigateway-deployment asset. Explicit id takes precedence.
+func initOciApigatewayDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "apigateway" || parsed.objectType != "deployment" {
+			return args, nil, nil
+		}
+		idVal = parsed.id
+	}
+
+	obj, err := CreateResource(runtime, "oci.apigateway", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	apigw := obj.(*mqlOciApigateway)
+
+	deps := apigw.GetDeployments()
+	if deps.Error != nil {
+		return nil, nil, deps.Error
+	}
+
+	for _, raw := range deps.Data {
+		d := raw.(*mqlOciApigatewayDeployment)
+		if d.Id.Data == idVal {
+			return args, d, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.apigateway.deployment not found: " + idVal)
+}
+
 func (o *mqlOciApigatewayDeployment) gateway() (*mqlOciApigatewayGateway, error) {
 	if o.cacheGatewayId == "" {
 		o.Gateway.State = plugin.StateIsSet | plugin.StateIsNull

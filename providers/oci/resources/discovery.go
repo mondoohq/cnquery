@@ -23,19 +23,29 @@ const (
 	DiscoveryAll     = "all"
 	DiscoveryTenancy = "tenancy"
 
-	DiscoverySecurityLists = "network-securitylists"
-	DiscoveryUsers         = "identity-users"
-	DiscoveryPolicies      = "identity-policies"
-	DiscoveryBuckets       = "objectstorage-buckets"
+	DiscoverySecurityLists         = "network-securitylists"
+	DiscoveryUsers                 = "identity-users"
+	DiscoveryPolicies              = "identity-policies"
+	DiscoveryBuckets               = "objectstorage-buckets"
+	DiscoveryApiGatewayDeployments = "apigateway-deployments"
+	DiscoveryLoadBalancers         = "loadbalancer-loadbalancers"
+	DiscoveryRedisClusters         = "redis-clusters"
+	DiscoveryVaultSecrets          = "vault-secrets"
+	DiscoveryOkeClusters           = "oke-clusters"
 )
 
 // AllAPIResources lists every fine-grained per-resource discovery target.
 // Keep sorted alphabetically by target string for diff stability.
 var AllAPIResources = []string{
+	DiscoveryApiGatewayDeployments,
+	DiscoveryBuckets,
+	DiscoveryLoadBalancers,
+	DiscoveryOkeClusters,
+	DiscoveryPolicies,
+	DiscoveryRedisClusters,
 	DiscoverySecurityLists,
 	DiscoveryUsers,
-	DiscoveryPolicies,
-	DiscoveryBuckets,
+	DiscoveryVaultSecrets,
 }
 
 // Auto expands to the tenancy plus all API resources. The order puts tenancy
@@ -204,6 +214,111 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				objectType:  "policy",
 			}, p.Name.Data, tagsToLabels(p.FreeformTags.Data), conn))
 		}
+	case DiscoveryApiGatewayDeployments:
+		res, err := NewResource(runtime, "oci.apigateway", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		apigw := res.(*mqlOciApigateway)
+		deps := apigw.GetDeployments()
+		if deps.Error != nil {
+			return nil, deps.Error
+		}
+		for i := range deps.Data {
+			d := deps.Data[i].(*mqlOciApigatewayDeployment)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: d.CompartmentID.Data,
+				region:      fallbackRegion(d.region),
+				id:          d.Id.Data,
+				service:     "apigateway",
+				objectType:  "deployment",
+			}, d.Name.Data, tagsToLabels(d.FreeformTags.Data), conn))
+		}
+	case DiscoveryLoadBalancers:
+		res, err := NewResource(runtime, "oci.loadBalancer", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		lbSvc := res.(*mqlOciLoadBalancer)
+		lbs := lbSvc.GetLoadBalancers()
+		if lbs.Error != nil {
+			return nil, lbs.Error
+		}
+		for i := range lbs.Data {
+			lb := lbs.Data[i].(*mqlOciLoadBalancerLoadBalancer)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: lb.CompartmentID.Data,
+				region:      fallbackRegion(lb.cacheRegion),
+				id:          lb.Id.Data,
+				service:     "loadbalancer",
+				objectType:  "loadBalancer",
+			}, lb.Name.Data, map[string]string{}, conn))
+		}
+	case DiscoveryRedisClusters:
+		res, err := NewResource(runtime, "oci.redis", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		redis := res.(*mqlOciRedis)
+		clusters := redis.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for i := range clusters.Data {
+			c := clusters.Data[i].(*mqlOciRedisCluster)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: c.CompartmentID.Data,
+				region:      fallbackRegion(c.cacheRegion),
+				id:          c.Id.Data,
+				service:     "redis",
+				objectType:  "cluster",
+			}, c.Name.Data, tagsToLabels(c.FreeformTags.Data), conn))
+		}
+	case DiscoveryVaultSecrets:
+		res, err := NewResource(runtime, "oci.vault", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		v := res.(*mqlOciVault)
+		secrets := v.GetSecrets()
+		if secrets.Error != nil {
+			return nil, secrets.Error
+		}
+		for i := range secrets.Data {
+			s := secrets.Data[i].(*mqlOciVaultSecret)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: s.CompartmentID.Data,
+				region:      fallbackRegion(s.cacheRegion),
+				id:          s.Id.Data,
+				service:     "vault",
+				objectType:  "secret",
+			}, s.Name.Data, map[string]string{}, conn))
+		}
+	case DiscoveryOkeClusters:
+		res, err := NewResource(runtime, "oci.oke", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		oke := res.(*mqlOciOke)
+		clusters := oke.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for i := range clusters.Data {
+			c := clusters.Data[i].(*mqlOciOkeCluster)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: c.CompartmentID.Data,
+				region:      fallbackRegion(c.region),
+				id:          c.Id.Data,
+				service:     "oke",
+				objectType:  "cluster",
+			}, c.Name.Data, map[string]string{}, conn))
+		}
 	default:
 		log.Warn().Str("target", target).Msg("oci discovery: unknown target; skipping")
 	}
@@ -261,6 +376,26 @@ func getPlatformName(obj ociObject) string {
 		if obj.objectType == "bucket" {
 			return "oci-objectstorage-bucket"
 		}
+	case "apigateway":
+		if obj.objectType == "deployment" {
+			return "oci-apigateway-deployment"
+		}
+	case "loadbalancer":
+		if obj.objectType == "loadBalancer" {
+			return "oci-loadbalancer-loadBalancer"
+		}
+	case "redis":
+		if obj.objectType == "cluster" {
+			return "oci-redis-cluster"
+		}
+	case "vault":
+		if obj.objectType == "secret" {
+			return "oci-vault-secret"
+		}
+	case "oke":
+		if obj.objectType == "cluster" {
+			return "oci-oke-cluster"
+		}
 	}
 	return ""
 }
@@ -276,6 +411,16 @@ func getPlatformTitle(platform string) string {
 		return "OCI Identity Policy"
 	case "oci-objectstorage-bucket":
 		return "OCI Object Storage Bucket"
+	case "oci-apigateway-deployment":
+		return "OCI API Gateway Deployment"
+	case "oci-loadbalancer-loadBalancer":
+		return "OCI Load Balancer"
+	case "oci-redis-cluster":
+		return "OCI Redis Cluster"
+	case "oci-vault-secret":
+		return "OCI Vault Secret"
+	case "oci-oke-cluster":
+		return "OCI OKE Cluster"
 	}
 	return ""
 }

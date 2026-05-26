@@ -391,7 +391,7 @@ func init() {
 			Create: createOciVault,
 		},
 		"oci.vault.secret": {
-			// to override args, implement: initOciVaultSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciVaultSecret,
 			Create: createOciVaultSecret,
 		},
 		"oci.vault.secretVersion": {
@@ -431,7 +431,7 @@ func init() {
 			Create: createOciOke,
 		},
 		"oci.oke.cluster": {
-			// to override args, implement: initOciOkeCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciOkeCluster,
 			Create: createOciOkeCluster,
 		},
 		"oci.oke.nodePool": {
@@ -503,7 +503,7 @@ func init() {
 			Create: createOciApigatewayGateway,
 		},
 		"oci.apigateway.deployment": {
-			// to override args, implement: initOciApigatewayDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciApigatewayDeployment,
 			Create: createOciApigatewayDeployment,
 		},
 		"oci.apigateway.certificate": {

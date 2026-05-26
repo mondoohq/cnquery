@@ -137,6 +137,7 @@ func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any)
 				mqlClusterTyped := mqlCluster.(*mqlOciRedisCluster)
 				mqlClusterTyped.cacheSubnetId = stringValue(c.SubnetId)
 				mqlClusterTyped.cacheNsgIds = c.NsgIds
+				mqlClusterTyped.cacheRegion = regionResource.Id.Data
 				res = append(res, mqlClusterTyped)
 			}
 
@@ -150,6 +151,7 @@ func (o *mqlOciRedis) getClusters(conn *connection.OciConnection, regions []any)
 type mqlOciRedisClusterInternal struct {
 	cacheSubnetId string
 	cacheNsgIds   []string
+	cacheRegion   string
 }
 
 func initOciRedisCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -157,10 +159,18 @@ func initOciRedisCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
-		return args, nil, nil
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "redis" || parsed.objectType != "cluster" {
+			return args, nil, nil
+		}
+		idVal = parsed.id
 	}
-	idVal := args["id"].Value.(string)
 
 	obj, err := CreateResource(runtime, "oci.redis", nil)
 	if err != nil {

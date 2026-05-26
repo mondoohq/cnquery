@@ -169,6 +169,48 @@ func (o *mqlOciOkeCluster) id() (string, error) {
 	return "oci.oke.cluster/" + o.Id.Data, nil
 }
 
+// initOciOkeCluster resolves a single OKE cluster from the scan asset's
+// PlatformId when policies reference `oci.oke.cluster` on a discovered
+// oci-oke-cluster asset. Explicit id takes precedence.
+func initOciOkeCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idVal := ociArgString(args, "id")
+	if idVal == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "oke" || parsed.objectType != "cluster" {
+			return args, nil, nil
+		}
+		idVal = parsed.id
+	}
+
+	obj, err := CreateResource(runtime, "oci.oke", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	oke := obj.(*mqlOciOke)
+
+	clusters := oke.GetClusters()
+	if clusters.Error != nil {
+		return nil, nil, clusters.Error
+	}
+
+	for _, raw := range clusters.Data {
+		c := raw.(*mqlOciOkeCluster)
+		if c.Id.Data == idVal {
+			return args, c, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.oke.cluster not found: " + idVal)
+}
+
 func (o *mqlOciOkeCluster) vcn() (*mqlOciNetworkVcn, error) {
 	if o.cacheVcnId == "" {
 		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
