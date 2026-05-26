@@ -4090,6 +4090,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
 	},
+	"iptables.entry.dport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetDport()).ToDataRes(types.Int)
+	},
+	"iptables.entry.dportRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetDportRange()).ToDataRes(types.String)
+	},
+	"iptables.entry.dports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetDports()).ToDataRes(types.Array(types.String))
+	},
+	"iptables.entry.sport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetSport()).ToDataRes(types.Int)
+	},
+	"iptables.entry.sportRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetSportRange()).ToDataRes(types.String)
+	},
+	"iptables.entry.sports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetSports()).ToDataRes(types.Array(types.String))
+	},
+	"iptables.entry.ctstate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetCtstate()).ToDataRes(types.Array(types.String))
+	},
+	"iptables.entry.tcpFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetTcpFlags()).ToDataRes(types.Array(types.String))
+	},
+	"iptables.entry.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetComment()).ToDataRes(types.String)
+	},
+	"iptables.entry.matchSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetMatchSet()).ToDataRes(types.String)
+	},
+	"iptables.entry.rejectWith": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetRejectWith()).ToDataRes(types.String)
+	},
+	"iptables.entry.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetRaw()).ToDataRes(types.String)
+	},
 	"nftables.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftables).GetVersion()).ToDataRes(types.String)
 	},
@@ -11686,6 +11722,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.dport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Dport, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.dportRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).DportRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.dports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Dports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.sport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Sport, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.sportRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).SportRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.sports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Sports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.ctstate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Ctstate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.tcpFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).TcpFlags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.matchSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).MatchSet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.rejectWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).RejectWith, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"nftables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29401,6 +29485,18 @@ type mqlIptablesEntry struct {
 	Destination plugin.TValue[string]
 	Options     plugin.TValue[string]
 	Chain       plugin.TValue[string]
+	Dport       plugin.TValue[int64]
+	DportRange  plugin.TValue[string]
+	Dports      plugin.TValue[[]any]
+	Sport       plugin.TValue[int64]
+	SportRange  plugin.TValue[string]
+	Sports      plugin.TValue[[]any]
+	Ctstate     plugin.TValue[[]any]
+	TcpFlags    plugin.TValue[[]any]
+	Comment     plugin.TValue[string]
+	MatchSet    plugin.TValue[string]
+	RejectWith  plugin.TValue[string]
+	Raw         plugin.TValue[string]
 }
 
 // createIptablesEntry creates a new instance of this resource
@@ -29486,6 +29582,54 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+func (c *mqlIptablesEntry) GetDport() *plugin.TValue[int64] {
+	return &c.Dport
+}
+
+func (c *mqlIptablesEntry) GetDportRange() *plugin.TValue[string] {
+	return &c.DportRange
+}
+
+func (c *mqlIptablesEntry) GetDports() *plugin.TValue[[]any] {
+	return &c.Dports
+}
+
+func (c *mqlIptablesEntry) GetSport() *plugin.TValue[int64] {
+	return &c.Sport
+}
+
+func (c *mqlIptablesEntry) GetSportRange() *plugin.TValue[string] {
+	return &c.SportRange
+}
+
+func (c *mqlIptablesEntry) GetSports() *plugin.TValue[[]any] {
+	return &c.Sports
+}
+
+func (c *mqlIptablesEntry) GetCtstate() *plugin.TValue[[]any] {
+	return &c.Ctstate
+}
+
+func (c *mqlIptablesEntry) GetTcpFlags() *plugin.TValue[[]any] {
+	return &c.TcpFlags
+}
+
+func (c *mqlIptablesEntry) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlIptablesEntry) GetMatchSet() *plugin.TValue[string] {
+	return &c.MatchSet
+}
+
+func (c *mqlIptablesEntry) GetRejectWith() *plugin.TValue[string] {
+	return &c.RejectWith
+}
+
+func (c *mqlIptablesEntry) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
 }
 
 // mqlNftables for the nftables resource

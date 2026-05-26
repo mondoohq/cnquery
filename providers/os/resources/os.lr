@@ -2523,6 +2523,61 @@ iptables.entry {
   options string
   // Chain and table identifier used for the resource ID
   chain string
+  // Destination port
+  //
+  // Single port from `--dport`. Null when the rule does not match by
+  // destination port, or when it matches a range or list — see
+  // `dportRange` for ranges and `dports` for multi-port matches.
+  dport int
+  // Destination port range, e.g. "1024:65535"
+  //
+  // Set when the rule uses `--dport low:high`. Empty otherwise.
+  dportRange string
+  // Destination port list from `-m multiport --dports`
+  //
+  // Empty when no `--dports` match is present. Single ports are integers;
+  // ranges (e.g. "1000:2000") remain as strings unchanged.
+  dports []string
+  // Source port
+  //
+  // Single port from `--sport`. Null when the rule does not match by
+  // source port, or when it matches a range or list.
+  sport int
+  // Source port range, e.g. "1024:65535"
+  sportRange string
+  // Source port list from `-m multiport --sports`
+  sports []string
+  // Conntrack state list from `-m state --state` or `-m conntrack --ctstate`
+  //
+  // Values such as NEW, ESTABLISHED, RELATED, INVALID, UNTRACKED. Empty
+  // when no state/ctstate match is present.
+  ctstate []string
+  // TCP flag match from `-m tcp --tcp-flags`
+  //
+  // Two-element list: [mask, comp] (e.g., ["FIN,SYN,RST,ACK", "SYN"] for
+  // `--tcp-flags FIN,SYN,RST,ACK SYN`). Empty when no `--tcp-flags` match
+  // is present.
+  tcpFlags []string
+  // Rule comment from `-m comment --comment`
+  //
+  // The unquoted comment text. Empty when no comment match is present.
+  comment string
+  // ipset name from `-m set --match-set`
+  //
+  // The set name used in a `--match-set` match. Empty when no `-m set`
+  // match is present.
+  matchSet string
+  // For `-j REJECT`, the `--reject-with` value (e.g., icmp-port-unreachable)
+  //
+  // Empty when target is not REJECT, or when REJECT is used without
+  // `--reject-with`.
+  rejectWith string
+  // Canonical iptables-save line for this rule
+  //
+  // The exact `-A CHAIN ...` line as emitted by `iptables-save -c`. Empty
+  // on systems where `iptables-save` is unavailable and the legacy `-L`
+  // parser is used as a fallback.
+  raw string
 }
 
 // nftables firewall
