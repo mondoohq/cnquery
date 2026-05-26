@@ -166,11 +166,13 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-lambda-function"
 		}
 	case "ecs":
-		if awsObject.objectType == "container" {
+		switch awsObject.objectType {
+		case "container":
 			return "aws-ecs-container"
-		}
-		if awsObject.objectType == "instance" {
+		case "instance":
 			return "aws-ecs-instance"
+		case "taskdefinition":
+			return "aws-ecs-taskdefinition"
 		}
 	case "efs":
 		if awsObject.objectType == "filesystem" {
@@ -193,8 +195,13 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-kms-key"
 		}
 	case "sagemaker":
-		if awsObject.objectType == "notebookinstance" {
+		switch awsObject.objectType {
+		case "notebookinstance":
 			return "aws-sagemaker-notebookinstance"
+		case "processingjob":
+			return "aws-sagemaker-processingjob"
+		case "trainingjob":
+			return "aws-sagemaker-trainingjob"
 		}
 	case "secretsmanager":
 		if awsObject.objectType == "secret" {
@@ -205,8 +212,11 @@ func getPlatformName(awsObject awsObject) string {
 			return "aws-ssm-instance"
 		}
 	case "ecr":
-		if awsObject.objectType == "image" {
+		switch awsObject.objectType {
+		case "image":
 			return "aws-ecr-image"
+		case "repository":
+			return "aws-ecr-repository"
 		}
 	case "eks":
 		if awsObject.objectType == "cluster" {
@@ -235,6 +245,18 @@ func getPlatformName(awsObject awsObject) string {
 	case "documentdb":
 		if awsObject.objectType == "cluster" {
 			return "aws-documentdb-cluster"
+		}
+	case "msk":
+		if awsObject.objectType == "cluster" {
+			return "aws-msk-cluster"
+		}
+	case "mq":
+		if awsObject.objectType == "broker" {
+			return "aws-mq-broker"
+		}
+	case "route53":
+		if awsObject.objectType == "hostedzone" {
+			return "aws-route53-hostedzone"
 		}
 	}
 	return ""

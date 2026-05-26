@@ -187,19 +187,22 @@ func (a *mqlAwsRoute53) queryLoggingConfigs() ([]any, error) {
 	return res, nil
 }
 
-// initAwsRoute53HostedZone resolves a hosted zone by ID from the cached list.
+// initAwsRoute53HostedZone resolves a hosted zone by ID, ARN, or asset
+// identifier (set during platform discovery).
 func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if args["id"] == nil {
-		return nil, nil, errors.New("id required to fetch aws route53 hosted zone")
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
 	}
 
-	idVal, ok := args["id"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("invalid id for aws route53 hosted zone")
+	if args["id"] == nil && args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("id, arn, or name required to fetch aws route53 hosted zone")
 	}
 
 	obj, err := CreateResource(runtime, "aws.route53", map[string]*llx.RawData{})
@@ -213,14 +216,37 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, rawResources.Error
 	}
 
+	var idVal, arnVal, nameVal string
+	if args["id"] != nil {
+		idVal, _ = args["id"].Value.(string)
+	}
+	if args["arn"] != nil {
+		arnVal, _ = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		nameVal, _ = args["name"].Value.(string)
+	}
+
 	for _, rawResource := range rawResources.Data {
 		hz := rawResource.(*mqlAwsRoute53HostedZone)
-		if hz.Id.Data == idVal {
+		switch {
+		case idVal != "" && hz.Id.Data == idVal:
+			return args, hz, nil
+		case arnVal != "" && hz.Arn.Data == arnVal:
+			return args, hz, nil
+		case nameVal != "" && hz.Name.Data == nameVal:
 			return args, hz, nil
 		}
 	}
 
-	return nil, nil, errors.New("aws route53 hosted zone not found: " + idVal)
+	identifier := idVal
+	if identifier == "" {
+		identifier = arnVal
+	}
+	if identifier == "" {
+		identifier = nameVal
+	}
+	return nil, nil, errors.New("aws route53 hosted zone not found: " + identifier)
 }
 
 // aws.route53.hostedZone

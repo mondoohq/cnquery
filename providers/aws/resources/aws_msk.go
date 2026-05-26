@@ -438,9 +438,16 @@ func newMqlAwsMskCluster(runtime *plugin.Runtime, region string, accountID strin
 // initAwsMskCluster tolerates a bare arn (for cross-account typed refs from Pipes/Firehose/Replicator).
 // When the cluster is accessible, DescribeClusterV2 populates all scalar fields; on access denied (cross-account)
 // the resource falls back to a minimal shell with just arn/__id so callers can still traverse other fields.
+// When invoked with no args (e.g. via asset identifier from platform discovery),
+// it pulls the arn from the discovered asset.
 func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) >= 2 {
 		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
+			args["arn"] = llx.StringData(ids.arn)
+		}
 	}
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws msk cluster")

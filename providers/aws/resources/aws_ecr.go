@@ -870,3 +870,49 @@ func (a *mqlAwsEcrScanningConfiguration) id() (string, error) {
 func (a *mqlAwsEcrScanningConfigurationRule) id() (string, error) {
 	return a.__id, nil
 }
+
+func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch ecr repository")
+	}
+
+	obj, err := CreateResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	e := obj.(*mqlAwsEcr)
+
+	repos := []any{}
+	if priv, err := e.privateRepositories(); err == nil {
+		repos = append(repos, priv...)
+	}
+	if pub, err := e.publicRepositories(); err == nil {
+		repos = append(repos, pub...)
+	}
+
+	var arnVal, nameVal string
+	if args["arn"] != nil {
+		arnVal, _ = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		nameVal, _ = args["name"].Value.(string)
+	}
+	for _, raw := range repos {
+		r := raw.(*mqlAwsEcrRepository)
+		if (arnVal != "" && r.Arn.Data == arnVal) || (nameVal != "" && r.Name.Data == nameVal) {
+			return args, r, nil
+		}
+	}
+	return nil, nil, errors.New("ecr repository does not exist")
+}

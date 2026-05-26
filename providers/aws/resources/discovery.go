@@ -5,6 +5,7 @@ package resources
 
 import (
 	"slices"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
@@ -56,12 +57,19 @@ const (
 	DiscoveryOpenSearchDomains          = "opensearch-domains"
 	DiscoveryKMSKeys                    = "kms-keys"
 	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
+	DiscoverySagemakerProcessingJobs    = "sagemaker-processingjobs"
+	DiscoverySagemakerTrainingJobs      = "sagemaker-trainingjobs"
 	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
 	DiscoveryElasticacheClusters        = "elasticache-clusters"
 	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
 	DiscoveryNeptuneClusters            = "neptune-clusters"
 	DiscoveryEMRClusters                = "emr-clusters"
 	DiscoveryDocumentDBClusters         = "documentdb-clusters"
+	DiscoveryMskClusters                = "msk-clusters"
+	DiscoveryMqBrokers                  = "mq-brokers"
+	DiscoveryEcsTaskDefinitions         = "ecs-taskdefinitions"
+	DiscoveryRoute53HostedZones         = "route53-hostedzones"
+	DiscoveryEcrRepositories            = "ecr-repositories"
 )
 
 var AllAPIResources = []string{
@@ -92,12 +100,19 @@ var AllAPIResources = []string{
 	DiscoveryOpenSearchDomains,
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
+	DiscoverySagemakerProcessingJobs,
+	DiscoverySagemakerTrainingJobs,
 	DiscoverySecretsManagerSecrets,
 	DiscoveryElasticacheClusters,
 	DiscoveryCloudfrontDistributions,
 	DiscoveryNeptuneClusters,
 	DiscoveryEMRClusters,
 	DiscoveryDocumentDBClusters,
+	DiscoveryMskClusters,
+	DiscoveryMqBrokers,
+	DiscoveryEcsTaskDefinitions,
+	DiscoveryRoute53HostedZones,
+	DiscoveryEcrRepositories,
 }
 
 var Auto = append(
@@ -1194,6 +1209,203 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.ClusterIdentifier.Data, service: "documentdb", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoverySagemakerProcessingJobs:
+		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		sm := res.(*mqlAwsSagemaker)
+
+		jobs := sm.GetProcessingJobs()
+		if jobs == nil {
+			return assetList, nil
+		}
+
+		for i := range jobs.Data {
+			f := jobs.Data[i].(*mqlAwsSagemakerProcessingjob)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "sagemaker", objectType: "processingjob",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoverySagemakerTrainingJobs:
+		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		sm := res.(*mqlAwsSagemaker)
+
+		jobs := sm.GetTrainingJobs()
+		if jobs == nil {
+			return assetList, nil
+		}
+
+		for i := range jobs.Data {
+			f := jobs.Data[i].(*mqlAwsSagemakerTrainingjob)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "sagemaker", objectType: "trainingjob",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryMskClusters:
+		res, err := NewResource(runtime, "aws.msk", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		msk := res.(*mqlAwsMsk)
+
+		clusters := msk.GetClusters()
+		if clusters == nil {
+			return assetList, nil
+		}
+
+		for i := range clusters.Data {
+			f := clusters.Data[i].(*mqlAwsMskCluster)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "msk", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryMqBrokers:
+		res, err := NewResource(runtime, "aws.mq", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		m := res.(*mqlAwsMq)
+
+		brokers := m.GetBrokers()
+		if brokers == nil {
+			return assetList, nil
+		}
+
+		for i := range brokers.Data {
+			f := brokers.Data[i].(*mqlAwsMqBroker)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.BrokerId.Data, service: "mq", objectType: "broker",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryEcsTaskDefinitions:
+		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ecs := res.(*mqlAwsEcs)
+
+		tds := ecs.GetTaskDefinitions()
+		if tds == nil {
+			return assetList, nil
+		}
+
+		for i := range tds.Data {
+			f := tds.Data[i].(*mqlAwsEcsTaskDefinition)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			name := f.Arn.Data
+			if family := f.GetFamily(); family != nil && family.Data != "" {
+				if rev := f.GetRevision(); rev != nil {
+					name = family.Data + ":" + strconv.FormatInt(rev.Data, 10)
+				} else {
+					name = family.Data
+				}
+			}
+			m := mqlObject{
+				name: name, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Arn.Data, service: "ecs", objectType: "taskdefinition",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryRoute53HostedZones:
+		res, err := NewResource(runtime, "aws.route53", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		r53 := res.(*mqlAwsRoute53)
+
+		zones := r53.GetHostedZones()
+		if zones == nil {
+			return assetList, nil
+		}
+
+		for i := range zones.Data {
+			f := zones.Data[i].(*mqlAwsRoute53HostedZone)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: "global", arn: f.Arn.Data,
+					id: f.Id.Data, service: "route53", objectType: "hostedzone",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryEcrRepositories:
+		res, err := NewResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ecr := res.(*mqlAwsEcr)
+
+		repos := []any{}
+		if priv, err := ecr.privateRepositories(); err == nil {
+			repos = append(repos, priv...)
+		} else {
+			log.Warn().Err(err).Msg("error discovering private ecr repositories")
+		}
+		if pub, err := ecr.publicRepositories(); err == nil {
+			repos = append(repos, pub...)
+		} else {
+			log.Warn().Err(err).Msg("error discovering public ecr repositories")
+		}
+
+		for i := range repos {
+			f := repos[i].(*mqlAwsEcrRepository)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "ecr", objectType: "repository",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

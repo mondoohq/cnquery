@@ -2198,3 +2198,39 @@ func (a *mqlAwsEcsTaskSet) service() (*mqlAwsEcsService, error) {
 	}
 	return res.(*mqlAwsEcsService), nil
 }
+
+func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws ecs task definition")
+	}
+
+	obj, err := CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	ecs := obj.(*mqlAwsEcs)
+
+	rawResources := ecs.GetTaskDefinitions()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, _ := args["arn"].Value.(string)
+	for _, rawResource := range rawResources.Data {
+		td := rawResource.(*mqlAwsEcsTaskDefinition)
+		if td.Arn.Data == arnVal {
+			return args, td, nil
+		}
+	}
+	return nil, nil, errors.New("aws ecs task definition does not exist: " + arnVal)
+}

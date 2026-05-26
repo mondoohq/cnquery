@@ -1264,7 +1264,7 @@ func init() {
 			Create: createAwsSagemakerModelContainer,
 		},
 		"aws.sagemaker.trainingjob": {
-			// to override args, implement: initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerTrainingjob,
 			Create: createAwsSagemakerTrainingjob,
 		},
 		"aws.sagemaker.trainingjob.statusTransition": {
@@ -1276,7 +1276,7 @@ func init() {
 			Create: createAwsSagemakerTrainingjobMetricData,
 		},
 		"aws.sagemaker.processingjob": {
-			// to override args, implement: initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerProcessingjob,
 			Create: createAwsSagemakerProcessingjob,
 		},
 		"aws.sagemaker.pipeline": {
@@ -1904,7 +1904,7 @@ func init() {
 			Create: createAwsEcsContainer,
 		},
 		"aws.ecs.taskDefinition": {
-			// to override args, implement: initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEcsTaskDefinition,
 			Create: createAwsEcsTaskDefinition,
 		},
 		"aws.ecs.service": {
@@ -2736,7 +2736,7 @@ func init() {
 			Create: createAwsEcr,
 		},
 		"aws.ecr.repository": {
-			// to override args, implement: initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEcrRepository,
 			Create: createAwsEcrRepository,
 		},
 		"aws.ecr.lifecyclePolicy": {

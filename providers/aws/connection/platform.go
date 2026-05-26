@@ -78,12 +78,26 @@ func getServiceName(platformName string) string {
 		return "kms"
 	case "aws-sagemaker-notebookinstance":
 		return "sagemaker"
+	case "aws-sagemaker-processingjob":
+		return "sagemaker"
+	case "aws-sagemaker-trainingjob":
+		return "sagemaker"
 	case "aws-ec2-instance":
 		return "ec2"
 	case "aws-ssm-instance":
 		return "ec2"
 	case "aws-ecr-image":
 		return "ecr"
+	case "aws-ecr-repository":
+		return "ecr"
+	case "aws-ecs-taskdefinition":
+		return "ecs"
+	case "aws-route53-hostedzone":
+		return "route53"
+	case "aws-msk-cluster":
+		return "msk"
+	case "aws-mq-broker":
+		return "mq"
 	case "aws-elasticache-cluster":
 		return "elasticache"
 	case "aws-cloudfront-distribution":
@@ -144,12 +158,26 @@ func getTitleForPlatformName(name string) string {
 		return "AWS KMS Key"
 	case "aws-sagemaker-notebookinstance":
 		return "AWS SageMaker Notebook Instance"
+	case "aws-sagemaker-processingjob":
+		return "AWS SageMaker Processing Job"
+	case "aws-sagemaker-trainingjob":
+		return "AWS SageMaker Training Job"
 	case "aws-ec2-instance":
 		return "AWS EC2 Instance"
 	case "aws-ssm-instance":
 		return "AWS SSM Instance"
 	case "aws-ecr-image":
 		return "AWS ECR Image"
+	case "aws-ecr-repository":
+		return "AWS ECR Repository"
+	case "aws-ecs-taskdefinition":
+		return "AWS ECS Task Definition"
+	case "aws-route53-hostedzone":
+		return "AWS Route 53 Hosted Zone"
+	case "aws-msk-cluster":
+		return "AWS MSK Cluster"
+	case "aws-mq-broker":
+		return "AWS MQ Broker"
 	case "aws-eks-cluster":
 		return "AWS EKS Cluster"
 	case "aws-secretsmanager-secret":

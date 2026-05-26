@@ -693,10 +693,42 @@ func initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		return args, nil, nil
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+			args["name"] = llx.StringData(ids.name)
+		}
 	}
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch aws mq broker")
+	}
+
+	// When arn or name is supplied (e.g. via asset identifier from discovery),
+	// resolve to the broker already populated by `aws.mq.brokers` so cached
+	// region/cacheBrokerId/cacheKmsKeyId values are preserved.
+	obj, err := CreateResource(runtime, "aws.mq", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	mq := obj.(*mqlAwsMq)
+	brokers := mq.GetBrokers()
+	if brokers != nil && brokers.Error == nil {
+		var arnVal, nameVal string
+		if args["arn"] != nil {
+			arnVal, _ = args["arn"].Value.(string)
+		}
+		if args["name"] != nil {
+			nameVal, _ = args["name"].Value.(string)
+		}
+		for _, raw := range brokers.Data {
+			b := raw.(*mqlAwsMqBroker)
+			if (arnVal != "" && b.Arn.Data == arnVal) || (nameVal != "" && b.Name.Data == nameVal) {
+				return args, b, nil
+			}
+		}
+	}
+
 	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws mq broker")
+		return nil, nil, errors.New("arn required to fetch aws mq broker that is not in the brokers list")
 	}
 	// __id must equal arn so the runtime cache can match against brokers already
 	// listed by `aws.mq.brokers`. Without this, every NewResource("aws.mq.broker",

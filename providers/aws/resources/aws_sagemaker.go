@@ -3932,3 +3932,89 @@ func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (
 	}
 	return tags, nil
 }
+
+func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch sagemaker training job")
+	}
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetTrainingJobs()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	var arnVal, nameVal string
+	if args["arn"] != nil {
+		arnVal, _ = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		nameVal, _ = args["name"].Value.(string)
+	}
+	for _, rawResource := range rawResources.Data {
+		tj := rawResource.(*mqlAwsSagemakerTrainingjob)
+		if (arnVal != "" && tj.Arn.Data == arnVal) || (nameVal != "" && tj.Name.Data == nameVal) {
+			return args, tj, nil
+		}
+	}
+	return nil, nil, errors.New("sagemaker training job does not exist")
+}
+
+func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil && args["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch sagemaker processing job")
+	}
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetProcessingJobs()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	var arnVal, nameVal string
+	if args["arn"] != nil {
+		arnVal, _ = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		nameVal, _ = args["name"].Value.(string)
+	}
+	for _, rawResource := range rawResources.Data {
+		pj := rawResource.(*mqlAwsSagemakerProcessingjob)
+		if (arnVal != "" && pj.Arn.Data == arnVal) || (nameVal != "" && pj.Name.Data == nameVal) {
+			return args, pj, nil
+		}
+	}
+	return nil, nil, errors.New("sagemaker processing job does not exist")
+}
