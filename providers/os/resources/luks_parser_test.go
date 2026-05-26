@@ -104,6 +104,14 @@ func TestParseLuksDump_LUKS2(t *testing.T) {
 	assert.Equal(t, "root", d.Label)
 	assert.Empty(t, d.Subsystem)
 
+	// Cipher info on LUKS2 comes from the `Data segments:` section, not
+	// the global header.
+	assert.Equal(t, "aes", d.Cipher.Name)
+	assert.Equal(t, "xts-plain64", d.Cipher.Mode)
+	assert.Equal(t, "aes-xts-plain64", d.Cipher.Spec)
+	assert.Equal(t, 512, d.Cipher.KeySize, "master key bits sourced from first keyslot")
+	assert.Equal(t, 512, d.MasterKeyBits)
+
 	require.Len(t, d.Keyslots, 2)
 
 	slot0 := d.Keyslots[0]
@@ -141,6 +149,8 @@ func TestParseLuksDump_LUKS2_MultipleTokens(t *testing.T) {
 
 	assert.Equal(t, "data", d.Label)
 	assert.Equal(t, "systemd", d.Subsystem, "subsystem string survives the parser")
+	assert.Equal(t, "aes-xts-plain64", d.Cipher.Spec)
+	assert.Equal(t, 512, d.MasterKeyBits)
 
 	require.Len(t, d.Keyslots, 2)
 	assert.Equal(t, 0, d.Keyslots[0].Index)
@@ -178,6 +188,8 @@ func TestParseLuksDump_LUKS2_NoTokens(t *testing.T) {
 
 	assert.Equal(t, "", d.Label, "'(no label)' decodes to empty string")
 	assert.Equal(t, "", d.Subsystem, "'(no subsystem)' decodes to empty string")
+	assert.Equal(t, "aes-xts-plain64", d.Cipher.Spec)
+	assert.Equal(t, 512, d.MasterKeyBits)
 
 	require.Len(t, d.Keyslots, 1)
 	slot := d.Keyslots[0]
@@ -188,6 +200,44 @@ func TestParseLuksDump_LUKS2_NoTokens(t *testing.T) {
 	assert.Zero(t, slot.Memory)
 
 	assert.Empty(t, d.Tokens, "empty Tokens: section produces no entries")
+}
+
+func TestParseLuksDump_LUKS2_Twofish(t *testing.T) {
+	// Cipher spec contains both a hyphen and a colon
+	// (`twofish-cbc-essiv:sha256`); makes sure the cipher splitter and
+	// the colon-splitter cooperate.
+	d, err := parseLuksDump(loadTestdata(t, "luks2_twofish.txt"))
+	require.NoError(t, err)
+
+	assert.Equal(t, "twofish", d.Cipher.Name)
+	assert.Equal(t, "cbc-essiv:sha256", d.Cipher.Mode, "mode preserves both hyphens and colons after the cipher family")
+	assert.Equal(t, "twofish-cbc-essiv:sha256", d.Cipher.Spec)
+	assert.Equal(t, 256, d.Cipher.KeySize)
+	assert.Equal(t, 256, d.MasterKeyBits)
+
+	require.Len(t, d.Keyslots, 1)
+	assert.Equal(t, "argon2id", d.Keyslots[0].KDF)
+}
+
+func TestSetLuks2CipherSpec(t *testing.T) {
+	cases := []struct {
+		spec, name, mode string
+	}{
+		{"aes-xts-plain64", "aes", "xts-plain64"},
+		{"serpent-cbc-essiv:sha256", "serpent", "cbc-essiv:sha256"},
+		{"twofish-cbc-essiv:sha256", "twofish", "cbc-essiv:sha256"},
+		{"camellia-xts-plain64", "camellia", "xts-plain64"},
+		// No mode separator — entire value becomes the cipher family.
+		{"aes", "aes", ""},
+		{"", "", ""},
+	}
+	for _, c := range cases {
+		var info luksCipherInfo
+		setLuks2CipherSpec(&info, c.spec)
+		assert.Equalf(t, c.spec, info.Spec, "input %q spec", c.spec)
+		assert.Equalf(t, c.name, info.Name, "input %q name", c.spec)
+		assert.Equalf(t, c.mode, info.Mode, "input %q mode", c.spec)
+	}
 }
 
 func TestParseLuksDump_MissingVersion(t *testing.T) {
@@ -398,6 +448,19 @@ func TestCollectLuksDevices(t *testing.T) {
 		names,
 		"should find LUKS devices at every depth and skip non-LUKS",
 	)
+}
+
+func TestLuksVolumeID_RequiresUUID(t *testing.T) {
+	// id() guards against an unset uuid arg; otherwise multiple volumes
+	// without a UUID would all collide on the empty-string cache key.
+	v := &mqlLuksVolume{}
+	_, err := v.id()
+	assert.Error(t, err)
+
+	v.Uuid.Data = "fd44f17a-0b3b-44c0-a4a4-6bea30b3c6bf"
+	id, err := v.id()
+	require.NoError(t, err)
+	assert.Equal(t, "fd44f17a-0b3b-44c0-a4a4-6bea30b3c6bf", id)
 }
 
 func TestCollectLuksDevices_Empty(t *testing.T) {

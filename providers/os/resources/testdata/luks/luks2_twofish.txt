@@ -1,0 +1,45 @@
+LUKS header information
+Version:       	2
+Epoch:         	3
+Metadata area: 	16384 [bytes]
+Keyslots area: 	16744448 [bytes]
+UUID:          	beefdead-cafe-babe-feed-c0ffeec0ffee
+Label:         	archive
+Subsystem:     	(no subsystem)
+Flags:       	(no flags)
+
+Data segments:
+  0: crypt
+	offset: 16777216 [bytes]
+	length: (whole device)
+	cipher: twofish-cbc-essiv:sha256
+	sector: 4096 [bytes]
+
+Keyslots:
+  0: luks2
+	Key:        256 bits
+	Priority:   normal
+	Cipher:     twofish-cbc-essiv:sha256
+	Cipher key: 256 bits
+	PBKDF:      argon2id
+	Time cost:  6
+	Memory:     1048576
+	Threads:    4
+	Salt:       aa bb cc dd ee ff 00 11 22 33 44 55 66 77 88 99
+	            aa bb cc dd ee ff 00 11 22 33 44 55 66 77 88 99
+	AF stripes: 4000
+	AF hash:    sha256
+	Area offset:32768 [bytes]
+	Area length:131072 [bytes]
+	Digest ID:  0
+
+Tokens:
+
+Digests:
+  0: pbkdf2
+	Hash:       sha256
+	Iterations: 300000
+	Salt:       00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
+	            00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff
+	Digest:     ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00
+	            ff ee dd cc bb aa 99 88 77 66 55 44 33 22 11 00

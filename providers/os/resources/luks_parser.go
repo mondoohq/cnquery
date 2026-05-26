@@ -203,9 +203,11 @@ func parseLuks2Sections(lines []string, d *luksDump) {
 	)
 
 	var (
-		sec     = sectionNone
-		keyslot *luksKeyslotInfo
-		token   map[string]any
+		sec       = sectionNone
+		keyslot   *luksKeyslotInfo
+		token     map[string]any
+		segIndex  = -1 // current `Data segments:` subsection index (-1 outside)
+		cipherSet bool
 	)
 	flushKeyslot := func() {
 		if keyslot != nil {
@@ -229,6 +231,7 @@ func parseLuks2Sections(lines []string, d *luksDump) {
 		if isSectionHeader(trimmed) {
 			flushKeyslot()
 			flushToken()
+			segIndex = -1
 			switch trimmed {
 			case "Keyslots:":
 				sec = sectionKeyslots
@@ -250,9 +253,17 @@ func parseLuks2Sections(lines []string, d *luksDump) {
 			n, _ := strconv.Atoi(idxStr)
 			switch sec {
 			case sectionKeyslots:
+				// Slots that appear in a LUKS2 textual dump are by
+				// definition allocated and usable — the on-disk format
+				// has no separate "inactive" state (LUKS1's
+				// ENABLED/DISABLED distinction doesn't carry over).
+				// `Priority: ignore` further down can still mark a slot
+				// as not-prompted-for, but the slot remains valid.
 				keyslot = &luksKeyslotInfo{Index: n, State: "active"}
 			case sectionTokens:
 				token = map[string]any{"id": int64(n), "type": typ}
+			case sectionSegments:
+				segIndex = n
 			}
 			continue
 		}
@@ -264,16 +275,40 @@ func parseLuks2Sections(lines []string, d *luksDump) {
 		switch sec {
 		case sectionKeyslots:
 			if keyslot != nil {
-				applyLuks2KeyslotField(keyslot, key, value)
+				applyLuks2KeyslotField(keyslot, d, key, value)
 			}
 		case sectionTokens:
 			if token != nil {
 				applyLuks2TokenField(token, key, value)
 			}
+		case sectionSegments:
+			// LUKS2 keeps the cipher under the data segment, not the
+			// global header. Take the first segment's cipher as the
+			// volume's cipher — multi-segment LUKS2 volumes are rare
+			// and a segment-aware audit would need a deeper schema.
+			if segIndex == 0 && key == "cipher" && !cipherSet {
+				setLuks2CipherSpec(&d.Cipher, value)
+				cipherSet = true
+			}
 		}
 	}
 	flushKeyslot()
 	flushToken()
+}
+
+// setLuks2CipherSpec splits a cryptsetup cipher string like
+// "aes-xts-plain64" or "twofish-cbc-essiv:sha256" into Name/Mode/Spec.
+// Cipher family names from the kernel crypto API don't contain
+// hyphens, so splitting on the first hyphen reliably separates the
+// family from the chaining mode.
+func setLuks2CipherSpec(c *luksCipherInfo, spec string) {
+	c.Spec = spec
+	if idx := strings.IndexByte(spec, '-'); idx > 0 {
+		c.Name = spec[:idx]
+		c.Mode = spec[idx+1:]
+	} else {
+		c.Name = spec
+	}
 }
 
 // isSubsectionStart reports whether the trimmed line is of the form
@@ -292,7 +327,7 @@ func isSubsectionStart(trimmed string) bool {
 	return true
 }
 
-func applyLuks2KeyslotField(k *luksKeyslotInfo, key, value string) {
+func applyLuks2KeyslotField(k *luksKeyslotInfo, d *luksDump, key, value string) {
 	switch key {
 	case "PBKDF":
 		k.KDF = value
@@ -311,6 +346,16 @@ func applyLuks2KeyslotField(k *luksKeyslotInfo, key, value string) {
 	case "Area offset":
 		// "32768 [bytes]" — convert to 512-byte sectors to match LUKS1.
 		k.KeyMaterialOffset = firstInt(value) / 512
+	case "Cipher key":
+		// "Cipher key: 512 bits" — the underlying segment cipher's
+		// master-key size. LUKS2 has no global "MK bits" header; take
+		// the first keyslot we see as authoritative since all slots in
+		// a single-segment volume wrap the same master key.
+		if d.MasterKeyBits == 0 {
+			bits := firstInt(value)
+			d.MasterKeyBits = bits
+			d.Cipher.KeySize = bits
+		}
 	}
 }
 

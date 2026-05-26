@@ -159,6 +159,9 @@ func luksTokensToDicts(tokens []map[string]any) []any {
 }
 
 func (v *mqlLuksVolume) id() (string, error) {
+	if v.Uuid.Data == "" {
+		return "", errors.New("luks.volume: uuid is required for the resource id")
+	}
 	return v.Uuid.Data, nil
 }
 
