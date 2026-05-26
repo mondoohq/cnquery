@@ -34,7 +34,7 @@ Examples:
 				resources.DiscoveryUsers,
 				resources.DiscoveryPolicies,
 				resources.DiscoveryBuckets,
-				resources.DiscoveryApiGatewayDeployments,
+				resources.DiscoveryAPIGatewayDeployments,
 				resources.DiscoveryLoadBalancers,
 				resources.DiscoveryRedisClusters,
 				resources.DiscoveryVaultSecrets,

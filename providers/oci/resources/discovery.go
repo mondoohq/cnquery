@@ -27,7 +27,7 @@ const (
 	DiscoveryUsers                 = "identity-users"
 	DiscoveryPolicies              = "identity-policies"
 	DiscoveryBuckets               = "objectstorage-buckets"
-	DiscoveryApiGatewayDeployments = "apigateway-deployments"
+	DiscoveryAPIGatewayDeployments = "apigateway-deployments"
 	DiscoveryLoadBalancers         = "loadbalancer-loadbalancers"
 	DiscoveryRedisClusters         = "redis-clusters"
 	DiscoveryVaultSecrets          = "vault-secrets"
@@ -37,7 +37,7 @@ const (
 // AllAPIResources lists every fine-grained per-resource discovery target.
 // Keep sorted alphabetically by target string for diff stability.
 var AllAPIResources = []string{
-	DiscoveryApiGatewayDeployments,
+	DiscoveryAPIGatewayDeployments,
 	DiscoveryBuckets,
 	DiscoveryLoadBalancers,
 	DiscoveryOkeClusters,
@@ -214,7 +214,7 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				objectType:  "policy",
 			}, p.Name.Data, tagsToLabels(p.FreeformTags.Data), conn))
 		}
-	case DiscoveryApiGatewayDeployments:
+	case DiscoveryAPIGatewayDeployments:
 		res, err := NewResource(runtime, "oci.apigateway", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
