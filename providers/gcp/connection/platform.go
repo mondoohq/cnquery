@@ -126,6 +126,14 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Memorystore for Redis"
 	case "gcp-memorystore-rediscluster":
 		return "GCP Memorystore for Redis Cluster"
+	case "gcp-memorystore-instance":
+		return "GCP Memorystore Instance"
+	case "gcp-artifactregistry-repository":
+		return "GCP Artifact Registry Repository"
+	case "gcp-memcache-instance":
+		return "GCP Memorystore for Memcached Instance"
+	case "gcp-vertexai-job":
+		return "GCP Vertex AI Custom Job"
 	case "gcp-secretmanager-secret":
 		return "GCP Secret Manager Secret"
 	case "gcp-compute-instance":
@@ -223,8 +231,31 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "memorystore", region, "redis"}
 		case "rediscluster":
 			return []string{"gcp", project, "memorystore", region, "rediscluster"}
+		case "instance":
+			return []string{"gcp", project, "memorystore", region, "instance"}
 		default:
 			return []string{"gcp", project, "memorystore", region, "other"}
+		}
+	case "artifactregistry":
+		switch objectType {
+		case "repository":
+			return []string{"gcp", project, "artifactregistry", region, "repository"}
+		default:
+			return []string{"gcp", project, "artifactregistry", region, "other"}
+		}
+	case "memcache":
+		switch objectType {
+		case "instance":
+			return []string{"gcp", project, "memcache", region, "instance"}
+		default:
+			return []string{"gcp", project, "memcache", region, "other"}
+		}
+	case "vertexai":
+		switch objectType {
+		case "job":
+			return []string{"gcp", project, "vertexai", region, "job"}
+		default:
+			return []string{"gcp", project, "vertexai", region, "other"}
 		}
 	case "secretmanager":
 		switch objectType {

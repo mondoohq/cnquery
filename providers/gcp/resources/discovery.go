@@ -62,6 +62,10 @@ const (
 	DiscoverSpannerInstances        = "spanner-instances"
 	DiscoverFirestoreDatabases      = "firestore-databases"
 	DiscoverBigtableInstances       = "bigtable-instances"
+	DiscoverMemorystoreInstances    = "memorystore-instances"
+	DiscoverArtifactRegistryRepos   = "artifactregistry-repositories"
+	DiscoverMemcacheInstances       = "memcache-instances"
+	DiscoverVertexAIJobs            = "vertexai-jobs"
 )
 
 // All includes every discovery target: Auto covers all of them for GCP.
@@ -101,6 +105,10 @@ var Auto = []string{
 	DiscoverSpannerInstances,
 	DiscoverFirestoreDatabases,
 	DiscoverBigtableInstances,
+	DiscoverMemorystoreInstances,
+	DiscoverArtifactRegistryRepos,
+	DiscoverMemcacheInstances,
+	DiscoverVertexAIJobs,
 }
 
 var AllAPIResources = []string{
@@ -134,6 +142,10 @@ var AllAPIResources = []string{
 	DiscoverSpannerInstances,
 	DiscoverFirestoreDatabases,
 	DiscoverBigtableInstances,
+	DiscoverMemorystoreInstances,
+	DiscoverArtifactRegistryRepos,
+	DiscoverMemcacheInstances,
+	DiscoverVertexAIJobs,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -664,6 +676,143 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("memorystore", gcpProject.Id.Data, location, "rediscluster", clusterName),
 				},
 				Labels:      map[string]string{},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverMemorystoreInstances) {
+		memorystoreService := gcpProject.GetMemorystore()
+		if memorystoreService.Error != nil {
+			return nil, memorystoreService.Error
+		}
+		instances := memorystoreService.Data.GetInstances()
+		if instances.Error != nil {
+			return nil, instances.Error
+		}
+		for i := range instances.Data {
+			instance := instances.Data[i].(*mqlGcpProjectMemorystoreServiceInstance)
+			// Memorystore instance name is the full resource path:
+			// projects/{project}/locations/{location}/instances/{instance}
+			instanceName := parseResourceName(instance.Name.Data)
+			location := parseLocationFromPath(instance.Name.Data)
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("memorystore", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Name: instanceName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-memorystore-instance",
+					Title:                 connection.GetTitleForPlatformName("gcp-memorystore-instance"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("memorystore", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(instance.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverArtifactRegistryRepos) {
+		artifactSvc := gcpProject.GetArtifactRegistry()
+		if artifactSvc.Error != nil {
+			return nil, artifactSvc.Error
+		}
+		repos := artifactSvc.Data.GetRepositories()
+		if repos.Error != nil {
+			return nil, repos.Error
+		}
+		for i := range repos.Data {
+			repo := repos.Data[i].(*mqlGcpProjectArtifactRegistryServiceRepository)
+			repoName := repo.Name.Data
+			location := repo.Location.Data
+			if location == "" {
+				location = "global"
+			}
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("artifactregistry", gcpProject.Id.Data, location, "repository", repoName),
+				},
+				Name: repoName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-artifactregistry-repository",
+					Title:                 connection.GetTitleForPlatformName("gcp-artifactregistry-repository"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("artifactregistry", gcpProject.Id.Data, location, "repository", repoName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(repo.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverMemcacheInstances) {
+		memcacheService := gcpProject.GetMemcache()
+		if memcacheService.Error != nil {
+			return nil, memcacheService.Error
+		}
+		instances := memcacheService.Data.GetInstances()
+		if instances.Error != nil {
+			return nil, instances.Error
+		}
+		for i := range instances.Data {
+			instance := instances.Data[i].(*mqlGcpProjectMemcacheServiceInstance)
+			// Memcache instance name is the full resource path:
+			// projects/{project}/locations/{location}/instances/{instance}
+			instanceName := parseResourceName(instance.Name.Data)
+			location := parseLocationFromPath(instance.Name.Data)
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("memcache", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Name: instanceName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-memcache-instance",
+					Title:                 connection.GetTitleForPlatformName("gcp-memcache-instance"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("memcache", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(instance.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverVertexAIJobs) {
+		vertexaiService := gcpProject.GetVertexai()
+		if vertexaiService.Error != nil {
+			return nil, vertexaiService.Error
+		}
+		jobs := vertexaiService.Data.GetCustomJobs()
+		if jobs.Error != nil {
+			return nil, jobs.Error
+		}
+		for i := range jobs.Data {
+			job := jobs.Data[i].(*mqlGcpProjectVertexaiServiceCustomJob)
+			// Custom job name is the full resource path:
+			// projects/{project}/locations/{location}/customJobs/{job}
+			jobName := parseResourceName(job.Name.Data)
+			location := parseLocationFromPath(job.Name.Data)
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("vertexai", gcpProject.Id.Data, location, "job", jobName),
+				},
+				Name: jobName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-vertexai-job",
+					Title:                 connection.GetTitleForPlatformName("gcp-vertexai-job"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("vertexai", gcpProject.Id.Data, location, "job", jobName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(job.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}

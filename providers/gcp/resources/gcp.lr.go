@@ -1706,7 +1706,7 @@ func init() {
 			Create: createGcpProjectVertexaiServiceTensorboard,
 		},
 		"gcp.project.vertexaiService.customJob": {
-			// to override args, implement: initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectVertexaiServiceCustomJob,
 			Create: createGcpProjectVertexaiServiceCustomJob,
 		},
 		"gcp.project.vertexaiService.index": {
@@ -1978,7 +1978,7 @@ func init() {
 			Create: createGcpProjectMemcacheService,
 		},
 		"gcp.project.memcacheService.instance": {
-			// to override args, implement: initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectMemcacheServiceInstance,
 			Create: createGcpProjectMemcacheServiceInstance,
 		},
 		"gcp.project.memcacheService.instance.node": {

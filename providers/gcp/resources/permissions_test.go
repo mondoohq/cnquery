@@ -18,6 +18,7 @@ import (
 // the live GCP IAM API using queryTestablePermissions.
 var validatedGCPPermissions = []string{
 	"accessapproval.settings.get",
+	"aiplatform.customJobs.get",
 	"aiplatform.customJobs.list",
 	"aiplatform.datasets.list",
 	"aiplatform.endpoints.list",

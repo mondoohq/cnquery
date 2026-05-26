@@ -126,6 +126,19 @@ func parseResourceName(fullPath string) string {
 	return segments[len(segments)-1]
 }
 
+// parseProjectFromPath extracts the project ID from a GCP resource path.
+// The path format is: projects/{project}/...
+// Returns "" if no project segment is found.
+func parseProjectFromPath(fullPath string) string {
+	segments := strings.Split(fullPath, "/")
+	for i, s := range segments {
+		if s == "projects" && i+1 < len(segments) {
+			return segments[i+1]
+		}
+	}
+	return ""
+}
+
 // parseLocationFromPath extracts the location/region from a GCP resource path.
 // The path format is: projects/{project}/locations/{location}/...
 // Returns "global" if no location segment is found.

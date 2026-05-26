@@ -1,9 +1,10 @@
 {
   "provider": "gcp",
   "version": "13.17.0",
-  "generated_at": "2026-05-26T14:28:59+03:00",
+  "generated_at": "2026-05-26T10:17:51-07:00",
   "permissions": [
     "accessapproval.settings.get",
+    "aiplatform.customJobs.get",
     "aiplatform.customJobs.list",
     "aiplatform.datasets.list",
     "aiplatform.endpoints.list",
@@ -234,6 +235,12 @@
       "service": "accessapproval",
       "action": "GetAccessApprovalSettings",
       "source_file": "access_approval.go"
+    },
+    {
+      "permission": "aiplatform.customJobs.get",
+      "service": "aiplatform",
+      "action": "GetCustomJob",
+      "source_file": "vertexai.go"
     },
     {
       "permission": "aiplatform.customJobs.list",

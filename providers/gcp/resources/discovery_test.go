@@ -46,6 +46,10 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverSpannerInstances,
 		DiscoverFirestoreDatabases,
 		DiscoverBigtableInstances,
+		DiscoverMemorystoreInstances,
+		DiscoverArtifactRegistryRepos,
+		DiscoverMemcacheInstances,
+		DiscoverVertexAIJobs,
 	}
 	require.ElementsMatch(t, expected, All)
 }
@@ -85,6 +89,10 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverSpannerInstances,
 		DiscoverFirestoreDatabases,
 		DiscoverBigtableInstances,
+		DiscoverMemorystoreInstances,
+		DiscoverArtifactRegistryRepos,
+		DiscoverMemcacheInstances,
+		DiscoverVertexAIJobs,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

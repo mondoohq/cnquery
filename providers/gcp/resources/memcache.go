@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	memcache "cloud.google.com/go/memcache/apiv1"
 	"cloud.google.com/go/memcache/apiv1/memcachepb"
@@ -59,6 +60,76 @@ func (g *mqlGcpProjectMemcacheServiceInstance) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/memcacheService/instance/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		args = make(map[string]*llx.RawData)
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+			args["location"] = llx.StringData(ids.region)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	// Accept either the full resource path or a short name + location.
+	projectId := conn.ResourceID()
+	location := ""
+	if !strings.HasPrefix(name, "projects/") {
+		locRaw := args["location"]
+		projRaw := args["projectId"]
+		if locRaw == nil || projRaw == nil {
+			return nil, nil, errors.New("memcache instance init: projectId and location required when name is not a full resource path")
+		}
+		projectId = projRaw.Value.(string)
+		location = locRaw.Value.(string)
+	} else {
+		projectId = parseProjectFromPath(name)
+		location = parseLocationFromPath(name)
+		name = parseResourceName(name)
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.memcacheService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	memcacheSvc := obj.(*mqlGcpProjectMemcacheService)
+	instances := memcacheSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, nil, instances.Error
+	}
+
+	for _, i := range instances.Data {
+		instance := i.(*mqlGcpProjectMemcacheServiceInstance)
+		// Memcache instance names are full resource paths; compare short
+		// segments + location to the asset identifier.
+		if parseResourceName(instance.Name.Data) == name &&
+			(location == "" || parseLocationFromPath(instance.Name.Data) == location) {
+			delete(args, "location")
+			return args, instance, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("memcache instance %q not found", name)
 }
 
 func (g *mqlGcpProjectMemcacheServiceInstanceNode) id() (string, error) {

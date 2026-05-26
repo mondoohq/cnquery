@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	memorystore "cloud.google.com/go/memorystore/apiv1"
 	"cloud.google.com/go/memorystore/apiv1/memorystorepb"
@@ -270,9 +271,21 @@ func mqlMemorystoreInstanceFromProto(runtime *plugin.Runtime, projectId string, 
 }
 
 func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
+
+	if len(args) == 0 {
+		args = make(map[string]*llx.RawData)
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+			args["location"] = llx.StringData(ids.region)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
 	nameRaw := args["name"]
 	if nameRaw == nil {
 		return args, nil, nil
@@ -294,15 +307,30 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 	}
 	defer client.Close()
 
-	inst, err := client.GetInstance(ctx, &memorystorepb.GetInstanceRequest{Name: name})
+	// Accept either the full resource path or a short name + location from
+	// the asset identifier driven discovery path.
+	fullName := name
+	projectId := conn.ResourceID()
+	if !strings.HasPrefix(name, "projects/") {
+		locRaw := args["location"]
+		projRaw := args["projectId"]
+		if locRaw == nil || projRaw == nil {
+			return nil, nil, errors.New("memorystore instance init: projectId and location required when name is not a full resource path")
+		}
+		projectId = projRaw.Value.(string)
+		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
+	}
+
+	inst, err := client.GetInstance(ctx, &memorystorepb.GetInstanceRequest{Name: fullName})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	res, err := mqlMemorystoreInstanceFromProto(runtime, conn.ResourceID(), inst)
+	res, err := mqlMemorystoreInstanceFromProto(runtime, projectId, inst)
 	if err != nil {
 		return nil, nil, err
 	}
+	delete(args, "location")
 	return args, res, nil
 }
 
