@@ -6108,6 +6108,8 @@ zfs.dataset @defaults("name type usedBytes") {
 ai @maturity("preview") {
   // All locally cached AI models across all supported sources
   models() []ai.model
+  // All detected AI applications (desktop apps, IDE extensions, browser extensions)
+  applications() []ai.application
 }
 
 // AI Model
@@ -6155,6 +6157,29 @@ private ai.model @defaults("name source") @maturity("preview") {
   tags []string
   // Short description of the model
   description string
+}
+
+// AI Application
+//
+// A locally installed AI application such as a desktop app (Claude Desktop,
+// ChatGPT, Cursor), an IDE extension (GitHub Copilot, Claude Code), or a
+// browser extension (Claude, Perplexity). Use `ai.applications` to discover
+// all AI-related applications on the system.
+private ai.application @defaults("name category") @maturity("preview") {
+  // Application name (e.g., "Claude Desktop", "GitHub Copilot")
+  name string
+  // Category: desktop, ide-extension, browser-extension
+  category string
+  // Application version
+  version string
+  // Publisher or vendor
+  vendor string
+  // Filesystem path to the application
+  path string
+  // Whether the application is currently installed
+  installed bool
+  // Last update time
+  updatedAt time
 }
 
 // Claude Code (Anthropic CLI agent) instance

@@ -7,6 +7,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/aiapp"
 	"go.mondoo.com/mql/v13/providers/os/resources/aimodel"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -89,4 +90,46 @@ func newAiModelResource(rt *plugin.Runtime, m aimodel.ModelInfo) (*mqlAiModel, e
 
 func (a *mqlAiModel) id() (string, error) {
 	return "ai.model/" + a.Source.Data + "/" + a.Name.Data, nil
+}
+
+func (a *mqlAi) applications() ([]any, error) {
+	home, err := targetHomeDir(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(shared.Connection)
+	afs := connectionAfs(a.MqlRuntime)
+	osFamily := targetOSFamily(conn)
+
+	var all []any
+	for _, app := range aiapp.DetectAll(afs, home, osFamily) {
+		res, err := newAiApplicationResource(a.MqlRuntime, app)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func newAiApplicationResource(rt *plugin.Runtime, app aiapp.AppInfo) (*mqlAiApplication, error) {
+	res, err := NewResource(rt, "ai.application", map[string]*llx.RawData{
+		"__id":      llx.StringData("ai.application/" + app.Category + "/" + app.Name),
+		"name":      llx.StringData(app.Name),
+		"category":  llx.StringData(app.Category),
+		"version":   llx.StringData(app.Version),
+		"vendor":    llx.StringData(app.Vendor),
+		"path":      llx.StringData(app.Path),
+		"installed": llx.BoolData(app.Installed),
+		"updatedAt": llx.TimeData(app.UpdatedAt),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAiApplication), nil
+}
+
+func (a *mqlAiApplication) id() (string, error) {
+	return "ai.application/" + a.Category.Data + "/" + a.Name.Data, nil
 }

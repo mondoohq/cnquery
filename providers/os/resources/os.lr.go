@@ -331,6 +331,7 @@ const (
 	ResourceZfsDataset                   string = "zfs.dataset"
 	ResourceAi                           string = "ai"
 	ResourceAiModel                      string = "ai.model"
+	ResourceAiApplication                string = "ai.application"
 	ResourceClaudeCode                   string = "claude.code"
 	ResourceClaudeCodePlugin             string = "claude.code.plugin"
 	ResourceClaudeCodeSkill              string = "claude.code.skill"
@@ -1661,6 +1662,10 @@ func init() {
 		"ai.model": {
 			// to override args, implement: initAiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAiModel,
+		},
+		"ai.application": {
+			// to override args, implement: initAiApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAiApplication,
 		},
 		"claude.code": {
 			Init:   initClaudeCode,
@@ -7354,6 +7359,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ai.models": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAi).GetModels()).ToDataRes(types.Array(types.Resource("ai.model")))
 	},
+	"ai.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAi).GetApplications()).ToDataRes(types.Array(types.Resource("ai.application")))
+	},
 	"ai.model.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAiModel).GetName()).ToDataRes(types.String)
 	},
@@ -7398,6 +7406,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ai.model.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAiModel).GetDescription()).ToDataRes(types.String)
+	},
+	"ai.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetName()).ToDataRes(types.String)
+	},
+	"ai.application.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetCategory()).ToDataRes(types.String)
+	},
+	"ai.application.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetVersion()).ToDataRes(types.String)
+	},
+	"ai.application.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetVendor()).ToDataRes(types.String)
+	},
+	"ai.application.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetPath()).ToDataRes(types.String)
+	},
+	"ai.application.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"ai.application.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAiApplication).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"claude.code.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetConfigPath()).ToDataRes(types.String)
@@ -16772,6 +16801,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAi).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ai.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAi).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ai.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAiModel).__id, ok = v.Value.(string)
 		return
@@ -16834,6 +16867,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ai.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAiModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"ai.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ai.application.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ai.application.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAiApplication).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"claude.code.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45633,7 +45698,8 @@ type mqlAi struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAiInternal it will be used here
-	Models plugin.TValue[[]any]
+	Models       plugin.TValue[[]any]
+	Applications plugin.TValue[[]any]
 }
 
 // createAi creates a new instance of this resource
@@ -45686,6 +45752,22 @@ func (c *mqlAi) GetModels() *plugin.TValue[[]any] {
 		}
 
 		return c.models()
+	})
+}
+
+func (c *mqlAi) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ai", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
 	})
 }
 
@@ -45806,6 +45888,85 @@ func (c *mqlAiModel) GetTags() *plugin.TValue[[]any] {
 
 func (c *mqlAiModel) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlAiApplication for the ai.application resource
+type mqlAiApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAiApplicationInternal it will be used here
+	Name      plugin.TValue[string]
+	Category  plugin.TValue[string]
+	Version   plugin.TValue[string]
+	Vendor    plugin.TValue[string]
+	Path      plugin.TValue[string]
+	Installed plugin.TValue[bool]
+	UpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAiApplication creates a new instance of this resource
+func createAiApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAiApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ai.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAiApplication) MqlName() string {
+	return "ai.application"
+}
+
+func (c *mqlAiApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAiApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAiApplication) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAiApplication) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAiApplication) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlAiApplication) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAiApplication) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlAiApplication) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlClaudeCode for the claude.code resource
