@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.13.0",
-  "generated_at": "2026-05-26T20:52:17+02:00",
+  "version": "13.14.0",
+  "generated_at": "2026-05-26T13:43:06-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -94,6 +94,7 @@
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.Logic/workflows/read",
+    "Microsoft.Machinelearning/workspaces/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Mongocluster/mongoClusters/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
@@ -484,7 +485,7 @@
     {
       "permission": "Microsoft.Compute/virtualMachines/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "compute.go"
     },
     {
@@ -520,7 +521,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -610,7 +611,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
     },
     {
@@ -764,6 +765,12 @@
       "source_file": "logic.go"
     },
     {
+      "permission": "Microsoft.Machinelearning/workspaces/read",
+      "service": "Microsoft.Machinelearning",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "machinelearning.go"
+    },
+    {
       "permission": "Microsoft.ManagedIdentity/userAssignedIdentities/read",
       "service": "Microsoft.ManagedIdentity",
       "action": "NewListBySubscriptionPager",
@@ -796,7 +803,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -820,7 +827,7 @@
     {
       "permission": "Microsoft.Network/connections/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
@@ -862,7 +869,7 @@
     {
       "permission": "Microsoft.Network/firewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -892,7 +899,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -952,7 +959,7 @@
     {
       "permission": "Microsoft.Network/privateEndpoints/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -1054,7 +1061,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "NewListPager",
+      "action": "NewListNSPPager",
       "source_file": "loganalytics.go"
     },
     {
@@ -1480,13 +1487,13 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "Get",
       "source_file": "functions.go"
     },
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListSlotsPager",
+      "action": "NewListPager",
       "source_file": "web.go"
     },
     {

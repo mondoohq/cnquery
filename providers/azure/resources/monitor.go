@@ -151,57 +151,116 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]any, error
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			properties, err := convert.JsonToDict(entry.Properties)
+			mqlAI, err := createApplicationInsightResource(a.MqlRuntime, entry)
 			if err != nil {
 				return nil, err
 			}
-
-			var disableIpMasking bool
-			var publicNetworkAccessForIngestion, publicNetworkAccessForQuery string
-			var retentionInDays int64
-			var workspaceResourceId string
-			if entry.Properties != nil {
-				if entry.Properties.DisableIPMasking != nil {
-					disableIpMasking = *entry.Properties.DisableIPMasking
-				}
-				if entry.Properties.PublicNetworkAccessForIngestion != nil {
-					publicNetworkAccessForIngestion = string(*entry.Properties.PublicNetworkAccessForIngestion)
-				}
-				if entry.Properties.PublicNetworkAccessForQuery != nil {
-					publicNetworkAccessForQuery = string(*entry.Properties.PublicNetworkAccessForQuery)
-				}
-				if entry.Properties.RetentionInDays != nil {
-					retentionInDays = int64(*entry.Properties.RetentionInDays)
-				}
-				if entry.Properties.WorkspaceResourceID != nil {
-					workspaceResourceId = *entry.Properties.WorkspaceResourceID
-				}
-			}
-
-			mqlAppInsight, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.applicationInsight",
-				map[string]*llx.RawData{
-					"id":                              llx.StringDataPtr(entry.ID),
-					"name":                            llx.StringDataPtr(entry.Name),
-					"properties":                      llx.DictData(properties),
-					"location":                        llx.StringDataPtr(entry.Location),
-					"type":                            llx.StringDataPtr(entry.Type),
-					"tags":                            llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"kind":                            llx.StringDataPtr(entry.Kind),
-					"disableIpMasking":                llx.BoolData(disableIpMasking),
-					"publicNetworkAccessForIngestion": llx.StringData(publicNetworkAccessForIngestion),
-					"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
-					"retentionInDays":                 llx.IntData(retentionInDays),
-					"workspaceResourceId":             llx.StringData(workspaceResourceId),
-				})
-			if err != nil {
-				return nil, err
-			}
-			mqlAI := mqlAppInsight.(*mqlAzureSubscriptionMonitorServiceApplicationInsight)
-			mqlAI.cacheWorkspaceResourceId = workspaceResourceId
 			res = append(res, mqlAI)
 		}
 	}
 	return res, nil
+}
+
+// createApplicationInsightResource maps an Application Insights component to its MQL resource.
+func createApplicationInsightResource(runtime *plugin.Runtime, entry *appinsights.Component) (*mqlAzureSubscriptionMonitorServiceApplicationInsight, error) {
+	properties, err := convert.JsonToDict(entry.Properties)
+	if err != nil {
+		return nil, err
+	}
+
+	var disableIpMasking bool
+	var publicNetworkAccessForIngestion, publicNetworkAccessForQuery string
+	var retentionInDays int64
+	var workspaceResourceId string
+	if entry.Properties != nil {
+		if entry.Properties.DisableIPMasking != nil {
+			disableIpMasking = *entry.Properties.DisableIPMasking
+		}
+		if entry.Properties.PublicNetworkAccessForIngestion != nil {
+			publicNetworkAccessForIngestion = string(*entry.Properties.PublicNetworkAccessForIngestion)
+		}
+		if entry.Properties.PublicNetworkAccessForQuery != nil {
+			publicNetworkAccessForQuery = string(*entry.Properties.PublicNetworkAccessForQuery)
+		}
+		if entry.Properties.RetentionInDays != nil {
+			retentionInDays = int64(*entry.Properties.RetentionInDays)
+		}
+		if entry.Properties.WorkspaceResourceID != nil {
+			workspaceResourceId = *entry.Properties.WorkspaceResourceID
+		}
+	}
+
+	mqlAppInsight, err := CreateResource(runtime, "azure.subscription.monitorService.applicationInsight",
+		map[string]*llx.RawData{
+			"id":                              llx.StringDataPtr(entry.ID),
+			"name":                            llx.StringDataPtr(entry.Name),
+			"properties":                      llx.DictData(properties),
+			"location":                        llx.StringDataPtr(entry.Location),
+			"type":                            llx.StringDataPtr(entry.Type),
+			"tags":                            llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+			"kind":                            llx.StringDataPtr(entry.Kind),
+			"disableIpMasking":                llx.BoolData(disableIpMasking),
+			"publicNetworkAccessForIngestion": llx.StringData(publicNetworkAccessForIngestion),
+			"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
+			"retentionInDays":                 llx.IntData(retentionInDays),
+			"workspaceResourceId":             llx.StringData(workspaceResourceId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlAI := mqlAppInsight.(*mqlAzureSubscriptionMonitorServiceApplicationInsight)
+	mqlAI.cacheWorkspaceResourceId = workspaceResourceId
+	return mqlAI, nil
+}
+
+// initAzureSubscriptionMonitorServiceApplicationInsight fetches an Application Insights
+// component by its resource ID, enabling typed cross-references from other resources.
+func initAzureSubscriptionMonitorServiceApplicationInsight(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idRaw, ok := args["id"]
+	if !ok || idRaw == nil {
+		return args, nil, nil
+	}
+	id, ok := idRaw.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	componentName, err := resourceID.Component("components")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	client, err := appinsights.NewComponentsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, componentName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mqlAI, err := createApplicationInsightResource(runtime, &resp.Component)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlAI, nil
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) {

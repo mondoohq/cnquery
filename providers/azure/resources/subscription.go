@@ -455,3 +455,13 @@ func (a *mqlAzureSubscription) sentinel() (*mqlAzureSubscriptionSentinelService,
 	}
 	return svc.(*mqlAzureSubscriptionSentinelService), nil
 }
+
+func (a *mqlAzureSubscription) machineLearning() (*mqlAzureSubscriptionMachineLearningService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.machineLearningService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionMachineLearningService), nil
+}

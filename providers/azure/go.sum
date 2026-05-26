@@ -142,6 +142,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2 v2
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2 v2.0.2/go.mod h1:7t88hsh6P4xqFM9uzaMX2qYfVsqDFkgFR4qdIX/OP+U=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/logic/armlogic v1.2.0 h1:EMNgS+pCj2/2LL7+nWG8zPf9sp4u8icP5FNwoBhyc8M=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/logic/armlogic v1.2.0/go.mod h1:TsM36SmGxYC24DiOTR9wPuBj5HYphihMC6xlnX536bE=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/machinelearning/armmachinelearning/v4 v4.0.0 h1:H5ykGRBhX8CJKpB2tiRVut1DPbH7BnYKQ+orFTD7+JY=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/machinelearning/armmachinelearning/v4 v4.0.0/go.mod h1:nivJvZio5SHpEASAk8LKIueqs7zEHU+iRLKWbx3Xi10=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mongocluster/armmongocluster v1.1.0 h1:Kt30VxZ4lRB/+7RgP9lur4/OweaB3V5JLBf3wQezWIU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mongocluster/armmongocluster v1.1.0/go.mod h1:07VKTvjY84x3qmE2pk3gwIhcDZ7RX7ZLntc59E+ZiRI=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor v0.11.0 h1:Ds0KRF8ggpEGg4Vo42oX1cIt/IfOhHWJBikksZbVxeg=

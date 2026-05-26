@@ -133,6 +133,8 @@ azure.subscription @defaults ("name") {
   cognitiveServices() azure.subscription.cognitiveServicesService
   // Microsoft Sentinel onboarded workspaces in the subscription
   sentinel() azure.subscription.sentinelService
+  // Azure Machine Learning resources in the subscription
+  machineLearning() azure.subscription.machineLearningService
 }
 
 // Azure function
@@ -10027,6 +10029,105 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   status string
   // Network rule set: IP firewall rules and the bypass setting governing public access
   networkRuleSet dict
+}
+
+// Azure Machine Learning
+//
+// Use the Machine Learning namespace to enumerate the Azure Machine Learning
+// workspaces in the subscription, backed by the
+// `Microsoft.MachineLearningServices` resource provider. A workspace is the
+// top-level container for ML assets — experiments, models, compute, and
+// datastores — and binds to a Key Vault, Storage account, Application Insights
+// component, and Container Registry, so the namespace is the entry point for
+// auditing their public-network exposure, network isolation,
+// customer-managed-key encryption, and authentication posture. Iterate
+// `workspaces()` for the per-workspace records.
+private azure.subscription.machineLearningService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Machine Learning workspaces in the subscription
+  workspaces() []azure.subscription.machineLearningService.workspace
+}
+
+// Azure Machine Learning workspace
+//
+// Examine a single Azure Machine Learning workspace — the top-level container
+// for ML experiments, models, compute, and datastores. Use
+// `publicNetworkAccess` to confirm whether the workspace is reachable from the
+// public internet, `managedNetworkIsolationMode` for the managed-VNet outbound
+// policy, `hbiWorkspace` for whether it is flagged high-business-impact (which
+// restricts the diagnostic data Microsoft collects),
+// `allowPublicAccessWhenBehindVnet` for whether public access is permitted
+// despite a private endpoint, `v1LegacyMode` for whether the older v1 API
+// surface is still enabled, `encryptionKey` for the customer-managed key
+// encrypting workspace data (null when platform-managed), and `keyVault`,
+// `storageAccount`, `applicationInsights`, and `containerRegistry` for the
+// linked resources whose own posture the workspace inherits. Select a
+// workspace by `name` — for example
+// `azure.subscription.machineLearning.workspaces.where(name == "my-ws")`.
+azure.subscription.machineLearningService.workspace @defaults("id name location publicNetworkAccess") {
+  // Workspace resource ID
+  id string
+  // Workspace name
+  name string
+  // Workspace location
+  location string
+  // Workspace tags
+  tags map[string]string
+  // Workspace kind (e.g., Default, Hub, Project, FeatureStore)
+  kind string
+  // SKU details (name and tier)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Immutable workspace identifier assigned by Azure
+  workspaceId string
+  // Friendly (display) name of the workspace
+  friendlyName string
+  // Workspace description
+  description string
+  // Provisioning state of the workspace
+  provisioningState string
+  // Whether the workspace is reachable from the public internet ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Outbound isolation mode of the managed virtual network
+  //
+  // One of "Disabled", "AllowInternetOutbound", or "AllowOnlyApprovedOutbound".
+  managedNetworkIsolationMode string
+  // Whether the workspace is flagged high-business-impact, which limits the diagnostic data Microsoft collects
+  hbiWorkspace bool
+  // Whether public network access is allowed even when the workspace is behind a virtual network
+  allowPublicAccessWhenBehindVnet bool
+  // Whether the legacy v1 API surface (v1LegacyMode) is enabled
+  v1LegacyMode bool
+  // URL of the discovery service that clients use to resolve workspace-scoped endpoints
+  discoveryUrl string
+  // MLflow tracking URI for the workspace
+  mlFlowTrackingUri string
+  // Compute resource (by name) used to build environment images; empty when the default managed build compute is used
+  imageBuildCompute string
+  // Whether workspace data is encrypted with a customer-managed key ("Enabled") or a Microsoft-managed key ("Disabled")
+  encryptionStatus string
+  // Private endpoint connections to the workspace
+  privateEndpointConnections []dict
+  // Customer-managed Key Vault key encrypting workspace data (null when Microsoft-managed)
+  encryptionKey() azure.subscription.keyVaultService.key
+  // Resource ID of the linked Key Vault
+  keyVaultId string
+  // Key Vault linked to the workspace, holding its secrets
+  keyVault() azure.subscription.keyVaultService.vault
+  // Resource ID of the linked Storage account
+  storageAccountId string
+  // Storage account linked to the workspace, holding its datastores
+  storageAccount() azure.subscription.storageService.account
+  // Resource ID of the linked Application Insights component
+  applicationInsightsId string
+  // Application Insights component linked to the workspace for telemetry
+  applicationInsights() azure.subscription.monitorService.applicationInsight
+  // Resource ID of the linked Container Registry
+  containerRegistryId string
+  // Container Registry linked to the workspace, holding its environment images
+  containerRegistry() azure.subscription.containerRegistryService.registry
 }
 
 // App Configuration
