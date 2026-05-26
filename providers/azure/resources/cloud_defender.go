@@ -1363,8 +1363,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 				if risk := props.Risk; risk != nil {
 					riskLevel = string(convert.ToValue(risk.Level))
 					riskIsContextual = convert.ToValue(risk.IsContextualRisk)
-					riskFactors = convert.SliceStrPtrToInterface(risk.RiskFactors)
-					riskAttackPaths = convert.SliceStrPtrToInterface(risk.AttackPathsReferences)
+					riskFactors = enumSliceToInterface(risk.RiskFactors)
+					riskAttackPaths = enumSliceToInterface(risk.AttackPathsReferences)
 				}
 			}
 
