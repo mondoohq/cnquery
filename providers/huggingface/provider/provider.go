@@ -50,7 +50,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if nsType, ok := flags["namespace-type"]; ok {
-		conf.Options[connection.NamespaceType] = string(nsType.Value)
+		val := string(nsType.Value)
+		if val != connection.NamespaceTypeUser && val != connection.NamespaceTypeOrg {
+			return nil, fmt.Errorf("invalid --namespace-type %q: must be %q or %q", val, connection.NamespaceTypeUser, connection.NamespaceTypeOrg)
+		}
+		conf.Options[connection.NamespaceType] = val
 	}
 
 	discoverTargets := []string{}

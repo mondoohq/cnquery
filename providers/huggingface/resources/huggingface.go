@@ -156,7 +156,10 @@ func createModelResource(runtime *plugin.Runtime, m hfmodels.Model) (*mqlHugging
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHuggingfaceModel), nil
+	model := res.(*mqlHuggingfaceModel)
+	model.listAuthor = m.Author
+	model.listSha = m.Sha
+	return model, nil
 }
 
 func (r *mqlHuggingface) datasets() ([]any, error) {
@@ -470,6 +473,8 @@ func initHuggingfaceModel(runtime *plugin.Runtime, args map[string]*llx.RawData)
 }
 
 type mqlHuggingfaceModelInternal struct {
+	listAuthor string
+	listSha    string
 	detail     *hfmodels.ModelDetail
 	detailOnce sync.Once
 	detailErr  error
@@ -488,6 +493,9 @@ func (r *mqlHuggingfaceModel) id() (string, error) {
 }
 
 func (r *mqlHuggingfaceModel) author() (string, error) {
+	if r.listAuthor != "" {
+		return r.listAuthor, nil
+	}
 	detail, err := r.fetchDetail()
 	if err != nil {
 		return "", err
@@ -502,6 +510,9 @@ func (r *mqlHuggingfaceModel) author() (string, error) {
 }
 
 func (r *mqlHuggingfaceModel) sha() (string, error) {
+	if r.listSha != "" {
+		return r.listSha, nil
+	}
 	detail, err := r.fetchDetail()
 	if err != nil {
 		return "", err
