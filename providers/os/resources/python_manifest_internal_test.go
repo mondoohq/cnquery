@@ -193,8 +193,8 @@ func TestMergePythonPackages(t *testing.T) {
 		{Name: "requests", Version: "2.32.0"},
 	}
 	secondary := []python.PackageDetails{
-		{Name: "openai", Version: "1.28.0"},  // duplicate, should be skipped
-		{Name: "torch", Version: "2.3.0"},     // new, should be added
+		{Name: "openai", Version: "1.28.0"}, // duplicate, should be skipped
+		{Name: "torch", Version: "2.3.0"},   // new, should be added
 	}
 
 	merged := mergePythonPackages(primary, secondary)
