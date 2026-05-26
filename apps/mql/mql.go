@@ -6,11 +6,13 @@ package main
 import (
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/apps/mql/cmd"
 	"go.mondoo.com/mql/v13/cli/config"
 	"go.mondoo.com/mql/v13/cli/selfupdate"
 	"go.mondoo.com/mql/v13/metrics"
+	"go.mondoo.com/mql/v13/profiling"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/health"
 )
 
@@ -50,6 +52,16 @@ func main() {
 	}
 
 	go metrics.Start()
+
+	profiler, err := profiling.Start("mql", map[string]string{
+		"version": mql.Version,
+		"build":   mql.Build,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("Pyroscope profiling not started")
+	}
+	defer func() { _ = profiler.Stop() }()
+
 	cmd.Execute()
 }
 

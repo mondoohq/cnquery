@@ -5,6 +5,9 @@ package plugin
 
 import (
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -12,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/profiling"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -73,6 +77,15 @@ func Start(args []string, impl ProviderPlugin) {
 		Output: io.Discard,
 	})
 
+	providerName := providerNameFromArgs(args)
+	profiler, err := profiling.Start("mql-provider-"+providerName, map[string]string{
+		"provider": providerName,
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("Pyroscope profiling not started")
+	}
+	defer func() { _ = profiler.Stop() }()
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: Handshake,
 		Plugins: map[string]plugin.Plugin{
@@ -83,4 +96,25 @@ func Start(args []string, impl ProviderPlugin) {
 		// A non-nil value here enables gRPC serving for this plugin...
 		GRPCServer: plugin.DefaultGRPCServer,
 	})
+}
+
+// providerNameFromArgs returns the binary name (without extension) of the
+// running provider, used as the `provider` profiling tag. Provider binaries
+// are named after the provider directory (e.g. providers/aws/dist/aws), so
+// the basename of argv[0] is the provider name. Falls back to "unknown" if
+// argv[0] is empty (defensive — it never should be).
+func providerNameFromArgs(args []string) string {
+	if len(args) == 0 || args[0] == "" {
+		if exe, err := os.Executable(); err == nil {
+			args = []string{exe}
+		} else {
+			return "unknown"
+		}
+	}
+	name := filepath.Base(args[0])
+	name = strings.TrimSuffix(name, filepath.Ext(name))
+	if name == "" || name == "." {
+		return "unknown"
+	}
+	return name
 }
