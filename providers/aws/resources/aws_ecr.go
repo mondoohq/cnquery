@@ -894,11 +894,19 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	e := obj.(*mqlAwsEcr)
 
 	repos := []any{}
+	var lastErr error
 	if priv, err := e.privateRepositories(); err == nil {
 		repos = append(repos, priv...)
+	} else {
+		lastErr = err
 	}
 	if pub, err := e.publicRepositories(); err == nil {
 		repos = append(repos, pub...)
+	} else {
+		lastErr = err
+	}
+	if len(repos) == 0 && lastErr != nil {
+		return nil, nil, fmt.Errorf("failed to list ecr repositories: %w", lastErr)
 	}
 
 	var arnVal, nameVal string

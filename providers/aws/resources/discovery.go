@@ -1367,7 +1367,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		for i := range zones.Data {
 			f := zones.Data[i].(*mqlAwsRoute53HostedZone)
 
-			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
 			m := mqlObject{
 				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
