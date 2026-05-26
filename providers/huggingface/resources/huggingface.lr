@@ -100,7 +100,7 @@ huggingface.model @defaults("id author") {
   id string
   // Internal model identifier
   modelId string
-  author string
+  author() string
   private bool
   // ML pipeline tag
   //
@@ -115,7 +115,7 @@ huggingface.model @defaults("id author") {
   downloads int
   likes int
   // Git SHA of the current revision
-  sha string
+  sha() string
   createdAt() time
   lastModified time
   // Whether the model requires access approval

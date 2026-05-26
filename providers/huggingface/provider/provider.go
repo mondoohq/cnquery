@@ -45,6 +45,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.TokenOption] = string(token.Value)
 	}
 
+	if ns, ok := flags["namespace"]; ok {
+		conf.Options[connection.NamespaceOption] = string(ns.Value)
+	}
+
+	if nsType, ok := flags["namespace-type"]; ok {
+		conf.Options[connection.NamespaceType] = string(nsType.Value)
+	}
+
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
 		for i := range x.Array {

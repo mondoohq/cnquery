@@ -25,6 +25,17 @@ var Config = plugin.Provider{
 					Type: plugin.FlagType_String,
 					Desc: "Hugging Face API token (or set HF_TOKEN env var)",
 				},
+				{
+					Long: "namespace",
+					Type: plugin.FlagType_String,
+					Desc: "Target a specific user or organization namespace (e.g. openai)",
+				},
+				{
+					Long:    "namespace-type",
+					Type:    plugin.FlagType_String,
+					Default: "user",
+					Desc:    "Type of the namespace: user or org",
+				},
 			},
 		},
 	},

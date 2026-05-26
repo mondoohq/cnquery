@@ -1320,7 +1320,9 @@ func (c *mqlHuggingfaceModel) GetModelId() *plugin.TValue[string] {
 }
 
 func (c *mqlHuggingfaceModel) GetAuthor() *plugin.TValue[string] {
-	return &c.Author
+	return plugin.GetOrCompute[string](&c.Author, func() (string, error) {
+		return c.author()
+	})
 }
 
 func (c *mqlHuggingfaceModel) GetPrivate() *plugin.TValue[bool] {
@@ -1348,7 +1350,9 @@ func (c *mqlHuggingfaceModel) GetLikes() *plugin.TValue[int64] {
 }
 
 func (c *mqlHuggingfaceModel) GetSha() *plugin.TValue[string] {
-	return &c.Sha
+	return plugin.GetOrCompute[string](&c.Sha, func() (string, error) {
+		return c.sha()
+	})
 }
 
 func (c *mqlHuggingfaceModel) GetCreatedAt() *plugin.TValue[*time.Time] {
