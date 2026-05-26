@@ -31,20 +31,11 @@ const (
 	RpmPkgFormat = "rpm"
 )
 
-// RPM_REGEX uses the ASCII Record Separator (RS, 0x1E) as the field
-// delimiter between the arch and the remaining columns. RS is in the
-// C0 control range and cannot appear in any rpm header tag (rpm rejects
-// non-printable characters in NAME / VENDOR / SUMMARY / LICENSE /
-// MODULARITYLABEL), so it's safe to split on without escaping. The
-// previous `__` separator was a latent risk because a summary or
-// license containing two literal underscores would have been
-// mis-parsed; switching to RS removes that class of failure.
-var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))\x1e([^\x1e]+?)\x1e([^\x1e]*)\x1e([^\x1e]*)\x1e(\d+|\(none\))(?:\x1e(.+))?$`)
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))__([\w\d\s,/<>:\.|\(none\)]+?)__(.*?)__(.*?)__(\d+|\(none\))(?:__(.+))?$`)
 
 // ParseRpmPackages parses output from:
 // %{MODULARITYLABEL} is only added on supported systems
-// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\036%{VENDOR}\036%{SUMMARY}\036%{LICENSE}\036%{INSTALLTIME}\036%{MODULARITYLABEL}\n'
-// (`\036` is the octal escape for ASCII RS that rpm queryformat accepts.)
+// rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\n'
 func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
@@ -227,25 +218,19 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	modularity := ""
 	// Not all rpm based distros support modules, only query when applicable, otherwise we get an error
 	if modularitySupportedByPlatform(rpm.platform) {
-		modularity = `\036%{MODULARITYLABEL}`
+		modularity = "__%{MODULARITYLABEL}"
 	}
 	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	//
-	// `\036` is the octal escape for ASCII Record Separator (0x1E).
-	// rpm queryformat passes C-style escape sequences through to the
-	// emitted output; using RS as the field delimiter avoids the
-	// ambiguity that the previous `__` separator had with package
-	// summaries / licenses that happen to contain two underscores.
-	format := `%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}\036%{VENDOR}\036%{SUMMARY}\036%{LICENSE}\036%{INSTALLTIME}` + modularity + `\n`
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}" + modularity + "\\n"
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
 	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
 	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
-		format = `%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\036%{VENDOR}\036%{SUMMARY}\036%{LICENSE}\036%{INSTALLTIME}` + modularity + `\n`
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}" + modularity + "\\n"
 	}
 
 	return format

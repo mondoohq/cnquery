@@ -30,7 +30,7 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	}
 
 	// get installed kernel version
-	installedKernelCmd, err := s.conn.RunCommand(`rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\036%{VENDOR}\036%{SUMMARY}\036%{LICENSE}\036%{INSTALLTIME}\n'`)
+	installedKernelCmd, err := s.conn.RunCommand("rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}\n'")
 	if err != nil {
 		return false, err
 	}

@@ -4,10 +4,10 @@ stdout="/usr/bin/rpm"
 [commands."rpm -E '%{_dbpath}'"]
 stdout="/var/lib/rpm"
 
-[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}\\036%{VENDOR}\\036%{SUMMARY}\\036%{LICENSE}\\036%{INSTALLTIME}\\036%{MODULARITYLABEL}\\n'"]
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{LICENSE}__%{INSTALLTIME}__%{MODULARITYLABEL}\\n'"]
 stdout="""
-adcli 0:0.9.2-1.el9 x86_64\u001EOracle America\u001EActive Directory enrollment\u001EGPLv3+\u001E1704067200\u001E(none)
-at 0:3.1.23-12.el9_6 x86_64\u001EOracle America\u001EJob spooling tools\u001EGPLv3+\u001E1704067200\u001E(none)
-ruby 0:3.1.7-146.module+el9.5.0+90564+273a1edd x86_64\u001EOracle America\u001EAn interpreter of object-oriented scripting language\u001EGPLv3+\u001E1704067200\u001Eruby:3.1:9050020250506050702:2e2f0e1c
-ruby-default-gems 0:3.1.7-146.module+el9.5.0+90564+273a1edd noarch\u001EOracle America\u001EDefault gems which are part of Ruby StdLib\u001EGPLv3+\u001E1704067200\u001Eruby:3.1:9050020250506050702:2e2f0e1c
+adcli 0:0.9.2-1.el9 x86_64__Oracle America__Active Directory enrollment__GPLv3+__1704067200__(none)
+at 0:3.1.23-12.el9_6 x86_64__Oracle America__Job spooling tools__GPLv3+__1704067200__(none)
+ruby 0:3.1.7-146.module+el9.5.0+90564+273a1edd x86_64__Oracle America__An interpreter of object-oriented scripting language__GPLv3+__1704067200__ruby:3.1:9050020250506050702:2e2f0e1c
+ruby-default-gems 0:3.1.7-146.module+el9.5.0+90564+273a1edd noarch__Oracle America__Default gems which are part of Ruby StdLib__GPLv3+__1704067200__ruby:3.1:9050020250506050702:2e2f0e1c
 """
