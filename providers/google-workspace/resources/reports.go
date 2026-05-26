@@ -6,7 +6,6 @@ package resources
 import (
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -157,67 +156,88 @@ func (g *mqlGoogleworkspaceReportUsers) id() (string, error) {
 }
 
 func (g *mqlGoogleworkspaceReportUsers) list() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
-	reportsService, err := reportsService(conn)
+	parent, err := workspaceResource(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	reportsByEmail, _, err := parent.loadUsageReports()
 	if err != nil {
 		return nil, err
 	}
 
-	date := time.Now()
-	expectedErr := "googleapi: Error 400: Data for dates later than"
-
-	usageReports, err := fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
-	// we expect this error if there is no data for the current day, so we fall through to past-day retries
-	if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
-		return nil, err
-	}
-	if len(usageReports) > 0 {
-		return usageReports, nil
-	}
-
-	// try and fetch usage for each of the past 7 days
-	attempts := 7
-	for attempts > 0 {
-		date = date.Add(-24 * time.Hour)
-		usageReports, err = fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
-		if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
+	res := make([]any, 0, len(reportsByEmail))
+	for _, u := range reportsByEmail {
+		r, err := newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, u)
+		if err != nil {
 			return nil, err
 		}
-		if len(usageReports) > 0 {
-			return usageReports, nil
-		}
-		attempts--
+		res = append(res, r)
 	}
-
-	return []any{}, nil
+	return res, nil
 }
 
-func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, customerId, date string) ([]any, error) {
-	res := []any{}
+// fetchAllUsageReports issues a single `UserUsageReport.Get("all", date)`
+// for the most recent date with published data (Google's reports lag 1–3
+// days; we walk back up to 8 days finding the latest available). The result
+// is keyed by primary email so per-user lookups become map reads instead of
+// individual Get(email, date) calls. Without this shared fetch, querying
+// `users { usageReport }` on a tenant with N users would issue up to 10×N
+// API calls (the per-user retry loop x N users).
+func fetchAllUsageReports(service *reports.Service, customerId string) (map[string]*reports.UsageReport, string, error) {
+	date := time.Now()
+	// 8 attempts cover the documented 1–3 day lag plus a safety margin for
+	// weekends and holidays when Google may not publish a new daily report.
+	for attempts := 8; attempts > 0; attempts-- {
+		dateStr := date.Format(time.DateOnly)
+		rpts, err := fetchAllUsageReportsForDate(service, customerId, dateStr)
+		if err != nil && shouldCheckEarlierDateForReport(err) {
+			date = date.Add(-24 * time.Hour)
+			continue
+		}
+		if err != nil {
+			return nil, "", err
+		}
+		if len(rpts) == 0 {
+			date = date.Add(-24 * time.Hour)
+			continue
+		}
+		return indexUsageReportsByEmail(rpts), dateStr, nil
+	}
+	return map[string]*reports.UsageReport{}, "", nil
+}
 
+// indexUsageReportsByEmail keys a flat slice of usage reports by the
+// per-entity primary email. Reports without an Entity or with an empty
+// UserEmail (e.g. customer-level aggregates) are skipped so the index
+// stays usable for the user.usageReport lookup path.
+func indexUsageReportsByEmail(rpts []*reports.UsageReport) map[string]*reports.UsageReport {
+	m := make(map[string]*reports.UsageReport, len(rpts))
+	for _, r := range rpts {
+		if r == nil || r.Entity == nil || r.Entity.UserEmail == "" {
+			continue
+		}
+		m[r.Entity.UserEmail] = r
+	}
+	return m
+}
+
+func fetchAllUsageReportsForDate(service *reports.Service, customerId, date string) ([]*reports.UsageReport, error) {
+	var out []*reports.UsageReport
 	usageReports, err := service.UserUsageReport.Get("all", date).CustomerId(customerId).Do()
 	if err != nil {
 		return nil, err
 	}
 	for {
-		for _, u := range usageReports.UsageReports {
-			r, err := newMqlGoogleWorkspaceUsageReport(runtime, u)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, r)
-		}
-
+		out = append(out, usageReports.UsageReports...)
 		if usageReports.NextPageToken == "" {
 			break
 		}
-
 		usageReports, err = service.UserUsageReport.Get("all", date).CustomerId(customerId).PageToken(usageReports.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}
 	}
-	return res, nil
+	return out, nil
 }
 
 func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.UsageReport) (*mqlGoogleworkspaceReportUsage, error) {

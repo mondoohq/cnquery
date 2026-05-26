@@ -10,6 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.11.0
 	golang.org/x/oauth2 v0.36.0
+	golang.org/x/sync v0.20.0
 	google.golang.org/api v0.280.0
 )
 
@@ -259,7 +260,6 @@ require (
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect

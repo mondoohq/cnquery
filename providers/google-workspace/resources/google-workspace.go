@@ -7,6 +7,8 @@ import (
 	"context"
 	"sync"
 
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 	reports "google.golang.org/api/admin/reports/v1"
@@ -16,10 +18,30 @@ import (
 	"google.golang.org/api/option"
 )
 
+// workspaceResource fetches (or creates) the singleton `googleworkspace`
+// resource so child resources can reach shared parent caches (user index,
+// usage-report batch, etc.) without re-issuing API calls.
+func workspaceResource(runtime *plugin.Runtime) (*mqlGoogleworkspace, error) {
+	obj, err := CreateResource(runtime, "googleworkspace", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return obj.(*mqlGoogleworkspace), nil
+}
+
 type mqlGoogleworkspaceInternal struct {
 	usersByEmailOnce sync.Once
 	usersByEmail     map[string]*mqlGoogleworkspaceUser
 	usersByEmailErr  error
+
+	// usageReportsOnce guards a single batched UserUsageReport.Get("all", date)
+	// fetch that returns every user's usage report. user.usageReport() and
+	// report.users.list() both look up by primary email instead of issuing
+	// their own per-user API call.
+	usageReportsOnce    sync.Once
+	usageReportsByEmail map[string]*reports.UsageReport
+	usageReportsDate    string
+	usageReportsErr     error
 }
 
 func (g *mqlGoogleworkspace) userByEmail(email string) (*mqlGoogleworkspaceUser, error) {
@@ -47,6 +69,31 @@ func (g *mqlGoogleworkspace) userByEmail(email string) (*mqlGoogleworkspaceUser,
 
 func (r *mqlGoogleworkspace) id() (string, error) {
 	return "google-workspace", nil
+}
+
+// loadUsageReports lazily fetches the entire customer's user usage reports
+// in a single batched `UserUsageReport.Get("all", date)` call (paginated),
+// guarded by sync.Once so the result is shared across every consumer in the
+// query. Returns the keyed-by-email map plus the date the data is for
+// (Google's reports API lags 1–3 days behind today; we walk back day-by-day
+// to find the most recent published date).
+func (g *mqlGoogleworkspace) loadUsageReports() (map[string]*reports.UsageReport, string, error) {
+	g.usageReportsOnce.Do(func() {
+		conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+		svc, err := reportsService(conn)
+		if err != nil {
+			g.usageReportsErr = err
+			return
+		}
+		m, date, err := fetchAllUsageReports(svc, conn.CustomerID())
+		if err != nil {
+			g.usageReportsErr = err
+			return
+		}
+		g.usageReportsByEmail = m
+		g.usageReportsDate = date
+	})
+	return g.usageReportsByEmail, g.usageReportsDate, g.usageReportsErr
 }
 
 func reportsService(conn *connection.GoogleWorkspaceConnection) (*reports.Service, error) {

@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	directory "google.golang.org/api/admin/directory/v1"
-	reports "google.golang.org/api/admin/reports/v1"
 	"google.golang.org/api/googleapi"
 )
 
@@ -32,7 +31,13 @@ func (g *mqlGoogleworkspace) users() ([]any, error) {
 
 	res := []any{}
 
-	users, err := directoryService.Users.List().Customer(conn.CustomerID()).MaxResults(500).Do()
+	// Projection("full") returns multi-value fields (sshPublicKeys,
+	// posixAccounts, customSchemas, organizations, addresses, ...). The
+	// default "basic" projection omits these silently, so the user-level
+	// MQL fields would return null on any tenant that populates them. The
+	// extra payload is on the same paginated request — no additional API
+	// calls.
+	users, err := directoryService.Users.List().Customer(conn.CustomerID()).Projection("full").MaxResults(500).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +55,7 @@ func (g *mqlGoogleworkspace) users() ([]any, error) {
 			break
 		}
 
-		users, err = directoryService.Users.List().Customer(conn.CustomerID()).MaxResults(500).PageToken(users.NextPageToken).Do()
+		users, err = directoryService.Users.List().Customer(conn.CustomerID()).Projection("full").MaxResults(500).PageToken(users.NextPageToken).Do()
 		if err != nil {
 			return nil, err
 		}
@@ -447,62 +452,45 @@ func customSchemasToDict(schemas map[string]googleapi.RawMessage) map[string]any
 	return out
 }
 
+// usageReport resolves the user's daily usage report from the parent
+// googleworkspace resource's shared cache. The cache is populated by a
+// single batched `UserUsageReport.Get("all", date)` call across the whole
+// customer, so per-user lookups are map reads — no per-user API call, and
+// the date-discovery retry loop runs once for the whole tenant instead of
+// once per user.
 func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
-	reportsService, err := reportsService(conn)
-	if err != nil {
-		return nil, err
-	}
-
 	if g.PrimaryEmail.Error != nil {
 		return nil, g.PrimaryEmail.Error
 	}
 	primaryEmail := g.PrimaryEmail.Data
 
-	day := 24 * time.Hour
-	now := time.Now()
-	tries := 10
-	for tries > 0 {
-		report, err := fetchUsageReport(reportsService, primaryEmail, conn.CustomerID(), now)
-		if err != nil && shouldCheckEarlierDateForReport(err) {
-			now = now.Add(-day)
-			tries--
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		if len(report.UsageReports) == 0 {
-			// try fetching from a day before
-			now = now.Add(-day)
-			tries--
-			continue
-		}
-
-		if len(report.UsageReports) > 1 {
-			return nil, errors.New("unexpected result for user usage report")
-		}
-
-		// if we reach here, we have exactly one report
-		return newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, report.UsageReports[0])
-	}
-
-	return nil, errors.New("could not fetch usage report for user, earliest tried date: " + now.Format(time.DateOnly))
-}
-
-func fetchUsageReport(svc *reports.Service, email string, customerId string, date time.Time) (*reports.UsageReports, error) {
-	report, err := svc.UserUsageReport.Get(email, date.Format(time.DateOnly)).CustomerId(customerId).Do()
+	parent, err := workspaceResource(g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-
-	return report, nil
+	reportsByEmail, date, err := parent.loadUsageReports()
+	if err != nil {
+		return nil, err
+	}
+	report, ok := reportsByEmail[primaryEmail]
+	if !ok {
+		// User has no published usage report on the most recent available
+		// date — common for recently provisioned, suspended, or deleted
+		// users. Surface this as a null field rather than an error so audits
+		// can still iterate the user list.
+		g.UsageReport.State = plugin.StateIsSet | plugin.StateIsNull
+		if date == "" {
+			return nil, errors.New("no usage reports published yet for this customer")
+		}
+		return nil, nil
+	}
+	return newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, report)
 }
 
-// there are 2 types of errors we can get here:
-// 1. Error 400: Start date can not be later than 2024-07-29, invalid
-// 2. Error 400: Data for dates later than 2024-07-26 is not yet available. Please check back later, invalid
-// we want to check both and return true if we should check an earlier date
+// shouldCheckEarlierDateForReport matches the two 400 errors Google
+// returns when the requested date is in the future or beyond the
+// most-recent published report. It drives the day-walk-back loop in
+// fetchAllUsageReports.
 func shouldCheckEarlierDateForReport(err error) bool {
 	if strings.Contains(err.Error(), "Error 400: Start date can not be later than ") {
 		return true

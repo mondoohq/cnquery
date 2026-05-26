@@ -4,11 +4,21 @@
 package resources
 
 import (
+	"context"
+
+	"golang.org/x/sync/errgroup"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
+
+// connectedAppsTokenFanoutLimit bounds the parallel Tokens.List fan-out
+// across users. The Admin SDK Directory quota is ~2400 units per 100s, so
+// 10 concurrent requests at ~150-300ms each stays well within budget while
+// collapsing wall-clock from N×latency to N/10×latency.
+const connectedAppsTokenFanoutLimit = 10
 
 type connectedApp struct {
 	clientID string
@@ -25,10 +35,28 @@ func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 	}
 	users := g.Users.Data
 
+	// Phase 1: fan out Tokens.List for every user in parallel. Each user's
+	// tokens are independent API calls, so the previous serial loop was
+	// O(N × latency) wall-clock. The errgroup populates the per-user MQL
+	// cache (c.Tokens) so subsequent queries that touch user.tokens hit it
+	// for free.
+	grp, _ := errgroup.WithContext(context.Background())
+	grp.SetLimit(connectedAppsTokenFanoutLimit)
+	for _, user := range users {
+		usr := user.(*mqlGoogleworkspaceUser)
+		grp.Go(func() error {
+			return usr.GetTokens().Error
+		})
+	}
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
+
+	// Phase 2: aggregate the (now-cached) tokens serially. This is pure
+	// CPU work, no API calls — safe to keep serial.
 	connectedApps := map[string]*connectedApp{}
 	for _, user := range users {
 		usr := user.(*mqlGoogleworkspaceUser)
-		// get all token from user
 		tokens := usr.GetTokens()
 		if tokens.Error != nil {
 			return nil, tokens.Error

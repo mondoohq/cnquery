@@ -75,6 +75,39 @@ func TestParseUserReports(t *testing.T) {
 	require.NotNil(t, r.AppUsage.DriveLastActiveUsageTime)
 }
 
+func TestIndexUsageReportsByEmail(t *testing.T) {
+	// nil and empty inputs return an empty map, not nil.
+	require.Empty(t, indexUsageReportsByEmail(nil))
+	require.Empty(t, indexUsageReportsByEmail([]*reports.UsageReport{}))
+
+	in := []*reports.UsageReport{
+		{Entity: &reports.UsageReportEntity{UserEmail: "alice@example.com"}, Date: "2026-05-20"},
+		{Entity: &reports.UsageReportEntity{UserEmail: "bob@example.com"}, Date: "2026-05-20"},
+		// nil Entity (should be skipped, not panic)
+		{Date: "2026-05-20"},
+		// empty UserEmail (customer-level aggregate, skipped)
+		{Entity: &reports.UsageReportEntity{UserEmail: ""}, Date: "2026-05-20"},
+		// nil report (skipped)
+		nil,
+	}
+	got := indexUsageReportsByEmail(in)
+	require.Len(t, got, 2)
+	require.Contains(t, got, "alice@example.com")
+	require.Contains(t, got, "bob@example.com")
+	require.Equal(t, "2026-05-20", got["alice@example.com"].Date)
+
+	// Duplicates keep the last write — Google's API returns one report per
+	// (user, date) so collisions are not expected, but the index should be
+	// deterministic if the SDK ever changes that.
+	dup := []*reports.UsageReport{
+		{Entity: &reports.UsageReportEntity{UserEmail: "alice@example.com"}, Date: "2026-05-19"},
+		{Entity: &reports.UsageReportEntity{UserEmail: "alice@example.com"}, Date: "2026-05-20"},
+	}
+	got = indexUsageReportsByEmail(dup)
+	require.Len(t, got, 1)
+	require.Equal(t, "2026-05-20", got["alice@example.com"].Date)
+}
+
 func TestParseUserReports_EmptyAndUnknownParams(t *testing.T) {
 	// no params at all
 	r := parseUserReports(nil)
