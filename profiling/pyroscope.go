@@ -180,18 +180,17 @@ func parseTags(s string) map[string]string {
 	return out
 }
 
-// zerologAdapter adapts pyroscope's Logger interface to our zerolog
-// global logger so its diagnostics show up alongside everything else.
+// zerologAdapter adapts pyroscope's Logger interface to our zerolog global
+// logger. Pyroscope's Infof/Debugf are dropped because they're noisy
+// (a multi-line config dump at startup, and upload-loop chatter); our own
+// one-line "Pyroscope profiling started" log in Start() is enough to
+// confirm the agent engaged. Errorf is downgraded to Warn since upload
+// failures shouldn't look like application errors.
 type zerologAdapter struct{}
 
-func (zerologAdapter) Infof(format string, args ...any) {
-	log.Info().Msgf("pyroscope: "+format, args...)
-}
-
-func (zerologAdapter) Debugf(format string, args ...any) {
-	log.Debug().Msgf("pyroscope: "+format, args...)
-}
+func (zerologAdapter) Infof(format string, args ...any)  {}
+func (zerologAdapter) Debugf(format string, args ...any) {}
 
 func (zerologAdapter) Errorf(format string, args ...any) {
-	log.Error().Msgf("pyroscope: "+format, args...)
+	log.Warn().Msgf("pyroscope: "+format, args...)
 }
