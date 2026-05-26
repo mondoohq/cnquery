@@ -30,6 +30,9 @@ const (
 // Windows Update Agent with the given criteria and emits one rich JSON record
 // per update. It is the single source of the WUA "search" used by both
 // os.update (via WindowsUpdateManager) and windows.update.available.
+//
+// IMPORTANT: criteria is concatenated into the script verbatim, so it must be
+// a trusted constant (e.g. WindowsUpdateCriteria*), never user input.
 func windowsUpdateSearchQuery(criteria string) string {
 	return `
 $ProgressPreference='SilentlyContinue';
@@ -118,7 +121,7 @@ func SearchWindowsUpdates(conn shared.Connection, criteria string) ([]WindowsUpd
 	cmd := powershell.Encode(windowsUpdateSearchQuery(criteria))
 	c, err := conn.RunCommand(cmd)
 	if err != nil {
-		return nil, fmt.Errorf("could not search for windows updates")
+		return nil, fmt.Errorf("could not search for windows updates: %w", err)
 	}
 	if c.ExitStatus != 0 {
 		stderr, err := io.ReadAll(c.Stderr)

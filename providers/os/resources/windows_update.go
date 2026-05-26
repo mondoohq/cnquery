@@ -353,9 +353,10 @@ func (w *mqlWindowsUpdate) available() ([]any, error) {
 	res := make([]any, 0, len(wuUpdates))
 	for i := range wuUpdates {
 		u := wuUpdates[i]
+		// KBArticleIDs are bare numbers (e.g. "5034441"); normalize to "KB…".
 		kbID := ""
 		if len(u.KBArticleIDs) > 0 {
-			kbID = "KB" + strings.TrimPrefix(strings.ToUpper(u.KBArticleIDs[0]), "KB")
+			kbID = windows.ParseKBID("KB" + u.KBArticleIDs[0])
 		}
 
 		mqlEntry, err := w.newEntry(map[string]*llx.RawData{
@@ -380,14 +381,7 @@ func (w *mqlWindowsUpdate) available() ([]any, error) {
 }
 
 func (w *mqlWindowsUpdate) newEntry(args map[string]*llx.RawData) (*mqlWindowsUpdateEntry, error) {
-	id := ""
-	if v, ok := args["updateId"]; ok && v.Value.(string) != "" {
-		id = v.Value.(string)
-	} else if v, ok := args["kbId"]; ok && v.Value.(string) != "" {
-		id = v.Value.(string)
-	} else if v, ok := args["title"]; ok {
-		id = v.Value.(string)
-	}
+	id := firstNonEmptyStringArg(args, "updateId", "kbId", "title")
 	args["__id"] = llx.StringData("windows.update.entry/" + id)
 
 	o, err := CreateResource(w.MqlRuntime, "windows.update.entry", args)
@@ -395,6 +389,22 @@ func (w *mqlWindowsUpdate) newEntry(args map[string]*llx.RawData) (*mqlWindowsUp
 		return nil, err
 	}
 	return o.(*mqlWindowsUpdateEntry), nil
+}
+
+// firstNonEmptyStringArg returns the first non-empty string value among the
+// given keys. It uses a comma-ok assertion so a nil or non-string value never
+// panics.
+func firstNonEmptyStringArg(args map[string]*llx.RawData, keys ...string) string {
+	for _, k := range keys {
+		v, ok := args[k]
+		if !ok || v == nil {
+			continue
+		}
+		if s, ok := v.Value.(string); ok && s != "" {
+			return s
+		}
+	}
+	return ""
 }
 
 func strSliceToAny(in []string) []any {
