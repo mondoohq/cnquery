@@ -529,7 +529,10 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forContainers() (*mqlAzureSub
 		return nil, err
 	}
 	mqlContainers := resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers)
-	rawExtensions := containersPricing.Properties.Extensions
+	var rawExtensions []*security.Extension
+	if containersPricing.Properties != nil {
+		rawExtensions = containersPricing.Properties.Extensions
+	}
 	mqlContainers.rawExtensionsOnce.Do(func() {
 		mqlContainers.rawExtensions = rawExtensions
 	})

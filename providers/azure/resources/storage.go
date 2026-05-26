@@ -214,7 +214,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			if !needsDetail || container.Name == nil {
 				continue
 			}
-			i, name := i, *container.Name
+			name := *container.Name
 			g.Go(func() error {
 				detail, err := client.Get(gctx, resourceID.ResourceGroup, account, name, nil)
 				if err == nil && detail.BlobContainer.ContainerProperties != nil {
