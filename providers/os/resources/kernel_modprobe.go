@@ -14,8 +14,8 @@ import (
 // modprobeRule captures the "module must not load" intent expressed by a
 // modprobe configuration file. It is the union of every directive observed
 // across every config path — i.e. if any file blacklists the module the
-// rule is blacklisted, and if any install rule short-circuits to
-// /bin/true or /bin/false the rule has installBypass set.
+// rule is blacklisted, and if any install rule short-circuits to a no-op
+// binary like /bin/true or /bin/false the rule has installBypass set.
 type modprobeRule struct {
 	blacklisted   bool
 	installBypass bool
@@ -34,13 +34,16 @@ var modprobeSearchPaths = []string{
 
 // installBypassBins are the executable paths whose presence as the command
 // of an `install <mod> ...` line means the load is short-circuited rather
-// than actually invoking modprobe / insmod. Both /bin/true and /bin/false
-// appear in CIS guidance and in the wild — admins use them interchangeably
-// (false is more semantically honest because it reports an error, true is
-// silent).
+// than actually invoking modprobe / insmod. /bin/true and /bin/false appear
+// in CIS guidance and in the wild — admins use them interchangeably (false
+// is more semantically honest because it reports an error, true is silent).
+// The /usr/bin variants are equivalent on modern distros where /bin is a
+// symlink to /usr/bin, and admins write either form.
 var installBypassBins = map[string]bool{
-	"/bin/true":  true,
-	"/bin/false": true,
+	"/bin/true":      true,
+	"/bin/false":     true,
+	"/usr/bin/true":  true,
+	"/usr/bin/false": true,
 }
 
 // parseModprobeConfig parses a single modprobe configuration blob and
@@ -50,9 +53,10 @@ var installBypassBins = map[string]bool{
 //   - `#` introduces a comment to end-of-line.
 //   - `blacklist <name>` marks <name> as blacklisted.
 //   - `install <name> <cmd>...` records installBypass when <cmd> resolves
-//     to /bin/true or /bin/false. A leading `exec` is stripped because
-//     modprobe accepts `install foo exec /bin/false` and treats it the
-//     same as `install foo /bin/false`.
+//     to a no-op binary — /bin/true, /bin/false, or their /usr/bin
+//     equivalents. A leading `exec` is stripped because modprobe accepts
+//     `install foo exec /bin/false` and treats it the same as
+//     `install foo /bin/false`.
 //   - alias, options, softdep, remove and anything else are ignored — they
 //     don't express "must not load" intent.
 //

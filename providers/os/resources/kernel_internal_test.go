@@ -44,8 +44,29 @@ func TestParseModprobeConfig(t *testing.T) {
 			},
 		},
 		{
+			name:    "install short-circuit to /usr/bin/true",
+			content: "install usb-storage /usr/bin/true\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
+			name:    "install short-circuit to /usr/bin/false",
+			content: "install usb-storage /usr/bin/false\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
 			name:    "install via exec wrapper to /bin/false",
 			content: "install usb-storage exec /bin/false\n",
+			want: map[string]modprobeRule{
+				"usb-storage": {installBypass: true},
+			},
+		},
+		{
+			name:    "install via exec wrapper to /usr/bin/false",
+			content: "install usb-storage exec /usr/bin/false\n",
 			want: map[string]modprobeRule{
 				"usb-storage": {installBypass: true},
 			},
