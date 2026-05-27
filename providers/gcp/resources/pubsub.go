@@ -520,16 +520,22 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		return nil, err
 	}
 
-	var pushEndpoint string
+	var pushEndpoint, oidcServiceAccountEmail, oidcAudience string
 	var pushAttributes map[string]string
 	if cfg.PushConfig != nil {
 		pushEndpoint = cfg.PushConfig.PushEndpoint
 		pushAttributes = cfg.PushConfig.Attributes
+		if oidc := cfg.PushConfig.GetOidcToken(); oidc != nil {
+			oidcServiceAccountEmail = oidc.ServiceAccountEmail
+			oidcAudience = oidc.Audience
+		}
 	}
 	pushConfig, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config.pushconfig", map[string]*llx.RawData{
-		"configId":   llx.StringData(pubsubConfigId(projectId, name)),
-		"endpoint":   llx.StringData(pushEndpoint),
-		"attributes": llx.MapData(convert.MapToInterfaceMap(pushAttributes), types.String),
+		"configId":                     llx.StringData(pubsubConfigId(projectId, name)),
+		"endpoint":                     llx.StringData(pushEndpoint),
+		"attributes":                   llx.MapData(convert.MapToInterfaceMap(pushAttributes), types.String),
+		"oidcTokenServiceAccountEmail": llx.StringData(oidcServiceAccountEmail),
+		"oidcTokenAudience":            llx.StringData(oidcAudience),
 	})
 	if err != nil {
 		return nil, err

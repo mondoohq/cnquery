@@ -4495,6 +4495,10 @@ private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attr
   endpoint string
   // Endpoint configuration attributes
   attributes map[string]string
+  // Service account email used to generate the OIDC token for authenticated push
+  oidcTokenServiceAccountEmail string
+  // Audience used when generating the OIDC token for authenticated push
+  oidcTokenAudience string
 }
 
 // Google Cloud (GCP) Pub/Sub snapshot

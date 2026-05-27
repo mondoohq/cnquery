@@ -3779,6 +3779,8 @@ gcp.project.pubsubService.subscription.config.pushconfig 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.attributes 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.configId 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.endpoint 9.0.0
+gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenAudience 13.18.1
+gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenServiceAccountEmail 13.18.1
 gcp.project.pubsubService.subscription.config.retainAckedMessages 9.0.0
 gcp.project.pubsubService.subscription.config.retentionDuration 9.0.0
 gcp.project.pubsubService.subscription.config.retryPolicy 13.7.2

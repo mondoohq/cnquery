@@ -6728,6 +6728,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.subscription.config.pushconfig.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetAttributes()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetOidcTokenServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenAudience": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetOidcTokenAudience()).ToDataRes(types.String)
+	},
 	"gcp.project.pubsubService.snapshot.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSnapshot).GetProjectId()).ToDataRes(types.String)
 	},
@@ -21781,6 +21787,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).Attributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).OidcTokenServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenAudience": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).OidcTokenAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49929,9 +49943,11 @@ type mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectPubsubServiceSubscriptionConfigPushconfigInternal it will be used here
-	ConfigId   plugin.TValue[string]
-	Endpoint   plugin.TValue[string]
-	Attributes plugin.TValue[map[string]any]
+	ConfigId                     plugin.TValue[string]
+	Endpoint                     plugin.TValue[string]
+	Attributes                   plugin.TValue[map[string]any]
+	OidcTokenServiceAccountEmail plugin.TValue[string]
+	OidcTokenAudience            plugin.TValue[string]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfigPushconfig creates a new instance of this resource
@@ -49981,6 +49997,14 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetEndpoint() *
 
 func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetAttributes() *plugin.TValue[map[string]any] {
 	return &c.Attributes
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetOidcTokenServiceAccountEmail() *plugin.TValue[string] {
+	return &c.OidcTokenServiceAccountEmail
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetOidcTokenAudience() *plugin.TValue[string] {
+	return &c.OidcTokenAudience
 }
 
 // mqlGcpProjectPubsubServiceSnapshot for the gcp.project.pubsubService.snapshot resource
