@@ -653,6 +653,19 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		return nil, err
 	}
 
+	stackTypeSet := map[string]struct{}{}
+	networkStackTypes := []any{}
+	for _, ni := range instance.NetworkInterfaces {
+		if ni == nil || ni.StackType == "" {
+			continue
+		}
+		if _, ok := stackTypeSet[ni.StackType]; ok {
+			continue
+		}
+		stackTypeSet[ni.StackType] = struct{}{}
+		networkStackTypes = append(networkStackTypes, ni.StackType)
+	}
+
 	var mqlWorkloadIdentityConfig map[string]any
 	if instance.WorkloadIdentityConfig != nil {
 		mqlWorkloadIdentityConfig, err = convert.JsonToDict(instance.WorkloadIdentityConfig)
@@ -756,6 +769,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"metadata":                        llx.MapData(convert.MapToInterfaceMap(metadata), types.String),
 		"minCpuPlatform":                  llx.StringData(instance.MinCpuPlatform),
 		"networkInterfaces":               llx.ArrayData(networkInterfaces, types.Dict),
+		"networkStackTypes":               llx.ArrayData(networkStackTypes, types.String),
 		"privateIpv6GoogleAccess":         llx.StringData(instance.PrivateIpv6GoogleAccess),
 		"reservationAffinity":             llx.DictData(reservationAffinity),
 		"resourcePolicies":                llx.ArrayData(convert.SliceAnyToInterface(instance.ResourcePolicies), types.String),
@@ -1254,6 +1268,10 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			var firewallLogConfigMetadata string
+			if firewall.LogConfig != nil {
+				firewallLogConfigMetadata = firewall.LogConfig.Metadata
+			}
 
 			mqlFirewall, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewall", map[string]*llx.RawData{
 				"id":                    llx.StringData(strconv.FormatUint(firewall.Id, 10)),
@@ -1274,6 +1292,7 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 				"targetTags":            llx.ArrayData(convert.SliceAnyToInterface(firewall.TargetTags), types.String),
 				"loggingEnabled":        llx.BoolData(firewall.LogConfig != nil && firewall.LogConfig.Enable),
 				"logConfig":             llx.DictData(firewallLogConfigDict),
+				"logConfigMetadata":     llx.StringData(firewallLogConfigMetadata),
 			})
 			if err != nil {
 				return err
@@ -2513,11 +2532,15 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 				}
 
 				var mqlSecuritySettings any
+				var securitySettingsClientTlsPolicy string
+				var securitySettingsSubjectAltNames []string
 				if b.SecuritySettings != nil {
 					mqlSecuritySettings = map[string]any{
 						"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
 						"subjectAltNames": convert.SliceAnyToInterface(b.SecuritySettings.SubjectAltNames),
 					}
+					securitySettingsClientTlsPolicy = b.SecuritySettings.ClientTlsPolicy
+					securitySettingsSubjectAltNames = b.SecuritySettings.SubjectAltNames
 				}
 
 				var maxStreamDuration *time.Time
@@ -2527,43 +2550,45 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 				}
 
 				mqlB, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService", map[string]*llx.RawData{
-					"id":                       llx.StringData(backendServiceId),
-					"affinityCookieTtlSec":     llx.IntData(b.AffinityCookieTtlSec),
-					"backends":                 llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
-					"cdnPolicy":                llx.ResourceData(cdnPolicy, " gcp.project.computeService.backendService.cdnPolicy"),
-					"circuitBreakers":          llx.DictData(mqlCircuitBreakers),
-					"compressionMode":          llx.StringData(b.CompressionMode),
-					"connectionDraining":       llx.DictData(mqlConnectionDraining),
-					"connectionTrackingPolicy": llx.DictData(mqlConnectionTrackingPolicy),
-					"consistentHash":           llx.DictData(mqlConsistentHash),
-					"created":                  llx.TimeDataPtr(parseTime(b.CreationTimestamp)),
-					"customRequestHeaders":     llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
-					"customResponseHeaders":    llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
-					"description":              llx.StringData(b.Description),
-					"edgeSecurityPolicy":       llx.StringData(b.EdgeSecurityPolicy),
-					"enableCDN":                llx.BoolData(b.EnableCDN),
-					"failoverPolicy":           llx.DictData(mqlFailoverPolicy),
-					"healthChecks":             llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
-					"iap":                      llx.DictData(mqlIap),
-					"loadBalancingScheme":      llx.StringData(b.LoadBalancingScheme),
-					"localityLbPolicies":       llx.ArrayData(mqlLocalityLbPolicy, types.Dict),
-					"localityLbPolicy":         llx.StringData(b.LocalityLbPolicy),
-					"logConfig":                llx.DictData(mqlLogConfig),
-					"maxStreamDuration":        llx.TimeDataPtr(maxStreamDuration),
-					"name":                     llx.StringData(b.Name),
-					"networkUrl":               llx.StringData(b.Network),
-					"portName":                 llx.StringData(b.PortName),
-					"protocol":                 llx.StringData(b.Protocol),
-					"regionUrl":                llx.StringData(b.Region),
-					"securityPolicyUrl":        llx.StringData(b.SecurityPolicy),
-					"securitySettings":         llx.DictData(mqlSecuritySettings),
-					"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
-					"sessionAffinity":          llx.StringData(b.SessionAffinity),
-					"timeoutSec":               llx.IntData(b.TimeoutSec),
-					"port":                     llx.IntData(b.Port),
-					"serviceLbPolicy":          llx.StringData(b.ServiceLbPolicy),
-					"ipAddressSelectionPolicy": llx.StringData(b.IpAddressSelectionPolicy),
-					"fingerprint":              llx.StringData(b.Fingerprint),
+					"id":                              llx.StringData(backendServiceId),
+					"affinityCookieTtlSec":            llx.IntData(b.AffinityCookieTtlSec),
+					"backends":                        llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
+					"cdnPolicy":                       llx.ResourceData(cdnPolicy, " gcp.project.computeService.backendService.cdnPolicy"),
+					"circuitBreakers":                 llx.DictData(mqlCircuitBreakers),
+					"compressionMode":                 llx.StringData(b.CompressionMode),
+					"connectionDraining":              llx.DictData(mqlConnectionDraining),
+					"connectionTrackingPolicy":        llx.DictData(mqlConnectionTrackingPolicy),
+					"consistentHash":                  llx.DictData(mqlConsistentHash),
+					"created":                         llx.TimeDataPtr(parseTime(b.CreationTimestamp)),
+					"customRequestHeaders":            llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
+					"customResponseHeaders":           llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
+					"description":                     llx.StringData(b.Description),
+					"edgeSecurityPolicy":              llx.StringData(b.EdgeSecurityPolicy),
+					"enableCDN":                       llx.BoolData(b.EnableCDN),
+					"failoverPolicy":                  llx.DictData(mqlFailoverPolicy),
+					"healthChecks":                    llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
+					"iap":                             llx.DictData(mqlIap),
+					"loadBalancingScheme":             llx.StringData(b.LoadBalancingScheme),
+					"localityLbPolicies":              llx.ArrayData(mqlLocalityLbPolicy, types.Dict),
+					"localityLbPolicy":                llx.StringData(b.LocalityLbPolicy),
+					"logConfig":                       llx.DictData(mqlLogConfig),
+					"maxStreamDuration":               llx.TimeDataPtr(maxStreamDuration),
+					"name":                            llx.StringData(b.Name),
+					"networkUrl":                      llx.StringData(b.Network),
+					"portName":                        llx.StringData(b.PortName),
+					"protocol":                        llx.StringData(b.Protocol),
+					"regionUrl":                       llx.StringData(b.Region),
+					"securityPolicyUrl":               llx.StringData(b.SecurityPolicy),
+					"securitySettings":                llx.DictData(mqlSecuritySettings),
+					"securitySettingsClientTlsPolicy": llx.StringData(securitySettingsClientTlsPolicy),
+					"securitySettingsSubjectAltNames": llx.ArrayData(convert.SliceAnyToInterface(securitySettingsSubjectAltNames), types.String),
+					"serviceBindingUrls":              llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
+					"sessionAffinity":                 llx.StringData(b.SessionAffinity),
+					"timeoutSec":                      llx.IntData(b.TimeoutSec),
+					"port":                            llx.IntData(b.Port),
+					"serviceLbPolicy":                 llx.StringData(b.ServiceLbPolicy),
+					"ipAddressSelectionPolicy":        llx.StringData(b.IpAddressSelectionPolicy),
+					"fingerprint":                     llx.StringData(b.Fingerprint),
 				})
 				if err != nil {
 					return err

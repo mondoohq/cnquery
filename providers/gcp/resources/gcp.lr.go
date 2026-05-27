@@ -3557,6 +3557,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.instance.networkStackTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetNetworkStackTypes()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasPublicIp()).ToDataRes(types.Bool)
 	},
@@ -4070,6 +4073,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewall.logConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetLogConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.computeService.firewall.logConfigMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewall).GetLogConfigMetadata()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.firewall.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
@@ -4372,6 +4378,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.backendService.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetSecuritySettings()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.backendService.securitySettingsClientTlsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceBackendService).GetSecuritySettingsClientTlsPolicy()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.backendService.securitySettingsSubjectAltNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceBackendService).GetSecuritySettingsSubjectAltNames()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.computeService.backendService.serviceBindingUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetServiceBindingUrls()).ToDataRes(types.Array(types.String))
@@ -16988,6 +17000,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.networkStackTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).NetworkStackTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -17712,6 +17728,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceFirewall).LogConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.firewall.logConfigMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewall).LogConfigMetadata, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.firewall.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewall).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
@@ -18134,6 +18154,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.backendService.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendService).SecuritySettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.backendService.securitySettingsClientTlsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceBackendService).SecuritySettingsClientTlsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.backendService.securitySettingsSubjectAltNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceBackendService).SecuritySettingsSubjectAltNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.backendService.serviceBindingUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39210,6 +39238,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	Metadata                        plugin.TValue[map[string]any]
 	MinCpuPlatform                  plugin.TValue[string]
 	NetworkInterfaces               plugin.TValue[[]any]
+	NetworkStackTypes               plugin.TValue[[]any]
 	HasPublicIp                     plugin.TValue[bool]
 	UsesDefaultServiceAccount       plugin.TValue[bool]
 	HasFullCloudPlatformScope       plugin.TValue[bool]
@@ -39369,6 +39398,10 @@ func (c *mqlGcpProjectComputeServiceInstance) GetMinCpuPlatform() *plugin.TValue
 
 func (c *mqlGcpProjectComputeServiceInstance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 	return &c.NetworkInterfaces
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetNetworkStackTypes() *plugin.TValue[[]any] {
+	return &c.NetworkStackTypes
 }
 
 func (c *mqlGcpProjectComputeServiceInstance) GetHasPublicIp() *plugin.TValue[bool] {
@@ -40712,6 +40745,7 @@ type mqlGcpProjectComputeServiceFirewall struct {
 	TargetTags            plugin.TValue[[]any]
 	LoggingEnabled        plugin.TValue[bool]
 	LogConfig             plugin.TValue[any]
+	LogConfigMetadata     plugin.TValue[string]
 	Network               plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 }
 
@@ -40840,6 +40874,10 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetLoggingEnabled() *plugin.TValue
 
 func (c *mqlGcpProjectComputeServiceFirewall) GetLogConfig() *plugin.TValue[any] {
 	return &c.LogConfig
+}
+
+func (c *mqlGcpProjectComputeServiceFirewall) GetLogConfigMetadata() *plugin.TValue[string] {
+	return &c.LogConfigMetadata
 }
 
 func (c *mqlGcpProjectComputeServiceFirewall) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
@@ -41426,48 +41464,50 @@ type mqlGcpProjectComputeServiceBackendService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceBackendServiceInternal it will be used here
-	Id                       plugin.TValue[string]
-	AffinityCookieTtlSec     plugin.TValue[int64]
-	Backends                 plugin.TValue[[]any]
-	CdnPolicy                plugin.TValue[*mqlGcpProjectComputeServiceBackendServiceCdnPolicy]
-	CircuitBreakers          plugin.TValue[any]
-	CompressionMode          plugin.TValue[string]
-	ConnectionDraining       plugin.TValue[any]
-	ConnectionTrackingPolicy plugin.TValue[any]
-	ConsistentHash           plugin.TValue[any]
-	Created                  plugin.TValue[*time.Time]
-	CustomRequestHeaders     plugin.TValue[[]any]
-	CustomResponseHeaders    plugin.TValue[[]any]
-	Description              plugin.TValue[string]
-	EdgeSecurityPolicy       plugin.TValue[string]
-	EnableCDN                plugin.TValue[bool]
-	FailoverPolicy           plugin.TValue[any]
-	HealthChecks             plugin.TValue[[]any]
-	Iap                      plugin.TValue[any]
-	LoadBalancingScheme      plugin.TValue[string]
-	LocalityLbPolicies       plugin.TValue[[]any]
-	LocalityLbPolicy         plugin.TValue[string]
-	LogConfig                plugin.TValue[any]
-	MaxStreamDuration        plugin.TValue[*time.Time]
-	Name                     plugin.TValue[string]
-	NetworkUrl               plugin.TValue[string]
-	Network                  plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	PortName                 plugin.TValue[string]
-	Protocol                 plugin.TValue[string]
-	RegionUrl                plugin.TValue[string]
-	Region                   plugin.TValue[*mqlGcpProjectComputeServiceRegion]
-	SecurityPolicyUrl        plugin.TValue[string]
-	SecurityPolicy           plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicy]
-	CloudArmorEnabled        plugin.TValue[bool]
-	IapEnabled               plugin.TValue[bool]
-	SecuritySettings         plugin.TValue[any]
-	ServiceBindingUrls       plugin.TValue[[]any]
-	SessionAffinity          plugin.TValue[string]
-	TimeoutSec               plugin.TValue[int64]
-	Port                     plugin.TValue[int64]
-	ServiceLbPolicy          plugin.TValue[string]
-	IpAddressSelectionPolicy plugin.TValue[string]
-	Fingerprint              plugin.TValue[string]
+	Id                              plugin.TValue[string]
+	AffinityCookieTtlSec            plugin.TValue[int64]
+	Backends                        plugin.TValue[[]any]
+	CdnPolicy                       plugin.TValue[*mqlGcpProjectComputeServiceBackendServiceCdnPolicy]
+	CircuitBreakers                 plugin.TValue[any]
+	CompressionMode                 plugin.TValue[string]
+	ConnectionDraining              plugin.TValue[any]
+	ConnectionTrackingPolicy        plugin.TValue[any]
+	ConsistentHash                  plugin.TValue[any]
+	Created                         plugin.TValue[*time.Time]
+	CustomRequestHeaders            plugin.TValue[[]any]
+	CustomResponseHeaders           plugin.TValue[[]any]
+	Description                     plugin.TValue[string]
+	EdgeSecurityPolicy              plugin.TValue[string]
+	EnableCDN                       plugin.TValue[bool]
+	FailoverPolicy                  plugin.TValue[any]
+	HealthChecks                    plugin.TValue[[]any]
+	Iap                             plugin.TValue[any]
+	LoadBalancingScheme             plugin.TValue[string]
+	LocalityLbPolicies              plugin.TValue[[]any]
+	LocalityLbPolicy                plugin.TValue[string]
+	LogConfig                       plugin.TValue[any]
+	MaxStreamDuration               plugin.TValue[*time.Time]
+	Name                            plugin.TValue[string]
+	NetworkUrl                      plugin.TValue[string]
+	Network                         plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	PortName                        plugin.TValue[string]
+	Protocol                        plugin.TValue[string]
+	RegionUrl                       plugin.TValue[string]
+	Region                          plugin.TValue[*mqlGcpProjectComputeServiceRegion]
+	SecurityPolicyUrl               plugin.TValue[string]
+	SecurityPolicy                  plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicy]
+	CloudArmorEnabled               plugin.TValue[bool]
+	IapEnabled                      plugin.TValue[bool]
+	SecuritySettings                plugin.TValue[any]
+	SecuritySettingsClientTlsPolicy plugin.TValue[string]
+	SecuritySettingsSubjectAltNames plugin.TValue[[]any]
+	ServiceBindingUrls              plugin.TValue[[]any]
+	SessionAffinity                 plugin.TValue[string]
+	TimeoutSec                      plugin.TValue[int64]
+	Port                            plugin.TValue[int64]
+	ServiceLbPolicy                 plugin.TValue[string]
+	IpAddressSelectionPolicy        plugin.TValue[string]
+	Fingerprint                     plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceBackendService creates a new instance of this resource
@@ -41685,6 +41725,14 @@ func (c *mqlGcpProjectComputeServiceBackendService) GetIapEnabled() *plugin.TVal
 
 func (c *mqlGcpProjectComputeServiceBackendService) GetSecuritySettings() *plugin.TValue[any] {
 	return &c.SecuritySettings
+}
+
+func (c *mqlGcpProjectComputeServiceBackendService) GetSecuritySettingsClientTlsPolicy() *plugin.TValue[string] {
+	return &c.SecuritySettingsClientTlsPolicy
+}
+
+func (c *mqlGcpProjectComputeServiceBackendService) GetSecuritySettingsSubjectAltNames() *plugin.TValue[[]any] {
+	return &c.SecuritySettingsSubjectAltNames
 }
 
 func (c *mqlGcpProjectComputeServiceBackendService) GetServiceBindingUrls() *plugin.TValue[[]any] {

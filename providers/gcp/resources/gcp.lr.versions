@@ -1390,6 +1390,8 @@ gcp.project.computeService.backendService.regionUrl 9.0.0
 gcp.project.computeService.backendService.securityPolicy 13.6.1
 gcp.project.computeService.backendService.securityPolicyUrl 9.0.0
 gcp.project.computeService.backendService.securitySettings 9.0.0
+gcp.project.computeService.backendService.securitySettingsClientTlsPolicy 13.18.1
+gcp.project.computeService.backendService.securitySettingsSubjectAltNames 13.18.1
 gcp.project.computeService.backendService.serviceBindingUrls 9.0.0
 gcp.project.computeService.backendService.serviceLbPolicy 11.6.6
 gcp.project.computeService.backendService.sessionAffinity 9.0.0
@@ -1456,6 +1458,7 @@ gcp.project.computeService.firewall.direction 9.0.0
 gcp.project.computeService.firewall.disabled 9.0.0
 gcp.project.computeService.firewall.id 9.0.0
 gcp.project.computeService.firewall.logConfig 13.7.2
+gcp.project.computeService.firewall.logConfigMetadata 13.18.1
 gcp.project.computeService.firewall.loggingEnabled 11.6.6
 gcp.project.computeService.firewall.name 9.0.0
 gcp.project.computeService.firewall.network 13.1.2
@@ -1619,6 +1622,7 @@ gcp.project.computeService.instance.metadata 9.0.0
 gcp.project.computeService.instance.minCpuPlatform 9.0.0
 gcp.project.computeService.instance.name 9.0.0
 gcp.project.computeService.instance.networkInterfaces 9.0.0
+gcp.project.computeService.instance.networkStackTypes 13.18.1
 gcp.project.computeService.instance.osInventory 13.15.1
 gcp.project.computeService.instance.osInventory.items 13.15.1
 gcp.project.computeService.instance.osInventory.name 13.15.1

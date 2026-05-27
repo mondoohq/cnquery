@@ -1288,6 +1288,8 @@ gcp.project.computeService.instance @defaults("name id") {
   minCpuPlatform string
   // Network configurations for the instance
   networkInterfaces []dict
+  // Distinct network interface stack types across all interfaces (IPV4_ONLY, IPV4_IPV6)
+  networkStackTypes []string
   // Whether the instance has at least one external IP attached via a network interface accessConfig
   hasPublicIp() bool
   // Whether the instance runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com)
@@ -1778,6 +1780,8 @@ private gcp.project.computeService.firewall @defaults("name") {
   loggingEnabled bool
   // Full firewall log configuration (enable, metadata)
   logConfig dict
+  // Firewall log metadata level (INCLUDE_ALL_METADATA, EXCLUDE_ALL_METADATA)
+  logConfigMetadata string
   // Network resource for this firewall rule
   network() gcp.project.computeService.network
 }
@@ -2056,6 +2060,10 @@ private gcp.project.computeService.backendService @defaults("name") {
   iapEnabled() bool
   // Client TLS policy and subject alternative names for the backend service
   securitySettings dict
+  // URL of the networksecurity ClientTlsPolicy that describes how clients authenticate with the backends
+  securitySettingsClientTlsPolicy string
+  // Subject Alternative Names the client verifies during a mutual TLS handshake with the backends
+  securitySettingsSubjectAltNames []string
   // Service binding URLs
   serviceBindingUrls []string
   // Session affinity type
