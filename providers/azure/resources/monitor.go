@@ -416,6 +416,11 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 		return nil, err
 	}
 
+	// id is an ARM resource URI (e.g. "/subscriptions/<id>" or a full resource ID
+	// returned by Azure). It is a multi-segment path, so it is joined raw rather than
+	// URL-escaped — escaping would turn the "/" separators into %2F. This matches the
+	// removed armmonitor DiagnosticSettingsClient, which substituted {resourceUri}
+	// without escaping for the same reason.
 	urlPath := azruntime.JoinPaths(client.Endpoint(), id, "/providers/Microsoft.Insights/diagnosticSettings")
 	req, err := azruntime.NewRequest(ctx, http.MethodGet, urlPath)
 	if err != nil {
@@ -447,6 +452,9 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 			properties = map[string]any{}
 		}
 
+		// "storageAccountId" is the camelCase key defined by the diagnosticSettings
+		// API contract (it was the json tag on the SDK's DiagnosticSettings.StorageAccountID
+		// field). Azure returns response keys with stable casing, so a direct lookup is safe.
 		var storageAccountId *string
 		if v, ok := properties["storageAccountId"].(string); ok {
 			storageAccountId = &v
