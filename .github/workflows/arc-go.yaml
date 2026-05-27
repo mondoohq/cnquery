@@ -2,6 +2,11 @@ name: ARC Go Test
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - gary/test-arc-runner
+    paths:
+      - ".github/workflows/arc-go.yaml"
 
 jobs:
   go-test:
