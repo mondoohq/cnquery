@@ -33,3 +33,40 @@ func iamPolicyHasPublicMember(bindings []any) (bool, error) {
 	}
 	return false, nil
 }
+
+func (b *mqlGcpResourcemanagerBinding) hasExternalMembers() (bool, error) {
+	if b.Members.Error != nil {
+		return false, b.Members.Error
+	}
+	for _, m := range b.Members.Data {
+		if s, ok := m.(string); ok && isPublicMember(s) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (b *mqlGcpResourcemanagerBinding) isPrimitiveRole() (bool, error) {
+	if b.Role.Error != nil {
+		return false, b.Role.Error
+	}
+	switch b.Role.Data {
+	case "roles/owner", "roles/editor", "roles/viewer":
+		return true, nil
+	}
+	return false, nil
+}
+
+func (b *mqlGcpResourcemanagerBinding) grantsImpersonation() (bool, error) {
+	if b.Role.Error != nil {
+		return false, b.Role.Error
+	}
+	switch b.Role.Data {
+	case "roles/iam.serviceAccountTokenCreator",
+		"roles/iam.serviceAccountUser",
+		"roles/iam.workloadIdentityUser",
+		"roles/iam.serviceAccountKeyAdmin":
+		return true, nil
+	}
+	return false, nil
+}

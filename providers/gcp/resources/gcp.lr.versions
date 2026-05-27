@@ -182,6 +182,8 @@ gcp.organization.projects 9.0.0
 gcp.organization.role 13.16.3
 gcp.organization.role.deleted 13.16.3
 gcp.organization.role.description 13.16.3
+gcp.organization.role.grantsIamPolicyManagement 13.18.1
+gcp.organization.role.grantsServiceAccountImpersonation 13.18.1
 gcp.organization.role.includedPermissions 13.16.3
 gcp.organization.role.name 13.16.3
 gcp.organization.role.organizationId 13.16.3
@@ -3126,6 +3128,8 @@ gcp.project.iamService.projectId 9.0.0
 gcp.project.iamService.role 11.6.6
 gcp.project.iamService.role.deleted 11.6.6
 gcp.project.iamService.role.description 11.6.6
+gcp.project.iamService.role.grantsIamPolicyManagement 13.18.1
+gcp.project.iamService.role.grantsServiceAccountImpersonation 13.18.1
 gcp.project.iamService.role.includedPermissions 11.6.6
 gcp.project.iamService.role.name 11.6.6
 gcp.project.iamService.role.projectId 11.6.6
@@ -3313,6 +3317,13 @@ gcp.project.kmsService.retiredResource.originalResource 13.6.1
 gcp.project.kmsService.retiredResource.resourceType 13.6.1
 gcp.project.kmsService.retiredResources 13.6.1
 gcp.project.labels 9.0.0
+gcp.project.lien 13.18.1
+gcp.project.lien.createTime 13.18.1
+gcp.project.lien.name 13.18.1
+gcp.project.lien.origin 13.18.1
+gcp.project.lien.reason 13.18.1
+gcp.project.lien.restrictions 13.18.1
+gcp.project.liens 13.18.1
 gcp.project.logging 9.0.0
 gcp.project.loggingservice 9.0.0
 gcp.project.loggingservice.bucket 9.0.0
@@ -4361,6 +4372,12 @@ gcp.project.storageService.bucket.versioningEnabled 11.6.6
 gcp.project.storageService.bucket.website 13.16.3
 gcp.project.storageService.buckets 9.0.0
 gcp.project.storageService.projectId 9.0.0
+gcp.project.tagBinding 13.18.1
+gcp.project.tagBinding.name 13.18.1
+gcp.project.tagBinding.resource 13.18.1
+gcp.project.tagBinding.tagValue 13.18.1
+gcp.project.tagBinding.tagValueNamespacedName 13.18.1
+gcp.project.tagBindings 13.18.1
 gcp.project.vertexai 13.1.2
 gcp.project.vertexaiService 13.1.2
 gcp.project.vertexaiService.customJob 13.6.1
@@ -4594,7 +4611,10 @@ gcp.resourcemanager.binding 9.0.0
 gcp.resourcemanager.binding.conditionDescription 13.18.1
 gcp.resourcemanager.binding.conditionExpression 13.18.1
 gcp.resourcemanager.binding.conditionTitle 13.18.1
+gcp.resourcemanager.binding.grantsImpersonation 13.18.1
+gcp.resourcemanager.binding.hasExternalMembers 13.18.1
 gcp.resourcemanager.binding.id 9.0.0
+gcp.resourcemanager.binding.isPrimitiveRole 13.18.1
 gcp.resourcemanager.binding.members 9.0.0
 gcp.resourcemanager.binding.role 9.0.0
 gcp.retryConfig 11.6.6

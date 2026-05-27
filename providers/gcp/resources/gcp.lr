@@ -124,6 +124,15 @@ private gcp.organization.role @defaults("title name") {
   includedPermissions []string
   // Whether the role has been deleted
   deleted bool
+  // Whether the role grants any IAM policy management permission (any permission ending in .setIamPolicy)
+  grantsIamPolicyManagement() bool
+  // Whether the role grants service-account impersonation
+  //
+  // True when any included permission is iam.serviceAccounts.actAs,
+  // getAccessToken, signBlob, signJwt, getOpenIdToken, or
+  // implicitDelegation — the permissions that enable acting as a service
+  // account and escalating privilege.
+  grantsServiceAccountImpersonation() bool
 }
 
 // Network Security profile for an organization
@@ -832,6 +841,51 @@ gcp.project @defaults("name number") {
   workflows() gcp.project.workflowsService
   // GCP Cloud Domains resources
   cloudDomains() gcp.project.cloudDomainsService
+  // Resource Manager liens that block deletion or other operations on the project
+  liens() []gcp.project.lien
+  // Resource Manager tag bindings attached to the project
+  tagBindings() []gcp.project.tagBinding
+}
+
+// Google Cloud (GCP) Resource Manager lien
+//
+// Examine the encumbrances that block destructive operations on a project.
+// A lien names the operations it blocks through `restrictions` (e.g.
+// `resourcemanager.projects.delete`), the system that created it via
+// `origin`, and a human-readable `reason`. Liens are deletion-protection
+// controls — a project with a `resourcemanager.projects.delete` lien cannot
+// be deleted until the lien is removed. Liens are selected by their
+// system-generated `name` (e.g. `liens/1234abcd`).
+private gcp.project.lien @defaults("name reason") {
+  // System-generated unique identifier for this lien (e.g. liens/1234abcd)
+  name string
+  // Stable, user-visible string identifying the system that created the lien (e.g. compute.googleapis.com)
+  origin string
+  // Concise user-visible string explaining why an action is blocked
+  reason string
+  // IAM permissions whose corresponding operations this lien blocks (e.g. resourcemanager.projects.delete)
+  restrictions []string
+  // Time the lien was created
+  createTime time
+}
+
+// Google Cloud (GCP) Resource Manager tag binding
+//
+// Examine the connection between a tag value and the project. A tag binding
+// applies a `tagValue` to the bound resource and all of its descendants, and
+// tags drive conditional IAM and organization-policy enforcement. The
+// `tagValueNamespacedName` gives the human-readable key/value path and
+// `resource` identifies the bound resource. Tag bindings are selected by
+// their `name`.
+private gcp.project.tagBinding @defaults("tagValueNamespacedName resource") {
+  // Name of the tag binding
+  name string
+  // Permanent ID of the bound tag value (e.g. tagValues/456)
+  tagValue string
+  // Namespaced name of the bound tag value (e.g. 123/environment/production)
+  tagValueNamespacedName string
+  // Full resource name the tag value is bound to (e.g. //cloudresourcemanager.googleapis.com/projects/123)
+  resource string
 }
 
 // Google Cloud service API
@@ -909,6 +963,17 @@ private gcp.resourcemanager.binding {
   conditionExpression string
   // Description of the IAM condition that scopes this binding
   conditionDescription string
+  // Whether any member is allUsers or allAuthenticatedUsers, exposing the binding to the public
+  hasExternalMembers() bool
+  // Whether the bound role is a primitive role (roles/owner, roles/editor, or roles/viewer)
+  isPrimitiveRole() bool
+  // Whether the bound role grants service-account impersonation
+  //
+  // True when the role is one of roles/iam.serviceAccountTokenCreator,
+  // roles/iam.serviceAccountUser, roles/iam.workloadIdentityUser, or
+  // roles/iam.serviceAccountKeyAdmin — the roles that surface
+  // impersonation and privilege-escalation paths.
+  grantsImpersonation() bool
 }
 
 // Google Cloud (GCP) Compute Engine
@@ -4975,6 +5040,15 @@ private gcp.project.iamService.role @defaults("title name") {
   includedPermissions []string
   // Whether the role has been deleted
   deleted bool
+  // Whether the role grants any IAM policy management permission (any permission ending in .setIamPolicy)
+  grantsIamPolicyManagement() bool
+  // Whether the role grants service-account impersonation
+  //
+  // True when any included permission is iam.serviceAccounts.actAs,
+  // getAccessToken, signBlob, signJwt, getOpenIdToken, or
+  // implicitDelegation — the permissions that enable acting as a service
+  // account and escalating privilege.
+  grantsServiceAccountImpersonation() bool
 }
 
 // Google Cloud (GCP) IAM service account

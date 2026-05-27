@@ -319,6 +319,103 @@ func (g *mqlGcpProject) commonInstanceMetadata() (map[string]any, error) {
 	return convert.MapToInterfaceMap(metadata), nil
 }
 
+func (g *mqlGcpProject) liens() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	err = svc.Liens.List().Parent(fmt.Sprintf("projects/%s", projectId)).Pages(ctx, func(page *cloudresourcemanager.ListLiensResponse) error {
+		for _, l := range page.Liens {
+			mqlLien, err := CreateResource(g.MqlRuntime, "gcp.project.lien", map[string]*llx.RawData{
+				"name":         llx.StringData(l.Name),
+				"origin":       llx.StringData(l.Origin),
+				"reason":       llx.StringData(l.Reason),
+				"restrictions": llx.ArrayData(convert.SliceAnyToInterface(l.Restrictions), types.String),
+				"createTime":   llx.TimeDataPtr(parseTime(l.CreateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlLien)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectLien) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProject) tagBindings() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	// TagBindings.List requires the project number in the full resource name.
+	p, err := svc.Projects.Get(fmt.Sprintf("projects/%s", projectId)).Do()
+	if err != nil {
+		return nil, err
+	}
+	projectNumber := strings.TrimPrefix(p.Name, "projects/")
+	parent := fmt.Sprintf("//cloudresourcemanager.googleapis.com/projects/%s", projectNumber)
+
+	var res []any
+	err = svc.TagBindings.List().Parent(parent).Pages(ctx, func(page *cloudresourcemanager.ListTagBindingsResponse) error {
+		for _, tb := range page.TagBindings {
+			mqlTb, err := CreateResource(g.MqlRuntime, "gcp.project.tagBinding", map[string]*llx.RawData{
+				"name":                   llx.StringData(tb.Name),
+				"tagValue":               llx.StringData(tb.TagValue),
+				"tagValueNamespacedName": llx.StringData(tb.TagValueNamespacedName),
+				"resource":               llx.StringData(tb.Parent),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlTb)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectTagBinding) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
 func (g *mqlGcpProjects) children() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error

@@ -10,6 +10,7 @@ import (
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
@@ -79,6 +80,59 @@ func (g *mqlGcpProjectIamServiceRole) id() (string, error) {
 
 func (g *mqlGcpOrganizationRole) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+// serviceAccountImpersonationPermissions are the IAM permissions that let a
+// principal act as a service account and thereby escalate privilege.
+var serviceAccountImpersonationPermissions = map[string]struct{}{
+	"iam.serviceAccounts.actAs":              {},
+	"iam.serviceAccounts.getAccessToken":     {},
+	"iam.serviceAccounts.signBlob":           {},
+	"iam.serviceAccounts.signJwt":            {},
+	"iam.serviceAccounts.getOpenIdToken":     {},
+	"iam.serviceAccounts.implicitDelegation": {},
+}
+
+func roleGrantsIamPolicyManagement(perms *plugin.TValue[[]any]) (bool, error) {
+	if perms.Error != nil {
+		return false, perms.Error
+	}
+	for _, p := range perms.Data {
+		if s, ok := p.(string); ok && strings.HasSuffix(s, ".setIamPolicy") {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func roleGrantsServiceAccountImpersonation(perms *plugin.TValue[[]any]) (bool, error) {
+	if perms.Error != nil {
+		return false, perms.Error
+	}
+	for _, p := range perms.Data {
+		if s, ok := p.(string); ok {
+			if _, found := serviceAccountImpersonationPermissions[s]; found {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectIamServiceRole) grantsIamPolicyManagement() (bool, error) {
+	return roleGrantsIamPolicyManagement(&g.IncludedPermissions)
+}
+
+func (g *mqlGcpProjectIamServiceRole) grantsServiceAccountImpersonation() (bool, error) {
+	return roleGrantsServiceAccountImpersonation(&g.IncludedPermissions)
+}
+
+func (g *mqlGcpOrganizationRole) grantsIamPolicyManagement() (bool, error) {
+	return roleGrantsIamPolicyManagement(&g.IncludedPermissions)
+}
+
+func (g *mqlGcpOrganizationRole) grantsServiceAccountImpersonation() (bool, error) {
+	return roleGrantsServiceAccountImpersonation(&g.IncludedPermissions)
 }
 
 func (g *mqlGcpOrganization) customRoles() ([]any, error) {
