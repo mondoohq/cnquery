@@ -724,4 +724,7 @@ var (
 	_ plugin.Resource = (*mqlBicepFunction)(nil)
 	_ plugin.Resource = (*mqlBicepImport)(nil)
 	_ plugin.Resource = (*mqlBicepParamFile)(nil)
+	_ plugin.Resource = (*mqlBicepTemplateParameter)(nil)
+	_ plugin.Resource = (*mqlBicepTemplateVariable)(nil)
+	_ plugin.Resource = (*mqlBicepTemplateOutput)(nil)
 )

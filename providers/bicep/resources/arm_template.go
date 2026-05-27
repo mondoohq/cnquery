@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	"sort"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -84,33 +85,148 @@ func (t *mqlBicepTemplate) contentVersion() (string, error) {
 	return tmpl.ContentVersion, nil
 }
 
-// parameters/variables/outputs return an empty map (not nil) when the
-// ARM template is unavailable. Returning nil here used to surface as
-// `null` in MQL, which forced every audit to defensively check for
-// missing-vs-empty; the connection layer already distinguishes "no ARM
-// template at all" by returning a nil bicep.template resource.
-func (t *mqlBicepTemplate) parameters() (map[string]any, error) {
+// parameters/variables/outputs return an empty slice (not nil) when the
+// ARM template is unavailable. The connection layer already distinguishes
+// "no ARM template at all" by returning a nil bicep.template resource, so
+// an empty list here means "template present, none declared". Entries are
+// emitted in a stable, name-sorted order so output and tests are
+// deterministic.
+func (t *mqlBicepTemplate) parameters() ([]any, error) {
 	tmpl := t.getARMTemplate()
 	if tmpl == nil {
-		return map[string]any{}, nil
+		return []any{}, nil
 	}
-	return rawMessageMapToDict(tmpl.Parameters)
+	mqlParams := make([]any, 0, len(tmpl.Parameters))
+	for _, name := range sortedKeys(tmpl.Parameters) {
+		mqlP, err := t.newMqlBicepTemplateParameter(name, tmpl.Parameters[name])
+		if err != nil {
+			return nil, err
+		}
+		mqlParams = append(mqlParams, mqlP)
+	}
+	return mqlParams, nil
 }
 
-func (t *mqlBicepTemplate) variables() (map[string]any, error) {
+func (t *mqlBicepTemplate) variables() ([]any, error) {
 	tmpl := t.getARMTemplate()
 	if tmpl == nil {
-		return map[string]any{}, nil
+		return []any{}, nil
 	}
-	return rawMessageMapToDict(tmpl.Variables)
+	mqlVars := make([]any, 0, len(tmpl.Variables))
+	for _, name := range sortedKeys(tmpl.Variables) {
+		mqlV, err := t.newMqlBicepTemplateVariable(name, tmpl.Variables[name])
+		if err != nil {
+			return nil, err
+		}
+		mqlVars = append(mqlVars, mqlV)
+	}
+	return mqlVars, nil
 }
 
-func (t *mqlBicepTemplate) outputs() (map[string]any, error) {
+func (t *mqlBicepTemplate) outputs() ([]any, error) {
 	tmpl := t.getARMTemplate()
 	if tmpl == nil {
-		return map[string]any{}, nil
+		return []any{}, nil
 	}
-	return rawMessageMapToDict(tmpl.Outputs)
+	mqlOutputs := make([]any, 0, len(tmpl.Outputs))
+	for _, name := range sortedKeys(tmpl.Outputs) {
+		mqlO, err := t.newMqlBicepTemplateOutput(name, tmpl.Outputs[name])
+		if err != nil {
+			return nil, err
+		}
+		mqlOutputs = append(mqlOutputs, mqlO)
+	}
+	return mqlOutputs, nil
+}
+
+// armParameter mirrors the shape of an ARM template parameter declaration.
+type armParameter struct {
+	Type          string            `json:"type"`
+	DefaultValue  json.RawMessage   `json:"defaultValue"`
+	AllowedValues []json.RawMessage `json:"allowedValues"`
+	Metadata      json.RawMessage   `json:"metadata"`
+}
+
+func (t *mqlBicepTemplate) newMqlBicepTemplateParameter(name string, raw json.RawMessage) (*mqlBicepTemplateParameter, error) {
+	var p armParameter
+	if err := json.Unmarshal(raw, &p); err != nil {
+		log.Warn().Err(err).Str("name", name).Msg("failed to unmarshal ARM template parameter")
+	}
+
+	var defaultValue any
+	if len(p.DefaultValue) > 0 {
+		defaultValue = rawMessageToDict(p.DefaultValue)
+	}
+
+	allowedValues := make([]any, 0, len(p.AllowedValues))
+	for _, av := range p.AllowedValues {
+		allowedValues = append(allowedValues, rawMessageToDict(av))
+	}
+
+	var metadata any
+	if len(p.Metadata) > 0 {
+		metadata = rawMessageToDict(p.Metadata)
+	}
+
+	secure := p.Type == "securestring" || p.Type == "secureObject"
+
+	id := t.cachePath + "/parameters/" + name
+	res, err := CreateResource(t.MqlRuntime, "bicep.template.parameter", map[string]*llx.RawData{
+		"__id":          llx.StringData(id),
+		"name":          llx.StringData(name),
+		"type":          llx.StringData(p.Type),
+		"defaultValue":  llx.DictData(defaultValue),
+		"allowedValues": llx.ArrayData(allowedValues, types.Dict),
+		"secure":        llx.BoolData(secure),
+		"metadata":      llx.DictData(metadata),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlBicepTemplateParameter), nil
+}
+
+func (t *mqlBicepTemplate) newMqlBicepTemplateVariable(name string, raw json.RawMessage) (*mqlBicepTemplateVariable, error) {
+	id := t.cachePath + "/variables/" + name
+	res, err := CreateResource(t.MqlRuntime, "bicep.template.variable", map[string]*llx.RawData{
+		"__id":  llx.StringData(id),
+		"name":  llx.StringData(name),
+		"value": llx.DictData(rawMessageToDict(raw)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlBicepTemplateVariable), nil
+}
+
+// armOutput mirrors the shape of an ARM template output declaration.
+type armOutput struct {
+	Type  string          `json:"type"`
+	Value json.RawMessage `json:"value"`
+}
+
+func (t *mqlBicepTemplate) newMqlBicepTemplateOutput(name string, raw json.RawMessage) (*mqlBicepTemplateOutput, error) {
+	var o armOutput
+	if err := json.Unmarshal(raw, &o); err != nil {
+		log.Warn().Err(err).Str("name", name).Msg("failed to unmarshal ARM template output")
+	}
+
+	var value any
+	if len(o.Value) > 0 {
+		value = rawMessageToDict(o.Value)
+	}
+
+	id := t.cachePath + "/outputs/" + name
+	res, err := CreateResource(t.MqlRuntime, "bicep.template.output", map[string]*llx.RawData{
+		"__id":  llx.StringData(id),
+		"name":  llx.StringData(name),
+		"type":  llx.StringData(o.Type),
+		"value": llx.DictData(value),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlBicepTemplateOutput), nil
 }
 
 func (t *mqlBicepTemplate) resources() ([]any, error) {
@@ -176,20 +292,27 @@ func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, i
 	return res.(*mqlBicepTemplateResource), nil
 }
 
-func rawMessageMapToDict(m map[string]json.RawMessage) (map[string]any, error) {
-	result := make(map[string]any, len(m))
-	for k, v := range m {
-		var val any
-		if err := json.Unmarshal(v, &val); err != nil {
-			result[k] = string(v)
-			continue
-		}
-		dict, err := convert.JsonToDict(val)
-		if err != nil {
-			result[k] = val
-			continue
-		}
-		result[k] = dict
+// sortedKeys returns the keys of a raw-message map in ascending order so
+// the materialized parameter/variable/output lists are deterministic.
+func sortedKeys(m map[string]json.RawMessage) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
 	}
-	return result, nil
+	sort.Strings(keys)
+	return keys
+}
+
+// rawMessageToDict unmarshals a single raw ARM JSON value into a dict-safe
+// Go value. Falls back to the raw string when the bytes don't parse as JSON.
+func rawMessageToDict(raw json.RawMessage) any {
+	var val any
+	if err := json.Unmarshal(raw, &val); err != nil {
+		return string(raw)
+	}
+	dict, err := convert.JsonToDict(val)
+	if err != nil {
+		return val
+	}
+	return dict
 }

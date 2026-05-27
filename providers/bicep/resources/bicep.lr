@@ -522,13 +522,68 @@ bicep.template @defaults("schema") {
   // Content version
   contentVersion() string
   // Compiled parameters
-  parameters() map[string]dict
+  parameters() []bicep.template.parameter
   // Compiled variables
-  variables() map[string]dict
+  variables() []bicep.template.variable
   // Compiled Azure resources
   resources() []bicep.template.resource
   // Compiled outputs
-  outputs() map[string]dict
+  outputs() []bicep.template.output
+}
+
+// Parameter in the compiled ARM template
+//
+// Examine a single parameter declaration from the post-`bicep build` ARM
+// JSON: its `type`, the `defaultValue` when one is declared, the
+// `allowedValues` constraint set, whether it is a secure type, and the
+// `metadata` block. Select a parameter by its `name` — for example
+// `bicep.template.parameters.where(name == "adminPassword")` — to flag
+// credential-shaped parameters that aren't declared `securestring`/
+// `secureObject` or that lack an `allowedValues` allow-list.
+bicep.template.parameter @defaults("name type") {
+  // Parameter name
+  name string
+  // ARM parameter type
+  //
+  // One of string, securestring, int, bool, object, secureObject, or array.
+  type string
+  // Default value, when the ARM parameter declares one (any JSON shape); null otherwise
+  defaultValue dict
+  // Allowed values from the ARM `allowedValues` array; empty when unconstrained
+  allowedValues []dict
+  // Whether the ARM type is a secure type (securestring / secureObject)
+  secure bool
+  // The ARM `metadata` block, when present
+  metadata dict
+}
+
+// Variable in the compiled ARM template
+//
+// Examine a single variable declaration from the post-`bicep build` ARM
+// JSON. Select a variable by its `name` — for example
+// `bicep.template.variables.where(name == "storageName")` — and read
+// `value` for its resolved JSON shape.
+bicep.template.variable @defaults("name") {
+  // Variable name
+  name string
+  // Variable value (any JSON shape)
+  value dict
+}
+
+// Output in the compiled ARM template
+//
+// Examine a single output declaration from the post-`bicep build` ARM
+// JSON: its `type` and the `value` expression Azure Resource Manager
+// returns after deployment. Select an output by its `name` — for example
+// `bicep.template.outputs.where(name == "endpoint")` — to spot outputs
+// that surface secrets or resource IDs.
+bicep.template.output @defaults("name type") {
+  // Output name
+  name string
+  // ARM output type
+  type string
+  // Output value expression/value (any JSON shape)
+  value dict
 }
 
 // Resource in the compiled ARM template

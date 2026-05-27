@@ -15,20 +15,23 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceBicep                 string = "bicep"
-	ResourceBicepFile             string = "bicep.file"
-	ResourceBicepParamFile        string = "bicep.paramFile"
-	ResourceBicepParameter        string = "bicep.parameter"
-	ResourceBicepVariable         string = "bicep.variable"
-	ResourceBicepResource         string = "bicep.resource"
-	ResourceBicepModule           string = "bicep.module"
-	ResourceBicepOutput           string = "bicep.output"
-	ResourceBicepExpression       string = "bicep.expression"
-	ResourceBicepType             string = "bicep.type"
-	ResourceBicepFunction         string = "bicep.function"
-	ResourceBicepImport           string = "bicep.import"
-	ResourceBicepTemplate         string = "bicep.template"
-	ResourceBicepTemplateResource string = "bicep.template.resource"
+	ResourceBicep                  string = "bicep"
+	ResourceBicepFile              string = "bicep.file"
+	ResourceBicepParamFile         string = "bicep.paramFile"
+	ResourceBicepParameter         string = "bicep.parameter"
+	ResourceBicepVariable          string = "bicep.variable"
+	ResourceBicepResource          string = "bicep.resource"
+	ResourceBicepModule            string = "bicep.module"
+	ResourceBicepOutput            string = "bicep.output"
+	ResourceBicepExpression        string = "bicep.expression"
+	ResourceBicepType              string = "bicep.type"
+	ResourceBicepFunction          string = "bicep.function"
+	ResourceBicepImport            string = "bicep.import"
+	ResourceBicepTemplate          string = "bicep.template"
+	ResourceBicepTemplateParameter string = "bicep.template.parameter"
+	ResourceBicepTemplateVariable  string = "bicep.template.variable"
+	ResourceBicepTemplateOutput    string = "bicep.template.output"
+	ResourceBicepTemplateResource  string = "bicep.template.resource"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -86,6 +89,18 @@ func init() {
 		"bicep.template": {
 			// to override args, implement: initBicepTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createBicepTemplate,
+		},
+		"bicep.template.parameter": {
+			// to override args, implement: initBicepTemplateParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBicepTemplateParameter,
+		},
+		"bicep.template.variable": {
+			// to override args, implement: initBicepTemplateVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBicepTemplateVariable,
+		},
+		"bicep.template.output": {
+			// to override args, implement: initBicepTemplateOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBicepTemplateOutput,
 		},
 		"bicep.template.resource": {
 			// to override args, implement: initBicepTemplateResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -514,16 +529,49 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlBicepTemplate).GetContentVersion()).ToDataRes(types.String)
 	},
 	"bicep.template.parameters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBicepTemplate).GetParameters()).ToDataRes(types.Map(types.String, types.Dict))
+		return (r.(*mqlBicepTemplate).GetParameters()).ToDataRes(types.Array(types.Resource("bicep.template.parameter")))
 	},
 	"bicep.template.variables": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBicepTemplate).GetVariables()).ToDataRes(types.Map(types.String, types.Dict))
+		return (r.(*mqlBicepTemplate).GetVariables()).ToDataRes(types.Array(types.Resource("bicep.template.variable")))
 	},
 	"bicep.template.resources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplate).GetResources()).ToDataRes(types.Array(types.Resource("bicep.template.resource")))
 	},
 	"bicep.template.outputs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBicepTemplate).GetOutputs()).ToDataRes(types.Map(types.String, types.Dict))
+		return (r.(*mqlBicepTemplate).GetOutputs()).ToDataRes(types.Array(types.Resource("bicep.template.output")))
+	},
+	"bicep.template.parameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetName()).ToDataRes(types.String)
+	},
+	"bicep.template.parameter.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetType()).ToDataRes(types.String)
+	},
+	"bicep.template.parameter.defaultValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetDefaultValue()).ToDataRes(types.Dict)
+	},
+	"bicep.template.parameter.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetAllowedValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"bicep.template.parameter.secure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetSecure()).ToDataRes(types.Bool)
+	},
+	"bicep.template.parameter.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateParameter).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"bicep.template.variable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateVariable).GetName()).ToDataRes(types.String)
+	},
+	"bicep.template.variable.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateVariable).GetValue()).ToDataRes(types.Dict)
+	},
+	"bicep.template.output.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateOutput).GetName()).ToDataRes(types.String)
+	},
+	"bicep.template.output.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateOutput).GetType()).ToDataRes(types.String)
+	},
+	"bicep.template.output.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateOutput).GetValue()).ToDataRes(types.Dict)
 	},
 	"bicep.template.resource.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplateResource).GetType()).ToDataRes(types.String)
@@ -1079,11 +1127,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"bicep.template.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBicepTemplate).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*mqlBicepTemplate).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.template.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBicepTemplate).Variables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*mqlBicepTemplate).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.template.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1091,7 +1139,63 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"bicep.template.outputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBicepTemplate).Outputs, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		r.(*mqlBicepTemplate).Outputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).__id, ok = v.Value.(string)
+		return
+	},
+	"bicep.template.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.defaultValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).DefaultValue, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).AllowedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.secure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).Secure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.template.parameter.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateParameter).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"bicep.template.variable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.variable.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateVariable).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateOutput).__id, ok = v.Value.(string)
+		return
+	},
+	"bicep.template.output.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateOutput).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.output.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateOutput).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.output.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateOutput).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"bicep.template.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2572,10 +2676,10 @@ type mqlBicepTemplate struct {
 	mqlBicepTemplateInternal
 	Schema         plugin.TValue[string]
 	ContentVersion plugin.TValue[string]
-	Parameters     plugin.TValue[map[string]any]
-	Variables      plugin.TValue[map[string]any]
+	Parameters     plugin.TValue[[]any]
+	Variables      plugin.TValue[[]any]
 	Resources      plugin.TValue[[]any]
-	Outputs        plugin.TValue[map[string]any]
+	Outputs        plugin.TValue[[]any]
 }
 
 // createBicepTemplate creates a new instance of this resource
@@ -2627,14 +2731,34 @@ func (c *mqlBicepTemplate) GetContentVersion() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlBicepTemplate) GetParameters() *plugin.TValue[map[string]any] {
-	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
+func (c *mqlBicepTemplate) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.template", c.__id, "parameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.parameters()
 	})
 }
 
-func (c *mqlBicepTemplate) GetVariables() *plugin.TValue[map[string]any] {
-	return plugin.GetOrCompute[map[string]any](&c.Variables, func() (map[string]any, error) {
+func (c *mqlBicepTemplate) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.template", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.variables()
 	})
 }
@@ -2655,10 +2779,192 @@ func (c *mqlBicepTemplate) GetResources() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlBicepTemplate) GetOutputs() *plugin.TValue[map[string]any] {
-	return plugin.GetOrCompute[map[string]any](&c.Outputs, func() (map[string]any, error) {
+func (c *mqlBicepTemplate) GetOutputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Outputs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.template", c.__id, "outputs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.outputs()
 	})
+}
+
+// mqlBicepTemplateParameter for the bicep.template.parameter resource
+type mqlBicepTemplateParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBicepTemplateParameterInternal it will be used here
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	DefaultValue  plugin.TValue[any]
+	AllowedValues plugin.TValue[[]any]
+	Secure        plugin.TValue[bool]
+	Metadata      plugin.TValue[any]
+}
+
+// createBicepTemplateParameter creates a new instance of this resource
+func createBicepTemplateParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBicepTemplateParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bicep.template.parameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBicepTemplateParameter) MqlName() string {
+	return "bicep.template.parameter"
+}
+
+func (c *mqlBicepTemplateParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBicepTemplateParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBicepTemplateParameter) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlBicepTemplateParameter) GetDefaultValue() *plugin.TValue[any] {
+	return &c.DefaultValue
+}
+
+func (c *mqlBicepTemplateParameter) GetAllowedValues() *plugin.TValue[[]any] {
+	return &c.AllowedValues
+}
+
+func (c *mqlBicepTemplateParameter) GetSecure() *plugin.TValue[bool] {
+	return &c.Secure
+}
+
+func (c *mqlBicepTemplateParameter) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+// mqlBicepTemplateVariable for the bicep.template.variable resource
+type mqlBicepTemplateVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBicepTemplateVariableInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[any]
+}
+
+// createBicepTemplateVariable creates a new instance of this resource
+func createBicepTemplateVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBicepTemplateVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bicep.template.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBicepTemplateVariable) MqlName() string {
+	return "bicep.template.variable"
+}
+
+func (c *mqlBicepTemplateVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBicepTemplateVariable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBicepTemplateVariable) GetValue() *plugin.TValue[any] {
+	return &c.Value
+}
+
+// mqlBicepTemplateOutput for the bicep.template.output resource
+type mqlBicepTemplateOutput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBicepTemplateOutputInternal it will be used here
+	Name  plugin.TValue[string]
+	Type  plugin.TValue[string]
+	Value plugin.TValue[any]
+}
+
+// createBicepTemplateOutput creates a new instance of this resource
+func createBicepTemplateOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBicepTemplateOutput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bicep.template.output", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBicepTemplateOutput) MqlName() string {
+	return "bicep.template.output"
+}
+
+func (c *mqlBicepTemplateOutput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBicepTemplateOutput) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBicepTemplateOutput) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlBicepTemplateOutput) GetValue() *plugin.TValue[any] {
+	return &c.Value
 }
 
 // mqlBicepTemplateResource for the bicep.template.resource resource

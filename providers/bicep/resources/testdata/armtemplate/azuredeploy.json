@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminPassword": {
+      "type": "securestring",
+      "allowedValues": [
+        "rotate-me",
+        "rotate-me-too"
+      ],
+      "metadata": {
+        "description": "Administrator password for the VM."
+      }
+    },
+    "instanceCount": {
+      "type": "int",
+      "defaultValue": 3
+    }
+  },
+  "variables": {
+    "storageName": "stcontoso001"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('storageName')]",
+      "location": "eastus",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {}
+    }
+  ],
+  "outputs": {
+    "storageId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+    }
+  }
+}
