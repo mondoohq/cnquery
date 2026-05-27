@@ -72,6 +72,9 @@ func (r *mqlBicep) template() (*mqlBicepTemplate, error) {
 type mqlBicepFileInternal struct {
 	parseOnce sync.Once
 	parsed    *parsedBicepFile
+
+	resolverOnce   sync.Once
+	cachedResolver *symbolResolver
 }
 
 func newMqlBicepFile(runtime *plugin.Runtime, f *connection.BicepFile) (*mqlBicepFile, error) {
@@ -114,13 +117,17 @@ func (f *mqlBicepFile) id() (string, error) {
 	return "bicep.file:" + f.Path.Data, nil
 }
 
-// resolver builds the per-file symbol table once and stamps it under
-// parseOnce's happens-before guarantee. The resolver lets expression-tree
-// nodes resolve a root identifier (`target`) to the declaration it names
-// within this file. It's derived purely from the already-parsed model, so
-// it's cheap to rebuild if the resource was reconstructed across gRPC.
+// resolver builds the per-file symbol table once and caches it. It's invoked
+// from variables()/resources()/modules()/outputs(), so caching avoids
+// rebuilding the index (and its maps) on each call. The resolver lets
+// expression-tree nodes resolve a root identifier (`target`) to the
+// declaration it names within this file, and is derived purely from the
+// already-parsed model.
 func (f *mqlBicepFile) resolver() *symbolResolver {
-	return newSymbolResolver(f.Path.Data, f.getParsed())
+	f.resolverOnce.Do(func() {
+		f.cachedResolver = newSymbolResolver(f.Path.Data, f.getParsed())
+	})
+	return f.cachedResolver
 }
 
 func (f *mqlBicepFile) parameters() ([]any, error) {
