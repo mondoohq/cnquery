@@ -250,14 +250,43 @@ func (e *mqlBicepExpression) segments() ([]any, error) {
 	return out, nil
 }
 
+// expressionTreeFor parses a raw Bicep expression string and returns it as a
+// bicep.expression resource. The suffix is appended to the parent's __id so
+// distinct expression fields under the same parent (e.g. nameTree vs
+// locationTree on one resource) get distinct, non-colliding cache keys. An
+// empty raw string parses to an `unknown` node with empty `raw`, mirroring the
+// existing variable/output expressionTree() behavior.
+func expressionTreeFor(runtime *plugin.Runtime, parentID, suffix, raw string) (*mqlBicepExpression, error) {
+	node := parseExpression(raw)
+	return newMqlBicepExpression(runtime, parentID+suffix, node)
+}
+
 func (v *mqlBicepVariable) expressionTree() (*mqlBicepExpression, error) {
-	node := parseExpression(v.Expression.Data)
-	return newMqlBicepExpression(v.MqlRuntime, v.__id+"/expr", node)
+	return expressionTreeFor(v.MqlRuntime, v.__id, "/expr", v.Expression.Data)
 }
 
 func (o *mqlBicepOutput) expressionTree() (*mqlBicepExpression, error) {
-	node := parseExpression(o.Expression.Data)
-	return newMqlBicepExpression(o.MqlRuntime, o.__id+"/expr", node)
+	return expressionTreeFor(o.MqlRuntime, o.__id, "/expr", o.Expression.Data)
+}
+
+func (r *mqlBicepResource) nameTree() (*mqlBicepExpression, error) {
+	return expressionTreeFor(r.MqlRuntime, r.__id, "/nameTree", r.Name.Data)
+}
+
+func (r *mqlBicepResource) locationTree() (*mqlBicepExpression, error) {
+	return expressionTreeFor(r.MqlRuntime, r.__id, "/locationTree", r.Location.Data)
+}
+
+func (r *mqlBicepResource) conditionTree() (*mqlBicepExpression, error) {
+	return expressionTreeFor(r.MqlRuntime, r.__id, "/conditionTree", r.Condition.Data)
+}
+
+func (m *mqlBicepModule) scopeTree() (*mqlBicepExpression, error) {
+	return expressionTreeFor(m.MqlRuntime, m.__id, "/scopeTree", m.Scope.Data)
+}
+
+func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
+	return expressionTreeFor(m.MqlRuntime, m.__id, "/conditionTree", m.Condition.Data)
 }
 
 func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsedOutput) ([]any, error) {

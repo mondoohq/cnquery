@@ -181,12 +181,34 @@ bicep.resource @defaults("type symbolicName") {
   apiVersion string
   // Resource name expression
   name string
+  // Parsed name expression tree
+  //
+  // Structured, queryable view of the `name` value. Use it to ask whether a
+  // resource name is a hardcoded literal, which Bicep function builds it
+  // (`functionCall`), or which parameters an interpolated name embeds
+  // (`interpolation` / `symbolicRef`). See `bicep.expression`.
+  nameTree() bicep.expression
   // Resource location expression
   location string
+  // Parsed location expression tree
+  //
+  // Structured, queryable view of the `location` value. Use it to ask
+  // whether a location is a hardcoded literal (e.g. `'eastus'`) or derived
+  // from a function such as `resourceGroup().location` (`functionCall` /
+  // `propertyAccess`). See `bicep.expression`.
+  locationTree() bicep.expression
   // Whether this is an existing resource reference
   existing bool
   // Condition expression (empty if unconditional)
   condition string
+  // Parsed condition expression tree
+  //
+  // Structured, queryable view of the `= if (<cond>)` deployment condition.
+  // Use it to ask which symbol or parameter gates the resource
+  // (`symbolicRef` / `propertyAccess`) or which function evaluates it
+  // (`functionCall`). An unconditional resource yields an `unknown` node
+  // with empty `raw`. See `bicep.expression`.
+  conditionTree() bicep.expression
   // Parent resource symbolic name
   parent string
   // Scope expression (deploy target scope, e.g. resourceGroup(), subscription())
@@ -231,10 +253,26 @@ bicep.module @defaults("name source") {
   source string
   // Scope expression
   scope string
+  // Parsed scope expression tree
+  //
+  // Structured, queryable view of the `scope` value. Use it to ask which
+  // function or symbol sets the module deployment scope — e.g.
+  // `resourceGroup('rg-name')` or `subscription()` (`functionCall`) or a
+  // referenced resource (`symbolicRef` / `propertyAccess`). See
+  // `bicep.expression`.
+  scopeTree() bicep.expression
   // Parameter values as dict
   params dict
   // Condition expression
   condition string
+  // Parsed condition expression tree
+  //
+  // Structured, queryable view of the module's `= if (<cond>)` deployment
+  // condition. Use it to ask which symbol or parameter gates the module
+  // (`symbolicRef` / `propertyAccess`) or which function evaluates it
+  // (`functionCall`). An unconditional module yields an `unknown` node with
+  // empty `raw`. See `bicep.expression`.
+  conditionTree() bicep.expression
   // Whether this references a Bicep registry (br:)
   isRegistry bool
   // Whether this references a template spec (ts:)

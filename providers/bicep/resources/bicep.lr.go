@@ -288,14 +288,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.resource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetName()).ToDataRes(types.String)
 	},
+	"bicep.resource.nameTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetNameTree()).ToDataRes(types.Resource("bicep.expression"))
+	},
 	"bicep.resource.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetLocation()).ToDataRes(types.String)
+	},
+	"bicep.resource.locationTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetLocationTree()).ToDataRes(types.Resource("bicep.expression"))
 	},
 	"bicep.resource.existing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetExisting()).ToDataRes(types.Bool)
 	},
 	"bicep.resource.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetCondition()).ToDataRes(types.String)
+	},
+	"bicep.resource.conditionTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetConditionTree()).ToDataRes(types.Resource("bicep.expression"))
 	},
 	"bicep.resource.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetParent()).ToDataRes(types.String)
@@ -339,11 +348,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.module.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetScope()).ToDataRes(types.String)
 	},
+	"bicep.module.scopeTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetScopeTree()).ToDataRes(types.Resource("bicep.expression"))
+	},
 	"bicep.module.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetParams()).ToDataRes(types.Dict)
 	},
 	"bicep.module.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetCondition()).ToDataRes(types.String)
+	},
+	"bicep.module.conditionTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetConditionTree()).ToDataRes(types.Resource("bicep.expression"))
 	},
 	"bicep.module.isRegistry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetIsRegistry()).ToDataRes(types.Bool)
@@ -705,8 +720,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.resource.nameTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).NameTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
+		return
+	},
 	"bicep.resource.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.locationTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).LocationTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
 		return
 	},
 	"bicep.resource.existing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -715,6 +738,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.resource.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.conditionTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).ConditionTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
 		return
 	},
 	"bicep.resource.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -777,12 +804,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepModule).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.module.scopeTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).ScopeTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
+		return
+	},
 	"bicep.module.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepModule).Params, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"bicep.module.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepModule).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.module.conditionTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).ConditionTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
 		return
 	},
 	"bicep.module.isRegistry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1593,9 +1628,12 @@ type mqlBicepResource struct {
 	Type           plugin.TValue[string]
 	ApiVersion     plugin.TValue[string]
 	Name           plugin.TValue[string]
+	NameTree       plugin.TValue[*mqlBicepExpression]
 	Location       plugin.TValue[string]
+	LocationTree   plugin.TValue[*mqlBicepExpression]
 	Existing       plugin.TValue[bool]
 	Condition      plugin.TValue[string]
+	ConditionTree  plugin.TValue[*mqlBicepExpression]
 	Parent         plugin.TValue[string]
 	Scope          plugin.TValue[string]
 	Resources      plugin.TValue[[]any]
@@ -1657,8 +1695,40 @@ func (c *mqlBicepResource) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlBicepResource) GetNameTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.NameTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.resource", c.__id, "nameTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.nameTree()
+	})
+}
+
 func (c *mqlBicepResource) GetLocation() *plugin.TValue[string] {
 	return &c.Location
+}
+
+func (c *mqlBicepResource) GetLocationTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.LocationTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.resource", c.__id, "locationTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.locationTree()
+	})
 }
 
 func (c *mqlBicepResource) GetExisting() *plugin.TValue[bool] {
@@ -1667,6 +1737,22 @@ func (c *mqlBicepResource) GetExisting() *plugin.TValue[bool] {
 
 func (c *mqlBicepResource) GetCondition() *plugin.TValue[string] {
 	return &c.Condition
+}
+
+func (c *mqlBicepResource) GetConditionTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.ConditionTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.resource", c.__id, "conditionTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.conditionTree()
+	})
 }
 
 func (c *mqlBicepResource) GetParent() *plugin.TValue[string] {
@@ -1733,8 +1819,10 @@ type mqlBicepModule struct {
 	Name           plugin.TValue[string]
 	Source         plugin.TValue[string]
 	Scope          plugin.TValue[string]
+	ScopeTree      plugin.TValue[*mqlBicepExpression]
 	Params         plugin.TValue[any]
 	Condition      plugin.TValue[string]
+	ConditionTree  plugin.TValue[*mqlBicepExpression]
 	IsRegistry     plugin.TValue[bool]
 	IsTemplateSpec plugin.TValue[bool]
 	Description    plugin.TValue[string]
@@ -1789,12 +1877,44 @@ func (c *mqlBicepModule) GetScope() *plugin.TValue[string] {
 	return &c.Scope
 }
 
+func (c *mqlBicepModule) GetScopeTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.ScopeTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.module", c.__id, "scopeTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.scopeTree()
+	})
+}
+
 func (c *mqlBicepModule) GetParams() *plugin.TValue[any] {
 	return &c.Params
 }
 
 func (c *mqlBicepModule) GetCondition() *plugin.TValue[string] {
 	return &c.Condition
+}
+
+func (c *mqlBicepModule) GetConditionTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.ConditionTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.module", c.__id, "conditionTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.conditionTree()
+	})
 }
 
 func (c *mqlBicepModule) GetIsRegistry() *plugin.TValue[bool] {

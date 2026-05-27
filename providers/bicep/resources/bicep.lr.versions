@@ -38,6 +38,7 @@ bicep.import.symbols 13.1.2
 bicep.import.wildcard 13.1.2
 bicep.module 13.0.0
 bicep.module.condition 13.0.0
+bicep.module.conditionTree 13.1.2
 bicep.module.decorators 13.0.1
 bicep.module.description 13.0.1
 bicep.module.isLoop 13.1.2
@@ -49,6 +50,7 @@ bicep.module.loopIterator 13.1.2
 bicep.module.name 13.0.0
 bicep.module.params 13.0.0
 bicep.module.scope 13.0.0
+bicep.module.scopeTree 13.1.2
 bicep.module.source 13.0.0
 bicep.output 13.0.0
 bicep.output.description 13.0.0
@@ -81,15 +83,18 @@ bicep.parameter.type 13.0.0
 bicep.resource 13.0.0
 bicep.resource.apiVersion 13.0.0
 bicep.resource.condition 13.0.0
+bicep.resource.conditionTree 13.1.2
 bicep.resource.decorators 13.0.0
 bicep.resource.dependsOn 13.0.0
 bicep.resource.existing 13.0.0
 bicep.resource.isLoop 13.1.2
 bicep.resource.location 13.0.0
+bicep.resource.locationTree 13.1.2
 bicep.resource.loopExpression 13.1.2
 bicep.resource.loopIndexVar 13.1.2
 bicep.resource.loopIterator 13.1.2
 bicep.resource.name 13.0.0
+bicep.resource.nameTree 13.1.2
 bicep.resource.parent 13.0.0
 bicep.resource.properties 13.0.0
 bicep.resource.resources 13.1.2
