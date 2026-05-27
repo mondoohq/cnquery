@@ -52,6 +52,12 @@ bicep.output.expression 13.0.0
 bicep.output.expressionTree 13.1.2
 bicep.output.name 13.0.0
 bicep.output.type 13.0.0
+bicep.paramFile 13.1.2
+bicep.paramFile.content 13.1.2
+bicep.paramFile.params 13.1.2
+bicep.paramFile.path 13.1.2
+bicep.paramFile.using 13.1.2
+bicep.paramFiles 13.1.2
 bicep.parameter 13.0.0
 bicep.parameter.allowed 13.0.0
 bicep.parameter.decorators 13.0.0

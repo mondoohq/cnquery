@@ -53,6 +53,7 @@ atlassian
 autoaccept
 automattic
 bfc
+bicepparam
 bumpable
 bwawxf
 cafd

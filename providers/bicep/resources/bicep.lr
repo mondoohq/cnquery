@@ -14,6 +14,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/bicep/resources"
 bicep {
   // All Bicep source files found
   files() []bicep.file
+  // All Bicep parameter (.bicepparam) files found
+  paramFiles() []bicep.paramFile
   // Compiled ARM template (if available via JSON or bicep build)
   template() bicep.template
 }
@@ -53,6 +55,38 @@ bicep.file @defaults("path") {
   // `bicep.resource.tags` skips expression-valued tags. Most real-world
   // metadata is `description = '...'`.
   metadata map[string]string
+  // Raw file content
+  content string
+}
+
+// Bicep parameter file
+//
+// Examine a `.bicepparam` parameter file — the file that carries the actual
+// parameter values used for a deployment. The `using` field names the
+// template the values target (`'./main.bicep'`, `'none'`, or a
+// registry/template-spec ref like `'br:...'`); `params` maps each
+// `param <name> = <value>` assignment to its right-hand-side value text.
+// Select a file by its `path` — for example
+// `bicep.paramFiles.where(path == "prod.bicepparam")`.
+bicep.paramFile @defaults("path") {
+  // File path
+  path string
+  // Target template referenced by the `using` statement
+  //
+  // The value of `using '<target>'` — `'./main.bicep'`, `'none'`, or a
+  // registry/template-spec ref like `'br:...'`. Empty when no `using`
+  // statement is present.
+  using string
+  // Parameter assignments as a name-to-value map
+  //
+  // Maps each `param <name> = <value>` to its right-hand-side value text,
+  // stored EXACTLY as written and NOT quote-stripped: a literal stays quoted
+  // (`'Standard_LRS'`) while an expression stays bare
+  // (`resourceGroup().location`, `readEnvironmentVariable('ADMIN_PW')`).
+  // This preserves the literal-vs-expression distinction that audits care
+  // about, and intentionally differs from `bicep.parameter.defaultValue`,
+  // which strips the surrounding quotes from literal values.
+  params map[string]string
   // Raw file content
   content string
 }

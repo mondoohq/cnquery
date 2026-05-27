@@ -31,6 +31,34 @@ func (r *mqlBicep) files() ([]any, error) {
 	return mqlFiles, nil
 }
 
+func (r *mqlBicep) paramFiles() ([]any, error) {
+	conn := r.MqlRuntime.Connection.(*connection.BicepConnection)
+	paramFiles := conn.BicepParamFiles()
+
+	var mqlFiles []any
+	for _, f := range paramFiles {
+		using, params := parseBicepParam(f.Content)
+
+		mqlParams := make(map[string]any, len(params))
+		for k, v := range params {
+			mqlParams[k] = v
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "bicep.paramFile", map[string]*llx.RawData{
+			"__id":    llx.StringData(f.Path),
+			"path":    llx.StringData(f.Path),
+			"using":   llx.StringData(using),
+			"params":  llx.MapData(mqlParams, types.String),
+			"content": llx.StringData(f.Content),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlFiles = append(mqlFiles, res)
+	}
+	return mqlFiles, nil
+}
+
 func (r *mqlBicep) template() (*mqlBicepTemplate, error) {
 	conn := r.MqlRuntime.Connection.(*connection.BicepConnection)
 	armTmpl := conn.ARMTemplate()

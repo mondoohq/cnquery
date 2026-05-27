@@ -19,15 +19,22 @@ var _ plugin.Connection = (*BicepConnection)(nil)
 
 type BicepConnection struct {
 	plugin.Connection
-	Conf        *inventory.Config
-	asset       *inventory.Asset
-	path        string
-	bicepFiles  []*BicepFile
-	armTemplate *ARMTemplate
+	Conf            *inventory.Config
+	asset           *inventory.Asset
+	path            string
+	bicepFiles      []*BicepFile
+	bicepParamFiles []*BicepParamFile
+	armTemplate     *ARMTemplate
 }
 
 // BicepFile holds a Bicep source file path and its raw content.
 type BicepFile struct {
+	Path    string
+	Content string
+}
+
+// BicepParamFile holds a `.bicepparam` parameter file path and its raw content.
+type BicepParamFile struct {
 	Path    string
 	Content string
 }
@@ -68,10 +75,15 @@ func NewBicepConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 			return nil, err
 		}
 		conn.bicepFiles = files
+		paramFiles, err := loadBicepParamFiles(bicepPath)
+		if err != nil {
+			return nil, err
+		}
+		conn.bicepParamFiles = paramFiles
 		// Check for ARM template JSON in the directory
 		conn.armTemplate = findARMTemplate(bicepPath)
-		if len(files) == 0 && conn.armTemplate == nil {
-			return nil, errors.New("no .bicep or ARM template JSON files found at " + bicepPath)
+		if len(files) == 0 && len(paramFiles) == 0 && conn.armTemplate == nil {
+			return nil, errors.New("no .bicep, .bicepparam, or ARM template JSON files found at " + bicepPath)
 		}
 	} else if strings.HasSuffix(bicepPath, ".json") {
 		// Direct ARM template JSON
@@ -80,6 +92,13 @@ func NewBicepConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 			return nil, err
 		}
 		conn.armTemplate = tmpl
+	} else if strings.HasSuffix(bicepPath, ".bicepparam") {
+		// Single .bicepparam parameter file
+		content, err := os.ReadFile(bicepPath)
+		if err != nil {
+			return nil, err
+		}
+		conn.bicepParamFiles = []*BicepParamFile{{Path: bicepPath, Content: string(content)}}
 	} else {
 		// Single .bicep file
 		content, err := os.ReadFile(bicepPath)
@@ -102,6 +121,10 @@ func (c *BicepConnection) Asset() *inventory.Asset {
 
 func (c *BicepConnection) BicepFiles() []*BicepFile {
 	return c.bicepFiles
+}
+
+func (c *BicepConnection) BicepParamFiles() []*BicepParamFile {
+	return c.bicepParamFiles
 }
 
 func (c *BicepConnection) ARMTemplate() *ARMTemplate {
@@ -129,6 +152,33 @@ func loadBicepFiles(dir string) ([]*BicepFile, error) {
 				return nil
 			}
 			files = append(files, &BicepFile{Path: path, Content: string(content)})
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+func loadBicepParamFiles(dir string) ([]*BicepParamFile, error) {
+	var files []*BicepParamFile
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(path, ".bicepparam") {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				log.Warn().Err(err).Str("path", path).Msg("failed to read bicepparam file")
+				return nil
+			}
+			files = append(files, &BicepParamFile{Path: path, Content: string(content)})
 		}
 		return nil
 	})

@@ -134,7 +134,56 @@ var (
 	// literal single-quoted values are captured; expression-/object-valued
 	// metadata is skipped (mirrors the tag-extraction behavior).
 	metadataRe = regexp.MustCompile(`(?m)^metadata\s+(\w+)\s*=\s*'([^']*)'\s*$`)
+
+	// usingRe matches the `using '<target>'` statement at the head of a
+	// `.bicepparam` file. The target is the referenced template
+	// ('./main.bicep', 'none', or a registry/template-spec ref like 'br:...').
+	usingRe = regexp.MustCompile(`(?m)^\s*using\s+'([^']*)'`)
+
+	// paramAssignRe matches a `.bicepparam` parameter assignment
+	// `param <name> = <value>`. Unlike a `.bicep` `param` declaration there
+	// is no type between the name and `=`, so this deliberately does not reuse
+	// paramRe. The right-hand side is captured raw (everything after `=`).
+	paramAssignRe = regexp.MustCompile(`^param\s+(\w+)\s*=\s*(.+)$`)
 )
+
+// parseBicepParam parses a `.bicepparam` parameter file into the `using`
+// target and a name->value map. The right-hand-side value text is stored
+// EXACTLY as written, NOT quote-stripped: a literal stays quoted
+// (`'Standard_LRS'`) and an expression stays bare
+// (`resourceGroup().location`, `readEnvironmentVariable('ADMIN_PW')`). This
+// preserves the literal-vs-expression distinction audits care about, and
+// intentionally differs from `bicep.parameter.defaultValue`, which strips
+// quotes.
+//
+// The tokenizer keys off the leading keyword of each statement, so `using`
+// and `param` assignments are dispatched the same brace/string-aware way as
+// `.bicep` constructs; multi-line object/array values are reassembled into a
+// single collapsed-whitespace value.
+func parseBicepParam(content string) (string, map[string]string) {
+	var using string
+	if m := usingRe.FindStringSubmatch(content); len(m) > 1 {
+		using = m[1]
+	}
+
+	params := map[string]string{}
+	for _, stmt := range tokenizeBicep(content) {
+		if stmt.keyword != "param" {
+			continue
+		}
+		stmtLines := strings.Split(stmt.text, "\n")
+		// Reassemble multi-line values (object/array RHS) into one line with
+		// runs of whitespace collapsed, mirroring parseVariableDecl.
+		combined := strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
+		m := paramAssignRe.FindStringSubmatch(strings.TrimSpace(combined))
+		if len(m) < 3 {
+			continue
+		}
+		params[m[1]] = strings.TrimSpace(m[2])
+	}
+
+	return using, params
+}
 
 func parseBicep(content string) *parsedBicepFile {
 	result := &parsedBicepFile{}

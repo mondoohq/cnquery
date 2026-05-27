@@ -996,3 +996,58 @@ func TestParseResourceTags(t *testing.T) {
 		assert.Nil(t, result.resources[0].tags)
 	})
 }
+
+func TestParseBicepParam(t *testing.T) {
+	t.Run("using target plus literal and expression params", func(t *testing.T) {
+		input := `using './main.bicep'
+
+param storageSku = 'Standard_LRS'
+param location = resourceGroup().location
+param adminPassword = readEnvironmentVariable('ADMIN_PW')
+`
+		using, params := parseBicepParam(input)
+		assert.Equal(t, "./main.bicep", using)
+		assert.Equal(t, map[string]string{
+			// Literal stays quoted; expressions stay bare. The raw RHS text is
+			// preserved verbatim so audits can tell a literal from an expression.
+			"storageSku":    "'Standard_LRS'",
+			"location":      "resourceGroup().location",
+			"adminPassword": "readEnvironmentVariable('ADMIN_PW')",
+		}, params)
+	})
+
+	t.Run("using none", func(t *testing.T) {
+		input := `using 'none'
+param foo = 'bar'
+`
+		using, params := parseBicepParam(input)
+		assert.Equal(t, "none", using)
+		assert.Equal(t, map[string]string{"foo": "'bar'"}, params)
+	})
+
+	t.Run("registry using ref", func(t *testing.T) {
+		input := `using 'br:example.azurecr.io/bicep/modules/storage:v1'
+param env = 'prod'
+`
+		using, _ := parseBicepParam(input)
+		assert.Equal(t, "br:example.azurecr.io/bicep/modules/storage:v1", using)
+	})
+
+	t.Run("no using statement", func(t *testing.T) {
+		input := `param foo = 'bar'`
+		using, params := parseBicepParam(input)
+		assert.Equal(t, "", using)
+		assert.Equal(t, map[string]string{"foo": "'bar'"}, params)
+	})
+
+	t.Run("multi-line object value", func(t *testing.T) {
+		input := `using './main.bicep'
+param config = {
+  name: 'example'
+  tier: 'standard'
+}
+`
+		_, params := parseBicepParam(input)
+		assert.Equal(t, "{ name: 'example' tier: 'standard' }", params["config"])
+	})
+}
