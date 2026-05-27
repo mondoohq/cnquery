@@ -72,11 +72,19 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 		// Best-effort read; a missing/unreadable file falls back to
 		// strategic-merge with no operations rather than failing the audit.
 		// Constrain the read to the kustomization directory so a malicious
-		// patch path (e.g. "../../etc/passwd") can't escape the scan root.
+		// patch path (e.g. "../../etc/passwd") — or a symlink inside the
+		// directory whose target is outside it — can't escape the scan root.
+		// Both the base and the candidate are symlink-resolved before the
+		// containment check so a symlinked scan root (e.g. /tmp on macOS,
+		// which resolves to /private/tmp) doesn't cause false rejections.
 		full := filepath.Join(kustPath, p.Path)
-		if rel, err := filepath.Rel(kustPath, full); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-			if data, err := os.ReadFile(full); err == nil {
-				raw = data
+		base, baseErr := filepath.EvalSymlinks(kustPath)
+		resolved, resErr := filepath.EvalSymlinks(full)
+		if baseErr == nil && resErr == nil {
+			if rel, err := filepath.Rel(base, resolved); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+				if data, err := os.ReadFile(resolved); err == nil {
+					raw = data
+				}
 			}
 		}
 	}

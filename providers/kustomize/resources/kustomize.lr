@@ -109,7 +109,7 @@ kustomize.patch @defaults("path") {
 // `/spec/template/spec/containers/0`); and `value` carries the operand for
 // add, replace, and test operations and is null otherwise. Use this to
 // detect operations that strip a security control from a base resource.
-kustomize.patch.operation @defaults("op path") {
+private kustomize.patch.operation @defaults("op path") {
   // Operation: add, remove, replace, move, copy, or test
   op string
   // RFC6901 JSON pointer the operation targets
