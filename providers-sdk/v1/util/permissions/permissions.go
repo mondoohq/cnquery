@@ -103,12 +103,24 @@ func main() {
 	}
 	sort.Strings(orgPermissions)
 
-	// Sort details for stable output
+	// Sort details for stable output. Permission + source file are the dedup
+	// key; Action and Scope are included as tiebreakers so that when the same
+	// permission is derived from multiple call sites in one file (e.g. both
+	// Folders.Search and Folders.List map to resourcemanager.folders.list), the
+	// detail that survives deduplication is deterministic rather than dependent
+	// on the unstable sort order — otherwise unrelated `action` churn appears in
+	// the manifest every time entries are added.
 	sort.Slice(details, func(i, j int) bool {
 		if details[i].Permission != details[j].Permission {
 			return details[i].Permission < details[j].Permission
 		}
-		return details[i].SourceFile < details[j].SourceFile
+		if details[i].SourceFile != details[j].SourceFile {
+			return details[i].SourceFile < details[j].SourceFile
+		}
+		if details[i].Action != details[j].Action {
+			return details[i].Action < details[j].Action
+		}
+		return details[i].Scope < details[j].Scope
 	})
 
 	// Deduplicate details (same permission + source file)
