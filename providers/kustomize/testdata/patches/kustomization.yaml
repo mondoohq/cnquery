@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+
+patches:
+  # Strategic-merge patch: a mapping with apiVersion/kind.
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: myapp
+      spec:
+        replicas: 3
+  # JSON6902 patch: a sequence of op objects, including a remove that
+  # strips the container securityContext.
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: LOG_LEVEL
+            value: debug
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext

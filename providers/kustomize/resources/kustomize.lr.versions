@@ -35,6 +35,12 @@ kustomize.kustomization.secretGenerators 13.0.0
 kustomize.kustomizations 13.0.0
 kustomize.patch 13.0.0
 kustomize.patch.content 13.0.0
+kustomize.patch.format 13.0.10
+kustomize.patch.operation 13.0.10
+kustomize.patch.operation.op 13.0.10
+kustomize.patch.operation.path 13.0.10
+kustomize.patch.operation.value 13.0.10
+kustomize.patch.operations 13.0.10
 kustomize.patch.path 13.0.0
 kustomize.patch.targetAnnotationSelector 13.0.0
 kustomize.patch.targetGroup 13.0.0

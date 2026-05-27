@@ -167,12 +167,36 @@ func (k *mqlKustomizeKustomization) patches() ([]any, error) {
 		return nil, err
 	}
 	var mqlPatches []any
-	for i, p := range kust.Patches {
-		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, i, &p)
+	idx := 0
+	// Modern unified patches: classify each by inspecting its content shape.
+	for i := range kust.Patches {
+		p := kust.Patches[i]
+		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, idx, &p, hintNone)
 		if err != nil {
 			return nil, err
 		}
 		mqlPatches = append(mqlPatches, mqlP)
+		idx++
+	}
+	// Legacy patchesJson6902: format is unambiguous, force json6902.
+	for i := range kust.PatchesJson6902 {
+		p := kust.PatchesJson6902[i]
+		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, idx, &p, hintJSON6902)
+		if err != nil {
+			return nil, err
+		}
+		mqlPatches = append(mqlPatches, mqlP)
+		idx++
+	}
+	// Legacy patchesStrategicMerge: each entry is a file path, force strategicMerge.
+	for i := range kust.PatchesStrategicMerge {
+		p := kustomizeTypes.Patch{Path: string(kust.PatchesStrategicMerge[i])}
+		mqlP, err := newMqlKustomizePatch(k.MqlRuntime, kustPath, idx, &p, hintStrategicMerge)
+		if err != nil {
+			return nil, err
+		}
+		mqlPatches = append(mqlPatches, mqlP)
+		idx++
 	}
 	return mqlPatches, nil
 }

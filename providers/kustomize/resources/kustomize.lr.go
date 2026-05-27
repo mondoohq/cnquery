@@ -18,6 +18,7 @@ const (
 	ResourceKustomize                  string = "kustomize"
 	ResourceKustomizeKustomization     string = "kustomize.kustomization"
 	ResourceKustomizePatch             string = "kustomize.patch"
+	ResourceKustomizePatchOperation    string = "kustomize.patch.operation"
 	ResourceKustomizeGenerator         string = "kustomize.generator"
 	ResourceKustomizeImage             string = "kustomize.image"
 	ResourceKustomizeResource          string = "kustomize.resource"
@@ -40,6 +41,10 @@ func init() {
 		"kustomize.patch": {
 			// to override args, implement: initKustomizePatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createKustomizePatch,
+		},
+		"kustomize.patch.operation": {
+			// to override args, implement: initKustomizePatchOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKustomizePatchOperation,
 		},
 		"kustomize.generator": {
 			// to override args, implement: initKustomizeGenerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -189,6 +194,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kustomize.patch.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizePatch).GetPath()).ToDataRes(types.String)
 	},
+	"kustomize.patch.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizePatch).GetFormat()).ToDataRes(types.String)
+	},
+	"kustomize.patch.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizePatch).GetOperations()).ToDataRes(types.Array(types.Resource("kustomize.patch.operation")))
+	},
 	"kustomize.patch.targetGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizePatch).GetTargetGroup()).ToDataRes(types.String)
 	},
@@ -209,6 +220,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kustomize.patch.targetAnnotationSelector": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizePatch).GetTargetAnnotationSelector()).ToDataRes(types.String)
+	},
+	"kustomize.patch.operation.op": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizePatchOperation).GetOp()).ToDataRes(types.String)
+	},
+	"kustomize.patch.operation.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizePatchOperation).GetPath()).ToDataRes(types.String)
+	},
+	"kustomize.patch.operation.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizePatchOperation).GetValue()).ToDataRes(types.Dict)
 	},
 	"kustomize.generator.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizeGenerator).GetName()).ToDataRes(types.String)
@@ -385,6 +405,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKustomizePatch).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"kustomize.patch.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatch).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kustomize.patch.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatch).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"kustomize.patch.targetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKustomizePatch).TargetGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -411,6 +439,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kustomize.patch.targetAnnotationSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKustomizePatch).TargetAnnotationSelector, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kustomize.patch.operation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatchOperation).__id, ok = v.Value.(string)
+		return
+	},
+	"kustomize.patch.operation.op": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatchOperation).Op, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kustomize.patch.operation.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatchOperation).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kustomize.patch.operation.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizePatchOperation).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"kustomize.generator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -818,9 +862,11 @@ func (c *mqlKustomizeKustomization) GetReplacements() *plugin.TValue[[]any] {
 type mqlKustomizePatch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlKustomizePatchInternal it will be used here
+	mqlKustomizePatchInternal
 	Content                  plugin.TValue[string]
 	Path                     plugin.TValue[string]
+	Format                   plugin.TValue[string]
+	Operations               plugin.TValue[[]any]
 	TargetGroup              plugin.TValue[string]
 	TargetVersion            plugin.TValue[string]
 	TargetKind               plugin.TValue[string]
@@ -870,6 +916,26 @@ func (c *mqlKustomizePatch) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
+func (c *mqlKustomizePatch) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlKustomizePatch) GetOperations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Operations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kustomize.patch", c.__id, "operations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.operations()
+	})
+}
+
 func (c *mqlKustomizePatch) GetTargetGroup() *plugin.TValue[string] {
 	return &c.TargetGroup
 }
@@ -896,6 +962,60 @@ func (c *mqlKustomizePatch) GetTargetLabelSelector() *plugin.TValue[string] {
 
 func (c *mqlKustomizePatch) GetTargetAnnotationSelector() *plugin.TValue[string] {
 	return &c.TargetAnnotationSelector
+}
+
+// mqlKustomizePatchOperation for the kustomize.patch.operation resource
+type mqlKustomizePatchOperation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKustomizePatchOperationInternal it will be used here
+	Op    plugin.TValue[string]
+	Path  plugin.TValue[string]
+	Value plugin.TValue[any]
+}
+
+// createKustomizePatchOperation creates a new instance of this resource
+func createKustomizePatchOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKustomizePatchOperation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kustomize.patch.operation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKustomizePatchOperation) MqlName() string {
+	return "kustomize.patch.operation"
+}
+
+func (c *mqlKustomizePatchOperation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKustomizePatchOperation) GetOp() *plugin.TValue[string] {
+	return &c.Op
+}
+
+func (c *mqlKustomizePatchOperation) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlKustomizePatchOperation) GetValue() *plugin.TValue[any] {
+	return &c.Value
 }
 
 // mqlKustomizeGenerator for the kustomize.generator resource

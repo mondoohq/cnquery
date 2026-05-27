@@ -69,6 +69,22 @@ kustomize.patch @defaults("path") {
   content string
   // Patch file path (empty if inline)
   path string
+  // Patch format
+  //
+  // Either "strategicMerge" or "json6902", determined from the patch
+  // declaration or by inspecting the patch content shape. A patch whose
+  // content is a sequence of operation objects (each carrying an `op` key)
+  // is classified as "json6902"; any mapping-shaped patch is
+  // "strategicMerge". Use this to distinguish a strategic-merge overlay
+  // from a JSON patch.
+  format string
+  // JSON patch operations
+  //
+  // Decomposed RFC6902 operations for a "json6902" patch — empty for a
+  // "strategicMerge" patch. Each entry exposes its `op`, `path`, and
+  // `value`, so an audit can detect a patch that removes a security
+  // control (for example an `op: remove` targeting a securityContext).
+  operations() []kustomize.patch.operation
   // Target group
   targetGroup string
   // Target version
@@ -83,6 +99,26 @@ kustomize.patch @defaults("path") {
   targetLabelSelector string
   // Target annotation selector
   targetAnnotationSelector string
+}
+
+// JSON patch operation from a JSON6902 Kustomize patch
+//
+// Examine a single RFC6902 operation decomposed from a "json6902" patch.
+// The `op` is one of add, remove, replace, move, copy, or test; `path` is
+// the RFC6901 JSON pointer the operation targets (for example
+// `/spec/template/spec/containers/0`); and `value` carries the operand for
+// add, replace, and test operations and is null otherwise. Use this to
+// detect operations that strip a security control from a base resource.
+kustomize.patch.operation @defaults("op path") {
+  // Operation: add, remove, replace, move, copy, or test
+  op string
+  // RFC6901 JSON pointer the operation targets
+  path string
+  // Operand value
+  //
+  // Present for add, replace, and test operations; null for remove, move,
+  // and copy.
+  value dict
 }
 
 // Kustomize ConfigMap or Secret generator
