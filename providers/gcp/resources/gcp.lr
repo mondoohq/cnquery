@@ -3617,6 +3617,20 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   legacyAbacEnabled bool
   // Authentication information for accessing the master endpoint
   masterAuth dict
+  // Whether client certificate authentication to the control plane is enabled
+  //
+  // True when the cluster issues a client certificate (MasterAuth client
+  // certificate config) or an output client certificate is present. Static
+  // client certificates cannot be rotated or revoked, so CIS recommends
+  // disabling this in favor of short-lived credentials.
+  clientCertificateEnabled bool
+  // Whether HTTP basic authentication to the control plane is enabled
+  //
+  // True when a static MasterAuth username is set. Basic authentication is
+  // deprecated and removed in modern GKE versions; a non-empty value is a CIS
+  // benchmark finding. Reads the deprecated MasterAuth.Username field purely
+  // for the audit signal.
+  basicAuthEnabled bool
   // Legacy master authorized networks configuration
   //
   // Deprecated in favor of
@@ -3772,6 +3786,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   costManagementConfig dict
   // Configuration of Confidential Nodes
   confidentialNodesConfig dict
+  // Whether Confidential Nodes (memory encryption via AMD SEV) is enabled cluster-wide
+  confidentialNodesEnabled bool
   // Configuration for Identity Service component
   identityServiceConfig dict
   // Raw network policy config dict
@@ -4134,6 +4150,11 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   taints []gcp.project.gkeService.cluster.nodepool.config.nodeTaint
   // Sandbox configuration for this node
   sandboxConfig gcp.project.gkeService.cluster.nodepool.config.sandboxConfig
+  // Whether the gVisor sandbox runtime is enabled for nodes in this pool
+  //
+  // True when the sandbox config type is GVISOR. gVisor provides an extra
+  // kernel-isolation boundary between containers and the host.
+  gvisorSandbox bool
   // Shielded instance configuration
   shieldedInstanceConfig gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig
   // Parameters that can be configured on Linux nodes
@@ -4146,6 +4167,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   bootDiskKmsKey string
   // Google Container File System (image streaming) configuration
   gcfsConfig gcp.project.gkeService.cluster.nodepool.config.gcfsConfig
+  // Whether Google Container File System (image streaming) is enabled for nodes in this pool
+  gcfsEnabled bool
   // Advanced features for the Compute Engine VM
   advancedMachineFeatures gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures
   // gVNIC configuration

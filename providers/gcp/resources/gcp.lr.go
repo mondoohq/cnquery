@@ -5930,6 +5930,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.masterAuth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterAuth()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.clientCertificateEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetClientCertificateEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.basicAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetBasicAuthEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterAuthorizedNetworksConfig()).ToDataRes(types.Dict)
 	},
@@ -6016,6 +6022,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.confidentialNodesConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetConfidentialNodesConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.confidentialNodesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetConfidentialNodesEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.identityServiceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetIdentityServiceConfig()).ToDataRes(types.Dict)
@@ -6416,6 +6425,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetSandboxConfig()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"))
 	},
+	"gcp.project.gkeService.cluster.nodepool.config.gvisorSandbox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetGvisorSandbox()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetShieldedInstanceConfig()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"))
 	},
@@ -6433,6 +6445,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetGcfsConfig()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"))
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.gcfsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetGcfsEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetAdvancedMachineFeatures()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"))
@@ -20572,6 +20587,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceCluster).MasterAuth, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.clientCertificateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ClientCertificateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.basicAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).BasicAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).MasterAuthorizedNetworksConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -20686,6 +20709,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.confidentialNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).ConfidentialNodesConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.confidentialNodesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ConfidentialNodesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.identityServiceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21272,6 +21299,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).SandboxConfig, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.nodepool.config.gvisorSandbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GvisorSandbox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).ShieldedInstanceConfig, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig](v.Value, v.Error)
 		return
@@ -21294,6 +21325,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GcfsConfig, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.gcfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GcfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46788,6 +46823,8 @@ type mqlGcpProjectGkeServiceCluster struct {
 	LegacyAbac                        plugin.TValue[any]
 	LegacyAbacEnabled                 plugin.TValue[bool]
 	MasterAuth                        plugin.TValue[any]
+	ClientCertificateEnabled          plugin.TValue[bool]
+	BasicAuthEnabled                  plugin.TValue[bool]
 	MasterAuthorizedNetworksConfig    plugin.TValue[any]
 	MasterAuthorizedNetworksEnabled   plugin.TValue[bool]
 	PrivateClusterConfig              plugin.TValue[any]
@@ -46817,6 +46854,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	ShieldedNodesEnabled              plugin.TValue[bool]
 	CostManagementConfig              plugin.TValue[any]
 	ConfidentialNodesConfig           plugin.TValue[any]
+	ConfidentialNodesEnabled          plugin.TValue[bool]
 	IdentityServiceConfig             plugin.TValue[any]
 	NetworkPolicyConfig               plugin.TValue[any]
 	NetworkPolicy                     plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkPolicy]
@@ -47013,6 +47051,14 @@ func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuth() *plugin.TValue[any] {
 	return &c.MasterAuth
 }
 
+func (c *mqlGcpProjectGkeServiceCluster) GetClientCertificateEnabled() *plugin.TValue[bool] {
+	return &c.ClientCertificateEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetBasicAuthEnabled() *plugin.TValue[bool] {
+	return &c.BasicAuthEnabled
+}
+
 func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuthorizedNetworksConfig() *plugin.TValue[any] {
 	return &c.MasterAuthorizedNetworksConfig
 }
@@ -47139,6 +47185,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetCostManagementConfig() *plugin.TValu
 
 func (c *mqlGcpProjectGkeServiceCluster) GetConfidentialNodesConfig() *plugin.TValue[any] {
 	return &c.ConfidentialNodesConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetConfidentialNodesEnabled() *plugin.TValue[bool] {
+	return &c.ConfidentialNodesEnabled
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetIdentityServiceConfig() *plugin.TValue[any] {
@@ -48290,12 +48340,14 @@ type mqlGcpProjectGkeServiceClusterNodepoolConfig struct {
 	WorkloadMetadataMode      plugin.TValue[string]
 	Taints                    plugin.TValue[[]any]
 	SandboxConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig]
+	GvisorSandbox             plugin.TValue[bool]
 	ShieldedInstanceConfig    plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig]
 	LinuxNodeConfig           plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig]
 	WindowsNodeConfig         plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig]
 	KubeletConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig]
 	BootDiskKmsKey            plugin.TValue[string]
 	GcfsConfig                plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig]
+	GcfsEnabled               plugin.TValue[bool]
 	AdvancedMachineFeatures   plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures]
 	GvnicConfig               plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig]
 	Spot                      plugin.TValue[bool]
@@ -48440,6 +48492,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetSandboxConfig() *plugi
 	return &c.SandboxConfig
 }
 
+func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetGvisorSandbox() *plugin.TValue[bool] {
+	return &c.GvisorSandbox
+}
+
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetShieldedInstanceConfig() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig] {
 	return &c.ShieldedInstanceConfig
 }
@@ -48462,6 +48518,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetBootDiskKmsKey() *plug
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetGcfsConfig() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig] {
 	return &c.GcfsConfig
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetGcfsEnabled() *plugin.TValue[bool] {
+	return &c.GcfsEnabled
 }
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetAdvancedMachineFeatures() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures] {

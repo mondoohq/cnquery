@@ -536,6 +536,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var masterAuth map[string]any
+		var clientCertificateEnabled, basicAuthEnabled bool
 		if c.MasterAuth != nil {
 			var clientCertCfg map[string]any
 			if c.MasterAuth.ClientCertificateConfig != nil {
@@ -543,6 +544,13 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 					"issueClientCertificate": c.MasterAuth.ClientCertificateConfig.IssueClientCertificate,
 				}
 			}
+			// Client cert auth is on when the cluster issues one (config) or an
+			// output client certificate is present.
+			clientCertificateEnabled = c.MasterAuth.GetClientCertificateConfig().GetIssueClientCertificate() ||
+				c.MasterAuth.ClientCertificate != ""
+			// Username is the deprecated HTTP basic-auth field; a non-empty value
+			// means basic auth is enabled (read solely for the audit signal).
+			basicAuthEnabled = c.MasterAuth.Username != ""
 			masterAuth = map[string]any{
 				"username":                c.MasterAuth.Username,
 				"password":                c.MasterAuth.Password,
@@ -664,7 +672,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var confidentialNodesConfig map[string]any
+		var confidentialNodesEnabled bool
 		if c.ConfidentialNodes != nil {
+			confidentialNodesEnabled = c.ConfidentialNodes.Enabled
 			confidentialNodesConfig = map[string]any{
 				"enabled": c.ConfidentialNodes.Enabled,
 			}
@@ -840,6 +850,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"legacyAbac":                        llx.DictData(legacyAbac),
 			"legacyAbacEnabled":                 llx.BoolData(legacyAbacEnabled),
 			"masterAuth":                        llx.DictData(masterAuth),
+			"clientCertificateEnabled":          llx.BoolData(clientCertificateEnabled),
+			"basicAuthEnabled":                  llx.BoolData(basicAuthEnabled),
 			"masterAuthorizedNetworksConfig":    llx.DictData(masterAuthorizedNetworksCfg),
 			"masterAuthorizedNetworksEnabled":   llx.BoolData(masterAuthorizedNetworksEnabled),
 			"privateClusterConfig":              llx.DictData(privateClusterCfg),
@@ -852,6 +864,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"shieldedNodesEnabled":              llx.BoolData(shieldedNodesEnabled),
 			"costManagementConfig":              llx.DictData(costManagementConfig),
 			"confidentialNodesConfig":           llx.DictData(confidentialNodesConfig),
+			"confidentialNodesEnabled":          llx.BoolData(confidentialNodesEnabled),
 			"identityServiceConfig":             llx.DictData(identityServiceConfig),
 			"networkPolicyConfig":               llx.DictData(networkPolicyConfig),
 			"releaseChannel":                    llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
@@ -1050,7 +1063,9 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	}
 
 	var mqlSandboxCfg plugin.Resource
+	var gvisorSandbox bool
 	if cfg.SandboxConfig != nil {
+		gvisorSandbox = cfg.SandboxConfig.Type == containerpb.SandboxConfig_GVISOR
 		mqlSandboxCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig", map[string]*llx.RawData{
 			"id":   llx.StringData(fmt.Sprintf("%s/sandbox", nodePoolId)),
 			"type": llx.StringData(cfg.SandboxConfig.Type.String()),
@@ -1108,7 +1123,9 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 	}
 
 	var mqlGcfsCfg plugin.Resource
+	var gcfsEnabled bool
 	if cfg.GcfsConfig != nil {
+		gcfsEnabled = cfg.GcfsConfig.Enabled
 		mqlGcfsCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig", map[string]*llx.RawData{
 			"id":      llx.StringData(fmt.Sprintf("%s/gcfsConfig", nodePoolId)),
 			"enabled": llx.BoolData(cfg.GcfsConfig.Enabled),
@@ -1182,12 +1199,14 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		"workloadMetadataMode":    llx.StringData(workloadMetadataMode),
 		"taints":                  llx.ArrayData(nodeTaints, types.Resource("gcp.project.gkeService.cluster.nodepool.config.nodeTaint")),
 		"sandboxConfig":           llx.ResourceData(mqlSandboxCfg, "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"),
+		"gvisorSandbox":           llx.BoolData(gvisorSandbox),
 		"shieldedInstanceConfig":  llx.ResourceData(mqlShieldedInstanceCfg, "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"),
 		"linuxNodeConfig":         llx.ResourceData(mqlLinuxNodeCfg, " gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"),
 		"windowsNodeConfig":       llx.ResourceData(mqlWindowsNodeCfg, "gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig"),
 		"kubeletConfig":           llx.ResourceData(mqlKubeletCfg, "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"),
 		"bootDiskKmsKey":          llx.StringData(cfg.BootDiskKmsKey),
 		"gcfsConfig":              llx.ResourceData(mqlGcfsCfg, "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"),
+		"gcfsEnabled":             llx.BoolData(gcfsEnabled),
 		"gvnicConfig":             llx.ResourceData(mqlGvnicCfg, "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"),
 		"advancedMachineFeatures": llx.ResourceData(mqlAdvancedMachineFeatures, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"),
 		"spot":                    llx.BoolData(cfg.Spot),

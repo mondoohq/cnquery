@@ -2866,12 +2866,15 @@ gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig 9.0.0
 gcp.project.gkeService.cluster.anonymousAuthenticationConfig 13.16.3
 gcp.project.gkeService.cluster.autopilotEnabled 9.0.0
+gcp.project.gkeService.cluster.basicAuthEnabled 13.18.1
 gcp.project.gkeService.cluster.binaryAuthorization 9.0.0
 gcp.project.gkeService.cluster.binaryAuthorizationEnabled 13.12.2
 gcp.project.gkeService.cluster.binaryAuthorizationEvaluationMode 13.16.3
+gcp.project.gkeService.cluster.clientCertificateEnabled 13.18.1
 gcp.project.gkeService.cluster.clusterIpv4Cidr 9.0.0
 gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
+gcp.project.gkeService.cluster.confidentialNodesEnabled 13.18.1
 gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
 gcp.project.gkeService.cluster.controlPlaneLoggingComponents 13.18.1
 gcp.project.gkeService.cluster.controlPlaneMonitoringComponents 13.18.1
@@ -2993,7 +2996,9 @@ gcp.project.gkeService.cluster.nodepool.config.diskType 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.id 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.gcfsEnabled 13.18.1
 gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig 13.6.1
+gcp.project.gkeService.cluster.nodepool.config.gvisorSandbox 13.18.1
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.id 9.0.0
