@@ -8,6 +8,12 @@ bicep.expression.functionName 13.1.2
 bicep.expression.kind 13.1.2
 bicep.expression.path 13.1.2
 bicep.expression.raw 13.1.2
+bicep.expression.referenceKind 13.1.2
+bicep.expression.referencedModule 13.1.2
+bicep.expression.referencedParameter 13.1.2
+bicep.expression.referencedResource 13.1.2
+bicep.expression.referencedType 13.1.2
+bicep.expression.referencedVariable 13.1.2
 bicep.expression.segments 13.1.2
 bicep.expression.target 13.1.2
 bicep.file 13.0.0

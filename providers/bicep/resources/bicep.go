@@ -114,24 +114,33 @@ func (f *mqlBicepFile) id() (string, error) {
 	return "bicep.file:" + f.Path.Data, nil
 }
 
+// resolver builds the per-file symbol table once and stamps it under
+// parseOnce's happens-before guarantee. The resolver lets expression-tree
+// nodes resolve a root identifier (`target`) to the declaration it names
+// within this file. It's derived purely from the already-parsed model, so
+// it's cheap to rebuild if the resource was reconstructed across gRPC.
+func (f *mqlBicepFile) resolver() *symbolResolver {
+	return newSymbolResolver(f.Path.Data, f.getParsed())
+}
+
 func (f *mqlBicepFile) parameters() ([]any, error) {
 	return createMqlParameters(f.MqlRuntime, f.Path.Data, f.getParsed().parameters)
 }
 
 func (f *mqlBicepFile) variables() ([]any, error) {
-	return createMqlVariables(f.MqlRuntime, f.Path.Data, f.getParsed().variables)
+	return createMqlVariables(f.MqlRuntime, f.Path.Data, f.getParsed().variables, f.resolver())
 }
 
 func (f *mqlBicepFile) resources() ([]any, error) {
-	return createMqlResources(f.MqlRuntime, f.Path.Data, f.getParsed().resources)
+	return createMqlResources(f.MqlRuntime, f.Path.Data, f.getParsed().resources, f.resolver())
 }
 
 func (f *mqlBicepFile) modules() ([]any, error) {
-	return createMqlModules(f.MqlRuntime, f.Path.Data, f.getParsed().modules)
+	return createMqlModules(f.MqlRuntime, f.Path.Data, f.getParsed().modules, f.resolver())
 }
 
 func (f *mqlBicepFile) outputs() ([]any, error) {
-	return createMqlOutputs(f.MqlRuntime, f.Path.Data, f.getParsed().outputs)
+	return createMqlOutputs(f.MqlRuntime, f.Path.Data, f.getParsed().outputs, f.resolver())
 }
 
 func (f *mqlBicepFile) types() ([]any, error) {

@@ -361,6 +361,43 @@ bicep.expression @defaults("kind raw") {
   path []string
   // Alternating literal and embedded-expression parts of an interpolation node
   segments() []bicep.expression
+  // Declaration category the root identifier resolves to
+  //
+  // One of parameter, variable, resource, module, or type — the kind of
+  // same-file declaration that `target` names — or empty when `target` is
+  // empty or doesn't match a declaration in the owning file (a built-in like
+  // `resourceGroup`, or a symbol brought in by `import`). Resolution is
+  // file-scoped; cross-file import resolution is handled elsewhere.
+  referenceKind() string
+  // Parameter the root identifier resolves to, or null
+  //
+  // Non-null only when `referenceKind` is parameter; the other referenced*()
+  // accessors are null in that case. Resolves the root identifier `target`
+  // (for example `myParam` in `'${myParam}'`) to the same-file
+  // `bicep.parameter` it names.
+  referencedParameter() bicep.parameter
+  // Variable the root identifier resolves to, or null
+  //
+  // Non-null only when `referenceKind` is variable; the other referenced*()
+  // accessors are null in that case.
+  referencedVariable() bicep.variable
+  // Resource the root identifier resolves to, or null
+  //
+  // Non-null only when `referenceKind` is resource; the other referenced*()
+  // accessors are null in that case. For a `propertyAccess` like
+  // `vnet.properties.subnets[0].id` the root identifier `vnet` resolves here,
+  // not the whole accessor chain.
+  referencedResource() bicep.resource
+  // Module the root identifier resolves to, or null
+  //
+  // Non-null only when `referenceKind` is module; the other referenced*()
+  // accessors are null in that case.
+  referencedModule() bicep.module
+  // User-defined type the root identifier resolves to, or null
+  //
+  // Non-null only when `referenceKind` is type; the other referenced*()
+  // accessors are null in that case.
+  referencedType() bicep.type
 }
 
 // Bicep user-defined type declaration

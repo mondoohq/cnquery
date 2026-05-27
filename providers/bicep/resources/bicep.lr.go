@@ -432,6 +432,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.expression.segments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepExpression).GetSegments()).ToDataRes(types.Array(types.Resource("bicep.expression")))
 	},
+	"bicep.expression.referenceKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferenceKind()).ToDataRes(types.String)
+	},
+	"bicep.expression.referencedParameter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferencedParameter()).ToDataRes(types.Resource("bicep.parameter"))
+	},
+	"bicep.expression.referencedVariable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferencedVariable()).ToDataRes(types.Resource("bicep.variable"))
+	},
+	"bicep.expression.referencedResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferencedResource()).ToDataRes(types.Resource("bicep.resource"))
+	},
+	"bicep.expression.referencedModule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferencedModule()).ToDataRes(types.Resource("bicep.module"))
+	},
+	"bicep.expression.referencedType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetReferencedType()).ToDataRes(types.Resource("bicep.type"))
+	},
 	"bicep.type.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepType).GetName()).ToDataRes(types.String)
 	},
@@ -922,6 +940,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.expression.segments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepExpression).Segments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referenceKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferenceKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referencedParameter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferencedParameter, ok = plugin.RawToTValue[*mqlBicepParameter](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referencedVariable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferencedVariable, ok = plugin.RawToTValue[*mqlBicepVariable](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referencedResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferencedResource, ok = plugin.RawToTValue[*mqlBicepResource](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referencedModule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferencedModule, ok = plugin.RawToTValue[*mqlBicepModule](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.referencedType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).ReferencedType, ok = plugin.RawToTValue[*mqlBicepType](v.Value, v.Error)
 		return
 	},
 	"bicep.type.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1532,7 +1574,7 @@ func (c *mqlBicepParameter) GetDecorators() *plugin.TValue[[]any] {
 type mqlBicepVariable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepVariableInternal it will be used here
+	mqlBicepVariableInternal
 	Name           plugin.TValue[string]
 	Expression     plugin.TValue[string]
 	ExpressionTree plugin.TValue[*mqlBicepExpression]
@@ -1815,7 +1857,7 @@ func (c *mqlBicepResource) GetLoopExpression() *plugin.TValue[string] {
 type mqlBicepModule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepModuleInternal it will be used here
+	mqlBicepModuleInternal
 	Name           plugin.TValue[string]
 	Source         plugin.TValue[string]
 	Scope          plugin.TValue[string]
@@ -1953,7 +1995,7 @@ func (c *mqlBicepModule) GetLoopExpression() *plugin.TValue[string] {
 type mqlBicepOutput struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepOutputInternal it will be used here
+	mqlBicepOutputInternal
 	Name           plugin.TValue[string]
 	Type           plugin.TValue[string]
 	Expression     plugin.TValue[string]
@@ -2050,13 +2092,19 @@ type mqlBicepExpression struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlBicepExpressionInternal
-	Kind         plugin.TValue[string]
-	Raw          plugin.TValue[string]
-	FunctionName plugin.TValue[string]
-	Args         plugin.TValue[[]any]
-	Target       plugin.TValue[string]
-	Path         plugin.TValue[[]any]
-	Segments     plugin.TValue[[]any]
+	Kind                plugin.TValue[string]
+	Raw                 plugin.TValue[string]
+	FunctionName        plugin.TValue[string]
+	Args                plugin.TValue[[]any]
+	Target              plugin.TValue[string]
+	Path                plugin.TValue[[]any]
+	Segments            plugin.TValue[[]any]
+	ReferenceKind       plugin.TValue[string]
+	ReferencedParameter plugin.TValue[*mqlBicepParameter]
+	ReferencedVariable  plugin.TValue[*mqlBicepVariable]
+	ReferencedResource  plugin.TValue[*mqlBicepResource]
+	ReferencedModule    plugin.TValue[*mqlBicepModule]
+	ReferencedType      plugin.TValue[*mqlBicepType]
 }
 
 // createBicepExpression creates a new instance of this resource
@@ -2140,6 +2188,92 @@ func (c *mqlBicepExpression) GetSegments() *plugin.TValue[[]any] {
 		}
 
 		return c.segments()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferenceKind() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReferenceKind, func() (string, error) {
+		return c.referenceKind()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferencedParameter() *plugin.TValue[*mqlBicepParameter] {
+	return plugin.GetOrCompute[*mqlBicepParameter](&c.ReferencedParameter, func() (*mqlBicepParameter, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "referencedParameter")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepParameter), nil
+			}
+		}
+
+		return c.referencedParameter()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferencedVariable() *plugin.TValue[*mqlBicepVariable] {
+	return plugin.GetOrCompute[*mqlBicepVariable](&c.ReferencedVariable, func() (*mqlBicepVariable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "referencedVariable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepVariable), nil
+			}
+		}
+
+		return c.referencedVariable()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferencedResource() *plugin.TValue[*mqlBicepResource] {
+	return plugin.GetOrCompute[*mqlBicepResource](&c.ReferencedResource, func() (*mqlBicepResource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "referencedResource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepResource), nil
+			}
+		}
+
+		return c.referencedResource()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferencedModule() *plugin.TValue[*mqlBicepModule] {
+	return plugin.GetOrCompute[*mqlBicepModule](&c.ReferencedModule, func() (*mqlBicepModule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "referencedModule")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepModule), nil
+			}
+		}
+
+		return c.referencedModule()
+	})
+}
+
+func (c *mqlBicepExpression) GetReferencedType() *plugin.TValue[*mqlBicepType] {
+	return plugin.GetOrCompute[*mqlBicepType](&c.ReferencedType, func() (*mqlBicepType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "referencedType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepType), nil
+			}
+		}
+
+		return c.referencedType()
 	})
 }
 
