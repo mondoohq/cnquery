@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -443,21 +442,23 @@ func (m *mqlBicepModule) target() (*mqlBicepFile, error) {
 		return nil, nil
 	}
 
-	// Prefer an already-loaded file so target() returns the same cached
-	// bicep.file instance the parent scan produced.
+	// Resolve only to a file the scan already discovered, returning the same
+	// cached bicep.file instance. We never read an arbitrary path from disk:
+	// `source` comes from the (potentially untrusted) Bicep file, so an
+	// on-demand read of the resolved path would let a crafted module
+	// reference (e.g. '../../../../etc/passwd') disclose arbitrary file
+	// contents via bicep.file.content. The scan already loads every .bicep
+	// under the root recursively, so any legitimate in-tree target — including
+	// ones reached via a relative '../' path — is present here; anything not
+	// found (out-of-root or absolute references) resolves to null.
 	for _, f := range conn.BicepFiles() {
 		if filepath.Clean(f.Path) == resolved {
 			return newMqlBicepFile(m.MqlRuntime, f)
 		}
 	}
 
-	// The target points outside the scanned root: best-effort read + parse.
-	content, err := os.ReadFile(resolved)
-	if err != nil {
-		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return newMqlBicepFile(m.MqlRuntime, &connection.BicepFile{Path: resolved, Content: string(content)})
+	m.Target.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 // mqlBicepOutputInternal carries the owning file's symbol resolver so the

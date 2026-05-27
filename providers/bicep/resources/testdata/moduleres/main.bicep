@@ -19,3 +19,11 @@ module shared 'br:contoso.azurecr.io/bicep/modules/storage:v1' = {
     location: location
   }
 }
+
+// Path-traversal reference — points at a real, readable .bicep that lives
+// OUTSIDE the scanned root (../loops.bicep). target() must be null: the
+// provider only resolves to files the scan discovered and never reads an
+// arbitrary path, so an out-of-root reference can't disclose file contents.
+module escape '../loops.bicep' = {
+  name: 'escape-attempt'
+}

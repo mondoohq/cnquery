@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -126,5 +127,28 @@ func TestModuleTargetRegistryIsNull(t *testing.T) {
 	target, err := mod.target()
 	require.NoError(t, err)
 	assert.Nil(t, target, "registry module target must be null")
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, mod.Target.State&(plugin.StateIsSet|plugin.StateIsNull))
+}
+
+// TestModuleTargetOutsideRootIsNull guards against path traversal: a module
+// whose source resolves to a real, readable .bicep OUTSIDE the scanned root
+// must still resolve to null. target() only returns files the scan discovered
+// and never reads an arbitrary path, so a crafted reference can't disclose
+// out-of-root file contents via bicep.file.content.
+func TestModuleTargetOutsideRootIsNull(t *testing.T) {
+	runtime := moduleResRuntime(t)
+
+	// Precondition: the traversal target genuinely exists and is readable, so a
+	// null result proves the read was refused by policy — not just absent.
+	outside := filepath.Join("testdata", "loops.bicep")
+	_, err := os.Stat(outside)
+	require.NoError(t, err, "fixture precondition: %s must exist", outside)
+
+	mod := findModule(t, runtime, "main.bicep", "escape")
+	require.False(t, mod.IsRegistry.Data, "../loops.bicep is a local reference, not a registry one")
+
+	target, err := mod.target()
+	require.NoError(t, err)
+	assert.Nil(t, target, "out-of-root module target must be null (no arbitrary file read)")
 	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, mod.Target.State&(plugin.StateIsSet|plugin.StateIsNull))
 }
