@@ -2033,6 +2033,7 @@ gcp.project.computeService.sslCertificate.description 11.5.1
 gcp.project.computeService.sslCertificate.expireTime 11.5.1
 gcp.project.computeService.sslCertificate.id 11.5.1
 gcp.project.computeService.sslCertificate.managed 11.5.1
+gcp.project.computeService.sslCertificate.managedStatus 13.18.1
 gcp.project.computeService.sslCertificate.name 11.5.1
 gcp.project.computeService.sslCertificate.region 13.16.3
 gcp.project.computeService.sslCertificate.regionUrl 11.5.1

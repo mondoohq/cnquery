@@ -7687,6 +7687,12 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
   subjectAlternativeNames []string
   // Managed certificate configuration and status
   managed dict
+  // Provisioning status of a managed certificate
+  //
+  // One of ACTIVE, PROVISIONING, PROVISIONING_FAILED,
+  // PROVISIONING_FAILED_PERMANENTLY, or RENEWAL_FAILED. Empty for
+  // self-managed certificates.
+  managedStatus string
   // Raw region self-link URL
   //
   // Deprecated in favor of `region`.

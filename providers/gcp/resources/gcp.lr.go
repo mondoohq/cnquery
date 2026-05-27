@@ -9930,6 +9930,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.sslCertificate.managed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetManaged()).ToDataRes(types.Dict)
 	},
+	"gcp.project.computeService.sslCertificate.managedStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetManagedStatus()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.sslCertificate.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetRegionUrl()).ToDataRes(types.String)
 	},
@@ -26430,6 +26433,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.sslCertificate.managed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSslCertificate).Managed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.sslCertificate.managedStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSslCertificate).ManagedStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslCertificate.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60883,6 +60890,7 @@ type mqlGcpProjectComputeServiceSslCertificate struct {
 	Type                    plugin.TValue[string]
 	SubjectAlternativeNames plugin.TValue[[]any]
 	Managed                 plugin.TValue[any]
+	ManagedStatus           plugin.TValue[string]
 	RegionUrl               plugin.TValue[string]
 	Region                  plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink                plugin.TValue[string]
@@ -60949,6 +60957,10 @@ func (c *mqlGcpProjectComputeServiceSslCertificate) GetSubjectAlternativeNames()
 
 func (c *mqlGcpProjectComputeServiceSslCertificate) GetManaged() *plugin.TValue[any] {
 	return &c.Managed
+}
+
+func (c *mqlGcpProjectComputeServiceSslCertificate) GetManagedStatus() *plugin.TValue[string] {
+	return &c.ManagedStatus
 }
 
 func (c *mqlGcpProjectComputeServiceSslCertificate) GetRegionUrl() *plugin.TValue[string] {

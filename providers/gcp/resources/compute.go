@@ -3149,6 +3149,11 @@ func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
 					return err
 				}
 
+				var managedStatus string
+				if cert.Managed != nil {
+					managedStatus = cert.Managed.Status
+				}
+
 				mqlCert, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.sslCertificate", map[string]*llx.RawData{
 					"id":                      llx.StringData(strconv.FormatUint(cert.Id, 10)),
 					"name":                    llx.StringData(cert.Name),
@@ -3156,6 +3161,7 @@ func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
 					"type":                    llx.StringData(cert.Type),
 					"subjectAlternativeNames": llx.ArrayData(convert.SliceAnyToInterface(cert.SubjectAlternativeNames), types.String),
 					"managed":                 llx.DictData(managed),
+					"managedStatus":           llx.StringData(managedStatus),
 					"regionUrl":               llx.StringData(cert.Region),
 					"selfLink":                llx.StringData(cert.SelfLink),
 					"expireTime":              llx.StringData(cert.ExpireTime),
