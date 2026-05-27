@@ -5991,8 +5991,7 @@ windows.update {
 // "Security Updates", "Critical Updates", or "Definition Updates"), the
 // support URL, and the CVEs it addresses. Installed updates carry the install
 // `date` and `operation`; available updates carry the `severity` and whether
-// they require a reboot. Iterated from `windows.update.installed` and
-// `windows.update.available`.
+// they require a reboot.
 private windows.update.entry @defaults("kbId title classification") {
   // Update identity (Windows Update Agent UpdateID GUID, or package name when read from the registry)
   updateId string

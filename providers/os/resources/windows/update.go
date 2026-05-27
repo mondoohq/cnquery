@@ -111,9 +111,10 @@ func unmarshalJSONArrayOrObject[T any](data []byte) ([]T, error) {
 
 // FilterInstalledHistory returns the succeeded installation entries from a
 // Windows Update Agent history, de-duplicated by KB ID (falling back to the
-// update identity when no KB is present). Uninstallations and failed
-// operations are dropped. The first entry seen for each update is kept;
-// QueryHistory returns history newest-first, so this keeps the most recent.
+// update identity when no KB is present). Uninstallations, failed operations,
+// and entries with neither a KB nor an update identity are dropped. The first
+// entry seen for each update is kept; QueryHistory returns history
+// newest-first, so this keeps the most recent.
 func FilterInstalledHistory(entries []WindowsUpdateHistoryEntry) []WindowsUpdateHistoryEntry {
 	seen := map[string]struct{}{}
 	res := []WindowsUpdateHistoryEntry{}
@@ -127,12 +128,15 @@ func FilterInstalledHistory(entries []WindowsUpdateHistoryEntry) []WindowsUpdate
 		if key == "" {
 			key = e.UpdateID
 		}
-		if key != "" {
-			if _, ok := seen[key]; ok {
-				continue
-			}
-			seen[key] = struct{}{}
+		// An entry with neither a KB nor an update identity can't be
+		// deduplicated and isn't usefully identifiable, so drop it.
+		if key == "" {
+			continue
 		}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
 		res = append(res, e)
 	}
 	return res
