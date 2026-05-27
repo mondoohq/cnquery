@@ -40,6 +40,16 @@ type mqlKernelInternal struct {
 	modprobeOnce  sync.Once
 	modprobeRules map[string]modprobeRule
 	modprobeErr   error
+
+	// module-index cache. modules.dep (loadable .ko files) and
+	// modules.builtin (features compiled into the kernel) for the running
+	// kernel are read once per query via loadModuleIndex, so every
+	// kernel.module.onDisk / .builtIn accessor shares a single read of
+	// those two index files.
+	moduleIndexOnce sync.Once
+	moduleOnDisk    map[string]bool
+	moduleBuiltIn   map[string]bool
+	moduleIndexErr  error
 }
 
 type KernelVersion struct {

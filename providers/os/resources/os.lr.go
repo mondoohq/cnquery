@@ -4316,6 +4316,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kernel.module.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetDisabled()).ToDataRes(types.Bool)
 	},
+	"kernel.module.onDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetOnDisk()).ToDataRes(types.Bool)
+	},
+	"kernel.module.builtIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetBuiltIn()).ToDataRes(types.Bool)
+	},
 	"kernel.cmdline.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelCmdline).GetRaw()).ToDataRes(types.String)
 	},
@@ -12645,6 +12651,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.module.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.onDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).OnDisk, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.builtIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).BuiltIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"kernel.cmdline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30711,6 +30725,8 @@ type mqlKernelModule struct {
 	Blacklisted   plugin.TValue[bool]
 	InstallBypass plugin.TValue[bool]
 	Disabled      plugin.TValue[bool]
+	OnDisk        plugin.TValue[bool]
+	BuiltIn       plugin.TValue[bool]
 }
 
 // createKernelModule creates a new instance of this resource
@@ -30777,6 +30793,18 @@ func (c *mqlKernelModule) GetInstallBypass() *plugin.TValue[bool] {
 func (c *mqlKernelModule) GetDisabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Disabled, func() (bool, error) {
 		return c.disabled()
+	})
+}
+
+func (c *mqlKernelModule) GetOnDisk() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OnDisk, func() (bool, error) {
+		return c.onDisk()
+	})
+}
+
+func (c *mqlKernelModule) GetBuiltIn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BuiltIn, func() (bool, error) {
+		return c.builtIn()
 	})
 }
 

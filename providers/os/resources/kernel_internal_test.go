@@ -377,3 +377,162 @@ func TestSuseKernelMatchesRunning(t *testing.T) {
 		})
 	}
 }
+
+// TestModuleNameFromPath locks down the extraction of a bare module name
+// from the path entries found in modules.dep and modules.builtin. The tricky
+// parts are the compression suffixes that modern kernels apply to .ko files
+// (.xz / .zst / .gz) and the dash↔underscore normalization the kernel applies
+// to module names.
+func TestModuleNameFromPath(t *testing.T) {
+	cases := []struct {
+		in  string
+		out string
+	}{
+		{"kernel/net/netfilter/nf_conntrack.ko", "nf_conntrack"},
+		{"kernel/fs/cramfs/cramfs.ko.xz", "cramfs"},
+		{"kernel/fs/squashfs/squashfs.ko.zst", "squashfs"},
+		{"kernel/drivers/usb/storage/usb-storage.ko.gz", "usb_storage"},
+		// leading/trailing whitespace (modules.dep keeps the colon on the LHS,
+		// which the caller strips, but tabs around builtin entries appear too)
+		{"\tkernel/fs/ext4/ext4.ko\t", "ext4"},
+		{"snd-hda-intel.ko", "snd_hda_intel"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.Equal(t, tc.out, moduleNameFromPath(tc.in))
+		})
+	}
+}
+
+// TestNormalizeModuleName confirms dashes collapse to underscores so a lookup
+// by either spelling resolves the same module (the kernel treats them as
+// equivalent and lsmod always reports underscores).
+func TestNormalizeModuleName(t *testing.T) {
+	assert.Equal(t, "usb_storage", normalizeModuleName("usb-storage"))
+	assert.Equal(t, "usb_storage", normalizeModuleName("usb_storage"))
+	assert.Equal(t, "nf_conntrack", normalizeModuleName("nf_conntrack"))
+	assert.Equal(t, "", normalizeModuleName(""))
+}
+
+// TestParseModulesDep locks down the modules.dep parser behind
+// kernel.module.onDisk. Real Debian/Ubuntu indexes compress modules
+// (.ko.zst / .ko.xz), list each loadable module as the left-hand side of a
+// "module: deps" line, and may carry hundreds of dependency paths on the
+// right that must NOT be treated as separately installed modules unless they
+// appear as their own left-hand entry.
+func TestParseModulesDep(t *testing.T) {
+	cases := []struct {
+		name    string
+		content string
+		present []string // expected onDisk
+		absent  []string // expected NOT onDisk
+	}{
+		{
+			name:    "single module, no deps, trailing colon",
+			content: "kernel/fs/overlayfs/overlay.ko.zst:",
+			present: []string{"overlay"},
+		},
+		{
+			name: "module with deps records only the left-hand side",
+			content: "kernel/net/netfilter/nf_conntrack.ko: " +
+				"kernel/net/netfilter/nf_defrag_ipv4.ko kernel/lib/libcrc32c.ko",
+			present: []string{"nf_conntrack"},
+			// deps on the RHS are not independently installed unless they
+			// also appear as their own left-hand entry.
+			absent: []string{"nf_defrag_ipv4", "libcrc32c"},
+		},
+		{
+			name: "dep that also has its own line is present",
+			content: "kernel/net/netfilter/nf_conntrack.ko: kernel/lib/libcrc32c.ko\n" +
+				"kernel/lib/libcrc32c.ko:",
+			present: []string{"nf_conntrack", "libcrc32c"},
+		},
+		{
+			name: "all compression suffixes and dash normalization",
+			content: "kernel/fs/cramfs/cramfs.ko.xz:\n" +
+				"kernel/fs/squashfs/squashfs.ko.zst:\n" +
+				"kernel/drivers/usb/storage/usb-storage.ko.gz:\n" +
+				"kernel/sound/pci/hda/snd-hda-intel.ko:",
+			present: []string{"cramfs", "squashfs", "usb_storage", "snd_hda_intel"},
+		},
+		{
+			name:    "blank lines, whitespace-only lines, and a trailing newline are ignored",
+			content: "\n  \n\t\nkernel/fs/jffs2/jffs2.ko:\n\n",
+			present: []string{"jffs2"},
+		},
+		{
+			name:    "duplicate module across lines is idempotent",
+			content: "kernel/fs/hfs/hfs.ko:\nkernel/fs/hfs/hfs.ko: kernel/dep.ko",
+			present: []string{"hfs"},
+		},
+		{
+			name:    "empty content yields no modules",
+			content: "",
+			absent:  []string{"anything"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseModulesDep(tc.content)
+			for _, name := range tc.present {
+				assert.True(t, got[name], "expected %q to be on disk", name)
+			}
+			for _, name := range tc.absent {
+				assert.False(t, got[name], "expected %q NOT to be on disk", name)
+			}
+		})
+	}
+}
+
+// TestParseModulesBuiltin locks down the modules.builtin parser behind
+// kernel.module.builtIn. Each non-blank line is one module path; the file
+// uses the ".ko" suffix on modern kernels but historically listed bare paths
+// without an extension, and dash/underscore normalization applies the same
+// way as modules.dep.
+func TestParseModulesBuiltin(t *testing.T) {
+	cases := []struct {
+		name    string
+		content string
+		present []string
+		absent  []string
+	}{
+		{
+			name:    "modern .ko-suffixed entries",
+			content: "kernel/fs/ext4/ext4.ko\nkernel/net/ipv4/tcp_cubic.ko",
+			present: []string{"ext4", "tcp_cubic"},
+		},
+		{
+			name:    "legacy entries without a .ko extension",
+			content: "kernel/fs/ext4/ext4\nkernel/drivers/char/random",
+			present: []string{"ext4", "random"},
+		},
+		{
+			name:    "dash normalization",
+			content: "kernel/drivers/usb/storage/usb-storage.ko",
+			present: []string{"usb_storage"},
+		},
+		{
+			name:    "blank lines and trailing newline ignored",
+			content: "\nkernel/fs/ext4/ext4.ko\n  \n",
+			present: []string{"ext4"},
+		},
+		{
+			name:    "empty content yields no modules",
+			content: "",
+			absent:  []string{"ext4"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseModulesBuiltin(tc.content)
+			for _, name := range tc.present {
+				assert.True(t, got[name], "expected %q to be builtin", name)
+			}
+			for _, name := range tc.absent {
+				assert.False(t, got[name], "expected %q NOT to be builtin", name)
+			}
+		})
+	}
+}

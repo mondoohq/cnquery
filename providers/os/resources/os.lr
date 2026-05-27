@@ -2441,7 +2441,10 @@ kernel @defaults("info") {
 // or iterate from `kernel.modules()` to audit the full loaded-module list.
 // Use `blacklisted`, `installBypass`, and `disabled` to express CIS-style
 // "module must not load" controls without falling back to raw modprobe.d
-// file parsing.
+// file parsing. Use `onDisk` to tell whether a loadable module file is
+// available for the running kernel even when it isn't currently loaded,
+// and `builtIn` to detect functionality compiled directly into the kernel
+// (which is always active and cannot be blacklisted or unloaded).
 kernel.module @defaults("name loaded") {
   init(name string)
 
@@ -2473,6 +2476,23 @@ kernel.module @defaults("name loaded") {
   // short-circuit rule. Use this as the canonical "module will not load
   // without explicit override" predicate.
   disabled() bool
+  // Whether a loadable module file is installed on disk for the running kernel
+  //
+  // True when a `.ko` (or compressed `.ko.xz` / `.ko.zst` / `.ko.gz`)
+  // file for this module exists under `/lib/modules/<version>/`, as
+  // listed in that kernel's `modules.dep` index. This reports presence
+  // independently of `loaded`, so it answers "the module is available to
+  // load but isn't loaded right now." Modules compiled into the kernel
+  // have no file on disk and report false here — see `builtIn`.
+  onDisk() bool
+  // Whether the module is compiled into the kernel image
+  //
+  // True when the functionality is built directly into the kernel
+  // (configured `=y`) rather than shipped as a loadable file, as listed
+  // in the running kernel's `modules.builtin` index. Built-in modules
+  // are always active: they never appear in `loaded`, have no file on
+  // disk (`onDisk` is false), and cannot be blacklisted or unloaded.
+  builtIn() bool
 }
 
 // Linux kernel boot command line
