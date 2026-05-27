@@ -3551,6 +3551,42 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // `masterAuthorizedNetworksConfig` and the access-related fields of
   // `privateClusterConfig`.
   controlPlaneEndpointsConfig dict
+  // Whether the control plane is reachable through a public IP endpoint
+  //
+  // True when the modern `controlPlaneEndpointsConfig.ipEndpointsConfig`
+  // permits public access, or when the legacy `privateClusterConfig` did not
+  // enable a private endpoint. A `false` result means the API server is only
+  // reachable over private networking.
+  controlPlanePublicEndpointEnabled bool
+  // CIDR blocks permitted to reach the control plane
+  //
+  // The source ranges from the master authorized networks allowlist, read
+  // from the modern `controlPlaneEndpointsConfig.ipEndpointsConfig`
+  // authorized-networks config when present, otherwise from the legacy
+  // `masterAuthorizedNetworksConfig`. An empty list with
+  // `masterAuthorizedNetworksAllowed` enabled means no external CIDR can
+  // reach the control plane.
+  masterAuthorizedNetworksCidrs []string
+  // Whether master authorized networks restricts control plane access
+  //
+  // True when the master authorized networks allowlist is enforced (modern
+  // or legacy). When false, the control plane is reachable from any source
+  // permitted by the endpoint configuration.
+  masterAuthorizedNetworksAllowed bool
+  // Logging components enabled on the control plane
+  //
+  // The members of `loggingConfig.componentConfig.enableComponents` —
+  // `SYSTEM_COMPONENTS`, `WORKLOADS`, `APISERVER`, `SCHEDULER`, and
+  // `CONTROLLER_MANAGER`. An empty list means cluster logging is disabled.
+  controlPlaneLoggingComponents []string
+  // Monitoring components enabled on the control plane
+  //
+  // The members of `monitoringConfig.componentConfig.enableComponents` —
+  // `SYSTEM_COMPONENTS`, `APISERVER`, `SCHEDULER`, `CONTROLLER_MANAGER`,
+  // `STORAGE`, `HPA`, `POD`, `DAEMONSET`, `DEPLOYMENT`, `STATEFULSET`,
+  // `CADVISOR`, `KUBELET`, `DCGM`, and `JOBSET`. An empty list means cluster
+  // monitoring is disabled.
+  controlPlaneMonitoringComponents []string
   // Logging configuration
   //
   // Examine which logging components are enabled for the cluster. The
@@ -5973,6 +6009,17 @@ private gcp.project.cloudRunService.service @defaults("name") {
   satisfiesPzs bool
   // Binary authorization configuration (useDefault, policy, breakglassJustification)
   binaryAuthorization dict
+  // Whether the service uses the project's default Binary Authorization policy
+  //
+  // True when the service inherits the project-singleton Binary Authorization
+  // policy rather than a service-specific policy reference.
+  binaryAuthorizationUseDefault bool
+  // Breakglass justification recorded for Binary Authorization
+  //
+  // When set, indicates the service was deployed bypassing Binary
+  // Authorization enforcement with this justification text. An empty value
+  // means no breakglass override is in effect.
+  binaryAuthorizationBreakglassJustification string
   // Unique identifier
   uid string
   // ETag for optimistic locking

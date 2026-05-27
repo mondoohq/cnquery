@@ -1178,6 +1178,8 @@ gcp.project.cloudRunService.regions 9.0.0
 gcp.project.cloudRunService.service 9.0.0
 gcp.project.cloudRunService.service.annotations 9.0.0
 gcp.project.cloudRunService.service.binaryAuthorization 13.7.2
+gcp.project.cloudRunService.service.binaryAuthorizationBreakglassJustification 13.18.1
+gcp.project.cloudRunService.service.binaryAuthorizationUseDefault 13.18.1
 gcp.project.cloudRunService.service.conditions 9.0.0
 gcp.project.cloudRunService.service.created 9.0.0
 gcp.project.cloudRunService.service.creator 9.0.0
@@ -2846,6 +2848,9 @@ gcp.project.gkeService.cluster.clusterIpv4Cidr 9.0.0
 gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
+gcp.project.gkeService.cluster.controlPlaneLoggingComponents 13.18.1
+gcp.project.gkeService.cluster.controlPlaneMonitoringComponents 13.18.1
+gcp.project.gkeService.cluster.controlPlanePublicEndpointEnabled 13.18.1
 gcp.project.gkeService.cluster.costManagementConfig 9.0.0
 gcp.project.gkeService.cluster.created 9.0.0
 gcp.project.gkeService.cluster.currentMasterVersion 9.0.0
@@ -2896,6 +2901,8 @@ gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowRecurrence 11.6.
 gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowStartTime 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.resourceVersion 11.6.6
 gcp.project.gkeService.cluster.masterAuth 9.0.0
+gcp.project.gkeService.cluster.masterAuthorizedNetworksAllowed 13.18.1
+gcp.project.gkeService.cluster.masterAuthorizedNetworksCidrs 13.18.1
 gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled 13.12.2
 gcp.project.gkeService.cluster.masterGlobalAccessEnabled 13.12.2

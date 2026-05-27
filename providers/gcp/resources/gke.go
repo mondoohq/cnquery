@@ -555,18 +555,56 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 
 		var masterAuthorizedNetworksCfg map[string]any
 		var masterAuthorizedNetworksEnabled bool
+		// Derived: the CIDR allowlist and enablement read from the modern
+		// ControlPlaneEndpointsConfig when present, otherwise the legacy
+		// MasterAuthorizedNetworksConfig.
+		var masterAuthorizedNetworksCidrs []any
+		var masterAuthorizedNetworksAllowed bool
 		if c.MasterAuthorizedNetworksConfig != nil {
 			masterAuthorizedNetworksEnabled = c.MasterAuthorizedNetworksConfig.Enabled
+			masterAuthorizedNetworksAllowed = c.MasterAuthorizedNetworksConfig.Enabled
 			cidrBlocks := make([]any, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
 			for _, cidrBlock := range c.MasterAuthorizedNetworksConfig.CidrBlocks {
 				cidrBlocks = append(cidrBlocks, map[string]any{
 					"displayName": cidrBlock.DisplayName,
 					"cidrBlock":   cidrBlock.CidrBlock,
 				})
+				masterAuthorizedNetworksCidrs = append(masterAuthorizedNetworksCidrs, cidrBlock.CidrBlock)
 			}
 			masterAuthorizedNetworksCfg = map[string]any{
 				"enabled":    c.MasterAuthorizedNetworksConfig.Enabled,
 				"cidrBlocks": cidrBlocks,
+			}
+		}
+
+		// Modern control-plane endpoint config overrides the legacy access fields.
+		controlPlanePublicEndpointEnabled := false
+		if ipc := c.GetControlPlaneEndpointsConfig().GetIpEndpointsConfig(); ipc != nil {
+			controlPlanePublicEndpointEnabled = ipc.GetEnablePublicEndpoint()
+			if anc := ipc.GetAuthorizedNetworksConfig(); anc != nil {
+				masterAuthorizedNetworksAllowed = anc.GetEnabled()
+				modernCidrs := make([]any, 0, len(anc.CidrBlocks))
+				for _, cidrBlock := range anc.CidrBlocks {
+					modernCidrs = append(modernCidrs, cidrBlock.CidrBlock)
+				}
+				masterAuthorizedNetworksCidrs = modernCidrs
+			}
+		} else if c.PrivateClusterConfig != nil {
+			// Legacy: public endpoint is enabled when the private endpoint is not.
+			controlPlanePublicEndpointEnabled = !c.PrivateClusterConfig.EnablePrivateEndpoint
+		}
+
+		controlPlaneLoggingComponents := make([]any, 0)
+		if cc := c.GetLoggingConfig().GetComponentConfig(); cc != nil {
+			for _, comp := range cc.EnableComponents {
+				controlPlaneLoggingComponents = append(controlPlaneLoggingComponents, comp.String())
+			}
+		}
+
+		controlPlaneMonitoringComponents := make([]any, 0)
+		if cc := c.GetMonitoringConfig().GetComponentConfig(); cc != nil {
+			for _, comp := range cc.EnableComponents {
+				controlPlaneMonitoringComponents = append(controlPlaneMonitoringComponents, comp.String())
 			}
 		}
 
@@ -826,6 +864,11 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"enabledK8sBetaApis":                llx.ArrayData(enabledK8sBetaApis, types.String),
 			"meshCertificates":                  llx.DictData(meshCertificates),
 			"controlPlaneEndpointsConfig":       llx.DictData(controlPlaneEndpointsConfig),
+			"controlPlanePublicEndpointEnabled": llx.BoolData(controlPlanePublicEndpointEnabled),
+			"masterAuthorizedNetworksCidrs":     llx.ArrayData(masterAuthorizedNetworksCidrs, types.String),
+			"masterAuthorizedNetworksAllowed":   llx.BoolData(masterAuthorizedNetworksAllowed),
+			"controlPlaneLoggingComponents":     llx.ArrayData(controlPlaneLoggingComponents, types.String),
+			"controlPlaneMonitoringComponents":  llx.ArrayData(controlPlaneMonitoringComponents, types.String),
 			"loggingConfig":                     llx.DictData(loggingConfig),
 			"monitoringConfig":                  llx.DictData(monitoringConfig),
 			"secretManagerConfig":               llx.DictData(secretManagerConfig),
