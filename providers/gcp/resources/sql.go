@@ -612,6 +612,11 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				}
 			}
 
+			var serverCaCertExpiration *time.Time
+			if instance.ServerCaCert != nil {
+				serverCaCertExpiration = parseTime(instance.ServerCaCert.ExpirationTime)
+			}
+
 			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance", map[string]*llx.RawData{
 				"availableMaintenanceVersions": llx.ArrayData(convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String),
 				"backendType":                  llx.StringData(instance.BackendType),
@@ -651,6 +656,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"scheduledMaintenance":       llx.DictData(mqlScheduledMaint),
 				"upgradableDatabaseVersions": llx.ArrayData(mqlUpgradableVersions, types.Dict),
 				"replicationCluster":         llx.DictData(mqlReplicationClusterDict),
+				"serverCaCertExpiration":     llx.TimeDataPtr(serverCaCertExpiration),
 			})
 			if err != nil {
 				return err

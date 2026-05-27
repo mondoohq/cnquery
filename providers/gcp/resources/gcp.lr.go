@@ -4907,6 +4907,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.replicationCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetReplicationCluster()).ToDataRes(types.Dict)
 	},
+	"gcp.project.sqlService.instance.serverCaCertExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetServerCaCertExpiration()).ToDataRes(types.Time)
+	},
 	"gcp.project.sqlService.instance.database.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceDatabase).GetProjectId()).ToDataRes(types.String)
 	},
@@ -19083,6 +19086,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.replicationCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).ReplicationCluster, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.serverCaCertExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).ServerCaCertExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43374,6 +43381,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	ScheduledMaintenance                       plugin.TValue[any]
 	UpgradableDatabaseVersions                 plugin.TValue[[]any]
 	ReplicationCluster                         plugin.TValue[any]
+	ServerCaCertExpiration                     plugin.TValue[*time.Time]
 }
 
 // createGcpProjectSqlServiceInstance creates a new instance of this resource
@@ -43705,6 +43713,10 @@ func (c *mqlGcpProjectSqlServiceInstance) GetUpgradableDatabaseVersions() *plugi
 
 func (c *mqlGcpProjectSqlServiceInstance) GetReplicationCluster() *plugin.TValue[any] {
 	return &c.ReplicationCluster
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetServerCaCertExpiration() *plugin.TValue[*time.Time] {
+	return &c.ServerCaCertExpiration
 }
 
 // mqlGcpProjectSqlServiceInstanceDatabase for the gcp.project.sqlService.instance.database resource
@@ -46605,7 +46617,12 @@ func createGcpProjectDnsServiceResponsePolicy(runtime *plugin.Runtime, args map[
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("gcp.project.dnsService.responsePolicy", res.__id)

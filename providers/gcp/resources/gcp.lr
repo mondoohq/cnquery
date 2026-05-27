@@ -2600,6 +2600,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   // `failoverDrReplicaName` is set on the primary to designate the DR
   // replica.
   replicationCluster dict
+  // Expiration time of the instance's server CA certificate used for TLS
+  serverCaCertExpiration time
 }
 
 // Google Cloud (GCP) SQL instance database

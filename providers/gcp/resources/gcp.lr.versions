@@ -4202,6 +4202,7 @@ gcp.project.sqlService.instance.satisfiesPzi 11.6.6
 gcp.project.sqlService.instance.satisfiesPzs 11.6.6
 gcp.project.sqlService.instance.scheduledMaintenance 13.16.3
 gcp.project.sqlService.instance.secondaryZone 11.6.6
+gcp.project.sqlService.instance.serverCaCertExpiration 13.18.1
 gcp.project.sqlService.instance.serviceAccountEmailAddress 9.0.0
 gcp.project.sqlService.instance.settings 9.0.0
 gcp.project.sqlService.instance.settings.activationPolicy 9.0.0
