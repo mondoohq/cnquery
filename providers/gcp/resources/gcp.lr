@@ -1475,10 +1475,64 @@ private gcp.project.computeService.instance.osInventory @defaults("name updateTi
   // Full resource name of the inventory
   name string
   // Operating system details reported by the OS Config agent
-  osInfo dict
+  //
+  // Deprecated in favor of the os* and kernel* fields, which expose the
+  // same operating system details as scalars. Retained for backward
+  // compatibility.
+  osInfo @maturity("deprecated") dict
   // Installed packages and available package updates, each keyed by its item id
-  items []dict
+  //
+  // Deprecated in favor of inventoryItems, which exposes each package as a
+  // resource with its type, package manager, name, version, and
+  // architecture. Retained for backward compatibility.
+  items @maturity("deprecated") []dict
+  // VM hostname reported by the OS Config agent
+  osHostname string
+  // Operating system long name (for example "Debian GNU/Linux 9")
+  osLongName string
+  // Operating system short name (for example "debian" or "windows")
+  osShortName string
+  // Operating system version
+  osVersion string
+  // System architecture of the operating system
+  osArchitecture string
+  // Kernel version of the operating system
+  kernelVersion string
+  // Kernel release of the operating system
+  kernelRelease string
+  // Version of the OS Config agent running on the VM
+  osConfigAgentVersion string
+  // Installed packages and available package updates on the instance
+  //
+  // Each entry records the inventory item type, the package manager, and the
+  // package name, version, and architecture.
+  inventoryItems []gcp.project.computeService.instance.osInventory.item
   // Time the inventory was last refreshed
+  updateTime time
+}
+
+// Inventory item on a Compute Engine instance
+//
+// Examine a single piece of OS inventory reported by the OS Config agent —
+// either an installed package or an available package update. The `type`
+// field distinguishes the two, `packageType` records the package manager
+// (apt, yum, zypper, googet, wua, qfe, cos, zypperPatch, or
+// windowsApplication), and `packageName`, `packageVersion`, and
+// `packageArchitecture` identify the package.
+private gcp.project.computeService.instance.osInventory.item @defaults("packageName packageVersion type") {
+  // Identifier of the inventory item, unique across items for the VM
+  itemId string
+  // Inventory item type (INSTALLED_PACKAGE or AVAILABLE_PACKAGE)
+  type string
+  // Package manager that provides the package (apt, yum, zypper, googet, wua, qfe, cos, zypperPatch, windowsApplication)
+  packageType string
+  // Name of the package
+  packageName string
+  // Version of the package
+  packageVersion string
+  // System architecture the package is intended for
+  packageArchitecture string
+  // Time the inventory item was last modified
   updateTime time
 }
 
@@ -1494,10 +1548,50 @@ private gcp.project.computeService.instance.vulnerabilityReport @defaults("name 
   // Full resource name of the vulnerability report
   name string
   // Vulnerabilities affecting installed packages on the instance
-  vulnerabilities []dict
+  //
+  // Deprecated in favor of vulnerabilityDetails, which exposes each
+  // vulnerability as a resource with its CVE, severity, score, and
+  // affected/fixed inventory items. Retained for backward compatibility.
+  vulnerabilities @maturity("deprecated") []dict
+  // Vulnerabilities affecting installed packages on the instance
+  //
+  // Each entry records the CVE, the distro-assigned severity, the CVSS v3
+  // base score, and the inventory items the vulnerability affects or that
+  // would fix it.
+  vulnerabilityDetails []gcp.project.computeService.instance.vulnerabilityReport.vulnerability
   // Highest severity among upgradable vulnerabilities with an attached CVE (NONE, MINIMAL, LOW, MEDIUM, HIGH, CRITICAL)
   highestUpgradableCveSeverity string
   // Time the report was last refreshed
+  updateTime time
+}
+
+// Vulnerability detected by VM Manager on a Compute Engine instance
+//
+// Examine a single vulnerability that VM Manager correlated against the
+// instance's OS inventory. The `cve` identifies the issue, `severity` and
+// `cvssV3Score` rank it, and `installedInventoryItemIds` /
+// `availableInventoryItemIds` link to the affected and fixing inventory
+// items. `fixedCpeUris` and `upstreamFixes` list the recommended fixes.
+private gcp.project.computeService.instance.vulnerabilityReport.vulnerability @defaults("cve severity") {
+  // CVE identifier of the vulnerability
+  cve string
+  // Severity ranking assigned by the distro (NONE, MINIMAL, LOW, MEDIUM, HIGH, CRITICAL)
+  severity string
+  // CVSS v3 base score from 0 (low) to 10 (high)
+  cvssV3Score float
+  // Description of the vulnerability from the distro
+  description string
+  // Inventory item ids of the installed packages affected by this vulnerability
+  installedInventoryItemIds []string
+  // Inventory item ids of the available packages that fix this vulnerability
+  availableInventoryItemIds []string
+  // Recommended CPE URIs that contain a fix for this vulnerability
+  fixedCpeUris []string
+  // Upstream OS patches, packages, or KBs that fix this vulnerability
+  upstreamFixes []string
+  // References attached to the vulnerability details
+  references []dict
+  // Time the vulnerability was last modified
   updateTime time
 }
 
@@ -12254,7 +12348,25 @@ private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
   // Remediation details
   remediation string
   // Vulnerability details (if kind is VULNERABILITY)
-  vulnerability dict
+  //
+  // Deprecated in favor of the vulnerability* fields, which expose the
+  // severity, CVSS score, fix availability, and descriptions as scalars.
+  // Retained for backward compatibility.
+  vulnerability @maturity("deprecated") dict
+  // Note-provider severity of the vulnerability (when kind is VULNERABILITY)
+  vulnerabilitySeverity string
+  // Distro-assigned effective severity of the vulnerability (when kind is VULNERABILITY)
+  vulnerabilityEffectiveSeverity string
+  // CVSS score of the vulnerability from 0 (low) to 10 (high)
+  vulnerabilityCvssScore float
+  // Whether at least one affected package has a fix available
+  vulnerabilityFixAvailable bool
+  // One-sentence description of the vulnerability (typically the CVE id)
+  vulnerabilityShortDescription string
+  // Detailed description of the vulnerability
+  vulnerabilityLongDescription string
+  // Affected locations and their fixes within the associated resource
+  vulnerabilityPackageIssues []dict
   // Build details (if kind is BUILD)
   build dict
   // Image details (if kind is IMAGE)

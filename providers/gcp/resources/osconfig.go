@@ -357,16 +357,101 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 		items = append(items, dict)
 	}
 
+	inventoryItems := make([]any, 0, len(inv.Items))
+	for _, item := range inv.Items {
+		mqlItem, err := newMqlOsInventoryItem(g.MqlRuntime, inv.Name, &item)
+		if err != nil {
+			return nil, err
+		}
+		inventoryItems = append(inventoryItems, mqlItem)
+	}
+
+	var osHostname, osLongName, osShortName, osVersion, osArchitecture, kernelVersion, kernelRelease, osConfigAgentVersion string
+	if inv.OsInfo != nil {
+		osHostname = inv.OsInfo.Hostname
+		osLongName = inv.OsInfo.LongName
+		osShortName = inv.OsInfo.ShortName
+		osVersion = inv.OsInfo.Version
+		osArchitecture = inv.OsInfo.Architecture
+		kernelVersion = inv.OsInfo.KernelVersion
+		kernelRelease = inv.OsInfo.KernelRelease
+		osConfigAgentVersion = inv.OsInfo.OsconfigAgentVersion
+	}
+
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.osInventory", map[string]*llx.RawData{
-		"name":       llx.StringData(inv.Name),
-		"osInfo":     llx.DictData(osInfo),
-		"items":      llx.ArrayData(items, types.Dict),
-		"updateTime": llx.TimeDataPtr(parseTime(inv.UpdateTime)),
+		"name":                 llx.StringData(inv.Name),
+		"osInfo":               llx.DictData(osInfo),
+		"items":                llx.ArrayData(items, types.Dict),
+		"osHostname":           llx.StringData(osHostname),
+		"osLongName":           llx.StringData(osLongName),
+		"osShortName":          llx.StringData(osShortName),
+		"osVersion":            llx.StringData(osVersion),
+		"osArchitecture":       llx.StringData(osArchitecture),
+		"kernelVersion":        llx.StringData(kernelVersion),
+		"kernelRelease":        llx.StringData(kernelRelease),
+		"osConfigAgentVersion": llx.StringData(osConfigAgentVersion),
+		"inventoryItems":       llx.ArrayData(inventoryItems, types.Resource("gcp.project.computeService.instance.osInventory.item")),
+		"updateTime":           llx.TimeDataPtr(parseTime(inv.UpdateTime)),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlGcpProjectComputeServiceInstanceOsInventory), nil
+}
+
+// osInventorySoftwarePackage extracts the package manager label, name,
+// version, and architecture from whichever variant of the inventory software
+// package is set.
+func osInventorySoftwarePackage(pkg *osconfig.InventorySoftwarePackage) (pkgType, name, version, arch string) {
+	if pkg == nil {
+		return "", "", "", ""
+	}
+	switch {
+	case pkg.AptPackage != nil:
+		v := pkg.AptPackage
+		return "apt", v.PackageName, v.Version, v.Architecture
+	case pkg.YumPackage != nil:
+		v := pkg.YumPackage
+		return "yum", v.PackageName, v.Version, v.Architecture
+	case pkg.ZypperPackage != nil:
+		v := pkg.ZypperPackage
+		return "zypper", v.PackageName, v.Version, v.Architecture
+	case pkg.GoogetPackage != nil:
+		v := pkg.GoogetPackage
+		return "googet", v.PackageName, v.Version, v.Architecture
+	case pkg.CosPackage != nil:
+		v := pkg.CosPackage
+		return "cos", v.PackageName, v.Version, v.Architecture
+	case pkg.WuaPackage != nil:
+		return "wua", pkg.WuaPackage.Title, "", ""
+	case pkg.QfePackage != nil:
+		return "qfe", pkg.QfePackage.HotFixId, "", ""
+	case pkg.WindowsApplication != nil:
+		return "windowsApplication", pkg.WindowsApplication.DisplayName, pkg.WindowsApplication.DisplayVersion, ""
+	case pkg.ZypperPatch != nil:
+		return "zypperPatch", pkg.ZypperPatch.PatchName, "", ""
+	default:
+		return "", "", "", ""
+	}
+}
+
+func newMqlOsInventoryItem(runtime *plugin.Runtime, inventoryName string, item *osconfig.InventoryItem) (plugin.Resource, error) {
+	pkg := item.InstalledPackage
+	if pkg == nil {
+		pkg = item.AvailablePackage
+	}
+	pkgType, name, version, arch := osInventorySoftwarePackage(pkg)
+
+	return CreateResource(runtime, "gcp.project.computeService.instance.osInventory.item", map[string]*llx.RawData{
+		"__id":                llx.StringData(inventoryName + "/" + item.Id),
+		"itemId":              llx.StringData(item.Id),
+		"type":                llx.StringData(item.Type),
+		"packageType":         llx.StringData(pkgType),
+		"packageName":         llx.StringData(name),
+		"packageVersion":      llx.StringData(version),
+		"packageArchitecture": llx.StringData(arch),
+		"updateTime":          llx.TimeDataPtr(parseTime(item.UpdateTime)),
+	})
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProjectComputeServiceInstanceVulnerabilityReport, error) {
@@ -403,9 +488,19 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 		return nil, err
 	}
 
+	vulnDetails := make([]any, 0, len(report.Vulnerabilities))
+	for i, v := range report.Vulnerabilities {
+		mqlVuln, err := newMqlVulnerabilityReportVulnerability(g.MqlRuntime, report.Name, i, v)
+		if err != nil {
+			return nil, err
+		}
+		vulnDetails = append(vulnDetails, mqlVuln)
+	}
+
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.vulnerabilityReport", map[string]*llx.RawData{
 		"name":                         llx.StringData(report.Name),
 		"vulnerabilities":              llx.ArrayData(vulnerabilities, types.Dict),
+		"vulnerabilityDetails":         llx.ArrayData(vulnDetails, types.Resource("gcp.project.computeService.instance.vulnerabilityReport.vulnerability")),
 		"highestUpgradableCveSeverity": llx.StringData(report.HighestUpgradableCveSeverity),
 		"updateTime":                   llx.TimeDataPtr(parseTime(report.UpdateTime)),
 	})
@@ -413,4 +508,55 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 		return nil, err
 	}
 	return res.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport), nil
+}
+
+func newMqlVulnerabilityReportVulnerability(runtime *plugin.Runtime, reportName string, idx int, v *osconfig.VulnerabilityReportVulnerability) (plugin.Resource, error) {
+	var cve, severity, description string
+	var cvssV3Score float64
+	var references []any
+	if v.Details != nil {
+		cve = v.Details.Cve
+		severity = v.Details.Severity
+		description = v.Details.Description
+		if v.Details.CvssV3 != nil {
+			cvssV3Score = v.Details.CvssV3.BaseScore
+		}
+		var err error
+		references, err = convert.JsonToDictSlice(v.Details.References)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	fixedCpeUris := []any{}
+	upstreamFixes := []any{}
+	for _, item := range v.Items {
+		if item.FixedCpeUri != "" {
+			fixedCpeUris = append(fixedCpeUris, item.FixedCpeUri)
+		}
+		if item.UpstreamFix != "" {
+			upstreamFixes = append(upstreamFixes, item.UpstreamFix)
+		}
+	}
+
+	// CVE uniquely identifies a vulnerability per VM, but fall back to an index
+	// suffix to keep the cache key unique when it is unexpectedly empty.
+	idKey := cve
+	if idKey == "" {
+		idKey = fmt.Sprintf("vuln-%d", idx)
+	}
+
+	return CreateResource(runtime, "gcp.project.computeService.instance.vulnerabilityReport.vulnerability", map[string]*llx.RawData{
+		"__id":                      llx.StringData(reportName + "/" + idKey),
+		"cve":                       llx.StringData(cve),
+		"severity":                  llx.StringData(severity),
+		"cvssV3Score":               llx.FloatData(cvssV3Score),
+		"description":               llx.StringData(description),
+		"installedInventoryItemIds": llx.ArrayData(convert.SliceAnyToInterface(v.InstalledInventoryItemIds), types.String),
+		"availableInventoryItemIds": llx.ArrayData(convert.SliceAnyToInterface(v.AvailableInventoryItemIds), types.String),
+		"fixedCpeUris":              llx.ArrayData(fixedCpeUris, types.String),
+		"upstreamFixes":             llx.ArrayData(upstreamFixes, types.String),
+		"references":                llx.ArrayData(references, types.Dict),
+		"updateTime":                llx.TimeDataPtr(parseTime(v.UpdateTime)),
+	})
 }

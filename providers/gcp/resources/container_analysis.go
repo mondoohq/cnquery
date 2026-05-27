@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	grafeaspb "google.golang.org/genproto/googleapis/grafeas/v1"
@@ -125,6 +126,29 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			return nil, err
 		}
 
+		var (
+			vulnSeverity, vulnEffectiveSeverity       string
+			vulnCvssScore                             float64
+			vulnFixAvailable                          bool
+			vulnShortDescription, vulnLongDescription string
+			vulnPackageIssues                         []any
+		)
+		if v := occ.GetVulnerability(); v != nil {
+			vulnSeverity = v.Severity.String()
+			vulnEffectiveSeverity = v.EffectiveSeverity.String()
+			vulnCvssScore = float64(v.CvssScore)
+			vulnFixAvailable = v.FixAvailable
+			vulnShortDescription = v.ShortDescription
+			vulnLongDescription = v.LongDescription
+			for _, pi := range v.PackageIssue {
+				d, err := protoToDict(pi)
+				if err != nil {
+					return nil, err
+				}
+				vulnPackageIssues = append(vulnPackageIssues, d)
+			}
+		}
+
 		build, err := protoToDict(occ.GetBuild())
 		if err != nil {
 			return nil, err
@@ -156,20 +180,27 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 		}
 
 		mqlOcc, err := CreateResource(g.MqlRuntime, "gcp.project.containerAnalysisService.occurrence", map[string]*llx.RawData{
-			"name":          llx.StringData(occ.Name),
-			"resourceUri":   llx.StringData(occ.ResourceUri),
-			"noteName":      llx.StringData(occ.NoteName),
-			"kind":          llx.StringData(occ.Kind.String()),
-			"remediation":   llx.StringData(occ.Remediation),
-			"vulnerability": llx.DictData(vulnerability),
-			"build":         llx.DictData(build),
-			"image":         llx.DictData(image),
-			"packageInfo":   llx.DictData(packageInfo),
-			"deployment":    llx.DictData(deployment),
-			"discovery":     llx.DictData(discovery),
-			"attestation":   llx.DictData(attestation),
-			"created":       llx.TimeDataPtr(timestampAsTimePtr(occ.CreateTime)),
-			"updated":       llx.TimeDataPtr(timestampAsTimePtr(occ.UpdateTime)),
+			"name":                           llx.StringData(occ.Name),
+			"resourceUri":                    llx.StringData(occ.ResourceUri),
+			"noteName":                       llx.StringData(occ.NoteName),
+			"kind":                           llx.StringData(occ.Kind.String()),
+			"remediation":                    llx.StringData(occ.Remediation),
+			"vulnerability":                  llx.DictData(vulnerability),
+			"vulnerabilitySeverity":          llx.StringData(vulnSeverity),
+			"vulnerabilityEffectiveSeverity": llx.StringData(vulnEffectiveSeverity),
+			"vulnerabilityCvssScore":         llx.FloatData(vulnCvssScore),
+			"vulnerabilityFixAvailable":      llx.BoolData(vulnFixAvailable),
+			"vulnerabilityShortDescription":  llx.StringData(vulnShortDescription),
+			"vulnerabilityLongDescription":   llx.StringData(vulnLongDescription),
+			"vulnerabilityPackageIssues":     llx.ArrayData(vulnPackageIssues, types.Dict),
+			"build":                          llx.DictData(build),
+			"image":                          llx.DictData(image),
+			"packageInfo":                    llx.DictData(packageInfo),
+			"deployment":                     llx.DictData(deployment),
+			"discovery":                      llx.DictData(discovery),
+			"attestation":                    llx.DictData(attestation),
+			"created":                        llx.TimeDataPtr(timestampAsTimePtr(occ.CreateTime)),
+			"updated":                        llx.TimeDataPtr(timestampAsTimePtr(occ.UpdateTime)),
 		})
 		if err != nil {
 			return nil, err

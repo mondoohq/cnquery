@@ -51,7 +51,9 @@ const (
 	ResourceGcpProjectComputeServiceMachineType                                        string = "gcp.project.computeService.machineType"
 	ResourceGcpProjectComputeServiceInstance                                           string = "gcp.project.computeService.instance"
 	ResourceGcpProjectComputeServiceInstanceOsInventory                                string = "gcp.project.computeService.instance.osInventory"
+	ResourceGcpProjectComputeServiceInstanceOsInventoryItem                            string = "gcp.project.computeService.instance.osInventory.item"
 	ResourceGcpProjectComputeServiceInstanceVulnerabilityReport                        string = "gcp.project.computeService.instance.vulnerabilityReport"
+	ResourceGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability           string = "gcp.project.computeService.instance.vulnerabilityReport.vulnerability"
 	ResourceGcpProjectComputeServiceInstanceConfidentialCompute                        string = "gcp.project.computeService.instance.confidentialCompute"
 	ResourceGcpProjectComputeServiceInstanceShieldedInstanceConfig                     string = "gcp.project.computeService.instance.shieldedInstanceConfig"
 	ResourceGcpProjectComputeServiceServiceaccount                                     string = "gcp.project.computeService.serviceaccount"
@@ -580,9 +582,17 @@ func init() {
 			// to override args, implement: initGcpProjectComputeServiceInstanceOsInventory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServiceInstanceOsInventory,
 		},
+		"gcp.project.computeService.instance.osInventory.item": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceOsInventoryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceOsInventoryItem,
+		},
 		"gcp.project.computeService.instance.vulnerabilityReport": {
 			// to override args, implement: initGcpProjectComputeServiceInstanceVulnerabilityReport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServiceInstanceVulnerabilityReport,
+		},
+		"gcp.project.computeService.instance.vulnerabilityReport.vulnerability": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability,
 		},
 		"gcp.project.computeService.instance.confidentialCompute": {
 			// to override args, implement: initGcpProjectComputeServiceInstanceConfidentialCompute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3752,8 +3762,56 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.osInventory.items": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetItems()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.instance.osInventory.osHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsHostname()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osLongName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsLongName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osShortName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsShortName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osArchitecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsArchitecture()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.kernelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetKernelVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.kernelRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetKernelRelease()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osConfigAgentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsConfigAgentVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.inventoryItems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetInventoryItems()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instance.osInventory.item")))
+	},
 	"gcp.project.computeService.instance.osInventory.updateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.osInventory.item.itemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetItemId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetPackageType()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetPackageName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetPackageVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageArchitecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetPackageArchitecture()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.item.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetName()).ToDataRes(types.String)
@@ -3761,11 +3819,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.vulnerabilityReport.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetVulnerabilities()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerabilityDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetVulnerabilityDetails()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instance.vulnerabilityReport.vulnerability")))
+	},
 	"gcp.project.computeService.instance.vulnerabilityReport.highestUpgradableCveSeverity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetHighestUpgradableCveSeverity()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport.updateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.cve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetCve()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetSeverity()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.cvssV3Score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetCvssV3Score()).ToDataRes(types.Float)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.installedInventoryItemIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetInstalledInventoryItemIds()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.availableInventoryItemIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetAvailableInventoryItemIds()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.fixedCpeUris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetFixedCpeUris()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.upstreamFixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetUpstreamFixes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.references": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetReferences()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.computeService.instance.confidentialCompute.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceConfidentialCompute).GetEnabled()).ToDataRes(types.Bool)
@@ -14390,6 +14481,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.containerAnalysisService.occurrence.vulnerability": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerability()).ToDataRes(types.Dict)
 	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilitySeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilitySeverity()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityEffectiveSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityEffectiveSeverity()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityCvssScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityCvssScore()).ToDataRes(types.Float)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityFixAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityFixAvailable()).ToDataRes(types.Bool)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityShortDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityShortDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityLongDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityLongDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityPackageIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetVulnerabilityPackageIssues()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.containerAnalysisService.occurrence.build": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuild()).ToDataRes(types.Dict)
 	},
@@ -17492,8 +17604,76 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.osInventory.osHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osLongName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsLongName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osShortName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsShortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osArchitecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsArchitecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.kernelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).KernelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.kernelRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).KernelRelease, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osConfigAgentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsConfigAgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.inventoryItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).InventoryItems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.osInventory.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.itemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).ItemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).PackageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).PackageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).PackageVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.packageArchitecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).PackageArchitecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.item.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventoryItem).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17508,12 +17688,60 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerabilityDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).VulnerabilityDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.vulnerabilityReport.highestUpgradableCveSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).HighestUpgradableCveSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.cve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).Cve, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.cvssV3Score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).CvssV3Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.installedInventoryItemIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).InstalledInventoryItemIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.availableInventoryItemIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).AvailableInventoryItemIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.fixedCpeUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).FixedCpeUris, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.upstreamFixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).UpstreamFixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.references": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).References, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerability.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.confidentialCompute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33064,6 +33292,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Vulnerability, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilitySeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilitySeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityEffectiveSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityEffectiveSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityCvssScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityCvssScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityFixAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityFixAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityShortDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityShortDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityLongDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityLongDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.vulnerabilityPackageIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).VulnerabilityPackageIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.containerAnalysisService.occurrence.build": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Build, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -40383,10 +40639,19 @@ type mqlGcpProjectComputeServiceInstanceOsInventory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInstanceOsInventoryInternal it will be used here
-	Name       plugin.TValue[string]
-	OsInfo     plugin.TValue[any]
-	Items      plugin.TValue[[]any]
-	UpdateTime plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	OsInfo               plugin.TValue[any]
+	Items                plugin.TValue[[]any]
+	OsHostname           plugin.TValue[string]
+	OsLongName           plugin.TValue[string]
+	OsShortName          plugin.TValue[string]
+	OsVersion            plugin.TValue[string]
+	OsArchitecture       plugin.TValue[string]
+	KernelVersion        plugin.TValue[string]
+	KernelRelease        plugin.TValue[string]
+	OsConfigAgentVersion plugin.TValue[string]
+	InventoryItems       plugin.TValue[[]any]
+	UpdateTime           plugin.TValue[*time.Time]
 }
 
 // createGcpProjectComputeServiceInstanceOsInventory creates a new instance of this resource
@@ -40438,7 +40703,117 @@ func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetItems() *plugin.TVal
 	return &c.Items
 }
 
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsHostname() *plugin.TValue[string] {
+	return &c.OsHostname
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsLongName() *plugin.TValue[string] {
+	return &c.OsLongName
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsShortName() *plugin.TValue[string] {
+	return &c.OsShortName
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsArchitecture() *plugin.TValue[string] {
+	return &c.OsArchitecture
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetKernelVersion() *plugin.TValue[string] {
+	return &c.KernelVersion
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetKernelRelease() *plugin.TValue[string] {
+	return &c.KernelRelease
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsConfigAgentVersion() *plugin.TValue[string] {
+	return &c.OsConfigAgentVersion
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetInventoryItems() *plugin.TValue[[]any] {
+	return &c.InventoryItems
+}
+
 func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectComputeServiceInstanceOsInventoryItem for the gcp.project.computeService.instance.osInventory.item resource
+type mqlGcpProjectComputeServiceInstanceOsInventoryItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceOsInventoryItemInternal it will be used here
+	ItemId              plugin.TValue[string]
+	Type                plugin.TValue[string]
+	PackageType         plugin.TValue[string]
+	PackageName         plugin.TValue[string]
+	PackageVersion      plugin.TValue[string]
+	PackageArchitecture plugin.TValue[string]
+	UpdateTime          plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceInstanceOsInventoryItem creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceOsInventoryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceOsInventoryItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.osInventory.item", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) MqlName() string {
+	return "gcp.project.computeService.instance.osInventory.item"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetItemId() *plugin.TValue[string] {
+	return &c.ItemId
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetPackageType() *plugin.TValue[string] {
+	return &c.PackageType
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetPackageName() *plugin.TValue[string] {
+	return &c.PackageName
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetPackageVersion() *plugin.TValue[string] {
+	return &c.PackageVersion
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetPackageArchitecture() *plugin.TValue[string] {
+	return &c.PackageArchitecture
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventoryItem) GetUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.UpdateTime
 }
 
@@ -40449,6 +40824,7 @@ type mqlGcpProjectComputeServiceInstanceVulnerabilityReport struct {
 	// optional: if you define mqlGcpProjectComputeServiceInstanceVulnerabilityReportInternal it will be used here
 	Name                         plugin.TValue[string]
 	Vulnerabilities              plugin.TValue[[]any]
+	VulnerabilityDetails         plugin.TValue[[]any]
 	HighestUpgradableCveSeverity plugin.TValue[string]
 	UpdateTime                   plugin.TValue[*time.Time]
 }
@@ -40498,11 +40874,104 @@ func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetVulnerabilit
 	return &c.Vulnerabilities
 }
 
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetVulnerabilityDetails() *plugin.TValue[[]any] {
+	return &c.VulnerabilityDetails
+}
+
 func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetHighestUpgradableCveSeverity() *plugin.TValue[string] {
 	return &c.HighestUpgradableCveSeverity
 }
 
 func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability for the gcp.project.computeService.instance.vulnerabilityReport.vulnerability resource
+type mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerabilityInternal it will be used here
+	Cve                       plugin.TValue[string]
+	Severity                  plugin.TValue[string]
+	CvssV3Score               plugin.TValue[float64]
+	Description               plugin.TValue[string]
+	InstalledInventoryItemIds plugin.TValue[[]any]
+	AvailableInventoryItemIds plugin.TValue[[]any]
+	FixedCpeUris              plugin.TValue[[]any]
+	UpstreamFixes             plugin.TValue[[]any]
+	References                plugin.TValue[[]any]
+	UpdateTime                plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.vulnerabilityReport.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) MqlName() string {
+	return "gcp.project.computeService.instance.vulnerabilityReport.vulnerability"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetCve() *plugin.TValue[string] {
+	return &c.Cve
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetCvssV3Score() *plugin.TValue[float64] {
+	return &c.CvssV3Score
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetInstalledInventoryItemIds() *plugin.TValue[[]any] {
+	return &c.InstalledInventoryItemIds
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetAvailableInventoryItemIds() *plugin.TValue[[]any] {
+	return &c.AvailableInventoryItemIds
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetFixedCpeUris() *plugin.TValue[[]any] {
+	return &c.FixedCpeUris
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetUpstreamFixes() *plugin.TValue[[]any] {
+	return &c.UpstreamFixes
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetReferences() *plugin.TValue[[]any] {
+	return &c.References
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReportVulnerability) GetUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.UpdateTime
 }
 
@@ -76708,20 +77177,27 @@ type mqlGcpProjectContainerAnalysisServiceOccurrence struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectContainerAnalysisServiceOccurrenceInternal it will be used here
-	Name          plugin.TValue[string]
-	ResourceUri   plugin.TValue[string]
-	NoteName      plugin.TValue[string]
-	Kind          plugin.TValue[string]
-	Remediation   plugin.TValue[string]
-	Vulnerability plugin.TValue[any]
-	Build         plugin.TValue[any]
-	Image         plugin.TValue[any]
-	PackageInfo   plugin.TValue[any]
-	Deployment    plugin.TValue[any]
-	Discovery     plugin.TValue[any]
-	Attestation   plugin.TValue[any]
-	Created       plugin.TValue[*time.Time]
-	Updated       plugin.TValue[*time.Time]
+	Name                           plugin.TValue[string]
+	ResourceUri                    plugin.TValue[string]
+	NoteName                       plugin.TValue[string]
+	Kind                           plugin.TValue[string]
+	Remediation                    plugin.TValue[string]
+	Vulnerability                  plugin.TValue[any]
+	VulnerabilitySeverity          plugin.TValue[string]
+	VulnerabilityEffectiveSeverity plugin.TValue[string]
+	VulnerabilityCvssScore         plugin.TValue[float64]
+	VulnerabilityFixAvailable      plugin.TValue[bool]
+	VulnerabilityShortDescription  plugin.TValue[string]
+	VulnerabilityLongDescription   plugin.TValue[string]
+	VulnerabilityPackageIssues     plugin.TValue[[]any]
+	Build                          plugin.TValue[any]
+	Image                          plugin.TValue[any]
+	PackageInfo                    plugin.TValue[any]
+	Deployment                     plugin.TValue[any]
+	Discovery                      plugin.TValue[any]
+	Attestation                    plugin.TValue[any]
+	Created                        plugin.TValue[*time.Time]
+	Updated                        plugin.TValue[*time.Time]
 }
 
 // createGcpProjectContainerAnalysisServiceOccurrence creates a new instance of this resource
@@ -76783,6 +77259,34 @@ func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetRemediation() *plug
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerability() *plugin.TValue[any] {
 	return &c.Vulnerability
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilitySeverity() *plugin.TValue[string] {
+	return &c.VulnerabilitySeverity
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityEffectiveSeverity() *plugin.TValue[string] {
+	return &c.VulnerabilityEffectiveSeverity
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityCvssScore() *plugin.TValue[float64] {
+	return &c.VulnerabilityCvssScore
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityFixAvailable() *plugin.TValue[bool] {
+	return &c.VulnerabilityFixAvailable
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityShortDescription() *plugin.TValue[string] {
+	return &c.VulnerabilityShortDescription
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityLongDescription() *plugin.TValue[string] {
+	return &c.VulnerabilityLongDescription
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetVulnerabilityPackageIssues() *plugin.TValue[[]any] {
+	return &c.VulnerabilityPackageIssues
 }
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuild() *plugin.TValue[any] {
