@@ -352,8 +352,10 @@ func parseVariable(line string, decorators []string) parsedVariable {
 		v.name = m[1]
 		expr := strings.TrimSpace(m[2])
 		// A looped variable (`var names = [for i in range(0, 3): 'item-${i}']`)
-		// builds an array; store the per-iteration value expression in
-		// `expression` and record the loop header.
+		// builds an array. Intentionally store the per-iteration value
+		// expression in `expression` (here `'item-${i}'`), not the raw
+		// `[for ...]` text, and record the loop header separately. This keeps
+		// `expression` describing the value each iteration produces.
 		if loop := detectLoop(expr); loop.isLoop {
 			v.loop = loop
 			v.expression = loop.body
@@ -529,8 +531,10 @@ func parseOutput(line string, decorators []string) parsedOutput {
 		o.typ = m[2]
 		expr := strings.TrimSpace(m[3])
 		// A looped output (`output ids array = [for sa in sas: sa.id]`)
-		// produces an array; store the per-iteration value expression in
-		// `expression` and record the loop header.
+		// produces an array. Intentionally store the per-iteration value
+		// expression in `expression` (here `sa.id`), not the raw `[for ...]`
+		// text, and record the loop header separately. This keeps `expression`
+		// describing the value each iteration produces.
 		if loop := detectLoop(expr); loop.isLoop {
 			o.loop = loop
 			o.expression = loop.body

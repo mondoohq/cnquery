@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -1053,41 +1054,13 @@ param config = {
 }
 
 func TestParseBicepForLoops(t *testing.T) {
-	input := `param location string = 'eastus'
+	// The committed fixture is the single source of truth for the loop
+	// scenarios asserted below — read it rather than duplicating the Bicep
+	// inline, so the fixture and the test can't drift apart.
+	data, err := os.ReadFile("testdata/loops.bicep")
+	require.NoError(t, err)
 
-var storageNames = [
-  'stga'
-  'stgb'
-]
-
-var itemNames = [for i in range(0, 3): 'item-${i}']
-
-resource sas 'Microsoft.Storage/storageAccounts@2023-01-01' = [for (name, i) in storageNames: {
-  name: name
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-}]
-
-resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 'mykeyvault'
-  location: location
-}
-
-module stamps 'stamp.bicep' = [for sku in storageNames: {
-  name: 'stamp-${sku}'
-  params: {
-    skuName: sku
-  }
-}]
-
-output ids array = [for sa in sas: sa.id]
-
-output region string = location
-`
-
-	result := parseBicep(input)
+	result := parseBicep(string(data))
 
 	// --- variables ---
 	vars := map[string]parsedVariable{}
