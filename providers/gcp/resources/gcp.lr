@@ -3376,6 +3376,8 @@ private gcp.project.dnsService {
   managedZones() []gcp.project.dnsService.managedzone
   // Cloud DNS rules in project
   policies() []gcp.project.dnsService.policy
+  // Cloud DNS response policies in project
+  responsePolicies() []gcp.project.dnsService.responsePolicy
 }
 
 // Google Cloud DNS managed zone
@@ -3421,6 +3423,10 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecDefaultKeyAlgorithms []string
   // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
   privateVisibilityConfig dict
+  // IPv4 addresses of the name servers this private zone forwards outbound queries to (empty when forwarding is not configured)
+  forwardingTargets []string
+  // Fully qualified URL of the VPC network this private zone peers with for DNS resolution (empty when peering is not configured)
+  peeringNetwork string
   // Cloud DNS record set in the zone
   recordSets() []gcp.project.dnsService.recordset
   // IAM policy bindings for this managed zone
@@ -3472,6 +3478,34 @@ private gcp.project.dnsService.policy @defaults("name") {
   networkNames []string
   // List of networks to which this policy is applied
   networks() []gcp.project.computeService.network
+  // IPv4 addresses of alternative name servers that all DNS queries are forwarded to (outbound forwarding targets)
+  alternativeNameServers []string
+}
+
+// Google Cloud DNS response policy
+//
+// Examine a Cloud DNS response policy that overrides DNS answers for queries
+// made against one or more VPC networks. Because a response policy can
+// redirect or rewrite resolved addresses, surfacing its bindings matters for
+// security review. Surfaces the server-assigned `id`, the user-assigned
+// `responsePolicyName`, `description`, `networkUrls` / `networks()` listing
+// the VPC networks the policy is attached to, and `gkeClusters` naming any
+// bound GKE clusters.
+private gcp.project.dnsService.responsePolicy @defaults("responsePolicyName") {
+  // Project ID
+  projectId string
+  // Unique server-assigned identifier for the response policy
+  id string
+  // User-assigned name for this response policy
+  responsePolicyName string
+  // User-provided description for this response policy
+  description string
+  // Fully qualified URLs of the VPC networks this response policy is applied to
+  networkUrls []string
+  // VPC networks this response policy is applied to
+  networks() []gcp.project.computeService.network
+  // Resource names of the GKE clusters this response policy is applied to
+  gkeClusters []string
 }
 
 // Google Kubernetes Engine (GKE)

@@ -211,6 +211,20 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				}
 			}
 
+			forwardingTargets := []any{}
+			if managedZone.ForwardingConfig != nil {
+				for _, target := range managedZone.ForwardingConfig.TargetNameServers {
+					if target.Ipv4Address != "" {
+						forwardingTargets = append(forwardingTargets, target.Ipv4Address)
+					}
+				}
+			}
+
+			peeringNetwork := ""
+			if managedZone.PeeringConfig != nil && managedZone.PeeringConfig.TargetNetwork != nil {
+				peeringNetwork = managedZone.PeeringConfig.TargetNetwork.NetworkUrl
+			}
+
 			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
 				"id":                         llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
 				"projectId":                  llx.StringData(projectId),
@@ -227,6 +241,8 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				"dnssecEnabled":              llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
 				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),
 				"privateVisibilityConfig":    llx.DictData(mqlPrivateVisibilityCfg),
+				"forwardingTargets":          llx.ArrayData(forwardingTargets, types.String),
+				"peeringNetwork":             llx.StringData(peeringNetwork),
 			})
 			if err != nil {
 				return err
@@ -291,6 +307,15 @@ func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
 				networkNames = append(networkNames, segments[len(segments)-1])
 			}
 
+			altNameServers := []any{}
+			if policy.AlternativeNameServerConfig != nil {
+				for _, target := range policy.AlternativeNameServerConfig.TargetNameServers {
+					if target.Ipv4Address != "" {
+						altNameServers = append(altNameServers, target.Ipv4Address)
+					}
+				}
+			}
+
 			mqlDnsPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.policy", map[string]*llx.RawData{
 				"projectId":               llx.StringData(projectId),
 				"id":                      llx.StringData(strconv.FormatInt(int64(policy.Id), 10)),
@@ -299,6 +324,7 @@ func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
 				"enableInboundForwarding": llx.BoolData(policy.EnableInboundForwarding),
 				"enableLogging":           llx.BoolData(policy.EnableLogging),
 				"networkNames":            llx.ArrayData(networkNames, types.String),
+				"alternativeNameServers":  llx.ArrayData(altNameServers, types.String),
 			})
 			if err != nil {
 				return err
@@ -310,6 +336,122 @@ func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
 		return nil, err
 	}
 
+	return res, nil
+}
+
+func (g *mqlGcpProjectDnsServiceResponsePolicy) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	id := g.Id.Data
+	return "gcp.project.dnsService.responsePolicy/" + projectId + "/" + id, nil
+}
+
+func (g *mqlGcpProjectDnsService) responsePolicies() ([]any, error) {
+	// when the service is known to be disabled, we return nil
+	if g.serviceChecked && !g.serviceEnabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(dns.CloudPlatformReadOnlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	dnsSvc, err := dns.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	req := dnsSvc.ResponsePolicies.List(projectId)
+	if err := req.Pages(ctx, func(page *dns.ResponsePoliciesListResponse) error {
+		for i := range page.ResponsePolicies {
+			responsePolicy := page.ResponsePolicies[i]
+
+			networkUrls := make([]any, 0, len(responsePolicy.Networks))
+			for _, network := range responsePolicy.Networks {
+				networkUrls = append(networkUrls, network.NetworkUrl)
+			}
+
+			gkeClusters := make([]any, 0, len(responsePolicy.GkeClusters))
+			for _, c := range responsePolicy.GkeClusters {
+				gkeClusters = append(gkeClusters, c.GkeClusterName)
+			}
+
+			mqlResponsePolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.responsePolicy", map[string]*llx.RawData{
+				"projectId":          llx.StringData(projectId),
+				"id":                 llx.StringData(strconv.FormatInt(responsePolicy.Id, 10)),
+				"responsePolicyName": llx.StringData(responsePolicy.ResponsePolicyName),
+				"description":        llx.StringData(responsePolicy.Description),
+				"networkUrls":        llx.ArrayData(networkUrls, types.String),
+				"gkeClusters":        llx.ArrayData(gkeClusters, types.String),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlResponsePolicy)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectDnsServiceResponsePolicy) networks() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	networkUrls := g.GetNetworkUrls()
+	if networkUrls.Error != nil {
+		return nil, networkUrls.Error
+	}
+
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	gcpCompute := obj.(*mqlGcpProjectComputeService)
+	networks := gcpCompute.GetNetworks()
+	if networks.Error != nil {
+		return nil, networks.Error
+	}
+
+	res := make([]any, 0, len(networkUrls.Data))
+	for _, network := range networks.Data {
+		mqlNetwork := network.(*mqlGcpProjectComputeServiceNetwork)
+		for _, raw := range networkUrls.Data {
+			url, ok := raw.(string)
+			if !ok || url == "" {
+				continue
+			}
+			segments := strings.Split(url, "/")
+			if segments[len(segments)-1] == mqlNetwork.Name.Data {
+				res = append(res, network)
+				break
+			}
+		}
+	}
 	return res, nil
 }
 

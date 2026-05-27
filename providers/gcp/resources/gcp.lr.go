@@ -101,6 +101,7 @@ const (
 	ResourceGcpProjectDnsServiceManagedzone                                            string = "gcp.project.dnsService.managedzone"
 	ResourceGcpProjectDnsServiceRecordset                                              string = "gcp.project.dnsService.recordset"
 	ResourceGcpProjectDnsServicePolicy                                                 string = "gcp.project.dnsService.policy"
+	ResourceGcpProjectDnsServiceResponsePolicy                                         string = "gcp.project.dnsService.responsePolicy"
 	ResourceGcpProjectGkeService                                                       string = "gcp.project.gkeService"
 	ResourceGcpProjectGkeServiceCluster                                                string = "gcp.project.gkeService.cluster"
 	ResourceGcpProjectGkeServiceClusterNotificationConfig                              string = "gcp.project.gkeService.cluster.notificationConfig"
@@ -778,6 +779,10 @@ func init() {
 		"gcp.project.dnsService.policy": {
 			// to override args, implement: initGcpProjectDnsServicePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDnsServicePolicy,
+		},
+		"gcp.project.dnsService.responsePolicy": {
+			// to override args, implement: initGcpProjectDnsServiceResponsePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDnsServiceResponsePolicy,
 		},
 		"gcp.project.gkeService": {
 			// to override args, implement: initGcpProjectGkeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5685,6 +5690,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsService).GetPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.dnsService.policy")))
 	},
+	"gcp.project.dnsService.responsePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsService).GetResponsePolicies()).ToDataRes(types.Array(types.Resource("gcp.project.dnsService.responsePolicy")))
+	},
 	"gcp.project.dnsService.managedzone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetId()).ToDataRes(types.String)
 	},
@@ -5733,6 +5741,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPrivateVisibilityConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dnsService.managedzone.forwardingTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetForwardingTargets()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dnsService.managedzone.peeringNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPeeringNetwork()).ToDataRes(types.String)
+	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetRecordSets()).ToDataRes(types.Array(types.Resource("gcp.project.dnsService.recordset")))
 	},
@@ -5780,6 +5794,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dnsService.policy.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServicePolicy).GetNetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network")))
+	},
+	"gcp.project.dnsService.policy.alternativeNameServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServicePolicy).GetAlternativeNameServers()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dnsService.responsePolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dnsService.responsePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dnsService.responsePolicy.responsePolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetResponsePolicyName()).ToDataRes(types.String)
+	},
+	"gcp.project.dnsService.responsePolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.dnsService.responsePolicy.networkUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetNetworkUrls()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dnsService.responsePolicy.networks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetNetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network")))
+	},
+	"gcp.project.dnsService.responsePolicy.gkeClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceResponsePolicy).GetGkeClusters()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.gkeService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeService).GetProjectId()).ToDataRes(types.String)
@@ -20187,6 +20225,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDnsService).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dnsService.responsePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsService).ResponsePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dnsService.managedzone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).__id, ok = v.Value.(string)
 		return
@@ -20253,6 +20295,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).PrivateVisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.forwardingTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).ForwardingTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.peeringNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).PeeringNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20325,6 +20375,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.policy.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServicePolicy).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.policy.alternativeNameServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServicePolicy).AlternativeNameServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.responsePolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).ResponsePolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.networkUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).NetworkUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.responsePolicy.gkeClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceResponsePolicy).GkeClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46054,9 +46140,10 @@ type mqlGcpProjectDnsService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectDnsServiceInternal
-	ProjectId    plugin.TValue[string]
-	ManagedZones plugin.TValue[[]any]
-	Policies     plugin.TValue[[]any]
+	ProjectId        plugin.TValue[string]
+	ManagedZones     plugin.TValue[[]any]
+	Policies         plugin.TValue[[]any]
+	ResponsePolicies plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsService creates a new instance of this resource
@@ -46132,6 +46219,22 @@ func (c *mqlGcpProjectDnsService) GetPolicies() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProjectDnsService) GetResponsePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResponsePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dnsService", c.__id, "responsePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.responsePolicies()
+	})
+}
+
 // mqlGcpProjectDnsServiceManagedzone for the gcp.project.dnsService.managedzone resource
 type mqlGcpProjectDnsServiceManagedzone struct {
 	MqlRuntime *plugin.Runtime
@@ -46153,6 +46256,8 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	DnsSecAlgorithmWeak        plugin.TValue[bool]
 	DnssecDefaultKeyAlgorithms plugin.TValue[[]any]
 	PrivateVisibilityConfig    plugin.TValue[any]
+	ForwardingTargets          plugin.TValue[[]any]
+	PeeringNetwork             plugin.TValue[string]
 	RecordSets                 plugin.TValue[[]any]
 	IamPolicy                  plugin.TValue[[]any]
 }
@@ -46258,6 +46363,14 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecDefaultKeyAlgorithms() *pl
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetPrivateVisibilityConfig() *plugin.TValue[any] {
 	return &c.PrivateVisibilityConfig
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetForwardingTargets() *plugin.TValue[[]any] {
+	return &c.ForwardingTargets
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetPeeringNetwork() *plugin.TValue[string] {
+	return &c.PeeringNetwork
 }
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() *plugin.TValue[[]any] {
@@ -46379,6 +46492,7 @@ type mqlGcpProjectDnsServicePolicy struct {
 	EnableLogging           plugin.TValue[bool]
 	NetworkNames            plugin.TValue[[]any]
 	Networks                plugin.TValue[[]any]
+	AlternativeNameServers  plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsServicePolicy creates a new instance of this resource
@@ -46460,6 +46574,96 @@ func (c *mqlGcpProjectDnsServicePolicy) GetNetworks() *plugin.TValue[[]any] {
 
 		return c.networks()
 	})
+}
+
+func (c *mqlGcpProjectDnsServicePolicy) GetAlternativeNameServers() *plugin.TValue[[]any] {
+	return &c.AlternativeNameServers
+}
+
+// mqlGcpProjectDnsServiceResponsePolicy for the gcp.project.dnsService.responsePolicy resource
+type mqlGcpProjectDnsServiceResponsePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDnsServiceResponsePolicyInternal it will be used here
+	ProjectId          plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	ResponsePolicyName plugin.TValue[string]
+	Description        plugin.TValue[string]
+	NetworkUrls        plugin.TValue[[]any]
+	Networks           plugin.TValue[[]any]
+	GkeClusters        plugin.TValue[[]any]
+}
+
+// createGcpProjectDnsServiceResponsePolicy creates a new instance of this resource
+func createGcpProjectDnsServiceResponsePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDnsServiceResponsePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dnsService.responsePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) MqlName() string {
+	return "gcp.project.dnsService.responsePolicy"
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetResponsePolicyName() *plugin.TValue[string] {
+	return &c.ResponsePolicyName
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetNetworkUrls() *plugin.TValue[[]any] {
+	return &c.NetworkUrls
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Networks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dnsService.responsePolicy", c.__id, "networks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networks()
+	})
+}
+
+func (c *mqlGcpProjectDnsServiceResponsePolicy) GetGkeClusters() *plugin.TValue[[]any] {
+	return &c.GkeClusters
 }
 
 // mqlGcpProjectGkeService for the gcp.project.gkeService resource
