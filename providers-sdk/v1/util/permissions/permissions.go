@@ -1054,6 +1054,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"dlp": {
 		// The DLP API exposes jobs under a `jobs` permission, not `dlpJobs`.
 		"ListDlpJobs": "dlp.jobs.list",
+		// File store data profiles are listed via dlp.fileStoreProfiles.list
+		// (no "Data" segment in the real permission).
+		"ListFileStoreDataProfiles": "dlp.fileStoreProfiles.list",
 	},
 	"memorystore": {
 		"GetInstance":         "memorystore.instances.get",
@@ -1078,6 +1081,40 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// WorkloadIdentityPools.Providers.List → the resource segment is "Providers",
 		// but the real IAM permission is "iam.workloadIdentityPoolProviders.list".
 		"Providers.List": "iam.workloadIdentityPoolProviders.list",
+		// IAM v2 deny policies are listed via iam.denypolicies.list, not the
+		// generic "iam.policies.list" (which is not a real permission).
+		"ListPolicies": "iam.denypolicies.list",
+	},
+	"certificatemanager": {
+		// The Certificate Manager IAM permissions use abbreviated, all-lowercase
+		// resource segments (certs, certissuanceconfigs, certmapentries, certmaps,
+		// dnsauthorizations, trustconfigs) that cannot be auto-derived from the
+		// SDK method names. Verified against GCP testable permissions.
+		"GetCertificate":                 "certificatemanager.certs.get",
+		"ListCertificates":               "certificatemanager.certs.list",
+		"GetCertificateIssuanceConfig":   "certificatemanager.certissuanceconfigs.get",
+		"ListCertificateIssuanceConfigs": "certificatemanager.certissuanceconfigs.list",
+		"ListCertificateMapEntries":      "certificatemanager.certmapentries.list",
+		"ListCertificateMaps":            "certificatemanager.certmaps.list",
+		"GetDnsAuthorization":            "certificatemanager.dnsauthorizations.get",
+		"ListDnsAuthorizations":          "certificatemanager.dnsauthorizations.list",
+		"ListTrustConfigs":               "certificatemanager.trustconfigs.list",
+	},
+	"logging": {
+		// GetCmekSettings is covered by logging.settings.get; there is no
+		// logging.cmekSettings.get permission (verified against GCP testable
+		// permissions at project and organization scope).
+		"Projects.GetCmekSettings": "logging.settings.get",
+	},
+	"resourcemanager": {
+		// Listing liens has no dedicated permission; it requires
+		// resourcemanager.projects.get, which is already emitted by the
+		// Projects.Get call in initGcpProject — so skip the generic form here
+		// rather than overwriting that entry's action.
+		"Liens.List": "",
+		// Tag bindings are listed via the resourceTagBindings permission, not a
+		// "resourcemanager.tagBindings.list" form (which is not a real permission).
+		"TagBindings.List": "resourcemanager.resourceTagBindings.list",
 	},
 }
 

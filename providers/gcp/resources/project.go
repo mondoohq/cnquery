@@ -383,11 +383,17 @@ func (g *mqlGcpProject) tagBindings() ([]any, error) {
 	}
 
 	// TagBindings.List requires the project number in the full resource name.
-	p, err := svc.Projects.Get(fmt.Sprintf("projects/%s", projectId)).Do()
-	if err != nil {
-		return nil, err
+	// The number is already resolved when the gcp.project resource is created,
+	// so read it rather than making another Projects.Get call; fall back to the
+	// API only if it was not populated at creation.
+	projectNumber := g.GetNumber().Data
+	if projectNumber == "" {
+		p, err := svc.Projects.Get(fmt.Sprintf("projects/%s", projectId)).Do()
+		if err != nil {
+			return nil, err
+		}
+		projectNumber = strings.TrimPrefix(p.Name, "projects/")
 	}
-	projectNumber := strings.TrimPrefix(p.Name, "projects/")
 	parent := fmt.Sprintf("//cloudresourcemanager.googleapis.com/projects/%s", projectNumber)
 
 	var res []any

@@ -14,8 +14,28 @@ import (
 )
 
 // validatedGCPPermissions is the authoritative set of GCP IAM permissions that
-// our manifest must contain — no more, no less. This list was validated against
-// the live GCP IAM API using queryTestablePermissions.
+// our manifest (gcp.permissions.json) must contain — no more, no less.
+//
+// IMPORTANT: Do NOT edit this list just to make the test pass after a provider
+// code change. Every entry here has been validated as a REAL GCP IAM permission
+// against the live IAM API (`gcloud iam list-testable-permissions` on a project
+// and an organization, cross-checked against predefined roles). The permission
+// scanner derives permission strings heuristically from SDK method names and
+// regularly emits names that are NOT real permissions (wrong casing, singular
+// vs. plural, abbreviated resource segments such as certificatemanager.certs,
+// or an entirely different resource). When the scanner produces a new
+// permission, first confirm the real permission name, add a
+// gcpPermissionOverrides entry in
+// providers-sdk/v1/util/permissions/permissions.go if the derived name is
+// wrong, regenerate the manifest, and only then add the validated name here.
+//
+// These entries are real permissions that list-testable-permissions does not
+// return for a project/organization resource (Cloud Identity is directory-
+// scoped; DLP discovery configs follow Google's documented naming), so they
+// were validated from documentation rather than the testable-permissions API:
+//   - cloudidentity.groups.list
+//   - cloudidentity.memberships.list
+//   - dlp.discoveryConfigs.list
 var validatedGCPPermissions = []string{
 	"accessapproval.settings.get",
 	"aiplatform.customJobs.get",
@@ -46,15 +66,15 @@ var validatedGCPPermissions = []string{
 	"bigtable.appProfiles.list",
 	"binaryauthorization.attestors.list",
 	"binaryauthorization.policy.get",
-	"certificatemanager.certificate.get",
-	"certificatemanager.certificateIssuanceConfig.get",
-	"certificatemanager.certificateIssuanceConfigs.list",
-	"certificatemanager.certificateMapEntries.list",
-	"certificatemanager.certificateMaps.list",
-	"certificatemanager.certificates.list",
-	"certificatemanager.dnsAuthorization.get",
-	"certificatemanager.dnsAuthorizations.list",
-	"certificatemanager.trustConfigs.list",
+	"certificatemanager.certissuanceconfigs.get",
+	"certificatemanager.certissuanceconfigs.list",
+	"certificatemanager.certmapentries.list",
+	"certificatemanager.certmaps.list",
+	"certificatemanager.certs.get",
+	"certificatemanager.certs.list",
+	"certificatemanager.dnsauthorizations.get",
+	"certificatemanager.dnsauthorizations.list",
+	"certificatemanager.trustconfigs.list",
 	"cloudbuild.builds.list",
 	"cloudbuild.workerpools.list",
 	"clouddeploy.deliveryPipelines.list",
@@ -149,10 +169,10 @@ var validatedGCPPermissions = []string{
 	"dlp.connections.list",
 	"dlp.deidentifyTemplates.list",
 	"dlp.discoveryConfigs.list",
-	"dlp.fileStoreDataProfiles.list",
+	"dlp.fileStoreProfiles.list",
 	"dlp.inspectTemplates.list",
-	"dlp.jobs.list",
 	"dlp.jobTriggers.list",
+	"dlp.jobs.list",
 	"dlp.projectDataProfiles.list",
 	"dlp.storedInfoTypes.list",
 	"dlp.tableDataProfiles.list",
@@ -160,6 +180,7 @@ var validatedGCPPermissions = []string{
 	"dns.managedZones.list",
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
+	"dns.responsePolicies.list",
 	"domains.registrations.list",
 	"essentialcontacts.contacts.list",
 	"eventarc.channels.list",
@@ -167,7 +188,7 @@ var validatedGCPPermissions = []string{
 	"file.instances.list",
 	"gkebackup.backupPlans.list",
 	"gkebackup.restorePlans.list",
-	"iam.policies.list",
+	"iam.denypolicies.list",
 	"iam.roles.list",
 	"iam.serviceAccountKeys.list",
 	"iam.serviceAccounts.list",
@@ -178,6 +199,7 @@ var validatedGCPPermissions = []string{
 	"ids.endpoints.list",
 	"logging.buckets.list",
 	"logging.exclusions.list",
+	"logging.settings.get",
 	"logging.sinks.list",
 	"logging.views.list",
 	"memcache.instances.get",
@@ -223,6 +245,7 @@ var validatedGCPPermissions = []string{
 	"resourcemanager.folders.getIamPolicy",
 	"resourcemanager.projects.get",
 	"resourcemanager.projects.getIamPolicy",
+	"resourcemanager.resourceTagBindings.list",
 	"run.jobs.getIamPolicy",
 	"run.jobs.list",
 	"run.operations.list",

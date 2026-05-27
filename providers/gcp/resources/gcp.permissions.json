@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.18.0",
-  "generated_at": "2026-05-26T17:08:46-07:00",
+  "generated_at": "2026-05-27T12:12:16-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -32,15 +32,15 @@
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
-    "certificatemanager.certificate.get",
-    "certificatemanager.certificateIssuanceConfig.get",
-    "certificatemanager.certificateIssuanceConfigs.list",
-    "certificatemanager.certificateMapEntries.list",
-    "certificatemanager.certificateMaps.list",
-    "certificatemanager.certificates.list",
-    "certificatemanager.dnsAuthorization.get",
-    "certificatemanager.dnsAuthorizations.list",
-    "certificatemanager.trustConfigs.list",
+    "certificatemanager.certissuanceconfigs.get",
+    "certificatemanager.certissuanceconfigs.list",
+    "certificatemanager.certmapentries.list",
+    "certificatemanager.certmaps.list",
+    "certificatemanager.certs.get",
+    "certificatemanager.certs.list",
+    "certificatemanager.dnsauthorizations.get",
+    "certificatemanager.dnsauthorizations.list",
+    "certificatemanager.trustconfigs.list",
     "cloudbuild.builds.list",
     "cloudbuild.workerpools.list",
     "clouddeploy.deliveryPipelines.list",
@@ -135,7 +135,7 @@
     "dlp.connections.list",
     "dlp.deidentifyTemplates.list",
     "dlp.discoveryConfigs.list",
-    "dlp.fileStoreDataProfiles.list",
+    "dlp.fileStoreProfiles.list",
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
     "dlp.jobs.list",
@@ -146,6 +146,7 @@
     "dns.managedZones.list",
     "dns.policies.list",
     "dns.resourceRecordSets.list",
+    "dns.responsePolicies.list",
     "domains.registrations.list",
     "essentialcontacts.contacts.list",
     "eventarc.channels.list",
@@ -153,7 +154,7 @@
     "file.instances.list",
     "gkebackup.backupPlans.list",
     "gkebackup.restorePlans.list",
-    "iam.policies.list",
+    "iam.denypolicies.list",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
@@ -164,6 +165,7 @@
     "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
+    "logging.settings.get",
     "logging.sinks.list",
     "logging.views.list",
     "memcache.instances.get",
@@ -209,6 +211,7 @@
     "resourcemanager.folders.getIamPolicy",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
+    "resourcemanager.resourceTagBindings.list",
     "run.jobs.getIamPolicy",
     "run.jobs.list",
     "run.operations.list",
@@ -411,55 +414,55 @@
       "source_file": "binary_authorization.go"
     },
     {
-      "permission": "certificatemanager.certificate.get",
-      "service": "certificatemanager",
-      "action": "GetCertificate",
-      "source_file": "certificatemanager.go"
-    },
-    {
-      "permission": "certificatemanager.certificateIssuanceConfig.get",
+      "permission": "certificatemanager.certissuanceconfigs.get",
       "service": "certificatemanager",
       "action": "GetCertificateIssuanceConfig",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.certificateIssuanceConfigs.list",
+      "permission": "certificatemanager.certissuanceconfigs.list",
       "service": "certificatemanager",
       "action": "ListCertificateIssuanceConfigs",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.certificateMapEntries.list",
+      "permission": "certificatemanager.certmapentries.list",
       "service": "certificatemanager",
       "action": "ListCertificateMapEntries",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.certificateMaps.list",
+      "permission": "certificatemanager.certmaps.list",
       "service": "certificatemanager",
       "action": "ListCertificateMaps",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.certificates.list",
+      "permission": "certificatemanager.certs.get",
+      "service": "certificatemanager",
+      "action": "GetCertificate",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.certs.list",
       "service": "certificatemanager",
       "action": "ListCertificates",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.dnsAuthorization.get",
+      "permission": "certificatemanager.dnsauthorizations.get",
       "service": "certificatemanager",
       "action": "GetDnsAuthorization",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.dnsAuthorizations.list",
+      "permission": "certificatemanager.dnsauthorizations.list",
       "service": "certificatemanager",
       "action": "ListDnsAuthorizations",
       "source_file": "certificatemanager.go"
     },
     {
-      "permission": "certificatemanager.trustConfigs.list",
+      "permission": "certificatemanager.trustconfigs.list",
       "service": "certificatemanager",
       "action": "ListTrustConfigs",
       "source_file": "certificatemanager.go"
@@ -1071,7 +1074,7 @@
       "source_file": "dlp.go"
     },
     {
-      "permission": "dlp.fileStoreDataProfiles.list",
+      "permission": "dlp.fileStoreProfiles.list",
       "service": "dlp",
       "action": "ListFileStoreDataProfiles",
       "source_file": "dlp.go"
@@ -1137,6 +1140,12 @@
       "source_file": "dns.go"
     },
     {
+      "permission": "dns.responsePolicies.list",
+      "service": "dns",
+      "action": "ResponsePolicies.List",
+      "source_file": "dns.go"
+    },
+    {
       "permission": "domains.registrations.list",
       "service": "domains",
       "action": "Registrations.List",
@@ -1179,7 +1188,7 @@
       "source_file": "gke_backup.go"
     },
     {
-      "permission": "iam.policies.list",
+      "permission": "iam.denypolicies.list",
       "service": "iam",
       "action": "ListPolicies",
       "source_file": "iam.go"
@@ -1242,6 +1251,12 @@
       "permission": "logging.exclusions.list",
       "service": "logging",
       "action": "Exclusions.List",
+      "source_file": "logging.go"
+    },
+    {
+      "permission": "logging.settings.get",
+      "service": "logging",
+      "action": "Projects.GetCmekSettings",
       "source_file": "logging.go"
     },
     {
@@ -1555,6 +1570,12 @@
       "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.resourceTagBindings.list",
+      "service": "resourcemanager",
+      "action": "TagBindings.List",
+      "source_file": "project.go"
     },
     {
       "permission": "run.jobs.getIamPolicy",
