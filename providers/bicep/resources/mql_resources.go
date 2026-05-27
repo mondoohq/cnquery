@@ -5,6 +5,7 @@ package resources
 
 import (
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -80,6 +81,11 @@ func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedV
 type mqlBicepResourceInternal struct {
 	nested   []parsedResource
 	resolver *symbolResolver
+	// propertiesBody is the raw text of the resource's `properties: { ... }`
+	// block (between the outer braces), kept so propertyExpressions() can
+	// re-walk it with quoting intact — the parsed `properties` dict has already
+	// stripped quotes, losing the literal-vs-expression distinction.
+	propertiesBody string
 }
 
 func createMqlResources(runtime *plugin.Runtime, filePath string, resources []parsedResource, resolver *symbolResolver) ([]any, error) {
@@ -111,9 +117,11 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 	// map rather than nil so the shape stays consistent across
 	// resources.
 	var properties any = map[string]any{}
+	propertiesBody := ""
 	if r.body != "" {
 		if raw := extractFieldBlock(r.body, "properties"); raw != "" {
 			properties = parseBicepObject(raw)
+			propertiesBody = raw
 		}
 	}
 
@@ -150,6 +158,7 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 	mqlRes := res.(*mqlBicepResource)
 	mqlRes.nested = r.nested
 	mqlRes.resolver = resolver
+	mqlRes.propertiesBody = propertiesBody
 	return mqlRes, nil
 }
 
@@ -178,6 +187,9 @@ func (r *mqlBicepResource) resources() ([]any, error) {
 type mqlBicepModuleInternal struct {
 	resolver       *symbolResolver
 	owningFilePath string
+	// paramsBody is the raw text of the module's `params: { ... }` block,
+	// kept so paramExpressions() can re-walk it with quoting intact.
+	paramsBody string
 }
 
 func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsedModule, resolver *symbolResolver) ([]any, error) {
@@ -187,9 +199,11 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 		// `params: { ... }` block as a structured dict so audits can
 		// pluck individual parameter values.
 		var params any = map[string]any{}
+		paramsBody := ""
 		if m.body != "" {
 			if raw := extractFieldBlock(m.body, "params"); raw != "" {
 				params = parseBicepObject(raw)
+				paramsBody = raw
 			}
 		}
 
@@ -215,6 +229,7 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 		mqlMod := res.(*mqlBicepModule)
 		mqlMod.resolver = resolver
 		mqlMod.owningFilePath = filePath
+		mqlMod.paramsBody = paramsBody
 		mqlModules = append(mqlModules, res)
 	}
 	return mqlModules, nil
@@ -408,6 +423,116 @@ func (m *mqlBicepModule) scopeTree() (*mqlBicepExpression, error) {
 
 func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
 	return expressionTreeFor(m.MqlRuntime, m.__id, "/conditionTree", m.Condition.Data, m.resolver)
+}
+
+// mqlBicepPropertyExpressionInternal carries the raw leaf value and the owning
+// file's symbol resolver so the lazy expression() accessor can parse the value
+// into a bicep.expression with symbol resolution intact (the same resolver the
+// owning resource/module's scalar expression trees thread through).
+type mqlBicepPropertyExpressionInternal struct {
+	raw      string
+	resolver *symbolResolver
+}
+
+// propertyExpressionEntry is one flattened string leaf of a properties/params
+// object: its dotted/indexed path and the raw Bicep value text at that path.
+type propertyExpressionEntry struct {
+	path string
+	raw  string
+}
+
+// flattenObjectExpressions walks the raw body text of a Bicep object (the text
+// between the outer braces, as captured by extractFieldBlock) and returns one
+// entry per scalar leaf, paired with its dotted/indexed path. It re-walks the
+// raw text rather than the already-parsed dict so the leaf value keeps its
+// original quoting: `'Hot'` (a literal), `resourceGroup().location` (a function
+// call), and `'${adminPassword}'` (an interpolation) stay distinguishable when
+// parsed into an expression. Map keys are sorted so output is deterministic;
+// array element order is preserved. Nested objects (`{`) and arrays (`[`)
+// recurse; every other value is a leaf and is emitted with its raw text intact.
+func flattenObjectExpressions(body, prefix string) []propertyExpressionEntry {
+	var out []propertyExpressionEntry
+
+	type kv struct{ key, value string }
+	var pairs []kv
+	for _, entry := range splitTopLevelEntries(body) {
+		key, value, ok := splitFirstColon(entry)
+		if !ok {
+			continue
+		}
+		pairs = append(pairs, kv{strings.TrimSpace(key), strings.TrimSpace(value)})
+	}
+	sort.Slice(pairs, func(i, j int) bool { return pairs[i].key < pairs[j].key })
+
+	for _, p := range pairs {
+		child := p.key
+		if prefix != "" {
+			child = prefix + "." + p.key
+		}
+		out = append(out, flattenValueExpressions(p.value, child)...)
+	}
+	return out
+}
+
+// flattenValueExpressions emits entries for a single value at the given path:
+// it recurses into objects and arrays and emits a leaf for everything else,
+// keeping the raw (still-quoted) value text.
+func flattenValueExpressions(value, path string) []propertyExpressionEntry {
+	if value == "" {
+		return nil
+	}
+	switch value[0] {
+	case '{':
+		return flattenObjectExpressions(stripOuter(value, '{', '}'), path)
+	case '[':
+		var out []propertyExpressionEntry
+		elems := splitTopLevelEntries(stripOuter(value, '[', ']'))
+		for i, elem := range elems {
+			out = append(out, flattenValueExpressions(strings.TrimSpace(elem), path+"["+strconv.Itoa(i)+"]")...)
+		}
+		return out
+	}
+	return []propertyExpressionEntry{{path: path, raw: value}}
+}
+
+// newMqlBicepPropertyExpressions builds the flattened []bicep.propertyExpression
+// for a properties/params object. The parentID is the owning resource/module's
+// __id; each entry gets a synthetic, parent-qualified `__id`
+// (`<parentId>/<accessor>/<path>`) and carries the raw leaf value plus the
+// resolver so its expression() resolves references the same way the scalar
+// trees do.
+func newMqlBicepPropertyExpressions(runtime *plugin.Runtime, parentID, accessor, body string, resolver *symbolResolver) ([]any, error) {
+	entries := flattenObjectExpressions(body, "")
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		res, err := CreateResource(runtime, "bicep.propertyExpression", map[string]*llx.RawData{
+			"__id": llx.StringData(parentID + "/" + accessor + "/" + e.path),
+			"path": llx.StringData(e.path),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPE := res.(*mqlBicepPropertyExpression)
+		mqlPE.raw = e.raw
+		mqlPE.resolver = resolver
+		out = append(out, mqlPE)
+	}
+	return out, nil
+}
+
+func (r *mqlBicepResource) propertyExpressions() ([]any, error) {
+	return newMqlBicepPropertyExpressions(r.MqlRuntime, r.__id, "propertyExpressions", r.propertiesBody, r.resolver)
+}
+
+func (m *mqlBicepModule) paramExpressions() ([]any, error) {
+	return newMqlBicepPropertyExpressions(m.MqlRuntime, m.__id, "paramExpressions", m.paramsBody, m.resolver)
+}
+
+// expression parses this leaf's raw Bicep value into a bicep.expression,
+// threading the owning file's resolver so referenceKind / referenced*()
+// resolve property values to their same-file declarations.
+func (p *mqlBicepPropertyExpression) expression() (*mqlBicepExpression, error) {
+	return expressionTreeFor(p.MqlRuntime, p.__id, "/expr", p.raw, p.resolver)
 }
 
 // resolveScannedBicepFile resolves a relative `source` (e.g. './shared.bicep')
@@ -720,6 +845,7 @@ var (
 	_ plugin.Resource = (*mqlBicepModule)(nil)
 	_ plugin.Resource = (*mqlBicepOutput)(nil)
 	_ plugin.Resource = (*mqlBicepExpression)(nil)
+	_ plugin.Resource = (*mqlBicepPropertyExpression)(nil)
 	_ plugin.Resource = (*mqlBicepType)(nil)
 	_ plugin.Resource = (*mqlBicepFunction)(nil)
 	_ plugin.Resource = (*mqlBicepImport)(nil)

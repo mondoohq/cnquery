@@ -217,6 +217,19 @@ bicep.resource @defaults("type symbolicName") {
   resources() []bicep.resource
   // Resource body as dict
   properties dict
+  // Flattened expression trees of every scalar property leaf
+  //
+  // Walks the `properties` object and emits one entry per scalar leaf, each
+  // carrying the dotted/indexed `path` to the value (for example
+  // `encryption.keyVaultProperties.keyName` or `ipRules[0].action`) and a
+  // parsed `expression` tree with full symbol resolution. Use it to ask, for
+  // any property at any depth, whether a value hardcodes a literal, reads a
+  // `@secure` parameter, references another resource, or calls a Bicep
+  // function — without manually digging through the nested `properties` dict.
+  // Nested objects and arrays are descended into rather than emitted; every
+  // leaf (string, number, or boolean) becomes one entry. See
+  // `bicep.propertyExpression`.
+  propertyExpressions() []bicep.propertyExpression
   // Resource tags
   //
   // Key/value pairs from the `tags: { ... }` block in the resource body.
@@ -274,6 +287,18 @@ bicep.module @defaults("name source") {
   scopeTree() bicep.expression
   // Parameter values as dict
   params dict
+  // Flattened expression trees of every scalar param leaf
+  //
+  // Walks the `params` object passed to the module and emits one entry per
+  // scalar leaf, each carrying the dotted/indexed `path` to the value and a
+  // parsed `expression` tree with full symbol resolution. Use it to ask which
+  // arguments a module is fed — whether a param value hardcodes a literal,
+  // forwards a `@secure` parameter, references another resource, or calls a
+  // Bicep function — without manually digging through the nested `params`
+  // dict. Nested objects and arrays are descended into rather than emitted;
+  // every leaf (string, number, or boolean) becomes one entry. See
+  // `bicep.propertyExpression`.
+  paramExpressions() []bicep.propertyExpression
   // Condition expression
   condition string
   // Parsed condition expression tree
@@ -409,6 +434,32 @@ bicep.expression @defaults("kind raw") {
   // Non-null only when `referenceKind` is type; the other referenced*()
   // accessors are null in that case.
   referencedType() bicep.type
+}
+
+// Scalar leaf inside a resource's properties or a module's params
+//
+// Examine a single value buried inside a resource's `properties` object or a
+// module's `params` object, flattened out of the nested dict so it can be
+// queried directly. The `path` field is the dotted/indexed location of the
+// value within the object — for example `encryption.keyVaultProperties.keyName`
+// or `ipRules[0].action` — and `expression` is the parsed expression tree of
+// the value at that path, carrying full symbol resolution (`referenceKind`,
+// `referencedParameter`, …). Emitted by `bicep.resource.propertyExpressions`
+// and `bicep.module.paramExpressions`, one per scalar leaf, in a stable order
+// (map keys sorted, array indices preserved). See `bicep.expression`.
+private bicep.propertyExpression @defaults("path") {
+  // Dotted/indexed path to the value within the object
+  //
+  // For example `encryption.keyVaultProperties.keyName` for a nested object key
+  // or `ipRules[0].action` for an array element.
+  path string
+  // Parsed expression tree of the value at `path`
+  //
+  // Structured, queryable view of the leaf value with symbol resolution
+  // (`referenceKind` / `referencedParameter` / …). Use it to ask whether the
+  // value hardcodes a literal, reads a `@secure` parameter, references another
+  // resource, or calls a Bicep function. See `bicep.expression`.
+  expression() bicep.expression
 }
 
 // Bicep user-defined type declaration

@@ -57,6 +57,7 @@ bicep.module.loopExpression 13.1.2
 bicep.module.loopIndexVar 13.1.2
 bicep.module.loopIterator 13.1.2
 bicep.module.name 13.0.0
+bicep.module.paramExpressions 13.1.2
 bicep.module.params 13.0.0
 bicep.module.scope 13.0.0
 bicep.module.scopeTree 13.1.2
@@ -90,6 +91,9 @@ bicep.parameter.minValue 13.0.9
 bicep.parameter.name 13.0.0
 bicep.parameter.secure 13.0.0
 bicep.parameter.type 13.0.0
+bicep.propertyExpression 13.1.2
+bicep.propertyExpression.expression 13.1.2
+bicep.propertyExpression.path 13.1.2
 bicep.resource 13.0.0
 bicep.resource.apiVersion 13.0.0
 bicep.resource.condition 13.0.0
@@ -107,6 +111,7 @@ bicep.resource.name 13.0.0
 bicep.resource.nameTree 13.1.2
 bicep.resource.parent 13.0.0
 bicep.resource.properties 13.0.0
+bicep.resource.propertyExpressions 13.1.2
 bicep.resource.resources 13.1.2
 bicep.resource.scope 13.1.2
 bicep.resource.symbolicName 13.0.0
