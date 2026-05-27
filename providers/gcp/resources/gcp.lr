@@ -4778,6 +4778,8 @@ private gcp.project.loggingservice {
   sinks() []gcp.project.loggingservice.sink
   // List of log exclusions
   exclusions() []gcp.project.loggingservice.exclusion
+  // Customer-managed KMS key the Log Router uses to encrypt newly ingested log entries (empty when Google-managed)
+  cmekKmsKeyName() string
 }
 
 // Google Cloud (GCP) Cloud Logging bucket
@@ -4903,6 +4905,8 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   //
   // When true, the sink also receives log entries (recursively) from any contained folders, billing accounts, or projects.
   includeChildren bool
+  // Whether the sink exports every log entry because its filter is empty
+  capturesAllLogs() bool
 }
 
 // Google Cloud (GCP) Cloud Logging exclusion filter

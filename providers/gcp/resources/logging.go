@@ -348,6 +348,42 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 	return sinks, nil
 }
 
+func (g *mqlGcpProjectLoggingservice) cmekKmsKeyName() (string, error) {
+	if !g.serviceEnabled {
+		return "", nil
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	if err != nil {
+		return "", err
+	}
+	ctx := context.Background()
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return "", err
+	}
+
+	settings, err := loggingSvc.Projects.GetCmekSettings(fmt.Sprintf("projects/%s", projectId)).Context(ctx).Do()
+	if err != nil {
+		return "", err
+	}
+	return settings.KmsKeyName, nil
+}
+
+func (g *mqlGcpProjectLoggingserviceSink) capturesAllLogs() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.TrimSpace(g.Filter.Data) == "", nil
+}
+
 func (g *mqlGcpProjectLoggingserviceSink) storageBucket() (*mqlGcpProjectStorageServiceBucket, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

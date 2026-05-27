@@ -6965,6 +6965,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.exclusions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingservice).GetExclusions()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.exclusion")))
 	},
+	"gcp.project.loggingservice.cmekKmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingservice).GetCmekKmsKeyName()).ToDataRes(types.String)
+	},
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
 	},
@@ -7087,6 +7090,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.loggingservice.sink.includeChildren": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceSink).GetIncludeChildren()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSink).GetCapturesAllLogs()).ToDataRes(types.Bool)
 	},
 	"gcp.project.loggingservice.exclusion.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceExclusion).GetName()).ToDataRes(types.String)
@@ -22033,6 +22039,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingservice).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.cmekKmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingservice).CmekKmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).__id, ok = v.Value.(string)
 		return
@@ -22215,6 +22225,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.sink.includeChildren": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceSink).IncludeChildren, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSink).CapturesAllLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.exclusion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50627,11 +50641,12 @@ type mqlGcpProjectLoggingservice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectLoggingserviceInternal
-	ProjectId  plugin.TValue[string]
-	Buckets    plugin.TValue[[]any]
-	Metrics    plugin.TValue[[]any]
-	Sinks      plugin.TValue[[]any]
-	Exclusions plugin.TValue[[]any]
+	ProjectId      plugin.TValue[string]
+	Buckets        plugin.TValue[[]any]
+	Metrics        plugin.TValue[[]any]
+	Sinks          plugin.TValue[[]any]
+	Exclusions     plugin.TValue[[]any]
+	CmekKmsKeyName plugin.TValue[string]
 }
 
 // createGcpProjectLoggingservice creates a new instance of this resource
@@ -50736,6 +50751,12 @@ func (c *mqlGcpProjectLoggingservice) GetExclusions() *plugin.TValue[[]any] {
 		}
 
 		return c.exclusions()
+	})
+}
+
+func (c *mqlGcpProjectLoggingservice) GetCmekKmsKeyName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CmekKmsKeyName, func() (string, error) {
+		return c.cmekKmsKeyName()
 	})
 }
 
@@ -51141,6 +51162,7 @@ type mqlGcpProjectLoggingserviceSink struct {
 	Filter          plugin.TValue[string]
 	WriterIdentity  plugin.TValue[string]
 	IncludeChildren plugin.TValue[bool]
+	CapturesAllLogs plugin.TValue[bool]
 }
 
 // createGcpProjectLoggingserviceSink creates a new instance of this resource
@@ -51218,6 +51240,12 @@ func (c *mqlGcpProjectLoggingserviceSink) GetWriterIdentity() *plugin.TValue[str
 
 func (c *mqlGcpProjectLoggingserviceSink) GetIncludeChildren() *plugin.TValue[bool] {
 	return &c.IncludeChildren
+}
+
+func (c *mqlGcpProjectLoggingserviceSink) GetCapturesAllLogs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CapturesAllLogs, func() (bool, error) {
+		return c.capturesAllLogs()
+	})
 }
 
 // mqlGcpProjectLoggingserviceExclusion for the gcp.project.loggingservice.exclusion resource

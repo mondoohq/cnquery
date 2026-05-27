@@ -3344,6 +3344,7 @@ gcp.project.loggingservice.bucket.view.name 13.7.2
 gcp.project.loggingservice.bucket.view.updateTime 13.7.2
 gcp.project.loggingservice.bucket.views 13.7.2
 gcp.project.loggingservice.buckets 9.0.0
+gcp.project.loggingservice.cmekKmsKeyName 13.18.1
 gcp.project.loggingservice.exclusion 13.6.1
 gcp.project.loggingservice.exclusion.created 13.6.1
 gcp.project.loggingservice.exclusion.description 13.6.1
@@ -3365,6 +3366,7 @@ gcp.project.loggingservice.metric.projectId 9.0.0
 gcp.project.loggingservice.metrics 9.0.0
 gcp.project.loggingservice.projectId 9.0.0
 gcp.project.loggingservice.sink 9.0.0
+gcp.project.loggingservice.sink.capturesAllLogs 13.18.1
 gcp.project.loggingservice.sink.destination 9.0.0
 gcp.project.loggingservice.sink.filter 9.0.0
 gcp.project.loggingservice.sink.id 9.0.0
