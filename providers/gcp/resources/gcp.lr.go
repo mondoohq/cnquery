@@ -3327,6 +3327,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instanceTemplates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetInstanceTemplates()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceTemplate")))
 	},
+	"gcp.project.computeService.projectOsLoginEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetProjectOsLoginEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.projectBlockProjectSshKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetProjectBlockProjectSshKeys()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.projectSerialPortEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetProjectSerialPortEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetId()).ToDataRes(types.String)
 	},
@@ -16813,6 +16822,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instanceTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).InstanceTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.projectOsLoginEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).ProjectOsLoginEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.projectBlockProjectSshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).ProjectBlockProjectSshKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.projectSerialPortEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).ProjectSerialPortEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38360,49 +38381,52 @@ type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
-	ProjectId                plugin.TValue[string]
-	Enabled                  plugin.TValue[bool]
-	Instances                plugin.TValue[[]any]
-	Snapshots                plugin.TValue[[]any]
-	Disks                    plugin.TValue[[]any]
-	Images                   plugin.TValue[[]any]
-	Firewalls                plugin.TValue[[]any]
-	Networks                 plugin.TValue[[]any]
-	HasDefaultNetwork        plugin.TValue[bool]
-	Subnetworks              plugin.TValue[[]any]
-	Routers                  plugin.TValue[[]any]
-	MachineTypes             plugin.TValue[[]any]
-	Regions                  plugin.TValue[[]any]
-	Zones                    plugin.TValue[[]any]
-	BackendServices          plugin.TValue[[]any]
-	Addresses                plugin.TValue[[]any]
-	ForwardingRules          plugin.TValue[[]any]
-	SecurityPolicies         plugin.TValue[[]any]
-	SslPolicies              plugin.TValue[[]any]
-	SslCertificates          plugin.TValue[[]any]
-	VpnGateways              plugin.TValue[[]any]
-	VpnTunnels               plugin.TValue[[]any]
-	StoragePools             plugin.TValue[[]any]
-	InstanceGroups           plugin.TValue[[]any]
-	InstanceGroupManagers    plugin.TValue[[]any]
-	FirewallPolicies         plugin.TValue[[]any]
-	HealthChecks             plugin.TValue[[]any]
-	UrlMaps                  plugin.TValue[[]any]
-	TargetHttpProxies        plugin.TValue[[]any]
-	TargetHttpsProxies       plugin.TValue[[]any]
-	Routes                   plugin.TValue[[]any]
-	ServiceAttachments       plugin.TValue[[]any]
-	NetworkEndpointGroups    plugin.TValue[[]any]
-	Interconnects            plugin.TValue[[]any]
-	InterconnectAttachments  plugin.TValue[[]any]
-	ExternalVpnGateways      plugin.TValue[[]any]
-	TargetTcpProxies         plugin.TValue[[]any]
-	TargetSslProxies         plugin.TValue[[]any]
-	PacketMirrorings         plugin.TValue[[]any]
-	BackendBuckets           plugin.TValue[[]any]
-	TargetPools              plugin.TValue[[]any]
-	PublicAdvertisedPrefixes plugin.TValue[[]any]
-	InstanceTemplates        plugin.TValue[[]any]
+	ProjectId                  plugin.TValue[string]
+	Enabled                    plugin.TValue[bool]
+	Instances                  plugin.TValue[[]any]
+	Snapshots                  plugin.TValue[[]any]
+	Disks                      plugin.TValue[[]any]
+	Images                     plugin.TValue[[]any]
+	Firewalls                  plugin.TValue[[]any]
+	Networks                   plugin.TValue[[]any]
+	HasDefaultNetwork          plugin.TValue[bool]
+	Subnetworks                plugin.TValue[[]any]
+	Routers                    plugin.TValue[[]any]
+	MachineTypes               plugin.TValue[[]any]
+	Regions                    plugin.TValue[[]any]
+	Zones                      plugin.TValue[[]any]
+	BackendServices            plugin.TValue[[]any]
+	Addresses                  plugin.TValue[[]any]
+	ForwardingRules            plugin.TValue[[]any]
+	SecurityPolicies           plugin.TValue[[]any]
+	SslPolicies                plugin.TValue[[]any]
+	SslCertificates            plugin.TValue[[]any]
+	VpnGateways                plugin.TValue[[]any]
+	VpnTunnels                 plugin.TValue[[]any]
+	StoragePools               plugin.TValue[[]any]
+	InstanceGroups             plugin.TValue[[]any]
+	InstanceGroupManagers      plugin.TValue[[]any]
+	FirewallPolicies           plugin.TValue[[]any]
+	HealthChecks               plugin.TValue[[]any]
+	UrlMaps                    plugin.TValue[[]any]
+	TargetHttpProxies          plugin.TValue[[]any]
+	TargetHttpsProxies         plugin.TValue[[]any]
+	Routes                     plugin.TValue[[]any]
+	ServiceAttachments         plugin.TValue[[]any]
+	NetworkEndpointGroups      plugin.TValue[[]any]
+	Interconnects              plugin.TValue[[]any]
+	InterconnectAttachments    plugin.TValue[[]any]
+	ExternalVpnGateways        plugin.TValue[[]any]
+	TargetTcpProxies           plugin.TValue[[]any]
+	TargetSslProxies           plugin.TValue[[]any]
+	PacketMirrorings           plugin.TValue[[]any]
+	BackendBuckets             plugin.TValue[[]any]
+	TargetPools                plugin.TValue[[]any]
+	PublicAdvertisedPrefixes   plugin.TValue[[]any]
+	InstanceTemplates          plugin.TValue[[]any]
+	ProjectOsLoginEnabled      plugin.TValue[bool]
+	ProjectBlockProjectSshKeys plugin.TValue[bool]
+	ProjectSerialPortEnabled   plugin.TValue[bool]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -39095,6 +39119,24 @@ func (c *mqlGcpProjectComputeService) GetInstanceTemplates() *plugin.TValue[[]an
 		}
 
 		return c.instanceTemplates()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetProjectOsLoginEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProjectOsLoginEnabled, func() (bool, error) {
+		return c.projectOsLoginEnabled()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetProjectBlockProjectSshKeys() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProjectBlockProjectSshKeys, func() (bool, error) {
+		return c.projectBlockProjectSshKeys()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetProjectSerialPortEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProjectSerialPortEnabled, func() (bool, error) {
+		return c.projectSerialPortEnabled()
 	})
 }
 

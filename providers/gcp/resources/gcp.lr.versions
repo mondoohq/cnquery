@@ -1861,7 +1861,10 @@ gcp.project.computeService.packetMirroring.region 13.16.3
 gcp.project.computeService.packetMirroring.regionUrl 13.6.1
 gcp.project.computeService.packetMirroring.selfLink 13.6.1
 gcp.project.computeService.packetMirrorings 13.6.1
+gcp.project.computeService.projectBlockProjectSshKeys 13.18.1
 gcp.project.computeService.projectId 9.0.0
+gcp.project.computeService.projectOsLoginEnabled 13.18.1
+gcp.project.computeService.projectSerialPortEnabled 13.18.1
 gcp.project.computeService.publicAdvertisedPrefix 13.6.1
 gcp.project.computeService.publicAdvertisedPrefix.byoipApiVersion 13.6.1
 gcp.project.computeService.publicAdvertisedPrefix.created 13.6.1

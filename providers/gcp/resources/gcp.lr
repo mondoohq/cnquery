@@ -1078,6 +1078,12 @@ private gcp.project.computeService {
   publicAdvertisedPrefixes() []gcp.project.computeService.publicAdvertisedPrefix
   // Instance templates
   instanceTemplates() []gcp.project.computeService.instanceTemplate
+  // Whether OS Login is enabled project-wide — project commonInstanceMetadata item 'enable-oslogin' is TRUE
+  projectOsLoginEnabled() bool
+  // Whether project-wide SSH keys are blocked — project commonInstanceMetadata item 'block-project-ssh-keys' is TRUE
+  projectBlockProjectSshKeys() bool
+  // Whether serial port access is enabled project-wide — project commonInstanceMetadata item 'serial-port-enable' is TRUE
+  projectSerialPortEnabled() bool
 }
 
 // Google Cloud (GCP) Compute Engine static IP address

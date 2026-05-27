@@ -3654,6 +3654,43 @@ func (g *mqlGcpProjectComputeServiceInstance) serialPortEnabled() (bool, error) 
 	return metadataBoolFlag(md.Data, "serial-port-enable"), nil
 }
 
+func (g *mqlGcpProjectComputeService) projectMetadataFlag(key string) (bool, error) {
+	if g.ProjectId.Error != nil {
+		return false, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if projectId == "" {
+		return false, nil
+	}
+	projRes, err := NewResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectId),
+	})
+	if err != nil {
+		return false, err
+	}
+	proj := projRes.(*mqlGcpProject)
+	projMd := proj.GetCommonInstanceMetadata()
+	if projMd.Error != nil {
+		return false, projMd.Error
+	}
+	if projMd.Data == nil {
+		return false, nil
+	}
+	return metadataBoolFlag(projMd.Data, key), nil
+}
+
+func (g *mqlGcpProjectComputeService) projectOsLoginEnabled() (bool, error) {
+	return g.projectMetadataFlag("enable-oslogin")
+}
+
+func (g *mqlGcpProjectComputeService) projectBlockProjectSshKeys() (bool, error) {
+	return g.projectMetadataFlag("block-project-ssh-keys")
+}
+
+func (g *mqlGcpProjectComputeService) projectSerialPortEnabled() (bool, error) {
+	return g.projectMetadataFlag("serial-port-enable")
+}
+
 func (g *mqlGcpProjectComputeService) hasDefaultNetwork() (bool, error) {
 	networks := g.GetNetworks()
 	if networks.Error != nil {
