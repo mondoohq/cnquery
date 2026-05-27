@@ -101,6 +101,26 @@ func TestParseFunctionDecl(t *testing.T) {
 			wantDesc:   "the answer",
 		},
 		{
+			// Object-typed parameter contains `{`, `}`, and a `,` that must
+			// not split the parameter list, plus a nested type.
+			name:       "object-typed parameter",
+			input:      "func render(opts { name: string, tier: int }) string => opts.name",
+			wantName:   "render",
+			wantParams: map[string]string{"opts": "{ name: string, tier: int }"},
+			wantReturn: "string",
+			wantExpr:   "opts.name",
+		},
+		{
+			// Array return type (`string[]`) and a lambda `=>` inside the body
+			// that must not be mistaken for the function arrow.
+			name:       "array return type with lambda body",
+			input:      "func names(items array) string[] => map(items, i => i.name)",
+			wantName:   "names",
+			wantParams: map[string]string{"items": "array"},
+			wantReturn: "string[]",
+			wantExpr:   "map(items, i => i.name)",
+		},
+		{
 			name:        "not a func decl",
 			input:       "function() {}",
 			wantSkipped: true,

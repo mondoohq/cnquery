@@ -13,7 +13,7 @@ import "strings"
 // re-walking raw source lines.
 type bicepStatement struct {
 	decorators []string // leading @decorators attached to this statement
-	keyword    string   // "targetScope" | "param" | "var" | "resource" | "module" | "output" | "" (unknown)
+	keyword    string   // "targetScope" | "param" | "var" | "resource" | "module" | "output" | "type" | "func" | "import" | "metadata" | "" (unknown)
 	text       string   // the full statement source, multi-line, from keyword to the end of its body
 	startLine  int      // 1-based, for diagnostics/future use
 }

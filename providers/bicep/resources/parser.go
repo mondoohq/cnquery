@@ -123,10 +123,12 @@ var (
 	// unions, object types, and references all flow through as text.
 	typeRe = regexp.MustCompile(`(?s)^type\s+(\w+)\s*=\s*(.+)$`)
 
-	// funcRe matches a `func name(params) returnType => expression`
-	// declaration. The parameter list, return type, and body expression are
-	// captured separately so the parameters can be split into a name->type map.
-	funcRe = regexp.MustCompile(`(?s)^func\s+(\w+)\s*\(([^)]*)\)\s*(\S+)\s*=>\s*(.+)$`)
+	// funcHeadRe matches just the `func name(` prefix of a function
+	// declaration. The parameter list, return type, and body are split out
+	// with depth-aware scanning rather than a single regex, so object-typed
+	// parameters (`opts { name: string }`, which contain `)`/`,`/`{}`) and
+	// array/object return types (`string[]`, `{ a: int }`) parse correctly.
+	funcHeadRe = regexp.MustCompile(`(?s)^func\s+(\w+)\s*\(`)
 
 	// metadataRe matches a `metadata <name> = '<literal>'` entry. Only
 	// literal single-quoted values are captured; expression-/object-valued
@@ -425,15 +427,33 @@ func parseTypeDecl(text string, decorators []string) (parsedType, bool) {
 // body expression after `=>` is captured raw (whitespace collapsed).
 func parseFunctionDecl(text string, decorators []string) (parsedFunction, bool) {
 	trimmed := strings.TrimSpace(text)
-	m := funcRe.FindStringSubmatch(trimmed)
-	if len(m) < 5 {
+	head := funcHeadRe.FindStringSubmatchIndex(trimmed)
+	if head == nil {
 		return parsedFunction{}, false
 	}
+	name := trimmed[head[2]:head[3]]
+	// The full match ends on the opening `(` of the parameter list.
+	openParen := head[1] - 1
+	closeParen := matchingParenIndex(trimmed, openParen)
+	if closeParen < 0 {
+		return parsedFunction{}, false
+	}
+	paramList := trimmed[openParen+1 : closeParen]
+
+	// After the parameter list comes `<returnType> => <expression>`. The
+	// first `=>` is the function arrow; any later `=>` belongs to a lambda
+	// inside the body, so splitting on the first occurrence is correct.
+	rest := strings.TrimSpace(trimmed[closeParen+1:])
+	arrow := strings.Index(rest, "=>")
+	if arrow < 0 {
+		return parsedFunction{}, false
+	}
+
 	fn := parsedFunction{
-		name:       m[1],
-		parameters: parseFunctionParams(m[2]),
-		returnType: m[3],
-		expression: strings.Join(strings.Fields(m[4]), " "),
+		name:       name,
+		parameters: parseFunctionParams(paramList),
+		returnType: strings.TrimSpace(rest[:arrow]),
+		expression: strings.Join(strings.Fields(rest[arrow+2:]), " "),
 		decorators: decorators,
 	}
 	decText := strings.Join(decorators, "\n")
@@ -444,25 +464,66 @@ func parseFunctionDecl(text string, decorators []string) (parsedFunction, bool) 
 }
 
 // parseFunctionParams splits a `p1 t1, p2 t2` parameter list into a
-// name->type map. Each comma-separated entry is `name type`; entries that
-// don't fit that shape are skipped. Returns nil for an empty parameter list.
+// name->type map. Commas are split at top-level depth only, so an
+// object-typed parameter such as `opts { name: string, tier: int }` is kept
+// intact. Each entry is `name <type...>`; the first token is the name and the
+// remainder (whitespace-collapsed) is the type. Returns nil for an empty list.
 func parseFunctionParams(raw string) map[string]string {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return nil
 	}
 	params := map[string]string{}
-	for _, part := range strings.Split(raw, ",") {
+	for _, part := range splitTopLevelCommas(raw) {
 		fields := strings.Fields(part)
 		if len(fields) < 2 {
 			continue
 		}
-		params[fields[0]] = fields[1]
+		params[fields[0]] = strings.Join(fields[1:], " ")
 	}
 	if len(params) == 0 {
 		return nil
 	}
 	return params
+}
+
+// matchingParenIndex returns the index of the `)` that closes the `(` at
+// position open, using the shared string-aware lexer so parens inside string
+// literals or nested brackets/braces don't throw off the count. Returns -1 if
+// the paren is unbalanced.
+func matchingParenIndex(s string, open int) int {
+	st := scanState{}
+	i := st.stepAt(s, open) // consume the opening '(' -> paren depth 1
+	for i < len(s) {
+		if st.paren == 0 {
+			return i - 1
+		}
+		i = st.stepAt(s, i)
+	}
+	if st.paren == 0 {
+		return len(s) - 1
+	}
+	return -1
+}
+
+// splitTopLevelCommas splits s on commas that sit outside any string,
+// bracket, brace, or paren — so commas inside an object-typed parameter or a
+// nested expression don't split the list.
+func splitTopLevelCommas(s string) []string {
+	var parts []string
+	st := scanState{}
+	start := 0
+	for i := 0; i < len(s); {
+		if s[i] == ',' && st.inStr == 0 && !st.inMulti &&
+			st.paren == 0 && st.bracket == 0 && st.brace == 0 {
+			parts = append(parts, s[start:i])
+			i++
+			start = i
+			continue
+		}
+		i = st.stepAt(s, i)
+	}
+	return append(parts, s[start:])
 }
 
 var (
