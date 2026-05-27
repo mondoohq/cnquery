@@ -141,16 +141,22 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 		}
 
 		var rotationDict map[string]any
+		var rotationPeriod string
+		var nextRotationTime *time.Time
 		if s.Rotation != nil {
+			rotationPeriod = durationToString(s.Rotation.RotationPeriod)
+			nextRotationTime = timestampAsTimePtr(s.Rotation.NextRotationTime)
 			rotationDict, err = convert.JsonToDict(mqlSecretRotation{
 				NextRotationTime: timestampToString(s.Rotation.NextRotationTime),
-				RotationPeriod:   durationToString(s.Rotation.RotationPeriod),
+				RotationPeriod:   rotationPeriod,
 			})
 			if err != nil {
 				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert rotation")
 				continue
 			}
 		}
+
+		ttl := durationToString(s.GetTtl())
 
 		versionAliasesMap := make(map[string]any)
 		for k, v := range s.VersionAliases {
@@ -175,8 +181,11 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"replicationType":           llx.StringData(replicationType),
 			"topics":                    llx.ArrayData(topicNames, types.String),
 			"expireTime":                llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
+			"ttl":                       llx.StringData(ttl),
 			"etag":                      llx.StringData(s.Etag),
 			"rotation":                  llx.DictData(rotationDict),
+			"rotationPeriod":            llx.StringData(rotationPeriod),
+			"nextRotationTime":          llx.TimeDataPtr(nextRotationTime),
 			"versionAliases":            llx.MapData(versionAliasesMap, types.Int),
 			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),

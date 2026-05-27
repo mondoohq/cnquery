@@ -742,6 +742,8 @@ gcp.project.certificateAuthorityService.caPool.labels 11.5.1
 gcp.project.certificateAuthorityService.caPool.location 11.5.1
 gcp.project.certificateAuthorityService.caPool.name 11.5.1
 gcp.project.certificateAuthorityService.caPool.projectId 11.5.1
+gcp.project.certificateAuthorityService.caPool.publishCaCert 13.18.1
+gcp.project.certificateAuthorityService.caPool.publishCrl 13.18.1
 gcp.project.certificateAuthorityService.caPool.publishingOptions 11.5.1
 gcp.project.certificateAuthorityService.caPool.resourcePath 11.5.1
 gcp.project.certificateAuthorityService.caPool.tier 11.5.1
@@ -3985,6 +3987,7 @@ gcp.project.secretmanagerService.secret.iamPolicy 11.1.0
 gcp.project.secretmanagerService.secret.kmsKeys 13.12.2
 gcp.project.secretmanagerService.secret.labels 11.1.0
 gcp.project.secretmanagerService.secret.name 11.1.0
+gcp.project.secretmanagerService.secret.nextRotationTime 13.18.1
 gcp.project.secretmanagerService.secret.projectId 11.1.0
 gcp.project.secretmanagerService.secret.public 13.12.2
 gcp.project.secretmanagerService.secret.replication 11.1.0
@@ -3992,8 +3995,10 @@ gcp.project.secretmanagerService.secret.replicationType 13.18.1
 gcp.project.secretmanagerService.secret.resourcePath 11.1.0
 gcp.project.secretmanagerService.secret.rotation 11.1.0
 gcp.project.secretmanagerService.secret.rotationEnabled 13.12.2
+gcp.project.secretmanagerService.secret.rotationPeriod 13.18.1
 gcp.project.secretmanagerService.secret.tags 13.12.2
 gcp.project.secretmanagerService.secret.topics 11.1.0
+gcp.project.secretmanagerService.secret.ttl 13.18.1
 gcp.project.secretmanagerService.secret.version 11.1.0
 gcp.project.secretmanagerService.secret.version.clientSpecifiedPayloadChecksum 11.1.0
 gcp.project.secretmanagerService.secret.version.created 11.1.0

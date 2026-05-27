@@ -107,6 +107,12 @@ func (g *mqlGcpProjectCertificateAuthorityService) caPools() ([]any, error) {
 			return nil, err
 		}
 
+		var publishCaCert, publishCrl bool
+		if pool.PublishingOptions != nil {
+			publishCaCert = pool.PublishingOptions.PublishCaCert
+			publishCrl = pool.PublishingOptions.PublishCrl
+		}
+
 		mqlPool, err := CreateResource(g.MqlRuntime, "gcp.project.certificateAuthorityService.caPool", map[string]*llx.RawData{
 			"projectId":         llx.StringData(projectId),
 			"resourcePath":      llx.StringData(pool.Name),
@@ -115,6 +121,8 @@ func (g *mqlGcpProjectCertificateAuthorityService) caPools() ([]any, error) {
 			"tier":              llx.StringData(pool.Tier.String()),
 			"issuancePolicy":    llx.DictData(issuancePolicy),
 			"publishingOptions": llx.DictData(publishingOptions),
+			"publishCaCert":     llx.BoolData(publishCaCert),
+			"publishCrl":        llx.BoolData(publishCrl),
 			"labels":            llx.MapData(convert.MapToInterfaceMap(pool.Labels), types.String),
 		})
 		if err != nil {

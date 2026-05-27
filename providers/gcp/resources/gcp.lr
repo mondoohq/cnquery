@@ -6808,10 +6808,16 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   topics []string
   // Expiration time (if set)
   expireTime time
+  // Input-only time-to-live duration after which the secret is scheduled to expire (empty when an absolute expireTime is set instead)
+  ttl string
   // Etag of the secret
   etag string
   // Rotation policy configuration
   rotation dict
+  // Frequency at which Secret Manager rotates the secret, as a duration (empty when no rotation policy is configured)
+  rotationPeriod string
+  // Time at which Secret Manager will send a rotation notification (empty when no rotation policy is configured)
+  nextRotationTime time
   // Whether rotation is configured (rotation.rotationPeriod or nextRotationTime is set)
   rotationEnabled() bool
   // Version aliases mapping alias names to version numbers
@@ -8004,6 +8010,10 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   issuancePolicy dict
   // Publishing options
   publishingOptions dict
+  // Whether each CA's certificate is published and referenced in the Authority Information Access X.509 extension of issued certificates
+  publishCaCert bool
+  // Whether each CA's certificate revocation list is published and referenced in the CRL Distribution Points X.509 extension of issued certificates
+  publishCrl bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Certificate authorities in this pool

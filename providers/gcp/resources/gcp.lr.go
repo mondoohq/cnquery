@@ -8993,11 +8993,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.secretmanagerService.secret.expireTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetExpireTime()).ToDataRes(types.Time)
 	},
+	"gcp.project.secretmanagerService.secret.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetTtl()).ToDataRes(types.String)
+	},
 	"gcp.project.secretmanagerService.secret.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetEtag()).ToDataRes(types.String)
 	},
 	"gcp.project.secretmanagerService.secret.rotation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetRotation()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.rotationPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetRotationPeriod()).ToDataRes(types.String)
+	},
+	"gcp.project.secretmanagerService.secret.nextRotationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetNextRotationTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.secretmanagerService.secret.rotationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetRotationEnabled()).ToDataRes(types.Bool)
@@ -10246,6 +10255,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.certificateAuthorityService.caPool.publishingOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetPublishingOptions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.certificateAuthorityService.caPool.publishCaCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetPublishCaCert()).ToDataRes(types.Bool)
+	},
+	"gcp.project.certificateAuthorityService.caPool.publishCrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetPublishCrl()).ToDataRes(types.Bool)
 	},
 	"gcp.project.certificateAuthorityService.caPool.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -25133,12 +25148,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.secretmanagerService.secret.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).Ttl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.secretmanagerService.secret.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.rotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Rotation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.rotationPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).RotationPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.nextRotationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).NextRotationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.rotationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26939,6 +26966,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.certificateAuthorityService.caPool.publishingOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).PublishingOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.certificateAuthorityService.caPool.publishCaCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).PublishCaCert, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.certificateAuthorityService.caPool.publishCrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).PublishCrl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.certificateAuthorityService.caPool.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57894,8 +57929,11 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	ReplicationType           plugin.TValue[string]
 	Topics                    plugin.TValue[[]any]
 	ExpireTime                plugin.TValue[*time.Time]
+	Ttl                       plugin.TValue[string]
 	Etag                      plugin.TValue[string]
 	Rotation                  plugin.TValue[any]
+	RotationPeriod            plugin.TValue[string]
+	NextRotationTime          plugin.TValue[*time.Time]
 	RotationEnabled           plugin.TValue[bool]
 	VersionAliases            plugin.TValue[map[string]any]
 	Annotations               plugin.TValue[map[string]any]
@@ -57981,12 +58019,24 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetExpireTime() *plugin.TValue
 	return &c.ExpireTime
 }
 
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetTtl() *plugin.TValue[string] {
+	return &c.Ttl
+}
+
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
 }
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetRotation() *plugin.TValue[any] {
 	return &c.Rotation
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetRotationPeriod() *plugin.TValue[string] {
+	return &c.RotationPeriod
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetNextRotationTime() *plugin.TValue[*time.Time] {
+	return &c.NextRotationTime
 }
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetRotationEnabled() *plugin.TValue[bool] {
@@ -61988,6 +62038,8 @@ type mqlGcpProjectCertificateAuthorityServiceCaPool struct {
 	Tier                   plugin.TValue[string]
 	IssuancePolicy         plugin.TValue[any]
 	PublishingOptions      plugin.TValue[any]
+	PublishCaCert          plugin.TValue[bool]
+	PublishCrl             plugin.TValue[bool]
 	Labels                 plugin.TValue[map[string]any]
 	CertificateAuthorities plugin.TValue[[]any]
 	Certificates           plugin.TValue[[]any]
@@ -62056,6 +62108,14 @@ func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetIssuancePolicy() *pl
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetPublishingOptions() *plugin.TValue[any] {
 	return &c.PublishingOptions
+}
+
+func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetPublishCaCert() *plugin.TValue[bool] {
+	return &c.PublishCaCert
+}
+
+func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetPublishCrl() *plugin.TValue[bool] {
+	return &c.PublishCrl
 }
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetLabels() *plugin.TValue[map[string]any] {
