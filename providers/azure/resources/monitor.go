@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -14,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azruntime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	appinsights "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 )
@@ -394,41 +396,74 @@ func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
+// diagnosticSettingsResource mirrors the fields of the
+// Microsoft.Insights/diagnosticSettings list response that we surface. armmonitor
+// dropped its typed DiagnosticSettings client in v0.12.0, so we call the REST API
+// directly through the ARM pipeline and decode the relevant fields here.
+type diagnosticSettingsResource struct {
+	ID         *string        `json:"id"`
+	Name       *string        `json:"name"`
+	Type       *string        `json:"type"`
+	Properties map[string]any `json:"properties"`
+}
+
 func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
 	ctx := context.Background()
-	token := conn.Token()
-	client, err := monitor.NewDiagnosticSettingsClient(token, &arm.ClientOptions{
+	client, err := arm.NewClient("azure.subscription.monitorService.diagnosticSettings", "v1.0.0", conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
-	pager := client.NewListPager(id, &monitor.DiagnosticSettingsClientListOptions{})
+
+	urlPath := azruntime.JoinPaths(client.Endpoint(), id, "/providers/Microsoft.Insights/diagnosticSettings")
+	req, err := azruntime.NewRequest(ctx, http.MethodGet, urlPath)
+	if err != nil {
+		return nil, err
+	}
+	query := req.Raw().URL.Query()
+	query.Set("api-version", "2021-05-01-preview")
+	req.Raw().URL.RawQuery = query.Encode()
+
+	resp, err := client.Pipeline().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if !azruntime.HasStatusCode(resp, http.StatusOK) {
+		return nil, azruntime.NewResponseError(resp)
+	}
+
+	var result struct {
+		Value []diagnosticSettingsResource `json:"value"`
+	}
+	if err := azruntime.UnmarshalAsJSON(resp, &result); err != nil {
+		return nil, err
+	}
+
 	res := []any{}
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
+	for _, entry := range result.Value {
+		properties := entry.Properties
+		if properties == nil {
+			properties = map[string]any{}
+		}
+
+		var storageAccountId *string
+		if v, ok := properties["storageAccountId"].(string); ok {
+			storageAccountId = &v
+		}
+
+		mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
+			map[string]*llx.RawData{
+				"id":               llx.StringDataPtr(entry.ID),
+				"name":             llx.StringDataPtr(entry.Name),
+				"type":             llx.StringDataPtr(entry.Type),
+				"properties":       llx.DictData(properties),
+				"storageAccountId": llx.StringDataPtr(storageAccountId),
+			})
 		if err != nil {
 			return nil, err
 		}
-		for _, entry := range page.Value {
-			properties, err := convert.JsonToDict(entry.Properties)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
-				map[string]*llx.RawData{
-					"id":               llx.StringDataPtr(entry.ID),
-					"name":             llx.StringDataPtr(entry.Name),
-					"type":             llx.StringDataPtr(entry.Type),
-					"properties":       llx.DictData(properties),
-					"storageAccountId": llx.StringDataPtr(entry.Properties.StorageAccountID),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlAzure)
-		}
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
