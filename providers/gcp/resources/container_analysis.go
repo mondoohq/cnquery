@@ -134,8 +134,14 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			vulnPackageIssues                         []any
 		)
 		if v := occ.GetVulnerability(); v != nil {
-			vulnSeverity = v.Severity.String()
-			vulnEffectiveSeverity = v.EffectiveSeverity.String()
+			// Leave severity empty when unspecified so audits can filter on
+			// `vulnerabilitySeverity != ""` without matching the proto zero value.
+			if v.Severity != grafeaspb.Severity_SEVERITY_UNSPECIFIED {
+				vulnSeverity = v.Severity.String()
+			}
+			if v.EffectiveSeverity != grafeaspb.Severity_SEVERITY_UNSPECIFIED {
+				vulnEffectiveSeverity = v.EffectiveSeverity.String()
+			}
 			vulnCvssScore = float64(v.CvssScore)
 			vulnFixAvailable = v.FixAvailable
 			vulnShortDescription = v.ShortDescription

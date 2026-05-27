@@ -349,16 +349,14 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 		return nil, err
 	}
 	items := make([]any, 0, len(inv.Items))
+	inventoryItems := make([]any, 0, len(inv.Items))
 	for _, item := range inv.Items {
 		dict, err := convert.JsonToDict(item)
 		if err != nil {
 			return nil, err
 		}
 		items = append(items, dict)
-	}
 
-	inventoryItems := make([]any, 0, len(inv.Items))
-	for _, item := range inv.Items {
 		mqlItem, err := newMqlOsInventoryItem(g.MqlRuntime, inv.Name, &item)
 		if err != nil {
 			return nil, err
