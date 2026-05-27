@@ -1051,3 +1051,132 @@ param config = {
 		assert.Equal(t, "{ name: 'example' tier: 'standard' }", params["config"])
 	})
 }
+
+func TestParseBicepForLoops(t *testing.T) {
+	input := `param location string = 'eastus'
+
+var storageNames = [
+  'stga'
+  'stgb'
+]
+
+var itemNames = [for i in range(0, 3): 'item-${i}']
+
+resource sas 'Microsoft.Storage/storageAccounts@2023-01-01' = [for (name, i) in storageNames: {
+  name: name
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+}]
+
+resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'mykeyvault'
+  location: location
+}
+
+module stamps 'stamp.bicep' = [for sku in storageNames: {
+  name: 'stamp-${sku}'
+  params: {
+    skuName: sku
+  }
+}]
+
+output ids array = [for sa in sas: sa.id]
+
+output region string = location
+`
+
+	result := parseBicep(input)
+
+	// --- variables ---
+	vars := map[string]parsedVariable{}
+	for _, v := range result.variables {
+		vars[v.name] = v
+	}
+	require.Contains(t, vars, "itemNames")
+	require.Contains(t, vars, "storageNames")
+
+	t.Run("looped variable with range", func(t *testing.T) {
+		v := vars["itemNames"]
+		assert.True(t, v.loop.isLoop)
+		assert.Equal(t, "i", v.loop.iterator)
+		assert.Equal(t, "", v.loop.indexVar)
+		assert.Equal(t, "range(0, 3)", v.loop.expression)
+		assert.Equal(t, "'item-${i}'", v.expression)
+	})
+
+	t.Run("non-looped variable", func(t *testing.T) {
+		v := vars["storageNames"]
+		assert.False(t, v.loop.isLoop)
+		assert.Equal(t, "", v.loop.iterator)
+		assert.Equal(t, "", v.loop.expression)
+	})
+
+	// --- resources ---
+	resources := map[string]parsedResource{}
+	for _, r := range result.resources {
+		resources[r.symbolicName] = r
+	}
+	require.Contains(t, resources, "sas")
+	require.Contains(t, resources, "kv")
+
+	t.Run("looped resource indexed form", func(t *testing.T) {
+		r := resources["sas"]
+		assert.True(t, r.loop.isLoop)
+		assert.Equal(t, "name", r.loop.iterator)
+		assert.Equal(t, "i", r.loop.indexVar)
+		assert.Equal(t, "storageNames", r.loop.expression)
+		// body-derived fields must still be extracted from the loop body
+		assert.Equal(t, "name", r.name)
+		assert.Equal(t, "location", r.location)
+		assert.Contains(t, r.body, "sku")
+	})
+
+	t.Run("non-looped resource", func(t *testing.T) {
+		r := resources["kv"]
+		assert.False(t, r.loop.isLoop)
+		assert.Equal(t, "", r.loop.iterator)
+		assert.Equal(t, "", r.loop.indexVar)
+		assert.Equal(t, "", r.loop.expression)
+		assert.Equal(t, "'mykeyvault'", r.name)
+	})
+
+	// --- modules ---
+	require.Len(t, result.modules, 1)
+	t.Run("looped module", func(t *testing.T) {
+		m := result.modules[0]
+		assert.Equal(t, "stamps", m.name)
+		assert.True(t, m.loop.isLoop)
+		assert.Equal(t, "sku", m.loop.iterator)
+		assert.Equal(t, "", m.loop.indexVar)
+		assert.Equal(t, "storageNames", m.loop.expression)
+		// body-derived name still extracted from the loop body
+		assert.Equal(t, "'stamp-${sku}'", extractFieldValue(m.body, "name"))
+		assert.Contains(t, m.body, "params")
+	})
+
+	// --- outputs ---
+	outputs := map[string]parsedOutput{}
+	for _, o := range result.outputs {
+		outputs[o.name] = o
+	}
+	require.Contains(t, outputs, "ids")
+	require.Contains(t, outputs, "region")
+
+	t.Run("looped output", func(t *testing.T) {
+		o := outputs["ids"]
+		assert.True(t, o.loop.isLoop)
+		assert.Equal(t, "sa", o.loop.iterator)
+		assert.Equal(t, "", o.loop.indexVar)
+		assert.Equal(t, "sas", o.loop.expression)
+		assert.Equal(t, "sa.id", o.expression)
+	})
+
+	t.Run("non-looped output", func(t *testing.T) {
+		o := outputs["region"]
+		assert.False(t, o.loop.isLoop)
+		assert.Equal(t, "", o.loop.iterator)
+		assert.Equal(t, "location", o.expression)
+	})
+}

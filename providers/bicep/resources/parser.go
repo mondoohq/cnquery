@@ -41,6 +41,7 @@ type parsedVariable struct {
 	name        string
 	expression  string
 	description string
+	loop        loopInfo
 }
 
 type parsedResource struct {
@@ -56,6 +57,7 @@ type parsedResource struct {
 	tags         map[string]string
 	dependsOn    []string
 	decorators   []string
+	loop         loopInfo
 }
 
 type parsedModule struct {
@@ -68,6 +70,7 @@ type parsedModule struct {
 	isRegistry     bool
 	isTemplateSpec bool
 	decorators     []string
+	loop           loopInfo
 }
 
 type parsedOutput struct {
@@ -75,6 +78,22 @@ type parsedOutput struct {
 	typ         string
 	expression  string
 	description string
+	loop        loopInfo
+}
+
+// loopInfo captures a Bicep `for`-loop on a declaration. Bicep iterates
+// resources, modules, outputs, and variables with
+// `[for <iterator> in <expression>: <body>]` (or the indexed
+// `[for (<iterator>, <indexVar>) in <expression>: <body>]` form). When a
+// declaration's value is such a loop, isLoop is true and the iterator,
+// optional indexVar, and collection expression are extracted; body holds
+// the text after the header colon (the per-iteration object or expression).
+type loopInfo struct {
+	isLoop     bool
+	iterator   string
+	indexVar   string
+	expression string
+	body       string
 }
 
 type parsedType struct {
@@ -221,7 +240,14 @@ func parseBicep(content string) *parsedBicepFile {
 				result.modules = append(result.modules, *mod)
 			}
 		case "output":
-			result.outputs = append(result.outputs, parseOutput(firstLine, stmt.decorators))
+			// Reassemble multi-line output values (a looped output's
+			// `[for ... : ...]` spans lines) into a single collapsed-whitespace
+			// line so the value regex and loop detector see the whole RHS.
+			outLine := firstLine
+			if len(stmtLines) > 1 {
+				outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
+			}
+			result.outputs = append(result.outputs, parseOutput(outLine, stmt.decorators))
 		case "type":
 			if t, ok := parseTypeDecl(stmt.text, stmt.decorators); ok {
 				result.types = append(result.types, t)
@@ -324,7 +350,16 @@ func parseVariable(line string, decorators []string) parsedVariable {
 	m := varRe.FindStringSubmatch(line)
 	if len(m) >= 3 {
 		v.name = m[1]
-		v.expression = strings.TrimSpace(m[2])
+		expr := strings.TrimSpace(m[2])
+		// A looped variable (`var names = [for i in range(0, 3): 'item-${i}']`)
+		// builds an array; store the per-iteration value expression in
+		// `expression` and record the loop header.
+		if loop := detectLoop(expr); loop.isLoop {
+			v.loop = loop
+			v.expression = loop.body
+		} else {
+			v.expression = expr
+		}
 	}
 	decText := strings.Join(decorators, "\n")
 	if m := descDecRe.FindStringSubmatch(decText); len(m) > 1 {
@@ -366,6 +401,33 @@ func parseVariableDecl(lines []string, startIdx int, decorators []string) (parse
 	return parseVariable(combined, decorators), i
 }
 
+// declValueAfterEquals returns the text following the top-level `=` of a
+// declaration that spans lines[startIdx:] — i.e. everything to the right of
+// the `=` in `resource foo 'Type@ver' = <value>` or `module m 'src' = <value>`.
+// The whole statement is reassembled and the first `=` that sits outside any
+// string, paren, bracket, or brace is taken as the assignment operator (so an
+// `=` inside the resource type string or a condition expression is ignored).
+// Returns "" when no top-level `=` is found.
+func declValueAfterEquals(lines []string, startIdx int) string {
+	full := strings.Join(lines[startIdx:], "\n")
+	st := scanState{}
+	for i := 0; i < len(full); {
+		if st.inStr == 0 && !st.inMulti && full[i] == '=' &&
+			st.paren == 0 && st.bracket == 0 && st.brace == 0 {
+			// Guard against `==`/`=>` which can appear in conditions; a real
+			// assignment `=` is followed by whitespace or a value char, not
+			// another `=` or `>`.
+			if i+1 < len(full) && (full[i+1] == '=' || full[i+1] == '>') {
+				i = st.stepAt(full, i)
+				continue
+			}
+			return strings.TrimSpace(full[i+1:])
+		}
+		i = st.stepAt(full, i)
+	}
+	return ""
+}
+
 func parseResourceDecl(lines []string, startIdx int, decorators []string) (*parsedResource, int) {
 	line := strings.TrimSpace(lines[startIdx])
 	m := resourceRe.FindStringSubmatch(line)
@@ -388,15 +450,29 @@ func parseResourceDecl(lines []string, startIdx int, decorators []string) (*pars
 	}
 
 	r.existing = len(m) > 4 && strings.TrimSpace(m[4]) == "existing"
+	r.condition = extractCondition(joinDeclHeader(lines, startIdx))
 
-	// Find the body between { and }
-	body, endIdx := extractBlock(lines, startIdx)
+	// endIdx is where the next statement begins; with the tokenizer feeding a
+	// single complete statement it is the end of the slice.
+	_, endIdx := extractBlock(lines, startIdx)
+
+	// When deployed via a `for`-loop the body object lives inside
+	// `[for <hdr>: { ... }]`. Detect the loop and parse the per-iteration
+	// object body the same way a plain resource body is parsed.
+	r.loop = detectLoop(declValueAfterEquals(lines, startIdx))
+	bodyLines := lines
+	bodyStart := startIdx
+	if r.loop.isLoop {
+		bodyLines = strings.Split(r.loop.body, "\n")
+		bodyStart = 0
+	}
+
+	body, _ := extractBlock(bodyLines, bodyStart)
 	r.body = body
 
 	// Extract common fields from body
 	r.name = extractFieldValue(body, "name")
 	r.location = extractFieldValue(body, "location")
-	r.condition = extractCondition(joinDeclHeader(lines, startIdx))
 	r.parent = extractFieldValue(body, "parent")
 	r.dependsOn = extractDependsOn(body)
 	r.tags = extractTags(body)
@@ -420,7 +496,20 @@ func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsed
 	}
 
 	mod.condition = extractCondition(joinDeclHeader(lines, startIdx))
-	body, endIdx := extractBlock(lines, startIdx)
+	_, endIdx := extractBlock(lines, startIdx)
+
+	// As with resources, a looped module wraps its body object in
+	// `[for <hdr>: { ... }]`; feed the loop body to the body parser so
+	// `name`/`scope`/`params` extraction still works.
+	mod.loop = detectLoop(declValueAfterEquals(lines, startIdx))
+	bodyLines := lines
+	bodyStart := startIdx
+	if mod.loop.isLoop {
+		bodyLines = strings.Split(mod.loop.body, "\n")
+		bodyStart = 0
+	}
+
+	body, _ := extractBlock(bodyLines, bodyStart)
 	mod.body = body
 	mod.scope = extractFieldValue(body, "scope")
 
@@ -438,7 +527,16 @@ func parseOutput(line string, decorators []string) parsedOutput {
 	if len(m) >= 4 {
 		o.name = m[1]
 		o.typ = m[2]
-		o.expression = strings.TrimSpace(m[3])
+		expr := strings.TrimSpace(m[3])
+		// A looped output (`output ids array = [for sa in sas: sa.id]`)
+		// produces an array; store the per-iteration value expression in
+		// `expression` and record the loop header.
+		if loop := detectLoop(expr); loop.isLoop {
+			o.loop = loop
+			o.expression = loop.body
+		} else {
+			o.expression = expr
+		}
 	}
 	decText := strings.Join(decorators, "\n")
 	if m := descDecRe.FindStringSubmatch(decText); len(m) > 1 {
@@ -583,6 +681,80 @@ var (
 	// importProviderRe matches a bare provider import like `import 'az@2.0.0'`.
 	importProviderRe = regexp.MustCompile(`^import\s+'([^']+)'`)
 )
+
+// loopHeaderRe matches the `[for` opener of a loop value and the iteration
+// variable form that follows. Group 1 captures the indexed
+// `(item, index)` form's item, group 2 the index var, group 3 the single
+// `item` form. Only the header up to the first identifier(s) and the
+// trailing `in ` is matched; the `<expression>: <body>` tail is split out
+// depth-aware so collection expressions and bodies that contain `:`/`]`
+// inside strings, parens, or nested brackets parse correctly.
+var loopHeaderRe = regexp.MustCompile(`^\[\s*for\s+(?:\(\s*(\w+)\s*,\s*(\w+)\s*\)|(\w+))\s+in\s+`)
+
+// detectLoop inspects a declaration's value text (everything after the `=`)
+// and, when it is a `for`-loop, returns the parsed loop header plus the
+// per-iteration body. For a non-loop value it returns loopInfo{} with
+// isLoop=false, so callers can fall back to their normal parse.
+//
+// The collection expression runs from `in` up to the top-level `:` that
+// separates the loop header from its body; the body runs from that `:` to
+// the matching closing `]`. Both boundaries are found with the shared
+// string/bracket-aware scanState so a `:` or `]` inside a string literal,
+// a `range(0, 3)` call, or a nested object/array doesn't split early.
+func detectLoop(value string) loopInfo {
+	trimmed := strings.TrimSpace(value)
+	m := loopHeaderRe.FindStringSubmatchIndex(trimmed)
+	if m == nil {
+		return loopInfo{}
+	}
+
+	info := loopInfo{isLoop: true}
+	// Submatch groups: [2:3]=indexed item, [4:5]=index var, [6:7]=single item.
+	if m[2] >= 0 {
+		info.iterator = trimmed[m[2]:m[3]]
+		info.indexVar = trimmed[m[4]:m[5]]
+	} else if m[6] >= 0 {
+		info.iterator = trimmed[m[6]:m[7]]
+	}
+
+	// The collection expression starts right after the matched `... in ` prefix.
+	exprStart := m[1]
+
+	// Find the top-level `:` separating the loop header from the body, and
+	// the matching closing `]`. Seed the scanner with the leading `[`
+	// already consumed (bracket depth 1).
+	st := scanState{bracket: 1}
+	colon := -1
+	closeBracket := -1
+	for i := exprStart; i < len(trimmed); {
+		if st.inStr == 0 && !st.inMulti {
+			// The header/body separator is the first `:` at the loop's own
+			// bracket depth (1) with no open paren/brace.
+			if trimmed[i] == ':' && colon < 0 && st.bracket == 1 && st.paren == 0 && st.brace == 0 {
+				colon = i
+			}
+		}
+		prev := i
+		i = st.stepAt(trimmed, i)
+		if st.bracket == 0 {
+			closeBracket = prev
+			break
+		}
+	}
+
+	if colon < 0 {
+		// Malformed loop (no header colon found); treat as non-loop so the
+		// caller's normal parse still runs.
+		return loopInfo{}
+	}
+	if closeBracket < 0 {
+		closeBracket = len(trimmed)
+	}
+
+	info.expression = strings.TrimSpace(trimmed[exprStart:colon])
+	info.body = strings.TrimSpace(trimmed[colon+1 : closeBracket])
+	return info
+}
 
 // parseImportDecl handles the three Bicep import forms:
 //

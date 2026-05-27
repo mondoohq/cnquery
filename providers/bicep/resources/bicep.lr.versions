@@ -40,8 +40,12 @@ bicep.module 13.0.0
 bicep.module.condition 13.0.0
 bicep.module.decorators 13.0.1
 bicep.module.description 13.0.1
+bicep.module.isLoop 13.1.2
 bicep.module.isRegistry 13.0.0
 bicep.module.isTemplateSpec 13.0.0
+bicep.module.loopExpression 13.1.2
+bicep.module.loopIndexVar 13.1.2
+bicep.module.loopIterator 13.1.2
 bicep.module.name 13.0.0
 bicep.module.params 13.0.0
 bicep.module.scope 13.0.0
@@ -50,6 +54,10 @@ bicep.output 13.0.0
 bicep.output.description 13.0.0
 bicep.output.expression 13.0.0
 bicep.output.expressionTree 13.1.2
+bicep.output.isLoop 13.1.2
+bicep.output.loopExpression 13.1.2
+bicep.output.loopIndexVar 13.1.2
+bicep.output.loopIterator 13.1.2
 bicep.output.name 13.0.0
 bicep.output.type 13.0.0
 bicep.paramFile 13.1.2
@@ -76,7 +84,11 @@ bicep.resource.condition 13.0.0
 bicep.resource.decorators 13.0.0
 bicep.resource.dependsOn 13.0.0
 bicep.resource.existing 13.0.0
+bicep.resource.isLoop 13.1.2
 bicep.resource.location 13.0.0
+bicep.resource.loopExpression 13.1.2
+bicep.resource.loopIndexVar 13.1.2
+bicep.resource.loopIterator 13.1.2
 bicep.resource.name 13.0.0
 bicep.resource.parent 13.0.0
 bicep.resource.properties 13.0.0
@@ -108,4 +120,8 @@ bicep.variable 13.0.0
 bicep.variable.description 13.0.0
 bicep.variable.expression 13.0.0
 bicep.variable.expressionTree 13.1.2
+bicep.variable.isLoop 13.1.2
+bicep.variable.loopExpression 13.1.2
+bicep.variable.loopIndexVar 13.1.2
+bicep.variable.loopIterator 13.1.2
 bicep.variable.name 13.0.0

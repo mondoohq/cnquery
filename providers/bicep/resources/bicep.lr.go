@@ -264,6 +264,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.variable.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepVariable).GetDescription()).ToDataRes(types.String)
 	},
+	"bicep.variable.isLoop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepVariable).GetIsLoop()).ToDataRes(types.Bool)
+	},
+	"bicep.variable.loopIterator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepVariable).GetLoopIterator()).ToDataRes(types.String)
+	},
+	"bicep.variable.loopIndexVar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepVariable).GetLoopIndexVar()).ToDataRes(types.String)
+	},
+	"bicep.variable.loopExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepVariable).GetLoopExpression()).ToDataRes(types.String)
+	},
 	"bicep.resource.symbolicName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetSymbolicName()).ToDataRes(types.String)
 	},
@@ -300,6 +312,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.resource.decorators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetDecorators()).ToDataRes(types.Array(types.String))
 	},
+	"bicep.resource.isLoop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetIsLoop()).ToDataRes(types.Bool)
+	},
+	"bicep.resource.loopIterator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetLoopIterator()).ToDataRes(types.String)
+	},
+	"bicep.resource.loopIndexVar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetLoopIndexVar()).ToDataRes(types.String)
+	},
+	"bicep.resource.loopExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetLoopExpression()).ToDataRes(types.String)
+	},
 	"bicep.module.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetName()).ToDataRes(types.String)
 	},
@@ -327,6 +351,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.module.decorators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetDecorators()).ToDataRes(types.Array(types.String))
 	},
+	"bicep.module.isLoop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetIsLoop()).ToDataRes(types.Bool)
+	},
+	"bicep.module.loopIterator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetLoopIterator()).ToDataRes(types.String)
+	},
+	"bicep.module.loopIndexVar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetLoopIndexVar()).ToDataRes(types.String)
+	},
+	"bicep.module.loopExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetLoopExpression()).ToDataRes(types.String)
+	},
 	"bicep.output.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetName()).ToDataRes(types.String)
 	},
@@ -341,6 +377,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bicep.output.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetDescription()).ToDataRes(types.String)
+	},
+	"bicep.output.isLoop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetIsLoop()).ToDataRes(types.Bool)
+	},
+	"bicep.output.loopIterator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetLoopIterator()).ToDataRes(types.String)
+	},
+	"bicep.output.loopIndexVar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetLoopIndexVar()).ToDataRes(types.String)
+	},
+	"bicep.output.loopExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetLoopExpression()).ToDataRes(types.String)
 	},
 	"bicep.expression.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepExpression).GetKind()).ToDataRes(types.String)
@@ -615,6 +663,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepVariable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.variable.isLoop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepVariable).IsLoop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.variable.loopIterator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepVariable).LoopIterator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.variable.loopIndexVar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepVariable).LoopIndexVar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.variable.loopExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepVariable).LoopExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"bicep.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).__id, ok = v.Value.(string)
 		return
@@ -667,6 +731,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepResource).Decorators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bicep.resource.isLoop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).IsLoop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.loopIterator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).LoopIterator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.loopIndexVar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).LoopIndexVar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.loopExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).LoopExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"bicep.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepModule).__id, ok = v.Value.(string)
 		return
@@ -707,6 +787,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepModule).Decorators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"bicep.module.isLoop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).IsLoop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.module.loopIterator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).LoopIterator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.module.loopIndexVar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).LoopIndexVar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.module.loopExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).LoopExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"bicep.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepOutput).__id, ok = v.Value.(string)
 		return
@@ -729,6 +825,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.output.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepOutput).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.output.isLoop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).IsLoop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.output.loopIterator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).LoopIterator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.output.loopIndexVar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).LoopIndexVar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.output.loopExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).LoopExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"bicep.expression.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1376,6 +1488,10 @@ type mqlBicepVariable struct {
 	Expression     plugin.TValue[string]
 	ExpressionTree plugin.TValue[*mqlBicepExpression]
 	Description    plugin.TValue[string]
+	IsLoop         plugin.TValue[bool]
+	LoopIterator   plugin.TValue[string]
+	LoopIndexVar   plugin.TValue[string]
+	LoopExpression plugin.TValue[string]
 }
 
 // createBicepVariable creates a new instance of this resource
@@ -1438,23 +1554,43 @@ func (c *mqlBicepVariable) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlBicepVariable) GetIsLoop() *plugin.TValue[bool] {
+	return &c.IsLoop
+}
+
+func (c *mqlBicepVariable) GetLoopIterator() *plugin.TValue[string] {
+	return &c.LoopIterator
+}
+
+func (c *mqlBicepVariable) GetLoopIndexVar() *plugin.TValue[string] {
+	return &c.LoopIndexVar
+}
+
+func (c *mqlBicepVariable) GetLoopExpression() *plugin.TValue[string] {
+	return &c.LoopExpression
+}
+
 // mqlBicepResource for the bicep.resource resource
 type mqlBicepResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlBicepResourceInternal it will be used here
-	SymbolicName plugin.TValue[string]
-	Type         plugin.TValue[string]
-	ApiVersion   plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Location     plugin.TValue[string]
-	Existing     plugin.TValue[bool]
-	Condition    plugin.TValue[string]
-	Parent       plugin.TValue[string]
-	Properties   plugin.TValue[any]
-	Tags         plugin.TValue[map[string]any]
-	DependsOn    plugin.TValue[[]any]
-	Decorators   plugin.TValue[[]any]
+	SymbolicName   plugin.TValue[string]
+	Type           plugin.TValue[string]
+	ApiVersion     plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Location       plugin.TValue[string]
+	Existing       plugin.TValue[bool]
+	Condition      plugin.TValue[string]
+	Parent         plugin.TValue[string]
+	Properties     plugin.TValue[any]
+	Tags           plugin.TValue[map[string]any]
+	DependsOn      plugin.TValue[[]any]
+	Decorators     plugin.TValue[[]any]
+	IsLoop         plugin.TValue[bool]
+	LoopIterator   plugin.TValue[string]
+	LoopIndexVar   plugin.TValue[string]
+	LoopExpression plugin.TValue[string]
 }
 
 // createBicepResource creates a new instance of this resource
@@ -1537,6 +1673,22 @@ func (c *mqlBicepResource) GetDecorators() *plugin.TValue[[]any] {
 	return &c.Decorators
 }
 
+func (c *mqlBicepResource) GetIsLoop() *plugin.TValue[bool] {
+	return &c.IsLoop
+}
+
+func (c *mqlBicepResource) GetLoopIterator() *plugin.TValue[string] {
+	return &c.LoopIterator
+}
+
+func (c *mqlBicepResource) GetLoopIndexVar() *plugin.TValue[string] {
+	return &c.LoopIndexVar
+}
+
+func (c *mqlBicepResource) GetLoopExpression() *plugin.TValue[string] {
+	return &c.LoopExpression
+}
+
 // mqlBicepModule for the bicep.module resource
 type mqlBicepModule struct {
 	MqlRuntime *plugin.Runtime
@@ -1551,6 +1703,10 @@ type mqlBicepModule struct {
 	IsTemplateSpec plugin.TValue[bool]
 	Description    plugin.TValue[string]
 	Decorators     plugin.TValue[[]any]
+	IsLoop         plugin.TValue[bool]
+	LoopIterator   plugin.TValue[string]
+	LoopIndexVar   plugin.TValue[string]
+	LoopExpression plugin.TValue[string]
 }
 
 // createBicepModule creates a new instance of this resource
@@ -1621,6 +1777,22 @@ func (c *mqlBicepModule) GetDecorators() *plugin.TValue[[]any] {
 	return &c.Decorators
 }
 
+func (c *mqlBicepModule) GetIsLoop() *plugin.TValue[bool] {
+	return &c.IsLoop
+}
+
+func (c *mqlBicepModule) GetLoopIterator() *plugin.TValue[string] {
+	return &c.LoopIterator
+}
+
+func (c *mqlBicepModule) GetLoopIndexVar() *plugin.TValue[string] {
+	return &c.LoopIndexVar
+}
+
+func (c *mqlBicepModule) GetLoopExpression() *plugin.TValue[string] {
+	return &c.LoopExpression
+}
+
 // mqlBicepOutput for the bicep.output resource
 type mqlBicepOutput struct {
 	MqlRuntime *plugin.Runtime
@@ -1631,6 +1803,10 @@ type mqlBicepOutput struct {
 	Expression     plugin.TValue[string]
 	ExpressionTree plugin.TValue[*mqlBicepExpression]
 	Description    plugin.TValue[string]
+	IsLoop         plugin.TValue[bool]
+	LoopIterator   plugin.TValue[string]
+	LoopIndexVar   plugin.TValue[string]
+	LoopExpression plugin.TValue[string]
 }
 
 // createBicepOutput creates a new instance of this resource
@@ -1695,6 +1871,22 @@ func (c *mqlBicepOutput) GetExpressionTree() *plugin.TValue[*mqlBicepExpression]
 
 func (c *mqlBicepOutput) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlBicepOutput) GetIsLoop() *plugin.TValue[bool] {
+	return &c.IsLoop
+}
+
+func (c *mqlBicepOutput) GetLoopIterator() *plugin.TValue[string] {
+	return &c.LoopIterator
+}
+
+func (c *mqlBicepOutput) GetLoopIndexVar() *plugin.TValue[string] {
+	return &c.LoopIndexVar
+}
+
+func (c *mqlBicepOutput) GetLoopExpression() *plugin.TValue[string] {
+	return &c.LoopExpression
 }
 
 // mqlBicepExpression for the bicep.expression resource

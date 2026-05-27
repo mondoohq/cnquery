@@ -42,12 +42,14 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedVariable) ([]any, error) {
 	var mqlVars []any
 	for _, v := range vars {
-		res, err := CreateResource(runtime, "bicep.variable", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"__id":        llx.StringData("bicep.variable:" + filePath + ":" + v.name),
 			"name":        llx.StringData(v.name),
 			"expression":  llx.StringData(v.expression),
 			"description": llx.StringData(v.description),
-		})
+		}
+		addLoopArgs(args, v.loop)
+		res, err := CreateResource(runtime, "bicep.variable", args)
 		if err != nil {
 			return nil, err
 		}
@@ -98,6 +100,7 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 			}
 			args["tags"] = llx.MapData(tags, types.String)
 		}
+		addLoopArgs(args, r.loop)
 
 		res, err := CreateResource(runtime, "bicep.resource", args)
 		if err != nil {
@@ -123,7 +126,7 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 
 		decorators := sliceToAny(m.decorators)
 
-		res, err := CreateResource(runtime, "bicep.module", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"__id":           llx.StringData("bicep.module:" + filePath + ":" + m.name),
 			"name":           llx.StringData(m.name),
 			"source":         llx.StringData(m.source),
@@ -134,7 +137,9 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 			"isTemplateSpec": llx.BoolData(m.isTemplateSpec),
 			"description":    llx.StringData(m.description),
 			"decorators":     llx.ArrayData(decorators, types.String),
-		})
+		}
+		addLoopArgs(args, m.loop)
+		res, err := CreateResource(runtime, "bicep.module", args)
 		if err != nil {
 			return nil, err
 		}
@@ -216,13 +221,15 @@ func (o *mqlBicepOutput) expressionTree() (*mqlBicepExpression, error) {
 func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsedOutput) ([]any, error) {
 	var mqlOutputs []any
 	for _, o := range outputs {
-		res, err := CreateResource(runtime, "bicep.output", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"__id":        llx.StringData("bicep.output:" + filePath + ":" + o.name),
 			"name":        llx.StringData(o.name),
 			"type":        llx.StringData(o.typ),
 			"expression":  llx.StringData(o.expression),
 			"description": llx.StringData(o.description),
-		})
+		}
+		addLoopArgs(args, o.loop)
+		res, err := CreateResource(runtime, "bicep.output", args)
 		if err != nil {
 			return nil, err
 		}
@@ -298,6 +305,16 @@ func createMqlImports(runtime *plugin.Runtime, filePath string, imports []parsed
 		mqlImports = append(mqlImports, res)
 	}
 	return mqlImports, nil
+}
+
+// addLoopArgs sets the four flattened `for`-loop fields shared by
+// bicep.resource, bicep.module, bicep.output, and bicep.variable. For a
+// non-loop declaration isLoop is false and the string fields are empty.
+func addLoopArgs(args map[string]*llx.RawData, loop loopInfo) {
+	args["isLoop"] = llx.BoolData(loop.isLoop)
+	args["loopIterator"] = llx.StringData(loop.iterator)
+	args["loopIndexVar"] = llx.StringData(loop.indexVar)
+	args["loopExpression"] = llx.StringData(loop.expression)
 }
 
 func sliceToAny(s []string) []any {

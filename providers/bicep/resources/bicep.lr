@@ -155,6 +155,14 @@ bicep.variable @defaults("name") {
   expressionTree() bicep.expression
   // Description from @description decorator
   description string
+  // Whether the value is built with a `for` loop
+  isLoop bool
+  // Loop item iteration variable (empty when not a loop)
+  loopIterator string
+  // Loop index variable in the `(item, index)` form (empty otherwise)
+  loopIndexVar string
+  // Raw collection expression the loop iterates (empty when not a loop)
+  loopExpression string
 }
 
 // Bicep resource declaration
@@ -196,6 +204,14 @@ bicep.resource @defaults("type symbolicName") {
   dependsOn []string
   // Decorators
   decorators []string
+  // Whether the resource is deployed with a `for` loop
+  isLoop bool
+  // Loop item iteration variable (empty when not a loop)
+  loopIterator string
+  // Loop index variable in the `(item, index)` form (empty otherwise)
+  loopIndexVar string
+  // Raw collection expression the loop iterates (empty when not a loop)
+  loopExpression string
 }
 
 // Bicep module reference
@@ -223,6 +239,14 @@ bicep.module @defaults("name source") {
   description string
   // All decorators as raw strings
   decorators []string
+  // Whether the module is deployed with a `for` loop
+  isLoop bool
+  // Loop item iteration variable (empty when not a loop)
+  loopIterator string
+  // Loop index variable in the `(item, index)` form (empty otherwise)
+  loopIndexVar string
+  // Raw collection expression the loop iterates (empty when not a loop)
+  loopExpression string
 }
 
 // Bicep output declaration
@@ -247,6 +271,14 @@ bicep.output @defaults("name type") {
   expressionTree() bicep.expression
   // Description from @description decorator
   description string
+  // Whether the value is built with a `for` loop
+  isLoop bool
+  // Loop item iteration variable (empty when not a loop)
+  loopIterator string
+  // Loop index variable in the `(item, index)` form (empty otherwise)
+  loopIndexVar string
+  // Raw collection expression the loop iterates (empty when not a loop)
+  loopExpression string
 }
 
 // Parsed Bicep expression
