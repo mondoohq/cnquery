@@ -410,6 +410,40 @@ func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
 	return expressionTreeFor(m.MqlRuntime, m.__id, "/conditionTree", m.Condition.Data, m.resolver)
 }
 
+// resolveScannedBicepFile resolves a relative `source` (e.g. './shared.bicep')
+// declared in the file at owningFilePath to the bicep.file it references,
+// returning the SAME cached bicep.file instance the scan already discovered, or
+// nil when no in-tree file matches.
+//
+// This is the shared, security-critical resolver behind both
+// bicep.module.target() and bicep.import.targetFile(). We never read an
+// arbitrary path from disk: `source` comes from the (potentially untrusted)
+// Bicep file, so an on-demand read of the resolved path would let a crafted
+// reference (e.g. '../../../../etc/passwd') disclose arbitrary file contents
+// via bicep.file.content. The scan already loads every .bicep under the root
+// recursively, so any legitimate in-tree target — including ones reached via a
+// relative '../' path — is present in conn.BicepFiles(); anything not found
+// (out-of-root or absolute references) resolves to nil. Callers are responsible
+// for setting StateIsNull on their singular field when nil is returned.
+func resolveScannedBicepFile(runtime *plugin.Runtime, owningFilePath, source string) (*mqlBicepFile, error) {
+	if source == "" || owningFilePath == "" {
+		return nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.BicepConnection)
+	if !ok {
+		return nil, nil
+	}
+
+	resolved := filepath.Clean(filepath.Join(filepath.Dir(owningFilePath), source))
+	for _, f := range conn.BicepFiles() {
+		if filepath.Clean(f.Path) == resolved {
+			return newMqlBicepFile(runtime, f)
+		}
+	}
+	return nil, nil
+}
+
 // target resolves a local module `source` to the bicep.file it references.
 //
 // Only local sources are resolved: a registry (`br:`) or template-spec (`ts:`)
@@ -419,8 +453,8 @@ func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
 // bicep.file is returned (reusing its __id) so the runtime serves the existing
 // instance and the caller can traverse into its resources/params/outputs. A
 // path that resolves outside the scanned root — or is otherwise unresolvable —
-// returns null; target() never reads an arbitrary path from disk (see the
-// security note at the lookup below).
+// returns null; target() never reads an arbitrary path from disk (it shares the
+// scan-only resolveScannedBicepFile helper).
 func (m *mqlBicepModule) target() (*mqlBicepFile, error) {
 	source := m.Source.Data
 	// Registry and template-spec references are not local files.
@@ -430,36 +464,16 @@ func (m *mqlBicepModule) target() (*mqlBicepFile, error) {
 		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	if source == "" || m.owningFilePath == "" {
+
+	f, err := resolveScannedBicepFile(m.MqlRuntime, m.owningFilePath, source)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
 		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-
-	resolved := filepath.Clean(filepath.Join(filepath.Dir(m.owningFilePath), source))
-
-	conn, ok := m.MqlRuntime.Connection.(*connection.BicepConnection)
-	if !ok {
-		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	// Resolve only to a file the scan already discovered, returning the same
-	// cached bicep.file instance. We never read an arbitrary path from disk:
-	// `source` comes from the (potentially untrusted) Bicep file, so an
-	// on-demand read of the resolved path would let a crafted module
-	// reference (e.g. '../../../../etc/passwd') disclose arbitrary file
-	// contents via bicep.file.content. The scan already loads every .bicep
-	// under the root recursively, so any legitimate in-tree target — including
-	// ones reached via a relative '../' path — is present here; anything not
-	// found (out-of-root or absolute references) resolves to null.
-	for _, f := range conn.BicepFiles() {
-		if filepath.Clean(f.Path) == resolved {
-			return newMqlBicepFile(m.MqlRuntime, f)
-		}
-	}
-
-	m.Target.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	return f, nil
 }
 
 // mqlBicepOutputInternal carries the owning file's symbol resolver so the
@@ -537,6 +551,13 @@ func createMqlFunctions(runtime *plugin.Runtime, filePath string, functions []pa
 	return mqlFunctions, nil
 }
 
+// mqlBicepImportInternal carries the path of the file that declared this
+// import; a relative `source` is resolved against its directory by the
+// targetFile() accessor.
+type mqlBicepImportInternal struct {
+	owningFilePath string
+}
+
 func createMqlImports(runtime *plugin.Runtime, filePath string, imports []parsedImport) ([]any, error) {
 	var mqlImports []any
 	for i, imp := range imports {
@@ -554,9 +575,111 @@ func createMqlImports(runtime *plugin.Runtime, filePath string, imports []parsed
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlBicepImport).owningFilePath = filePath
 		mqlImports = append(mqlImports, res)
 	}
 	return mqlImports, nil
+}
+
+// targetFile resolves a local import `source` to the bicep.file it pulls from.
+//
+// A bare provider import (e.g. `az@2.0.0`) is not a local file: imports never
+// set isRegistry, so a provider import is detected as one whose `source` is not
+// a relative path (it has no `./`/`../` prefix and no `.bicep` extension) — it
+// resolves to null. Otherwise the relative source is resolved against the
+// declaring file's directory via the shared scan-only resolver: only a file the
+// scan already discovered is returned (the same cached bicep.file instance),
+// and an out-of-root or otherwise unresolvable path returns null. The resolved
+// path is never read directly from disk.
+func (i *mqlBicepImport) targetFile() (*mqlBicepFile, error) {
+	source := i.Source.Data
+
+	// A provider import like `az@2.0.0` is not a relative local file path.
+	isRelative := strings.HasPrefix(source, "./") || strings.HasPrefix(source, "../")
+	if !isRelative || !strings.HasSuffix(source, ".bicep") {
+		i.TargetFile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	f, err := resolveScannedBicepFile(i.MqlRuntime, i.owningFilePath, source)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		i.TargetFile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return f, nil
+}
+
+// resolvedTypes returns the user-defined types this import brings in from its
+// target file: the named subset (filtered by `symbols`) for a named import, or
+// all of the target file's types for a wildcard import. Empty when there is no
+// resolvable target file.
+func (i *mqlBicepImport) resolvedTypes() ([]any, error) {
+	target, err := i.targetFile()
+	if err != nil {
+		return nil, err
+	}
+	if target == nil {
+		return []any{}, nil
+	}
+	all, err := target.types()
+	if err != nil {
+		return nil, err
+	}
+	if i.Wildcard.Data {
+		return all, nil
+	}
+	wanted := importSymbolSet(i.Symbols.Data)
+	out := make([]any, 0, len(all))
+	for _, t := range all {
+		if wanted[t.(*mqlBicepType).Name.Data] {
+			out = append(out, t)
+		}
+	}
+	return out, nil
+}
+
+// resolvedFunctions returns the user-defined functions this import brings in
+// from its target file: the named subset (filtered by `symbols`) for a named
+// import, or all of the target file's functions for a wildcard import. Empty
+// when there is no resolvable target file.
+func (i *mqlBicepImport) resolvedFunctions() ([]any, error) {
+	target, err := i.targetFile()
+	if err != nil {
+		return nil, err
+	}
+	if target == nil {
+		return []any{}, nil
+	}
+	all, err := target.functions()
+	if err != nil {
+		return nil, err
+	}
+	if i.Wildcard.Data {
+		return all, nil
+	}
+	wanted := importSymbolSet(i.Symbols.Data)
+	out := make([]any, 0, len(all))
+	for _, fn := range all {
+		if wanted[fn.(*mqlBicepFunction).Name.Data] {
+			out = append(out, fn)
+		}
+	}
+	return out, nil
+}
+
+// importSymbolSet turns the `symbols` list (an []any of strings) into a lookup
+// set for filtering a target file's types/functions on a named import.
+func importSymbolSet(symbols []any) map[string]bool {
+	set := make(map[string]bool, len(symbols))
+	for _, s := range symbols {
+		if name, ok := s.(string); ok {
+			set[name] = true
+		}
+	}
+	return set
 }
 
 // addLoopArgs sets the four flattened `for`-loop fields shared by

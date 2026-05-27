@@ -498,6 +498,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.import.wildcard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepImport).GetWildcard()).ToDataRes(types.Bool)
 	},
+	"bicep.import.targetFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepImport).GetTargetFile()).ToDataRes(types.Resource("bicep.file"))
+	},
+	"bicep.import.resolvedTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepImport).GetResolvedTypes()).ToDataRes(types.Array(types.Resource("bicep.type")))
+	},
+	"bicep.import.resolvedFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepImport).GetResolvedFunctions()).ToDataRes(types.Array(types.Resource("bicep.function")))
+	},
 	"bicep.template.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplate).GetSchema()).ToDataRes(types.String)
 	},
@@ -1043,6 +1052,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.import.wildcard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepImport).Wildcard, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.import.targetFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepImport).TargetFile, ok = plugin.RawToTValue[*mqlBicepFile](v.Value, v.Error)
+		return
+	},
+	"bicep.import.resolvedTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepImport).ResolvedTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.import.resolvedFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepImport).ResolvedFunctions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2438,11 +2459,14 @@ func (c *mqlBicepFunction) GetDecorators() *plugin.TValue[[]any] {
 type mqlBicepImport struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepImportInternal it will be used here
-	Source    plugin.TValue[string]
-	Symbols   plugin.TValue[[]any]
-	Namespace plugin.TValue[string]
-	Wildcard  plugin.TValue[bool]
+	mqlBicepImportInternal
+	Source            plugin.TValue[string]
+	Symbols           plugin.TValue[[]any]
+	Namespace         plugin.TValue[string]
+	Wildcard          plugin.TValue[bool]
+	TargetFile        plugin.TValue[*mqlBicepFile]
+	ResolvedTypes     plugin.TValue[[]any]
+	ResolvedFunctions plugin.TValue[[]any]
 }
 
 // createBicepImport creates a new instance of this resource
@@ -2491,6 +2515,54 @@ func (c *mqlBicepImport) GetNamespace() *plugin.TValue[string] {
 
 func (c *mqlBicepImport) GetWildcard() *plugin.TValue[bool] {
 	return &c.Wildcard
+}
+
+func (c *mqlBicepImport) GetTargetFile() *plugin.TValue[*mqlBicepFile] {
+	return plugin.GetOrCompute[*mqlBicepFile](&c.TargetFile, func() (*mqlBicepFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.import", c.__id, "targetFile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepFile), nil
+			}
+		}
+
+		return c.targetFile()
+	})
+}
+
+func (c *mqlBicepImport) GetResolvedTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResolvedTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.import", c.__id, "resolvedTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resolvedTypes()
+	})
+}
+
+func (c *mqlBicepImport) GetResolvedFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResolvedFunctions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.import", c.__id, "resolvedFunctions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resolvedFunctions()
+	})
 }
 
 // mqlBicepTemplate for the bicep.template resource

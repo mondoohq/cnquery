@@ -479,6 +479,34 @@ bicep.import @defaults("source") {
   namespace string
   // Whether this is a `* as ns` wildcard import
   wildcard bool
+
+  // Local Bicep file this import pulls from
+  //
+  // Resolves a relative `source` (for example `./shared.bicep`) against the
+  // directory of the file that declared the import and returns the matching
+  // Bicep file the scan already discovered, so you can traverse into its
+  // types, functions, and other declarations. Only scan-discovered files
+  // resolve; a bare provider import (for example `az@2.0.0`), a path that
+  // resolves outside the scanned root, or any otherwise unresolvable path
+  // returns null — the resolved path is never read directly from disk.
+  targetFile() bicep.file
+
+  // User-defined types this import brings in from the target file
+  //
+  // For a named import (`import { sku } from './shared.bicep'`) this is the
+  // subset of the target file's types whose name appears in `symbols`. For a
+  // wildcard import (`import * as shared from './shared.bicep'`) it is all of
+  // the target file's types. Empty when there is no resolvable target file.
+  resolvedTypes() []bicep.type
+
+  // User-defined functions this import brings in from the target file
+  //
+  // For a named import (`import { buildName } from './shared.bicep'`) this is
+  // the subset of the target file's functions whose name appears in
+  // `symbols`. For a wildcard import (`import * as shared from
+  // './shared.bicep'`) it is all of the target file's functions. Empty when
+  // there is no resolvable target file.
+  resolvedFunctions() []bicep.function
 }
 
 // Compiled ARM template (from ARM JSON input)

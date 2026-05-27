@@ -39,8 +39,11 @@ bicep.function.parameters 13.1.2
 bicep.function.returnType 13.1.2
 bicep.import 13.1.2
 bicep.import.namespace 13.1.2
+bicep.import.resolvedFunctions 13.1.2
+bicep.import.resolvedTypes 13.1.2
 bicep.import.source 13.1.2
 bicep.import.symbols 13.1.2
+bicep.import.targetFile 13.1.2
 bicep.import.wildcard 13.1.2
 bicep.module 13.0.0
 bicep.module.condition 13.0.0
