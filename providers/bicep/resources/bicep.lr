@@ -604,6 +604,24 @@ bicep.template.resource @defaults("type name") {
   properties dict
   // Dependencies
   dependsOn []string
+  // ARM deployment condition expression; empty when the resource is unconditional
+  condition string
+  // Name of the ARM `copy` iteration block; empty when the resource is not copied
+  copyName string
+  // Iteration count of the ARM `copy` block (an int or an ARM expression); null when not a copy loop
+  copyCount dict
+  // Iteration mode of the ARM `copy` block: "Serial" or "Parallel"; empty when not a copy loop or unspecified
+  copyMode string
+  // Batch size for a Serial `copy` loop; null when not set
+  copyBatchSize int
+  // Inline nested deployment template
+  //
+  // For a `Microsoft.Resources/deployments` resource whose `properties.template`
+  // is an inline ARM template, returns that template as a `bicep.template` so you
+  // can traverse its parameters/variables/resources/outputs. Null for an external
+  // `templateLink` deployment (not resolvable offline) and for non-deployment
+  // resources.
+  linkedTemplate() bicep.template
   // Full manifest
   manifest dict
 }

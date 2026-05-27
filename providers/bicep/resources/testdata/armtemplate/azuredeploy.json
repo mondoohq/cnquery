@@ -31,6 +31,64 @@
       },
       "kind": "StorageV2",
       "properties": {}
+    },
+    {
+      "condition": "[greater(parameters('instanceCount'), 0)]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-05-01",
+      "name": "conditionalPip",
+      "location": "eastus",
+      "properties": {}
+    },
+    {
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('instanceCount')]",
+        "mode": "Serial",
+        "batchSize": 2
+      },
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-05-01",
+      "name": "[concat('nic-', copyIndex())]",
+      "location": "eastus",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "inlineNested",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "nestedName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-01-01",
+              "name": "[parameters('nestedName')]",
+              "location": "eastus",
+              "properties": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "externalLinked",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "https://example.com/nested/azuredeploy.json"
+        }
+      }
     }
   ],
   "outputs": {

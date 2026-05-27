@@ -100,6 +100,99 @@ func TestARMTemplateResources(t *testing.T) {
 
 	resources, err := tmpl.resources()
 	require.NoError(t, err)
-	require.Len(t, resources, 1)
+	require.Len(t, resources, 5)
 	assert.Equal(t, "Microsoft.Storage/storageAccounts", resources[0].(*mqlBicepTemplateResource).Type.Data)
+}
+
+// armResourceByName indexes the materialized template resources by their
+// (resolved) name so each construct-specific assertion can fetch the one it
+// cares about regardless of slice order.
+func armResourceByName(t *testing.T, runtime *plugin.Runtime) map[string]*mqlBicepTemplateResource {
+	t.Helper()
+	tmpl := armTemplate(t, runtime)
+	resources, err := tmpl.resources()
+	require.NoError(t, err)
+	byName := make(map[string]*mqlBicepTemplateResource, len(resources))
+	for _, r := range resources {
+		res := r.(*mqlBicepTemplateResource)
+		byName[res.Name.Data] = res
+	}
+	return byName
+}
+
+func TestARMTemplateResourceCondition(t *testing.T) {
+	runtime := armTemplateRuntime(t)
+	byName := armResourceByName(t, runtime)
+
+	cond := byName["conditionalPip"]
+	require.NotNil(t, cond)
+	assert.Equal(t, "[greater(parameters('instanceCount'), 0)]", cond.Condition.Data)
+
+	// An ordinary resource carries no condition.
+	assert.Empty(t, byName["[variables('storageName')]"].Condition.Data)
+}
+
+func TestARMTemplateResourceCopy(t *testing.T) {
+	runtime := armTemplateRuntime(t)
+	byName := armResourceByName(t, runtime)
+
+	// The copy resource's name resolves at deploy time, so look it up by the
+	// raw concat expression.
+	var copyRes *mqlBicepTemplateResource
+	for _, r := range byName {
+		if r.CopyName.Data == "nicLoop" {
+			copyRes = r
+			break
+		}
+	}
+	require.NotNil(t, copyRes)
+	assert.Equal(t, "nicLoop", copyRes.CopyName.Data)
+	assert.Equal(t, "[parameters('instanceCount')]", copyRes.CopyCount.Data)
+	assert.Equal(t, "Serial", copyRes.CopyMode.Data)
+	assert.Equal(t, int64(2), copyRes.CopyBatchSize.Data)
+
+	// A non-copy resource has empty/null copy fields.
+	ordinary := byName["[variables('storageName')]"]
+	assert.Empty(t, ordinary.CopyName.Data)
+	assert.Empty(t, ordinary.CopyMode.Data)
+	assert.Nil(t, ordinary.CopyCount.Data)
+	assert.Equal(t, int64(0), ordinary.CopyBatchSize.Data)
+	assert.True(t, ordinary.CopyBatchSize.State&plugin.StateIsNull != 0, "absent batchSize must be null")
+}
+
+func TestARMTemplateResourceLinkedTemplate(t *testing.T) {
+	runtime := armTemplateRuntime(t)
+	byName := armResourceByName(t, runtime)
+
+	// Inline nested deployment resolves to a traversable bicep.template.
+	inline := byName["inlineNested"]
+	require.NotNil(t, inline)
+	linked, err := inline.linkedTemplate()
+	require.NoError(t, err)
+	require.NotNil(t, linked)
+
+	params, err := linked.parameters()
+	require.NoError(t, err)
+	require.Len(t, params, 1)
+	assert.Equal(t, "nestedName", params[0].(*mqlBicepTemplateParameter).Name.Data)
+
+	nestedResources, err := linked.resources()
+	require.NoError(t, err)
+	require.Len(t, nestedResources, 1)
+	assert.Equal(t, "Microsoft.Storage/storageAccounts", nestedResources[0].(*mqlBicepTemplateResource).Type.Data)
+
+	// External templateLink deployment is not resolvable offline -> null.
+	external := byName["externalLinked"]
+	require.NotNil(t, external)
+	linkedExt, err := external.linkedTemplate()
+	require.NoError(t, err)
+	assert.Nil(t, linkedExt)
+	assert.True(t, external.LinkedTemplate.State&plugin.StateIsNull != 0, "templateLink linkedTemplate must be null")
+
+	// An ordinary (non-deployment) resource has a null linkedTemplate.
+	ordinary := byName["[variables('storageName')]"]
+	linkedOrd, err := ordinary.linkedTemplate()
+	require.NoError(t, err)
+	assert.Nil(t, linkedOrd)
+	assert.True(t, ordinary.LinkedTemplate.State&plugin.StateIsNull != 0)
 }

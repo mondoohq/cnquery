@@ -8,6 +8,7 @@ import (
 	"errors"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -251,11 +252,23 @@ func (t *mqlBicepTemplate) resources() ([]any, error) {
 	return mqlResources, nil
 }
 
+// mqlBicepTemplateResourceInternal caches what the lazy linkedTemplate()
+// accessor needs: the inline nested ARM template parsed from a
+// `Microsoft.Resources/deployments` resource's `properties.template`, plus the
+// synthetic id used to build a non-colliding `bicep.template` for it. Both are
+// nil/empty for resources that carry no inline nested template (ordinary
+// resources, or deployments that use an external `templateLink`).
+type mqlBicepTemplateResourceInternal struct {
+	linkedTmpl   *connection.ARMTemplate
+	linkedTmplID string
+}
+
 func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, index int, obj map[string]any) (*mqlBicepTemplateResource, error) {
 	typ, _ := obj["type"].(string)
 	apiVersion, _ := obj["apiVersion"].(string)
 	name, _ := obj["name"].(string)
 	location, _ := obj["location"].(string)
+	condition, _ := obj["condition"].(string)
 
 	var dependsOn []any
 	if deps, ok := obj["dependsOn"].([]any); ok {
@@ -263,6 +276,23 @@ func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, i
 			if s, ok := d.(string); ok {
 				dependsOn = append(dependsOn, s)
 			}
+		}
+	}
+
+	// ARM `copy` iteration block: { name, count, mode, batchSize }. count may
+	// be an int or an ARM expression string, so it's surfaced as a dict.
+	var copyName, copyMode string
+	var copyCount any
+	var copyBatchSize *int64
+	if copy, ok := obj["copy"].(map[string]any); ok {
+		copyName, _ = copy["name"].(string)
+		copyMode, _ = copy["mode"].(string)
+		// count is already a decoded JSON value (a float64 for a literal int
+		// or a string for an ARM expression); surface it as-is in the dict.
+		copyCount = copy["count"]
+		if bs, ok := copy["batchSize"].(float64); ok {
+			v := int64(bs)
+			copyBatchSize = &v
 		}
 	}
 
@@ -276,20 +306,76 @@ func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, i
 	}
 
 	id := "bicep.template.resource:" + templatePath + ":" + typ + ":" + name + ":" + strconv.Itoa(index)
+
+	// Extract an inline nested deployment template, if any. Only a
+	// `Microsoft.Resources/deployments` resource whose `properties.template`
+	// is an inline ARM template is resolvable offline; an external
+	// `templateLink` is not.
+	linkedTmpl := extractInlineTemplate(typ, obj)
+
 	res, err := CreateResource(runtime, "bicep.template.resource", map[string]*llx.RawData{
-		"__id":       llx.StringData(id),
-		"type":       llx.StringData(typ),
-		"apiVersion": llx.StringData(apiVersion),
-		"name":       llx.StringData(name),
-		"location":   llx.StringData(location),
-		"properties": llx.DictData(properties),
-		"dependsOn":  llx.ArrayData(dependsOn, types.String),
-		"manifest":   llx.DictData(manifest),
+		"__id":          llx.StringData(id),
+		"type":          llx.StringData(typ),
+		"apiVersion":    llx.StringData(apiVersion),
+		"name":          llx.StringData(name),
+		"location":      llx.StringData(location),
+		"condition":     llx.StringData(condition),
+		"copyName":      llx.StringData(copyName),
+		"copyCount":     llx.DictData(copyCount),
+		"copyMode":      llx.StringData(copyMode),
+		"copyBatchSize": llx.IntDataPtr(copyBatchSize),
+		"properties":    llx.DictData(properties),
+		"dependsOn":     llx.ArrayData(dependsOn, types.String),
+		"manifest":      llx.DictData(manifest),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlBicepTemplateResource), nil
+	mqlRes := res.(*mqlBicepTemplateResource)
+	mqlRes.linkedTmpl = linkedTmpl
+	mqlRes.linkedTmplID = id + "/linkedTemplate"
+	return mqlRes, nil
+}
+
+// extractInlineTemplate returns the inline nested ARM template carried by a
+// `Microsoft.Resources/deployments` resource's `properties.template`, or nil
+// for non-deployment resources, external `templateLink` deployments, and
+// deployments with no inline template.
+func extractInlineTemplate(typ string, obj map[string]any) *connection.ARMTemplate {
+	if !strings.EqualFold(typ, "Microsoft.Resources/deployments") {
+		return nil
+	}
+	props, ok := obj["properties"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	inline, ok := props["template"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	raw, err := json.Marshal(inline)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to re-marshal inline nested ARM template")
+		return nil
+	}
+	var tmpl connection.ARMTemplate
+	if err := json.Unmarshal(raw, &tmpl); err != nil {
+		log.Warn().Err(err).Msg("failed to unmarshal inline nested ARM template")
+		return nil
+	}
+	return &tmpl
+}
+
+// linkedTemplate resolves an inline nested deployment template into a
+// bicep.template so its parameters/variables/resources/outputs can be
+// traversed. It is null for an external templateLink deployment, a
+// non-deployment resource, and a deployment with no inline template.
+func (a *mqlBicepTemplateResource) linkedTemplate() (*mqlBicepTemplate, error) {
+	if a.linkedTmpl == nil {
+		a.LinkedTemplate.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlBicepTemplate(a.MqlRuntime, a.linkedTmplID, a.linkedTmpl)
 }
 
 // sortedKeys returns the keys of a raw-message map in ascending order so

@@ -129,7 +129,13 @@ bicep.template.parameter.type 13.1.2
 bicep.template.parameters 13.0.0
 bicep.template.resource 13.0.0
 bicep.template.resource.apiVersion 13.0.0
+bicep.template.resource.condition 13.1.2
+bicep.template.resource.copyBatchSize 13.1.2
+bicep.template.resource.copyCount 13.1.2
+bicep.template.resource.copyMode 13.1.2
+bicep.template.resource.copyName 13.1.2
 bicep.template.resource.dependsOn 13.0.0
+bicep.template.resource.linkedTemplate 13.1.2
 bicep.template.resource.location 13.0.0
 bicep.template.resource.manifest 13.0.0
 bicep.template.resource.name 13.0.0

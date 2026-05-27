@@ -591,6 +591,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.template.resource.dependsOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplateResource).GetDependsOn()).ToDataRes(types.Array(types.String))
 	},
+	"bicep.template.resource.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetCondition()).ToDataRes(types.String)
+	},
+	"bicep.template.resource.copyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetCopyName()).ToDataRes(types.String)
+	},
+	"bicep.template.resource.copyCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetCopyCount()).ToDataRes(types.Dict)
+	},
+	"bicep.template.resource.copyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetCopyMode()).ToDataRes(types.String)
+	},
+	"bicep.template.resource.copyBatchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetCopyBatchSize()).ToDataRes(types.Int)
+	},
+	"bicep.template.resource.linkedTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTemplateResource).GetLinkedTemplate()).ToDataRes(types.Resource("bicep.template"))
+	},
 	"bicep.template.resource.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplateResource).GetManifest()).ToDataRes(types.Dict)
 	},
@@ -1224,6 +1242,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.template.resource.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepTemplateResource).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.copyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).CopyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.copyCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).CopyCount, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.copyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).CopyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.copyBatchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).CopyBatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"bicep.template.resource.linkedTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTemplateResource).LinkedTemplate, ok = plugin.RawToTValue[*mqlBicepTemplate](v.Value, v.Error)
 		return
 	},
 	"bicep.template.resource.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2971,14 +3013,20 @@ func (c *mqlBicepTemplateOutput) GetValue() *plugin.TValue[any] {
 type mqlBicepTemplateResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepTemplateResourceInternal it will be used here
-	Type       plugin.TValue[string]
-	ApiVersion plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Location   plugin.TValue[string]
-	Properties plugin.TValue[any]
-	DependsOn  plugin.TValue[[]any]
-	Manifest   plugin.TValue[any]
+	mqlBicepTemplateResourceInternal
+	Type           plugin.TValue[string]
+	ApiVersion     plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Location       plugin.TValue[string]
+	Properties     plugin.TValue[any]
+	DependsOn      plugin.TValue[[]any]
+	Condition      plugin.TValue[string]
+	CopyName       plugin.TValue[string]
+	CopyCount      plugin.TValue[any]
+	CopyMode       plugin.TValue[string]
+	CopyBatchSize  plugin.TValue[int64]
+	LinkedTemplate plugin.TValue[*mqlBicepTemplate]
+	Manifest       plugin.TValue[any]
 }
 
 // createBicepTemplateResource creates a new instance of this resource
@@ -3035,6 +3083,42 @@ func (c *mqlBicepTemplateResource) GetProperties() *plugin.TValue[any] {
 
 func (c *mqlBicepTemplateResource) GetDependsOn() *plugin.TValue[[]any] {
 	return &c.DependsOn
+}
+
+func (c *mqlBicepTemplateResource) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlBicepTemplateResource) GetCopyName() *plugin.TValue[string] {
+	return &c.CopyName
+}
+
+func (c *mqlBicepTemplateResource) GetCopyCount() *plugin.TValue[any] {
+	return &c.CopyCount
+}
+
+func (c *mqlBicepTemplateResource) GetCopyMode() *plugin.TValue[string] {
+	return &c.CopyMode
+}
+
+func (c *mqlBicepTemplateResource) GetCopyBatchSize() *plugin.TValue[int64] {
+	return &c.CopyBatchSize
+}
+
+func (c *mqlBicepTemplateResource) GetLinkedTemplate() *plugin.TValue[*mqlBicepTemplate] {
+	return plugin.GetOrCompute[*mqlBicepTemplate](&c.LinkedTemplate, func() (*mqlBicepTemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.template.resource", c.__id, "linkedTemplate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepTemplate), nil
+			}
+		}
+
+		return c.linkedTemplate()
+	})
 }
 
 func (c *mqlBicepTemplateResource) GetManifest() *plugin.TValue[any] {
