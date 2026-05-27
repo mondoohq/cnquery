@@ -414,12 +414,13 @@ func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
 //
 // Only local sources are resolved: a registry (`br:`) or template-spec (`ts:`)
 // source returns null. The source path is computed relative to the directory
-// of the file that declared the module. When the resolved path matches one of
-// the connection's already-discovered files, the same cached bicep.file is
-// returned (reusing its __id) so the runtime serves the existing instance and
-// the caller can traverse into its resources/params/outputs. When the resolved
-// path lies outside the scanned root, the file is read and parsed on demand. An
-// unreadable or unresolvable path returns null.
+// of the file that declared the module. The resolved path must match one of
+// the connection's already-discovered files, in which case the same cached
+// bicep.file is returned (reusing its __id) so the runtime serves the existing
+// instance and the caller can traverse into its resources/params/outputs. A
+// path that resolves outside the scanned root — or is otherwise unresolvable —
+// returns null; target() never reads an arbitrary path from disk (see the
+// security note at the lookup below).
 func (m *mqlBicepModule) target() (*mqlBicepFile, error) {
 	source := m.Source.Data
 	// Registry and template-spec references are not local files.
