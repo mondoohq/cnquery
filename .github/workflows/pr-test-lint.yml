@@ -2,6 +2,7 @@ name: Code Test
 
 ## Only trigger tests if source is changing
 on:
+  workflow_dispatch:
   push:
     paths:
       - "**.go"
@@ -21,7 +22,7 @@ permissions:
 
 jobs:
   detect-changed-providers:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     outputs:
       providers: ${{ steps.changed.outputs.providers }}
       all: ${{ steps.changed.outputs.all }}
@@ -41,7 +42,7 @@ jobs:
 
   # Check if there is any dirty change for go mod tidy
   go-mod:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -62,7 +63,7 @@ jobs:
           git diff --exit-code go.mod
 
   golangci-lint:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -97,8 +98,7 @@ jobs:
       providers: ${{ needs.detect-changed-providers.outputs.all == 'true' && '' || needs.detect-changed-providers.outputs.providers }}
 
   go-test:
-    runs-on:
-      group: Default
+    runs-on: arc-runner-set
     timeout-minutes: 120
     steps:
       - name: Checkout code
@@ -135,8 +135,7 @@ jobs:
           path: "*.xml"
 
   go-test-integration:
-    runs-on:
-      group: Default
+    runs-on: arc-runner-set
     timeout-minutes: 120
     steps:
       - name: Checkout code
@@ -170,7 +169,7 @@ jobs:
           path: report.xml
 
   go-race:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -227,7 +226,7 @@ jobs:
 
   event_file:
     name: "Store event file"
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
