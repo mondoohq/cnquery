@@ -4462,6 +4462,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   name string
   // Primary version for encrypt to use for this crypto key
   primary gcp.project.kmsService.keyring.cryptokey.version
+  // Lifecycle state of the primary version (ENABLED, DISABLED, DESTROYED, DESTROY_SCHEDULED; empty when the key has no primary)
+  primaryState string
   // Crypto key purpose
   purpose string
   // Creation timestamp
@@ -6651,6 +6653,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   labels map[string]string
   // Replication policy configuration
   replication dict
+  // Replication policy kind (AUTOMATIC for Google-selected locations, USER_MANAGED for explicitly chosen replica locations)
+  replicationType string
   // Pub/Sub topics for event notifications
   topics []string
   // Expiration time (if set)
@@ -10304,6 +10308,8 @@ private gcp.project.backupdrService.backupVault @defaults("name state") {
   totalStoredBytes int
   // Access restriction
   accessRestriction string
+  // Cloud KMS key name encrypting backups at rest (empty when Google-managed encryption is used)
+  kmsKeyName string
   // System-managed annotation metadata on the resource
   annotations map[string]string
   // User-defined key/value labels for organizing the resource
@@ -11815,6 +11821,11 @@ private gcp.project.networkSecurityService.serverTlsPolicy @defaults("name allow
   allowOpen bool
   // Mutual TLS configuration for validating client certificates
   mtlsPolicy dict
+  // How connections with invalid or missing client certificates are handled
+  //
+  // One of CLIENT_VALIDATION_MODE_UNSPECIFIED, ALLOW_INVALID_OR_MISSING_CLIENT_CERT,
+  // or REJECT_INVALID. Empty when no mTLS policy is set.
+  clientValidationMode string
   // Certificate provider configuration for the certificate the server presents
   serverCertificate dict
   // User-defined key/value labels for organizing the resource

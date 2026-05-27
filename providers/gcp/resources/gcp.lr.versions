@@ -466,6 +466,7 @@ gcp.project.backupdrService.backupVault.deletable 13.1.2
 gcp.project.backupdrService.backupVault.description 13.1.2
 gcp.project.backupdrService.backupVault.effectiveTime 13.1.2
 gcp.project.backupdrService.backupVault.etag 13.1.2
+gcp.project.backupdrService.backupVault.kmsKeyName 13.18.1
 gcp.project.backupdrService.backupVault.labels 13.1.2
 gcp.project.backupdrService.backupVault.name 13.1.2
 gcp.project.backupdrService.backupVault.serviceAccount 13.1.2
@@ -3241,6 +3242,7 @@ gcp.project.kmsService.keyring.cryptokey.labels 9.0.0
 gcp.project.kmsService.keyring.cryptokey.name 9.0.0
 gcp.project.kmsService.keyring.cryptokey.nextRotation 9.0.0
 gcp.project.kmsService.keyring.cryptokey.primary 9.0.0
+gcp.project.kmsService.keyring.cryptokey.primaryState 13.18.1
 gcp.project.kmsService.keyring.cryptokey.public 13.12.2
 gcp.project.kmsService.keyring.cryptokey.purpose 9.0.0
 gcp.project.kmsService.keyring.cryptokey.resourcePath 9.0.0
@@ -3623,6 +3625,7 @@ gcp.project.networkSecurityService.projectId 13.15.1
 gcp.project.networkSecurityService.serverTlsPolicies 13.15.1
 gcp.project.networkSecurityService.serverTlsPolicy 13.15.1
 gcp.project.networkSecurityService.serverTlsPolicy.allowOpen 13.15.1
+gcp.project.networkSecurityService.serverTlsPolicy.clientValidationMode 13.18.1
 gcp.project.networkSecurityService.serverTlsPolicy.created 13.15.1
 gcp.project.networkSecurityService.serverTlsPolicy.description 13.15.1
 gcp.project.networkSecurityService.serverTlsPolicy.labels 13.15.1
@@ -3943,6 +3946,7 @@ gcp.project.secretmanagerService.secret.name 11.1.0
 gcp.project.secretmanagerService.secret.projectId 11.1.0
 gcp.project.secretmanagerService.secret.public 13.12.2
 gcp.project.secretmanagerService.secret.replication 11.1.0
+gcp.project.secretmanagerService.secret.replicationType 13.18.1
 gcp.project.secretmanagerService.secret.resourcePath 11.1.0
 gcp.project.secretmanagerService.secret.rotation 11.1.0
 gcp.project.secretmanagerService.secret.rotationEnabled 13.12.2

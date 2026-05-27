@@ -200,15 +200,20 @@ func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error)
 			if err != nil {
 				return err
 			}
+			var clientValidationMode string
+			if p.MtlsPolicy != nil {
+				clientValidationMode = p.MtlsPolicy.ClientValidationMode
+			}
 			mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.networkSecurityService.serverTlsPolicy", map[string]*llx.RawData{
-				"name":              llx.StringData(p.Name),
-				"description":       llx.StringData(p.Description),
-				"allowOpen":         llx.BoolData(p.AllowOpen),
-				"mtlsPolicy":        llx.DictData(mtlsPolicy),
-				"serverCertificate": llx.DictData(serverCertificate),
-				"labels":            llx.MapData(convert.MapToInterfaceMap(p.Labels), types.String),
-				"created":           llx.TimeDataPtr(parseTime(p.CreateTime)),
-				"updated":           llx.TimeDataPtr(parseTime(p.UpdateTime)),
+				"name":                 llx.StringData(p.Name),
+				"description":          llx.StringData(p.Description),
+				"allowOpen":            llx.BoolData(p.AllowOpen),
+				"mtlsPolicy":           llx.DictData(mtlsPolicy),
+				"clientValidationMode": llx.StringData(clientValidationMode),
+				"serverCertificate":    llx.DictData(serverCertificate),
+				"labels":               llx.MapData(convert.MapToInterfaceMap(p.Labels), types.String),
+				"created":              llx.TimeDataPtr(parseTime(p.CreateTime)),
+				"updated":              llx.TimeDataPtr(parseTime(p.UpdateTime)),
 			})
 			if err != nil {
 				return err

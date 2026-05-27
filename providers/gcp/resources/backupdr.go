@@ -192,6 +192,7 @@ func (g *mqlGcpProjectBackupdrService) backupVaults() ([]any, error) {
 			"serviceAccount":                         llx.StringData(vault.ServiceAccount),
 			"totalStoredBytes":                       llx.IntData(vault.GetTotalStoredBytes()),
 			"accessRestriction":                      llx.StringData(vault.AccessRestriction.String()),
+			"kmsKeyName":                             llx.StringData(vault.GetEncryptionConfig().GetKmsKeyName()),
 			"annotations":                            llx.MapData(convert.MapToInterfaceMap(vault.Annotations), types.String),
 			"labels":                                 llx.MapData(convert.MapToInterfaceMap(vault.Labels), types.String),
 			"createdAt":                              llx.TimeDataPtr(timestampAsTimePtr(vault.CreateTime)),

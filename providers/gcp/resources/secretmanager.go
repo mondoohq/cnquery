@@ -121,11 +121,17 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 		}
 
 		var replicationDict map[string]any
+		var replicationType string
 		if s.Replication != nil {
 			replicationDict, err = secretReplicationToDict(s.Replication)
 			if err != nil {
 				log.Error().Err(err).Str("secret", s.Name).Msg("failed to convert replication")
 				continue
+			}
+			if s.Replication.GetAutomatic() != nil {
+				replicationType = "AUTOMATIC"
+			} else if s.Replication.GetUserManaged() != nil {
+				replicationType = "USER_MANAGED"
 			}
 		}
 
@@ -166,6 +172,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"createTime":                llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
 			"labels":                    llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
 			"replication":               llx.DictData(replicationDict),
+			"replicationType":           llx.StringData(replicationType),
 			"topics":                    llx.ArrayData(topicNames, types.String),
 			"expireTime":                llx.TimeDataPtr(timestampAsTimePtr(s.GetExpireTime())),
 			"etag":                      llx.StringData(s.Etag),

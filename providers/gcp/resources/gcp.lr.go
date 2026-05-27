@@ -6677,6 +6677,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.cryptokey.primary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetPrimary()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey.version"))
 	},
+	"gcp.project.kmsService.keyring.cryptokey.primaryState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetPrimaryState()).ToDataRes(types.String)
+	},
 	"gcp.project.kmsService.keyring.cryptokey.purpose": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetPurpose()).ToDataRes(types.String)
 	},
@@ -8836,6 +8839,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.secretmanagerService.secret.replication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetReplication()).ToDataRes(types.Dict)
+	},
+	"gcp.project.secretmanagerService.secret.replicationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetReplicationType()).ToDataRes(types.String)
 	},
 	"gcp.project.secretmanagerService.secret.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetTopics()).ToDataRes(types.Array(types.String))
@@ -12536,6 +12542,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.backupdrService.backupVault.accessRestriction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBackupdrServiceBackupVault).GetAccessRestriction()).ToDataRes(types.String)
 	},
+	"gcp.project.backupdrService.backupVault.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBackupdrServiceBackupVault).GetKmsKeyName()).ToDataRes(types.String)
+	},
 	"gcp.project.backupdrService.backupVault.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBackupdrServiceBackupVault).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -13972,6 +13981,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.networkSecurityService.serverTlsPolicy.mtlsPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetMtlsPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.clientValidationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetClientValidationMode()).ToDataRes(types.String)
 	},
 	"gcp.project.networkSecurityService.serverTlsPolicy.serverCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetServerCertificate()).ToDataRes(types.Dict)
@@ -21572,6 +21584,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).Primary, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersion](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.cryptokey.primaryState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).PrimaryState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.purpose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).Purpose, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24754,6 +24770,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.secretmanagerService.secret.replication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Replication, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.replicationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).ReplicationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30160,6 +30180,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBackupdrServiceBackupVault).AccessRestriction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.backupdrService.backupVault.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBackupdrServiceBackupVault).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.backupdrService.backupVault.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBackupdrServiceBackupVault).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -32286,6 +32310,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.networkSecurityService.serverTlsPolicy.mtlsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).MtlsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.clientValidationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).ClientValidationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.networkSecurityService.serverTlsPolicy.serverCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49567,6 +49595,7 @@ type mqlGcpProjectKmsServiceKeyringCryptokey struct {
 	ResourcePath                  plugin.TValue[string]
 	Name                          plugin.TValue[string]
 	Primary                       plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersion]
+	PrimaryState                  plugin.TValue[string]
 	Purpose                       plugin.TValue[string]
 	Created                       plugin.TValue[*time.Time]
 	NextRotation                  plugin.TValue[*time.Time]
@@ -49630,6 +49659,10 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetName() *plugin.TValue[strin
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetPrimary() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyVersion] {
 	return &c.Primary
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetPrimaryState() *plugin.TValue[string] {
+	return &c.PrimaryState
 }
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetPurpose() *plugin.TValue[string] {
@@ -57062,6 +57095,7 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	CreateTime                plugin.TValue[*time.Time]
 	Labels                    plugin.TValue[map[string]any]
 	Replication               plugin.TValue[any]
+	ReplicationType           plugin.TValue[string]
 	Topics                    plugin.TValue[[]any]
 	ExpireTime                plugin.TValue[*time.Time]
 	Etag                      plugin.TValue[string]
@@ -57137,6 +57171,10 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetLabels() *plugin.TValue[map
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetReplication() *plugin.TValue[any] {
 	return &c.Replication
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetReplicationType() *plugin.TValue[string] {
+	return &c.ReplicationType
 }
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetTopics() *plugin.TValue[[]any] {
@@ -69681,6 +69719,7 @@ type mqlGcpProjectBackupdrServiceBackupVault struct {
 	ServiceAccount                         plugin.TValue[string]
 	TotalStoredBytes                       plugin.TValue[int64]
 	AccessRestriction                      plugin.TValue[string]
+	KmsKeyName                             plugin.TValue[string]
 	Annotations                            plugin.TValue[map[string]any]
 	Labels                                 plugin.TValue[map[string]any]
 	CreatedAt                              plugin.TValue[*time.Time]
@@ -69767,6 +69806,10 @@ func (c *mqlGcpProjectBackupdrServiceBackupVault) GetTotalStoredBytes() *plugin.
 
 func (c *mqlGcpProjectBackupdrServiceBackupVault) GetAccessRestriction() *plugin.TValue[string] {
 	return &c.AccessRestriction
+}
+
+func (c *mqlGcpProjectBackupdrServiceBackupVault) GetKmsKeyName() *plugin.TValue[string] {
+	return &c.KmsKeyName
 }
 
 func (c *mqlGcpProjectBackupdrServiceBackupVault) GetAnnotations() *plugin.TValue[map[string]any] {
@@ -74960,14 +75003,15 @@ type mqlGcpProjectNetworkSecurityServiceServerTlsPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectNetworkSecurityServiceServerTlsPolicyInternal it will be used here
-	Name              plugin.TValue[string]
-	Description       plugin.TValue[string]
-	AllowOpen         plugin.TValue[bool]
-	MtlsPolicy        plugin.TValue[any]
-	ServerCertificate plugin.TValue[any]
-	Labels            plugin.TValue[map[string]any]
-	Created           plugin.TValue[*time.Time]
-	Updated           plugin.TValue[*time.Time]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	AllowOpen            plugin.TValue[bool]
+	MtlsPolicy           plugin.TValue[any]
+	ClientValidationMode plugin.TValue[string]
+	ServerCertificate    plugin.TValue[any]
+	Labels               plugin.TValue[map[string]any]
+	Created              plugin.TValue[*time.Time]
+	Updated              plugin.TValue[*time.Time]
 }
 
 // createGcpProjectNetworkSecurityServiceServerTlsPolicy creates a new instance of this resource
@@ -75021,6 +75065,10 @@ func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetAllowOpen() *plu
 
 func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetMtlsPolicy() *plugin.TValue[any] {
 	return &c.MtlsPolicy
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetClientValidationMode() *plugin.TValue[string] {
+	return &c.ClientValidationMode
 }
 
 func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetServerCertificate() *plugin.TValue[any] {
