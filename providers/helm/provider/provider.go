@@ -49,7 +49,51 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if len(req.Args) == 0 {
 		return nil, errors.New("helm provider requires a path argument")
 	}
-	conf.Options["path"] = req.Args[0]
+	conf.Options[connection.OptionPath] = req.Args[0]
+
+	// Scalar string/bool flags map straight to Options.
+	for flagName, optKey := range map[string]string{
+		"release-name":      connection.OptionReleaseName,
+		"namespace":         connection.OptionNamespace,
+		"kube-version":      connection.OptionKubeVersion,
+		"repo":              connection.OptionRepo,
+		"version":           connection.OptionVersion,
+		"username":          connection.OptionUsername,
+		"password":          connection.OptionPassword,
+		"repository-config": connection.OptionRepositoryConfig,
+		"repository-cache":  connection.OptionRepositoryCache,
+	} {
+		if f, ok := flags[flagName]; ok {
+			if v := string(f.Value); v != "" {
+				conf.Options[optKey] = v
+			}
+		}
+	}
+	if f, ok := flags["is-upgrade"]; ok {
+		if b, isBool := f.RawData().Value.(bool); isBool && b {
+			conf.Options[connection.OptionIsUpgrade] = "true"
+		}
+	}
+
+	// List flags are JSON-encoded into Options (which is map[string]string).
+	for flagName, optKey := range map[string]string{
+		"values":       connection.OptionValues,
+		"set":          connection.OptionSet,
+		"set-string":   connection.OptionSetString,
+		"set-json":     connection.OptionSetJSON,
+		"set-file":     connection.OptionSetFile,
+		"api-versions": connection.OptionAPIVersions,
+	} {
+		if f, ok := flags[flagName]; ok && len(f.Array) > 0 {
+			vals := make([]string, 0, len(f.Array))
+			for i := range f.Array {
+				vals = append(vals, string(f.Array[i].Value))
+			}
+			if enc := connection.EncodeStringList(vals); enc != "" {
+				conf.Options[optKey] = enc
+			}
+		}
+	}
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},

@@ -28,10 +28,11 @@ type LoadedChart struct {
 
 type HelmConnection struct {
 	plugin.Connection
-	Conf   *inventory.Config
-	asset  *inventory.Asset
-	path   string
-	charts []LoadedChart
+	Conf       *inventory.Config
+	asset      *inventory.Asset
+	path       string
+	charts     []LoadedChart
+	renderOpts RenderOptions
 }
 
 func NewHelmConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*HelmConnection, error) {
@@ -45,7 +46,18 @@ func NewHelmConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		return nil, errors.New("no connection configuration provided")
 	}
 	cc := asset.Connections[0]
-	chartPath := filepath.Clean(cc.Options["path"])
+	conn.renderOpts = parseRenderOptions(cc.Options)
+
+	// Resolve a possibly-remote chart reference (oci://, http(s) .tgz, or a
+	// chart name with --repo) to a local path. Remote refs download to a
+	// temp dir that's cleaned up once the charts are read into memory.
+	chartPath, cleanup, err := resolveChartRef(cc.Options[OptionPath], cc.Options)
+	if cleanup != nil {
+		defer cleanup()
+	}
+	if err != nil {
+		return nil, err
+	}
 	conn.path = chartPath
 
 	charts, err := loadCharts(chartPath)

@@ -19,8 +19,10 @@ type mqlHelmResourceInternal struct {
 	cacheTemplateKey string
 }
 
-// parseK8sResources parses rendered YAML content into Kubernetes resource objects.
-func parseK8sResources(runtime *plugin.Runtime, templateKey string, content string) ([]any, error) {
+// parseK8sResources parses rendered YAML content into Kubernetes resource
+// objects. isCRD marks resources that came from the chart's crds/ directory
+// (helm installs those ahead of templating) rather than from a template.
+func parseK8sResources(runtime *plugin.Runtime, templateKey string, content string, isCRD bool) ([]any, error) {
 	var mqlResources []any
 
 	// Split on YAML document separator
@@ -78,19 +80,26 @@ func parseK8sResources(runtime *plugin.Runtime, templateKey string, content stri
 			continue
 		}
 
+		isHook, hookTypes, hookWeight, hookDeletePolicies := parseHookAnnotations(annotations)
+
 		// Use templateKey (chartName/templateName), namespace, kind, name, and docIndex for uniqueness
 		id := "helm.resource:" + templateKey + ":" + kind + ":" + namespace + ":" + name + ":" + strconv.Itoa(docIndex)
 		// Store the template ID using ":" separator to match the template __id format (helm.template:chartName:templateName)
 		templateID := strings.Replace(templateKey, "/", ":", 1)
 		res, err := CreateResource(runtime, "helm.resource", map[string]*llx.RawData{
-			"__id":        llx.StringData(id),
-			"apiVersion":  llx.StringData(apiVersion),
-			"kind":        llx.StringData(kind),
-			"name":        llx.StringData(name),
-			"namespace":   llx.StringData(namespace),
-			"labels":      llx.MapData(labelsStr, types.String),
-			"annotations": llx.MapData(annotationsStr, types.String),
-			"manifest":    llx.DictData(manifest),
+			"__id":               llx.StringData(id),
+			"apiVersion":         llx.StringData(apiVersion),
+			"kind":               llx.StringData(kind),
+			"name":               llx.StringData(name),
+			"namespace":          llx.StringData(namespace),
+			"labels":             llx.MapData(labelsStr, types.String),
+			"annotations":        llx.MapData(annotationsStr, types.String),
+			"manifest":           llx.DictData(manifest),
+			"isHook":             llx.BoolData(isHook),
+			"hookTypes":          llx.ArrayData(hookTypes, types.String),
+			"hookWeight":         llx.IntData(hookWeight),
+			"hookDeletePolicies": llx.ArrayData(hookDeletePolicies, types.String),
+			"isCRD":              llx.BoolData(isCRD),
 		})
 		if err != nil {
 			continue
@@ -102,6 +111,45 @@ func parseK8sResources(runtime *plugin.Runtime, templateKey string, content stri
 	}
 
 	return mqlResources, nil
+}
+
+// parseHookAnnotations reads Helm's hook annotations off a rendered
+// resource's metadata.annotations: helm.sh/hook (lifecycle phases),
+// helm.sh/hook-weight (ordering), and helm.sh/hook-delete-policy. A
+// resource is a hook iff it carries the helm.sh/hook annotation.
+func parseHookAnnotations(annotations map[string]any) (isHook bool, hookTypes []any, hookWeight int64, hookDeletePolicies []any) {
+	hookTypes = []any{}
+	hookDeletePolicies = []any{}
+
+	hookVal, _ := annotations["helm.sh/hook"].(string)
+	if strings.TrimSpace(hookVal) == "" {
+		return false, hookTypes, 0, hookDeletePolicies
+	}
+	isHook = true
+	hookTypes = splitCSV(hookVal)
+
+	if w, ok := annotations["helm.sh/hook-weight"].(string); ok {
+		if n, err := strconv.Atoi(strings.TrimSpace(w)); err == nil {
+			hookWeight = int64(n)
+		}
+	}
+	if dp, ok := annotations["helm.sh/hook-delete-policy"].(string); ok {
+		hookDeletePolicies = splitCSV(dp)
+	}
+	return isHook, hookTypes, hookWeight, hookDeletePolicies
+}
+
+// splitCSV splits a comma-separated annotation value into trimmed,
+// non-empty entries.
+func splitCSV(s string) []any {
+	parts := strings.Split(s, ",")
+	out := make([]any, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func (r *mqlHelmResource) template() (*mqlHelmTemplate, error) {

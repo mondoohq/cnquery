@@ -66,10 +66,59 @@ helm.chart @defaults("name version") {
   templates() []helm.template
   // Default values from values.yaml
   values() dict
+  // Effective values used to render this chart
+  //
+  // The chart's bundled values.yaml coalesced with any --values files and
+  // --set overrides supplied on the connection — exactly the values Helm
+  // used to produce resources() and the templates' rendered output. With
+  // no overrides this is the chart's default values. Contrast with
+  // values(), which is always the bundled values.yaml verbatim.
+  renderedValues() dict
   // All Kubernetes resources across all templates (rendered with values)
   resources() []helm.resource
   // Files in the chart
   files() []helm.file
+  // Rendered NOTES.txt
+  //
+  // The chart's templates/NOTES.txt rendered with the effective values, or
+  // empty when the chart ships no NOTES.txt. This is the post-install
+  // message Helm prints to operators; auditing it catches secrets or
+  // instructions accidentally emitted on install.
+  notes() string
+  // Custom Resource Definitions shipped in crds/
+  //
+  // Each CustomResourceDefinition under the chart's crds/ directory, parsed
+  // as a helm.resource with isCRD true. Helm installs these before
+  // templates render and never templates them, so they are not part of
+  // resources(); query them here to audit the CRDs a chart introduces.
+  crds() []helm.resource
+  // Parsed values.schema.json
+  //
+  // The chart's JSON Schema for values (Helm 3), or null when the chart
+  // ships none. Helm validates supplied values against this schema at
+  // install time; expose it so policy can require a schema or inspect its
+  // constraints.
+  valuesSchema() dict
+  // Lifecycle hook resources
+  //
+  // Rendered resources carrying a helm.sh/hook annotation (pre-install,
+  // post-upgrade, test, and so on). These run outside the normal resource
+  // lifecycle; surfacing them separately lets policy audit hook workloads —
+  // often privileged jobs — without scanning every rendered resource.
+  hooks() []helm.resource
+  // Resolved dependency lock
+  //
+  // The chart's Chart.lock recording the concrete dependency versions Helm
+  // resolved, or null when the chart has no lock file. Use it to verify a
+  // chart pins reproducible dependency versions.
+  lock() helm.chart.dependencyLock
+  // Lint report
+  //
+  // Result of running Helm's built-in lint rules against the chart,
+  // including every message with its severity and the chart-relative path
+  // it concerns. Lets CI gate on chart linting without shelling out to
+  // `helm lint`.
+  lint() helm.chart.lintResult
   // Vendored subcharts loaded from charts/
   //
   // Each entry is a fully recursive helm.chart for a dependency whose
@@ -129,6 +178,27 @@ helm.dependency @defaults("name version") {
   // `oci://` reference into registry, repository, tag, and digest for
   // offline supply-chain auditing without contacting the registry.
   registryRef() helm.ociRef
+  // Values imported from this dependency
+  //
+  // The dependency's `import-values` entries from Chart.yaml, which map a
+  // subchart's values onto the parent. Each entry is either a
+  // `{child, parent}` dict or a plain string naming a values block. Empty
+  // when the dependency imports nothing.
+  importValues []dict
+  // Resolved version from Chart.lock
+  //
+  // The concrete version Helm locked for this dependency, read from the
+  // parent chart's Chart.lock. Empty when the chart has no lock file or the
+  // dependency isn't locked. Unlike version — the declared constraint such
+  // as `^1.2.0` — this is the exact version that would be pulled.
+  resolvedVersion() string
+  // Vendored subchart satisfying this dependency
+  //
+  // The helm.chart loaded from the parent's charts/ directory that
+  // satisfies this dependency, matched by name or alias. Null when the
+  // dependency isn't vendored on disk. Lets you traverse from a declared
+  // dependency straight into the resolved chart's templates and values.
+  chart() helm.chart
 }
 
 // OCI registry reference for a Helm chart dependency
@@ -189,6 +259,13 @@ helm.template @defaults("name") {
   resources() []helm.resource
   // Template directives found in raw content (include, tpl, range, if, etc.)
   directives() []helm.directive
+  // Whether rendering this template requires a live cluster
+  //
+  // True when the template calls the `lookup` function, which queries a
+  // running cluster at render time. Such templates can't be fully rendered
+  // by static analysis; this flag explains why a rendered resource may be
+  // missing or incomplete.
+  requiresCluster bool
 }
 
 // Go-template directive in a Helm template
@@ -229,6 +306,34 @@ helm.resource @defaults("kind name") {
   manifest dict
   // The template that produced this resource
   template() helm.template
+  // Whether this resource is a Helm lifecycle hook
+  //
+  // True when the resource carries a `helm.sh/hook` annotation. Hook
+  // resources run outside the normal apply order and are also surfaced via
+  // helm.chart.hooks.
+  isHook bool
+  // Hook lifecycle phases
+  //
+  // The phases this resource hooks into (for example pre-install,
+  // post-upgrade, test), parsed from the `helm.sh/hook` annotation. Empty
+  // for non-hook resources.
+  hookTypes []string
+  // Hook execution weight
+  //
+  // The `helm.sh/hook-weight` value controlling hook ordering — lower runs
+  // first. 0 when unset or the resource isn't a hook.
+  hookWeight int
+  // Hook deletion policies
+  //
+  // The `helm.sh/hook-delete-policy` values controlling when Helm deletes
+  // the hook resource (for example before-hook-creation, hook-succeeded,
+  // hook-failed). Empty when unset.
+  hookDeletePolicies []string
+  // Whether this resource is a CustomResourceDefinition from crds/
+  //
+  // True for resources produced by helm.chart.crds — CRDs Helm installs
+  // ahead of templating. False for normally rendered resources.
+  isCRD bool
 }
 
 // File within a Helm chart
@@ -241,4 +346,53 @@ helm.file @defaults("path") {
   path string
   // File content
   content() string
+  // File size in bytes
+  size int
+  // Whether the file is binary
+  //
+  // True when the content isn't valid UTF-8 text (for example a bundled
+  // icon image). Binary files still expose content as a best-effort string.
+  isBinary bool
+}
+
+// Helm chart dependency lock
+//
+// Examine the resolved dependency lock recorded in Chart.lock: the
+// generation timestamp, the digest over the resolved dependency set, and
+// the concrete dependency versions Helm pinned. Selected from a chart via
+// `helm.chart.lock`.
+private helm.chart.dependencyLock @defaults("digest generated") {
+  // Time the lock file was generated
+  generated time
+  // Digest over the resolved dependency set
+  digest string
+  // Locked dependencies with their resolved versions
+  dependencies() []helm.dependency
+}
+
+// Helm chart lint result
+//
+// Examine the outcome of linting a chart with Helm's built-in rules:
+// whether it passed (no error-severity messages) and the full list of
+// messages. Selected from a chart via `helm.chart.lint`.
+private helm.chart.lintResult @defaults("passed") {
+  // Whether the chart passed linting (no error-severity messages)
+  passed bool
+  // Lint messages
+  messages() []helm.chart.lintMessage
+}
+
+// Helm chart lint message
+//
+// Examine a single message from a chart lint run: its severity, the
+// chart-relative path it concerns, and the human-readable text.
+private helm.chart.lintMessage @defaults("severity message") {
+  // Severity
+  //
+  // One of "info", "warning", or "error".
+  severity string
+  // Chart-relative path the message concerns
+  path string
+  // Message text
+  message string
 }

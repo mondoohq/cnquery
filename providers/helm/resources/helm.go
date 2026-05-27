@@ -4,10 +4,17 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"maps"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf8"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -15,9 +22,11 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/helm/connection"
 	"go.mondoo.com/mql/v13/types"
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/engine"
+	"helm.sh/helm/v3/pkg/strvals"
 )
 
 func (r *mqlHelm) id() (string, error) {
@@ -46,6 +55,7 @@ type mqlHelmChartInternal struct {
 	idKey           string
 	renderedOnce    sync.Once
 	rendered        map[string]string
+	renderValues    map[string]any
 	renderedErr     error
 	resourcesOnce   sync.Once
 	cachedResources []any
@@ -138,27 +148,162 @@ func (c *mqlHelmChart) id() (string, error) {
 
 func (c *mqlHelmChart) fetchRendered() (map[string]string, error) {
 	c.renderedOnce.Do(func() {
-		e := engine.Engine{Strict: false}
-		options := chartutil.ReleaseOptions{
-			Name:      c.chartObj.Name(),
-			Namespace: "default",
-			IsInstall: true,
-		}
-		vals, err := chartutil.ToRenderValues(c.chartObj, c.chartObj.Values, options, nil)
+		ro := c.renderOptions()
+
+		// Merge -f/--set overrides on top of the chart's bundled values,
+		// exactly as `helm install` does.
+		userVals, err := mergeRenderValues(ro)
 		if err != nil {
 			c.renderedErr = err
 			return
 		}
+
+		name := ro.ReleaseName
+		if name == "" {
+			name = c.chartObj.Name()
+		}
+		options := chartutil.ReleaseOptions{
+			Name:      name,
+			Namespace: ro.Namespace,
+			IsInstall: !ro.IsUpgrade,
+			IsUpgrade: ro.IsUpgrade,
+		}
+
+		caps, err := renderCapabilities(ro)
+		if err != nil {
+			c.renderedErr = err
+			return
+		}
+
+		vals, err := chartutil.ToRenderValues(c.chartObj, userVals, options, caps)
+		if err != nil {
+			c.renderedErr = err
+			return
+		}
+		// Stash the coalesced values (defaults + overrides) so
+		// renderedValues() can expose exactly what drove the render.
+		if cv, ok := vals["Values"].(chartutil.Values); ok {
+			c.renderValues = map[string]any(cv)
+		}
+
+		e := engine.Engine{Strict: false}
 		c.rendered, c.renderedErr = e.Render(c.chartObj, vals)
 	})
 	return c.rendered, c.renderedErr
+}
+
+// renderOptions reads the connection's parsed render configuration. A
+// subchart shares its parent connection, so this works at any depth.
+func (c *mqlHelmChart) renderOptions() connection.RenderOptions {
+	conn, ok := c.MqlRuntime.Connection.(*connection.HelmConnection)
+	if !ok {
+		return connection.RenderOptions{Namespace: "default"}
+	}
+	return conn.RenderOptions()
+}
+
+// mergeRenderValues applies the -f/--set family of overrides in the same
+// order and with the same semantics as `helm install`'s MergeValues,
+// using helm's own strvals parser. It is reimplemented here (rather than
+// calling pkg/cli/values) to avoid pulling in helm's kube/registry getter
+// stack for what static analysis only needs locally.
+func mergeRenderValues(ro connection.RenderOptions) (map[string]any, error) {
+	base := map[string]any{}
+
+	for _, f := range ro.ValueFiles {
+		data, err := readValueFile(f)
+		if err != nil {
+			return nil, err
+		}
+		current := map[string]any{}
+		if err := yaml.Unmarshal(data, &current); err != nil {
+			return nil, fmt.Errorf("failed to parse values file %q: %w", f, err)
+		}
+		base = mergeMaps(base, current)
+	}
+	for _, v := range ro.Values {
+		if err := strvals.ParseInto(v, base); err != nil {
+			return nil, fmt.Errorf("failed to parse --set %q: %w", v, err)
+		}
+	}
+	for _, v := range ro.StringValues {
+		if err := strvals.ParseIntoString(v, base); err != nil {
+			return nil, fmt.Errorf("failed to parse --set-string %q: %w", v, err)
+		}
+	}
+	for _, v := range ro.FileValues {
+		reader := func(rs []rune) (any, error) {
+			data, err := readValueFile(string(rs))
+			return string(data), err
+		}
+		if err := strvals.ParseIntoFile(v, base, reader); err != nil {
+			return nil, fmt.Errorf("failed to parse --set-file %q: %w", v, err)
+		}
+	}
+	for _, v := range ro.JSONValues {
+		if err := strvals.ParseJSON(v, base); err != nil {
+			return nil, fmt.Errorf("failed to parse --set-json %q: %w", v, err)
+		}
+	}
+	return base, nil
+}
+
+// readValueFile reads a values/file override from a local path or an
+// http(s) URL.
+func readValueFile(ref string) ([]byte, error) {
+	if strings.HasPrefix(ref, "http://") || strings.HasPrefix(ref, "https://") {
+		resp, err := http.Get(ref) //nolint:gosec // user-supplied values URL, same trust model as helm -f
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("failed to fetch values file %q: status %d", ref, resp.StatusCode)
+		}
+		return io.ReadAll(resp.Body)
+	}
+	return os.ReadFile(ref)
+}
+
+// mergeMaps deep-merges src into a copy of dst, mirroring helm's
+// values.mergeMaps: maps recurse, scalars and slices from src win.
+func mergeMaps(dst, src map[string]any) map[string]any {
+	out := make(map[string]any, len(dst))
+	maps.Copy(out, dst)
+	for k, v := range src {
+		if vMap, ok := v.(map[string]any); ok {
+			if existing, ok := out[k].(map[string]any); ok {
+				out[k] = mergeMaps(existing, vMap)
+				continue
+			}
+		}
+		out[k] = v
+	}
+	return out
+}
+
+// renderCapabilities builds the .Capabilities object from a target kube
+// version and any --api-versions, falling back to helm's defaults.
+func renderCapabilities(ro connection.RenderOptions) (*chartutil.Capabilities, error) {
+	caps := chartutil.DefaultCapabilities.Copy()
+	if ro.KubeVersion != "" {
+		kv, err := chartutil.ParseKubeVersion(ro.KubeVersion)
+		if err != nil {
+			return nil, err
+		}
+		caps.KubeVersion = *kv
+	}
+	for _, av := range ro.APIVersions {
+		caps.APIVersions = append(caps.APIVersions, av)
+	}
+	return caps, nil
 }
 
 func (c *mqlHelmChart) dependencies() ([]any, error) {
 	deps := c.chartObj.Metadata.Dependencies
 	var mqlDeps []any
 	for _, dep := range deps {
-		mqlDep, err := newMqlHelmDependency(c.MqlRuntime, c.chartObj.Name(), dep)
+		mqlDep, err := newMqlHelmDependency(c, dep, "dep")
 		if err != nil {
 			return nil, err
 		}
@@ -270,7 +415,7 @@ func (c *mqlHelmChart) fetchResources() ([]any, error) {
 			return
 		}
 		for templateKey, content := range rendered {
-			resources, err := parseK8sResources(c.MqlRuntime, templateKey, content)
+			resources, err := parseK8sResources(c.MqlRuntime, templateKey, content, false)
 			if err != nil {
 				continue
 			}
@@ -292,24 +437,188 @@ func (c *mqlHelmChart) files() ([]any, error) {
 	return mqlFiles, nil
 }
 
-func newMqlHelmDependency(runtime *plugin.Runtime, chartName string, dep *chart.Dependency) (*mqlHelmDependency, error) {
-	tags := convert.SliceAnyToInterface(dep.Tags)
+type mqlHelmDependencyInternal struct {
+	parentChart *mqlHelmChart
+}
 
-	res, err := CreateResource(runtime, "helm.dependency", map[string]*llx.RawData{
-		"__id":       llx.StringData("helm.dependency:" + chartName + ":" + dep.Name),
-		"name":       llx.StringData(dep.Name),
-		"version":    llx.StringData(dep.Version),
-		"repository": llx.StringData(dep.Repository),
-		"condition":  llx.StringData(dep.Condition),
-		"tags":       llx.ArrayData(tags, types.String),
-		"enabled":    llx.BoolData(dep.Enabled),
-		"alias":      llx.StringData(dep.Alias),
-		"sourceType": llx.StringData(classifyHelmSource(dep.Repository, dep.Alias)),
+// newMqlHelmDependency materializes a chart.Dependency. parent is the
+// chart that declared (or locked) it, used by resolvedVersion() and
+// chart() to reach the parent's lock file and vendored subcharts.
+// idScope ("dep" for declared dependencies, "lock" for Chart.lock
+// entries) keeps a declared dependency and its locked counterpart from
+// colliding on the resource cache.
+// renderedValues exposes the coalesced values (chart defaults merged
+// with -f/--set overrides) that drove the render, distinct from values()
+// which is always the bundled values.yaml.
+func (c *mqlHelmChart) renderedValues() (any, error) {
+	// fetchRendered populates renderValues during ToRenderValues, before
+	// engine.Render runs, so the coalesced values are available even when
+	// rendering later fails (e.g. a missing `required` value).
+	_, _ = c.fetchRendered()
+	vals := c.renderValues
+	if vals == nil {
+		vals = map[string]any{}
+	}
+	return convert.JsonToDict(vals)
+}
+
+// notes returns the chart's rendered templates/NOTES.txt, or empty when
+// the chart ships none or rendering failed.
+func (c *mqlHelmChart) notes() (string, error) {
+	rendered, _ := c.fetchRendered()
+	if rendered == nil {
+		return "", nil
+	}
+	return rendered[c.chartObj.Name()+"/templates/NOTES.txt"], nil
+}
+
+// crds parses the CustomResourceDefinition YAML under the chart's crds/
+// directory. Helm never templates these, so they're parsed verbatim and
+// flagged isCRD.
+func (c *mqlHelmChart) crds() ([]any, error) {
+	out := []any{}
+	for _, crd := range c.chartObj.CRDObjects() {
+		if crd.File == nil {
+			continue
+		}
+		resources, err := parseK8sResources(c.MqlRuntime, c.chartObj.Name()+"/"+crd.Name, string(crd.File.Data), true)
+		if err != nil {
+			continue
+		}
+		out = append(out, resources...)
+	}
+	return out, nil
+}
+
+// valuesSchema returns the parsed values.schema.json, or null when the
+// chart ships no schema.
+func (c *mqlHelmChart) valuesSchema() (any, error) {
+	if len(c.chartObj.Schema) == 0 {
+		return nil, nil
+	}
+	var parsed any
+	if err := json.Unmarshal(c.chartObj.Schema, &parsed); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(parsed)
+}
+
+// hooks returns the rendered resources carrying a helm.sh/hook annotation.
+func (c *mqlHelmChart) hooks() ([]any, error) {
+	resources, err := c.fetchResources()
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, r := range resources {
+		if res, ok := r.(*mqlHelmResource); ok && res.IsHook.Data {
+			out = append(out, res)
+		}
+	}
+	return out, nil
+}
+
+type mqlHelmChartDependencyLockInternal struct {
+	parentChart *mqlHelmChart
+	lockObj     *chart.Lock
+}
+
+// lock exposes the chart's Chart.lock, or null when the chart has none.
+func (c *mqlHelmChart) lock() (*mqlHelmChartDependencyLock, error) {
+	lock := c.chartObj.Lock
+	if lock == nil {
+		c.Lock.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(c.MqlRuntime, "helm.chart.dependencyLock", map[string]*llx.RawData{
+		"__id":      llx.StringData(c.idKey + "/lock"),
+		"digest":    llx.StringData(lock.Digest),
+		"generated": llx.TimeData(lock.Generated),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHelmDependency), nil
+	mqlLock := res.(*mqlHelmChartDependencyLock)
+	mqlLock.parentChart = c
+	mqlLock.lockObj = lock
+	return mqlLock, nil
+}
+
+func (l *mqlHelmChartDependencyLock) dependencies() ([]any, error) {
+	out := []any{}
+	if l.lockObj == nil || l.parentChart == nil {
+		return out, nil
+	}
+	for _, dep := range l.lockObj.Dependencies {
+		mqlDep, err := newMqlHelmDependency(l.parentChart, dep, "lock")
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlDep)
+	}
+	return out, nil
+}
+
+func newMqlHelmDependency(parent *mqlHelmChart, dep *chart.Dependency, idScope string) (*mqlHelmDependency, error) {
+	tags := convert.SliceAnyToInterface(dep.Tags)
+
+	importValues := make([]any, 0, len(dep.ImportValues))
+	for _, iv := range dep.ImportValues {
+		d, err := convert.JsonToDict(iv)
+		if err != nil {
+			continue
+		}
+		importValues = append(importValues, d)
+	}
+
+	res, err := CreateResource(parent.MqlRuntime, "helm.dependency", map[string]*llx.RawData{
+		"__id":         llx.StringData("helm.dependency:" + idScope + ":" + parent.chartObj.Name() + ":" + dep.Name),
+		"name":         llx.StringData(dep.Name),
+		"version":      llx.StringData(dep.Version),
+		"repository":   llx.StringData(dep.Repository),
+		"condition":    llx.StringData(dep.Condition),
+		"tags":         llx.ArrayData(tags, types.String),
+		"enabled":      llx.BoolData(dep.Enabled),
+		"alias":        llx.StringData(dep.Alias),
+		"sourceType":   llx.StringData(classifyHelmSource(dep.Repository, dep.Alias)),
+		"importValues": llx.ArrayData(importValues, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlDep := res.(*mqlHelmDependency)
+	mqlDep.parentChart = parent
+	return mqlDep, nil
+}
+
+// resolvedVersion returns the concrete version Helm locked for this
+// dependency, read from the parent chart's Chart.lock. Empty when there
+// is no lock file or the dependency isn't locked.
+func (d *mqlHelmDependency) resolvedVersion() (string, error) {
+	if d.parentChart == nil || d.parentChart.chartObj.Lock == nil {
+		return "", nil
+	}
+	for _, locked := range d.parentChart.chartObj.Lock.Dependencies {
+		if locked.Name == d.Name.Data {
+			return locked.Version, nil
+		}
+	}
+	return "", nil
+}
+
+// chart links to the vendored subchart that satisfies this dependency,
+// matched by name or alias against the parent's loaded subcharts. Null
+// when the dependency isn't vendored on disk.
+func (d *mqlHelmDependency) chart() (*mqlHelmChart, error) {
+	if d.parentChart != nil {
+		for _, sub := range d.parentChart.chartObj.Dependencies() {
+			if sub.Name() == d.Name.Data || (d.Alias.Data != "" && sub.Name() == d.Alias.Data) {
+				return newMqlHelmChart(d.MqlRuntime, sub, "", d.parentChart)
+			}
+		}
+	}
+	d.Chart.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 // classifyHelmSource categorizes a dependency's source from its
@@ -449,8 +758,10 @@ func newMqlHelmMaintainer(runtime *plugin.Runtime, chartName string, idx int, m 
 
 func newMqlHelmFile(runtime *plugin.Runtime, chartName string, f *chart.File) (*mqlHelmFile, error) {
 	res, err := CreateResource(runtime, "helm.file", map[string]*llx.RawData{
-		"__id": llx.StringData("helm.file:" + chartName + ":" + f.Name),
-		"path": llx.StringData(f.Name),
+		"__id":     llx.StringData("helm.file:" + chartName + ":" + f.Name),
+		"path":     llx.StringData(f.Name),
+		"size":     llx.IntData(int64(len(f.Data))),
+		"isBinary": llx.BoolData(!utf8.Valid(f.Data)),
 	})
 	if err != nil {
 		return nil, err

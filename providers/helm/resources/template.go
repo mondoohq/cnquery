@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -93,9 +94,10 @@ func newMqlHelmTemplate(runtime *plugin.Runtime, chartName string, t *chart.File
 	rawContent := string(t.Data)
 
 	res, err := CreateResource(runtime, "helm.template", map[string]*llx.RawData{
-		"__id": llx.StringData("helm.template:" + chartName + ":" + t.Name),
-		"name": llx.StringData(t.Name),
-		"raw":  llx.StringData(rawContent),
+		"__id":            llx.StringData("helm.template:" + chartName + ":" + t.Name),
+		"name":            llx.StringData(t.Name),
+		"raw":             llx.StringData(rawContent),
+		"requiresCluster": llx.BoolData(templateUsesLookup(t.Name, rawContent)),
 	})
 	if err != nil {
 		return nil, err
@@ -128,11 +130,77 @@ func (t *mqlHelmTemplate) resources() ([]any, error) {
 		return []any{}, nil
 	}
 	templateKey := t.chartName + "/" + t.Name.Data
-	return parseK8sResources(t.MqlRuntime, templateKey, t.renderedContent)
+	return parseK8sResources(t.MqlRuntime, templateKey, t.renderedContent, false)
 }
 
 func (t *mqlHelmTemplate) directives() ([]any, error) {
 	return extractDirectives(t.MqlRuntime, t.Name.Data, t.rawContent)
+}
+
+// lookupCallRE matches a call to the Helm `lookup` function inside a
+// template action, used as the fallback when the AST parser fails.
+var lookupCallRE = regexp.MustCompile(`(^|[\s(|])lookup\s`)
+
+// templateUsesLookup reports whether a template calls the `lookup`
+// function, which queries a live cluster at render time. Static analysis
+// can't satisfy lookup, so resources gated on it may be missing or
+// incomplete in the rendered output.
+func templateUsesLookup(name, raw string) bool {
+	tmpl, err := template.New(name).Funcs(helmStubFuncs).Parse(raw)
+	if err != nil {
+		return lookupCallRE.MatchString(raw)
+	}
+	for _, t := range tmpl.Templates() {
+		if t.Tree == nil || t.Tree.Root == nil {
+			continue
+		}
+		if nodeUsesLookup(t.Tree.Root) {
+			return true
+		}
+	}
+	return false
+}
+
+// nodeUsesLookup walks a template AST looking for an identifier named
+// "lookup" in any pipeline command.
+func nodeUsesLookup(node parse.Node) bool {
+	switch n := node.(type) {
+	case *parse.ListNode:
+		if n == nil {
+			return false
+		}
+		for _, child := range n.Nodes {
+			if nodeUsesLookup(child) {
+				return true
+			}
+		}
+	case *parse.ActionNode:
+		return pipeUsesLookup(n.Pipe)
+	case *parse.IfNode:
+		return pipeUsesLookup(n.Pipe) || nodeUsesLookup(n.List) || nodeUsesLookup(n.ElseList)
+	case *parse.RangeNode:
+		return pipeUsesLookup(n.Pipe) || nodeUsesLookup(n.List) || nodeUsesLookup(n.ElseList)
+	case *parse.WithNode:
+		return pipeUsesLookup(n.Pipe) || nodeUsesLookup(n.List) || nodeUsesLookup(n.ElseList)
+	}
+	return false
+}
+
+func pipeUsesLookup(pipe *parse.PipeNode) bool {
+	if pipe == nil {
+		return false
+	}
+	for _, cmd := range pipe.Cmds {
+		for _, arg := range cmd.Args {
+			if id, ok := arg.(*parse.IdentifierNode); ok && id.Ident == "lookup" {
+				return true
+			}
+			if p, ok := arg.(*parse.PipeNode); ok && pipeUsesLookup(p) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // extractDirectives parses Go template directives from raw template content.

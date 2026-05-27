@@ -1,0 +1,2 @@
+replicas: 1
+image: nginx

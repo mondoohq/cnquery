@@ -1,0 +1,6 @@
+dependencies:
+- name: common
+  repository: https://charts.example.com
+  version: 1.2.3
+digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+generated: "2024-01-02T03:04:05Z"

@@ -33,7 +33,7 @@ spec:
   replicas: 3`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/deployment.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/deployment.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -62,7 +62,7 @@ metadata:
   name: config-a`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/all.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/all.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 3)
 
@@ -86,7 +86,7 @@ metadata:
 ---`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/sparse.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/sparse.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 	})
@@ -97,7 +97,7 @@ key: value
 another: thing`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/notes.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/notes.yaml", yaml, false)
 		require.NoError(t, err)
 		assert.Empty(t, resources)
 	})
@@ -116,7 +116,7 @@ metadata:
   name: valid-cm`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/mixed.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/mixed.yaml", yaml, false)
 		require.NoError(t, err)
 		assert.Len(t, resources, 2, "should skip invalid YAML but parse valid docs")
 	})
@@ -126,7 +126,7 @@ metadata:
 kind: Namespace`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/ns.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/ns.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -143,7 +143,7 @@ metadata:
   name: test`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "my-chart/templates/cm.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "my-chart/templates/cm.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -154,7 +154,7 @@ metadata:
 
 	t.Run("empty content", func(t *testing.T) {
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/empty.yaml", "")
+		resources, err := parseK8sResources(runtime, "mychart/templates/empty.yaml", "", false)
 		require.NoError(t, err)
 		assert.Empty(t, resources)
 	})
@@ -169,7 +169,7 @@ metadata:
   namespace: default`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/svc.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/svc.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -190,7 +190,7 @@ kind: Namespace
 metadata: {}`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/ns.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/ns.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -213,7 +213,7 @@ metadata:
 ---`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/comments.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/comments.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -235,7 +235,7 @@ metadata:
 ---`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/ws.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/ws.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -276,7 +276,7 @@ metadata:
     commit: abc123`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/large.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/large.yaml", yaml, false)
 		require.NoError(t, err)
 		assert.Len(t, resources, 4, "should parse 4 valid K8s resources, skipping invalid YAML and non-K8s docs")
 
@@ -308,7 +308,7 @@ metadata:
     bool_val: true`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/labels.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/labels.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 1)
 
@@ -323,7 +323,7 @@ metadata:
   name: no-kind`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/nokind.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/nokind.yaml", yaml, false)
 		require.NoError(t, err)
 		assert.Empty(t, resources, "should skip docs without a kind field")
 	})
@@ -335,9 +335,9 @@ metadata:
   name: shared-name`
 
 		runtime := newTestRuntime()
-		res1, err := parseK8sResources(runtime, "chartA/templates/cm.yaml", yaml)
+		res1, err := parseK8sResources(runtime, "chartA/templates/cm.yaml", yaml, false)
 		require.NoError(t, err)
-		res2, err := parseK8sResources(runtime, "chartB/templates/cm.yaml", yaml)
+		res2, err := parseK8sResources(runtime, "chartB/templates/cm.yaml", yaml, false)
 		require.NoError(t, err)
 
 		id1 := res1[0].(*mqlHelmResource).__id
@@ -361,7 +361,7 @@ metadata:
   namespace: production`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/cm.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/cm.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 2)
 
@@ -382,7 +382,7 @@ metadata:
   name: duplicate`
 
 		runtime := newTestRuntime()
-		resources, err := parseK8sResources(runtime, "mychart/templates/dup.yaml", yaml)
+		resources, err := parseK8sResources(runtime, "mychart/templates/dup.yaml", yaml, false)
 		require.NoError(t, err)
 		require.Len(t, resources, 2)
 

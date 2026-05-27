@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-cm
+data:
+  image: {{ .Values.image | quote }}
+  replicas: "{{ .Values.replicas }}"
+  existing: {{ (lookup "v1" "ConfigMap" "default" "foo") | toYaml | quote }}

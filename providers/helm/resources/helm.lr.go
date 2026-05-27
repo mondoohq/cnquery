@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -15,15 +16,18 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceHelm           string = "helm"
-	ResourceHelmChart      string = "helm.chart"
-	ResourceHelmDependency string = "helm.dependency"
-	ResourceHelmOciRef     string = "helm.ociRef"
-	ResourceHelmMaintainer string = "helm.maintainer"
-	ResourceHelmTemplate   string = "helm.template"
-	ResourceHelmDirective  string = "helm.directive"
-	ResourceHelmResource   string = "helm.resource"
-	ResourceHelmFile       string = "helm.file"
+	ResourceHelm                    string = "helm"
+	ResourceHelmChart               string = "helm.chart"
+	ResourceHelmDependency          string = "helm.dependency"
+	ResourceHelmOciRef              string = "helm.ociRef"
+	ResourceHelmMaintainer          string = "helm.maintainer"
+	ResourceHelmTemplate            string = "helm.template"
+	ResourceHelmDirective           string = "helm.directive"
+	ResourceHelmResource            string = "helm.resource"
+	ResourceHelmFile                string = "helm.file"
+	ResourceHelmChartDependencyLock string = "helm.chart.dependencyLock"
+	ResourceHelmChartLintResult     string = "helm.chart.lintResult"
+	ResourceHelmChartLintMessage    string = "helm.chart.lintMessage"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -65,6 +69,18 @@ func init() {
 		"helm.file": {
 			// to override args, implement: initHelmFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHelmFile,
+		},
+		"helm.chart.dependencyLock": {
+			// to override args, implement: initHelmChartDependencyLock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHelmChartDependencyLock,
+		},
+		"helm.chart.lintResult": {
+			// to override args, implement: initHelmChartLintResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHelmChartLintResult,
+		},
+		"helm.chart.lintMessage": {
+			// to override args, implement: initHelmChartLintMessage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHelmChartLintMessage,
 		},
 	}
 }
@@ -191,11 +207,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.chart.values": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetValues()).ToDataRes(types.Dict)
 	},
+	"helm.chart.renderedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetRenderedValues()).ToDataRes(types.Dict)
+	},
 	"helm.chart.resources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetResources()).ToDataRes(types.Array(types.Resource("helm.resource")))
 	},
 	"helm.chart.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetFiles()).ToDataRes(types.Array(types.Resource("helm.file")))
+	},
+	"helm.chart.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetNotes()).ToDataRes(types.String)
+	},
+	"helm.chart.crds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetCrds()).ToDataRes(types.Array(types.Resource("helm.resource")))
+	},
+	"helm.chart.valuesSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetValuesSchema()).ToDataRes(types.Dict)
+	},
+	"helm.chart.hooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetHooks()).ToDataRes(types.Array(types.Resource("helm.resource")))
+	},
+	"helm.chart.lock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetLock()).ToDataRes(types.Resource("helm.chart.dependencyLock"))
+	},
+	"helm.chart.lint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetLint()).ToDataRes(types.Resource("helm.chart.lintResult"))
 	},
 	"helm.chart.subcharts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetSubcharts()).ToDataRes(types.Array(types.Resource("helm.chart")))
@@ -232,6 +269,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"helm.dependency.registryRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmDependency).GetRegistryRef()).ToDataRes(types.Resource("helm.ociRef"))
+	},
+	"helm.dependency.importValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmDependency).GetImportValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"helm.dependency.resolvedVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmDependency).GetResolvedVersion()).ToDataRes(types.String)
+	},
+	"helm.dependency.chart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmDependency).GetChart()).ToDataRes(types.Resource("helm.chart"))
 	},
 	"helm.ociRef.reference": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmOciRef).GetReference()).ToDataRes(types.String)
@@ -272,6 +318,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.template.directives": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmTemplate).GetDirectives()).ToDataRes(types.Array(types.Resource("helm.directive")))
 	},
+	"helm.template.requiresCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmTemplate).GetRequiresCluster()).ToDataRes(types.Bool)
+	},
 	"helm.directive.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmDirective).GetType()).ToDataRes(types.String)
 	},
@@ -305,11 +354,56 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.resource.template": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmResource).GetTemplate()).ToDataRes(types.Resource("helm.template"))
 	},
+	"helm.resource.isHook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmResource).GetIsHook()).ToDataRes(types.Bool)
+	},
+	"helm.resource.hookTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmResource).GetHookTypes()).ToDataRes(types.Array(types.String))
+	},
+	"helm.resource.hookWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmResource).GetHookWeight()).ToDataRes(types.Int)
+	},
+	"helm.resource.hookDeletePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmResource).GetHookDeletePolicies()).ToDataRes(types.Array(types.String))
+	},
+	"helm.resource.isCRD": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmResource).GetIsCRD()).ToDataRes(types.Bool)
+	},
 	"helm.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmFile).GetPath()).ToDataRes(types.String)
 	},
 	"helm.file.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmFile).GetContent()).ToDataRes(types.String)
+	},
+	"helm.file.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmFile).GetSize()).ToDataRes(types.Int)
+	},
+	"helm.file.isBinary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmFile).GetIsBinary()).ToDataRes(types.Bool)
+	},
+	"helm.chart.dependencyLock.generated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartDependencyLock).GetGenerated()).ToDataRes(types.Time)
+	},
+	"helm.chart.dependencyLock.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartDependencyLock).GetDigest()).ToDataRes(types.String)
+	},
+	"helm.chart.dependencyLock.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartDependencyLock).GetDependencies()).ToDataRes(types.Array(types.Resource("helm.dependency")))
+	},
+	"helm.chart.lintResult.passed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartLintResult).GetPassed()).ToDataRes(types.Bool)
+	},
+	"helm.chart.lintResult.messages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartLintResult).GetMessages()).ToDataRes(types.Array(types.Resource("helm.chart.lintMessage")))
+	},
+	"helm.chart.lintMessage.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartLintMessage).GetSeverity()).ToDataRes(types.String)
+	},
+	"helm.chart.lintMessage.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartLintMessage).GetPath()).ToDataRes(types.String)
+	},
+	"helm.chart.lintMessage.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartLintMessage).GetMessage()).ToDataRes(types.String)
 	},
 }
 
@@ -403,12 +497,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHelmChart).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"helm.chart.renderedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).RenderedValues, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"helm.chart.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmChart).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"helm.chart.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmChart).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.crds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Crds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.valuesSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).ValuesSchema, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.hooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Hooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Lock, ok = plugin.RawToTValue[*mqlHelmChartDependencyLock](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Lint, ok = plugin.RawToTValue[*mqlHelmChartLintResult](v.Value, v.Error)
 		return
 	},
 	"helm.chart.subcharts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -461,6 +583,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.dependency.registryRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmDependency).RegistryRef, ok = plugin.RawToTValue[*mqlHelmOciRef](v.Value, v.Error)
+		return
+	},
+	"helm.dependency.importValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmDependency).ImportValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.dependency.resolvedVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmDependency).ResolvedVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.dependency.chart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmDependency).Chart, ok = plugin.RawToTValue[*mqlHelmChart](v.Value, v.Error)
 		return
 	},
 	"helm.ociRef.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -527,6 +661,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHelmTemplate).Directives, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"helm.template.requiresCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmTemplate).RequiresCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"helm.directive.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmDirective).__id, ok = v.Value.(string)
 		return
@@ -579,6 +717,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHelmResource).Template, ok = plugin.RawToTValue[*mqlHelmTemplate](v.Value, v.Error)
 		return
 	},
+	"helm.resource.isHook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmResource).IsHook, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.resource.hookTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmResource).HookTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.resource.hookWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmResource).HookWeight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"helm.resource.hookDeletePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmResource).HookDeletePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.resource.isCRD": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmResource).IsCRD, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"helm.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmFile).__id, ok = v.Value.(string)
 		return
@@ -589,6 +747,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.file.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmFile).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.file.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmFile).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"helm.file.isBinary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmFile).IsBinary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.dependencyLock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartDependencyLock).__id, ok = v.Value.(string)
+		return
+	},
+	"helm.chart.dependencyLock.generated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartDependencyLock).Generated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"helm.chart.dependencyLock.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartDependencyLock).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.dependencyLock.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartDependencyLock).Dependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lintResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintResult).__id, ok = v.Value.(string)
+		return
+	},
+	"helm.chart.lintResult.passed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintResult).Passed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lintResult.messages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintResult).Messages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lintMessage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintMessage).__id, ok = v.Value.(string)
+		return
+	},
+	"helm.chart.lintMessage.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintMessage).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lintMessage.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintMessage).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.lintMessage.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartLintMessage).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -681,28 +891,35 @@ type mqlHelmChart struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHelmChartInternal
-	Name         plugin.TValue[string]
-	Version      plugin.TValue[string]
-	ApiVersion   plugin.TValue[string]
-	Type         plugin.TValue[string]
-	AppVersion   plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Dependencies plugin.TValue[[]any]
-	Maintainers  plugin.TValue[[]any]
-	Keywords     plugin.TValue[[]any]
-	Home         plugin.TValue[string]
-	Sources      plugin.TValue[[]any]
-	Icon         plugin.TValue[string]
-	Deprecated   plugin.TValue[bool]
-	KubeVersion  plugin.TValue[string]
-	Annotations  plugin.TValue[map[string]any]
-	Templates    plugin.TValue[[]any]
-	Values       plugin.TValue[any]
-	Resources    plugin.TValue[[]any]
-	Files        plugin.TValue[[]any]
-	Subcharts    plugin.TValue[[]any]
-	IsSubchart   plugin.TValue[bool]
-	Parent       plugin.TValue[*mqlHelmChart]
+	Name           plugin.TValue[string]
+	Version        plugin.TValue[string]
+	ApiVersion     plugin.TValue[string]
+	Type           plugin.TValue[string]
+	AppVersion     plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Dependencies   plugin.TValue[[]any]
+	Maintainers    plugin.TValue[[]any]
+	Keywords       plugin.TValue[[]any]
+	Home           plugin.TValue[string]
+	Sources        plugin.TValue[[]any]
+	Icon           plugin.TValue[string]
+	Deprecated     plugin.TValue[bool]
+	KubeVersion    plugin.TValue[string]
+	Annotations    plugin.TValue[map[string]any]
+	Templates      plugin.TValue[[]any]
+	Values         plugin.TValue[any]
+	RenderedValues plugin.TValue[any]
+	Resources      plugin.TValue[[]any]
+	Files          plugin.TValue[[]any]
+	Notes          plugin.TValue[string]
+	Crds           plugin.TValue[[]any]
+	ValuesSchema   plugin.TValue[any]
+	Hooks          plugin.TValue[[]any]
+	Lock           plugin.TValue[*mqlHelmChartDependencyLock]
+	Lint           plugin.TValue[*mqlHelmChartLintResult]
+	Subcharts      plugin.TValue[[]any]
+	IsSubchart     plugin.TValue[bool]
+	Parent         plugin.TValue[*mqlHelmChart]
 }
 
 // createHelmChart creates a new instance of this resource
@@ -848,6 +1065,12 @@ func (c *mqlHelmChart) GetValues() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlHelmChart) GetRenderedValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RenderedValues, func() (any, error) {
+		return c.renderedValues()
+	})
+}
+
 func (c *mqlHelmChart) GetResources() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -877,6 +1100,82 @@ func (c *mqlHelmChart) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files()
+	})
+}
+
+func (c *mqlHelmChart) GetNotes() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Notes, func() (string, error) {
+		return c.notes()
+	})
+}
+
+func (c *mqlHelmChart) GetCrds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Crds, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "crds")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.crds()
+	})
+}
+
+func (c *mqlHelmChart) GetValuesSchema() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ValuesSchema, func() (any, error) {
+		return c.valuesSchema()
+	})
+}
+
+func (c *mqlHelmChart) GetHooks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hooks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "hooks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hooks()
+	})
+}
+
+func (c *mqlHelmChart) GetLock() *plugin.TValue[*mqlHelmChartDependencyLock] {
+	return plugin.GetOrCompute[*mqlHelmChartDependencyLock](&c.Lock, func() (*mqlHelmChartDependencyLock, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "lock")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmChartDependencyLock), nil
+			}
+		}
+
+		return c.lock()
+	})
+}
+
+func (c *mqlHelmChart) GetLint() *plugin.TValue[*mqlHelmChartLintResult] {
+	return plugin.GetOrCompute[*mqlHelmChartLintResult](&c.Lint, func() (*mqlHelmChartLintResult, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "lint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmChartLintResult), nil
+			}
+		}
+
+		return c.lint()
 	})
 }
 
@@ -920,16 +1219,19 @@ func (c *mqlHelmChart) GetParent() *plugin.TValue[*mqlHelmChart] {
 type mqlHelmDependency struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlHelmDependencyInternal it will be used here
-	Name        plugin.TValue[string]
-	Version     plugin.TValue[string]
-	Repository  plugin.TValue[string]
-	Condition   plugin.TValue[string]
-	Tags        plugin.TValue[[]any]
-	Enabled     plugin.TValue[bool]
-	Alias       plugin.TValue[string]
-	SourceType  plugin.TValue[string]
-	RegistryRef plugin.TValue[*mqlHelmOciRef]
+	mqlHelmDependencyInternal
+	Name            plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Repository      plugin.TValue[string]
+	Condition       plugin.TValue[string]
+	Tags            plugin.TValue[[]any]
+	Enabled         plugin.TValue[bool]
+	Alias           plugin.TValue[string]
+	SourceType      plugin.TValue[string]
+	RegistryRef     plugin.TValue[*mqlHelmOciRef]
+	ImportValues    plugin.TValue[[]any]
+	ResolvedVersion plugin.TValue[string]
+	Chart           plugin.TValue[*mqlHelmChart]
 }
 
 // createHelmDependency creates a new instance of this resource
@@ -1009,6 +1311,32 @@ func (c *mqlHelmDependency) GetRegistryRef() *plugin.TValue[*mqlHelmOciRef] {
 		}
 
 		return c.registryRef()
+	})
+}
+
+func (c *mqlHelmDependency) GetImportValues() *plugin.TValue[[]any] {
+	return &c.ImportValues
+}
+
+func (c *mqlHelmDependency) GetResolvedVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResolvedVersion, func() (string, error) {
+		return c.resolvedVersion()
+	})
+}
+
+func (c *mqlHelmDependency) GetChart() *plugin.TValue[*mqlHelmChart] {
+	return plugin.GetOrCompute[*mqlHelmChart](&c.Chart, func() (*mqlHelmChart, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.dependency", c.__id, "chart")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmChart), nil
+			}
+		}
+
+		return c.chart()
 	})
 }
 
@@ -1135,11 +1463,12 @@ type mqlHelmTemplate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHelmTemplateInternal
-	Name       plugin.TValue[string]
-	Raw        plugin.TValue[string]
-	Rendered   plugin.TValue[string]
-	Resources  plugin.TValue[[]any]
-	Directives plugin.TValue[[]any]
+	Name            plugin.TValue[string]
+	Raw             plugin.TValue[string]
+	Rendered        plugin.TValue[string]
+	Resources       plugin.TValue[[]any]
+	Directives      plugin.TValue[[]any]
+	RequiresCluster plugin.TValue[bool]
 }
 
 // createHelmTemplate creates a new instance of this resource
@@ -1220,6 +1549,10 @@ func (c *mqlHelmTemplate) GetDirectives() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlHelmTemplate) GetRequiresCluster() *plugin.TValue[bool] {
+	return &c.RequiresCluster
+}
+
 // mqlHelmDirective for the helm.directive resource
 type mqlHelmDirective struct {
 	MqlRuntime *plugin.Runtime
@@ -1279,14 +1612,19 @@ type mqlHelmResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHelmResourceInternal
-	ApiVersion  plugin.TValue[string]
-	Kind        plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Namespace   plugin.TValue[string]
-	Labels      plugin.TValue[map[string]any]
-	Annotations plugin.TValue[map[string]any]
-	Manifest    plugin.TValue[any]
-	Template    plugin.TValue[*mqlHelmTemplate]
+	ApiVersion         plugin.TValue[string]
+	Kind               plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Namespace          plugin.TValue[string]
+	Labels             plugin.TValue[map[string]any]
+	Annotations        plugin.TValue[map[string]any]
+	Manifest           plugin.TValue[any]
+	Template           plugin.TValue[*mqlHelmTemplate]
+	IsHook             plugin.TValue[bool]
+	HookTypes          plugin.TValue[[]any]
+	HookWeight         plugin.TValue[int64]
+	HookDeletePolicies plugin.TValue[[]any]
+	IsCRD              plugin.TValue[bool]
 }
 
 // createHelmResource creates a new instance of this resource
@@ -1365,13 +1703,35 @@ func (c *mqlHelmResource) GetTemplate() *plugin.TValue[*mqlHelmTemplate] {
 	})
 }
 
+func (c *mqlHelmResource) GetIsHook() *plugin.TValue[bool] {
+	return &c.IsHook
+}
+
+func (c *mqlHelmResource) GetHookTypes() *plugin.TValue[[]any] {
+	return &c.HookTypes
+}
+
+func (c *mqlHelmResource) GetHookWeight() *plugin.TValue[int64] {
+	return &c.HookWeight
+}
+
+func (c *mqlHelmResource) GetHookDeletePolicies() *plugin.TValue[[]any] {
+	return &c.HookDeletePolicies
+}
+
+func (c *mqlHelmResource) GetIsCRD() *plugin.TValue[bool] {
+	return &c.IsCRD
+}
+
 // mqlHelmFile for the helm.file resource
 type mqlHelmFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHelmFileInternal
-	Path    plugin.TValue[string]
-	Content plugin.TValue[string]
+	Path     plugin.TValue[string]
+	Content  plugin.TValue[string]
+	Size     plugin.TValue[int64]
+	IsBinary plugin.TValue[bool]
 }
 
 // createHelmFile creates a new instance of this resource
@@ -1414,4 +1774,193 @@ func (c *mqlHelmFile) GetContent() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
 		return c.content()
 	})
+}
+
+func (c *mqlHelmFile) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlHelmFile) GetIsBinary() *plugin.TValue[bool] {
+	return &c.IsBinary
+}
+
+// mqlHelmChartDependencyLock for the helm.chart.dependencyLock resource
+type mqlHelmChartDependencyLock struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHelmChartDependencyLockInternal
+	Generated    plugin.TValue[*time.Time]
+	Digest       plugin.TValue[string]
+	Dependencies plugin.TValue[[]any]
+}
+
+// createHelmChartDependencyLock creates a new instance of this resource
+func createHelmChartDependencyLock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHelmChartDependencyLock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("helm.chart.dependencyLock", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHelmChartDependencyLock) MqlName() string {
+	return "helm.chart.dependencyLock"
+}
+
+func (c *mqlHelmChartDependencyLock) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHelmChartDependencyLock) GetGenerated() *plugin.TValue[*time.Time] {
+	return &c.Generated
+}
+
+func (c *mqlHelmChartDependencyLock) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlHelmChartDependencyLock) GetDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart.dependencyLock", c.__id, "dependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependencies()
+	})
+}
+
+// mqlHelmChartLintResult for the helm.chart.lintResult resource
+type mqlHelmChartLintResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHelmChartLintResultInternal
+	Passed   plugin.TValue[bool]
+	Messages plugin.TValue[[]any]
+}
+
+// createHelmChartLintResult creates a new instance of this resource
+func createHelmChartLintResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHelmChartLintResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("helm.chart.lintResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHelmChartLintResult) MqlName() string {
+	return "helm.chart.lintResult"
+}
+
+func (c *mqlHelmChartLintResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHelmChartLintResult) GetPassed() *plugin.TValue[bool] {
+	return &c.Passed
+}
+
+func (c *mqlHelmChartLintResult) GetMessages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Messages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart.lintResult", c.__id, "messages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.messages()
+	})
+}
+
+// mqlHelmChartLintMessage for the helm.chart.lintMessage resource
+type mqlHelmChartLintMessage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHelmChartLintMessageInternal it will be used here
+	Severity plugin.TValue[string]
+	Path     plugin.TValue[string]
+	Message  plugin.TValue[string]
+}
+
+// createHelmChartLintMessage creates a new instance of this resource
+func createHelmChartLintMessage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHelmChartLintMessage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("helm.chart.lintMessage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHelmChartLintMessage) MqlName() string {
+	return "helm.chart.lintMessage"
+}
+
+func (c *mqlHelmChartLintMessage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHelmChartLintMessage) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlHelmChartLintMessage) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlHelmChartLintMessage) GetMessage() *plugin.TValue[string] {
+	return &c.Message
 }
