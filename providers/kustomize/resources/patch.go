@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -70,8 +71,13 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 	if len(raw) == 0 && p.Path != "" {
 		// Best-effort read; a missing/unreadable file falls back to
 		// strategic-merge with no operations rather than failing the audit.
-		if data, err := os.ReadFile(filepath.Join(kustPath, p.Path)); err == nil {
-			raw = data
+		// Constrain the read to the kustomization directory so a malicious
+		// patch path (e.g. "../../etc/passwd") can't escape the scan root.
+		full := filepath.Join(kustPath, p.Path)
+		if rel, err := filepath.Rel(kustPath, full); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			if data, err := os.ReadFile(full); err == nil {
+				raw = data
+			}
 		}
 	}
 
