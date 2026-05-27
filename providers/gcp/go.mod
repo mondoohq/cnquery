@@ -93,6 +93,8 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/grafana/pyroscope-go v1.3.0 // indirect
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.10 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/knqyf263/go-rpmdb v0.1.1 // indirect

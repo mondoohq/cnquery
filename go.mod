@@ -124,7 +124,10 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
-require github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd
+require (
+	github.com/grafana/pyroscope-go v1.3.0
+	github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd
+)
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
@@ -210,6 +213,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gopherjs/gopherjs v1.20.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.10 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

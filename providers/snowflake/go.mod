@@ -20,6 +20,8 @@ require (
 )
 
 require (
+	github.com/grafana/pyroscope-go v1.3.0 // indirect
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.10 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1 // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 )
