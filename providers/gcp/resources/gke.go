@@ -578,7 +578,10 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		// Modern control-plane endpoint config overrides the legacy access fields.
-		controlPlanePublicEndpointEnabled := false
+		// Default to true: a cluster with neither config block present (e.g. a
+		// vanilla public cluster on an older API response) has a publicly
+		// reachable control plane, so the safe default avoids audit false negatives.
+		controlPlanePublicEndpointEnabled := true
 		if ipc := c.GetControlPlaneEndpointsConfig().GetIpEndpointsConfig(); ipc != nil {
 			controlPlanePublicEndpointEnabled = ipc.GetEnablePublicEndpoint()
 			if anc := ipc.GetAuthorizedNetworksConfig(); anc != nil {

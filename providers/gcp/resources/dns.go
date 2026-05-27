@@ -169,6 +169,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 
 			var mqlDnssecCfg map[string]any
 			dnssecAlgorithms := []any{}
+			dnssecAlgorithmSet := map[string]struct{}{}
 			if managedZone.DnssecConfig != nil {
 				keySpecs := make([]any, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
 				for _, keySpec := range managedZone.DnssecConfig.DefaultKeySpecs {
@@ -177,7 +178,9 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 						"keyLength": keySpec.KeyLength,
 						"keyType":   keySpec.KeyType,
 					})
-					if keySpec.Algorithm != "" {
+					// The ZSK and KSK key specs commonly share an algorithm; emit each distinct value once.
+					if _, ok := dnssecAlgorithmSet[keySpec.Algorithm]; keySpec.Algorithm != "" && !ok {
+						dnssecAlgorithmSet[keySpec.Algorithm] = struct{}{}
 						dnssecAlgorithms = append(dnssecAlgorithms, keySpec.Algorithm)
 					}
 				}
