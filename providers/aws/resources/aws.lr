@@ -13154,6 +13154,116 @@ private aws.apigatewayv2.domainName @defaults("domainName routingMode") {
   tags map[string]string
 }
 
+// AWS Lake Formation
+//
+// Use the Lake Formation namespace to audit how data-lake access is governed
+// across all enabled regions. Iterate `settings()` for the
+// per-region governance configuration — the data lake administrators, the
+// default database and table permissions granted to new resources (the
+// signal for whether the lake falls back to open IAM access or enforces Lake
+// Formation grants), the trusted resource owners, and the external
+// data-filtering settings. Iterate `permissions()` for every Lake Formation
+// grant (principal, resource, and the actions allowed, with or without grant
+// option). Iterate `resources()` for every S3 location registered with Lake
+// Formation, along with the IAM role used to access it.
+aws.lakeformation {
+  // Per-region Lake Formation data lake settings
+  settings() []aws.lakeformation.dataLakeSettings
+  // Lake Formation permission grants
+  permissions() []aws.lakeformation.permission
+  // S3 locations registered with Lake Formation
+  resources() []aws.lakeformation.resource
+}
+
+// AWS Lake Formation data lake settings
+//
+// Examine the Lake Formation governance configuration for one region. Each
+// settings record is selected by its region — for example
+// `aws.lakeformation.dataLakeSettings(region: "us-east-1")` — and exposes the
+// data lake administrators, the default permissions handed to newly created
+// databases and tables, the trusted resource owners, and the external
+// data-filtering controls. A `createDatabaseDefaultPermissions` or
+// `createTableDefaultPermissions` entry granting `ALL` to the
+// `IAM_ALLOWED_PRINCIPALS` group means new resources fall back to IAM-based
+// access rather than Lake Formation grants.
+private aws.lakeformation.dataLakeSettings @defaults("region") {
+  // Region these settings apply to
+  region string
+  // IAM principals designated as Lake Formation data lake administrators
+  admins []string
+  // IAM principals designated as read-only data lake administrators
+  readOnlyAdmins []string
+  // AWS account IDs whose resources can be shared into this account without IAM permissions
+  trustedResourceOwners []string
+  // Whether third-party engines are allowed to access data managed by Lake Formation
+  allowExternalDataFiltering bool
+  // Whether third-party engines are allowed full-table access to data managed by Lake Formation
+  allowFullTableExternalDataAccess bool
+  // Default permissions granted on databases created in the catalog
+  //
+  // Each entry shape: `{principal: "<identifier>", permissions: ["<permission>", ...]}`. An entry granting ALL to IAM_ALLOWED_PRINCIPALS means new databases use IAM access rather than Lake Formation grants.
+  createDatabaseDefaultPermissions []dict
+  // Default permissions granted on tables created in the catalog
+  //
+  // Each entry shape: `{principal: "<identifier>", permissions: ["<permission>", ...]}`. An entry granting ALL to IAM_ALLOWED_PRINCIPALS means new tables use IAM access rather than Lake Formation grants.
+  createTableDefaultPermissions []dict
+  // Session tag values authorized for use in external data filtering
+  authorizedSessionTagValueList []string
+  // Key-value parameters configured for the data lake
+  parameters map[string]string
+}
+
+// AWS Lake Formation permission grant
+//
+// Examine a single Lake Formation grant — the binding of a principal to a set
+// of actions on a catalog resource. Each grant exposes the principal it is
+// granted to, the resource it applies to, and the permissions allowed, along
+// with the subset that the principal may further grant to others.
+private aws.lakeformation.permission @defaults("principal region") {
+  // Region the grant applies to
+  region string
+  // Principal the permissions are granted to (an IAM ARN, account ID, or the IAM_ALLOWED_PRINCIPALS group)
+  principal string
+  // Catalog resource the grant applies to
+  //
+  // Shape mirrors the Lake Formation resource selector and varies by resource kind: one of `catalog`, `database`, `table`, `tableWithColumns`, `dataLocation`, `dataCellsFilter`, `lfTag`, `lfTagPolicy`, or `lfTagExpression`.
+  resource dict
+  // Actions the principal is allowed on the resource
+  //
+  // For example ALL, SELECT, ALTER, DROP, INSERT, DELETE, DESCRIBE, CREATE_DATABASE, CREATE_TABLE, or DATA_LOCATION_ACCESS.
+  permissions []string
+  // Subset of the actions that the principal may grant to other principals
+  permissionsWithGrantOption []string
+  // When the grant was last updated
+  lastUpdated time
+  // Principal that last updated the grant
+  lastUpdatedBy string
+}
+
+// AWS Lake Formation registered resource
+//
+// Examine an S3 location registered with Lake Formation. Each resource is
+// keyed by its ARN — for example
+// `aws.lakeformation.resource(arn: "arn:aws:s3:::my-data-lake-bucket")` — and
+// exposes the IAM role Lake Formation assumes to access the location and the
+// access modes enabled for it.
+private aws.lakeformation.resource @defaults("arn region") {
+  // ARN of the registered resource (an S3 location)
+  arn string
+  // Region the resource is registered in
+  region string
+  // IAM role Lake Formation assumes to access the registered location
+  iamRole() aws.iam.role
+  // Whether the registered location uses a federated, hybrid access mode
+  withFederation bool
+  // Whether both Lake Formation permissions and IAM permissions are honored for the location
+  hybridAccessEnabled bool
+  // Whether privileged access is enabled for the registered location
+  withPrivilegedAccess bool
+  // When the resource registration was last modified
+  lastModified time
+}
+
 // AWS Lambda
 //
 // Use the Lambda namespace to enumerate serverless functions and the

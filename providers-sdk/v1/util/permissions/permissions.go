@@ -476,6 +476,7 @@ func awsConnectionMethodToService(method string) string {
 		"cloudwatchlogs":           "cloudwatchlogs",
 		"configservice":            "configservice",
 		"rds":                      "rds",
+		"lakeformation":            "lakeformation",
 		"lambda":                   "lambda",
 		"dynamodb":                 "dynamodb",
 		"kms":                      "kms",

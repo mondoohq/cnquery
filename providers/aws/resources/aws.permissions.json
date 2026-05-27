@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.28.0",
-  "generated_at": "2026-05-26T16:39:11-07:00",
+  "generated_at": "2026-05-26T17:10:13-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -502,6 +502,9 @@
     "kms:ListGrants",
     "kms:ListKeys",
     "kms:ListResourceTags",
+    "lakeformation:GetDataLakeSettings",
+    "lakeformation:ListPermissions",
+    "lakeformation:ListResources",
     "lambda:GetCodeSigningConfig",
     "lambda:GetFunction",
     "lambda:GetFunctionCodeSigningConfig",
@@ -3939,6 +3942,24 @@
       "service": "kms",
       "action": "ListResourceTags",
       "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "lakeformation:GetDataLakeSettings",
+      "service": "lakeformation",
+      "action": "GetDataLakeSettings",
+      "source_file": "aws_lakeformation.go"
+    },
+    {
+      "permission": "lakeformation:ListPermissions",
+      "service": "lakeformation",
+      "action": "ListPermissions",
+      "source_file": "aws_lakeformation.go"
+    },
+    {
+      "permission": "lakeformation:ListResources",
+      "service": "lakeformation",
+      "action": "ListResources",
+      "source_file": "aws_lakeformation.go"
     },
     {
       "permission": "lambda:GetCodeSigningConfig",

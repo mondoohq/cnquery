@@ -516,6 +516,10 @@ const (
 	ResourceAwsApigatewayv2Route                                                string = "aws.apigatewayv2.route"
 	ResourceAwsApigatewayv2Authorizer                                           string = "aws.apigatewayv2.authorizer"
 	ResourceAwsApigatewayv2DomainName                                           string = "aws.apigatewayv2.domainName"
+	ResourceAwsLakeformation                                                    string = "aws.lakeformation"
+	ResourceAwsLakeformationDataLakeSettings                                    string = "aws.lakeformation.dataLakeSettings"
+	ResourceAwsLakeformationPermission                                          string = "aws.lakeformation.permission"
+	ResourceAwsLakeformationResource                                            string = "aws.lakeformation.resource"
 	ResourceAwsLambda                                                           string = "aws.lambda"
 	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
 	ResourceAwsLambdaFunctionVersion                                            string = "aws.lambda.function.version"
@@ -2873,6 +2877,22 @@ func init() {
 		"aws.apigatewayv2.domainName": {
 			// to override args, implement: initAwsApigatewayv2DomainName(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsApigatewayv2DomainName,
+		},
+		"aws.lakeformation": {
+			// to override args, implement: initAwsLakeformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLakeformation,
+		},
+		"aws.lakeformation.dataLakeSettings": {
+			Init:   initAwsLakeformationDataLakeSettings,
+			Create: createAwsLakeformationDataLakeSettings,
+		},
+		"aws.lakeformation.permission": {
+			// to override args, implement: initAwsLakeformationPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLakeformationPermission,
+		},
+		"aws.lakeformation.resource": {
+			Init:   initAwsLakeformationResource,
+			Create: createAwsLakeformationResource,
 		},
 		"aws.lambda": {
 			// to override args, implement: initAwsLambda(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18917,6 +18937,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigatewayv2.domainName.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2DomainName).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.lakeformation.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformation).GetSettings()).ToDataRes(types.Array(types.Resource("aws.lakeformation.dataLakeSettings")))
+	},
+	"aws.lakeformation.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformation).GetPermissions()).ToDataRes(types.Array(types.Resource("aws.lakeformation.permission")))
+	},
+	"aws.lakeformation.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformation).GetResources()).ToDataRes(types.Array(types.Resource("aws.lakeformation.resource")))
+	},
+	"aws.lakeformation.dataLakeSettings.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.dataLakeSettings.admins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetAdmins()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.dataLakeSettings.readOnlyAdmins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetReadOnlyAdmins()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.dataLakeSettings.trustedResourceOwners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetTrustedResourceOwners()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.dataLakeSettings.allowExternalDataFiltering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetAllowExternalDataFiltering()).ToDataRes(types.Bool)
+	},
+	"aws.lakeformation.dataLakeSettings.allowFullTableExternalDataAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetAllowFullTableExternalDataAccess()).ToDataRes(types.Bool)
+	},
+	"aws.lakeformation.dataLakeSettings.createDatabaseDefaultPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetCreateDatabaseDefaultPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lakeformation.dataLakeSettings.createTableDefaultPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetCreateTableDefaultPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lakeformation.dataLakeSettings.authorizedSessionTagValueList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetAuthorizedSessionTagValueList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.dataLakeSettings.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationDataLakeSettings).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.lakeformation.permission.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.permission.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetPrincipal()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.permission.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetResource()).ToDataRes(types.Dict)
+	},
+	"aws.lakeformation.permission.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.permission.permissionsWithGrantOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetPermissionsWithGrantOption()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lakeformation.permission.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"aws.lakeformation.permission.lastUpdatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationPermission).GetLastUpdatedBy()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.resource.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.resource.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lakeformation.resource.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.lakeformation.resource.withFederation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetWithFederation()).ToDataRes(types.Bool)
+	},
+	"aws.lakeformation.resource.hybridAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetHybridAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.lakeformation.resource.withPrivilegedAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetWithPrivilegedAccess()).ToDataRes(types.Bool)
+	},
+	"aws.lakeformation.resource.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLakeformationResource).GetLastModified()).ToDataRes(types.Time)
 	},
 	"aws.lambda.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambda).GetFunctions()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
@@ -51877,6 +51978,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigatewayv2.domainName.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayv2DomainName).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lakeformation.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformation).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformation).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformation).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.admins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).Admins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.readOnlyAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).ReadOnlyAdmins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.trustedResourceOwners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).TrustedResourceOwners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.allowExternalDataFiltering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).AllowExternalDataFiltering, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.allowFullTableExternalDataAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).AllowFullTableExternalDataAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.createDatabaseDefaultPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).CreateDatabaseDefaultPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.createTableDefaultPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).CreateTableDefaultPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.authorizedSessionTagValueList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).AuthorizedSessionTagValueList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.dataLakeSettings.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationDataLakeSettings).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lakeformation.permission.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).Principal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).Resource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.permissionsWithGrantOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).PermissionsWithGrantOption, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.permission.lastUpdatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationPermission).LastUpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lakeformation.resource.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.withFederation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).WithFederation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.hybridAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).HybridAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.withPrivilegedAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).WithPrivilegedAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lakeformation.resource.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLakeformationResource).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -125169,6 +125394,350 @@ func (c *mqlAwsApigatewayv2DomainName) GetMutualTlsAuthentication() *plugin.TVal
 
 func (c *mqlAwsApigatewayv2DomainName) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsLakeformation for the aws.lakeformation resource
+type mqlAwsLakeformation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLakeformationInternal it will be used here
+	Settings    plugin.TValue[[]any]
+	Permissions plugin.TValue[[]any]
+	Resources   plugin.TValue[[]any]
+}
+
+// createAwsLakeformation creates a new instance of this resource
+func createAwsLakeformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLakeformation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lakeformation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLakeformation) MqlName() string {
+	return "aws.lakeformation"
+}
+
+func (c *mqlAwsLakeformation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLakeformation) GetSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Settings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lakeformation", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+func (c *mqlAwsLakeformation) GetPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Permissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lakeformation", c.__id, "permissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.permissions()
+	})
+}
+
+func (c *mqlAwsLakeformation) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lakeformation", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+// mqlAwsLakeformationDataLakeSettings for the aws.lakeformation.dataLakeSettings resource
+type mqlAwsLakeformationDataLakeSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLakeformationDataLakeSettingsInternal it will be used here
+	Region                           plugin.TValue[string]
+	Admins                           plugin.TValue[[]any]
+	ReadOnlyAdmins                   plugin.TValue[[]any]
+	TrustedResourceOwners            plugin.TValue[[]any]
+	AllowExternalDataFiltering       plugin.TValue[bool]
+	AllowFullTableExternalDataAccess plugin.TValue[bool]
+	CreateDatabaseDefaultPermissions plugin.TValue[[]any]
+	CreateTableDefaultPermissions    plugin.TValue[[]any]
+	AuthorizedSessionTagValueList    plugin.TValue[[]any]
+	Parameters                       plugin.TValue[map[string]any]
+}
+
+// createAwsLakeformationDataLakeSettings creates a new instance of this resource
+func createAwsLakeformationDataLakeSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLakeformationDataLakeSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lakeformation.dataLakeSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) MqlName() string {
+	return "aws.lakeformation.dataLakeSettings"
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetAdmins() *plugin.TValue[[]any] {
+	return &c.Admins
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetReadOnlyAdmins() *plugin.TValue[[]any] {
+	return &c.ReadOnlyAdmins
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetTrustedResourceOwners() *plugin.TValue[[]any] {
+	return &c.TrustedResourceOwners
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetAllowExternalDataFiltering() *plugin.TValue[bool] {
+	return &c.AllowExternalDataFiltering
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetAllowFullTableExternalDataAccess() *plugin.TValue[bool] {
+	return &c.AllowFullTableExternalDataAccess
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetCreateDatabaseDefaultPermissions() *plugin.TValue[[]any] {
+	return &c.CreateDatabaseDefaultPermissions
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetCreateTableDefaultPermissions() *plugin.TValue[[]any] {
+	return &c.CreateTableDefaultPermissions
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetAuthorizedSessionTagValueList() *plugin.TValue[[]any] {
+	return &c.AuthorizedSessionTagValueList
+}
+
+func (c *mqlAwsLakeformationDataLakeSettings) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+// mqlAwsLakeformationPermission for the aws.lakeformation.permission resource
+type mqlAwsLakeformationPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLakeformationPermissionInternal it will be used here
+	Region                     plugin.TValue[string]
+	Principal                  plugin.TValue[string]
+	Resource                   plugin.TValue[any]
+	Permissions                plugin.TValue[[]any]
+	PermissionsWithGrantOption plugin.TValue[[]any]
+	LastUpdated                plugin.TValue[*time.Time]
+	LastUpdatedBy              plugin.TValue[string]
+}
+
+// createAwsLakeformationPermission creates a new instance of this resource
+func createAwsLakeformationPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLakeformationPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lakeformation.permission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLakeformationPermission) MqlName() string {
+	return "aws.lakeformation.permission"
+}
+
+func (c *mqlAwsLakeformationPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLakeformationPermission) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLakeformationPermission) GetPrincipal() *plugin.TValue[string] {
+	return &c.Principal
+}
+
+func (c *mqlAwsLakeformationPermission) GetResource() *plugin.TValue[any] {
+	return &c.Resource
+}
+
+func (c *mqlAwsLakeformationPermission) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAwsLakeformationPermission) GetPermissionsWithGrantOption() *plugin.TValue[[]any] {
+	return &c.PermissionsWithGrantOption
+}
+
+func (c *mqlAwsLakeformationPermission) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlAwsLakeformationPermission) GetLastUpdatedBy() *plugin.TValue[string] {
+	return &c.LastUpdatedBy
+}
+
+// mqlAwsLakeformationResource for the aws.lakeformation.resource resource
+type mqlAwsLakeformationResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsLakeformationResourceInternal
+	Arn                  plugin.TValue[string]
+	Region               plugin.TValue[string]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+	WithFederation       plugin.TValue[bool]
+	HybridAccessEnabled  plugin.TValue[bool]
+	WithPrivilegedAccess plugin.TValue[bool]
+	LastModified         plugin.TValue[*time.Time]
+}
+
+// createAwsLakeformationResource creates a new instance of this resource
+func createAwsLakeformationResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLakeformationResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lakeformation.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLakeformationResource) MqlName() string {
+	return "aws.lakeformation.resource"
+}
+
+func (c *mqlAwsLakeformationResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLakeformationResource) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLakeformationResource) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLakeformationResource) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lakeformation.resource", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsLakeformationResource) GetWithFederation() *plugin.TValue[bool] {
+	return &c.WithFederation
+}
+
+func (c *mqlAwsLakeformationResource) GetHybridAccessEnabled() *plugin.TValue[bool] {
+	return &c.HybridAccessEnabled
+}
+
+func (c *mqlAwsLakeformationResource) GetWithPrivilegedAccess() *plugin.TValue[bool] {
+	return &c.WithPrivilegedAccess
+}
+
+func (c *mqlAwsLakeformationResource) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
 }
 
 // mqlAwsLambda for the aws.lambda resource

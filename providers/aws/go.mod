@@ -76,6 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.52.0
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.8
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.90.1
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.2
