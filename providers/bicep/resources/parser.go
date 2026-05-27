@@ -17,6 +17,10 @@ type parsedBicepFile struct {
 	resources   []parsedResource
 	modules     []parsedModule
 	outputs     []parsedOutput
+	types       []parsedType
+	functions   []parsedFunction
+	imports     []parsedImport
+	metadata    map[string]string
 }
 
 type parsedParameter struct {
@@ -73,6 +77,30 @@ type parsedOutput struct {
 	description string
 }
 
+type parsedType struct {
+	name        string
+	definition  string
+	description string
+	exported    bool
+	decorators  []string
+}
+
+type parsedFunction struct {
+	name        string
+	parameters  map[string]string
+	returnType  string
+	expression  string
+	description string
+	decorators  []string
+}
+
+type parsedImport struct {
+	source    string
+	symbols   []string
+	namespace string
+	wildcard  bool
+}
+
 var (
 	targetScopeRe  = regexp.MustCompile(`(?m)^targetScope\s*=\s*'([^']+)'`)
 	paramRe        = regexp.MustCompile(`(?m)^param\s+(\w+)\s+(\w+)(.*)$`)
@@ -88,6 +116,22 @@ var (
 	maxLengthDecRe = regexp.MustCompile(`@maxLength\(\s*(-?\d+)\s*\)`)
 	minValueDecRe  = regexp.MustCompile(`@minValue\(\s*(-?\d+)\s*\)`)
 	maxValueDecRe  = regexp.MustCompile(`@maxValue\(\s*(-?\d+)\s*\)`)
+	exportDecRe    = regexp.MustCompile(`@export\(\)`)
+
+	// typeRe matches the header of a `type Name = <definition>` statement.
+	// The definition (everything after the first `=`) is captured raw;
+	// unions, object types, and references all flow through as text.
+	typeRe = regexp.MustCompile(`(?s)^type\s+(\w+)\s*=\s*(.+)$`)
+
+	// funcRe matches a `func name(params) returnType => expression`
+	// declaration. The parameter list, return type, and body expression are
+	// captured separately so the parameters can be split into a name->type map.
+	funcRe = regexp.MustCompile(`(?s)^func\s+(\w+)\s*\(([^)]*)\)\s*(\S+)\s*=>\s*(.+)$`)
+
+	// metadataRe matches a `metadata <name> = '<literal>'` entry. Only
+	// literal single-quoted values are captured; expression-/object-valued
+	// metadata is skipped (mirrors the tag-extraction behavior).
+	metadataRe = regexp.MustCompile(`(?m)^metadata\s+(\w+)\s*=\s*'([^']*)'\s*$`)
 )
 
 func parseBicep(content string) *parsedBicepFile {
@@ -127,6 +171,25 @@ func parseBicep(content string) *parsedBicepFile {
 			}
 		case "output":
 			result.outputs = append(result.outputs, parseOutput(firstLine, stmt.decorators))
+		case "type":
+			if t, ok := parseTypeDecl(stmt.text, stmt.decorators); ok {
+				result.types = append(result.types, t)
+			}
+		case "func":
+			if fn, ok := parseFunctionDecl(stmt.text, stmt.decorators); ok {
+				result.functions = append(result.functions, fn)
+			}
+		case "import":
+			if imp, ok := parseImportDecl(stmt.text); ok {
+				result.imports = append(result.imports, imp)
+			}
+		case "metadata":
+			if name, value, ok := parseMetadataDecl(stmt.text); ok {
+				if result.metadata == nil {
+					result.metadata = map[string]string{}
+				}
+				result.metadata[name] = value
+			}
 		default:
 			// targetScope (already captured above) and unknown leading
 			// tokens carry no per-construct parsing here; they are retained
@@ -331,6 +394,137 @@ func parseOutput(line string, decorators []string) parsedOutput {
 		o.description = m[1]
 	}
 	return o
+}
+
+// parseTypeDecl handles a `type Name = <definition>` statement. The whole
+// statement body is passed in (it may span multiple lines for object types),
+// so runs of whitespace in the captured definition are collapsed into single
+// spaces for a readable single-line value. The `@export()` decorator marks
+// the type as shared/exported, and `@description(...)` is captured.
+func parseTypeDecl(text string, decorators []string) (parsedType, bool) {
+	trimmed := strings.TrimSpace(text)
+	m := typeRe.FindStringSubmatch(trimmed)
+	if len(m) < 3 {
+		return parsedType{}, false
+	}
+	t := parsedType{
+		name:       m[1],
+		definition: strings.Join(strings.Fields(m[2]), " "),
+		decorators: decorators,
+	}
+	decText := strings.Join(decorators, "\n")
+	if dm := descDecRe.FindStringSubmatch(decText); len(dm) > 1 {
+		t.description = dm[1]
+	}
+	t.exported = exportDecRe.MatchString(decText)
+	return t, true
+}
+
+// parseFunctionDecl handles a `func name(p1 t1, p2 t2) returnType => expr`
+// declaration. The parameter list is split into a name->type map, and the
+// body expression after `=>` is captured raw (whitespace collapsed).
+func parseFunctionDecl(text string, decorators []string) (parsedFunction, bool) {
+	trimmed := strings.TrimSpace(text)
+	m := funcRe.FindStringSubmatch(trimmed)
+	if len(m) < 5 {
+		return parsedFunction{}, false
+	}
+	fn := parsedFunction{
+		name:       m[1],
+		parameters: parseFunctionParams(m[2]),
+		returnType: m[3],
+		expression: strings.Join(strings.Fields(m[4]), " "),
+		decorators: decorators,
+	}
+	decText := strings.Join(decorators, "\n")
+	if dm := descDecRe.FindStringSubmatch(decText); len(dm) > 1 {
+		fn.description = dm[1]
+	}
+	return fn, true
+}
+
+// parseFunctionParams splits a `p1 t1, p2 t2` parameter list into a
+// name->type map. Each comma-separated entry is `name type`; entries that
+// don't fit that shape are skipped. Returns nil for an empty parameter list.
+func parseFunctionParams(raw string) map[string]string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	params := map[string]string{}
+	for _, part := range strings.Split(raw, ",") {
+		fields := strings.Fields(part)
+		if len(fields) < 2 {
+			continue
+		}
+		params[fields[0]] = fields[1]
+	}
+	if len(params) == 0 {
+		return nil
+	}
+	return params
+}
+
+var (
+	// importNamedRe matches `import { a, b } from './x.bicep'`.
+	importNamedRe = regexp.MustCompile(`(?s)^import\s*\{([^}]*)\}\s*from\s*'([^']+)'`)
+	// importWildcardRe matches `import * as ns from './x.bicep'`.
+	importWildcardRe = regexp.MustCompile(`^import\s*\*\s*as\s+(\w+)\s+from\s*'([^']+)'`)
+	// importProviderRe matches a bare provider import like `import 'az@2.0.0'`.
+	importProviderRe = regexp.MustCompile(`^import\s+'([^']+)'`)
+)
+
+// parseImportDecl handles the three Bicep import forms:
+//
+//	import { typeA, funcB } from './shared.bicep'
+//	import * as shared from './shared.bicep'
+//	import 'az@2.0.0'
+//
+// The `from` target (or the bare provider string) becomes `source`; named
+// imports populate `symbols`; a `* as ns` import sets `namespace` and
+// `wildcard`.
+func parseImportDecl(text string) (parsedImport, bool) {
+	trimmed := strings.Join(strings.Fields(text), " ")
+
+	if m := importWildcardRe.FindStringSubmatch(trimmed); len(m) > 2 {
+		return parsedImport{
+			source:    m[2],
+			namespace: m[1],
+			wildcard:  true,
+		}, true
+	}
+
+	if m := importNamedRe.FindStringSubmatch(trimmed); len(m) > 2 {
+		var symbols []string
+		for _, s := range strings.Split(m[1], ",") {
+			s = strings.TrimSpace(s)
+			if s != "" {
+				symbols = append(symbols, s)
+			}
+		}
+		return parsedImport{
+			source:  m[2],
+			symbols: symbols,
+		}, true
+	}
+
+	if m := importProviderRe.FindStringSubmatch(trimmed); len(m) > 1 {
+		return parsedImport{source: m[1]}, true
+	}
+
+	return parsedImport{}, false
+}
+
+// parseMetadataDecl handles a `metadata <name> = '<literal>'` entry. Only
+// literal single-quoted values are captured; expression-/object-valued
+// metadata returns ok=false and is skipped, mirroring tag extraction.
+func parseMetadataDecl(text string) (string, string, bool) {
+	trimmed := strings.TrimSpace(text)
+	m := metadataRe.FindStringSubmatch(trimmed)
+	if len(m) < 3 {
+		return "", "", false
+	}
+	return m[1], m[2], true
 }
 
 // extractBlock extracts a brace-delimited block starting from startIdx by

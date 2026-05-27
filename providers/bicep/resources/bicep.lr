@@ -39,6 +39,20 @@ bicep.file @defaults("path") {
   modules() []bicep.module
   // Output declarations
   outputs() []bicep.output
+  // User-defined type declarations
+  types() []bicep.type
+  // User-defined function declarations
+  functions() []bicep.function
+  // Import statements
+  imports() []bicep.import
+  // File-level metadata
+  //
+  // Key/value pairs from `metadata <name> = '<value>'` statements. Only
+  // entries whose value is a literal single-quoted string are captured —
+  // expression- or object-valued metadata is skipped, the same way
+  // `bicep.resource.tags` skips expression-valued tags. Most real-world
+  // metadata is `description = '...'`.
+  metadata map[string]string
   // Raw file content
   content string
 }
@@ -239,6 +253,76 @@ bicep.expression @defaults("kind raw") {
   path []string
   // Alternating literal and embedded-expression parts of an interpolation node
   segments() []bicep.expression
+}
+
+// Bicep user-defined type declaration
+//
+// Examine a `type Name = <definition>` declaration: the type name, the raw
+// right-hand-side definition text (a union like `'Standard_LRS' |
+// 'Premium_LRS'`, an object type like `{ name: string, tier: sku }`, or a
+// reference to another type), the `@description` text, whether the type is
+// `@export()`ed for reuse from other files, and the full raw decorator list.
+// Select a type by its `name` — for example
+// `bicep.file.types.where(name == "sku")`.
+bicep.type @defaults("name") {
+  // Type name
+  name string
+  // Raw right-hand-side definition text (the part after `=`)
+  definition string
+  // Description from @description decorator
+  description string
+  // Whether @export() is present
+  exported bool
+  // All decorators as raw strings
+  decorators []string
+}
+
+// Bicep user-defined function declaration
+//
+// Examine a `func name(p1 t1, p2 t2) returnType => expression` declaration:
+// the function name, its parameters as a name-to-type map, the declared
+// return type, the raw body expression after `=>`, the `@description` text,
+// and the full raw decorator list. Select a function by its `name` — for
+// example `bicep.file.functions.where(name == "buildName")` — and read
+// `parameters["prefix"]` to get a parameter's type.
+bicep.function @defaults("name") {
+  // Function name
+  name string
+  // Parameters as a name-to-type map
+  parameters map[string]string
+  // Declared return type
+  returnType string
+  // Raw text of the `=> ...` body expression
+  expression string
+  // Description from @description decorator
+  description string
+  // All decorators as raw strings
+  decorators []string
+}
+
+// Bicep import statement
+//
+// Examine an `import` statement in any of its forms: named imports
+// (`import { typeA, funcB } from './shared.bicep'`), a wildcard namespace
+// import (`import * as shared from './shared.bicep'`), or a bare provider
+// import (`import 'az@2.0.0'`). The `source` field holds the `from` target
+// or the bare provider string; `symbols` lists the named imports inside
+// `{ }`; `namespace` holds the alias for a `* as <ns>` import and `wildcard`
+// flags that form. Select an import by its `source` — for example
+// `bicep.file.imports.where(source == "az@2.0.0")`.
+bicep.import @defaults("source") {
+  // Import source: the `from` target or the bare provider string
+  source string
+  // Named imports inside `{ }`
+  //
+  // Empty for wildcard namespace imports and bare provider imports.
+  symbols []string
+  // Alias for a `* as <ns>` import
+  //
+  // Empty for named imports and bare provider imports.
+  namespace string
+  // Whether this is a `* as ns` wildcard import
+  wildcard bool
 }
 
 // Compiled ARM template (from ARM JSON input)

@@ -29,6 +29,10 @@ var knownKeywords = map[string]string{
 	"resource":    "resource",
 	"module":      "module",
 	"output":      "output",
+	"type":        "type",
+	"func":        "func",
+	"import":      "import",
+	"metadata":    "metadata",
 }
 
 // tokenizeBicep walks the source once and returns its top-level statements.

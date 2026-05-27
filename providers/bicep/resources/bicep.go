@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/bicep/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (r *mqlBicep) id() (string, error) {
@@ -48,10 +49,16 @@ type mqlBicepFileInternal struct {
 func newMqlBicepFile(runtime *plugin.Runtime, f *connection.BicepFile) (*mqlBicepFile, error) {
 	parsed := parseBicep(f.Content)
 
+	metadata := make(map[string]any, len(parsed.metadata))
+	for k, v := range parsed.metadata {
+		metadata[k] = v
+	}
+
 	res, err := CreateResource(runtime, "bicep.file", map[string]*llx.RawData{
 		"__id":        llx.StringData("bicep.file:" + f.Path),
 		"path":        llx.StringData(f.Path),
 		"targetScope": llx.StringData(parsed.targetScope),
+		"metadata":    llx.MapData(metadata, types.String),
 		"content":     llx.StringData(f.Content),
 	})
 	if err != nil {
@@ -97,4 +104,16 @@ func (f *mqlBicepFile) modules() ([]any, error) {
 
 func (f *mqlBicepFile) outputs() ([]any, error) {
 	return createMqlOutputs(f.MqlRuntime, f.Path.Data, f.getParsed().outputs)
+}
+
+func (f *mqlBicepFile) types() ([]any, error) {
+	return createMqlTypes(f.MqlRuntime, f.Path.Data, f.getParsed().types)
+}
+
+func (f *mqlBicepFile) functions() ([]any, error) {
+	return createMqlFunctions(f.MqlRuntime, f.Path.Data, f.getParsed().functions)
+}
+
+func (f *mqlBicepFile) imports() ([]any, error) {
+	return createMqlImports(f.MqlRuntime, f.Path.Data, f.getParsed().imports)
 }

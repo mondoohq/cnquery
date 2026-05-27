@@ -231,6 +231,75 @@ func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsed
 	return mqlOutputs, nil
 }
 
+func createMqlTypes(runtime *plugin.Runtime, filePath string, types_ []parsedType) ([]any, error) {
+	var mqlTypes []any
+	for _, t := range types_ {
+		decorators := sliceToAny(t.decorators)
+		res, err := CreateResource(runtime, "bicep.type", map[string]*llx.RawData{
+			"__id":        llx.StringData("bicep.type:" + filePath + ":" + t.name),
+			"name":        llx.StringData(t.name),
+			"definition":  llx.StringData(t.definition),
+			"description": llx.StringData(t.description),
+			"exported":    llx.BoolData(t.exported),
+			"decorators":  llx.ArrayData(decorators, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlTypes = append(mqlTypes, res)
+	}
+	return mqlTypes, nil
+}
+
+func createMqlFunctions(runtime *plugin.Runtime, filePath string, functions []parsedFunction) ([]any, error) {
+	var mqlFunctions []any
+	for _, fn := range functions {
+		decorators := sliceToAny(fn.decorators)
+
+		params := make(map[string]any, len(fn.parameters))
+		for k, v := range fn.parameters {
+			params[k] = v
+		}
+
+		res, err := CreateResource(runtime, "bicep.function", map[string]*llx.RawData{
+			"__id":        llx.StringData("bicep.function:" + filePath + ":" + fn.name),
+			"name":        llx.StringData(fn.name),
+			"parameters":  llx.MapData(params, types.String),
+			"returnType":  llx.StringData(fn.returnType),
+			"expression":  llx.StringData(fn.expression),
+			"description": llx.StringData(fn.description),
+			"decorators":  llx.ArrayData(decorators, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlFunctions = append(mqlFunctions, res)
+	}
+	return mqlFunctions, nil
+}
+
+func createMqlImports(runtime *plugin.Runtime, filePath string, imports []parsedImport) ([]any, error) {
+	var mqlImports []any
+	for i, imp := range imports {
+		symbols := sliceToAny(imp.symbols)
+		// A file can import the same source twice (e.g. a named import and a
+		// wildcard import of './shared.bicep'), so the index disambiguates
+		// the synthetic id.
+		res, err := CreateResource(runtime, "bicep.import", map[string]*llx.RawData{
+			"__id":      llx.StringData("bicep.import:" + filePath + ":" + strconv.Itoa(i) + ":" + imp.source),
+			"source":    llx.StringData(imp.source),
+			"symbols":   llx.ArrayData(symbols, types.String),
+			"namespace": llx.StringData(imp.namespace),
+			"wildcard":  llx.BoolData(imp.wildcard),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlImports = append(mqlImports, res)
+	}
+	return mqlImports, nil
+}
+
 func sliceToAny(s []string) []any {
 	out := make([]any, len(s))
 	for i, v := range s {
@@ -247,4 +316,7 @@ var (
 	_ plugin.Resource = (*mqlBicepModule)(nil)
 	_ plugin.Resource = (*mqlBicepOutput)(nil)
 	_ plugin.Resource = (*mqlBicepExpression)(nil)
+	_ plugin.Resource = (*mqlBicepType)(nil)
+	_ plugin.Resource = (*mqlBicepFunction)(nil)
+	_ plugin.Resource = (*mqlBicepImport)(nil)
 )

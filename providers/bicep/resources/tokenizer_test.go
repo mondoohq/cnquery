@@ -126,13 +126,30 @@ output c string = b`,
 		},
 		{
 			name:  "unknown leading keyword becomes empty-keyword statement",
-			input: `type myType = string`,
+			input: `unknownKeyword myThing = string`,
 			want: []struct {
 				keyword     string
 				decorators  []string
 				containsAll []string
 			}{
-				{keyword: "", containsAll: []string{"type myType = string"}},
+				{keyword: "", containsAll: []string{"unknownKeyword myThing = string"}},
+			},
+		},
+		{
+			name: "type, func, import, and metadata are classified",
+			input: `type sku = 'a' | 'b'
+func f() int => 1
+import 'az@2.0.0'
+metadata author = 'team'`,
+			want: []struct {
+				keyword     string
+				decorators  []string
+				containsAll []string
+			}{
+				{keyword: "type", containsAll: []string{"type sku = 'a' | 'b'"}},
+				{keyword: "func", containsAll: []string{"func f() int => 1"}},
+				{keyword: "import", containsAll: []string{"import 'az@2.0.0'"}},
+				{keyword: "metadata", containsAll: []string{"metadata author = 'team'"}},
 			},
 		},
 		{
