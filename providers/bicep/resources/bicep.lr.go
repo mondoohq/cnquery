@@ -300,6 +300,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.resource.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetParent()).ToDataRes(types.String)
 	},
+	"bicep.resource.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetScope()).ToDataRes(types.String)
+	},
+	"bicep.resource.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetResources()).ToDataRes(types.Array(types.Resource("bicep.resource")))
+	},
 	"bicep.resource.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -713,6 +719,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.resource.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).Parent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.resource.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1574,7 +1588,7 @@ func (c *mqlBicepVariable) GetLoopExpression() *plugin.TValue[string] {
 type mqlBicepResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepResourceInternal it will be used here
+	mqlBicepResourceInternal
 	SymbolicName   plugin.TValue[string]
 	Type           plugin.TValue[string]
 	ApiVersion     plugin.TValue[string]
@@ -1583,6 +1597,8 @@ type mqlBicepResource struct {
 	Existing       plugin.TValue[bool]
 	Condition      plugin.TValue[string]
 	Parent         plugin.TValue[string]
+	Scope          plugin.TValue[string]
+	Resources      plugin.TValue[[]any]
 	Properties     plugin.TValue[any]
 	Tags           plugin.TValue[map[string]any]
 	DependsOn      plugin.TValue[[]any]
@@ -1655,6 +1671,26 @@ func (c *mqlBicepResource) GetCondition() *plugin.TValue[string] {
 
 func (c *mqlBicepResource) GetParent() *plugin.TValue[string] {
 	return &c.Parent
+}
+
+func (c *mqlBicepResource) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlBicepResource) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.resource", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
 }
 
 func (c *mqlBicepResource) GetProperties() *plugin.TValue[any] {

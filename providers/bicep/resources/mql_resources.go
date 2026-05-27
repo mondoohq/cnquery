@@ -58,57 +58,99 @@ func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedV
 	return mqlVars, nil
 }
 
+// mqlBicepResourceInternal caches the parsed nested child resources so the
+// lazy `resources()` accessor can materialize them without re-parsing. Each
+// child carries a parent-qualified `__id` (`<parentId>/<childSymbolicName>`)
+// so nested resources under different parents never collide in the cache.
+type mqlBicepResourceInternal struct {
+	nested []parsedResource
+}
+
 func createMqlResources(runtime *plugin.Runtime, filePath string, resources []parsedResource) ([]any, error) {
 	var mqlResources []any
 	for _, r := range resources {
-		dependsOn := sliceToAny(r.dependsOn)
-		decorators := sliceToAny(r.decorators)
-
-		// Surface the resource's `properties: { ... }` sub-block as a
-		// structured dict so audits can query individual keys directly
-		// (e.g., `bicepResource.properties["accessTier"]`). When the
-		// resource has no `properties` block the field is an empty
-		// map rather than nil so the shape stays consistent across
-		// resources.
-		var properties any = map[string]any{}
-		if r.body != "" {
-			if raw := extractFieldBlock(r.body, "properties"); raw != "" {
-				properties = parseBicepObject(raw)
-			}
-		}
-
-		args := map[string]*llx.RawData{
-			"__id":         llx.StringData("bicep.resource:" + filePath + ":" + r.symbolicName),
-			"symbolicName": llx.StringData(r.symbolicName),
-			"type":         llx.StringData(r.typ),
-			"apiVersion":   llx.StringData(r.apiVersion),
-			"name":         llx.StringData(r.name),
-			"location":     llx.StringData(r.location),
-			"existing":     llx.BoolData(r.existing),
-			"condition":    llx.StringData(r.condition),
-			"parent":       llx.StringData(r.parent),
-			"properties":   llx.DictData(properties),
-			"dependsOn":    llx.ArrayData(dependsOn, types.String),
-			"decorators":   llx.ArrayData(decorators, types.String),
-		}
-		if r.tags == nil {
-			args["tags"] = llx.NilData
-		} else {
-			tags := make(map[string]any, len(r.tags))
-			for k, v := range r.tags {
-				tags[k] = v
-			}
-			args["tags"] = llx.MapData(tags, types.String)
-		}
-		addLoopArgs(args, r.loop)
-
-		res, err := CreateResource(runtime, "bicep.resource", args)
+		res, err := newMqlBicepResource(runtime, "bicep.resource:"+filePath+":"+r.symbolicName, r)
 		if err != nil {
 			return nil, err
 		}
 		mqlResources = append(mqlResources, res)
 	}
 	return mqlResources, nil
+}
+
+// newMqlBicepResource builds a single bicep.resource from a parsedResource.
+// The id is supplied by the caller: top-level resources use
+// `bicep.resource:<file>:<symbolicName>`, while nested resources use a
+// parent-qualified `<parentId>/<childSymbolicName>`. The parsed nested
+// declarations are cached on the Internal struct for the lazy `resources()`
+// accessor to materialize, recursively.
+func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource) (*mqlBicepResource, error) {
+	dependsOn := sliceToAny(r.dependsOn)
+	decorators := sliceToAny(r.decorators)
+
+	// Surface the resource's `properties: { ... }` sub-block as a
+	// structured dict so audits can query individual keys directly
+	// (e.g., `bicepResource.properties["accessTier"]`). When the
+	// resource has no `properties` block the field is an empty
+	// map rather than nil so the shape stays consistent across
+	// resources.
+	var properties any = map[string]any{}
+	if r.body != "" {
+		if raw := extractFieldBlock(r.body, "properties"); raw != "" {
+			properties = parseBicepObject(raw)
+		}
+	}
+
+	args := map[string]*llx.RawData{
+		"__id":         llx.StringData(id),
+		"symbolicName": llx.StringData(r.symbolicName),
+		"type":         llx.StringData(r.typ),
+		"apiVersion":   llx.StringData(r.apiVersion),
+		"name":         llx.StringData(r.name),
+		"location":     llx.StringData(r.location),
+		"existing":     llx.BoolData(r.existing),
+		"condition":    llx.StringData(r.condition),
+		"parent":       llx.StringData(r.parent),
+		"scope":        llx.StringData(r.scope),
+		"properties":   llx.DictData(properties),
+		"dependsOn":    llx.ArrayData(dependsOn, types.String),
+		"decorators":   llx.ArrayData(decorators, types.String),
+	}
+	if r.tags == nil {
+		args["tags"] = llx.NilData
+	} else {
+		tags := make(map[string]any, len(r.tags))
+		for k, v := range r.tags {
+			tags[k] = v
+		}
+		args["tags"] = llx.MapData(tags, types.String)
+	}
+	addLoopArgs(args, r.loop)
+
+	res, err := CreateResource(runtime, "bicep.resource", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlRes := res.(*mqlBicepResource)
+	mqlRes.nested = r.nested
+	return mqlRes, nil
+}
+
+// resources materializes this resource's nested child resources. Each child
+// gets a parent-qualified `__id` so nested resources under different parents
+// don't collide; children may themselves declare further nested resources,
+// resolved recursively by the same accessor.
+func (r *mqlBicepResource) resources() ([]any, error) {
+	out := make([]any, 0, len(r.nested))
+	for _, child := range r.nested {
+		childID := r.__id + "/" + child.symbolicName
+		mqlChild, err := newMqlBicepResource(r.MqlRuntime, childID, child)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlChild)
+	}
+	return out, nil
 }
 
 func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsedModule) ([]any, error) {

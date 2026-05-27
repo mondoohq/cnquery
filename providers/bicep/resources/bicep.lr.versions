@@ -92,6 +92,8 @@ bicep.resource.loopIterator 13.1.2
 bicep.resource.name 13.0.0
 bicep.resource.parent 13.0.0
 bicep.resource.properties 13.0.0
+bicep.resource.resources 13.1.2
+bicep.resource.scope 13.1.2
 bicep.resource.symbolicName 13.0.0
 bicep.resource.tags 13.0.9
 bicep.resource.type 13.0.0

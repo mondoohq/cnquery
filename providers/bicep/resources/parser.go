@@ -53,11 +53,13 @@ type parsedResource struct {
 	existing     bool
 	condition    string
 	parent       string
+	scope        string
 	body         string
 	tags         map[string]string
 	dependsOn    []string
 	decorators   []string
 	loop         loopInfo
+	nested       []parsedResource
 }
 
 type parsedModule struct {
@@ -476,10 +478,125 @@ func parseResourceDecl(lines []string, startIdx int, decorators []string) (*pars
 	r.name = extractFieldValue(body, "name")
 	r.location = extractFieldValue(body, "location")
 	r.parent = extractFieldValue(body, "parent")
+	r.scope = extractFieldValue(body, "scope")
 	r.dependsOn = extractDependsOn(body)
 	r.tags = extractTags(body)
 
+	// A resource may declare child resources inside its body. Each nested
+	// declaration is parsed with the same logic as a top-level resource and
+	// has its `parent` set to this resource's symbolic name.
+	r.nested = extractNestedResources(body, r.symbolicName)
+
 	return r, endIdx
+}
+
+// extractNestedResources finds `resource <sym> '<type>'( existing)? =`
+// declarations that sit at the top level of the parent's body (one brace
+// deep, relative to the parent's outer braces) and parses each one
+// recursively with the same logic as a top-level resource. The body text
+// passed in is the parent's full `{ ... }` block including its outer braces,
+// so child declarations live at brace depth 1. The parent's symbolic name is
+// recorded on each child's `parent` field.
+func extractNestedResources(body, parentSymbolic string) []parsedResource {
+	var nested []parsedResource
+	st := scanState{}
+	for i := 0; i < len(body); {
+		// We only consider a `resource` keyword when it begins a statement at
+		// brace depth 1 (directly inside the parent body) and outside any
+		// string/paren/bracket. depthBefore is captured before stepping.
+		if st.inStr == 0 && !st.inMulti && st.brace == 1 && st.paren == 0 && st.bracket == 0 &&
+			isStatementStart(body, i) && hasKeywordAt(body, i, "resource") {
+			// Reassemble the nested declaration from here until its delimiters
+			// balance again, then hand the statement text to the recursive
+			// resource parser.
+			stmtEnd := scanStatementEnd(body[i:]) + i
+			stmt := body[i:stmtEnd]
+			stmtLines := strings.Split(stmt, "\n")
+			if child, _ := parseResourceDecl(stmtLines, 0, nil); child != nil {
+				child.parent = parentSymbolic
+				nested = append(nested, *child)
+			}
+			// Resume scanning after the consumed statement, keeping the depth
+			// state consistent by feeding the skipped text.
+			for j := i; j < stmtEnd; {
+				j = st.stepAt(body, j)
+			}
+			i = stmtEnd
+			continue
+		}
+		i = st.stepAt(body, i)
+	}
+	return nested
+}
+
+// isStatementStart reports whether position i in s begins a token — i.e. the
+// preceding non-ignored byte is a newline, brace, or the start of input. This
+// keeps `extractNestedResources` from matching a `resource` substring that is
+// part of a larger identifier or appears mid-line (e.g. an expression).
+func isStatementStart(s string, i int) bool {
+	for j := i - 1; j >= 0; j-- {
+		c := s[j]
+		if c == ' ' || c == '\t' || c == '\r' {
+			continue
+		}
+		return c == '\n' || c == '{' || c == '}'
+	}
+	return true
+}
+
+// hasKeywordAt reports whether the identifier starting at i in s is exactly
+// `kw` (followed by whitespace, not more identifier characters).
+func hasKeywordAt(s string, i int, kw string) bool {
+	if i+len(kw) > len(s) {
+		return false
+	}
+	if s[i:i+len(kw)] != kw {
+		return false
+	}
+	next := i + len(kw)
+	if next >= len(s) {
+		return false
+	}
+	c := s[next]
+	return c == ' ' || c == '\t'
+}
+
+// scanStatementEnd returns the index just past the end of the statement at the
+// start of s. It mirrors the tokenizer: consume the first line, then keep
+// pulling continuation lines until the running depth (string-aware) returns to
+// zero. This way a `= if (cond) { ... }` header whose parens close before the
+// body brace opens doesn't terminate the statement early, and a multi-line
+// `= { ... }` body is consumed whole.
+func scanStatementEnd(s string) int {
+	st := scanState{}
+	// Consume the first line.
+	nl := strings.IndexByte(s, '\n')
+	if nl < 0 {
+		return len(s)
+	}
+	st.feed(s[:nl])
+	pos := nl + 1
+	if st.totalDepth() <= 0 {
+		return nl
+	}
+	for pos < len(s) {
+		next := strings.IndexByte(s[pos:], '\n')
+		var line string
+		if next < 0 {
+			line = s[pos:]
+		} else {
+			line = s[pos : pos+next]
+		}
+		st.feed(line)
+		if next < 0 {
+			return len(s)
+		}
+		pos += next + 1
+		if st.totalDepth() <= 0 {
+			return pos - 1
+		}
+	}
+	return len(s)
 }
 
 func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsedModule, int) {

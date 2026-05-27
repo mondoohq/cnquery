@@ -189,6 +189,10 @@ bicep.resource @defaults("type symbolicName") {
   condition string
   // Parent resource symbolic name
   parent string
+  // Scope expression (deploy target scope, e.g. resourceGroup(), subscription())
+  scope string
+  // Nested child resources declared inside this resource
+  resources() []bicep.resource
   // Resource body as dict
   properties dict
   // Resource tags

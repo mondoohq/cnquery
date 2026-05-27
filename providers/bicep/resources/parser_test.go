@@ -1153,3 +1153,67 @@ func TestParseBicepForLoops(t *testing.T) {
 		assert.Equal(t, "location", o.expression)
 	})
 }
+
+func TestParseBicepNestedResources(t *testing.T) {
+	// The committed fixture is the single source of truth for the nested /
+	// scope scenarios asserted below — read it rather than duplicating the
+	// Bicep inline, so the fixture and the test can't drift apart.
+	data, err := os.ReadFile("testdata/nested.bicep")
+	require.NoError(t, err)
+
+	result := parseBicep(string(data))
+
+	top := map[string]parsedResource{}
+	for _, r := range result.resources {
+		top[r.symbolicName] = r
+	}
+
+	t.Run("top-level list excludes nested resources", func(t *testing.T) {
+		require.Len(t, result.resources, 3)
+		require.Contains(t, top, "sa")
+		require.Contains(t, top, "lock")
+		require.Contains(t, top, "kv")
+		// nested resources must NOT appear at the top level
+		assert.NotContains(t, top, "blob")
+		assert.NotContains(t, top, "container")
+	})
+
+	t.Run("parent exposes its nested child", func(t *testing.T) {
+		sa := top["sa"]
+		assert.Empty(t, sa.parent)
+		require.Len(t, sa.nested, 1)
+		blob := sa.nested[0]
+		assert.Equal(t, "blob", blob.symbolicName)
+		assert.Equal(t, "blobServices", blob.typ)
+		// relative child type inherits no apiVersion when omitted
+		assert.Equal(t, "", blob.apiVersion)
+		assert.Equal(t, "'default'", blob.name)
+		assert.Equal(t, "sa", blob.parent)
+	})
+
+	t.Run("child exposes its grandchild", func(t *testing.T) {
+		blob := top["sa"].nested[0]
+		require.Len(t, blob.nested, 1)
+		container := blob.nested[0]
+		assert.Equal(t, "container", container.symbolicName)
+		assert.Equal(t, "containers", container.typ)
+		assert.Equal(t, "2023-01-01", container.apiVersion)
+		assert.Equal(t, "'data'", container.name)
+		assert.Equal(t, "blob", container.parent)
+		// grandchild has no further nesting
+		assert.Empty(t, container.nested)
+	})
+
+	t.Run("scope keyword is captured", func(t *testing.T) {
+		lock := top["lock"]
+		assert.Equal(t, "sa", lock.scope)
+		assert.Empty(t, lock.nested)
+	})
+
+	t.Run("flat resource has no scope and no nesting", func(t *testing.T) {
+		kv := top["kv"]
+		assert.Equal(t, "", kv.scope)
+		assert.Empty(t, kv.nested)
+		assert.Empty(t, kv.parent)
+	})
+}
