@@ -32,10 +32,9 @@ Examples:
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
-					Long:  "values",
-					Short: "f",
-					Type:  plugin.FlagType_List,
-					Desc:  "Values files to merge into the chart's values before rendering (repeatable, like helm -f)",
+					Long: "values",
+					Type: plugin.FlagType_List,
+					Desc: "Values files to merge into the chart's values before rendering (repeatable, like helm --values)",
 				},
 				{
 					Long: "set",

@@ -291,6 +291,21 @@ func attachPFlags(base *pflag.FlagSet, nu *pflag.FlagSet) {
 }
 
 func attachFlag(flagset *pflag.FlagSet, flag plugin.Flag) {
+	// A provider must never be able to panic the whole CLI by declaring a
+	// shorthand that a global flag (e.g. -f for output-format) already owns.
+	// pflag's AddFlag panics on a duplicate shorthand, so drop the colliding
+	// shorthand here and keep the long flag usable.
+	if flag.Short != "" {
+		if found := flagset.ShorthandLookup(flag.Short); found != nil {
+			log.Warn().
+				Str("flag", flag.Long).
+				Str("shorthand", flag.Short).
+				Str("conflicts-with", found.Name).
+				Msg("provider flag shorthand already in use, ignoring shorthand")
+			flag.Short = ""
+		}
+	}
+
 	switch flag.Type {
 	case plugin.FlagType_Bool:
 		if flag.Short != "" {
