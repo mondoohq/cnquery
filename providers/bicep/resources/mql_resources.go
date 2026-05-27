@@ -4,10 +4,14 @@
 package resources
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/bicep/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -169,9 +173,12 @@ func (r *mqlBicepResource) resources() ([]any, error) {
 
 // mqlBicepModuleInternal carries the owning file's symbol resolver so the
 // lazy scope/condition expression-tree accessors can resolve referenced root
-// identifiers to same-file declarations.
+// identifiers to same-file declarations. owningFilePath is the path of the
+// file that declared this module; a relative `source` is resolved against its
+// directory by the target() accessor.
 type mqlBicepModuleInternal struct {
-	resolver *symbolResolver
+	resolver       *symbolResolver
+	owningFilePath string
 }
 
 func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsedModule, resolver *symbolResolver) ([]any, error) {
@@ -206,7 +213,9 @@ func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsed
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlBicepModule).resolver = resolver
+		mqlMod := res.(*mqlBicepModule)
+		mqlMod.resolver = resolver
+		mqlMod.owningFilePath = filePath
 		mqlModules = append(mqlModules, res)
 	}
 	return mqlModules, nil
@@ -400,6 +409,55 @@ func (m *mqlBicepModule) scopeTree() (*mqlBicepExpression, error) {
 
 func (m *mqlBicepModule) conditionTree() (*mqlBicepExpression, error) {
 	return expressionTreeFor(m.MqlRuntime, m.__id, "/conditionTree", m.Condition.Data, m.resolver)
+}
+
+// target resolves a local module `source` to the bicep.file it references.
+//
+// Only local sources are resolved: a registry (`br:`) or template-spec (`ts:`)
+// source returns null. The source path is computed relative to the directory
+// of the file that declared the module. When the resolved path matches one of
+// the connection's already-discovered files, the same cached bicep.file is
+// returned (reusing its __id) so the runtime serves the existing instance and
+// the caller can traverse into its resources/params/outputs. When the resolved
+// path lies outside the scanned root, the file is read and parsed on demand. An
+// unreadable or unresolvable path returns null.
+func (m *mqlBicepModule) target() (*mqlBicepFile, error) {
+	source := m.Source.Data
+	// Registry and template-spec references are not local files.
+	if m.IsRegistry.Data || m.IsTemplateSpec.Data ||
+		strings.HasPrefix(source, "br:") || strings.HasPrefix(source, "br/") ||
+		strings.HasPrefix(source, "ts:") || strings.HasPrefix(source, "ts/") {
+		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if source == "" || m.owningFilePath == "" {
+		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	resolved := filepath.Clean(filepath.Join(filepath.Dir(m.owningFilePath), source))
+
+	conn, ok := m.MqlRuntime.Connection.(*connection.BicepConnection)
+	if !ok {
+		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	// Prefer an already-loaded file so target() returns the same cached
+	// bicep.file instance the parent scan produced.
+	for _, f := range conn.BicepFiles() {
+		if filepath.Clean(f.Path) == resolved {
+			return newMqlBicepFile(m.MqlRuntime, f)
+		}
+	}
+
+	// The target points outside the scanned root: best-effort read + parse.
+	content, err := os.ReadFile(resolved)
+	if err != nil {
+		m.Target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlBicepFile(m.MqlRuntime, &connection.BicepFile{Path: resolved, Content: string(content)})
 }
 
 // mqlBicepOutputInternal carries the owning file's symbol resolver so the

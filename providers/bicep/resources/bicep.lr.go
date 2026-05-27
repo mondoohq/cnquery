@@ -345,6 +345,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.module.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetSource()).ToDataRes(types.String)
 	},
+	"bicep.module.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetTarget()).ToDataRes(types.Resource("bicep.file"))
+	},
 	"bicep.module.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetScope()).ToDataRes(types.String)
 	},
@@ -816,6 +819,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.module.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepModule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.module.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).Target, ok = plugin.RawToTValue[*mqlBicepFile](v.Value, v.Error)
 		return
 	},
 	"bicep.module.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1860,6 +1867,7 @@ type mqlBicepModule struct {
 	mqlBicepModuleInternal
 	Name           plugin.TValue[string]
 	Source         plugin.TValue[string]
+	Target         plugin.TValue[*mqlBicepFile]
 	Scope          plugin.TValue[string]
 	ScopeTree      plugin.TValue[*mqlBicepExpression]
 	Params         plugin.TValue[any]
@@ -1913,6 +1921,22 @@ func (c *mqlBicepModule) GetName() *plugin.TValue[string] {
 
 func (c *mqlBicepModule) GetSource() *plugin.TValue[string] {
 	return &c.Source
+}
+
+func (c *mqlBicepModule) GetTarget() *plugin.TValue[*mqlBicepFile] {
+	return plugin.GetOrCompute[*mqlBicepFile](&c.Target, func() (*mqlBicepFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.module", c.__id, "target")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepFile), nil
+			}
+		}
+
+		return c.target()
+	})
 }
 
 func (c *mqlBicepModule) GetScope() *plugin.TValue[string] {

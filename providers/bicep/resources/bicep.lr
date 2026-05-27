@@ -251,6 +251,17 @@ bicep.module @defaults("name source") {
   name string
   // Module source path or registry reference
   source string
+  // Target Bicep file this module references
+  //
+  // Resolves a local module `source` (a relative path like `./modules/x.bicep`
+  // or `../shared/y.bicep`) to the `bicep.file` it points at, computed against
+  // the owning file's directory. When the target is one of the scanned files
+  // it returns that same cached `bicep.file`, so you can traverse into the
+  // module's `resources`, `parameters`, and `outputs`. A file outside the
+  // scanned root is read and parsed on demand. Registry (`br:`) and
+  // template-spec (`ts:`) sources, and any path that can't be resolved or
+  // read, return null.
+  target() bicep.file
   // Scope expression
   scope string
   // Parsed scope expression tree
