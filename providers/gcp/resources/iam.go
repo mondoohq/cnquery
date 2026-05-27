@@ -477,6 +477,28 @@ func (g *mqlGcpProjectIamServiceServiceAccount) lastAuthenticatedTime() (*time.T
 	return latest, nil
 }
 
+// isDefault reports whether this is a Google-created default service account.
+// The default Compute Engine SA has the form
+// <projectNumber>-compute@developer.gserviceaccount.com and the default App
+// Engine SA has the form <projectId>@appspot.gserviceaccount.com. Both are
+// created automatically with broad project-editor permissions.
+func (g *mqlGcpProjectIamServiceServiceAccount) isDefault() (bool, error) {
+	if g.Email.Error != nil {
+		return false, g.Email.Error
+	}
+	email := g.Email.Data
+	if email == "" {
+		return false, nil
+	}
+	if strings.HasSuffix(email, "-compute@developer.gserviceaccount.com") {
+		return true, nil
+	}
+	if strings.HasSuffix(email, "@appspot.gserviceaccount.com") {
+		return true, nil
+	}
+	return false, nil
+}
+
 // lastAuthKeyActivity matches the JSON shape returned by the Policy Analyzer
 // serviceAccountKeyLastAuthentication activity type.
 type lastAuthKeyActivity struct {
@@ -670,6 +692,21 @@ func (g *mqlGcpProjectIamServiceServiceAccountKey) lastAuthenticatedTime() (*tim
 		return nil, nil
 	}
 	return latest, nil
+}
+
+// ageInDays returns the whole-day age of the key, computed from validAfterTime
+// to the current time. CIS key-rotation audits compare this against a 90-day
+// threshold.
+func (g *mqlGcpProjectIamServiceServiceAccountKey) ageInDays() (int64, error) {
+	if g.ValidAfterTime.Error != nil {
+		return 0, g.ValidAfterTime.Error
+	}
+	if g.ValidAfterTime.IsNull() || g.ValidAfterTime.Data == nil {
+		g.AgeInDays.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	age := time.Since(*g.ValidAfterTime.Data)
+	return int64(age.Hours() / 24), nil
 }
 
 func (g *mqlGcpProjectIamServiceDenyPolicy) id() (string, error) {

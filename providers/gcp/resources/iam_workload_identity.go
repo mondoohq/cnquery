@@ -137,7 +137,7 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 		ShowDeleted(true).
 		Pages(ctx, func(resp *iam.ListWorkloadIdentityPoolProvidersResponse) error {
 			for _, p := range resp.WorkloadIdentityPoolProviders {
-				providerType, awsAccountId, oidcIssuer, oidcAudiences, samlMetadata := flattenWifProviderConfig(p)
+				providerType, awsAccountId, oidcIssuer, oidcAudiences, samlMetadata, x509TrustAnchorCount := flattenWifProviderConfig(p)
 
 				mqlProvider, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.workloadIdentityPool.provider",
 					map[string]*llx.RawData{
@@ -157,6 +157,7 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 						"oidcIssuerUri":        llx.StringData(oidcIssuer),
 						"oidcAllowedAudiences": llx.ArrayData(oidcAudiences, types.String),
 						"samlIdpMetadataXml":   llx.StringData(samlMetadata),
+						"x509TrustAnchorCount": llx.IntData(int64(x509TrustAnchorCount)),
 					})
 				if err != nil {
 					return err
@@ -177,11 +178,10 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) id() (string, erro
 
 // flattenWifProviderConfig extracts the credential-family discriminator and
 // the per-family fields from a WorkloadIdentityPoolProvider. Exactly one of
-// Aws, Oidc, Saml, or X509 should be set; the rest return zero values. X.509
-// trust-store details aren't surfaced — providerType=="x509" is enough for
-// audits to flag the family, and the trust-store schema is left for a
-// follow-up if there's demand.
-func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType, awsAccountId, oidcIssuer string, oidcAudiences []any, samlMetadata string) {
+// Aws, Oidc, Saml, or X509 should be set; the rest return zero values. For
+// X.509 providers, x509TrustAnchorCount reports how many trust anchors are
+// configured in the provider's trust store.
+func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType, awsAccountId, oidcIssuer string, oidcAudiences []any, samlMetadata string, x509TrustAnchorCount int) {
 	oidcAudiences = []any{}
 	switch {
 	case p.Aws != nil:
@@ -198,6 +198,9 @@ func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType
 		samlMetadata = p.Saml.IdpMetadataXml
 	case p.X509 != nil:
 		providerType = "x509"
+		if p.X509.TrustStore != nil {
+			x509TrustAnchorCount = len(p.X509.TrustStore.TrustAnchors)
+		}
 	}
 	return
 }

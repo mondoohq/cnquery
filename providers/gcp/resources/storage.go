@@ -467,10 +467,20 @@ func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
+		var conditionTitle, conditionExpression, conditionDescription string
+		if b.Condition != nil {
+			conditionTitle = b.Condition.Title
+			conditionExpression = b.Condition.Expression
+			conditionDescription = b.Condition.Description
+		}
+
 		mqlServiceaccount, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(bucketName + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"id":                   llx.StringData(bucketName + "-" + strconv.Itoa(i)),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(conditionTitle),
+			"conditionExpression":  llx.StringData(conditionExpression),
+			"conditionDescription": llx.StringData(conditionDescription),
 		})
 		if err != nil {
 			return nil, err

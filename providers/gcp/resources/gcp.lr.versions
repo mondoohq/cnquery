@@ -117,6 +117,7 @@ gcp.orgPolicy.customConstraint.methodTypes 13.15.1
 gcp.orgPolicy.customConstraint.name 13.15.1
 gcp.orgPolicy.customConstraint.resourceTypes 13.15.1
 gcp.orgPolicy.customConstraint.updated 13.15.1
+gcp.orgPolicy.dryRunOnly 13.18.1
 gcp.orgPolicy.dryRunSpec 11.5.1
 gcp.orgPolicy.etag 11.5.1
 gcp.orgPolicy.id 11.5.1
@@ -331,6 +332,7 @@ gcp.project.apiKey.resourcePath 9.0.0
 gcp.project.apiKey.restrictions 9.0.0
 gcp.project.apiKey.restrictions.androidKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.apiTargets 9.0.0
+gcp.project.apiKey.restrictions.appliedRestrictionTypes 13.18.1
 gcp.project.apiKey.restrictions.browserKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.iosKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.parentResourcePath 9.0.0
@@ -3122,7 +3124,9 @@ gcp.project.iamService.serviceAccount.disabled 9.0.0
 gcp.project.iamService.serviceAccount.displayName 9.0.0
 gcp.project.iamService.serviceAccount.email 9.0.0
 gcp.project.iamService.serviceAccount.hasUserManagedKeys 13.12.2
+gcp.project.iamService.serviceAccount.isDefault 13.18.1
 gcp.project.iamService.serviceAccount.key 9.0.0
+gcp.project.iamService.serviceAccount.key.ageInDays 13.18.1
 gcp.project.iamService.serviceAccount.key.disabled 9.0.0
 gcp.project.iamService.serviceAccount.key.keyAlgorithm 9.0.0
 gcp.project.iamService.serviceAccount.key.keyOrigin 9.0.0
@@ -3165,6 +3169,7 @@ gcp.project.iamService.workloadIdentityPool.provider.providerId 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.providerType 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.state 13.13.4
+gcp.project.iamService.workloadIdentityPool.provider.x509TrustAnchorCount 13.18.1
 gcp.project.iamService.workloadIdentityPool.providers 13.13.4
 gcp.project.iamService.workloadIdentityPool.state 13.13.4
 gcp.project.iamService.workloadIdentityPools 13.13.4
@@ -4565,6 +4570,9 @@ gcp.resourcemanager.auditConfig.logConfig.id 11.5.1
 gcp.resourcemanager.auditConfig.logConfig.logType 11.5.1
 gcp.resourcemanager.auditConfig.service 11.5.1
 gcp.resourcemanager.binding 9.0.0
+gcp.resourcemanager.binding.conditionDescription 13.18.1
+gcp.resourcemanager.binding.conditionExpression 13.18.1
+gcp.resourcemanager.binding.conditionTitle 13.18.1
 gcp.resourcemanager.binding.id 9.0.0
 gcp.resourcemanager.binding.members 9.0.0
 gcp.resourcemanager.binding.role 9.0.0

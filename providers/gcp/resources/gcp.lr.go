@@ -3131,6 +3131,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.resourcemanager.binding.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerBinding).GetRole()).ToDataRes(types.String)
 	},
+	"gcp.resourcemanager.binding.conditionTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpResourcemanagerBinding).GetConditionTitle()).ToDataRes(types.String)
+	},
+	"gcp.resourcemanager.binding.conditionExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpResourcemanagerBinding).GetConditionExpression()).ToDataRes(types.String)
+	},
+	"gcp.resourcemanager.binding.conditionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpResourcemanagerBinding).GetConditionDescription()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6917,6 +6926,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetUnrestricted()).ToDataRes(types.Bool)
 	},
+	"gcp.project.apiKey.restrictions.appliedRestrictionTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAppliedRestrictionTypes()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.loggingservice.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingservice).GetProjectId()).ToDataRes(types.String)
 	},
@@ -7145,6 +7157,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.serviceAccount.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetLastAuthenticatedTime()).ToDataRes(types.Time)
 	},
+	"gcp.project.iamService.serviceAccount.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetIsDefault()).ToDataRes(types.Bool)
+	},
 	"gcp.project.iamService.serviceAccount.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetName()).ToDataRes(types.String)
 	},
@@ -7171,6 +7186,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetLastAuthenticatedTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.iamService.serviceAccount.key.ageInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetAgeInDays()).ToDataRes(types.Int)
 	},
 	"gcp.project.iamService.denyPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetName()).ToDataRes(types.String)
@@ -7273,6 +7291,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetSamlIdpMetadataXml()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.x509TrustAnchorCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetX509TrustAnchorCount()).ToDataRes(types.Int)
 	},
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetProjectId()).ToDataRes(types.String)
@@ -10441,6 +10462,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.orgPolicy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicy).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.orgPolicy.dryRunOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetDryRunOnly()).ToDataRes(types.Bool)
 	},
 	"gcp.orgPolicy.constraint.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicyConstraint).GetName()).ToDataRes(types.String)
@@ -16404,6 +16428,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpResourcemanagerBinding).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.resourcemanager.binding.conditionTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpResourcemanagerBinding).ConditionTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.resourcemanager.binding.conditionExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpResourcemanagerBinding).ConditionExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.resourcemanager.binding.conditionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpResourcemanagerBinding).ConditionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).__id, ok = v.Value.(string)
 		return
@@ -21884,6 +21920,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKeyRestrictions).Unrestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.restrictions.appliedRestrictionTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).AppliedRestrictionTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingservice).__id, ok = v.Value.(string)
 		return
@@ -22228,6 +22268,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamServiceServiceAccount).LastAuthenticatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.serviceAccount.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.serviceAccount.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).__id, ok = v.Value.(string)
 		return
@@ -22266,6 +22310,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).LastAuthenticatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.key.ageInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).AgeInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.denyPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22414,6 +22462,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).SamlIdpMetadataXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.x509TrustAnchorCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).X509TrustAnchorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27030,6 +27082,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.orgPolicy.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrgPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.dryRunOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).DryRunOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.orgPolicy.constraint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37737,9 +37793,12 @@ type mqlGcpResourcemanagerBinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpResourcemanagerBindingInternal it will be used here
-	Id      plugin.TValue[string]
-	Members plugin.TValue[[]any]
-	Role    plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Members              plugin.TValue[[]any]
+	Role                 plugin.TValue[string]
+	ConditionTitle       plugin.TValue[string]
+	ConditionExpression  plugin.TValue[string]
+	ConditionDescription plugin.TValue[string]
 }
 
 // createGcpResourcemanagerBinding creates a new instance of this resource
@@ -37789,6 +37848,18 @@ func (c *mqlGcpResourcemanagerBinding) GetMembers() *plugin.TValue[[]any] {
 
 func (c *mqlGcpResourcemanagerBinding) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+func (c *mqlGcpResourcemanagerBinding) GetConditionTitle() *plugin.TValue[string] {
+	return &c.ConditionTitle
+}
+
+func (c *mqlGcpResourcemanagerBinding) GetConditionExpression() *plugin.TValue[string] {
+	return &c.ConditionExpression
+}
+
+func (c *mqlGcpResourcemanagerBinding) GetConditionDescription() *plugin.TValue[string] {
+	return &c.ConditionDescription
 }
 
 // mqlGcpProjectComputeService for the gcp.project.computeService resource
@@ -50300,13 +50371,14 @@ type mqlGcpProjectApiKeyRestrictions struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectApiKeyRestrictionsInternal it will be used here
-	ParentResourcePath     plugin.TValue[string]
-	AndroidKeyRestrictions plugin.TValue[any]
-	ApiTargets             plugin.TValue[[]any]
-	BrowserKeyRestrictions plugin.TValue[any]
-	IosKeyRestrictions     plugin.TValue[any]
-	ServerKeyRestrictions  plugin.TValue[any]
-	Unrestricted           plugin.TValue[bool]
+	ParentResourcePath      plugin.TValue[string]
+	AndroidKeyRestrictions  plugin.TValue[any]
+	ApiTargets              plugin.TValue[[]any]
+	BrowserKeyRestrictions  plugin.TValue[any]
+	IosKeyRestrictions      plugin.TValue[any]
+	ServerKeyRestrictions   plugin.TValue[any]
+	Unrestricted            plugin.TValue[bool]
+	AppliedRestrictionTypes plugin.TValue[[]any]
 }
 
 // createGcpProjectApiKeyRestrictions creates a new instance of this resource
@@ -50373,6 +50445,12 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TVa
 func (c *mqlGcpProjectApiKeyRestrictions) GetUnrestricted() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Unrestricted, func() (bool, error) {
 		return c.unrestricted()
+	})
+}
+
+func (c *mqlGcpProjectApiKeyRestrictions) GetAppliedRestrictionTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppliedRestrictionTypes, func() ([]any, error) {
+		return c.appliedRestrictionTypes()
 	})
 }
 
@@ -51261,6 +51339,7 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	HasUserManagedKeys    plugin.TValue[bool]
 	ActiveUserManagedKeys plugin.TValue[[]any]
 	LastAuthenticatedTime plugin.TValue[*time.Time]
+	IsDefault             plugin.TValue[bool]
 }
 
 // createGcpProjectIamServiceServiceAccount creates a new instance of this resource
@@ -51376,6 +51455,12 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetLastAuthenticatedTime() *plug
 	})
 }
 
+func (c *mqlGcpProjectIamServiceServiceAccount) GetIsDefault() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsDefault, func() (bool, error) {
+		return c.isDefault()
+	})
+}
+
 // mqlGcpProjectIamServiceServiceAccountKey for the gcp.project.iamService.serviceAccount.key resource
 type mqlGcpProjectIamServiceServiceAccountKey struct {
 	MqlRuntime *plugin.Runtime
@@ -51390,6 +51475,7 @@ type mqlGcpProjectIamServiceServiceAccountKey struct {
 	UserManaged           plugin.TValue[bool]
 	Disabled              plugin.TValue[bool]
 	LastAuthenticatedTime plugin.TValue[*time.Time]
+	AgeInDays             plugin.TValue[int64]
 }
 
 // createGcpProjectIamServiceServiceAccountKey creates a new instance of this resource
@@ -51464,6 +51550,12 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetLastAuthenticatedTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LastAuthenticatedTime, func() (*time.Time, error) {
 		return c.lastAuthenticatedTime()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccountKey) GetAgeInDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AgeInDays, func() (int64, error) {
+		return c.ageInDays()
 	})
 }
 
@@ -51678,6 +51770,7 @@ type mqlGcpProjectIamServiceWorkloadIdentityPoolProvider struct {
 	OidcIssuerUri        plugin.TValue[string]
 	OidcAllowedAudiences plugin.TValue[[]any]
 	SamlIdpMetadataXml   plugin.TValue[string]
+	X509TrustAnchorCount plugin.TValue[int64]
 }
 
 // createGcpProjectIamServiceWorkloadIdentityPoolProvider creates a new instance of this resource
@@ -51779,6 +51872,10 @@ func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetOidcAllowedAudi
 
 func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetSamlIdpMetadataXml() *plugin.TValue[string] {
 	return &c.SamlIdpMetadataXml
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetX509TrustAnchorCount() *plugin.TValue[int64] {
+	return &c.X509TrustAnchorCount
 }
 
 // mqlGcpProjectCloudFunction for the gcp.project.cloudFunction resource
@@ -62271,6 +62368,7 @@ type mqlGcpOrgPolicy struct {
 	DryRunSpec     plugin.TValue[any]
 	Etag           plugin.TValue[string]
 	UpdatedAt      plugin.TValue[*time.Time]
+	DryRunOnly     plugin.TValue[bool]
 }
 
 // createGcpOrgPolicy creates a new instance of this resource
@@ -62336,6 +62434,12 @@ func (c *mqlGcpOrgPolicy) GetEtag() *plugin.TValue[string] {
 
 func (c *mqlGcpOrgPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlGcpOrgPolicy) GetDryRunOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DryRunOnly, func() (bool, error) {
+		return c.dryRunOnly()
+	})
 }
 
 // mqlGcpOrgPolicyConstraint for the gcp.orgPolicy.constraint resource

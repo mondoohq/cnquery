@@ -144,10 +144,20 @@ func (g *mqlGcpOrganization) iamPolicy() ([]any, error) {
 
 	res := make([]any, 0, len(policy.Bindings))
 	for i, b := range policy.Bindings {
+		condTitle, condExpr, condDesc := "", "", ""
+		if b.Condition != nil {
+			condTitle = b.Condition.Title
+			condExpr = b.Condition.Expression
+			condDesc = b.Condition.Description
+		}
+
 		mqlServiceaccount, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(name + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"id":                   llx.StringData(name + "-" + strconv.Itoa(i)),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(condTitle),
+			"conditionExpression":  llx.StringData(condExpr),
+			"conditionDescription": llx.StringData(condDesc),
 		})
 		if err != nil {
 			return nil, err

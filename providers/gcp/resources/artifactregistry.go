@@ -258,9 +258,12 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) iamPolicy() ([]any, err
 	res := make([]any, 0, len(policy.Bindings))
 	for _, b := range policy.Bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(repoPath + "/" + b.Role),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"id":                   llx.StringData(repoPath + "/" + b.Role),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),
+			"conditionExpression":  llx.StringData(b.GetCondition().GetExpression()),
+			"conditionDescription": llx.StringData(b.GetCondition().GetDescription()),
 		})
 		if err != nil {
 			return nil, err

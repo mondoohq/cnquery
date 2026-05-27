@@ -903,6 +903,12 @@ private gcp.resourcemanager.binding {
   members []string
   // Role assigned to the list of members or principals
   role string
+  // Title of the IAM condition that scopes this binding (empty when the binding is unconditional)
+  conditionTitle string
+  // CEL expression of the IAM condition that scopes this binding (empty when the binding is unconditional)
+  conditionExpression string
+  // Description of the IAM condition that scopes this binding
+  conditionDescription string
 }
 
 // Google Cloud (GCP) Compute Engine
@@ -4702,6 +4708,14 @@ private gcp.project.apiKey.restrictions {
   serverKeyRestrictions dict
   // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). CIS flags unrestricted keys.
   unrestricted() bool
+  // Names of the restriction categories actually set on the key
+  //
+  // Contains one entry for each configured category: `androidKeyRestrictions`,
+  // `browserKeyRestrictions`, `iosKeyRestrictions`, `serverKeyRestrictions`,
+  // and `apiTargets`. An empty list means the key is fully unrestricted; a
+  // partial list surfaces keys that restrict the caller but not the callable
+  // APIs (or vice versa).
+  appliedRestrictionTypes() []string
 }
 
 // Google Cloud (GCP) Cloud Logging
@@ -4952,6 +4966,8 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   activeUserManagedKeys() []gcp.project.iamService.serviceAccount.key
   // Timestamp when the service account was last used to authenticate (from Policy Intelligence)
   lastAuthenticatedTime() time
+  // Whether this is a Google-created default service account (default Compute or App Engine SA), which holds broad project-editor permissions by default
+  isDefault() bool
 }
 
 // Google Cloud (GCP) IAM service account key
@@ -4982,6 +4998,8 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   disabled bool
   // Timestamp when the key was last used to authenticate (from Policy Intelligence)
   lastAuthenticatedTime() time
+  // Age of the key in whole days, computed from `validAfterTime` to now (the field CIS key-rotation audits compare against a 90-day threshold)
+  ageInDays() int
 }
 
 // Google Cloud (GCP) IAM deny policy
@@ -5056,9 +5074,9 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
 // `attributeCondition` is the typical misconfiguration that turns federation
 // into anyone-can-impersonate-anyone. The `providerType` field is the
 // discriminator (`aws`, `oidc`, `saml`, or `x509`); the matching `aws*` /
-// `oidc*` / `saml*` flat fields are populated for those types. X.509
-// trust-store config is not yet surfaced — `providerType=="x509"` flags the
-// family but no per-family detail is available.
+// `oidc*` / `saml*` flat fields are populated for those types, and
+// `x509TrustAnchorCount` reports how many trust anchors an `x509` provider
+// configures.
 private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayName providerType state") {
   // Project ID
   projectId string
@@ -5094,6 +5112,8 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   oidcAllowedAudiences []string
   // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
   samlIdpMetadataXml string
+  // For X.509 providers: the number of trust anchors configured in the provider's trust store (0 for non-X.509 providers)
+  x509TrustAnchorCount int
 }
 
 // Google Cloud (GCP) Cloud Function (1st gen)
@@ -8183,6 +8203,8 @@ private gcp.orgPolicy @defaults("constraintName") {
   etag string
   // Time last updated
   updatedAt time
+  // Whether the policy only has a dry-run spec and no enforced live spec, meaning it is evaluated for testing but does not actually enforce
+  dryRunOnly() bool
 }
 
 // Google Cloud (GCP) Organization policy constraint

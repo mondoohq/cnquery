@@ -344,9 +344,12 @@ func (g *mqlGcpProjectBigtableServiceInstance) iamPolicy() ([]any, error) {
 	for _, role := range policy.Roles() {
 		members := policy.Members(role)
 		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(resourcePath + "/" + string(role)),
-			"role":    llx.StringData(string(role)),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+			"id":                   llx.StringData(resourcePath + "/" + string(role)),
+			"role":                 llx.StringData(string(role)),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+			"conditionTitle":       llx.StringData(""),
+			"conditionExpression":  llx.StringData(""),
+			"conditionDescription": llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err

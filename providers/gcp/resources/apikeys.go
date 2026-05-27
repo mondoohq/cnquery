@@ -253,6 +253,41 @@ func (g *mqlGcpProjectApiKeyRestrictions) unrestricted() (bool, error) {
 		len(g.ApiTargets.Data) == 0, nil
 }
 
+func (g *mqlGcpProjectApiKeyRestrictions) appliedRestrictionTypes() ([]any, error) {
+	if g.AndroidKeyRestrictions.Error != nil {
+		return nil, g.AndroidKeyRestrictions.Error
+	}
+	if g.BrowserKeyRestrictions.Error != nil {
+		return nil, g.BrowserKeyRestrictions.Error
+	}
+	if g.IosKeyRestrictions.Error != nil {
+		return nil, g.IosKeyRestrictions.Error
+	}
+	if g.ServerKeyRestrictions.Error != nil {
+		return nil, g.ServerKeyRestrictions.Error
+	}
+	if g.ApiTargets.Error != nil {
+		return nil, g.ApiTargets.Error
+	}
+	applied := []any{}
+	if g.AndroidKeyRestrictions.Data != nil {
+		applied = append(applied, "androidKeyRestrictions")
+	}
+	if g.BrowserKeyRestrictions.Data != nil {
+		applied = append(applied, "browserKeyRestrictions")
+	}
+	if g.IosKeyRestrictions.Data != nil {
+		applied = append(applied, "iosKeyRestrictions")
+	}
+	if g.ServerKeyRestrictions.Data != nil {
+		applied = append(applied, "serverKeyRestrictions")
+	}
+	if len(g.ApiTargets.Data) > 0 {
+		applied = append(applied, "apiTargets")
+	}
+	return applied, nil
+}
+
 // Always bootstrap through the parent key. apiKeys() populates restrictions
 // via CreateResource (which bypasses Init), so any NewResource call here is
 // a top-level `gcp.project.apiKey.restrictions` query — partial args would

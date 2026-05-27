@@ -3394,10 +3394,20 @@ func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
 func computeIamBindingsToResources(runtime *plugin.Runtime, idPrefix string, bindings []*compute.Binding) ([]any, error) {
 	res := make([]any, 0, len(bindings))
 	for i, b := range bindings {
+		condTitle, condExpr, condDesc := "", "", ""
+		if b.Condition != nil {
+			condTitle = b.Condition.Title
+			condExpr = b.Condition.Expression
+			condDesc = b.Condition.Description
+		}
+
 		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(idPrefix + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(b.Role),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"id":                   llx.StringData(idPrefix + "-" + strconv.Itoa(i)),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(condTitle),
+			"conditionExpression":  llx.StringData(condExpr),
+			"conditionDescription": llx.StringData(condDesc),
 		})
 		if err != nil {
 			return nil, err

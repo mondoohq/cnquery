@@ -22,6 +22,19 @@ func (g *mqlGcpOrgPolicy) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+// dryRunOnly reports whether the policy has a dry-run spec set but no enforced
+// live spec, meaning it is evaluated for testing only and does not actually
+// enforce.
+func (g *mqlGcpOrgPolicy) dryRunOnly() (bool, error) {
+	if g.Spec.Error != nil {
+		return false, g.Spec.Error
+	}
+	if g.DryRunSpec.Error != nil {
+		return false, g.DryRunSpec.Error
+	}
+	return g.DryRunSpec.Data != nil && g.Spec.Data == nil, nil
+}
+
 // listOrgPolicies fetches org policies for a given parent resource.
 // parentResourceName should be "organizations/{id}" or "projects/{id}".
 func listOrgPolicies(runtime *plugin.Runtime, conn *connection.GcpConnection, parentResourceName string) ([]any, error) {
