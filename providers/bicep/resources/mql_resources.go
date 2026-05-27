@@ -612,12 +612,24 @@ func (i *mqlBicepImport) targetFile() (*mqlBicepFile, error) {
 	return f, nil
 }
 
+// cachedTargetFile reads the resolved target file through the generated
+// GetTargetFile getter so resolvedTypes() and resolvedFunctions() share a
+// single resolution (and its connection scan) instead of each re-running
+// targetFile().
+func (i *mqlBicepImport) cachedTargetFile() (*mqlBicepFile, error) {
+	tv := i.GetTargetFile()
+	if tv.Error != nil {
+		return nil, tv.Error
+	}
+	return tv.Data, nil
+}
+
 // resolvedTypes returns the user-defined types this import brings in from its
 // target file: the named subset (filtered by `symbols`) for a named import, or
 // all of the target file's types for a wildcard import. Empty when there is no
 // resolvable target file.
 func (i *mqlBicepImport) resolvedTypes() ([]any, error) {
-	target, err := i.targetFile()
+	target, err := i.cachedTargetFile()
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +658,7 @@ func (i *mqlBicepImport) resolvedTypes() ([]any, error) {
 // import, or all of the target file's functions for a wildcard import. Empty
 // when there is no resolvable target file.
 func (i *mqlBicepImport) resolvedFunctions() ([]any, error) {
-	target, err := i.targetFile()
+	target, err := i.cachedTargetFile()
 	if err != nil {
 		return nil, err
 	}
