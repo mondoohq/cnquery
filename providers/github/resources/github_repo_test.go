@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-github/v87/github"
@@ -146,6 +147,25 @@ func TestPermissionsFromUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := permissionsFromUser(tt.user)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGithubResponseStatus(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want int
+	}{
+		{name: "not found", err: ghErrorResponse(404), want: 404},
+		{name: "forbidden", err: ghErrorResponse(403), want: 403},
+		{name: "ok", err: ghErrorResponse(200), want: 200},
+		{name: "plain error has no status", err: errors.New("boom"), want: 0},
+		{name: "wrapped github error", err: errors.Join(errors.New("ctx"), ghErrorResponse(404)), want: 404},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, githubResponseStatus(tc.err))
 		})
 	}
 }

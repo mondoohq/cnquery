@@ -44,3 +44,34 @@ func TestReposFilter_Both(t *testing.T) {
 	assert.True(t, reposFilter.skipRepo("repo2"))
 	assert.False(t, reposFilter.skipRepo("repo3"))
 }
+
+func TestHandleTargets(t *testing.T) {
+	t.Run("all expands to every discovery target", func(t *testing.T) {
+		got := handleTargets([]string{connection.DiscoveryAll})
+		assert.Equal(t, []string{
+			connection.DiscoveryRepos,
+			connection.DiscoveryUsers,
+			connection.DiscoveryTerraform,
+			connection.DiscoveryK8sManifests,
+		}, got)
+	})
+
+	t.Run("all wins even when mixed with explicit targets", func(t *testing.T) {
+		got := handleTargets([]string{connection.DiscoveryRepos, connection.DiscoveryAll})
+		assert.Equal(t, []string{
+			connection.DiscoveryRepos,
+			connection.DiscoveryUsers,
+			connection.DiscoveryTerraform,
+			connection.DiscoveryK8sManifests,
+		}, got)
+	})
+
+	t.Run("explicit targets pass through unchanged", func(t *testing.T) {
+		in := []string{connection.DiscoveryRepos, connection.DiscoveryUsers}
+		assert.Equal(t, in, handleTargets(in))
+	})
+
+	t.Run("empty stays empty", func(t *testing.T) {
+		assert.Empty(t, handleTargets([]string{}))
+	})
+}
