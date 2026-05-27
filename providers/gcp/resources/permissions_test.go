@@ -160,6 +160,7 @@ var validatedGCPPermissions = []string{
 	"dns.managedZones.list",
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
+	"domains.registrations.list",
 	"essentialcontacts.contacts.list",
 	"eventarc.channels.list",
 	"eventarc.triggers.list",

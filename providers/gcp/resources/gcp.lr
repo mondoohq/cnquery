@@ -830,6 +830,8 @@ gcp.project @defaults("name number") {
   dataplex() gcp.project.dataplexService
   // GCP Workflows resources
   workflows() gcp.project.workflowsService
+  // GCP Cloud Domains resources
+  cloudDomains() gcp.project.cloudDomainsService
 }
 
 // Google Cloud service API
@@ -3182,6 +3184,98 @@ private gcp.project.bigqueryService.reservation @defaults("name slotCapacity edi
   created time
   // Last update timestamp
   updated time
+}
+
+// Google Cloud Domains
+//
+// Use this resource as the entry point for Cloud Domains in the project.
+// It hosts the `registrations` — the domain names registered through Cloud
+// Domains — and `enabled` reports whether the Cloud Domains API is turned
+// on for the project.
+private gcp.project.cloudDomainsService @defaults("projectId") {
+  // Project ID
+  projectId string
+  // Whether the Cloud Domains API is enabled for the project
+  enabled bool
+  // Domain registrations in the project
+  registrations() []gcp.project.cloudDomainsService.registration
+}
+
+// Google Cloud Domains registration
+//
+// Examine a domain registered through Cloud Domains. Surfaces the
+// `domainName`, lifecycle `state`, `expireTime`, and the configuration
+// that matters for domain security: the `transferLockState` (protection
+// against unauthorized transfers), the authoritative `nameServers` and
+// which `dnsProvider` serves them, the DNSSEC `dnssecState` and signing
+// `dsRecords`, the `renewalMethod`, the WHOIS `contactPrivacy` level, and
+// any open `issues`. Selected by its full resource name, for example
+// `projects/my-project/locations/global/registrations/example-com`.
+private gcp.project.cloudDomainsService.registration @defaults("domainName state expireTime") {
+  // Full resource name of the registration
+  id string
+  // Project ID
+  projectId string
+  // Location of the registration
+  location string
+  // Registered domain name
+  domainName string
+  // Registration lifecycle state
+  //
+  // One of REGISTRATION_PENDING, REGISTRATION_FAILED, TRANSFER_PENDING,
+  // TRANSFER_FAILED, ACTIVE, SUSPENDED, EXPORTED, or EXPIRED.
+  state string
+  // Time at which the registration expires
+  expireTime time
+  // Creation timestamp
+  created time
+  // User-provided labels
+  labels map[string]string
+  // Open issues affecting the registration
+  //
+  // May include CONTACT_SUPPORT, UNVERIFIED_EMAIL, or other registry-level
+  // problems that require attention.
+  issues []string
+  // Properties of the registered domain (for example a TRANSFER_LOCKED hint)
+  domainProperties []string
+  // WHOIS contact privacy level
+  //
+  // One of PUBLIC_CONTACT_DATA, PRIVATE_CONTACT_DATA, or
+  // REDACTED_CONTACT_DATA.
+  contactPrivacy string
+  // Configured transfer-lock state guarding against unauthorized transfers
+  //
+  // One of LOCKED, UNLOCKED, or TRANSFER_LOCK_STATE_UNSPECIFIED.
+  transferLockState string
+  // Transfer-lock state currently in effect at the registry
+  //
+  // One of LOCKED or UNLOCKED.
+  effectiveTransferLockState string
+  // Configured renewal behavior
+  //
+  // One of AUTOMATIC_RENEWAL, MANUAL_RENEWAL, or RENEWAL_DISABLED.
+  renewalMethod string
+  // Renewal behavior the registrant prefers
+  //
+  // One of AUTOMATIC_RENEWAL, MANUAL_RENEWAL, or RENEWAL_DISABLED.
+  preferredRenewalMethod string
+  // DNS provider serving the domain
+  //
+  // Either `customDns` (the registrant's own name servers) or
+  // `googleDomainsDns` (name servers provisioned by Cloud Domains).
+  dnsProvider string
+  // Authoritative name servers for the domain
+  nameServers []string
+  // DNSSEC state of the domain
+  //
+  // For Google-managed DNS, one of DS_RECORDS_PUBLISHED,
+  // DS_RECORDS_UNPUBLISHED, or DS_STATE_UNSPECIFIED. Empty when the domain
+  // uses custom DNS without DNSSEC.
+  dnssecState string
+  // DNSSEC delegation-signer records published for the domain
+  //
+  // Each entry exposes `keyTag`, `algorithm`, `digestType`, and `digest`.
+  dsRecords []dict
 }
 
 // Google Cloud (GCP) Cloud DNS

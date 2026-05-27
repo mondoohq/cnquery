@@ -93,6 +93,8 @@ const (
 	ResourceGcpProjectBigqueryServiceRoutine                                           string = "gcp.project.bigqueryService.routine"
 	ResourceGcpProjectBigqueryServiceConnection                                        string = "gcp.project.bigqueryService.connection"
 	ResourceGcpProjectBigqueryServiceReservation                                       string = "gcp.project.bigqueryService.reservation"
+	ResourceGcpProjectCloudDomainsService                                              string = "gcp.project.cloudDomainsService"
+	ResourceGcpProjectCloudDomainsServiceRegistration                                  string = "gcp.project.cloudDomainsService.registration"
 	ResourceGcpProjectDnsService                                                       string = "gcp.project.dnsService"
 	ResourceGcpProjectDnsServiceManagedzone                                            string = "gcp.project.dnsService.managedzone"
 	ResourceGcpProjectDnsServiceRecordset                                              string = "gcp.project.dnsService.recordset"
@@ -742,6 +744,14 @@ func init() {
 		"gcp.project.bigqueryService.reservation": {
 			// to override args, implement: initGcpProjectBigqueryServiceReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectBigqueryServiceReservation,
+		},
+		"gcp.project.cloudDomainsService": {
+			Init:   initGcpProjectCloudDomainsService,
+			Create: createGcpProjectCloudDomainsService,
+		},
+		"gcp.project.cloudDomainsService.registration": {
+			// to override args, implement: initGcpProjectCloudDomainsServiceRegistration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudDomainsServiceRegistration,
 		},
 		"gcp.project.dnsService": {
 			Init:   initGcpProjectDnsService,
@@ -3054,6 +3064,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.workflows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetWorkflows()).ToDataRes(types.Resource("gcp.project.workflowsService"))
+	},
+	"gcp.project.cloudDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetCloudDomains()).ToDataRes(types.Resource("gcp.project.cloudDomainsService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -5508,6 +5521,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.bigqueryService.reservation.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudDomainsService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudDomainsService.registrations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsService).GetRegistrations()).ToDataRes(types.Array(types.Resource("gcp.project.cloudDomainsService.registration")))
+	},
+	"gcp.project.cloudDomainsService.registration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetDomainName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudDomainsService.registration.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudDomainsService.registration.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudDomainsService.registration.issues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetIssues()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.cloudDomainsService.registration.domainProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetDomainProperties()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.cloudDomainsService.registration.contactPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetContactPrivacy()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.transferLockState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetTransferLockState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.effectiveTransferLockState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetEffectiveTransferLockState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.renewalMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetRenewalMethod()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.preferredRenewalMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetPreferredRenewalMethod()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.dnsProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetDnsProvider()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.nameServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetNameServers()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.cloudDomainsService.registration.dnssecState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetDnssecState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudDomainsService.registration.dsRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudDomainsServiceRegistration).GetDsRecords()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.dnsService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsService).GetProjectId()).ToDataRes(types.String)
@@ -16213,6 +16292,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).Workflows, ok = plugin.RawToTValue[*mqlGcpProjectWorkflowsService](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).CloudDomains, ok = plugin.RawToTValue[*mqlGcpProjectCloudDomainsService](v.Value, v.Error)
+		return
+	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpService).__id, ok = v.Value.(string)
 		return
@@ -19703,6 +19786,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.reservation.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceReservation).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudDomainsService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsService).Registrations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.issues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).Issues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.domainProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).DomainProperties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.contactPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).ContactPrivacy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.transferLockState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).TransferLockState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.effectiveTransferLockState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).EffectiveTransferLockState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.renewalMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).RenewalMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.preferredRenewalMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).PreferredRenewalMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.dnsProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).DnsProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.nameServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).NameServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.dnssecState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).DnssecState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudDomainsService.registration.dsRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudDomainsServiceRegistration).DsRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36153,6 +36332,7 @@ type mqlGcpProject struct {
 	NetworkSecurity          plugin.TValue[*mqlGcpProjectNetworkSecurityService]
 	Dataplex                 plugin.TValue[*mqlGcpProjectDataplexService]
 	Workflows                plugin.TValue[*mqlGcpProjectWorkflowsService]
+	CloudDomains             plugin.TValue[*mqlGcpProjectCloudDomainsService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -37325,6 +37505,22 @@ func (c *mqlGcpProject) GetWorkflows() *plugin.TValue[*mqlGcpProjectWorkflowsSer
 		}
 
 		return c.workflows()
+	})
+}
+
+func (c *mqlGcpProject) GetCloudDomains() *plugin.TValue[*mqlGcpProjectCloudDomainsService] {
+	return plugin.GetOrCompute[*mqlGcpProjectCloudDomainsService](&c.CloudDomains, func() (*mqlGcpProjectCloudDomainsService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "cloudDomains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectCloudDomainsService), nil
+			}
+		}
+
+		return c.cloudDomains()
 	})
 }
 
@@ -44985,6 +45181,211 @@ func (c *mqlGcpProjectBigqueryServiceReservation) GetCreated() *plugin.TValue[*t
 
 func (c *mqlGcpProjectBigqueryServiceReservation) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectCloudDomainsService for the gcp.project.cloudDomainsService resource
+type mqlGcpProjectCloudDomainsService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudDomainsServiceInternal it will be used here
+	ProjectId     plugin.TValue[string]
+	Enabled       plugin.TValue[bool]
+	Registrations plugin.TValue[[]any]
+}
+
+// createGcpProjectCloudDomainsService creates a new instance of this resource
+func createGcpProjectCloudDomainsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudDomainsService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudDomainsService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudDomainsService) MqlName() string {
+	return "gcp.project.cloudDomainsService"
+}
+
+func (c *mqlGcpProjectCloudDomainsService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudDomainsService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudDomainsService) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGcpProjectCloudDomainsService) GetRegistrations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Registrations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudDomainsService", c.__id, "registrations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.registrations()
+	})
+}
+
+// mqlGcpProjectCloudDomainsServiceRegistration for the gcp.project.cloudDomainsService.registration resource
+type mqlGcpProjectCloudDomainsServiceRegistration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudDomainsServiceRegistrationInternal it will be used here
+	Id                         plugin.TValue[string]
+	ProjectId                  plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	DomainName                 plugin.TValue[string]
+	State                      plugin.TValue[string]
+	ExpireTime                 plugin.TValue[*time.Time]
+	Created                    plugin.TValue[*time.Time]
+	Labels                     plugin.TValue[map[string]any]
+	Issues                     plugin.TValue[[]any]
+	DomainProperties           plugin.TValue[[]any]
+	ContactPrivacy             plugin.TValue[string]
+	TransferLockState          plugin.TValue[string]
+	EffectiveTransferLockState plugin.TValue[string]
+	RenewalMethod              plugin.TValue[string]
+	PreferredRenewalMethod     plugin.TValue[string]
+	DnsProvider                plugin.TValue[string]
+	NameServers                plugin.TValue[[]any]
+	DnssecState                plugin.TValue[string]
+	DsRecords                  plugin.TValue[[]any]
+}
+
+// createGcpProjectCloudDomainsServiceRegistration creates a new instance of this resource
+func createGcpProjectCloudDomainsServiceRegistration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudDomainsServiceRegistration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudDomainsService.registration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) MqlName() string {
+	return "gcp.project.cloudDomainsService.registration"
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetIssues() *plugin.TValue[[]any] {
+	return &c.Issues
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetDomainProperties() *plugin.TValue[[]any] {
+	return &c.DomainProperties
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetContactPrivacy() *plugin.TValue[string] {
+	return &c.ContactPrivacy
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetTransferLockState() *plugin.TValue[string] {
+	return &c.TransferLockState
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetEffectiveTransferLockState() *plugin.TValue[string] {
+	return &c.EffectiveTransferLockState
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetRenewalMethod() *plugin.TValue[string] {
+	return &c.RenewalMethod
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetPreferredRenewalMethod() *plugin.TValue[string] {
+	return &c.PreferredRenewalMethod
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetDnsProvider() *plugin.TValue[string] {
+	return &c.DnsProvider
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetNameServers() *plugin.TValue[[]any] {
+	return &c.NameServers
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetDnssecState() *plugin.TValue[string] {
+	return &c.DnssecState
+}
+
+func (c *mqlGcpProjectCloudDomainsServiceRegistration) GetDsRecords() *plugin.TValue[[]any] {
+	return &c.DsRecords
 }
 
 // mqlGcpProjectDnsService for the gcp.project.dnsService resource

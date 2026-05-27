@@ -57,6 +57,7 @@ const (
 	service_networksecurity     = "networksecurity.googleapis.com"
 	service_dataplex            = "dataplex.googleapis.com"
 	service_workflows           = "workflows.googleapis.com"
+	service_clouddomains        = "domains.googleapis.com"
 )
 
 func serviceName(name string) string {
