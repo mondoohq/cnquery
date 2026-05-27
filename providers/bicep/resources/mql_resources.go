@@ -246,4 +246,5 @@ var (
 	_ plugin.Resource = (*mqlBicepResource)(nil)
 	_ plugin.Resource = (*mqlBicepModule)(nil)
 	_ plugin.Resource = (*mqlBicepOutput)(nil)
+	_ plugin.Resource = (*mqlBicepExpression)(nil)
 )

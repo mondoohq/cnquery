@@ -387,6 +387,9 @@ func (p *exprParser) parseNumber() *exprNode {
 		digits = true
 	}
 	if !digits {
+		// Rewind: a bare '-' (e.g. in an unsupported binary expression like
+		// `a - b`) is not a number, so leave the cursor where we found it.
+		p.pos = start
 		return nil
 	}
 	return &exprNode{kind: exprKindLiteral, raw: p.src[start:p.pos]}
