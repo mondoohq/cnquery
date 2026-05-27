@@ -17,16 +17,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14
-	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.16
+	github.com/aws/aws-sdk-go-v2/service/apprunner v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.7
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.66.2
-	github.com/aws/aws-sdk-go-v2/service/backup v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/batch v1.64.3
+	github.com/aws/aws-sdk-go-v2/service/backup v1.57.0
+	github.com/aws/aws-sdk-go-v2/service/batch v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.0
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.6
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.7
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.11
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.25
@@ -68,9 +68,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/glue v1.142.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.10
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.7
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.7
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.3
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.22
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.118.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.8
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.101.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.70.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.249.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.24
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.15
