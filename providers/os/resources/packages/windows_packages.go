@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -804,6 +805,21 @@ func normalizeMsSqlVersion(version string) string {
 	return m[1] + ".0." + m[3] + "." + m[4]
 }
 
+// sanitizePackageField removes control characters (e.g. \r, \n, \t) from a
+// package name or version and trims surrounding whitespace. Windows registry
+// DisplayName/DisplayVersion values occasionally contain trailing control
+// characters, which produce invalid purls such as
+// "pkg:windows/windows/Foo%0D%0A@1.2.3" and fail to parse as URLs.
+func sanitizePackageField(s string) string {
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, s)
+	return strings.TrimSpace(s)
+}
+
 // createPackage creates a new package with the given parameters
 func createPackage(name, version, format, arch, publisher, installLocation string, platform *inventory.Platform) *Package {
 	purlType := purl.TypeWindows
@@ -813,6 +829,11 @@ func createPackage(name, version, format, arch, publisher, installLocation strin
 
 	// replace non-breaking spaces with regular spaces
 	name = strings.ReplaceAll(name, "\u00a0", " ")
+	// Windows registry values can carry trailing control characters (e.g. \r\n).
+	// These break purl generation ("net/url: invalid control character in URL"),
+	// so strip control characters and surrounding whitespace from name and version.
+	name = sanitizePackageField(name)
+	version = sanitizePackageField(version)
 	pkg := &Package{
 		Name:    name,
 		Version: version,

@@ -4,6 +4,7 @@
 package packages
 
 import (
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -874,6 +875,35 @@ func TestCreatePackage(t *testing.T) {
 
 		// Here we check that the name is replaced with a regular space
 		assert.Equal(t, "GDR 2042 für SQL Server 2017 (KB5014354) (64-bit)", pkg.Name)
+	})
+
+	t.Run("create package with control characters in name produces a valid purl", func(t *testing.T) {
+		// Regression test for https://github.com/mondoohq/mql/issues/7975
+		// Windows registry DisplayName values can carry trailing \r\n, which
+		// previously leaked into the purl and failed with
+		// "net/url: invalid control character in URL".
+		pkg := createPackage("Arcserve UDP Host-Based VM Backup VM-Integrationsdienst\r\n", "8.0.5628.430", "windows/app", "x86_64", "Arcserve", "", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		// The control characters must be stripped from the name...
+		assert.Equal(t, "Arcserve UDP Host-Based VM Backup VM-Integrationsdienst", pkg.Name)
+
+		// ...and the resulting purl must be free of control characters and parseable as a URL.
+		assert.NotContains(t, pkg.PUrl, "\r")
+		assert.NotContains(t, pkg.PUrl, "\n")
+		assert.NotContains(t, pkg.PUrl, "%0D")
+		assert.NotContains(t, pkg.PUrl, "%0A")
+		_, err := url.Parse(pkg.PUrl)
+		assert.NoError(t, err, "purl must parse as a URL")
+	})
+
+	t.Run("create package strips control characters from version", func(t *testing.T) {
+		pkg := createPackage("SomeApp", "1.2.3\r\n", "windows/app", "x86_64", "Vendor", "", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+
+		assert.Equal(t, "1.2.3", pkg.Version)
+		assert.NotContains(t, pkg.PUrl, "%0D")
+		assert.NotContains(t, pkg.PUrl, "%0A")
 	})
 }
 
