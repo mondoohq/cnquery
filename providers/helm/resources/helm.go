@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/rs/zerolog/log"
@@ -248,11 +249,19 @@ func mergeRenderValues(ro connection.RenderOptions) (map[string]any, error) {
 	return base, nil
 }
 
+// valueFileHTTPClient bounds remote values-file fetches so a slow server
+// can't hang the query indefinitely.
+var valueFileHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+// maxValueFileSize caps a remote values/file override (10 MiB) so an
+// oversized response can't exhaust memory.
+const maxValueFileSize = 10 << 20
+
 // readValueFile reads a values/file override from a local path or an
 // http(s) URL.
 func readValueFile(ref string) ([]byte, error) {
 	if strings.HasPrefix(ref, "http://") || strings.HasPrefix(ref, "https://") {
-		resp, err := http.Get(ref) //nolint:gosec // user-supplied values URL, same trust model as helm -f
+		resp, err := valueFileHTTPClient.Get(ref) //nolint:gosec // user-supplied values URL, same trust model as helm -f
 		if err != nil {
 			return nil, err
 		}
@@ -260,7 +269,7 @@ func readValueFile(ref string) ([]byte, error) {
 		if resp.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("failed to fetch values file %q: status %d", ref, resp.StatusCode)
 		}
-		return io.ReadAll(resp.Body)
+		return io.ReadAll(io.LimitReader(resp.Body, maxValueFileSize))
 	}
 	return os.ReadFile(ref)
 }
@@ -441,12 +450,6 @@ type mqlHelmDependencyInternal struct {
 	parentChart *mqlHelmChart
 }
 
-// newMqlHelmDependency materializes a chart.Dependency. parent is the
-// chart that declared (or locked) it, used by resolvedVersion() and
-// chart() to reach the parent's lock file and vendored subcharts.
-// idScope ("dep" for declared dependencies, "lock" for Chart.lock
-// entries) keeps a declared dependency and its locked counterpart from
-// colliding on the resource cache.
 // renderedValues exposes the coalesced values (chart defaults merged
 // with -f/--set overrides) that drove the render, distinct from values()
 // which is always the bundled values.yaml.
@@ -559,6 +562,12 @@ func (l *mqlHelmChartDependencyLock) dependencies() ([]any, error) {
 	return out, nil
 }
 
+// newMqlHelmDependency materializes a chart.Dependency. parent is the
+// chart that declared (or locked) it, used by resolvedVersion() and
+// chart() to reach the parent's lock file and vendored subcharts.
+// idScope ("dep" for declared dependencies, "lock" for Chart.lock
+// entries) keeps a declared dependency and its locked counterpart from
+// colliding on the resource cache.
 func newMqlHelmDependency(parent *mqlHelmChart, dep *chart.Dependency, idScope string) (*mqlHelmDependency, error) {
 	tags := convert.SliceAnyToInterface(dep.Tags)
 

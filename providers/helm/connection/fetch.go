@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
@@ -167,7 +168,16 @@ func resolveChartInRepo(repoURL, chartName, version, username, password string) 
 	return chartURL, nil
 }
 
-// httpGetBytes fetches a URL with optional basic auth.
+// chartHTTPClient bounds remote chart/index fetches so a slow or stalled
+// repository can't hang the connection indefinitely.
+var chartHTTPClient = &http.Client{Timeout: 60 * time.Second}
+
+// maxChartDownloadSize caps a downloaded chart archive or repository index
+// (128 MiB) so a misbehaving repo can't exhaust memory.
+const maxChartDownloadSize = 128 << 20
+
+// httpGetBytes fetches a URL with optional basic auth, a request timeout,
+// and a bounded read.
 func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, rawURL, nil)
 	if err != nil {
@@ -176,7 +186,7 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	if username != "" || password != "" {
 		req.SetBasicAuth(username, password)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := chartHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +194,7 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch %q: status %d", rawURL, resp.StatusCode)
 	}
-	return io.ReadAll(resp.Body)
+	return io.ReadAll(io.LimitReader(resp.Body, maxChartDownloadSize))
 }
 
 // lastPathSegment returns the final path segment of a registry reference,
