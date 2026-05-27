@@ -22,6 +22,7 @@ const (
 	ResourceBicepResource         string = "bicep.resource"
 	ResourceBicepModule           string = "bicep.module"
 	ResourceBicepOutput           string = "bicep.output"
+	ResourceBicepExpression       string = "bicep.expression"
 	ResourceBicepTemplate         string = "bicep.template"
 	ResourceBicepTemplateResource string = "bicep.template.resource"
 )
@@ -57,6 +58,10 @@ func init() {
 		"bicep.output": {
 			// to override args, implement: initBicepOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createBicepOutput,
+		},
+		"bicep.expression": {
+			// to override args, implement: initBicepExpression(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBicepExpression,
 		},
 		"bicep.template": {
 			// to override args, implement: initBicepTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -206,6 +211,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.variable.expression": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepVariable).GetExpression()).ToDataRes(types.String)
 	},
+	"bicep.variable.expressionTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepVariable).GetExpressionTree()).ToDataRes(types.Resource("bicep.expression"))
+	},
 	"bicep.variable.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepVariable).GetDescription()).ToDataRes(types.String)
 	},
@@ -281,8 +289,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.output.expression": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetExpression()).ToDataRes(types.String)
 	},
+	"bicep.output.expressionTree": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetExpressionTree()).ToDataRes(types.Resource("bicep.expression"))
+	},
 	"bicep.output.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetDescription()).ToDataRes(types.String)
+	},
+	"bicep.expression.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetKind()).ToDataRes(types.String)
+	},
+	"bicep.expression.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetRaw()).ToDataRes(types.String)
+	},
+	"bicep.expression.functionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetFunctionName()).ToDataRes(types.String)
+	},
+	"bicep.expression.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetArgs()).ToDataRes(types.Array(types.Resource("bicep.expression")))
+	},
+	"bicep.expression.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetTarget()).ToDataRes(types.String)
+	},
+	"bicep.expression.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetPath()).ToDataRes(types.Array(types.String))
+	},
+	"bicep.expression.segments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepExpression).GetSegments()).ToDataRes(types.Array(types.Resource("bicep.expression")))
 	},
 	"bicep.template.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepTemplate).GetSchema()).ToDataRes(types.String)
@@ -443,6 +475,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepVariable).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.variable.expressionTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepVariable).ExpressionTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
+		return
+	},
 	"bicep.variable.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepVariable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -555,8 +591,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepOutput).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.output.expressionTree": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).ExpressionTree, ok = plugin.RawToTValue[*mqlBicepExpression](v.Value, v.Error)
+		return
+	},
 	"bicep.output.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepOutput).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).__id, ok = v.Value.(string)
+		return
+	},
+	"bicep.expression.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.functionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).FunctionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Path, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.expression.segments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepExpression).Segments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -964,9 +1036,10 @@ type mqlBicepVariable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlBicepVariableInternal it will be used here
-	Name        plugin.TValue[string]
-	Expression  plugin.TValue[string]
-	Description plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Expression     plugin.TValue[string]
+	ExpressionTree plugin.TValue[*mqlBicepExpression]
+	Description    plugin.TValue[string]
 }
 
 // createBicepVariable creates a new instance of this resource
@@ -1007,6 +1080,22 @@ func (c *mqlBicepVariable) GetName() *plugin.TValue[string] {
 
 func (c *mqlBicepVariable) GetExpression() *plugin.TValue[string] {
 	return &c.Expression
+}
+
+func (c *mqlBicepVariable) GetExpressionTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.ExpressionTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.variable", c.__id, "expressionTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.expressionTree()
+	})
 }
 
 func (c *mqlBicepVariable) GetDescription() *plugin.TValue[string] {
@@ -1201,10 +1290,11 @@ type mqlBicepOutput struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlBicepOutputInternal it will be used here
-	Name        plugin.TValue[string]
-	Type        plugin.TValue[string]
-	Expression  plugin.TValue[string]
-	Description plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	Expression     plugin.TValue[string]
+	ExpressionTree plugin.TValue[*mqlBicepExpression]
+	Description    plugin.TValue[string]
 }
 
 // createBicepOutput creates a new instance of this resource
@@ -1251,8 +1341,122 @@ func (c *mqlBicepOutput) GetExpression() *plugin.TValue[string] {
 	return &c.Expression
 }
 
+func (c *mqlBicepOutput) GetExpressionTree() *plugin.TValue[*mqlBicepExpression] {
+	return plugin.GetOrCompute[*mqlBicepExpression](&c.ExpressionTree, func() (*mqlBicepExpression, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.output", c.__id, "expressionTree")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepExpression), nil
+			}
+		}
+
+		return c.expressionTree()
+	})
+}
+
 func (c *mqlBicepOutput) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlBicepExpression for the bicep.expression resource
+type mqlBicepExpression struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlBicepExpressionInternal
+	Kind         plugin.TValue[string]
+	Raw          plugin.TValue[string]
+	FunctionName plugin.TValue[string]
+	Args         plugin.TValue[[]any]
+	Target       plugin.TValue[string]
+	Path         plugin.TValue[[]any]
+	Segments     plugin.TValue[[]any]
+}
+
+// createBicepExpression creates a new instance of this resource
+func createBicepExpression(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBicepExpression{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bicep.expression", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBicepExpression) MqlName() string {
+	return "bicep.expression"
+}
+
+func (c *mqlBicepExpression) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBicepExpression) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlBicepExpression) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
+}
+
+func (c *mqlBicepExpression) GetFunctionName() *plugin.TValue[string] {
+	return &c.FunctionName
+}
+
+func (c *mqlBicepExpression) GetArgs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Args, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "args")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.args()
+	})
+}
+
+func (c *mqlBicepExpression) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlBicepExpression) GetPath() *plugin.TValue[[]any] {
+	return &c.Path
+}
+
+func (c *mqlBicepExpression) GetSegments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Segments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.expression", c.__id, "segments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.segments()
+	})
 }
 
 // mqlBicepTemplate for the bicep.template resource

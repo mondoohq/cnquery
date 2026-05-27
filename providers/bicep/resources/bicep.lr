@@ -97,6 +97,14 @@ bicep.variable @defaults("name") {
   name string
   // Value expression (raw Bicep expression)
   expression string
+  // Parsed expression tree
+  //
+  // Structured, queryable view of the `expression` value. Use it to ask
+  // whether a value is a hardcoded literal, which Bicep function builds it
+  // (`functionCall`), which symbolic resources or parameters it references
+  // (`symbolicRef` / `propertyAccess`), and which parameters an
+  // interpolated name string embeds. See `bicep.expression`.
+  expressionTree() bicep.expression
   // Description from @description decorator
   description string
 }
@@ -181,8 +189,56 @@ bicep.output @defaults("name type") {
   type string
   // Value expression
   expression string
+  // Parsed expression tree
+  //
+  // Structured, queryable view of the `expression` value. Use it to spot
+  // outputs that return a hardcoded literal, that call a specific Bicep
+  // function (`functionCall`), or that reference a resource property or a
+  // `@secure` parameter (`symbolicRef` / `propertyAccess` / `interpolation`).
+  // See `bicep.expression`.
+  expressionTree() bicep.expression
   // Description from @description decorator
   description string
+}
+
+// Parsed Bicep expression
+//
+// Examine the structure of a single Bicep value expression broken into a
+// queryable tree. The `kind` field classifies the node — `literal`,
+// `functionCall`, `propertyAccess`, `symbolicRef`, `interpolation`,
+// `ternary`, `array`, or `unknown` — and `raw` always holds the original
+// source text. For a `functionCall`, `functionName` names the called
+// function (`resourceId`, `concat`, `reference`, …) and `args` lists its
+// parsed arguments. For a `propertyAccess` or `symbolicRef`, `target` is
+// the root identifier and `path` is the accessor chain (for example
+// `vnet.properties.subnets[0].id` yields target `vnet` and path
+// `["properties","subnets","0","id"]`). For an `interpolation`, `segments`
+// holds the alternating literal and embedded-expression parts of a
+// `'...${expr}...'` string. This is structure only — values are never
+// evaluated — so policies can ask questions like "is this location a
+// hardcoded literal?" or "does this name interpolate a parameter?" without
+// resolving the deployment.
+bicep.expression @defaults("kind raw") {
+  // Node kind
+  //
+  // One of literal, functionCall, propertyAccess, symbolicRef,
+  // interpolation, ternary, array, or unknown.
+  kind string
+  // Original source text of the expression
+  raw string
+  // Called function name for a functionCall node (empty otherwise)
+  functionName string
+  // Parsed arguments of a functionCall node
+  args() []bicep.expression
+  // Root identifier of a propertyAccess or symbolicRef node (empty otherwise)
+  target string
+  // Accessor chain of a propertyAccess node
+  //
+  // For example `vnet.properties.subnets[0].id` produces
+  // `["properties","subnets","0","id"]`. Empty for other kinds.
+  path []string
+  // Alternating literal and embedded-expression parts of an interpolation node
+  segments() []bicep.expression
 }
 
 // Compiled ARM template (from ARM JSON input)
