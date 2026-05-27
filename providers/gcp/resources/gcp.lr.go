@@ -5660,6 +5660,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnsSecAlgorithmWeak()).ToDataRes(types.Bool)
 	},
+	"gcp.project.dnsService.managedzone.dnssecDefaultKeyAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnssecDefaultKeyAlgorithms()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPrivateVisibilityConfig()).ToDataRes(types.Dict)
 	},
@@ -10880,6 +10883,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudSchedulerService.job.targetType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetTargetType()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudSchedulerService.job.oidcServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOidcServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOauthServiceAccountEmail()).ToDataRes(types.String)
+	},
 	"gcp.project.appEngineService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -11162,6 +11171,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.workbenchService.instance.gceSetup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectWorkbenchServiceInstance).GetGceSetup()).ToDataRes(types.Dict)
 	},
+	"gcp.project.workbenchService.instance.disablePublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkbenchServiceInstance).GetDisablePublicIp()).ToDataRes(types.Bool)
+	},
 	"gcp.project.workbenchService.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectWorkbenchServiceInstance).GetCreateTime()).ToDataRes(types.Time)
 	},
@@ -11248,6 +11260,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.composerService.environment.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.composerService.environment.privateEnvironmentEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetPrivateEnvironmentEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.composerService.environment.webServerAllowedIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetWebServerAllowedIpRanges()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.healthcareService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectHealthcareService).GetProjectId()).ToDataRes(types.String)
@@ -12289,6 +12307,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataflowService.job.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataflowServiceJob).GetEnvironment()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dataflowService.job.workerIpConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataflowServiceJob).GetWorkerIpConfiguration()).ToDataRes(types.String)
 	},
 	"gcp.project.dataflowService.job.pipelineDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataflowServiceJob).GetPipelineDescription()).ToDataRes(types.Dict)
@@ -20060,6 +20081,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDnsServiceManagedzone).DnsSecAlgorithmWeak, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dnsService.managedzone.dnssecDefaultKeyAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).DnssecDefaultKeyAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).PrivateVisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -27736,6 +27761,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudSchedulerServiceJob).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudSchedulerService.job.oidcServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudSchedulerServiceJob).OidcServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudSchedulerServiceJob).OauthServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.appEngineService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAppEngineService).__id, ok = v.Value.(string)
 		return
@@ -28160,6 +28193,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectWorkbenchServiceInstance).GceSetup, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.workbenchService.instance.disablePublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkbenchServiceInstance).DisablePublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.workbenchService.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectWorkbenchServiceInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -28290,6 +28327,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.composerService.environment.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComposerServiceEnvironment).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.privateEnvironmentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).PrivateEnvironmentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.webServerAllowedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).WebServerAllowedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.healthcareService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29794,6 +29839,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataflowService.job.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataflowServiceJob).Environment, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataflowService.job.workerIpConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataflowServiceJob).WorkerIpConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataflowService.job.pipelineDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45679,23 +45728,24 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDnsServiceManagedzoneInternal it will be used here
-	Id                      plugin.TValue[string]
-	ProjectId               plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Description             plugin.TValue[string]
-	DnssecConfig            plugin.TValue[any]
-	DnsName                 plugin.TValue[string]
-	NameServerSet           plugin.TValue[string]
-	NameServers             plugin.TValue[[]any]
-	Visibility              plugin.TValue[string]
-	Created                 plugin.TValue[*time.Time]
-	Labels                  plugin.TValue[map[string]any]
-	CloudLoggingEnabled     plugin.TValue[bool]
-	DnssecEnabled           plugin.TValue[bool]
-	DnsSecAlgorithmWeak     plugin.TValue[bool]
-	PrivateVisibilityConfig plugin.TValue[any]
-	RecordSets              plugin.TValue[[]any]
-	IamPolicy               plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	ProjectId                  plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	DnssecConfig               plugin.TValue[any]
+	DnsName                    plugin.TValue[string]
+	NameServerSet              plugin.TValue[string]
+	NameServers                plugin.TValue[[]any]
+	Visibility                 plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	Labels                     plugin.TValue[map[string]any]
+	CloudLoggingEnabled        plugin.TValue[bool]
+	DnssecEnabled              plugin.TValue[bool]
+	DnsSecAlgorithmWeak        plugin.TValue[bool]
+	DnssecDefaultKeyAlgorithms plugin.TValue[[]any]
+	PrivateVisibilityConfig    plugin.TValue[any]
+	RecordSets                 plugin.TValue[[]any]
+	IamPolicy                  plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsServiceManagedzone creates a new instance of this resource
@@ -45791,6 +45841,10 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetDnsSecAlgorithmWeak() *plugin.TV
 	return plugin.GetOrCompute[bool](&c.DnsSecAlgorithmWeak, func() (bool, error) {
 		return c.dnsSecAlgorithmWeak()
 	})
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecDefaultKeyAlgorithms() *plugin.TValue[[]any] {
+	return &c.DnssecDefaultKeyAlgorithms
 }
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetPrivateVisibilityConfig() *plugin.TValue[any] {
@@ -63902,17 +63956,19 @@ type mqlGcpProjectCloudSchedulerServiceJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectCloudSchedulerServiceJobInternal it will be used here
-	ProjectId       plugin.TValue[string]
-	Name            plugin.TValue[string]
-	Schedule        plugin.TValue[string]
-	TimeZone        plugin.TValue[string]
-	State           plugin.TValue[string]
-	Description     plugin.TValue[string]
-	LastAttemptTime plugin.TValue[*time.Time]
-	ScheduleTime    plugin.TValue[*time.Time]
-	UserUpdateTime  plugin.TValue[*time.Time]
-	RetryConfig     plugin.TValue[*mqlGcpRetryConfig]
-	TargetType      plugin.TValue[string]
+	ProjectId                plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Schedule                 plugin.TValue[string]
+	TimeZone                 plugin.TValue[string]
+	State                    plugin.TValue[string]
+	Description              plugin.TValue[string]
+	LastAttemptTime          plugin.TValue[*time.Time]
+	ScheduleTime             plugin.TValue[*time.Time]
+	UserUpdateTime           plugin.TValue[*time.Time]
+	RetryConfig              plugin.TValue[*mqlGcpRetryConfig]
+	TargetType               plugin.TValue[string]
+	OidcServiceAccountEmail  plugin.TValue[string]
+	OauthServiceAccountEmail plugin.TValue[string]
 }
 
 // createGcpProjectCloudSchedulerServiceJob creates a new instance of this resource
@@ -63994,6 +64050,14 @@ func (c *mqlGcpProjectCloudSchedulerServiceJob) GetRetryConfig() *plugin.TValue[
 
 func (c *mqlGcpProjectCloudSchedulerServiceJob) GetTargetType() *plugin.TValue[string] {
 	return &c.TargetType
+}
+
+func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOidcServiceAccountEmail() *plugin.TValue[string] {
+	return &c.OidcServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOauthServiceAccountEmail() *plugin.TValue[string] {
+	return &c.OauthServiceAccountEmail
 }
 
 // mqlGcpProjectAppEngineService for the gcp.project.appEngineService resource
@@ -65003,6 +65067,7 @@ type mqlGcpProjectWorkbenchServiceInstance struct {
 	EnableThirdPartyIdentity plugin.TValue[bool]
 	Labels                   plugin.TValue[map[string]any]
 	GceSetup                 plugin.TValue[any]
+	DisablePublicIp          plugin.TValue[bool]
 	CreateTime               plugin.TValue[*time.Time]
 	UpdateTime               plugin.TValue[*time.Time]
 }
@@ -65090,6 +65155,10 @@ func (c *mqlGcpProjectWorkbenchServiceInstance) GetLabels() *plugin.TValue[map[s
 
 func (c *mqlGcpProjectWorkbenchServiceInstance) GetGceSetup() *plugin.TValue[any] {
 	return &c.GceSetup
+}
+
+func (c *mqlGcpProjectWorkbenchServiceInstance) GetDisablePublicIp() *plugin.TValue[bool] {
+	return &c.DisablePublicIp
 }
 
 func (c *mqlGcpProjectWorkbenchServiceInstance) GetCreateTime() *plugin.TValue[*time.Time] {
@@ -65351,15 +65420,17 @@ type mqlGcpProjectComposerServiceEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComposerServiceEnvironmentInternal it will be used here
-	ProjectId    plugin.TValue[string]
-	Name         plugin.TValue[string]
-	State        plugin.TValue[string]
-	Uuid         plugin.TValue[string]
-	CreateTime   plugin.TValue[*time.Time]
-	UpdateTime   plugin.TValue[*time.Time]
-	Labels       plugin.TValue[map[string]any]
-	ImageVersion plugin.TValue[string]
-	Config       plugin.TValue[any]
+	ProjectId                 plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	State                     plugin.TValue[string]
+	Uuid                      plugin.TValue[string]
+	CreateTime                plugin.TValue[*time.Time]
+	UpdateTime                plugin.TValue[*time.Time]
+	Labels                    plugin.TValue[map[string]any]
+	ImageVersion              plugin.TValue[string]
+	Config                    plugin.TValue[any]
+	PrivateEnvironmentEnabled plugin.TValue[bool]
+	WebServerAllowedIpRanges  plugin.TValue[[]any]
 }
 
 // createGcpProjectComposerServiceEnvironment creates a new instance of this resource
@@ -65433,6 +65504,14 @@ func (c *mqlGcpProjectComposerServiceEnvironment) GetImageVersion() *plugin.TVal
 
 func (c *mqlGcpProjectComposerServiceEnvironment) GetConfig() *plugin.TValue[any] {
 	return &c.Config
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetPrivateEnvironmentEnabled() *plugin.TValue[bool] {
+	return &c.PrivateEnvironmentEnabled
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetWebServerAllowedIpRanges() *plugin.TValue[[]any] {
+	return &c.WebServerAllowedIpRanges
 }
 
 // mqlGcpProjectHealthcareService for the gcp.project.healthcareService resource
@@ -68710,17 +68789,18 @@ type mqlGcpProjectDataflowServiceJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDataflowServiceJobInternal it will be used here
-	ProjectId           plugin.TValue[string]
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Type                plugin.TValue[string]
-	CurrentState        plugin.TValue[string]
-	CreateTime          plugin.TValue[*time.Time]
-	Location            plugin.TValue[string]
-	Labels              plugin.TValue[map[string]any]
-	Environment         plugin.TValue[any]
-	PipelineDescription plugin.TValue[any]
-	CurrentStateTime    plugin.TValue[*time.Time]
+	ProjectId             plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	CurrentState          plugin.TValue[string]
+	CreateTime            plugin.TValue[*time.Time]
+	Location              plugin.TValue[string]
+	Labels                plugin.TValue[map[string]any]
+	Environment           plugin.TValue[any]
+	WorkerIpConfiguration plugin.TValue[string]
+	PipelineDescription   plugin.TValue[any]
+	CurrentStateTime      plugin.TValue[*time.Time]
 }
 
 // createGcpProjectDataflowServiceJob creates a new instance of this resource
@@ -68794,6 +68874,10 @@ func (c *mqlGcpProjectDataflowServiceJob) GetLabels() *plugin.TValue[map[string]
 
 func (c *mqlGcpProjectDataflowServiceJob) GetEnvironment() *plugin.TValue[any] {
 	return &c.Environment
+}
+
+func (c *mqlGcpProjectDataflowServiceJob) GetWorkerIpConfiguration() *plugin.TValue[string] {
+	return &c.WorkerIpConfiguration
 }
 
 func (c *mqlGcpProjectDataflowServiceJob) GetPipelineDescription() *plugin.TValue[any] {

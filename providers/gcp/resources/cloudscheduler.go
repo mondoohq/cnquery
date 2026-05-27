@@ -76,9 +76,17 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 		}
 
 		targetType := ""
-		switch job.Target.(type) {
+		oidcServiceAccountEmail := ""
+		oauthServiceAccountEmail := ""
+		switch t := job.Target.(type) {
 		case *schedulerpb.Job_HttpTarget:
 			targetType = "httpTarget"
+			if oidc := t.HttpTarget.GetOidcToken(); oidc != nil {
+				oidcServiceAccountEmail = oidc.GetServiceAccountEmail()
+			}
+			if oauth := t.HttpTarget.GetOauthToken(); oauth != nil {
+				oauthServiceAccountEmail = oauth.GetServiceAccountEmail()
+			}
 		case *schedulerpb.Job_PubsubTarget:
 			targetType = "pubsubTarget"
 		case *schedulerpb.Job_AppEngineHttpTarget:
@@ -100,17 +108,19 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 		}
 
 		mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.cloudSchedulerService.job", map[string]*llx.RawData{
-			"projectId":       llx.StringData(projectId),
-			"name":            llx.StringData(job.Name),
-			"schedule":        llx.StringData(job.Schedule),
-			"timeZone":        llx.StringData(job.TimeZone),
-			"state":           llx.StringData(job.State.String()),
-			"description":     llx.StringData(job.Description),
-			"lastAttemptTime": llx.TimeDataPtr(lastAttemptTime),
-			"scheduleTime":    llx.TimeDataPtr(scheduleTime),
-			"userUpdateTime":  llx.TimeDataPtr(userUpdateTime),
-			"retryConfig":     llx.ResourceData(retryConfig, "gcp.retryConfig"),
-			"targetType":      llx.StringData(targetType),
+			"projectId":                llx.StringData(projectId),
+			"name":                     llx.StringData(job.Name),
+			"schedule":                 llx.StringData(job.Schedule),
+			"timeZone":                 llx.StringData(job.TimeZone),
+			"state":                    llx.StringData(job.State.String()),
+			"description":              llx.StringData(job.Description),
+			"lastAttemptTime":          llx.TimeDataPtr(lastAttemptTime),
+			"scheduleTime":             llx.TimeDataPtr(scheduleTime),
+			"userUpdateTime":           llx.TimeDataPtr(userUpdateTime),
+			"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
+			"targetType":               llx.StringData(targetType),
+			"oidcServiceAccountEmail":  llx.StringData(oidcServiceAccountEmail),
+			"oauthServiceAccountEmail": llx.StringData(oauthServiceAccountEmail),
 		})
 		if err != nil {
 			return nil, err

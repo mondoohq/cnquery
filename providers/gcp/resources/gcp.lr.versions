@@ -1241,6 +1241,8 @@ gcp.project.cloudSchedulerService.job 11.6.6
 gcp.project.cloudSchedulerService.job.description 11.6.6
 gcp.project.cloudSchedulerService.job.lastAttemptTime 11.6.6
 gcp.project.cloudSchedulerService.job.name 11.6.6
+gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail 13.18.1
+gcp.project.cloudSchedulerService.job.oidcServiceAccountEmail 13.18.1
 gcp.project.cloudSchedulerService.job.projectId 11.6.6
 gcp.project.cloudSchedulerService.job.retryConfig 11.6.6
 gcp.project.cloudSchedulerService.job.schedule 11.6.6
@@ -1271,10 +1273,12 @@ gcp.project.composerService.environment.createTime 13.15.1
 gcp.project.composerService.environment.imageVersion 13.15.1
 gcp.project.composerService.environment.labels 13.15.1
 gcp.project.composerService.environment.name 13.15.1
+gcp.project.composerService.environment.privateEnvironmentEnabled 13.18.1
 gcp.project.composerService.environment.projectId 13.15.1
 gcp.project.composerService.environment.state 13.15.1
 gcp.project.composerService.environment.updateTime 13.15.1
 gcp.project.composerService.environment.uuid 13.15.1
+gcp.project.composerService.environment.webServerAllowedIpRanges 13.18.1
 gcp.project.composerService.environments 13.15.1
 gcp.project.composerService.projectId 13.15.1
 gcp.project.compute 9.0.0
@@ -2265,6 +2269,7 @@ gcp.project.dataflowService.job.name 11.6.6
 gcp.project.dataflowService.job.pipelineDescription 11.6.6
 gcp.project.dataflowService.job.projectId 11.6.6
 gcp.project.dataflowService.job.type 11.6.6
+gcp.project.dataflowService.job.workerIpConfiguration 13.18.1
 gcp.project.dataflowService.jobs 11.6.6
 gcp.project.dataflowService.projectId 11.6.6
 gcp.project.dataplex 13.18.1
@@ -2660,6 +2665,7 @@ gcp.project.dnsService.managedzone.description 9.0.0
 gcp.project.dnsService.managedzone.dnsName 9.0.0
 gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak 13.12.2
 gcp.project.dnsService.managedzone.dnssecConfig 9.0.0
+gcp.project.dnsService.managedzone.dnssecDefaultKeyAlgorithms 13.18.1
 gcp.project.dnsService.managedzone.dnssecEnabled 13.1.2
 gcp.project.dnsService.managedzone.iamPolicy 13.9.1
 gcp.project.dnsService.managedzone.id 9.0.0
@@ -4498,6 +4504,7 @@ gcp.project.workbenchService.instance 13.15.1
 gcp.project.workbenchService.instance.createTime 13.15.1
 gcp.project.workbenchService.instance.creator 13.15.1
 gcp.project.workbenchService.instance.disableProxyAccess 13.15.1
+gcp.project.workbenchService.instance.disablePublicIp 13.18.1
 gcp.project.workbenchService.instance.enableDeletionProtection 13.15.1
 gcp.project.workbenchService.instance.enableThirdPartyIdentity 13.15.1
 gcp.project.workbenchService.instance.gceSetup 13.15.1

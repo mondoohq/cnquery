@@ -168,6 +168,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			managedZone := page.ManagedZones[i]
 
 			var mqlDnssecCfg map[string]any
+			dnssecAlgorithms := []any{}
 			if managedZone.DnssecConfig != nil {
 				keySpecs := make([]any, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
 				for _, keySpec := range managedZone.DnssecConfig.DefaultKeySpecs {
@@ -176,6 +177,9 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 						"keyLength": keySpec.KeyLength,
 						"keyType":   keySpec.KeyType,
 					})
+					if keySpec.Algorithm != "" {
+						dnssecAlgorithms = append(dnssecAlgorithms, keySpec.Algorithm)
+					}
 				}
 				mqlDnssecCfg = map[string]any{
 					"defaultKeySpecs": keySpecs,
@@ -205,20 +209,21 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			}
 
 			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
-				"id":                      llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
-				"projectId":               llx.StringData(projectId),
-				"name":                    llx.StringData(managedZone.Name),
-				"description":             llx.StringData(managedZone.Description),
-				"dnssecConfig":            llx.DictData(mqlDnssecCfg),
-				"dnsName":                 llx.StringData(managedZone.DnsName),
-				"nameServerSet":           llx.StringData(managedZone.NameServerSet),
-				"nameServers":             llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
-				"visibility":              llx.StringData(managedZone.Visibility),
-				"created":                 llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
-				"labels":                  llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
-				"cloudLoggingEnabled":     llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
-				"dnssecEnabled":           llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
-				"privateVisibilityConfig": llx.DictData(mqlPrivateVisibilityCfg),
+				"id":                         llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
+				"projectId":                  llx.StringData(projectId),
+				"name":                       llx.StringData(managedZone.Name),
+				"description":                llx.StringData(managedZone.Description),
+				"dnssecConfig":               llx.DictData(mqlDnssecCfg),
+				"dnsName":                    llx.StringData(managedZone.DnsName),
+				"nameServerSet":              llx.StringData(managedZone.NameServerSet),
+				"nameServers":                llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
+				"visibility":                 llx.StringData(managedZone.Visibility),
+				"created":                    llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+				"labels":                     llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
+				"cloudLoggingEnabled":        llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
+				"dnssecEnabled":              llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
+				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),
+				"privateVisibilityConfig":    llx.DictData(mqlPrivateVisibilityCfg),
 			})
 			if err != nil {
 				return err

@@ -120,6 +120,11 @@ func (g *mqlGcpProjectWorkbenchService) instances() ([]any, error) {
 				return err
 			}
 
+			disablePublicIp := false
+			if i.GceSetup != nil {
+				disablePublicIp = i.GceSetup.DisablePublicIp
+			}
+
 			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.workbenchService.instance", map[string]*llx.RawData{
 				"projectId":                llx.StringData(projectId),
 				"name":                     llx.StringData(i.Name),
@@ -133,6 +138,7 @@ func (g *mqlGcpProjectWorkbenchService) instances() ([]any, error) {
 				"enableThirdPartyIdentity": llx.BoolData(i.EnableThirdPartyIdentity),
 				"labels":                   llx.MapData(convert.MapToInterfaceMap(i.Labels), types.String),
 				"gceSetup":                 llx.DictData(gceSetup),
+				"disablePublicIp":          llx.BoolData(disablePublicIp),
 				"createTime":               llx.TimeDataPtr(parseTime(i.CreateTime)),
 				"updateTime":               llx.TimeDataPtr(parseTime(i.UpdateTime)),
 			})

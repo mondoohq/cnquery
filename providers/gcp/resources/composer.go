@@ -99,16 +99,33 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 					imageVersion = e.Config.SoftwareConfig.ImageVersion
 				}
 
+				privateEnvironmentEnabled := false
+				webServerAllowedIpRanges := []any{}
+				if e.Config != nil {
+					if e.Config.PrivateEnvironmentConfig != nil {
+						privateEnvironmentEnabled = e.Config.PrivateEnvironmentConfig.EnablePrivateEnvironment
+					}
+					if e.Config.WebServerNetworkAccessControl != nil {
+						for _, r := range e.Config.WebServerNetworkAccessControl.AllowedIpRanges {
+							if r != nil && r.Value != "" {
+								webServerAllowedIpRanges = append(webServerAllowedIpRanges, r.Value)
+							}
+						}
+					}
+				}
+
 				mqlEnv, err := CreateResource(g.MqlRuntime, "gcp.project.composerService.environment", map[string]*llx.RawData{
-					"projectId":    llx.StringData(projectId),
-					"name":         llx.StringData(e.Name),
-					"state":        llx.StringData(e.State),
-					"uuid":         llx.StringData(e.Uuid),
-					"createTime":   llx.TimeDataPtr(parseTime(e.CreateTime)),
-					"updateTime":   llx.TimeDataPtr(parseTime(e.UpdateTime)),
-					"labels":       llx.MapData(convert.MapToInterfaceMap(e.Labels), types.String),
-					"imageVersion": llx.StringData(imageVersion),
-					"config":       llx.DictData(cfg),
+					"projectId":                 llx.StringData(projectId),
+					"name":                      llx.StringData(e.Name),
+					"state":                     llx.StringData(e.State),
+					"uuid":                      llx.StringData(e.Uuid),
+					"createTime":                llx.TimeDataPtr(parseTime(e.CreateTime)),
+					"updateTime":                llx.TimeDataPtr(parseTime(e.UpdateTime)),
+					"labels":                    llx.MapData(convert.MapToInterfaceMap(e.Labels), types.String),
+					"imageVersion":              llx.StringData(imageVersion),
+					"config":                    llx.DictData(cfg),
+					"privateEnvironmentEnabled": llx.BoolData(privateEnvironmentEnabled),
+					"webServerAllowedIpRanges":  llx.ArrayData(webServerAllowedIpRanges, types.String),
 				})
 				if err != nil {
 					return err

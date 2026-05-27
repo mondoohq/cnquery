@@ -3346,6 +3346,8 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecEnabled bool
   // Whether DNSSEC is enabled but uses a weak signing algorithm (RSASHA1 / RSASHA1-NSEC3-SHA1)
   dnsSecAlgorithmWeak() bool
+  // DNSSEC signing algorithms of the zone's default key specs (e.g. rsasha256, ecdsap256sha256, rsasha1)
+  dnssecDefaultKeyAlgorithms []string
   // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
   privateVisibilityConfig dict
   // Cloud DNS record set in the zone
@@ -8652,6 +8654,10 @@ private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
   retryConfig gcp.retryConfig
   // Target type: "httpTarget", "pubsubTarget", or "appEngineHttpTarget"
   targetType string
+  // Service account email used to mint the OIDC token for HTTP target authentication (empty if not configured)
+  oidcServiceAccountEmail string
+  // Service account email used to mint the OAuth token for HTTP target authentication (empty if not configured)
+  oauthServiceAccountEmail string
 }
 
 // Google Cloud (GCP) App Engine
@@ -8953,6 +8959,8 @@ private gcp.project.workbenchService.instance @defaults("name state healthState"
   labels map[string]string
   // Compute Engine setup for the notebook, including disablePublicIp and network interfaces
   gceSetup dict
+  // Whether the instance has no external IP address assigned
+  disablePublicIp bool
   // Instance creation time
   createTime time
   // Instance last update time
@@ -9050,6 +9058,10 @@ private gcp.project.composerService.environment @defaults("name state imageVersi
   imageVersion string
   // Environment configuration (node config, software config, encryption config, web server access control)
   config dict
+  // Whether the environment uses a Private IP Cloud Composer setup
+  privateEnvironmentEnabled bool
+  // IP ranges (CIDR) allowed to access the Airflow web server (empty means open to all)
+  webServerAllowedIpRanges []string
 }
 
 // Google Cloud (GCP) Cloud Healthcare API
@@ -10059,6 +10071,8 @@ private gcp.project.dataflowService.job @defaults("name currentState") {
   labels map[string]string
   // The environment the job runs in
   environment dict
+  // VM IP configuration of the job's worker pools (WORKER_IP_PUBLIC, WORKER_IP_PRIVATE, or WORKER_IP_UNSPECIFIED)
+  workerIpConfiguration string
   // The SDK pipeline options
   pipelineDescription dict
   // Timestamp of the current state

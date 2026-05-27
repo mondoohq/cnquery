@@ -61,18 +61,29 @@ func (g *mqlGcpProjectDataflowService) jobs() ([]any, error) {
 			env, _ := convert.JsonToDict(job.Environment)
 			pipelineDesc, _ := convert.JsonToDict(job.PipelineDescription)
 
+			workerIpConfiguration := ""
+			if job.Environment != nil {
+				for _, wp := range job.Environment.WorkerPools {
+					if wp != nil && wp.IpConfiguration != "" {
+						workerIpConfiguration = wp.IpConfiguration
+						break
+					}
+				}
+			}
+
 			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.dataflowService.job", map[string]*llx.RawData{
-				"projectId":           llx.StringData(projectId),
-				"id":                  llx.StringData(job.Id),
-				"name":                llx.StringData(job.Name),
-				"type":                llx.StringData(job.Type),
-				"currentState":        llx.StringData(job.CurrentState),
-				"createTime":          llx.TimeDataPtr(parseTime(job.CreateTime)),
-				"location":            llx.StringData(job.Location),
-				"labels":              llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-				"environment":         llx.DictData(env),
-				"pipelineDescription": llx.DictData(pipelineDesc),
-				"currentStateTime":    llx.TimeDataPtr(parseTime(job.CurrentStateTime)),
+				"projectId":             llx.StringData(projectId),
+				"id":                    llx.StringData(job.Id),
+				"name":                  llx.StringData(job.Name),
+				"type":                  llx.StringData(job.Type),
+				"currentState":          llx.StringData(job.CurrentState),
+				"createTime":            llx.TimeDataPtr(parseTime(job.CreateTime)),
+				"location":              llx.StringData(job.Location),
+				"labels":                llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"environment":           llx.DictData(env),
+				"workerIpConfiguration": llx.StringData(workerIpConfiguration),
+				"pipelineDescription":   llx.DictData(pipelineDesc),
+				"currentStateTime":      llx.TimeDataPtr(parseTime(job.CurrentStateTime)),
 			})
 			if err != nil {
 				return err
