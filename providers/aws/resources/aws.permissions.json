@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.28.0",
-  "generated_at": "2026-05-26T17:10:13-07:00",
+  "generated_at": "2026-05-27T10:51:54-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -73,6 +73,7 @@
     "backup:ListBackupSelections",
     "backup:ListBackupVaults",
     "backup:ListRecoveryPointsByBackupVault",
+    "backup:ListScanJobs",
     "batch:DescribeComputeEnvironments",
     "batch:DescribeJobDefinitions",
     "batch:DescribeJobQueues",
@@ -1307,6 +1308,12 @@
       "permission": "backup:ListRecoveryPointsByBackupVault",
       "service": "backup",
       "action": "ListRecoveryPointsByBackupVault",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListScanJobs",
+      "service": "backup",
+      "action": "ListScanJobs",
       "source_file": "aws_backups.go"
     },
     {

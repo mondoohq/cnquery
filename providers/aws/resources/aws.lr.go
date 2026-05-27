@@ -433,6 +433,7 @@ const (
 	ResourceAwsBackupPlanAdvancedBackupSetting                                  string = "aws.backup.plan.advancedBackupSetting"
 	ResourceAwsBackupPlanRule                                                   string = "aws.backup.plan.rule"
 	ResourceAwsBackupPlanRuleCopyAction                                         string = "aws.backup.plan.rule.copyAction"
+	ResourceAwsBackupScanJob                                                    string = "aws.backup.scanJob"
 	ResourceAwsDynamodb                                                         string = "aws.dynamodb"
 	ResourceAwsDynamodbDaxCluster                                               string = "aws.dynamodb.dax.cluster"
 	ResourceAwsDynamodbExport                                                   string = "aws.dynamodb.export"
@@ -2545,6 +2546,10 @@ func init() {
 		"aws.backup.plan.rule.copyAction": {
 			// to override args, implement: initAwsBackupPlanRuleCopyAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBackupPlanRuleCopyAction,
+		},
+		"aws.backup.scanJob": {
+			// to override args, implement: initAwsBackupScanJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackupScanJob,
 		},
 		"aws.dynamodb": {
 			// to override args, implement: initAwsDynamodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -15554,6 +15559,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.plans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackup).GetPlans()).ToDataRes(types.Array(types.Resource("aws.backup.plan")))
 	},
+	"aws.backup.scanJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackup).GetScanJobs()).ToDataRes(types.Array(types.Resource("aws.backup.scanJob")))
+	},
 	"aws.backup.vault.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetArn()).ToDataRes(types.String)
 	},
@@ -15707,6 +15715,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.plan.rule.recoveryPointTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupPlanRule).GetRecoveryPointTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.backup.plan.rule.scanActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanRule).GetScanActions()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.backup.plan.rule.copyAction.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupPlanRuleCopyAction).GetId()).ToDataRes(types.String)
 	},
@@ -15724,6 +15735,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.backup.plan.rule.copyAction.optInToArchiveForSupportedResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupPlanRuleCopyAction).GetOptInToArchiveForSupportedResources()).ToDataRes(types.Bool)
+	},
+	"aws.backup.scanJob.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetId()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.vault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetVault()).ToDataRes(types.Resource("aws.backup.vault"))
+	},
+	"aws.backup.scanJob.recoveryPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetRecoveryPoint()).ToDataRes(types.Resource("aws.backup.vaultRecoveryPoint"))
+	},
+	"aws.backup.scanJob.baseRecoveryPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetBaseRecoveryPoint()).ToDataRes(types.Resource("aws.backup.vaultRecoveryPoint"))
+	},
+	"aws.backup.scanJob.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetResourceName()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.malwareScanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetMalwareScanner()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.scanMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetScanMode()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.scanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetScanId()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetState()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.scanResultStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetScanResultStatus()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.backup.scanJob.scannerRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetScannerRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.backup.scanJob.backupPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetBackupPlan()).ToDataRes(types.Resource("aws.backup.plan"))
+	},
+	"aws.backup.scanJob.backupPlanVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetBackupPlanVersion()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.backupRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetBackupRuleId()).ToDataRes(types.String)
+	},
+	"aws.backup.scanJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.backup.scanJob.completionDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetCompletionDate()).ToDataRes(types.Time)
+	},
+	"aws.backup.scanJob.continuousScanStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetContinuousScanStartTime()).ToDataRes(types.Time)
+	},
+	"aws.backup.scanJob.continuousScanEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupScanJob).GetContinuousScanEndTime()).ToDataRes(types.Time)
 	},
 	"aws.dynamodb.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodb).GetBackups()).ToDataRes(types.Array(types.Dict))
@@ -47108,6 +47191,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackup).Plans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.backup.scanJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackup).ScanJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.backup.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).__id, ok = v.Value.(string)
 		return
@@ -47336,6 +47423,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackupPlanRule).RecoveryPointTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.backup.plan.rule.scanActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanRule).ScanActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.backup.plan.rule.copyAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupPlanRuleCopyAction).__id, ok = v.Value.(string)
 		return
@@ -47362,6 +47453,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.backup.plan.rule.copyAction.optInToArchiveForSupportedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupPlanRuleCopyAction).OptInToArchiveForSupportedResources, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.backup.scanJob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).Vault, ok = plugin.RawToTValue[*mqlAwsBackupVault](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.recoveryPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).RecoveryPoint, ok = plugin.RawToTValue[*mqlAwsBackupVaultRecoveryPoint](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.baseRecoveryPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).BaseRecoveryPoint, ok = plugin.RawToTValue[*mqlAwsBackupVaultRecoveryPoint](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.malwareScanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).MalwareScanner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.scanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ScanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.scanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ScanId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.scanResultStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ScanResultStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.scannerRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ScannerRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.backupPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).BackupPlan, ok = plugin.RawToTValue[*mqlAwsBackupPlan](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.backupPlanVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).BackupPlanVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.backupRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).BackupRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.completionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).CompletionDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.continuousScanStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ContinuousScanStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.scanJob.continuousScanEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupScanJob).ContinuousScanEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -113651,8 +113842,9 @@ type mqlAwsBackup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsBackupInternal it will be used here
-	Vaults plugin.TValue[[]any]
-	Plans  plugin.TValue[[]any]
+	Vaults   plugin.TValue[[]any]
+	Plans    plugin.TValue[[]any]
+	ScanJobs plugin.TValue[[]any]
 }
 
 // createAwsBackup creates a new instance of this resource
@@ -113721,6 +113913,22 @@ func (c *mqlAwsBackup) GetPlans() *plugin.TValue[[]any] {
 		}
 
 		return c.plans()
+	})
+}
+
+func (c *mqlAwsBackup) GetScanJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScanJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup", c.__id, "scanJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scanJobs()
 	})
 }
 
@@ -114222,6 +114430,7 @@ type mqlAwsBackupPlanRule struct {
 	Lifecycle                  plugin.TValue[*mqlAwsBackupLifecycle]
 	CopyActions                plugin.TValue[[]any]
 	RecoveryPointTags          plugin.TValue[map[string]any]
+	ScanActions                plugin.TValue[[]any]
 }
 
 // createAwsBackupPlanRule creates a new instance of this resource
@@ -114303,6 +114512,10 @@ func (c *mqlAwsBackupPlanRule) GetCopyActions() *plugin.TValue[[]any] {
 
 func (c *mqlAwsBackupPlanRule) GetRecoveryPointTags() *plugin.TValue[map[string]any] {
 	return &c.RecoveryPointTags
+}
+
+func (c *mqlAwsBackupPlanRule) GetScanActions() *plugin.TValue[[]any] {
+	return &c.ScanActions
 }
 
 // mqlAwsBackupPlanRuleCopyAction for the aws.backup.plan.rule.copyAction resource
@@ -114389,6 +114602,242 @@ func (c *mqlAwsBackupPlanRuleCopyAction) GetMoveToColdStorageAfterDays() *plugin
 
 func (c *mqlAwsBackupPlanRuleCopyAction) GetOptInToArchiveForSupportedResources() *plugin.TValue[bool] {
 	return &c.OptInToArchiveForSupportedResources
+}
+
+// mqlAwsBackupScanJob for the aws.backup.scanJob resource
+type mqlAwsBackupScanJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBackupScanJobInternal
+	Id                      plugin.TValue[string]
+	AccountId               plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Vault                   plugin.TValue[*mqlAwsBackupVault]
+	RecoveryPoint           plugin.TValue[*mqlAwsBackupVaultRecoveryPoint]
+	BaseRecoveryPoint       plugin.TValue[*mqlAwsBackupVaultRecoveryPoint]
+	ResourceArn             plugin.TValue[string]
+	ResourceName            plugin.TValue[string]
+	ResourceType            plugin.TValue[string]
+	MalwareScanner          plugin.TValue[string]
+	ScanMode                plugin.TValue[string]
+	ScanId                  plugin.TValue[string]
+	State                   plugin.TValue[string]
+	StatusMessage           plugin.TValue[string]
+	ScanResultStatus        plugin.TValue[string]
+	IamRole                 plugin.TValue[*mqlAwsIamRole]
+	ScannerRole             plugin.TValue[*mqlAwsIamRole]
+	BackupPlan              plugin.TValue[*mqlAwsBackupPlan]
+	BackupPlanVersion       plugin.TValue[string]
+	BackupRuleId            plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	CompletionDate          plugin.TValue[*time.Time]
+	ContinuousScanStartTime plugin.TValue[*time.Time]
+	ContinuousScanEndTime   plugin.TValue[*time.Time]
+}
+
+// createAwsBackupScanJob creates a new instance of this resource
+func createAwsBackupScanJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackupScanJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup.scanJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackupScanJob) MqlName() string {
+	return "aws.backup.scanJob"
+}
+
+func (c *mqlAwsBackupScanJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackupScanJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBackupScanJob) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsBackupScanJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBackupScanJob) GetVault() *plugin.TValue[*mqlAwsBackupVault] {
+	return plugin.GetOrCompute[*mqlAwsBackupVault](&c.Vault, func() (*mqlAwsBackupVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "vault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupVault), nil
+			}
+		}
+
+		return c.vault()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetRecoveryPoint() *plugin.TValue[*mqlAwsBackupVaultRecoveryPoint] {
+	return plugin.GetOrCompute[*mqlAwsBackupVaultRecoveryPoint](&c.RecoveryPoint, func() (*mqlAwsBackupVaultRecoveryPoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "recoveryPoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupVaultRecoveryPoint), nil
+			}
+		}
+
+		return c.recoveryPoint()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetBaseRecoveryPoint() *plugin.TValue[*mqlAwsBackupVaultRecoveryPoint] {
+	return plugin.GetOrCompute[*mqlAwsBackupVaultRecoveryPoint](&c.BaseRecoveryPoint, func() (*mqlAwsBackupVaultRecoveryPoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "baseRecoveryPoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupVaultRecoveryPoint), nil
+			}
+		}
+
+		return c.baseRecoveryPoint()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsBackupScanJob) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlAwsBackupScanJob) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsBackupScanJob) GetMalwareScanner() *plugin.TValue[string] {
+	return &c.MalwareScanner
+}
+
+func (c *mqlAwsBackupScanJob) GetScanMode() *plugin.TValue[string] {
+	return &c.ScanMode
+}
+
+func (c *mqlAwsBackupScanJob) GetScanId() *plugin.TValue[string] {
+	return &c.ScanId
+}
+
+func (c *mqlAwsBackupScanJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsBackupScanJob) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsBackupScanJob) GetScanResultStatus() *plugin.TValue[string] {
+	return &c.ScanResultStatus
+}
+
+func (c *mqlAwsBackupScanJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetScannerRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ScannerRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "scannerRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.scannerRole()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetBackupPlan() *plugin.TValue[*mqlAwsBackupPlan] {
+	return plugin.GetOrCompute[*mqlAwsBackupPlan](&c.BackupPlan, func() (*mqlAwsBackupPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.scanJob", c.__id, "backupPlan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBackupPlan), nil
+			}
+		}
+
+		return c.backupPlan()
+	})
+}
+
+func (c *mqlAwsBackupScanJob) GetBackupPlanVersion() *plugin.TValue[string] {
+	return &c.BackupPlanVersion
+}
+
+func (c *mqlAwsBackupScanJob) GetBackupRuleId() *plugin.TValue[string] {
+	return &c.BackupRuleId
+}
+
+func (c *mqlAwsBackupScanJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBackupScanJob) GetCompletionDate() *plugin.TValue[*time.Time] {
+	return &c.CompletionDate
+}
+
+func (c *mqlAwsBackupScanJob) GetContinuousScanStartTime() *plugin.TValue[*time.Time] {
+	return &c.ContinuousScanStartTime
+}
+
+func (c *mqlAwsBackupScanJob) GetContinuousScanEndTime() *plugin.TValue[*time.Time] {
+	return &c.ContinuousScanEndTime
 }
 
 // mqlAwsDynamodb for the aws.dynamodb resource

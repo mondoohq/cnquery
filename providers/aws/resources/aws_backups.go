@@ -302,6 +302,117 @@ func (a *mqlAwsBackupPlan) selections() ([]any, error) {
 	return res, nil
 }
 
+// ========================
+// aws.backup.scanJob
+// ========================
+
+func (a *mqlAwsBackup) scanJobs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getScanJobs(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsBackup) getScanJobs(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Backup(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := backup.NewListScanJobsPaginator(svc, &backup.ListScanJobsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sj := range page.ScanJobs {
+					mqlScanJob, err := newMqlBackupScanJob(a.MqlRuntime, region, sj)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlScanJob)
+				}
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlBackupScanJob(runtime *plugin.Runtime, region string, sj backuptypes.ScanJob) (*mqlAwsBackupScanJob, error) {
+	args := map[string]*llx.RawData{
+		"__id":                    llx.StringDataPtr(sj.ScanJobId),
+		"id":                      llx.StringDataPtr(sj.ScanJobId),
+		"accountId":               llx.StringDataPtr(sj.AccountId),
+		"region":                  llx.StringData(region),
+		"resourceArn":             llx.StringDataPtr(sj.ResourceArn),
+		"resourceName":            llx.StringDataPtr(sj.ResourceName),
+		"resourceType":            llx.StringData(string(sj.ResourceType)),
+		"malwareScanner":          llx.StringData(string(sj.MalwareScanner)),
+		"scanMode":                llx.StringData(string(sj.ScanMode)),
+		"scanId":                  llx.StringDataPtr(sj.ScanId),
+		"state":                   llx.StringData(string(sj.State)),
+		"statusMessage":           llx.StringDataPtr(sj.StatusMessage),
+		"createdAt":               llx.TimeDataPtr(sj.CreationDate),
+		"completionDate":          llx.TimeDataPtr(sj.CompletionDate),
+		"continuousScanStartTime": llx.TimeDataPtr(sj.ContinuousScanStartTime),
+		"continuousScanEndTime":   llx.TimeDataPtr(sj.ContinuousScanEndTime),
+	}
+
+	if sj.ScanResult != nil {
+		args["scanResultStatus"] = llx.StringData(string(sj.ScanResult.ScanResultStatus))
+	} else {
+		args["scanResultStatus"] = llx.StringData("")
+	}
+
+	var backupPlanVersion, backupRuleId string
+	if sj.CreatedBy != nil {
+		backupPlanVersion = convert.ToValue(sj.CreatedBy.BackupPlanVersion)
+		backupRuleId = convert.ToValue(sj.CreatedBy.BackupRuleId)
+	}
+	args["backupPlanVersion"] = llx.StringData(backupPlanVersion)
+	args["backupRuleId"] = llx.StringData(backupRuleId)
+
+	resource, err := CreateResource(runtime, ResourceAwsBackupScanJob, args)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlScanJob := resource.(*mqlAwsBackupScanJob)
+	mqlScanJob.cacheVaultArn = convert.ToValue(sj.BackupVaultArn)
+	mqlScanJob.cacheRecoveryPointArn = convert.ToValue(sj.RecoveryPointArn)
+	mqlScanJob.cacheBaseRecoveryPointArn = convert.ToValue(sj.ScanBaseRecoveryPointArn)
+	mqlScanJob.cacheIamRoleArn = convert.ToValue(sj.IamRoleArn)
+	mqlScanJob.cacheScannerRoleArn = convert.ToValue(sj.ScannerRoleArn)
+	if sj.CreatedBy != nil {
+		mqlScanJob.cacheBackupPlanArn = convert.ToValue(sj.CreatedBy.BackupPlanArn)
+	}
+	return mqlScanJob, nil
+}
+
 func newMqlBackupPlanRule(runtime *plugin.Runtime, planArn string, rule backuptypes.BackupRule) (*mqlAwsBackupPlanRule, error) {
 	ruleId := convert.ToValue(rule.RuleId)
 	uniqueId := planArn + "\x00" + ruleId
@@ -332,6 +443,15 @@ func newMqlBackupPlanRule(runtime *plugin.Runtime, planArn string, rule backupty
 		rpTags = toInterfaceMap(rule.RecoveryPointTags)
 	}
 
+	// Build malware scan actions
+	scanActions := make([]any, 0, len(rule.ScanActions))
+	for _, sa := range rule.ScanActions {
+		scanActions = append(scanActions, map[string]any{
+			"malwareScanner": string(sa.MalwareScanner),
+			"scanMode":       string(sa.ScanMode),
+		})
+	}
+
 	resource, err := CreateResource(runtime, ResourceAwsBackupPlanRule,
 		map[string]*llx.RawData{
 			"__id":                       llx.StringData(uniqueId),
@@ -345,6 +465,7 @@ func newMqlBackupPlanRule(runtime *plugin.Runtime, planArn string, rule backupty
 			"enableContinuousBackup":     llx.BoolDataPtr(rule.EnableContinuousBackup),
 			"copyActions":                llx.ArrayData(copyActions, types.Resource(ResourceAwsBackupPlanRuleCopyAction)),
 			"recoveryPointTags":          llx.MapData(rpTags, types.String),
+			"scanActions":                llx.ArrayData(scanActions, types.Dict),
 		})
 	if err != nil {
 		return nil, err
@@ -495,4 +616,95 @@ func (a *mqlAwsBackupPlanRuleCopyAction) destinationVault() (*mqlAwsBackupVault,
 		return nil, err
 	}
 	return res.(*mqlAwsBackupVault), nil
+}
+
+type mqlAwsBackupScanJobInternal struct {
+	cacheVaultArn             string
+	cacheRecoveryPointArn     string
+	cacheBaseRecoveryPointArn string
+	cacheIamRoleArn           string
+	cacheScannerRoleArn       string
+	cacheBackupPlanArn        string
+}
+
+func (a *mqlAwsBackupScanJob) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsBackupScanJob) vault() (*mqlAwsBackupVault, error) {
+	if a.cacheVaultArn == "" {
+		a.Vault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.vault",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheVaultArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVault), nil
+}
+
+func (a *mqlAwsBackupScanJob) recoveryPoint() (*mqlAwsBackupVaultRecoveryPoint, error) {
+	if a.cacheRecoveryPointArn == "" {
+		a.RecoveryPoint.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheRecoveryPointArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVaultRecoveryPoint), nil
+}
+
+func (a *mqlAwsBackupScanJob) baseRecoveryPoint() (*mqlAwsBackupVaultRecoveryPoint, error) {
+	if a.cacheBaseRecoveryPointArn == "" {
+		a.BaseRecoveryPoint.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheBaseRecoveryPointArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVaultRecoveryPoint), nil
+}
+
+func (a *mqlAwsBackupScanJob) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheIamRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheIamRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsBackupScanJob) scannerRole() (*mqlAwsIamRole, error) {
+	if a.cacheScannerRoleArn == "" {
+		a.ScannerRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheScannerRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsBackupScanJob) backupPlan() (*mqlAwsBackupPlan, error) {
+	if a.cacheBackupPlanArn == "" {
+		a.BackupPlan.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.plan",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheBackupPlanArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupPlan), nil
 }
