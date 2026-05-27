@@ -18,6 +18,7 @@ const (
 	ResourceHelm           string = "helm"
 	ResourceHelmChart      string = "helm.chart"
 	ResourceHelmDependency string = "helm.dependency"
+	ResourceHelmOciRef     string = "helm.ociRef"
 	ResourceHelmMaintainer string = "helm.maintainer"
 	ResourceHelmTemplate   string = "helm.template"
 	ResourceHelmDirective  string = "helm.directive"
@@ -40,6 +41,10 @@ func init() {
 		"helm.dependency": {
 			// to override args, implement: initHelmDependency(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHelmDependency,
+		},
+		"helm.ociRef": {
+			// to override args, implement: initHelmOciRef(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHelmOciRef,
 		},
 		"helm.maintainer": {
 			// to override args, implement: initHelmMaintainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -212,6 +217,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"helm.dependency.alias": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmDependency).GetAlias()).ToDataRes(types.String)
+	},
+	"helm.dependency.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmDependency).GetSourceType()).ToDataRes(types.String)
+	},
+	"helm.dependency.registryRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmDependency).GetRegistryRef()).ToDataRes(types.Resource("helm.ociRef"))
+	},
+	"helm.ociRef.reference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmOciRef).GetReference()).ToDataRes(types.String)
+	},
+	"helm.ociRef.registry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmOciRef).GetRegistry()).ToDataRes(types.String)
+	},
+	"helm.ociRef.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmOciRef).GetRepository()).ToDataRes(types.String)
+	},
+	"helm.ociRef.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmOciRef).GetTag()).ToDataRes(types.String)
+	},
+	"helm.ociRef.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmOciRef).GetDigest()).ToDataRes(types.String)
 	},
 	"helm.maintainer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmMaintainer).GetName()).ToDataRes(types.String)
@@ -406,6 +432,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.dependency.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmDependency).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.dependency.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmDependency).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.dependency.registryRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmDependency).RegistryRef, ok = plugin.RawToTValue[*mqlHelmOciRef](v.Value, v.Error)
+		return
+	},
+	"helm.ociRef.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).__id, ok = v.Value.(string)
+		return
+	},
+	"helm.ociRef.reference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).Reference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.ociRef.registry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).Registry, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.ociRef.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.ociRef.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.ociRef.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmOciRef).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"helm.maintainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -803,13 +861,15 @@ type mqlHelmDependency struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlHelmDependencyInternal it will be used here
-	Name       plugin.TValue[string]
-	Version    plugin.TValue[string]
-	Repository plugin.TValue[string]
-	Condition  plugin.TValue[string]
-	Tags       plugin.TValue[[]any]
-	Enabled    plugin.TValue[bool]
-	Alias      plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Repository  plugin.TValue[string]
+	Condition   plugin.TValue[string]
+	Tags        plugin.TValue[[]any]
+	Enabled     plugin.TValue[bool]
+	Alias       plugin.TValue[string]
+	SourceType  plugin.TValue[string]
+	RegistryRef plugin.TValue[*mqlHelmOciRef]
 }
 
 // createHelmDependency creates a new instance of this resource
@@ -870,6 +930,90 @@ func (c *mqlHelmDependency) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlHelmDependency) GetAlias() *plugin.TValue[string] {
 	return &c.Alias
+}
+
+func (c *mqlHelmDependency) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlHelmDependency) GetRegistryRef() *plugin.TValue[*mqlHelmOciRef] {
+	return plugin.GetOrCompute[*mqlHelmOciRef](&c.RegistryRef, func() (*mqlHelmOciRef, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.dependency", c.__id, "registryRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmOciRef), nil
+			}
+		}
+
+		return c.registryRef()
+	})
+}
+
+// mqlHelmOciRef for the helm.ociRef resource
+type mqlHelmOciRef struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHelmOciRefInternal it will be used here
+	Reference  plugin.TValue[string]
+	Registry   plugin.TValue[string]
+	Repository plugin.TValue[string]
+	Tag        plugin.TValue[string]
+	Digest     plugin.TValue[string]
+}
+
+// createHelmOciRef creates a new instance of this resource
+func createHelmOciRef(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHelmOciRef{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("helm.ociRef", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHelmOciRef) MqlName() string {
+	return "helm.ociRef"
+}
+
+func (c *mqlHelmOciRef) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHelmOciRef) GetReference() *plugin.TValue[string] {
+	return &c.Reference
+}
+
+func (c *mqlHelmOciRef) GetRegistry() *plugin.TValue[string] {
+	return &c.Registry
+}
+
+func (c *mqlHelmOciRef) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlHelmOciRef) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlHelmOciRef) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
 }
 
 // mqlHelmMaintainer for the helm.maintainer resource

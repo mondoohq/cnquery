@@ -1,0 +1,16 @@
+apiVersion: v2
+name: oci-deps
+version: 1.0.0
+appVersion: "1.0.0"
+description: A chart with mixed dependency sources for source classification
+type: application
+dependencies:
+  - name: redis
+    version: 18.1.5
+    repository: oci://ghcr.io/acme/charts/redis
+  - name: nginx
+    version: ">=15.0.0"
+    repository: https://charts.bitnami.com/bitnami
+  - name: localchart
+    version: 0.1.0
+    repository: file://./charts/localchart

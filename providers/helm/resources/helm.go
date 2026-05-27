@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -253,11 +254,130 @@ func newMqlHelmDependency(runtime *plugin.Runtime, chartName string, dep *chart.
 		"tags":       llx.ArrayData(tags, types.String),
 		"enabled":    llx.BoolData(dep.Enabled),
 		"alias":      llx.StringData(dep.Alias),
+		"sourceType": llx.StringData(classifyHelmSource(dep.Repository, dep.Alias)),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlHelmDependency), nil
+}
+
+// classifyHelmSource categorizes a dependency's source from its
+// repository value (offline, no network). An empty repository with an
+// alias is a sibling-chart reference; an empty repository with neither
+// is unknown.
+func classifyHelmSource(repository, alias string) string {
+	repo := strings.TrimSpace(repository)
+	switch {
+	case repo == "":
+		if alias != "" {
+			return "alias"
+		}
+		return "unknown"
+	case strings.HasPrefix(repo, "oci://"):
+		return "oci"
+	case strings.HasPrefix(repo, "https://"):
+		return "https"
+	case strings.HasPrefix(repo, "http://"):
+		return "http"
+	case strings.HasPrefix(repo, "file://"), strings.HasPrefix(repo, "./"), strings.HasPrefix(repo, "../"), strings.HasPrefix(repo, "/"):
+		return "file"
+	default:
+		return "unknown"
+	}
+}
+
+func (d *mqlHelmDependency) registryRef() (*mqlHelmOciRef, error) {
+	if d.SourceType.Data != "oci" {
+		d.RegistryRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	parsed := parseOciRef(d.Repository.Data, d.Version.Data)
+
+	res, err := CreateResource(d.MqlRuntime, "helm.ociRef", map[string]*llx.RawData{
+		"__id":       llx.StringData("helm.dependency:" + d.Name.Data + "/ociRef"),
+		"reference":  llx.StringData(parsed.reference),
+		"registry":   llx.StringData(parsed.registry),
+		"repository": llx.StringData(parsed.repository),
+		"tag":        llx.StringData(parsed.tag),
+		"digest":     llx.StringData(parsed.digest),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHelmOciRef), nil
+}
+
+type ociRef struct {
+	reference  string
+	registry   string
+	repository string
+	tag        string
+	digest     string
+}
+
+// parseOciRef decomposes an oci:// reference (and the dependency's
+// version constraint) into registry / repository / tag / digest. It is
+// defensive: an unparseable reference yields whatever parts could be
+// recovered with empty strings for the rest, and never panics.
+//
+//	oci://ghcr.io/acme/charts/redis        -> registry=ghcr.io repository=acme/charts/redis
+//	oci://ghcr.io/acme/redis:1.2.3         -> ... tag=1.2.3
+//	oci://ghcr.io/acme/redis@sha256:abc... -> ... digest=sha256:abc...
+//
+// The tag falls back to the dependency version when it's a concrete
+// version (no range operators); the digest falls back to the version
+// when the version itself pins a sha256 digest.
+func parseOciRef(repository, version string) ociRef {
+	ref := ociRef{reference: repository}
+
+	rest := strings.TrimPrefix(strings.TrimSpace(repository), "oci://")
+
+	// A digest pin (@sha256:...) takes precedence over a :tag suffix.
+	if at := strings.LastIndex(rest, "@"); at != -1 {
+		ref.digest = rest[at+1:]
+		rest = rest[:at]
+	}
+
+	// Split host from path. Everything before the first "/" is the
+	// registry host; the remainder is the repository path.
+	if slash := strings.Index(rest, "/"); slash != -1 {
+		ref.registry = rest[:slash]
+		repoPath := rest[slash+1:]
+
+		// A :tag suffix on the final path segment (only when no digest
+		// was found, and only if the colon isn't part of a host:port —
+		// which lives in the registry segment, already split off).
+		if ref.digest == "" {
+			if colon := strings.LastIndex(repoPath, ":"); colon != -1 {
+				ref.tag = repoPath[colon+1:]
+				repoPath = repoPath[:colon]
+			}
+		}
+		ref.repository = repoPath
+	} else {
+		// No path component — treat the whole thing as the registry.
+		ref.registry = rest
+	}
+
+	// Fall back to the version constraint for tag/digest when the
+	// reference itself didn't carry one.
+	v := strings.TrimSpace(version)
+	if ref.digest == "" && strings.HasPrefix(v, "sha256:") {
+		ref.digest = v
+	} else if ref.tag == "" && v != "" && isConcreteVersion(v) {
+		ref.tag = v
+	}
+
+	return ref
+}
+
+// isConcreteVersion reports whether a version string is a single
+// concrete version rather than a SemVer range/constraint. OCI tags are
+// concrete, so only a concrete version maps onto a tag.
+func isConcreteVersion(v string) bool {
+	return !strings.ContainsAny(v, "^~*><= |,x")
 }
 
 func newMqlHelmMaintainer(runtime *plugin.Runtime, chartName string, idx int, m *chart.Maintainer) (*mqlHelmMaintainer, error) {

@@ -28,7 +28,9 @@ helm.dependency.alias 13.0.0
 helm.dependency.condition 13.0.0
 helm.dependency.enabled 13.0.0
 helm.dependency.name 13.0.0
+helm.dependency.registryRef 13.0.10
 helm.dependency.repository 13.0.0
+helm.dependency.sourceType 13.0.10
 helm.dependency.tags 13.0.0
 helm.dependency.version 13.0.0
 helm.directive 13.0.0
@@ -42,6 +44,12 @@ helm.maintainer 13.0.0
 helm.maintainer.email 13.0.0
 helm.maintainer.name 13.0.0
 helm.maintainer.url 13.0.0
+helm.ociRef 13.0.10
+helm.ociRef.digest 13.0.10
+helm.ociRef.reference 13.0.10
+helm.ociRef.registry 13.0.10
+helm.ociRef.repository 13.0.10
+helm.ociRef.tag 13.0.10
 helm.resource 13.0.0
 helm.resource.annotations 13.0.0
 helm.resource.apiVersion 13.0.0

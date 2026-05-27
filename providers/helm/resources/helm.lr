@@ -92,6 +92,48 @@ helm.dependency @defaults("name version") {
   enabled bool
   // Alias for the dependency
   alias string
+  // Classification of the dependency's source
+  //
+  // Derived from the `repository:` value (and `alias`/local path when the
+  // repository is empty). One of: "oci" for an OCI registry reference
+  // (`oci://...`, Helm 3.8+), "http" or "https" for a classic chart
+  // repository URL, "file" for a `file://` or local relative path, "alias"
+  // when the dependency references a sibling chart by alias with no
+  // repository, or "unknown" when the source can't be classified.
+  sourceType string
+  // OCI registry reference parsed from the repository
+  //
+  // Non-null only when sourceType is "oci"; null otherwise. Breaks the
+  // `oci://` reference into registry, repository, tag, and digest for
+  // offline supply-chain auditing without contacting the registry.
+  registryRef() helm.ociRef
+}
+
+// OCI registry reference for a Helm chart dependency
+//
+// Examine the parsed parts of an `oci://` dependency reference (Helm 3.8+):
+// the full reference, the registry host, the repository path, and the
+// pinned tag or digest. Parsing is offline — it classifies and decomposes
+// the reference string and the dependency's version constraint without ever
+// pulling from the registry.
+helm.ociRef @defaults("reference") {
+  // Full OCI reference (e.g., oci://ghcr.io/acme/charts/redis)
+  reference string
+  // Registry host (e.g., ghcr.io)
+  registry string
+  // Repository path within the registry (e.g., acme/charts/redis)
+  repository string
+  // Tag the reference resolves to
+  //
+  // Taken from the dependency's version constraint when it's a concrete
+  // version, or from a `:tag` suffix on the reference. Empty when the
+  // reference is pinned by digest or the version is a range constraint.
+  tag string
+  // Digest the reference is pinned to
+  //
+  // A `sha256:...` digest when the reference or version pins one (via an
+  // `@sha256:` suffix); empty otherwise.
+  digest string
 }
 
 // Helm chart maintainer
