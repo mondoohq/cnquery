@@ -98,76 +98,40 @@ func parseBicep(content string) *parsedBicepFile {
 		result.targetScope = m[1]
 	}
 
-	lines := strings.Split(content, "\n")
-	i := 0
-	for i < len(lines) {
-		line := lines[i]
-		trimmed := strings.TrimSpace(line)
+	// Walk the file once into brace/bracket/string-aware statements, then
+	// dispatch each one to the construct-specific parser. Each statement's
+	// `text` is a guaranteed-complete construct (its delimiters balance), so
+	// the per-construct helpers receive the whole body rather than re-walking
+	// the raw line slice.
+	for _, stmt := range tokenizeBicep(content) {
+		// The Decl helpers still operate on a line slice indexed from the
+		// start of the statement. Because `stmt.text` is already a complete
+		// construct, splitting it and starting at index 0 yields exactly the
+		// lines the helper would have seen in the old line-walking loop.
+		stmtLines := strings.Split(stmt.text, "\n")
+		firstLine := strings.TrimSpace(stmtLines[0])
 
-		// Collect decorators. Multiline decorators (e.g. @allowed([\n...\n]))
-		// are reassembled by walking the string-aware depth scanner —
-		// paren / bracket counts inside Bicep string literals don't
-		// contribute, so `@description('contains ] bracket')` still
-		// terminates after one line.
-		var decorators []string
-		for strings.HasPrefix(trimmed, "@") {
-			decLine := trimmed
-			st := scanState{}
-			st.feed(decLine)
-			i++
-			for st.totalDepth() > 0 && i < len(lines) {
-				line = lines[i]
-				trimmed = strings.TrimSpace(line)
-				decLine += "\n" + trimmed
-				st.feed(trimmed)
-				i++
-			}
-			decorators = append(decorators, decLine)
-			if i >= len(lines) {
-				break
-			}
-			line = lines[i]
-			trimmed = strings.TrimSpace(line)
-		}
-
-		if strings.HasPrefix(trimmed, "param ") {
-			result.parameters = append(result.parameters, parseParameter(trimmed, decorators))
-			i++
-			continue
-		}
-
-		if strings.HasPrefix(trimmed, "var ") {
-			v, consumed := parseVariableDecl(lines, i, decorators)
+		switch stmt.keyword {
+		case "param":
+			result.parameters = append(result.parameters, parseParameter(firstLine, stmt.decorators))
+		case "var":
+			v, _ := parseVariableDecl(stmtLines, 0, stmt.decorators)
 			result.variables = append(result.variables, v)
-			i = consumed
-			continue
-		}
-
-		if strings.HasPrefix(trimmed, "resource ") {
-			res, consumed := parseResourceDecl(lines, i, decorators)
-			if res != nil {
+		case "resource":
+			if res, _ := parseResourceDecl(stmtLines, 0, stmt.decorators); res != nil {
 				result.resources = append(result.resources, *res)
 			}
-			i = consumed
-			continue
-		}
-
-		if strings.HasPrefix(trimmed, "module ") {
-			mod, consumed := parseModuleDecl(lines, i, decorators)
-			if mod != nil {
+		case "module":
+			if mod, _ := parseModuleDecl(stmtLines, 0, stmt.decorators); mod != nil {
 				result.modules = append(result.modules, *mod)
 			}
-			i = consumed
-			continue
+		case "output":
+			result.outputs = append(result.outputs, parseOutput(firstLine, stmt.decorators))
+		default:
+			// targetScope (already captured above) and unknown leading
+			// tokens carry no per-construct parsing here; they are retained
+			// as statements purely so the tokenizer never drops a line.
 		}
-
-		if strings.HasPrefix(trimmed, "output ") {
-			result.outputs = append(result.outputs, parseOutput(trimmed, decorators))
-			i++
-			continue
-		}
-
-		i++
 	}
 
 	return result
