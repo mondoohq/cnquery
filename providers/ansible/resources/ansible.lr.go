@@ -190,6 +190,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.task.register": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetRegister()).ToDataRes(types.String)
 	},
+	"ansible.task.become": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetBecome()).ToDataRes(types.Bool)
+	},
+	"ansible.task.becomeUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetBecomeUser()).ToDataRes(types.String)
+	},
+	"ansible.task.becomeMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetBecomeMethod()).ToDataRes(types.String)
+	},
+	"ansible.task.becomeFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetBecomeFlags()).ToDataRes(types.String)
+	},
+	"ansible.task.delegateTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetDelegateTo()).ToDataRes(types.String)
+	},
+	"ansible.task.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetEnvironment()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"ansible.task.noLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetNoLog()).ToDataRes(types.Dict)
+	},
+	"ansible.task.ignoreErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetIgnoreErrors()).ToDataRes(types.Dict)
+	},
+	"ansible.task.runOnce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetRunOnce()).ToDataRes(types.Dict)
+	},
 	"ansible.task.when": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetWhen()).ToDataRes(types.String)
 	},
@@ -361,6 +388,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.task.register": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Register, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.become": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Become, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ansible.task.becomeUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).BecomeUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.becomeMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).BecomeMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.becomeFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).BecomeFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.delegateTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).DelegateTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.noLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).NoLog, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.ignoreErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).IgnoreErrors, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.runOnce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).RunOnce, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ansible.task.when": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -709,6 +772,15 @@ type mqlAnsibleTask struct {
 	Vars            plugin.TValue[map[string]any]
 	Tags            plugin.TValue[[]any]
 	Register        plugin.TValue[string]
+	Become          plugin.TValue[bool]
+	BecomeUser      plugin.TValue[string]
+	BecomeMethod    plugin.TValue[string]
+	BecomeFlags     plugin.TValue[string]
+	DelegateTo      plugin.TValue[string]
+	Environment     plugin.TValue[map[string]any]
+	NoLog           plugin.TValue[any]
+	IgnoreErrors    plugin.TValue[any]
+	RunOnce         plugin.TValue[any]
 	When            plugin.TValue[string]
 	FailedWhen      plugin.TValue[string]
 	ChangedWhen     plugin.TValue[string]
@@ -774,6 +846,42 @@ func (c *mqlAnsibleTask) GetTags() *plugin.TValue[[]any] {
 
 func (c *mqlAnsibleTask) GetRegister() *plugin.TValue[string] {
 	return &c.Register
+}
+
+func (c *mqlAnsibleTask) GetBecome() *plugin.TValue[bool] {
+	return &c.Become
+}
+
+func (c *mqlAnsibleTask) GetBecomeUser() *plugin.TValue[string] {
+	return &c.BecomeUser
+}
+
+func (c *mqlAnsibleTask) GetBecomeMethod() *plugin.TValue[string] {
+	return &c.BecomeMethod
+}
+
+func (c *mqlAnsibleTask) GetBecomeFlags() *plugin.TValue[string] {
+	return &c.BecomeFlags
+}
+
+func (c *mqlAnsibleTask) GetDelegateTo() *plugin.TValue[string] {
+	return &c.DelegateTo
+}
+
+func (c *mqlAnsibleTask) GetEnvironment() *plugin.TValue[map[string]any] {
+	return &c.Environment
+}
+
+func (c *mqlAnsibleTask) GetNoLog() *plugin.TValue[any] {
+	return &c.NoLog
+}
+
+func (c *mqlAnsibleTask) GetIgnoreErrors() *plugin.TValue[any] {
+	return &c.IgnoreErrors
+}
+
+func (c *mqlAnsibleTask) GetRunOnce() *plugin.TValue[any] {
+	return &c.RunOnce
 }
 
 func (c *mqlAnsibleTask) GetWhen() *plugin.TValue[string] {

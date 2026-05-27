@@ -1,0 +1,19 @@
+---
+- name: Security-sensitive play
+  hosts: webservers
+  tasks:
+    - name: Run privileged task with masked secrets
+      ansible.builtin.command: /usr/bin/rotate-secrets
+      become: true
+      become_user: root
+      become_method: sudo
+      become_flags: "-H -S -n"
+      no_log: true
+      delegate_to: localhost
+      run_once: true
+      environment:
+        HTTP_PROXY: http://proxy.example.com:8080
+
+    - name: Task that tolerates templated error masking
+      ansible.builtin.command: /usr/bin/maybe-fails
+      ignore_errors: "{{ ansible_check_mode }}"

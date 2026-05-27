@@ -239,3 +239,52 @@ func TestSerialIsExposed(t *testing.T) {
 	require.Len(t, plays, 1)
 	assert.Equal(t, 3, plays[0].(*mqlAnsiblePlay).Serial.Data)
 }
+
+// Task-level security attributes (become family, no_log, ignore_errors,
+// delegate_to, run_once, environment) must decode and be exposed on the MQL
+// resource. The polymorphic dict fields must accept a Jinja2 templated string
+// without breaking playbook parsing.
+func TestTaskSecurityAttributesExposed(t *testing.T) {
+	rt := newTestRuntime(t, `---
+- name: p
+  hosts: a
+  tasks:
+    - name: privileged
+      command: /usr/bin/rotate-secrets
+      become: true
+      become_user: root
+      become_method: sudo
+      become_flags: "-H -S -n"
+      delegate_to: localhost
+      no_log: true
+      run_once: true
+      environment:
+        HTTP_PROXY: http://proxy.example.com:8080
+    - name: templated
+      command: /usr/bin/maybe-fails
+      ignore_errors: "{{ ansible_check_mode }}"
+`)
+	a := &mqlAnsible{MqlRuntime: rt}
+	plays, err := a.plays()
+	require.NoError(t, err)
+	require.Len(t, plays, 1)
+
+	tasks, err := plays[0].(*mqlAnsiblePlay).tasks()
+	require.NoError(t, err)
+	require.Len(t, tasks, 2)
+
+	priv := tasks[0].(*mqlAnsibleTask)
+	assert.Equal(t, true, priv.Become.Data)
+	assert.Equal(t, "root", priv.BecomeUser.Data)
+	assert.Equal(t, "sudo", priv.BecomeMethod.Data)
+	assert.Equal(t, "-H -S -n", priv.BecomeFlags.Data)
+	assert.Equal(t, "localhost", priv.DelegateTo.Data)
+	assert.Equal(t, true, priv.NoLog.Data)
+	assert.Equal(t, true, priv.RunOnce.Data)
+	assert.Equal(t, "http://proxy.example.com:8080", priv.Environment.Data["HTTP_PROXY"])
+
+	// A Jinja2 templated ignore_errors must be exposed as the raw string, not
+	// fail to parse.
+	templated := tasks[1].(*mqlAnsibleTask)
+	assert.Equal(t, "{{ ansible_check_mode }}", templated.IgnoreErrors.Data)
+}

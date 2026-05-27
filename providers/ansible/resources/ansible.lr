@@ -86,6 +86,39 @@ ansible.task @defaults("name"){
   tags []string
   // Variable name to store task result
   register string
+  // Whether privilege escalation is activated for the task
+  become bool
+  // User to become for the task (e.g., root)
+  becomeUser string
+  // Privilege escalation method for the task
+  becomeMethod string
+  // Additional flags passed to the become method
+  becomeFlags string
+  // Host the task is delegated to
+  delegateTo string
+  // Environment variables set for the task
+  environment map[string]dict
+  // Whether sensitive task output is hidden from logs
+  //
+  // The value supplied to the `no_log:` keyword. Usually a boolean, but
+  // Ansible also accepts a Jinja2 expression string (for example
+  // `"{{ hide_secrets }}"`). Compare against `== true` to match the literal
+  // boolean case.
+  noLog dict
+  // Whether task failure is ignored
+  //
+  // The value supplied to the `ignore_errors:` keyword. Usually a boolean,
+  // but Ansible also accepts a Jinja2 expression string (for example
+  // `"{{ ansible_check_mode }}"`). Compare against `== true` to match the
+  // literal boolean case.
+  ignoreErrors dict
+  // Whether the task runs on only one host
+  //
+  // The value supplied to the `run_once:` keyword. Usually a boolean, but
+  // Ansible also accepts a Jinja2 expression string (for example
+  // `"{{ run_migration }}"`). Compare against `== true` to match the literal
+  // boolean case.
+  runOnce dict
   // Jinja2 condition for task execution
   when string
   // Condition that marks task as failed

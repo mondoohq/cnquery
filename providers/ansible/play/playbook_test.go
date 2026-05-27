@@ -138,6 +138,32 @@ func TestPlaybookDecoding(t *testing.T) {
 		require.Equal(t, 1, len(blockTask.Always))
 		assert.Equal(t, "Reload firewalld", blockTask.Always[0].Name)
 	})
+
+	t.Run("load playbook with task-level security attributes", func(t *testing.T) {
+		data, err := os.ReadFile("./testdata/play_security.yml")
+		require.NoError(t, err)
+
+		playbook, err := DecodePlaybook(data)
+		require.NoError(t, err)
+		require.NotNil(t, playbook)
+
+		p := playbook[0]
+		require.Equal(t, 2, len(p.Tasks))
+
+		privileged := p.Tasks[0]
+		assert.True(t, privileged.Become)
+		assert.Equal(t, "root", privileged.BecomeUser)
+		assert.Equal(t, "sudo", privileged.BecomeMethod)
+		assert.Equal(t, "-H -S -n", privileged.BecomeFlags)
+		assert.Equal(t, "localhost", privileged.DelegateTo)
+		assert.Equal(t, true, privileged.NoLog)
+		assert.Equal(t, true, privileged.RunOnce)
+		assert.Equal(t, "http://proxy.example.com:8080", privileged.Environment["HTTP_PROXY"])
+
+		// A templated string for ignore_errors must not break parsing.
+		templated := p.Tasks[1]
+		assert.Equal(t, "{{ ansible_check_mode }}", templated.IgnoreErrors)
+	})
 }
 
 func TestTaskDecoding(t *testing.T) {

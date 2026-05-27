@@ -117,6 +117,45 @@ type Task struct {
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#registering-variables
 	Register string `yaml:"register,omitempty"`
 
+	// Become sets to true to activate privilege escalation.
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become
+	Become bool `yaml:"become,omitempty"`
+
+	// BecomeUser sets to user with desired privileges
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become
+	BecomeUser string `yaml:"become_user,omitempty"`
+
+	// BecomeMethod overrides the default method of privilege escalation
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become
+	BecomeMethod string `yaml:"become_method,omitempty"`
+
+	// BecomeFlags permits the use of specific flags
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become
+	BecomeFlags string `yaml:"become_flags,omitempty"`
+
+	// DelegateTo delegates the task to a specific host
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-tasks
+	DelegateTo string `yaml:"delegate_to,omitempty"`
+
+	// Environment sets environment variables for the task
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html
+	Environment map[string]any `yaml:"environment,omitempty"`
+
+	// NoLog hides sensitive task output from logs. Usually a boolean but
+	// Ansible also accepts a Jinja2 templated string, so it is decoded as any.
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#keep-secret-data
+	NoLog any `yaml:"no_log,omitempty"`
+
+	// IgnoreErrors continues the play even if the task fails. Usually a boolean
+	// but Ansible also accepts a Jinja2 templated string, so it is decoded as any.
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-failed-commands
+	IgnoreErrors any `yaml:"ignore_errors,omitempty"`
+
+	// RunOnce runs the task on only one host. Usually a boolean but Ansible
+	// also accepts a Jinja2 templated string, so it is decoded as any.
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#run-once
+	RunOnce any `yaml:"run_once,omitempty"`
+
 	// Conditional statement to execute the task
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#basic-conditionals-with-when
 	When string `yaml:"when,omitempty"`
