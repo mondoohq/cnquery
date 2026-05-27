@@ -246,6 +246,7 @@ var validatedGCPPermissions = []string{
 	"storage.buckets.get",
 	"storage.buckets.getIamPolicy",
 	"storage.buckets.list",
+	"workflows.workflows.list",
 }
 
 type permissionManifest struct {

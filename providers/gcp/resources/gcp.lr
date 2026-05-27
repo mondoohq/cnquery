@@ -828,6 +828,8 @@ gcp.project @defaults("name number") {
   networkSecurity() gcp.project.networkSecurityService
   // GCP Dataplex resources
   dataplex() gcp.project.dataplexService
+  // GCP Workflows resources
+  workflows() gcp.project.workflowsService
 }
 
 // Google Cloud service API
@@ -5372,6 +5374,85 @@ private gcp.project.dataplexService.lake.zone.asset @defaults("name resourceType
   discoveryEnabled bool
   // Cron schedule for periodic metadata discovery runs
   discoverySchedule string
+}
+
+// Google Cloud Workflows
+//
+// Use this resource as the entry point for Workflows in the project. It
+// hosts the `workflows` — serverless orchestrations that chain together
+// services and APIs — and `enabled` reports whether the Workflows API is
+// turned on for the project.
+private gcp.project.workflowsService @defaults("projectId") {
+  // Project ID
+  projectId string
+  // Whether the Workflows API is enabled for the project
+  enabled bool
+  // Workflows across all locations in the project
+  workflows() []gcp.project.workflowsService.workflow
+}
+
+// Google Cloud Workflows workflow
+//
+// Examine a workflow definition and its execution settings. Surfaces the
+// `state`, the `serviceAccount` identity executions run as, the
+// `sourceContents` (the workflow definition), the active `revisionId`,
+// `callLogLevel` and `executionHistoryLevel` logging settings, the
+// customer-managed encryption key (`cryptoKeyName`) and `allKmsKeys` in
+// effect, and user-defined environment variables. Selected by its full
+// resource name, for example
+// `projects/my-project/locations/us-central1/workflows/my-workflow`.
+private gcp.project.workflowsService.workflow @defaults("name state") {
+  // Full resource name of the workflow
+  id string
+  // Project ID
+  projectId string
+  // Location (region) where the workflow resides
+  location string
+  // Short name of the workflow
+  name string
+  // User-provided description of the workflow
+  description string
+  // Workflow lifecycle state
+  //
+  // One of ACTIVE, UNAVAILABLE, or STATE_UNSPECIFIED.
+  state string
+  // Detail of the last state error, if any
+  //
+  // Exposes `type` (the kind of error, for example KMS_ERROR) and
+  // `details` (a human-readable message). Null when the workflow is healthy.
+  stateError dict
+  // Revision ID of the deployed workflow definition
+  revisionId string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+  // Time the current revision was created
+  revisionCreated time
+  // User-provided labels
+  labels map[string]string
+  // Severity of calls logged to Cloud Logging during executions
+  //
+  // One of LOG_ALL_CALLS, LOG_ERRORS_ONLY, LOG_NONE, or
+  // CALL_LOG_LEVEL_UNSPECIFIED.
+  callLogLevel string
+  // Granularity of execution history retained for the workflow
+  //
+  // One of EXECUTION_HISTORY_BASIC, EXECUTION_HISTORY_DETAILED, or
+  // EXECUTION_HISTORY_LEVEL_UNSPECIFIED.
+  executionHistoryLevel string
+  // Resource name of the customer-managed encryption key, if configured
+  cryptoKeyName string
+  // All KMS key resource names in use by the workflow and its revisions
+  allKmsKeys []string
+  // Email of the service account executions run as
+  serviceAccountEmail string
+  // Service account executions run as
+  serviceAccount() gcp.project.iamService.serviceAccount
+  // Source definition of the workflow (YAML or JSON)
+  sourceContents string
+  // User-defined environment variables available to executions
+  userEnvVars map[string]string
 }
 
 // Google Cloud (GCP) Dataproc

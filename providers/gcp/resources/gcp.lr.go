@@ -170,6 +170,8 @@ const (
 	ResourceGcpProjectDataplexServiceLake                                              string = "gcp.project.dataplexService.lake"
 	ResourceGcpProjectDataplexServiceLakeZone                                          string = "gcp.project.dataplexService.lake.zone"
 	ResourceGcpProjectDataplexServiceLakeZoneAsset                                     string = "gcp.project.dataplexService.lake.zone.asset"
+	ResourceGcpProjectWorkflowsService                                                 string = "gcp.project.workflowsService"
+	ResourceGcpProjectWorkflowsServiceWorkflow                                         string = "gcp.project.workflowsService.workflow"
 	ResourceGcpProjectDataprocService                                                  string = "gcp.project.dataprocService"
 	ResourceGcpProjectDataprocServiceCluster                                           string = "gcp.project.dataprocService.cluster"
 	ResourceGcpProjectDataprocServiceClusterConfig                                     string = "gcp.project.dataprocService.cluster.config"
@@ -1048,6 +1050,14 @@ func init() {
 		"gcp.project.dataplexService.lake.zone.asset": {
 			// to override args, implement: initGcpProjectDataplexServiceLakeZoneAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDataplexServiceLakeZoneAsset,
+		},
+		"gcp.project.workflowsService": {
+			Init:   initGcpProjectWorkflowsService,
+			Create: createGcpProjectWorkflowsService,
+		},
+		"gcp.project.workflowsService.workflow": {
+			// to override args, implement: initGcpProjectWorkflowsServiceWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectWorkflowsServiceWorkflow,
 		},
 		"gcp.project.dataprocService": {
 			Init:   initGcpProjectDataprocService,
@@ -3041,6 +3051,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataplex": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetDataplex()).ToDataRes(types.Resource("gcp.project.dataplexService"))
+	},
+	"gcp.project.workflows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetWorkflows()).ToDataRes(types.Resource("gcp.project.workflowsService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -7586,6 +7599,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataplexService.lake.zone.asset.discoverySchedule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).GetDiscoverySchedule()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.workflowsService.workflows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsService).GetWorkflows()).ToDataRes(types.Array(types.Resource("gcp.project.workflowsService.workflow")))
+	},
+	"gcp.project.workflowsService.workflow.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.stateError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetStateError()).ToDataRes(types.Dict)
+	},
+	"gcp.project.workflowsService.workflow.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetRevisionId()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.workflowsService.workflow.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.workflowsService.workflow.revisionCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetRevisionCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.workflowsService.workflow.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.workflowsService.workflow.callLogLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetCallLogLevel()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.executionHistoryLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetExecutionHistoryLevel()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.cryptoKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetCryptoKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.allKmsKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetAllKmsKeys()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.workflowsService.workflow.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.workflowsService.workflow.sourceContents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetSourceContents()).ToDataRes(types.String)
+	},
+	"gcp.project.workflowsService.workflow.userEnvVars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectWorkflowsServiceWorkflow).GetUserEnvVars()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.dataprocService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocService).GetProjectId()).ToDataRes(types.String)
@@ -16127,6 +16209,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).Dataplex, ok = plugin.RawToTValue[*mqlGcpProjectDataplexService](v.Value, v.Error)
 		return
 	},
+	"gcp.project.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Workflows, ok = plugin.RawToTValue[*mqlGcpProjectWorkflowsService](v.Value, v.Error)
+		return
+	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpService).__id, ok = v.Value.(string)
 		return
@@ -22713,6 +22799,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataplexService.lake.zone.asset.discoverySchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataplexServiceLakeZoneAsset).DiscoverySchedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.workflowsService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsService).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.workflowsService.workflow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.stateError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).StateError, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.revisionCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).RevisionCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.callLogLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).CallLogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.executionHistoryLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).ExecutionHistoryLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.cryptoKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).CryptoKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.allKmsKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).AllKmsKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.sourceContents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).SourceContents, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.workflowsService.workflow.userEnvVars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectWorkflowsServiceWorkflow).UserEnvVars, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35966,6 +36152,7 @@ type mqlGcpProject struct {
 	OsConfig                 plugin.TValue[*mqlGcpProjectOsConfigService]
 	NetworkSecurity          plugin.TValue[*mqlGcpProjectNetworkSecurityService]
 	Dataplex                 plugin.TValue[*mqlGcpProjectDataplexService]
+	Workflows                plugin.TValue[*mqlGcpProjectWorkflowsService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -37122,6 +37309,22 @@ func (c *mqlGcpProject) GetDataplex() *plugin.TValue[*mqlGcpProjectDataplexServi
 		}
 
 		return c.dataplex()
+	})
+}
+
+func (c *mqlGcpProject) GetWorkflows() *plugin.TValue[*mqlGcpProjectWorkflowsService] {
+	return plugin.GetOrCompute[*mqlGcpProjectWorkflowsService](&c.Workflows, func() (*mqlGcpProjectWorkflowsService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "workflows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectWorkflowsService), nil
+			}
+		}
+
+		return c.workflows()
 	})
 }
 
@@ -52311,6 +52514,228 @@ func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDiscoveryEnabled() *plugi
 
 func (c *mqlGcpProjectDataplexServiceLakeZoneAsset) GetDiscoverySchedule() *plugin.TValue[string] {
 	return &c.DiscoverySchedule
+}
+
+// mqlGcpProjectWorkflowsService for the gcp.project.workflowsService resource
+type mqlGcpProjectWorkflowsService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectWorkflowsServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Enabled   plugin.TValue[bool]
+	Workflows plugin.TValue[[]any]
+}
+
+// createGcpProjectWorkflowsService creates a new instance of this resource
+func createGcpProjectWorkflowsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectWorkflowsService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.workflowsService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectWorkflowsService) MqlName() string {
+	return "gcp.project.workflowsService"
+}
+
+func (c *mqlGcpProjectWorkflowsService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectWorkflowsService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectWorkflowsService) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGcpProjectWorkflowsService) GetWorkflows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workflows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.workflowsService", c.__id, "workflows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workflows()
+	})
+}
+
+// mqlGcpProjectWorkflowsServiceWorkflow for the gcp.project.workflowsService.workflow resource
+type mqlGcpProjectWorkflowsServiceWorkflow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectWorkflowsServiceWorkflowInternal it will be used here
+	Id                    plugin.TValue[string]
+	ProjectId             plugin.TValue[string]
+	Location              plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	State                 plugin.TValue[string]
+	StateError            plugin.TValue[any]
+	RevisionId            plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	Updated               plugin.TValue[*time.Time]
+	RevisionCreated       plugin.TValue[*time.Time]
+	Labels                plugin.TValue[map[string]any]
+	CallLogLevel          plugin.TValue[string]
+	ExecutionHistoryLevel plugin.TValue[string]
+	CryptoKeyName         plugin.TValue[string]
+	AllKmsKeys            plugin.TValue[[]any]
+	ServiceAccountEmail   plugin.TValue[string]
+	ServiceAccount        plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	SourceContents        plugin.TValue[string]
+	UserEnvVars           plugin.TValue[map[string]any]
+}
+
+// createGcpProjectWorkflowsServiceWorkflow creates a new instance of this resource
+func createGcpProjectWorkflowsServiceWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectWorkflowsServiceWorkflow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.workflowsService.workflow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) MqlName() string {
+	return "gcp.project.workflowsService.workflow"
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetStateError() *plugin.TValue[any] {
+	return &c.StateError
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetRevisionId() *plugin.TValue[string] {
+	return &c.RevisionId
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetRevisionCreated() *plugin.TValue[*time.Time] {
+	return &c.RevisionCreated
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetCallLogLevel() *plugin.TValue[string] {
+	return &c.CallLogLevel
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetExecutionHistoryLevel() *plugin.TValue[string] {
+	return &c.ExecutionHistoryLevel
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetCryptoKeyName() *plugin.TValue[string] {
+	return &c.CryptoKeyName
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetAllKmsKeys() *plugin.TValue[[]any] {
+	return &c.AllKmsKeys
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.workflowsService.workflow", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetSourceContents() *plugin.TValue[string] {
+	return &c.SourceContents
+}
+
+func (c *mqlGcpProjectWorkflowsServiceWorkflow) GetUserEnvVars() *plugin.TValue[map[string]any] {
+	return &c.UserEnvVars
 }
 
 // mqlGcpProjectDataprocService for the gcp.project.dataprocService resource

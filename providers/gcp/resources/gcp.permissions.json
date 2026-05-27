@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.18.0",
-  "generated_at": "2026-05-26T13:43:06-07:00",
+  "generated_at": "2026-05-26T16:47:35-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -231,7 +231,8 @@
     "spanner.instances.list",
     "storage.buckets.get",
     "storage.buckets.getIamPolicy",
-    "storage.buckets.list"
+    "storage.buckets.list",
+    "workflows.workflows.list"
   ],
   "details": [
     {
@@ -1691,6 +1692,12 @@
       "service": "storage",
       "action": "Buckets.List",
       "source_file": "storage.go"
+    },
+    {
+      "permission": "workflows.workflows.list",
+      "service": "workflows",
+      "action": "Workflows.List",
+      "source_file": "workflows.go"
     }
   ],
   "org_level_permissions": [
