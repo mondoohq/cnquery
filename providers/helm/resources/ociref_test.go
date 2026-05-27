@@ -92,7 +92,7 @@ func TestDependencySourceClassification(t *testing.T) {
 	c, err := loader.LoadDir("../testdata/oci-deps")
 	require.NoError(t, err)
 
-	mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "../testdata/oci-deps")
+	mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "../testdata/oci-deps", nil)
 	require.NoError(t, err)
 
 	deps, err := mqlChart.dependencies()
