@@ -7237,6 +7237,8 @@ private gcp.project.alloydbService.cluster @defaults("name") {
   databaseVersion string
   // Network configuration
   networkConfig dict
+  // Whether Private Service Connect is enabled on the cluster
+  pscEnabled bool
   // Encryption configuration (CMEK)
   encryptionConfig dict
   // Encryption information

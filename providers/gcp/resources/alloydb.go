@@ -164,6 +164,7 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 			"clusterType":             llx.StringData(cluster.ClusterType.String()),
 			"databaseVersion":         llx.StringData(cluster.DatabaseVersion.String()),
 			"networkConfig":           llx.DictData(networkConfig),
+			"pscEnabled":              llx.BoolData(cluster.GetPscConfig().GetPscEnabled()),
 			"encryptionConfig":        llx.DictData(encryptionConfig),
 			"encryptionInfo":          llx.DictData(encryptionInfo),
 			"automatedBackupPolicy":   llx.DictData(automatedBackupPolicy),

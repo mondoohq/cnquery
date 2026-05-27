@@ -242,6 +242,7 @@ gcp.project.alloydbService.cluster.name 11.3.1
 gcp.project.alloydbService.cluster.networkConfig 11.3.1
 gcp.project.alloydbService.cluster.primaryConfig 11.3.1
 gcp.project.alloydbService.cluster.projectId 11.3.1
+gcp.project.alloydbService.cluster.pscEnabled 13.18.1
 gcp.project.alloydbService.cluster.reconciling 11.3.1
 gcp.project.alloydbService.cluster.secondaryConfig 11.3.1
 gcp.project.alloydbService.cluster.sslConfig 11.3.1

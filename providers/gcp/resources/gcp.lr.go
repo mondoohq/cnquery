@@ -9467,6 +9467,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.alloydbService.cluster.networkConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetNetworkConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.alloydbService.cluster.pscEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetPscEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.alloydbService.cluster.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetEncryptionConfig()).ToDataRes(types.Dict)
 	},
@@ -25654,6 +25657,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.alloydbService.cluster.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAlloydbServiceCluster).NetworkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.pscEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).PscEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.alloydbService.cluster.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59278,6 +59285,7 @@ type mqlGcpProjectAlloydbServiceCluster struct {
 	ClusterType             plugin.TValue[string]
 	DatabaseVersion         plugin.TValue[string]
 	NetworkConfig           plugin.TValue[any]
+	PscEnabled              plugin.TValue[bool]
 	EncryptionConfig        plugin.TValue[any]
 	EncryptionInfo          plugin.TValue[any]
 	AutomatedBackupPolicy   plugin.TValue[any]
@@ -59368,6 +59376,10 @@ func (c *mqlGcpProjectAlloydbServiceCluster) GetDatabaseVersion() *plugin.TValue
 
 func (c *mqlGcpProjectAlloydbServiceCluster) GetNetworkConfig() *plugin.TValue[any] {
 	return &c.NetworkConfig
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetPscEnabled() *plugin.TValue[bool] {
+	return &c.PscEnabled
 }
 
 func (c *mqlGcpProjectAlloydbServiceCluster) GetEncryptionConfig() *plugin.TValue[any] {
