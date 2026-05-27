@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mysubchart
+version: 0.2.0
+appVersion: "0.2.0"
+description: A vendored subchart
+type: application

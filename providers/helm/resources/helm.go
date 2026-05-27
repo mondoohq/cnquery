@@ -29,7 +29,7 @@ func (r *mqlHelm) charts() ([]any, error) {
 
 	var mqlCharts []any
 	for _, lc := range charts {
-		mqlChart, err := newMqlHelmChart(r.MqlRuntime, lc.Chart, lc.Path)
+		mqlChart, err := newMqlHelmChart(r.MqlRuntime, lc.Chart, lc.Path, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -41,6 +41,8 @@ func (r *mqlHelm) charts() ([]any, error) {
 type mqlHelmChartInternal struct {
 	chartObj        *chart.Chart
 	chartPath       string
+	parentChart     *mqlHelmChart
+	idKey           string
 	renderedOnce    sync.Once
 	rendered        map[string]string
 	renderedErr     error
@@ -48,7 +50,12 @@ type mqlHelmChartInternal struct {
 	cachedResources []any
 }
 
-func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string) (*mqlHelmChart, error) {
+// newMqlHelmChart materializes a *chart.Chart as a helm.chart resource.
+// parent is nil for a top-level chart and points at the vendoring chart
+// for a subchart reached through subcharts(). The cache key (__id) is
+// parent-qualified so that sibling subcharts sharing name+version under
+// different parents don't collapse onto one cached instance.
+func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string, parent *mqlHelmChart) (*mqlHelmChart, error) {
 	// Guard against archives that load with a nil Metadata pointer.
 	// loader.LoadDir always populates Metadata for a valid chart, but
 	// loader.LoadFile (the .tgz path) can return a chart with nil
@@ -70,8 +77,18 @@ func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string) 
 		chartKey += ":" + chartPath
 	}
 
+	// Parent-qualify the cache key for subcharts. Sibling subcharts can
+	// share name+version across different parents (and a vendored subchart
+	// carries no filesystem path of its own), so without the parent chain
+	// in the id distinct subcharts would collapse onto one cached instance.
+	idKey := "helm.chart:" + chartKey
+	if parent != nil {
+		idKey = parent.idKey + "/" + chartKey
+	}
+
 	args := map[string]*llx.RawData{
-		"__id":        llx.StringData("helm.chart:" + chartKey),
+		"__id":        llx.StringData(idKey),
+		"isSubchart":  llx.BoolData(parent != nil),
 		"name":        llx.StringData(meta.Name),
 		"version":     llx.StringData(meta.Version),
 		"apiVersion":  llx.StringData(meta.APIVersion),
@@ -102,10 +119,15 @@ func newMqlHelmChart(runtime *plugin.Runtime, c *chart.Chart, chartPath string) 
 	mqlChart := res.(*mqlHelmChart)
 	mqlChart.chartObj = c
 	mqlChart.chartPath = chartPath
+	mqlChart.parentChart = parent
+	mqlChart.idKey = idKey
 	return mqlChart, nil
 }
 
 func (c *mqlHelmChart) id() (string, error) {
+	if c.idKey != "" {
+		return c.idKey, nil
+	}
 	key := c.Name.Data + ":" + c.Version.Data
 	if c.chartPath != "" {
 		key += ":" + c.chartPath
@@ -142,6 +164,34 @@ func (c *mqlHelmChart) dependencies() ([]any, error) {
 		mqlDeps = append(mqlDeps, mqlDep)
 	}
 	return mqlDeps, nil
+}
+
+// subcharts wraps chart.Dependencies() — the subchart bodies actually
+// loaded from charts/ — as fully recursive helm.chart resources, reusing
+// newMqlHelmChart so every chart field works per-subchart. This is the
+// loaded subchart objects, distinct from dependencies() which reads the
+// declared dependency entries from Chart.yaml.
+func (c *mqlHelmChart) subcharts() ([]any, error) {
+	subs := c.chartObj.Dependencies()
+	mqlSubs := make([]any, 0, len(subs))
+	for _, sub := range subs {
+		// A vendored subchart has no filesystem path of its own; the
+		// parent-qualified id keeps siblings distinct.
+		mqlSub, err := newMqlHelmChart(c.MqlRuntime, sub, "", c)
+		if err != nil {
+			return nil, err
+		}
+		mqlSubs = append(mqlSubs, mqlSub)
+	}
+	return mqlSubs, nil
+}
+
+func (c *mqlHelmChart) parent() (*mqlHelmChart, error) {
+	if c.parentChart == nil {
+		c.Parent.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return c.parentChart, nil
 }
 
 func (c *mqlHelmChart) maintainers() ([]any, error) {

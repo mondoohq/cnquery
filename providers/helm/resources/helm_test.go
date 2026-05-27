@@ -8,7 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
 )
 
 func TestNewMqlHelmChart_KubeVersionAndAnnotations(t *testing.T) {
@@ -23,7 +25,7 @@ func TestNewMqlHelmChart_KubeVersionAndAnnotations(t *testing.T) {
 			},
 		}}
 
-		mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "")
+		mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "", nil)
 		require.NoError(t, err)
 		assert.Equal(t, ">=1.27.0-0", mqlChart.KubeVersion.Data)
 		assert.Equal(t, map[string]any{
@@ -38,7 +40,7 @@ func TestNewMqlHelmChart_KubeVersionAndAnnotations(t *testing.T) {
 			Version: "1.2.3",
 		}}
 
-		mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "")
+		mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "", nil)
 		require.NoError(t, err)
 		assert.Equal(t, "", mqlChart.KubeVersion.Data)
 		// A chart without `annotations:` parses to nil; the resource layer
@@ -53,13 +55,13 @@ func TestNewMqlHelmChart_KubeVersionAndAnnotations(t *testing.T) {
 func TestNewMqlHelmChart_NilMetadataReturnsError(t *testing.T) {
 	t.Run("nil metadata", func(t *testing.T) {
 		c := &chart.Chart{Metadata: nil}
-		_, err := newMqlHelmChart(newTestRuntime(), c, "")
+		_, err := newMqlHelmChart(newTestRuntime(), c, "", nil)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "metadata")
 	})
 
 	t.Run("nil chart", func(t *testing.T) {
-		_, err := newMqlHelmChart(newTestRuntime(), nil, "")
+		_, err := newMqlHelmChart(newTestRuntime(), nil, "", nil)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "metadata")
 	})
@@ -78,7 +80,7 @@ func TestMaintainersDoNotDedupeOnDuplicateName(t *testing.T) {
 			{Name: "Alex", Email: "alex-secondary@example.com"},
 		},
 	}}
-	mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "")
+	mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "", nil)
 	require.NoError(t, err)
 
 	mqlChart.chartObj = c
@@ -95,6 +97,57 @@ func TestMaintainersDoNotDedupeOnDuplicateName(t *testing.T) {
 	assert.True(t, emails["alex-secondary@example.com"], "second Alex email kept")
 }
 
+// A chart with a vendored subchart under charts/ should surface that
+// subchart as a fully recursive helm.chart through subcharts(), with
+// isSubchart set on the child, parent() linking back to the top chart,
+// and nested fields (values/templates) resolving per-subchart.
+func TestSubchartRecursion(t *testing.T) {
+	c, err := loader.LoadDir("../testdata/with-subchart")
+	require.NoError(t, err)
+
+	mqlChart, err := newMqlHelmChart(newTestRuntime(), c, "../testdata/with-subchart", nil)
+	require.NoError(t, err)
+
+	// Top-level chart is not a subchart and has no parent.
+	assert.False(t, mqlChart.IsSubchart.Data, "top-level chart is not a subchart")
+	parent, err := mqlChart.parent()
+	require.NoError(t, err)
+	assert.Nil(t, parent, "top-level chart has no parent")
+	assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, mqlChart.Parent.State)
+
+	subs, err := mqlChart.subcharts()
+	require.NoError(t, err)
+	require.Len(t, subs, 1, "the vendored subchart should be returned")
+
+	sub := subs[0].(*mqlHelmChart)
+	assert.Equal(t, "mysubchart", sub.Name.Data)
+	assert.Equal(t, "0.2.0", sub.Version.Data)
+	assert.True(t, sub.IsSubchart.Data, "the subchart must be flagged isSubchart")
+
+	// parent() on the subchart links back to the top chart.
+	subParent, err := sub.parent()
+	require.NoError(t, err)
+	require.NotNil(t, subParent)
+	assert.Equal(t, "with-subchart", subParent.Name.Data)
+
+	// Parent-qualified __id keeps the subchart distinct from the parent.
+	assert.NotEqual(t, mqlChart.__id, sub.__id)
+	assert.Contains(t, sub.__id, mqlChart.__id, "subchart id is parent-qualified")
+
+	// Nested fields resolve per-subchart: the subchart's own values.yaml.
+	vals, err := sub.values()
+	require.NoError(t, err)
+	valsMap, ok := vals.(map[string]any)
+	require.True(t, ok)
+	assert.Contains(t, valsMap, "subImage", "subchart values.yaml should resolve")
+
+	// And the subchart's own template renders.
+	tmpls, err := sub.templates()
+	require.NoError(t, err)
+	require.Len(t, tmpls, 1)
+	assert.Equal(t, "templates/service.yaml", tmpls[0].(*mqlHelmTemplate).Name.Data)
+}
+
 // Two charts that share name + version (real for feature-branch forks
 // in a multi-chart directory) used to collide on the CreateResource
 // cache because the __id ignored their path. Including ChartFullPath
@@ -108,9 +161,9 @@ func TestChartIDIncludesPathToDeduplicate(t *testing.T) {
 	// real-world case for feature-branch forks in a multi-chart
 	// directory. The connection layer passes each chart's load path
 	// into newMqlHelmChart so the __id stays unique.
-	mqlA, err := newMqlHelmChart(runtime, a, "/repo/charts/a")
+	mqlA, err := newMqlHelmChart(runtime, a, "/repo/charts/a", nil)
 	require.NoError(t, err)
-	mqlB, err := newMqlHelmChart(runtime, b, "/repo/charts/b")
+	mqlB, err := newMqlHelmChart(runtime, b, "/repo/charts/b", nil)
 	require.NoError(t, err)
 
 	// CreateResource dedupes by __id; identical names would land both
@@ -123,7 +176,7 @@ func TestChartIDIncludesPathToDeduplicate(t *testing.T) {
 	// charts collide" but that matches prior behavior.
 	mqlNoPath, err := newMqlHelmChart(runtime, &chart.Chart{
 		Metadata: &chart.Metadata{Name: "lone", Version: "1.0.0"},
-	}, "")
+	}, "", nil)
 	require.NoError(t, err)
 	assert.NotEmpty(t, mqlNoPath.__id)
 }

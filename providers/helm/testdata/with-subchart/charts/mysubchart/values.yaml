@@ -1,0 +1,3 @@
+subImage:
+  repository: redis
+  tag: "7.2"

@@ -192,6 +192,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.chart.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetFiles()).ToDataRes(types.Array(types.Resource("helm.file")))
 	},
+	"helm.chart.subcharts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetSubcharts()).ToDataRes(types.Array(types.Resource("helm.chart")))
+	},
+	"helm.chart.isSubchart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetIsSubchart()).ToDataRes(types.Bool)
+	},
+	"helm.chart.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetParent()).ToDataRes(types.Resource("helm.chart"))
+	},
 	"helm.dependency.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmDependency).GetName()).ToDataRes(types.String)
 	},
@@ -374,6 +383,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.chart.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmChart).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.subcharts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Subcharts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"helm.chart.isSubchart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).IsSubchart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Parent, ok = plugin.RawToTValue[*mqlHelmChart](v.Value, v.Error)
 		return
 	},
 	"helm.dependency.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -621,6 +642,9 @@ type mqlHelmChart struct {
 	Values       plugin.TValue[any]
 	Resources    plugin.TValue[[]any]
 	Files        plugin.TValue[[]any]
+	Subcharts    plugin.TValue[[]any]
+	IsSubchart   plugin.TValue[bool]
+	Parent       plugin.TValue[*mqlHelmChart]
 }
 
 // createHelmChart creates a new instance of this resource
@@ -795,6 +819,42 @@ func (c *mqlHelmChart) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files()
+	})
+}
+
+func (c *mqlHelmChart) GetSubcharts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subcharts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "subcharts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subcharts()
+	})
+}
+
+func (c *mqlHelmChart) GetIsSubchart() *plugin.TValue[bool] {
+	return &c.IsSubchart
+}
+
+func (c *mqlHelmChart) GetParent() *plugin.TValue[*mqlHelmChart] {
+	return plugin.GetOrCompute[*mqlHelmChart](&c.Parent, func() (*mqlHelmChart, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "parent")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmChart), nil
+			}
+		}
+
+		return c.parent()
 	})
 }
 

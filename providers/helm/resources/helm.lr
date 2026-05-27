@@ -70,6 +70,28 @@ helm.chart @defaults("name version") {
   resources() []helm.resource
   // Files in the chart
   files() []helm.file
+  // Vendored subcharts loaded from charts/
+  //
+  // Each entry is a fully recursive helm.chart for a dependency whose
+  // chart body is vendored under the chart's charts/ directory, so every
+  // chart field (templates, values, dependencies, maintainers, files,
+  // and subcharts again) works per-subchart. Helm's render engine already
+  // merges subchart templates into the parent chart's rendered output, so
+  // this is for introspecting the source tree — per-subchart values,
+  // metadata, and declared dependencies — not for obtaining additional
+  // rendered manifests beyond what the parent already renders.
+  subcharts() []helm.chart
+  // Whether this chart was reached as a vendored subchart of another chart
+  //
+  // True for charts materialized through subcharts(); false for top-level
+  // charts loaded directly from the connection path.
+  isSubchart bool
+  // Parent chart that vendors this chart as a subchart
+  //
+  // Null for top-level charts. For a vendored subchart, links back to the
+  // chart whose charts/ directory it was loaded from, enabling traversal
+  // back up the dependency tree.
+  parent() helm.chart
 }
 
 // Helm chart dependency

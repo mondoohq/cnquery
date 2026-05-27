@@ -12,12 +12,15 @@ helm.chart.description 13.0.0
 helm.chart.files 13.0.0
 helm.chart.home 13.0.0
 helm.chart.icon 13.0.0
+helm.chart.isSubchart 13.0.10
 helm.chart.keywords 13.0.0
 helm.chart.kubeVersion 13.0.9
 helm.chart.maintainers 13.0.0
 helm.chart.name 13.0.0
+helm.chart.parent 13.0.10
 helm.chart.resources 13.0.0
 helm.chart.sources 13.0.0
+helm.chart.subcharts 13.0.10
 helm.chart.templates 13.0.0
 helm.chart.type 13.0.0
 helm.chart.values 13.0.0

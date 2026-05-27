@@ -1,0 +1,10 @@
+apiVersion: v2
+name: with-subchart
+version: 1.0.0
+appVersion: "1.0.0"
+description: A chart that vendors a subchart under charts/
+type: application
+dependencies:
+  - name: mysubchart
+    version: 0.2.0
+    repository: file://./charts/mysubchart
