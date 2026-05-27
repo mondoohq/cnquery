@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.14.0",
-  "generated_at": "2026-05-26T17:08:46-07:00",
+  "generated_at": "2026-05-27T10:28:47-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -89,7 +89,6 @@
     "Microsoft.HybridCompute/machines/read",
     "Microsoft.Insights/activityLogAlerts/read",
     "Microsoft.Insights/components/read",
-    "Microsoft.Insights/diagnosticSettings/read",
     "Microsoft.Insights/logProfiles/read",
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
@@ -732,12 +731,6 @@
       "permission": "Microsoft.Insights/components/read",
       "service": "Microsoft.Insights",
       "action": "Get",
-      "source_file": "monitor.go"
-    },
-    {
-      "permission": "Microsoft.Insights/diagnosticSettings/read",
-      "service": "Microsoft.Insights",
-      "action": "NewListPager",
       "source_file": "monitor.go"
     },
     {
