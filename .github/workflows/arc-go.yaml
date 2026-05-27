@@ -1,0 +1,72 @@
+name: ARC Go Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  go-test:
+    runs-on: arc-runner-set
+    steps:
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: false
+
+      - name: Show Go cache environment
+        run: |
+          echo "GOMODCACHE=${GOMODCACHE}"
+          echo "GOCACHE=${GOCACHE}"
+          go env GOMODCACHE
+          go env GOCACHE
+          ls -la /home/runner/.cache || true
+          ls -la /home/runner/.cache/go-shared || true
+          ls -la /home/runner/.cache/go || true
+
+      - name: Create cache test Go project
+        run: |
+          mkdir demo-go
+          cd demo-go
+          go mod init example.com/demo
+          cat > main.go <<'EOF'
+          package main
+
+          import (
+            _ "github.com/aws/aws-sdk-go-v2/config"
+            _ "github.com/google/go-github/v67/github"
+            _ "github.com/jackc/pgx/v5"
+            _ "github.com/prometheus/client_golang/prometheus"
+            _ "github.com/redis/go-redis/v9"
+            _ "go.opentelemetry.io/otel"
+            _ "go.uber.org/zap"
+            _ "golang.org/x/oauth2"
+          )
+
+          func main() {}
+          EOF
+          cat > main_test.go <<'EOF'
+          package main
+
+          import "testing"
+
+          func TestSmoke(t *testing.T) {}
+          EOF
+
+      - name: Resolve and download modules
+        run: |
+          cd demo-go
+          go mod tidy
+          go mod download -x
+
+      - name: Show shared module cache after download
+        run: |
+          du -sh /home/runner/.cache/go-shared || true
+
+      - name: Run go test
+        run: |
+          cd demo-go
+          go test ./...
+
+      - name: Show Go cache sizes after test
+        run: |
+          du -sh /home/runner/.cache/go-shared || true
+          du -sh /home/runner/.cache/go || true
