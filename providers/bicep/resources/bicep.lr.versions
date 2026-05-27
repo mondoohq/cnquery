@@ -72,6 +72,7 @@ bicep.output.loopExpression 13.1.2
 bicep.output.loopIndexVar 13.1.2
 bicep.output.loopIterator 13.1.2
 bicep.output.name 13.0.0
+bicep.output.resolvedType 13.1.2
 bicep.output.type 13.0.0
 bicep.paramFile 13.1.2
 bicep.paramFile.content 13.1.2
@@ -89,6 +90,7 @@ bicep.parameter.maxValue 13.0.9
 bicep.parameter.minLength 13.0.9
 bicep.parameter.minValue 13.0.9
 bicep.parameter.name 13.0.0
+bicep.parameter.resolvedType 13.1.2
 bicep.parameter.secure 13.0.0
 bicep.parameter.type 13.0.0
 bicep.propertyExpression 13.1.2
@@ -156,8 +158,15 @@ bicep.type 13.1.2
 bicep.type.decorators 13.1.2
 bicep.type.definition 13.1.2
 bicep.type.description 13.1.2
+bicep.type.discriminator 13.1.2
 bicep.type.exported 13.1.2
+bicep.type.kind 13.1.2
 bicep.type.name 13.1.2
+bicep.type.properties 13.1.2
+bicep.type.property 13.1.2
+bicep.type.property.name 13.1.2
+bicep.type.property.type 13.1.2
+bicep.type.unionMembers 13.1.2
 bicep.variable 13.0.0
 bicep.variable.description 13.0.0
 bicep.variable.expression 13.0.0

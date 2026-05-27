@@ -131,7 +131,7 @@ func (f *mqlBicepFile) resolver() *symbolResolver {
 }
 
 func (f *mqlBicepFile) parameters() ([]any, error) {
-	return createMqlParameters(f.MqlRuntime, f.Path.Data, f.getParsed().parameters)
+	return createMqlParameters(f.MqlRuntime, f.Path.Data, f.getParsed().parameters, f.resolver())
 }
 
 func (f *mqlBicepFile) variables() ([]any, error) {

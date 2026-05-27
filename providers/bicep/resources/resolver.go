@@ -105,7 +105,7 @@ func (r *symbolResolver) parameter(runtime *plugin.Runtime, target string) (*mql
 	if !ok {
 		return nil, nil
 	}
-	out, err := createMqlParameters(runtime, r.filePath, []parsedParameter{p})
+	out, err := createMqlParameters(runtime, r.filePath, []parsedParameter{p}, r)
 	if err != nil {
 		return nil, err
 	}

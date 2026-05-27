@@ -26,6 +26,7 @@ const (
 	ResourceBicepExpression         string = "bicep.expression"
 	ResourceBicepPropertyExpression string = "bicep.propertyExpression"
 	ResourceBicepType               string = "bicep.type"
+	ResourceBicepTypeProperty       string = "bicep.type.property"
 	ResourceBicepFunction           string = "bicep.function"
 	ResourceBicepImport             string = "bicep.import"
 	ResourceBicepTemplate           string = "bicep.template"
@@ -82,6 +83,10 @@ func init() {
 		"bicep.type": {
 			// to override args, implement: initBicepType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createBicepType,
+		},
+		"bicep.type.property": {
+			// to override args, implement: initBicepTypeProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createBicepTypeProperty,
 		},
 		"bicep.function": {
 			// to override args, implement: initBicepFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -247,6 +252,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bicep.parameter.defaultValue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepParameter).GetDefaultValue()).ToDataRes(types.String)
+	},
+	"bicep.parameter.resolvedType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepParameter).GetResolvedType()).ToDataRes(types.Resource("bicep.type"))
 	},
 	"bicep.parameter.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepParameter).GetDescription()).ToDataRes(types.String)
@@ -419,6 +427,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.output.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetType()).ToDataRes(types.String)
 	},
+	"bicep.output.resolvedType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepOutput).GetResolvedType()).ToDataRes(types.Resource("bicep.type"))
+	},
 	"bicep.output.expression": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetExpression()).ToDataRes(types.String)
 	},
@@ -491,6 +502,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.type.definition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepType).GetDefinition()).ToDataRes(types.String)
 	},
+	"bicep.type.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepType).GetKind()).ToDataRes(types.String)
+	},
+	"bicep.type.unionMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepType).GetUnionMembers()).ToDataRes(types.Array(types.String))
+	},
+	"bicep.type.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepType).GetProperties()).ToDataRes(types.Array(types.Resource("bicep.type.property")))
+	},
+	"bicep.type.discriminator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepType).GetDiscriminator()).ToDataRes(types.String)
+	},
 	"bicep.type.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepType).GetDescription()).ToDataRes(types.String)
 	},
@@ -499,6 +522,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bicep.type.decorators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepType).GetDecorators()).ToDataRes(types.Array(types.String))
+	},
+	"bicep.type.property.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTypeProperty).GetName()).ToDataRes(types.String)
+	},
+	"bicep.type.property.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepTypeProperty).GetType()).ToDataRes(types.String)
 	},
 	"bicep.function.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepFunction).GetName()).ToDataRes(types.String)
@@ -745,6 +774,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepParameter).DefaultValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.parameter.resolvedType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepParameter).ResolvedType, ok = plugin.RawToTValue[*mqlBicepType](v.Value, v.Error)
+		return
+	},
 	"bicep.parameter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepParameter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -989,6 +1022,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepOutput).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.output.resolvedType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepOutput).ResolvedType, ok = plugin.RawToTValue[*mqlBicepType](v.Value, v.Error)
+		return
+	},
 	"bicep.output.expression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepOutput).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1097,6 +1134,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBicepType).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"bicep.type.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepType).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.type.unionMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepType).UnionMembers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.type.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepType).Properties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.type.discriminator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepType).Discriminator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"bicep.type.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepType).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1107,6 +1160,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.type.decorators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepType).Decorators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.type.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTypeProperty).__id, ok = v.Value.(string)
+		return
+	},
+	"bicep.type.property.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTypeProperty).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.type.property.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepTypeProperty).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"bicep.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1691,10 +1756,11 @@ func (c *mqlBicepParamFile) GetContent() *plugin.TValue[string] {
 type mqlBicepParameter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepParameterInternal it will be used here
+	mqlBicepParameterInternal
 	Name         plugin.TValue[string]
 	Type         plugin.TValue[string]
 	DefaultValue plugin.TValue[string]
+	ResolvedType plugin.TValue[*mqlBicepType]
 	Description  plugin.TValue[string]
 	Secure       plugin.TValue[bool]
 	Allowed      plugin.TValue[[]any]
@@ -1747,6 +1813,22 @@ func (c *mqlBicepParameter) GetType() *plugin.TValue[string] {
 
 func (c *mqlBicepParameter) GetDefaultValue() *plugin.TValue[string] {
 	return &c.DefaultValue
+}
+
+func (c *mqlBicepParameter) GetResolvedType() *plugin.TValue[*mqlBicepType] {
+	return plugin.GetOrCompute[*mqlBicepType](&c.ResolvedType, func() (*mqlBicepType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.parameter", c.__id, "resolvedType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepType), nil
+			}
+		}
+
+		return c.resolvedType()
+	})
 }
 
 func (c *mqlBicepParameter) GetDescription() *plugin.TValue[string] {
@@ -2260,6 +2342,7 @@ type mqlBicepOutput struct {
 	mqlBicepOutputInternal
 	Name           plugin.TValue[string]
 	Type           plugin.TValue[string]
+	ResolvedType   plugin.TValue[*mqlBicepType]
 	Expression     plugin.TValue[string]
 	ExpressionTree plugin.TValue[*mqlBicepExpression]
 	Description    plugin.TValue[string]
@@ -2307,6 +2390,22 @@ func (c *mqlBicepOutput) GetName() *plugin.TValue[string] {
 
 func (c *mqlBicepOutput) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlBicepOutput) GetResolvedType() *plugin.TValue[*mqlBicepType] {
+	return plugin.GetOrCompute[*mqlBicepType](&c.ResolvedType, func() (*mqlBicepType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.output", c.__id, "resolvedType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlBicepType), nil
+			}
+		}
+
+		return c.resolvedType()
+	})
 }
 
 func (c *mqlBicepOutput) GetExpression() *plugin.TValue[string] {
@@ -2604,12 +2703,16 @@ func (c *mqlBicepPropertyExpression) GetExpression() *plugin.TValue[*mqlBicepExp
 type mqlBicepType struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlBicepTypeInternal it will be used here
-	Name        plugin.TValue[string]
-	Definition  plugin.TValue[string]
-	Description plugin.TValue[string]
-	Exported    plugin.TValue[bool]
-	Decorators  plugin.TValue[[]any]
+	mqlBicepTypeInternal
+	Name          plugin.TValue[string]
+	Definition    plugin.TValue[string]
+	Kind          plugin.TValue[string]
+	UnionMembers  plugin.TValue[[]any]
+	Properties    plugin.TValue[[]any]
+	Discriminator plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Exported      plugin.TValue[bool]
+	Decorators    plugin.TValue[[]any]
 }
 
 // createBicepType creates a new instance of this resource
@@ -2652,6 +2755,34 @@ func (c *mqlBicepType) GetDefinition() *plugin.TValue[string] {
 	return &c.Definition
 }
 
+func (c *mqlBicepType) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlBicepType) GetUnionMembers() *plugin.TValue[[]any] {
+	return &c.UnionMembers
+}
+
+func (c *mqlBicepType) GetProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Properties, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep.type", c.__id, "properties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.properties()
+	})
+}
+
+func (c *mqlBicepType) GetDiscriminator() *plugin.TValue[string] {
+	return &c.Discriminator
+}
+
 func (c *mqlBicepType) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
@@ -2662,6 +2793,55 @@ func (c *mqlBicepType) GetExported() *plugin.TValue[bool] {
 
 func (c *mqlBicepType) GetDecorators() *plugin.TValue[[]any] {
 	return &c.Decorators
+}
+
+// mqlBicepTypeProperty for the bicep.type.property resource
+type mqlBicepTypeProperty struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlBicepTypePropertyInternal it will be used here
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createBicepTypeProperty creates a new instance of this resource
+func createBicepTypeProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlBicepTypeProperty{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("bicep.type.property", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlBicepTypeProperty) MqlName() string {
+	return "bicep.type.property"
+}
+
+func (c *mqlBicepTypeProperty) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlBicepTypeProperty) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlBicepTypeProperty) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 // mqlBicepFunction for the bicep.function resource

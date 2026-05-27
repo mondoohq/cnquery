@@ -104,6 +104,14 @@ bicep.parameter @defaults("name type") {
   type string
   // Default value expression (empty if required)
   defaultValue string
+  // User-defined type the `type` names, or null
+  //
+  // Non-null only when `type` names a `bicep.type` declared in the same file
+  // (for example `param sku storageSku` resolves to the `storageSku` type).
+  // Null for a built-in type (`string`, `int`, `bool`, `object`, `array`,
+  // `secureString`, `secureObject`) or any name that doesn't match a
+  // same-file type declaration.
+  resolvedType() bicep.type
   // Description from @description decorator
   description string
   // Whether @secure decorator is present
@@ -337,6 +345,13 @@ bicep.output @defaults("name type") {
   name string
   // Output type
   type string
+  // User-defined type the `type` names, or null
+  //
+  // Non-null only when `type` names a `bicep.type` declared in the same file.
+  // Null for a built-in type (`string`, `int`, `bool`, `object`, `array`,
+  // `secureString`, `secureObject`) or any name that doesn't match a
+  // same-file type declaration.
+  resolvedType() bicep.type
   // Value expression
   expression string
   // Parsed expression tree
@@ -471,17 +486,57 @@ private bicep.propertyExpression @defaults("path") {
 // `@export()`ed for reuse from other files, and the full raw decorator list.
 // Select a type by its `name` — for example
 // `bicep.file.types.where(name == "sku")`.
-bicep.type @defaults("name") {
+bicep.type @defaults("name kind") {
   // Type name
   name string
   // Raw right-hand-side definition text (the part after `=`)
   definition string
+  // Classification of the definition
+  //
+  // One of "object" (a `{ ... }` body), "union" (members joined by top-level
+  // `|`), "array" (a `[]`-suffixed or `[...]` tuple type), "primitive" (a
+  // built-in like string/int/bool/object/array/secureString/secureObject), or
+  // "alias" (a bare identifier naming another type).
+  kind string
+  // Literal members of a union type
+  //
+  // For example `['Standard_LRS', 'Premium_LRS']` for the definition
+  // `'Standard_LRS' | 'Premium_LRS'`; each member is preserved exactly as
+  // written, including its quotes. Empty for non-union types.
+  unionMembers []string
+  // Properties of an object type
+  //
+  // For an object definition like `{ name: string, tier: sku }` this lists one
+  // entry per property with its name and declared type. Empty for non-object
+  // types. See `bicep.type.property`.
+  properties() []bicep.type.property
+  // Discriminator key of a tagged union
+  //
+  // The key captured from an `@discriminator('<key>')` decorator (for example
+  // `kind` for `@discriminator('kind')`); empty when the type carries no
+  // discriminator decorator.
+  discriminator string
   // Description from @description decorator
   description string
   // Whether @export() is present
   exported bool
   // All decorators as raw strings
   decorators []string
+}
+
+// Property of a Bicep object type
+//
+// Examine a single `name: type` member of an object-typed `bicep.type`
+// definition. The `type` may itself name a user-defined type. Emitted by
+// `bicep.type.properties`, one per declared property.
+private bicep.type.property @defaults("name type") {
+  // Property name
+  name string
+  // Declared type
+  //
+  // The property's declared type as written; may itself name a user-defined
+  // type (for example `sku` in `tier: sku`).
+  type string
 }
 
 // Bicep user-defined function declaration

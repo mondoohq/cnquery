@@ -104,6 +104,24 @@ type parsedType struct {
 	description string
 	exported    bool
 	decorators  []string
+
+	// kind classifies the definition: "object", "union", "array", "tuple"
+	// (folded into "array"), "primitive", or "alias".
+	kind string
+	// unionMembers holds the literal members of a union type, each kept
+	// exactly as written (including quotes). Empty for non-unions.
+	unionMembers []string
+	// properties holds the name/type pairs of an object type. Empty otherwise.
+	properties []parsedTypeProperty
+	// discriminator is the key captured from an `@discriminator('<key>')`
+	// decorator; empty when no such decorator is present.
+	discriminator string
+}
+
+// parsedTypeProperty is one `name: type` member of an object-typed declaration.
+type parsedTypeProperty struct {
+	name string
+	typ  string
 }
 
 type parsedFunction struct {
@@ -138,6 +156,10 @@ var (
 	minValueDecRe  = regexp.MustCompile(`@minValue\(\s*(-?\d+)\s*\)`)
 	maxValueDecRe  = regexp.MustCompile(`@maxValue\(\s*(-?\d+)\s*\)`)
 	exportDecRe    = regexp.MustCompile(`@export\(\)`)
+
+	// discriminatorDecRe captures the key argument of an
+	// `@discriminator('<key>')` decorator on a tagged-union type.
+	discriminatorDecRe = regexp.MustCompile(`@discriminator\(\s*'([^']*)'\s*\)`)
 
 	// typeRe matches the header of a `type Name = <definition>` statement.
 	// The definition (everything after the first `=`) is captured raw;
@@ -687,7 +709,132 @@ func parseTypeDecl(text string, decorators []string) (parsedType, bool) {
 		t.description = dm[1]
 	}
 	t.exported = exportDecRe.MatchString(decText)
+	if dm := discriminatorDecRe.FindStringSubmatch(decText); len(dm) > 1 {
+		t.discriminator = dm[1]
+	}
+
+	// Decompose the definition into a kind plus (for objects/unions) its
+	// structured members. Classification runs on the RAW (pre-collapse)
+	// right-hand side because object properties may be newline-separated with
+	// no commas — collapsing whitespace would merge them — and the splitter is
+	// already string/bracket-aware so newlines and nested braces are handled.
+	t.kind, t.unionMembers, t.properties = classifyTypeDefinition(m[2])
 	return t, true
+}
+
+// builtinTypeNames is the set of Bicep built-in primitive types a bare type
+// identifier may name. A definition that is exactly one of these classifies as
+// "primitive"; any other bare identifier classifies as "alias" (it names
+// another user-defined type).
+var builtinTypeNames = map[string]bool{
+	"string":       true,
+	"int":          true,
+	"bool":         true,
+	"object":       true,
+	"array":        true,
+	"secureString": true,
+	"securestring": true,
+	"secureObject": true,
+	"secureobject": true,
+}
+
+// classifyTypeDefinition inspects a type's raw right-hand-side definition and
+// returns its kind plus, for object/union types, the structured members:
+//
+//   - a trimmed `{ ... }` body  -> "object", with each `key: type` pair parsed
+//   - a top-level `|`           -> "union", with members split on that `|`
+//   - a leading `[`             -> "array" (a `[...]` tuple is folded in)
+//   - a `[]` suffix             -> "array"
+//   - a bare built-in name      -> "primitive"
+//   - any other bare identifier -> "alias"
+//
+// Splitting (object pairs, union members) is depth-aware via scanState so
+// commas/pipes inside nested `{}`/`[]`/`<>`/strings don't split early.
+func classifyTypeDefinition(def string) (string, []string, []parsedTypeProperty) {
+	trimmed := strings.TrimSpace(def)
+	if trimmed == "" {
+		return "", nil, nil
+	}
+
+	// Union type: members separated by a top-level `|`. Checked before the
+	// object case because a discriminated tagged union's first member is itself
+	// an object (`{ kind: 'circle', ... } | { kind: 'square', ... }`), so a
+	// leading `{` does not imply a plain object type. Members keep their raw
+	// form (including the surrounding whitespace collapsed to a single line).
+	if members := splitTopLevelPipes(trimmed); len(members) > 1 {
+		out := make([]string, 0, len(members))
+		for _, m := range members {
+			m = strings.Join(strings.Fields(m), " ")
+			if m != "" {
+				out = append(out, m)
+			}
+		}
+		return "union", out, nil
+	}
+
+	// Object type: `{ name: string, tier: sku }`.
+	if trimmed[0] == '{' {
+		return "object", nil, parseTypeObjectProperties(stripOuter(trimmed, '{', '}'))
+	}
+
+	// Array/tuple: a `[...]` tuple or a `<type>[]` suffix.
+	if trimmed[0] == '[' || strings.HasSuffix(trimmed, "[]") {
+		return "array", nil, nil
+	}
+
+	// A bare identifier: a built-in primitive, otherwise an alias for another
+	// type. Anything else (a function-shaped or otherwise complex definition)
+	// also falls through to "alias".
+	if builtinTypeNames[trimmed] {
+		return "primitive", nil, nil
+	}
+	return "alias", nil, nil
+}
+
+// parseTypeObjectProperties splits an object type body (the text between the
+// outer braces) into its `name: type` members. Entries are split on top-level
+// commas and newlines (string/bracket/brace-aware) so a nested object property
+// like `nested: { a: int, b: int }` stays intact; a trailing `?` optional
+// marker on a key is stripped.
+func parseTypeObjectProperties(body string) []parsedTypeProperty {
+	var props []parsedTypeProperty
+	for _, entry := range splitTopLevelEntries(body) {
+		key, value, ok := splitFirstColon(entry)
+		if !ok {
+			continue
+		}
+		name := strings.TrimSpace(key)
+		name = strings.TrimSuffix(name, "?")
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		props = append(props, parsedTypeProperty{
+			name: name,
+			typ:  strings.TrimSpace(value),
+		})
+	}
+	return props
+}
+
+// splitTopLevelPipes splits s on `|` characters that sit outside any string,
+// bracket, brace, or paren and outside a triple-quoted string — so a `|` inside
+// a nested object/array or a string literal doesn't split the union.
+func splitTopLevelPipes(s string) []string {
+	var parts []string
+	st := scanState{}
+	start := 0
+	for i := 0; i < len(s); {
+		if s[i] == '|' && st.inStr == 0 && !st.inMulti &&
+			st.paren == 0 && st.bracket == 0 && st.brace == 0 {
+			parts = append(parts, s[start:i])
+			i++
+			start = i
+			continue
+		}
+		i = st.stepAt(s, i)
+	}
+	return append(parts, s[start:])
 }
 
 // parseFunctionDecl handles a `func name(p1 t1, p2 t2) returnType => expr`

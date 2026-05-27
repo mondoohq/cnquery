@@ -15,7 +15,14 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-func createMqlParameters(runtime *plugin.Runtime, filePath string, params []parsedParameter) ([]any, error) {
+// mqlBicepParameterInternal carries the owning file's symbol resolver so the
+// lazy resolvedType() accessor can resolve the declared `type` name to the
+// same-file `bicep.type` it names.
+type mqlBicepParameterInternal struct {
+	resolver *symbolResolver
+}
+
+func createMqlParameters(runtime *plugin.Runtime, filePath string, params []parsedParameter, resolver *symbolResolver) ([]any, error) {
 	var mqlParams []any
 	for _, p := range params {
 		allowed := sliceToAny(p.allowed)
@@ -38,9 +45,25 @@ func createMqlParameters(runtime *plugin.Runtime, filePath string, params []pars
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlBicepParameter).resolver = resolver
 		mqlParams = append(mqlParams, res)
 	}
 	return mqlParams, nil
+}
+
+// resolvedType resolves the parameter's declared `type` name to the same-file
+// `bicep.type` it references, or null for a built-in type or an unresolvable
+// name.
+func (p *mqlBicepParameter) resolvedType() (*mqlBicepType, error) {
+	t, err := p.resolver.typ(p.MqlRuntime, p.Type.Data)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		p.ResolvedType.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return t, nil
 }
 
 // mqlBicepVariableInternal carries the owning file's symbol resolver so the
@@ -629,24 +652,70 @@ func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsed
 	return mqlOutputs, nil
 }
 
+// resolvedType resolves the output's declared `type` name to the same-file
+// `bicep.type` it references, or null for a built-in type or an unresolvable
+// name.
+func (o *mqlBicepOutput) resolvedType() (*mqlBicepType, error) {
+	t, err := o.resolver.typ(o.MqlRuntime, o.Type.Data)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		o.ResolvedType.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return t, nil
+}
+
+// mqlBicepTypeInternal caches the parsed object-type properties so the lazy
+// properties() accessor can materialize them without re-parsing the raw
+// definition.
+type mqlBicepTypeInternal struct {
+	cacheProperties []parsedTypeProperty
+}
+
 func createMqlTypes(runtime *plugin.Runtime, filePath string, types_ []parsedType) ([]any, error) {
 	var mqlTypes []any
 	for _, t := range types_ {
 		decorators := sliceToAny(t.decorators)
+		unionMembers := sliceToAny(t.unionMembers)
 		res, err := CreateResource(runtime, "bicep.type", map[string]*llx.RawData{
-			"__id":        llx.StringData("bicep.type:" + filePath + ":" + t.name),
-			"name":        llx.StringData(t.name),
-			"definition":  llx.StringData(t.definition),
-			"description": llx.StringData(t.description),
-			"exported":    llx.BoolData(t.exported),
-			"decorators":  llx.ArrayData(decorators, types.String),
+			"__id":          llx.StringData("bicep.type:" + filePath + ":" + t.name),
+			"name":          llx.StringData(t.name),
+			"definition":    llx.StringData(t.definition),
+			"kind":          llx.StringData(t.kind),
+			"unionMembers":  llx.ArrayData(unionMembers, types.String),
+			"discriminator": llx.StringData(t.discriminator),
+			"description":   llx.StringData(t.description),
+			"exported":      llx.BoolData(t.exported),
+			"decorators":    llx.ArrayData(decorators, types.String),
 		})
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlBicepType).cacheProperties = t.properties
 		mqlTypes = append(mqlTypes, res)
 	}
 	return mqlTypes, nil
+}
+
+// properties materializes the object type's `name: type` members. Each gets a
+// synthetic parent-qualified `__id` (`<typeId>/properties/<name>`); the value
+// is empty for non-object types.
+func (t *mqlBicepType) properties() ([]any, error) {
+	out := make([]any, 0, len(t.cacheProperties))
+	for _, p := range t.cacheProperties {
+		res, err := CreateResource(t.MqlRuntime, "bicep.type.property", map[string]*llx.RawData{
+			"__id": llx.StringData(t.__id + "/properties/" + p.name),
+			"name": llx.StringData(p.name),
+			"type": llx.StringData(p.typ),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 func createMqlFunctions(runtime *plugin.Runtime, filePath string, functions []parsedFunction) ([]any, error) {
@@ -847,6 +916,7 @@ var (
 	_ plugin.Resource = (*mqlBicepExpression)(nil)
 	_ plugin.Resource = (*mqlBicepPropertyExpression)(nil)
 	_ plugin.Resource = (*mqlBicepType)(nil)
+	_ plugin.Resource = (*mqlBicepTypeProperty)(nil)
 	_ plugin.Resource = (*mqlBicepFunction)(nil)
 	_ plugin.Resource = (*mqlBicepImport)(nil)
 	_ plugin.Resource = (*mqlBicepParamFile)(nil)
