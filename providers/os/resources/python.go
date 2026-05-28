@@ -314,8 +314,14 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails) (pl
 		cpes = append(cpes, cpe)
 	}
 
+	// id has to be unique per package; multiple packages can share a File
+	// (lockfiles, requirements.txt), so disambiguate with name@version.
+	id := ppd.File
+	if ppd.Name != "" {
+		id = ppd.File + "#" + ppd.Name + "@" + ppd.Version
+	}
 	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
-		"id":             llx.StringData(ppd.File),
+		"id":             llx.StringData(id),
 		"name":           llx.StringData(ppd.Name),
 		"version":        llx.StringData(ppd.Version),
 		"author":         llx.StringData(ppd.Author),
