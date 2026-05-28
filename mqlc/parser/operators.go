@@ -8,8 +8,47 @@ import "errors"
 // Operator list
 type Operator int
 
+// Operator precedence in MQL
+//
+// MQL follows JavaScript-style operator precedence. Each operator has a rank;
+// higher rank binds tighter. From lowest to highest:
+//
+//	Tier            Operators              Example grouping
+//	----            ---------              ----------------
+//	assignment      =                      a = b + c       →  a = (b + c)
+//	logical or      ||                     a || b && c     →  a || (b && c)
+//	logical and     &&                     a && b == c     →  a && (b == c)
+//	equality        == =~ != !~            a == b < c      →  a == (b < c)
+//	comparison      <  <=  >  >=           a < b + c       →  a < (b + c)
+//	additive        +  -                   a + b * c       →  a + (b * c)
+//	multiplicative  *  /  %                a * b           →  (a * b)
+//
+// Operators within the same tier have equal precedence and associate
+// left-to-right. So `10 - 4 - 3` evaluates as `(10 - 4) - 3 = 3`, and
+// `a == b =~ c` evaluates as `(a == b) =~ c`. The two equality-style
+// matchers (`=~` for regex match, `!~` for no-match) share the
+// equality tier with `==` and `!=`.
+//
+// Parentheses always override precedence: `(a + b) * c` forces the
+// addition first.
+//
+// Examples:
+//
+//	1 + 2 * 3            →  1 + (2 * 3)          = 7
+//	a || b && c          →  a || (b && c)
+//	users.length > 0 && active
+//	                     →  (users.length > 0) && active
+//	age >= 18 && age < 65
+//	                     →  (age >= 18) && (age < 65)
+//	name =~ /admin/ || role == "root"
+//	                     →  (name =~ /admin/) || (role == "root")
+//
+// Implementation note: at parse time every operator is rewritten into a
+// function call (e.g. `1 + 2` becomes `+(1, 2)`), so by the time the
+// compiler sees the tree there are no operators left — only calls. The
+// fold itself happens in processOperators, which buckets operators by
+// their tens digit and collapses one precedence tier per pass.
 const (
-	// strictly following the javascript operator precedence
 	OpAssignment Operator = iota + 30
 	OpOr         Operator = iota + 60
 	OpAnd        Operator = iota + 70
