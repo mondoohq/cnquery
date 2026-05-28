@@ -2668,6 +2668,15 @@ docker.file @defaults("file.path instructions.length stages.length") {
   // `escape` (line-continuation token, default `\`), and `check` (Buildkit
   // build-check toggles).
   directives(file) map[string]string
+  // Whether the Dockerfile defines more than one stage
+  multiStage(file) bool
+  // Whether a BuildKit frontend is pinned via the `syntax` parser directive
+  usesBuildkit(file) bool
+  // Final stage in this Dockerfile
+  //
+  // Shortcut to the last `docker.file.stage`, which is the one that produces
+  // the image when the build runs without `--target`. Null for an empty file.
+  finalStage(file) docker.file.stage
 }
 
 // Dockerfile stages
@@ -2711,6 +2720,23 @@ private docker.file.stage @defaults("from.name") {
   // ONBUILD instructions are deferred and run when an image built from this
   // Dockerfile is itself used as the base image of a downstream build.
   onbuild []docker.file.onbuild
+  // Whether this stage runs as root
+  //
+  // True when no `USER` instruction is present in the stage or when the
+  // declared user resolves to UID 0 (`0` or `root`). Inherited `USER` from
+  // the base image is not considered, because it is not visible from the
+  // Dockerfile alone.
+  runsAsRoot bool
+  // Whether this stage declares a HEALTHCHECK
+  //
+  // True for any `HEALTHCHECK` line, including `HEALTHCHECK NONE` (which
+  // explicitly disables an inherited check).
+  hasHealthcheck bool
+  // Whether this stage is the final stage in the Dockerfile
+  //
+  // Only the final stage produces the image when the Dockerfile is built
+  // without `--target`.
+  final bool
 }
 
 // Dockerfile ARG instructions
@@ -2739,6 +2765,10 @@ private docker.file.user @defaults("user") {
   user string
   // Set the user group or GID (optional)
   group string
+  // Whether the declared user is root
+  //
+  // True when `user` is `0` or `root`. The group is not considered.
+  isRoot bool
 }
 
 // Dockerfile EXPOSE instruction
@@ -2777,6 +2807,21 @@ private docker.file.run @defaults("script") {
   // `insecure` runs the step with elevated privileges and is commonly
   // flagged by security policies.
   security string
+  // Whether the instruction is written in shell form
+  //
+  // Shell form (`RUN echo hi`) wraps the command in the stage `SHELL`
+  // (default `/bin/sh -c`), allowing shell expansion, pipes, and
+  // variable substitution.
+  isShellForm bool
+  // Whether the instruction is written in exec form
+  //
+  // Exec form (`RUN ["echo", "hi"]`) executes the program directly without
+  // a shell, so pipes, redirects, and `${VAR}` expansion are not interpreted.
+  isExecForm bool
+  // Whether the instruction declares a `--mount=type=secret`
+  mountsSecret bool
+  // Whether the instruction declares a `--mount=type=ssh`
+  mountsSsh bool
 }
 
 // Dockerfile RUN --mount flag

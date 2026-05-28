@@ -4445,6 +4445,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.directives": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFile).GetDirectives()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"docker.file.multiStage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetMultiStage()).ToDataRes(types.Bool)
+	},
+	"docker.file.usesBuildkit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetUsesBuildkit()).ToDataRes(types.Bool)
+	},
+	"docker.file.finalStage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetFinalStage()).ToDataRes(types.Resource("docker.file.stage"))
+	},
 	"docker.file.stage.from": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetFrom()).ToDataRes(types.Resource("docker.file.from"))
 	},
@@ -4499,6 +4508,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.onbuild": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetOnbuild()).ToDataRes(types.Array(types.Resource("docker.file.onbuild")))
 	},
+	"docker.file.stage.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"docker.file.stage.hasHealthcheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetHasHealthcheck()).ToDataRes(types.Bool)
+	},
+	"docker.file.stage.final": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetFinal()).ToDataRes(types.Bool)
+	},
 	"docker.file.arg.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileArg).GetName()).ToDataRes(types.String)
 	},
@@ -4516,6 +4534,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.user.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileUser).GetGroup()).ToDataRes(types.String)
+	},
+	"docker.file.user.isRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileUser).GetIsRoot()).ToDataRes(types.Bool)
 	},
 	"docker.file.expose.port": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileExpose).GetPort()).ToDataRes(types.Int)
@@ -4549,6 +4570,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.run.security": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileRun).GetSecurity()).ToDataRes(types.String)
+	},
+	"docker.file.run.isShellForm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRun).GetIsShellForm()).ToDataRes(types.Bool)
+	},
+	"docker.file.run.isExecForm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRun).GetIsExecForm()).ToDataRes(types.Bool)
+	},
+	"docker.file.run.mountsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRun).GetMountsSecret()).ToDataRes(types.Bool)
+	},
+	"docker.file.run.mountsSsh": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRun).GetMountsSsh()).ToDataRes(types.Bool)
 	},
 	"docker.file.run.mount.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileRunMount).GetType()).ToDataRes(types.String)
@@ -12930,6 +12963,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFile).Directives, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"docker.file.multiStage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).MultiStage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.usesBuildkit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).UsesBuildkit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.finalStage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).FinalStage, ok = plugin.RawToTValue[*mqlDockerFileStage](v.Value, v.Error)
+		return
+	},
 	"docker.file.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).__id, ok = v.Value.(string)
 		return
@@ -13006,6 +13051,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFileStage).Onbuild, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"docker.file.stage.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.hasHealthcheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).HasHealthcheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.final": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Final, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"docker.file.arg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileArg).__id, ok = v.Value.(string)
 		return
@@ -13040,6 +13097,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.user.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileUser).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.user.isRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileUser).IsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"docker.file.expose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13096,6 +13157,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.run.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileRun).Security, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.isShellForm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRun).IsShellForm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.isExecForm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRun).IsExecForm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.mountsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRun).MountsSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.mountsSsh": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRun).MountsSsh, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"docker.file.run.mount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31553,6 +31630,9 @@ type mqlDockerFile struct {
 	Instructions plugin.TValue[any]
 	Stages       plugin.TValue[[]any]
 	Directives   plugin.TValue[map[string]any]
+	MultiStage   plugin.TValue[bool]
+	UsesBuildkit plugin.TValue[bool]
+	FinalStage   plugin.TValue[*mqlDockerFileStage]
 }
 
 // createDockerFile creates a new instance of this resource
@@ -31651,29 +31731,75 @@ func (c *mqlDockerFile) GetDirectives() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlDockerFile) GetMultiStage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MultiStage, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.multiStage(vargFile.Data)
+	})
+}
+
+func (c *mqlDockerFile) GetUsesBuildkit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesBuildkit, func() (bool, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return false, vargFile.Error
+		}
+
+		return c.usesBuildkit(vargFile.Data)
+	})
+}
+
+func (c *mqlDockerFile) GetFinalStage() *plugin.TValue[*mqlDockerFileStage] {
+	return plugin.GetOrCompute[*mqlDockerFileStage](&c.FinalStage, func() (*mqlDockerFileStage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("docker.file", c.__id, "finalStage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDockerFileStage), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.finalStage(vargFile.Data)
+	})
+}
+
 // mqlDockerFileStage for the docker.file.stage resource
 type mqlDockerFileStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDockerFileStageInternal it will be used here
-	From        plugin.TValue[*mqlDockerFileFrom]
-	File        plugin.TValue[*mqlDockerFile]
-	Env         plugin.TValue[[]any]
-	Arg         plugin.TValue[[]any]
-	Labels      plugin.TValue[map[string]any]
-	Run         plugin.TValue[[]any]
-	Cmd         plugin.TValue[*mqlDockerFileRun]
-	User        plugin.TValue[*mqlDockerFileUser]
-	Entrypoint  plugin.TValue[*mqlDockerFileRun]
-	Add         plugin.TValue[[]any]
-	Copy        plugin.TValue[[]any]
-	Expose      plugin.TValue[[]any]
-	Healthcheck plugin.TValue[*mqlDockerFileHealthcheck]
-	Volumes     plugin.TValue[[]any]
-	Shell       plugin.TValue[*mqlDockerFileShell]
-	Workdir     plugin.TValue[[]any]
-	Stopsignal  plugin.TValue[*mqlDockerFileStopsignal]
-	Onbuild     plugin.TValue[[]any]
+	From           plugin.TValue[*mqlDockerFileFrom]
+	File           plugin.TValue[*mqlDockerFile]
+	Env            plugin.TValue[[]any]
+	Arg            plugin.TValue[[]any]
+	Labels         plugin.TValue[map[string]any]
+	Run            plugin.TValue[[]any]
+	Cmd            plugin.TValue[*mqlDockerFileRun]
+	User           plugin.TValue[*mqlDockerFileUser]
+	Entrypoint     plugin.TValue[*mqlDockerFileRun]
+	Add            plugin.TValue[[]any]
+	Copy           plugin.TValue[[]any]
+	Expose         plugin.TValue[[]any]
+	Healthcheck    plugin.TValue[*mqlDockerFileHealthcheck]
+	Volumes        plugin.TValue[[]any]
+	Shell          plugin.TValue[*mqlDockerFileShell]
+	Workdir        plugin.TValue[[]any]
+	Stopsignal     plugin.TValue[*mqlDockerFileStopsignal]
+	Onbuild        plugin.TValue[[]any]
+	RunsAsRoot     plugin.TValue[bool]
+	HasHealthcheck plugin.TValue[bool]
+	Final          plugin.TValue[bool]
 }
 
 // createDockerFileStage creates a new instance of this resource
@@ -31780,6 +31906,18 @@ func (c *mqlDockerFileStage) GetOnbuild() *plugin.TValue[[]any] {
 	return &c.Onbuild
 }
 
+func (c *mqlDockerFileStage) GetRunsAsRoot() *plugin.TValue[bool] {
+	return &c.RunsAsRoot
+}
+
+func (c *mqlDockerFileStage) GetHasHealthcheck() *plugin.TValue[bool] {
+	return &c.HasHealthcheck
+}
+
+func (c *mqlDockerFileStage) GetFinal() *plugin.TValue[bool] {
+	return &c.Final
+}
+
 // mqlDockerFileArg for the docker.file.arg resource
 type mqlDockerFileArg struct {
 	MqlRuntime *plugin.Runtime
@@ -31883,8 +32021,9 @@ type mqlDockerFileUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDockerFileUserInternal it will be used here
-	User  plugin.TValue[string]
-	Group plugin.TValue[string]
+	User   plugin.TValue[string]
+	Group  plugin.TValue[string]
+	IsRoot plugin.TValue[bool]
 }
 
 // createDockerFileUser creates a new instance of this resource
@@ -31925,6 +32064,10 @@ func (c *mqlDockerFileUser) GetUser() *plugin.TValue[string] {
 
 func (c *mqlDockerFileUser) GetGroup() *plugin.TValue[string] {
 	return &c.Group
+}
+
+func (c *mqlDockerFileUser) GetIsRoot() *plugin.TValue[bool] {
+	return &c.IsRoot
 }
 
 // mqlDockerFileExpose for the docker.file.expose resource
@@ -32045,10 +32188,14 @@ type mqlDockerFileRun struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDockerFileRunInternal it will be used here
-	Script   plugin.TValue[string]
-	Mounts   plugin.TValue[[]any]
-	Network  plugin.TValue[string]
-	Security plugin.TValue[string]
+	Script       plugin.TValue[string]
+	Mounts       plugin.TValue[[]any]
+	Network      plugin.TValue[string]
+	Security     plugin.TValue[string]
+	IsShellForm  plugin.TValue[bool]
+	IsExecForm   plugin.TValue[bool]
+	MountsSecret plugin.TValue[bool]
+	MountsSsh    plugin.TValue[bool]
 }
 
 // createDockerFileRun creates a new instance of this resource
@@ -32097,6 +32244,22 @@ func (c *mqlDockerFileRun) GetNetwork() *plugin.TValue[string] {
 
 func (c *mqlDockerFileRun) GetSecurity() *plugin.TValue[string] {
 	return &c.Security
+}
+
+func (c *mqlDockerFileRun) GetIsShellForm() *plugin.TValue[bool] {
+	return &c.IsShellForm
+}
+
+func (c *mqlDockerFileRun) GetIsExecForm() *plugin.TValue[bool] {
+	return &c.IsExecForm
+}
+
+func (c *mqlDockerFileRun) GetMountsSecret() *plugin.TValue[bool] {
+	return &c.MountsSecret
+}
+
+func (c *mqlDockerFileRun) GetMountsSsh() *plugin.TValue[bool] {
+	return &c.MountsSsh
 }
 
 // mqlDockerFileRunMount for the docker.file.run.mount resource

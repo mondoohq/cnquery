@@ -445,6 +445,7 @@ docker.file.expose 11.0.3
 docker.file.expose.port 11.0.3
 docker.file.expose.protocol 11.0.3
 docker.file.file 11.0.2
+docker.file.finalStage 13.21.1
 docker.file.from 11.0.2
 docker.file.from.digest 11.0.2
 docker.file.from.image 11.0.2
@@ -460,9 +461,12 @@ docker.file.healthcheck.startPeriod 11.8.14
 docker.file.healthcheck.test 11.8.14
 docker.file.healthcheck.timeout 11.8.14
 docker.file.instructions 11.0.2
+docker.file.multiStage 13.21.1
 docker.file.onbuild 13.16.10
 docker.file.onbuild.expression 13.16.10
 docker.file.run 11.0.2
+docker.file.run.isExecForm 13.21.1
+docker.file.run.isShellForm 13.21.1
 docker.file.run.mount 13.16.10
 docker.file.run.mount.env 13.16.10
 docker.file.run.mount.from 13.16.10
@@ -478,6 +482,8 @@ docker.file.run.mount.target 13.16.10
 docker.file.run.mount.type 13.16.10
 docker.file.run.mount.uid 13.16.10
 docker.file.run.mounts 13.16.10
+docker.file.run.mountsSecret 13.21.1
+docker.file.run.mountsSsh 13.21.1
 docker.file.run.network 13.16.10
 docker.file.run.script 11.0.2
 docker.file.run.security 13.16.10
@@ -492,11 +498,14 @@ docker.file.stage.entrypoint 11.0.2
 docker.file.stage.env 11.4.86
 docker.file.stage.expose 11.0.2
 docker.file.stage.file 11.0.2
+docker.file.stage.final 13.21.1
 docker.file.stage.from 11.0.2
+docker.file.stage.hasHealthcheck 13.21.1
 docker.file.stage.healthcheck 11.8.14
 docker.file.stage.labels 11.0.2
 docker.file.stage.onbuild 13.16.10
 docker.file.stage.run 11.0.2
+docker.file.stage.runsAsRoot 13.21.1
 docker.file.stage.shell 11.8.15
 docker.file.stage.stopsignal 13.16.10
 docker.file.stage.user 11.0.2
@@ -507,7 +516,9 @@ docker.file.stopsignal 13.16.10
 docker.file.stopsignal.signal 13.16.10
 docker.file.user 11.1.3
 docker.file.user.group 11.1.3
+docker.file.user.isRoot 13.21.1
 docker.file.user.user 11.1.3
+docker.file.usesBuildkit 13.21.1
 docker.file.volume 11.8.14
 docker.file.volume.path 11.8.14
 docker.file.workdir 11.8.15

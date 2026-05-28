@@ -489,3 +489,258 @@ COPY --parents --exclude=*.log src/ /dest/
 	require.True(t, cp1.Parents.Data)
 	require.Equal(t, []any{"*.log"}, cp1.Excludes.Data)
 }
+
+func TestParseDockerfile_FromDigest(t *testing.T) {
+	cases := []struct {
+		baseName       string
+		expectedImage  string
+		expectedTag    string
+		expectedDigest string
+	}{
+		{"alpine", "alpine", "", ""},
+		{"alpine:3.18", "alpine", "3.18", ""},
+		{"alpine@sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d", "alpine", "", "sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d"},
+		{"alpine:3.18@sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d", "alpine", "3.18", "sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc04d"},
+	}
+	for _, kase := range cases {
+		t.Run(kase.baseName, func(t *testing.T) {
+			r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+			src := "FROM " + kase.baseName + "\n"
+			file := &mqlFile{
+				Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+				Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			df := mqlDockerFile{
+				File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			require.NoError(t, df.parse(file))
+
+			from := df.Stages.Data[0].(*mqlDockerFileStage).From.Data
+			require.Equal(t, kase.expectedImage, from.Image.Data, "image")
+			require.Equal(t, kase.expectedTag, from.Tag.Data, "tag")
+			require.Equal(t, kase.expectedDigest, from.Digest.Data, "digest")
+		})
+	}
+}
+
+func TestParseDockerfile_FilePredicates(t *testing.T) {
+	cases := []struct {
+		purpose              string
+		src                  string
+		expectedMultiStage   bool
+		expectedUsesBuildkit bool
+		expectedFinalImage   string
+	}{
+		{
+			purpose:              "single stage without syntax directive",
+			src:                  "FROM alpine\nRUN echo hi\n",
+			expectedMultiStage:   false,
+			expectedUsesBuildkit: false,
+			expectedFinalImage:   "alpine",
+		},
+		{
+			purpose: "multi-stage with syntax directive",
+			src: `# syntax=docker/dockerfile:1.7
+FROM golang AS builder
+RUN go build
+FROM scratch
+COPY --from=builder /out /out
+`,
+			expectedMultiStage:   true,
+			expectedUsesBuildkit: true,
+			expectedFinalImage:   "scratch",
+		},
+	}
+	for _, kase := range cases {
+		t.Run(kase.purpose, func(t *testing.T) {
+			r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+			file := &mqlFile{
+				Content:    plugin.TValue[string]{Data: kase.src, State: plugin.StateIsSet},
+				Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			df := mqlDockerFile{
+				File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			require.NoError(t, df.parse(file))
+
+			require.Equal(t, kase.expectedMultiStage, df.MultiStage.Data, "multiStage")
+			require.Equal(t, kase.expectedUsesBuildkit, df.UsesBuildkit.Data, "usesBuildkit")
+			require.NotNil(t, df.FinalStage.Data, "finalStage populated")
+			require.Equal(t, kase.expectedFinalImage, df.FinalStage.Data.From.Data.Image.Data, "finalStage.from.image")
+		})
+	}
+}
+
+func TestParseDockerfile_StagePredicates(t *testing.T) {
+	src := `
+FROM alpine AS builder
+RUN echo build
+
+FROM alpine
+USER 1001
+HEALTHCHECK CMD curl -f http://localhost/ || exit 1
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+	require.Equal(t, 2, len(df.Stages.Data))
+
+	builder := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.True(t, builder.RunsAsRoot.Data, "builder has no USER → assumed root")
+	require.False(t, builder.HasHealthcheck.Data, "builder has no HEALTHCHECK")
+	require.False(t, builder.Final.Data, "builder is not final")
+
+	finalStage := df.Stages.Data[1].(*mqlDockerFileStage)
+	require.False(t, finalStage.RunsAsRoot.Data, "final stage USER=1001 is non-root")
+	require.True(t, finalStage.HasHealthcheck.Data, "final stage declares HEALTHCHECK")
+	require.True(t, finalStage.Final.Data, "last stage is final")
+}
+
+func TestParseDockerfile_SingleStageFinal(t *testing.T) {
+	src := "FROM alpine\nRUN echo hi\n"
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	require.False(t, df.MultiStage.Data, "single stage → multiStage false")
+	require.Equal(t, 1, len(df.Stages.Data))
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.True(t, stage.Final.Data, "the only stage is also the final stage")
+	require.Equal(t, stage, df.FinalStage.Data, "finalStage points at the single stage")
+}
+
+func TestParseDockerfile_HealthcheckNoneIsHealthcheck(t *testing.T) {
+	src := "FROM alpine\nHEALTHCHECK NONE\n"
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.True(t, stage.HasHealthcheck.Data, "HEALTHCHECK NONE still counts as declared")
+	require.NotNil(t, stage.Healthcheck.Data)
+	require.True(t, stage.Healthcheck.Data.None.Data, "and the inner healthcheck is the NONE form")
+}
+
+func TestParseDockerfile_StageRunsAsRoot(t *testing.T) {
+	cases := []struct {
+		user     string
+		expected bool
+	}{
+		{"", true},      // no USER
+		{"0", true},     // root by UID
+		{"root", true},  // root by name
+		{"0:0", true},   // root with group
+		{"1001", false}, // non-root UID
+		{"app", false},  // non-root name
+	}
+	for _, kase := range cases {
+		name := kase.user
+		if name == "" {
+			name = "(no USER)"
+		}
+		t.Run(name, func(t *testing.T) {
+			r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+			src := "FROM alpine\n"
+			if kase.user != "" {
+				src += "USER " + kase.user + "\n"
+			}
+			file := &mqlFile{
+				Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+				Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			df := mqlDockerFile{
+				File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+				MqlRuntime: r,
+			}
+			require.NoError(t, df.parse(file))
+
+			stage := df.Stages.Data[0].(*mqlDockerFileStage)
+			require.Equal(t, kase.expected, stage.RunsAsRoot.Data)
+			if kase.user != "" {
+				require.NotNil(t, stage.User.Data)
+				require.Equal(t, kase.expected, stage.User.Data.IsRoot.Data)
+			}
+		})
+	}
+}
+
+func TestParseDockerfile_RunFormAndMountPredicates(t *testing.T) {
+	src := `
+FROM alpine
+RUN echo shell-form
+RUN ["echo", "exec-form"]
+RUN --mount=type=secret,id=npm_token,target=/run/secrets/npm npm install
+RUN --mount=type=ssh ssh-add -l
+CMD ["echo", "hello"]
+ENTRYPOINT /entry.sh
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.Equal(t, 4, len(stage.Run.Data))
+
+	shellRun := stage.Run.Data[0].(*mqlDockerFileRun)
+	require.True(t, shellRun.IsShellForm.Data, "RUN echo ... is shell form")
+	require.False(t, shellRun.IsExecForm.Data)
+	require.False(t, shellRun.MountsSecret.Data)
+	require.False(t, shellRun.MountsSsh.Data)
+
+	execRun := stage.Run.Data[1].(*mqlDockerFileRun)
+	require.False(t, execRun.IsShellForm.Data)
+	require.True(t, execRun.IsExecForm.Data, `RUN ["echo", ...] is exec form`)
+
+	secretRun := stage.Run.Data[2].(*mqlDockerFileRun)
+	require.True(t, secretRun.MountsSecret.Data, "RUN with --mount=type=secret")
+	require.False(t, secretRun.MountsSsh.Data)
+
+	sshRun := stage.Run.Data[3].(*mqlDockerFileRun)
+	require.True(t, sshRun.MountsSsh.Data, "RUN with --mount=type=ssh")
+	require.False(t, sshRun.MountsSecret.Data)
+
+	require.NotNil(t, stage.Cmd.Data)
+	require.True(t, stage.Cmd.Data.IsExecForm.Data, `CMD ["echo", ...] is exec form`)
+	require.False(t, stage.Cmd.Data.IsShellForm.Data)
+
+	require.NotNil(t, stage.Entrypoint.Data)
+	require.True(t, stage.Entrypoint.Data.IsShellForm.Data, `ENTRYPOINT /entry.sh is shell form`)
+	require.False(t, stage.Entrypoint.Data.IsExecForm.Data)
+}
