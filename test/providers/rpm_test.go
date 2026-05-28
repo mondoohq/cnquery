@@ -19,7 +19,8 @@ import (
 // which is all both code paths need.
 var rpmTestImages = []string{
 	"redhat/ubi9-minimal",
-	"almalinux:9-minimal",
+	"redhat/ubi8",
+	"amazonlinux:2",
 }
 
 type pkgInfo struct {
