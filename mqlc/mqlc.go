@@ -155,11 +155,44 @@ type compiler struct {
 	//   file(xyz).content == _     is not
 	standalone bool
 
-	// bindingIsExplicit is true when the block's binding was given an explicit
-	// name by the caller, e.g. `xs.map(p: p.foo)`. In that case bare identifiers
-	// resolve against the global namespace (resources, builtins, vars) instead
-	// of against the bound resource's fields. The bound resource is only
-	// reachable through its explicit name (`p`) or through `_`.
+	// Identifier resolution inside blocks
+	// -----------------------------------
+	//
+	// A block has a binding: the resource (or value) it iterates over. How a
+	// bare identifier inside the block resolves depends on whether the user
+	// gave that binding an explicit name.
+	//
+	// Anonymous binding (bindingIsExplicit == false):
+	//
+	//	processes.list { command }
+	//
+	// The bound resource (each process) is implicitly in scope. Bare `command`
+	// first tries the bound resource's fields (process.command), and only falls
+	// back to the global namespace if no field matches. The implicit binding
+	// effectively shadows globals.
+	//
+	// Named binding (bindingIsExplicit == true):
+	//
+	//	processes.list.map(p: command("echo " + p.command))
+	//
+	// Once the user supplies a name (`p`), they have signaled that the bound
+	// resource is reachable through that name (and through `_`) and nothing
+	// else. Bare `command` now resolves against the global namespace, so it
+	// picks up the top-level `command` resource. To reach the process field
+	// the user writes `p.command` or `_.command`.
+	//
+	// This rule prevents the trap where a same-named field on the bound
+	// resource hides a top-level resource the user wanted to call. Before
+	// commit 47cac143d we shadowed even when an explicit name was given, which
+	// made some queries impossible to write in MQL.
+	//
+	// The enforcement points are:
+	//   - blockcompileOnResource (this file): registers the explicit name and
+	//     `_`, and sets bindingIsExplicit on the inner compiler.
+	//   - compileDictQuery / compileMapWhere (builtin_map.go): same, for dict
+	//     and map blocks.
+	//   - compileIdentifier (this file): skips the bound-field lookup when
+	//     bindingIsExplicit is true.
 	bindingIsExplicit bool
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
