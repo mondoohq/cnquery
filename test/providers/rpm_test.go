@@ -48,8 +48,17 @@ func requireDocker(t *testing.T) {
 // (ContainerConnection.RunCommand -> real `rpm -qa --queryformat`).
 func dockerRunDetached(t *testing.T, image string) string {
 	t.Helper()
-	out, err := exec.Command("docker", "run", "-d", image, "sleep", "3600").CombinedOutput()
-	require.NoErrorf(t, err, "starting container for %s: %s", image, string(out))
+	// Pull explicitly first: `docker run` prints image-pull progress, and if
+	// that progress ends up mixed with the container id we read back, the id
+	// becomes garbage and mql falls back to printing usage.
+	if out, err := exec.Command("docker", "pull", image).CombinedOutput(); err != nil {
+		t.Fatalf("pulling %s: %v\n%s", image, err, string(out))
+	}
+	// --rm so the daemon reaps the container if the test process dies before
+	// the cleanup callback runs (SIGKILL, OOM, CI timeout). Read only stdout so
+	// the container id is never contaminated by warnings on stderr.
+	out, err := exec.Command("docker", "run", "-d", "--rm", image, "sleep", "3600").Output()
+	require.NoErrorf(t, err, "starting container for %s", image)
 	id := strings.TrimSpace(string(out))
 	require.NotEmpty(t, id, "empty container id for %s", image)
 	t.Cleanup(func() {
@@ -62,7 +71,10 @@ func dockerRunDetached(t *testing.T, image string) string {
 // parsed package list.
 func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
 	t.Helper()
-	args := append(append([]string{"run"}, target...), "-c", "packages", "-j")
+	args := make([]string, 0, 1+len(target)+3)
+	args = append(args, "run")
+	args = append(args, target...)
+	args = append(args, "-c", "packages", "-j")
 	r := test.NewCliTestRunner("./mql", args...)
 	require.NoError(t, r.Run())
 	require.Equalf(t, 0, r.ExitCode(), "mql exited non-zero; stderr: %s", string(r.Stderr()))
