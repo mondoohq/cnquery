@@ -18,9 +18,9 @@ import (
 // to keep the pull cheap; they still ship the rpm CLI and a real rpm database,
 // which is all both code paths need.
 var rpmTestImages = []string{
-	"redhat/ubi9-minimal",
 	"redhat/ubi8",
-	"amazonlinux:2",
+	"oraclelinux:8",
+	"opensuse/leap:15.6",
 }
 
 type pkgInfo struct {
