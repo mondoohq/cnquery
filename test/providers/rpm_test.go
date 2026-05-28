@@ -68,7 +68,10 @@ func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
 	require.Equalf(t, 0, r.ExitCode(), "mql exited non-zero; stderr: %s", string(r.Stderr()))
 
 	var res rpmPackagesResult
-	require.NoError(t, r.Json(&res))
+	if err := r.Json(&res); err != nil {
+		t.Fatalf("parsing mql json failed: %v\n--- stdout ---\n%s\n--- stderr ---\n%s",
+			err, string(r.Stdout()), string(r.Stderr()))
+	}
 	require.NotEmpty(t, res, "no result object from mql")
 	return res[0].List
 }
