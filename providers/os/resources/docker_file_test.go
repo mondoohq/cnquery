@@ -527,18 +527,18 @@ func TestParseDockerfile_FromDigest(t *testing.T) {
 
 func TestParseDockerfile_FilePredicates(t *testing.T) {
 	cases := []struct {
-		purpose              string
-		src                  string
-		expectedMultiStage   bool
-		expectedUsesBuildkit bool
-		expectedFinalImage   string
+		purpose                    string
+		src                        string
+		expectedMultiStage         bool
+		expectedHasSyntaxDirective bool
+		expectedFinalImage         string
 	}{
 		{
-			purpose:              "single stage without syntax directive",
-			src:                  "FROM alpine\nRUN echo hi\n",
-			expectedMultiStage:   false,
-			expectedUsesBuildkit: false,
-			expectedFinalImage:   "alpine",
+			purpose:                    "single stage without syntax directive",
+			src:                        "FROM alpine\nRUN echo hi\n",
+			expectedMultiStage:         false,
+			expectedHasSyntaxDirective: false,
+			expectedFinalImage:         "alpine",
 		},
 		{
 			purpose: "multi-stage with syntax directive",
@@ -548,9 +548,9 @@ RUN go build
 FROM scratch
 COPY --from=builder /out /out
 `,
-			expectedMultiStage:   true,
-			expectedUsesBuildkit: true,
-			expectedFinalImage:   "scratch",
+			expectedMultiStage:         true,
+			expectedHasSyntaxDirective: true,
+			expectedFinalImage:         "scratch",
 		},
 	}
 	for _, kase := range cases {
@@ -568,7 +568,7 @@ COPY --from=builder /out /out
 			require.NoError(t, df.parse(file))
 
 			require.Equal(t, kase.expectedMultiStage, df.MultiStage.Data, "multiStage")
-			require.Equal(t, kase.expectedUsesBuildkit, df.UsesBuildkit.Data, "usesBuildkit")
+			require.Equal(t, kase.expectedHasSyntaxDirective, df.HasSyntaxDirective.Data, "hasSyntaxDirective")
 			require.NotNil(t, df.FinalStage.Data, "finalStage populated")
 			require.Equal(t, kase.expectedFinalImage, df.FinalStage.Data.From.Data.Image.Data, "finalStage.from.image")
 		})

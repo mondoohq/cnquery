@@ -4448,8 +4448,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.multiStage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFile).GetMultiStage()).ToDataRes(types.Bool)
 	},
-	"docker.file.usesBuildkit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDockerFile).GetUsesBuildkit()).ToDataRes(types.Bool)
+	"docker.file.hasSyntaxDirective": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetHasSyntaxDirective()).ToDataRes(types.Bool)
 	},
 	"docker.file.finalStage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFile).GetFinalStage()).ToDataRes(types.Resource("docker.file.stage"))
@@ -12967,8 +12967,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFile).MultiStage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"docker.file.usesBuildkit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDockerFile).UsesBuildkit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"docker.file.hasSyntaxDirective": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).HasSyntaxDirective, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"docker.file.finalStage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31626,13 +31626,13 @@ type mqlDockerFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDockerFileInternal
-	File         plugin.TValue[*mqlFile]
-	Instructions plugin.TValue[any]
-	Stages       plugin.TValue[[]any]
-	Directives   plugin.TValue[map[string]any]
-	MultiStage   plugin.TValue[bool]
-	UsesBuildkit plugin.TValue[bool]
-	FinalStage   plugin.TValue[*mqlDockerFileStage]
+	File               plugin.TValue[*mqlFile]
+	Instructions       plugin.TValue[any]
+	Stages             plugin.TValue[[]any]
+	Directives         plugin.TValue[map[string]any]
+	MultiStage         plugin.TValue[bool]
+	HasSyntaxDirective plugin.TValue[bool]
+	FinalStage         plugin.TValue[*mqlDockerFileStage]
 }
 
 // createDockerFile creates a new instance of this resource
@@ -31742,14 +31742,14 @@ func (c *mqlDockerFile) GetMultiStage() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlDockerFile) GetUsesBuildkit() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.UsesBuildkit, func() (bool, error) {
+func (c *mqlDockerFile) GetHasSyntaxDirective() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasSyntaxDirective, func() (bool, error) {
 		vargFile := c.GetFile()
 		if vargFile.Error != nil {
 			return false, vargFile.Error
 		}
 
-		return c.usesBuildkit(vargFile.Data)
+		return c.hasSyntaxDirective(vargFile.Data)
 	})
 }
 

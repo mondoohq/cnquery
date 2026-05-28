@@ -93,7 +93,7 @@ func (p *mqlDockerFile) parse(file *mqlFile) error {
 		p.Stages.Error = err
 		p.Directives.Error = err
 		p.MultiStage.Error = err
-		p.UsesBuildkit.Error = err
+		p.HasSyntaxDirective.Error = err
 		p.FinalStage.Error = err
 		return err
 	}
@@ -167,7 +167,7 @@ func (p *mqlDockerFile) parse(file *mqlFile) error {
 		State: plugin.StateIsSet,
 	}
 	_, hasSyntax := directives["syntax"]
-	p.UsesBuildkit = plugin.TValue[bool]{
+	p.HasSyntaxDirective = plugin.TValue[bool]{
 		Data:  hasSyntax,
 		State: plugin.StateIsSet,
 	}
@@ -415,10 +415,14 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		log.Debug().Strs("commands", slices.Compact(unsupported)).Msg("unsupported dockerfile commands")
 	}
 
-	var userValue string
+	var userValue, groupValue string
 	if userRaw != nil {
-		if parts := strings.SplitN(userRaw.User, ":", 2); len(parts) > 0 {
+		parts := strings.SplitN(userRaw.User, ":", 2)
+		if len(parts) > 0 && parts[0] != "" {
 			userValue = parts[0]
+		}
+		if len(parts) > 1 && parts[1] != "" {
+			groupValue = parts[1]
 		}
 	}
 
@@ -497,21 +501,11 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 	}
 
 	if userRaw != nil {
-		arr := strings.Split(userRaw.User, ":")
-		var user string
-		var group string
-		if len(arr) != 0 && arr[0] != "" {
-			user = arr[0]
-		}
-
-		if len(arr) > 1 && arr[1] != "" {
-			group = arr[1]
-		}
 		userResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileUser, map[string]*llx.RawData{
 			"__id":   llx.StringData(p.locationID(userRaw.Location())),
-			"user":   llx.StringData(user),
-			"group":  llx.StringData(group),
-			"isRoot": llx.BoolData(isRootUser(user)),
+			"user":   llx.StringData(userValue),
+			"group":  llx.StringData(groupValue),
+			"isRoot": llx.BoolData(isRootUser(userValue)),
 		})
 		if err != nil {
 			return nil, err
@@ -597,7 +591,7 @@ func (p *mqlDockerFile) multiStage(file *mqlFile) (bool, error) {
 	return false, p.parse(file)
 }
 
-func (p *mqlDockerFile) usesBuildkit(file *mqlFile) (bool, error) {
+func (p *mqlDockerFile) hasSyntaxDirective(file *mqlFile) (bool, error) {
 	return false, p.parse(file)
 }
 

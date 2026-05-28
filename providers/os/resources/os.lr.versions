@@ -452,6 +452,7 @@ docker.file.from.image 11.0.2
 docker.file.from.name 11.0.2
 docker.file.from.platform 11.0.2
 docker.file.from.tag 11.0.2
+docker.file.hasSyntaxDirective 13.21.1
 docker.file.healthcheck 11.8.14
 docker.file.healthcheck.interval 11.8.14
 docker.file.healthcheck.none 11.8.14
@@ -518,7 +519,6 @@ docker.file.user 11.1.3
 docker.file.user.group 11.1.3
 docker.file.user.isRoot 13.21.1
 docker.file.user.user 11.1.3
-docker.file.usesBuildkit 13.21.1
 docker.file.volume 11.8.14
 docker.file.volume.path 11.8.14
 docker.file.workdir 11.8.15

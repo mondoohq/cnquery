@@ -2670,8 +2670,14 @@ docker.file @defaults("file.path instructions.length stages.length") {
   directives(file) map[string]string
   // Whether the Dockerfile defines more than one stage
   multiStage(file) bool
-  // Whether a BuildKit frontend is pinned via the `syntax` parser directive
-  usesBuildkit(file) bool
+  // Whether the Dockerfile pins a frontend via the `syntax` parser directive
+  //
+  // Set when the file begins with `# syntax=<image>` (e.g.
+  // `# syntax=docker/dockerfile:1.7`). The directive selects a specific
+  // BuildKit frontend version. Note that BuildKit-only features such as
+  // `RUN --mount=type=secret` work without this directive too, so `false`
+  // does not mean BuildKit is unused.
+  hasSyntaxDirective(file) bool
   // Final stage in this Dockerfile
   //
   // Shortcut to the last `docker.file.stage`, which is the one that produces
