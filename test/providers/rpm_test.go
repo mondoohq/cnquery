@@ -22,7 +22,7 @@ var rpmTestImages = []string{
 	"almalinux:9-minimal",
 }
 
-type rpmPackage struct {
+type pkgInfo struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 	Arch    string `json:"arch"`
@@ -76,11 +76,11 @@ func requireRpmBinary(t *testing.T, containerID string) {
 	require.NoErrorf(t, err, "rpm CLI missing in container, runtime path would fall back to static: %s", string(out))
 }
 
-// queryRpmPackages runs mql against the target and returns the parsed package
+// queryPackages runs mql against the target and returns the parsed package
 // list. It projects the fields explicitly with a block: a bare `packages`
 // query only serializes the resource's @defaults (name, version) under -j, so
 // arch and format would come back empty.
-func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
+func queryPackages(t *testing.T, target ...string) []pkgInfo {
 	t.Helper()
 	args := make([]string, 0, 1+len(target)+3)
 	args = append(args, "run")
@@ -93,7 +93,7 @@ func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
 	// The -j output is an array with one object per scanned asset; that object
 	// has a single key (the queried block) whose value is the package list.
 	// Parse key-agnostically so we don't depend on how mql labels the block.
-	var assets []map[string][]rpmPackage
+	var assets []map[string][]pkgInfo
 	if err := r.Json(&assets); err != nil {
 		t.Fatalf("parsing mql json failed: %v\n--- stdout ---\n%s\n--- stderr ---\n%s",
 			err, string(r.Stdout()), string(r.Stderr()))
@@ -106,16 +106,16 @@ func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
 	return nil
 }
 
-func hasPackage(list []rpmPackage, name string) (rpmPackage, bool) {
+func hasPackage(list []pkgInfo, name string) (pkgInfo, bool) {
 	for _, p := range list {
 		if p.Name == name {
 			return p, true
 		}
 	}
-	return rpmPackage{}, false
+	return pkgInfo{}, false
 }
 
-func packageNames(list []rpmPackage) []string {
+func packageNames(list []pkgInfo) []string {
 	names := make([]string, 0, len(list))
 	for _, p := range list {
 		names = append(names, p.Name)
@@ -127,7 +127,7 @@ func packageNames(list []rpmPackage) []string {
 // delimiter. The bug that triggered the revert (#7963 reverting #7818) made
 // the runtime path parse zero packages because rpm did not emit the assumed
 // delimiter byte. These assertions only pass against genuine rpm output.
-func assertRealRpmPackages(t *testing.T, path string, list []rpmPackage) {
+func assertRealRpmPackages(t *testing.T, path string, list []pkgInfo) {
 	t.Helper()
 	// The delimiter break produced an empty list. Even a minimal image has
 	// dozens of packages, so 20 is a safe floor that still catches that failure.
@@ -164,13 +164,13 @@ func TestRpmPackages(t *testing.T) {
 			// delimiter change broke and the reason mock fixtures could not.
 			id := dockerRunDetached(t, image)
 			requireRpmBinary(t, id)
-			runtime := queryRpmPackages(t, "docker", id)
+			runtime := queryPackages(t, "docker", id)
 			assertRealRpmPackages(t, "runtime", runtime)
 
 			// Static path: the same image as an image reference routes to a
 			// snapshot connection, which reads the rpm database with the rpmdb
 			// library and never touches queryFormat/RPM_REGEX.
-			static := queryRpmPackages(t, "docker", image)
+			static := queryPackages(t, "docker", image)
 			assertRealRpmPackages(t, "static", static)
 
 			// Both code paths enumerate the same installed rpm database, so the

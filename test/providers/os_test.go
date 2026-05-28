@@ -192,6 +192,28 @@ func TestOsProviderSharedTests(t *testing.T) {
 	}
 }
 
+// TestDebPackageFields verifies that deb package fields beyond name/version
+// (arch, format) parse correctly end to end against the deterministic debian
+// testdata. It is the deb analogue of the rpm field-shape check in
+// rpm_test.go. Unlike rpm, the deb listing path needs no dual-path container
+// test: it reads /var/lib/dpkg/status directly via the filesystem for both
+// running systems and images, with no self-constructed queryformat delimiter
+// and no separate runtime/static code paths, so it lacks the fragility that
+// caused the rpm delimiter incident.
+func TestDebPackageFields(t *testing.T) {
+	once.Do(setup)
+
+	pkgs := queryPackages(t, "fs", "--path", "./testdata/fs")
+
+	// fdisk is in the testdata with a normal architecture, so it proves field
+	// splitting worked end to end.
+	fdisk, ok := hasPackage(pkgs, "fdisk")
+	require.True(t, ok, "fdisk package missing from debian testdata")
+	assert.Equal(t, "amd64", fdisk.Arch)
+	assert.Equal(t, "deb", fdisk.Format)
+	assert.NotEmpty(t, fdisk.Version)
+}
+
 func TestProvidersEnvVarsLoading(t *testing.T) {
 	t.Run("command WITHOUT path should not find any package", func(t *testing.T) {
 		r := test.NewCliTestRunner("./mql", "run", "fs", "-c", mqlPackagesQuery, "-j")
