@@ -28,10 +28,6 @@ type rpmPackage struct {
 	Vendor  string `json:"vendor"`
 }
 
-type rpmPackagesResult []struct {
-	List []rpmPackage `json:"packages.list"`
-}
-
 // requireDocker fails the test (it does NOT skip) when docker is unavailable.
 // A silently skipped integration test gives the same false-green as the
 // hand-edited mock fixtures that caused the rpm delimiter incident: the test
@@ -67,25 +63,34 @@ func dockerRunDetached(t *testing.T, image string) string {
 	return id
 }
 
-// queryRpmPackages runs `mql run <target...> -c packages -j` and returns the
-// parsed package list.
+// queryRpmPackages runs mql against the target and returns the parsed package
+// list. It projects the fields explicitly with a block: a bare `packages`
+// query only serializes the resource's @defaults (name, version) under -j, so
+// arch and format would come back empty.
 func queryRpmPackages(t *testing.T, target ...string) []rpmPackage {
 	t.Helper()
 	args := make([]string, 0, 1+len(target)+3)
 	args = append(args, "run")
 	args = append(args, target...)
-	args = append(args, "-c", "packages", "-j")
+	args = append(args, "-c", "packages.list { name version arch format }", "-j")
 	r := test.NewCliTestRunner("./mql", args...)
 	require.NoError(t, r.Run())
 	require.Equalf(t, 0, r.ExitCode(), "mql exited non-zero; stderr: %s", string(r.Stderr()))
 
-	var res rpmPackagesResult
-	if err := r.Json(&res); err != nil {
+	// The -j output is an array with one object per scanned asset; that object
+	// has a single key (the queried block) whose value is the package list.
+	// Parse key-agnostically so we don't depend on how mql labels the block.
+	var assets []map[string][]rpmPackage
+	if err := r.Json(&assets); err != nil {
 		t.Fatalf("parsing mql json failed: %v\n--- stdout ---\n%s\n--- stderr ---\n%s",
 			err, string(r.Stdout()), string(r.Stderr()))
 	}
-	require.NotEmpty(t, res, "no result object from mql")
-	return res[0].List
+	require.Lenf(t, assets, 1, "expected exactly one asset result; stdout: %s", string(r.Stdout()))
+	for _, list := range assets[0] {
+		return list
+	}
+	t.Fatalf("no package list in mql output; stdout: %s", string(r.Stdout()))
+	return nil
 }
 
 func hasPackage(list []rpmPackage, name string) (rpmPackage, bool) {
@@ -118,15 +123,16 @@ func assertRealRpmPackages(t *testing.T, path string, list []rpmPackage) {
 	for _, p := range list {
 		assert.NotEmptyf(t, p.Name, "%s path: package with empty name", path)
 		assert.NotEmptyf(t, p.Version, "%s path: %q has empty version", path, p.Name)
-		assert.Equalf(t, "rpm", p.Format, "%s path: %q has unexpected format %q", path, p.Name, p.Format)
 	}
 
-	// bash is present on every rpm base image and carries a normal arch, so it
-	// proves field splitting worked end to end (gpg-pubkey, by contrast, has an
-	// empty arch and would not).
+	// bash is present on every rpm base image and carries a normal arch and
+	// format, so it proves field splitting worked end to end. We assert these
+	// on bash rather than every package because gpg-pubkey (a GPG-key
+	// pseudo-package, not real software) has an empty arch and format.
 	bash, ok := hasPackage(list, "bash")
 	require.Truef(t, ok, "%s path: base package bash missing", path)
 	assert.NotEmptyf(t, bash.Arch, "%s path: bash has empty arch", path)
+	assert.Equalf(t, "rpm", bash.Format, "%s path: bash has unexpected format %q", path, bash.Format)
 }
 
 // TestRpmPackages exercises both rpm package code paths against real rpm
