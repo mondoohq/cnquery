@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/mql/v13/cli/config"
 )
 
-// featuresCmd represents the version command
+// featuresCmd represents the features command
 var featuresCmd = &cobra.Command{
 	Hidden: true,
 	Use:    "features",
@@ -24,8 +24,9 @@ var featuresCmd = &cobra.Command{
 
 		var optIn []string
 		for _, b := range mql.AvailableFeatures {
-			if !config.Features.IsActive(mql.Feature(b)) {
-				optIn = append(optIn, mql.Feature(b).String())
+			f := mql.Feature(b)
+			if !config.Features.IsActive(f) {
+				optIn = append(optIn, f.String())
 			}
 		}
 		if len(optIn) > 0 {
