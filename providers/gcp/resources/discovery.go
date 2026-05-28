@@ -214,9 +214,9 @@ func runDiscoveryStep(target string, fn func() error) error {
 		return err
 	}
 	if m := gcpAPIServiceRe.FindStringSubmatch(err.Error()); len(m) == 2 {
-		log.Warn().Str("target", target).Msgf("%s API not available", m[1])
+		log.Warn().Msgf("%s API not available. Skipping %s discovery", m[1], target)
 	} else {
-		log.Warn().Str("target", target).Msg("permission denied, skipping")
+		log.Warn().Msgf("Permission denied. Skipping %s discovery", target)
 	}
 	return nil
 }

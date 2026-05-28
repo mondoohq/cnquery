@@ -244,10 +244,9 @@ func TestRunDiscoveryStep(t *testing.T) {
 		require.NoError(t, err)
 
 		out := buf.String()
-		require.Contains(t, out, `"message":"Memorystore API not available"`,
-			"log message should be the short, API-name form")
-		require.Contains(t, out, `"target":"memorystore-instances"`,
-			"log should carry the discovery target name")
+		require.Contains(t, out,
+			`"message":"Memorystore API not available. Skipping memorystore-instances discovery"`,
+			"log message should embed both the API name and the target")
 		require.NotContains(t, out, "console.developers.google.com",
 			"log line should not embed the full wrapped GCP error blob")
 	})
