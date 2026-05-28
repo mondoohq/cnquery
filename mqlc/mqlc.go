@@ -877,11 +877,20 @@ func (c *compiler) unnamedResourceArgs(resource *resources.ResourceInfo, args []
 // values resolve to strings at runtime; the runtime init function is
 // responsible for asserting the actual element types. See `compileOperand`
 // where the value type is widened to `Any` for refs/mixed entries.
+//
+// Restricted to `want.Child() == types.String` for now — it's the only
+// case in the schema today, and broadening would let other element types
+// (e.g. `map[string]int`) pass the compile check only to fail at runtime
+// with a confusing assertion error. Extend deliberately when the need
+// arises and the runtime path can convert the value safely.
 func mapLiteralCoercibleTo(got, want types.Type) bool {
 	if !got.IsMap() || !want.IsMap() {
 		return false
 	}
 	if got.Key() != want.Key() {
+		return false
+	}
+	if want.Child() != types.String {
 		return false
 	}
 	return got.Child() == types.Any

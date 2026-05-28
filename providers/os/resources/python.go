@@ -73,22 +73,26 @@ func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 }
 
 func (r *mqlPython) id() (string, error) {
-	// when content is supplied, fold the supplied filenames into the id so
-	// two instances with different inputs do not collide in the runtime
-	// resource cache
-	if contents := r.contentMap(); len(contents) > 0 {
-		keys := make([]string, 0, len(contents))
-		for k := range contents {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		hash := sha256.New()
-		for _, k := range keys {
-			hash.Write([]byte(k))
-		}
-		return "python/" + hex.EncodeToString(hash.Sum(nil)), nil
+	// when content is supplied, fold both filenames and their content into
+	// the id so two instances with the same filenames but different content
+	// do not collide in the runtime resource cache
+	contents := r.contentMap()
+	if len(contents) == 0 {
+		return "python", nil
 	}
-	return "python", nil
+	keys := make([]string, 0, len(contents))
+	for k := range contents {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	hash := sha256.New()
+	for _, k := range keys {
+		hash.Write([]byte(k))
+		hash.Write([]byte{0})
+		hash.Write([]byte(contents[k]))
+		hash.Write([]byte{0})
+	}
+	return "python/" + hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func (r *mqlPython) packages() ([]any, error) {

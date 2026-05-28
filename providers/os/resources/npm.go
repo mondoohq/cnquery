@@ -91,24 +91,37 @@ func (r *mqlNpmPackages) id() (string, error) {
 		return "", err
 	}
 
-	// fold content-map keys into the id so two instances with different
-	// inputs do not collide in the runtime resource cache
-	if contentKeys := r.contentKeys(); len(contentKeys) > 0 {
-		entries = append(entries, contentKeys...)
-		sort.Strings(entries)
+	// fold content into the id so two instances with the same filenames but
+	// different content do not collide in the runtime resource cache
+	contents := r.contentMap()
+
+	if len(entries) == 0 && len(contents) == 0 {
+		return "npm.packages", nil
+	}
+	if len(contents) == 0 && len(entries) == 1 {
+		return "npm.packages/" + entries[0], nil
 	}
 
-	if len(entries) == 0 {
-		return "npm.packages", nil
-	} else if len(entries) == 1 {
-		return "npm.packages/" + entries[0], nil
-	} else {
-		hash := sha256.New()
-		for _, entry := range entries {
-			hash.Write([]byte(entry))
-		}
-		return "npm.packages/" + hex.EncodeToString(hash.Sum(nil)), nil
+	sort.Strings(entries)
+	hash := sha256.New()
+	for _, entry := range entries {
+		hash.Write([]byte(entry))
+		hash.Write([]byte{0})
 	}
+	// stable iteration order: hash by sorted filename, with both key and
+	// value included so different content under the same key disambiguates
+	keys := make([]string, 0, len(contents))
+	for k := range contents {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		hash.Write([]byte(k))
+		hash.Write([]byte{0})
+		hash.Write([]byte(contents[k]))
+		hash.Write([]byte{0})
+	}
+	return "npm.packages/" + hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func (r *mqlNpmPackages) paths() ([]any, error) {
@@ -309,13 +322,13 @@ func npmExtractorFor(path string) languages.Extractor {
 }
 
 // collectNpmPackagesFromContents parses the supplied {path: content} map
-// directly, without touching the connection's filesystem. Lockfiles are
-// preferred over package.json when both are present so that resolved
-// versions win out.
+// directly, without touching the connection's filesystem. Lockfiles win
+// for direct/transitive dependencies (resolved versions), but the root
+// package metadata is taken from package.json when supplied — lockfiles
+// don't always carry a top-level root entry (older formats, partial
+// fixtures), and package.json is the authoritative source for project
+// name/version anyway.
 func collectNpmPackagesFromContents(contents map[string]string) (*languages.Package, []*languages.Package, []*languages.Package, []string, error) {
-	// Sort keys so output ordering is stable. Lockfiles are preferred — if
-	// any lockfile parses successfully we drop package.json results to avoid
-	// duplicates.
 	type entry struct {
 		path     string
 		isLock   bool
@@ -333,30 +346,56 @@ func collectNpmPackagesFromContents(contents map[string]string) (*languages.Pack
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].path < entries[j].path })
 
-	var root *languages.Package
-	var direct []*languages.Package
-	var transitive []*languages.Package
-	var files []string
-	lockfileSucceeded := false
+	var (
+		manifestRoot, lockRoot             *languages.Package
+		manifestDirect, lockDirect         []*languages.Package
+		manifestTransitive, lockTransitive []*languages.Package
+		manifestFiles, lockFiles           []string
+	)
 
 	for _, e := range entries {
-		if lockfileSucceeded && !e.isLock {
-			continue
-		}
 		bom, err := e.ext.Parse(strings.NewReader(e.contents), e.path)
 		if err != nil {
 			log.Debug().Err(err).Str("file", e.path).Msg("failed to parse npm manifest content")
 			continue
 		}
-		files = append(files, e.path)
-		if r := bom.Root(); r != nil && root == nil {
-			root = r
-		}
-		direct = append(direct, bom.Direct()...)
-		transitive = append(transitive, bom.Transitive()...)
 		if e.isLock {
-			lockfileSucceeded = true
+			lockFiles = append(lockFiles, e.path)
+			if r := bom.Root(); r != nil && lockRoot == nil {
+				lockRoot = r
+			}
+			lockDirect = append(lockDirect, bom.Direct()...)
+			lockTransitive = append(lockTransitive, bom.Transitive()...)
+		} else {
+			manifestFiles = append(manifestFiles, e.path)
+			if r := bom.Root(); r != nil && manifestRoot == nil {
+				manifestRoot = r
+			}
+			manifestDirect = append(manifestDirect, bom.Direct()...)
+			manifestTransitive = append(manifestTransitive, bom.Transitive()...)
 		}
+	}
+
+	root := manifestRoot
+	if root == nil {
+		root = lockRoot
+	}
+
+	var direct, transitive []*languages.Package
+	var files []string
+	if len(lockFiles) > 0 {
+		direct = lockDirect
+		transitive = lockTransitive
+		files = lockFiles
+		// keep the package.json in the file list when its root contributed
+		if manifestRoot != nil && root == manifestRoot {
+			files = append(files, manifestFiles...)
+			sort.Strings(files)
+		}
+	} else {
+		direct = manifestDirect
+		transitive = manifestTransitive
+		files = manifestFiles
 	}
 
 	return root, direct, transitive, files, nil

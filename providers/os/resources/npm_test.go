@@ -127,10 +127,12 @@ func TestCollectNpmPackagesFromContents(t *testing.T) {
 		require.True(t, names["left-pad"], "expected left-pad in parsed deps, got %v", names)
 	})
 
-	t.Run("skips package.json when a lockfile is also provided", func(t *testing.T) {
+	t.Run("uses lockfile for deps but keeps package.json root metadata", func(t *testing.T) {
 		// A minimal v3 package-lock.json that resolves an exact version
-		// for left-pad. If the lockfile parses, the root package.json
-		// branch is suppressed.
+		// for left-pad. When both files are present the lockfile wins for
+		// resolved versions, but the project's root metadata is still
+		// taken from package.json (the authoritative source for project
+		// name/version) and the package.json appears in the files list.
 		contents := map[string]string{
 			"package.json": `{
 				"name": "demo-app",
@@ -154,11 +156,13 @@ func TestCollectNpmPackagesFromContents(t *testing.T) {
 				}
 			}`,
 		}
-		_, _, _, files, err := collectNpmPackagesFromContents(contents)
+		root, _, _, files, err := collectNpmPackagesFromContents(contents)
 		require.NoError(t, err)
-		// only the lockfile should contribute when both parsed successfully
-		require.Contains(t, files, "package-lock.json")
-		require.NotContains(t, files, "package.json", "package.json must be skipped when a lockfile is present")
+		require.NotNil(t, root, "root should be populated from package.json")
+		require.Equal(t, "demo-app", root.Name)
+		require.Equal(t, "1.2.3", root.Version)
+		require.Contains(t, files, "package-lock.json", "lockfile contributes deps")
+		require.Contains(t, files, "package.json", "package.json contributes root metadata")
 	})
 
 	t.Run("ignores unknown filenames", func(t *testing.T) {
