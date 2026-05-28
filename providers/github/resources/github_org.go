@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v87/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/internal/workerpool"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -380,7 +378,7 @@ func (g *mqlGithubOrganization) repositories() ([]any, error) {
 		return nil, g.Login.Error
 	}
 	orgLogin := g.Login.Data
-	listOpts := github.RepositoryListByOrgOptions{
+	listOpts := &github.RepositoryListByOrgOptions{
 		ListOptions: github.ListOptions{
 			PerPage: paginationPerPage,
 			Page:    1,
@@ -388,76 +386,43 @@ func (g *mqlGithubOrganization) repositories() ([]any, error) {
 		Type: "all",
 	}
 
-	repoCount := g.TotalPrivateRepos.Data + g.TotalPublicRepos.Data
-	expectedPages := int(repoCount)/paginationPerPage + 1
-	workerCount := int(repoCount)/paginationPerPage + 1
-	workerPool := workerpool.New[[]*github.Repository](workerCount)
-	workerPool.Start()
-	defer workerPool.Close()
-
 	log.Debug().
-		Int("workers", workerCount).
-		Int64("total-repos", repoCount).
 		Str("organization", g.Name.Data).
 		Msg("list repositories")
 
+	// Paginate via resp.NextPage rather than the org's total_private_repos +
+	// public_repos counters. Those counters are unreliable on GitHub Enterprise
+	// and with GitHub App / fine-grained PAT auth, and trusting them caused
+	// scans to silently truncate at one page (see provider regression from #6244).
+	var allRepos []*github.Repository
 	for {
-		// exit as soon as we collect all repositories
-		reposLen := len(slices.Concat(workerPool.GetValues()...))
-		if reposLen >= int(repoCount) {
-			break
-		}
-
-		// failsafe: when total count is correct but some repos aren't returned from ListByOrg
-		// (e.g., due to permission issues), we stop after enough pages have been requested
-		// plus the number of pending workers to account for concurrency
-		if listOpts.Page > (int(workerPool.PendingRequests()) + expectedPages) {
-			log.Warn().
-				Int("found-repos", reposLen).
-				Int64("total-repos", repoCount).
-				Int("page", listOpts.Page).
-				Int("per-page", listOpts.PerPage).
-				Msg("Failsafe triggered, no more repos are returned")
-			break
-		}
-
-		// send requests to workers
-		opts := listOpts
-		workerPool.Submit(func() ([]*github.Repository, error) {
-			repos, _, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, &opts)
-			return repos, err
-		})
-
-		// next page
-		listOpts.Page++
-
-		// check if any request failed
-		if errs := workerPool.GetErrors(); len(errs) != 0 {
-			if err := errors.Join(errs...); err != nil {
-				if strings.Contains(err.Error(), "404") {
-					return nil, nil
-				}
-				return nil, err
+		repos, resp, err := conn.Client().Repositories.ListByOrg(conn.Context(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
 			}
+			return nil, err
 		}
+		allRepos = append(allRepos, repos...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	if g.repoCacheMap == nil {
 		g.repoCacheMap = make(map[string]*mqlGithubRepository)
 	}
 
-	res := []any{}
-	for _, repos := range workerPool.GetValues() {
-		for i := range repos {
-			repo := repos[i]
-
-			r, err := newMqlGithubRepository(g.MqlRuntime, repo)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, r)
-			g.repoCacheMap[repo.GetName()] = r
+	res := make([]any, 0, len(allRepos))
+	for i := range allRepos {
+		repo := allRepos[i]
+		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, r)
+		g.repoCacheMap[repo.GetName()] = r
 	}
 
 	return res, nil
