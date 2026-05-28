@@ -18,7 +18,8 @@ permissions:
 
 jobs:
   detect-changed-providers:
-    runs-on: arc-runner-set
+    runs-on:
+      group: arc-runners
     outputs:
       providers: ${{ steps.changed.outputs.providers }}
       all: ${{ steps.changed.outputs.all }}
