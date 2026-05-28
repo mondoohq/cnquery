@@ -14,10 +14,12 @@ import (
 )
 
 // rpmTestImages are rpm-based images we exercise both package code paths
-// against. They mirror the distros we keep mock fixtures for.
+// against. We deliberately use the *minimal* variants (~15-20 MB compressed)
+// to keep the pull cheap; they still ship the rpm CLI and a real rpm database,
+// which is all both code paths need.
 var rpmTestImages = []string{
-	"oraclelinux:9",
-	"almalinux:8",
+	"redhat/ubi9-minimal",
+	"almalinux:9-minimal",
 }
 
 type rpmPackage struct {
@@ -61,6 +63,17 @@ func dockerRunDetached(t *testing.T, image string) string {
 		_ = exec.Command("docker", "rm", "-f", id).Run()
 	})
 	return id
+}
+
+// requireRpmBinary asserts the running container actually has the rpm CLI so
+// the runtime code path (`rpm -qa --queryformat`) is genuinely exercised. Some
+// minimal/micro images ship rpm-libs without /usr/bin/rpm; on those mql would
+// silently fall back to the static path, making this test pass while covering
+// nothing. Fail loudly instead so a bad image choice is obvious.
+func requireRpmBinary(t *testing.T, containerID string) {
+	t.Helper()
+	out, err := exec.Command("docker", "exec", containerID, "sh", "-c", "command -v rpm").CombinedOutput()
+	require.NoErrorf(t, err, "rpm CLI missing in container, runtime path would fall back to static: %s", string(out))
 }
 
 // queryRpmPackages runs mql against the target and returns the parsed package
@@ -116,23 +129,23 @@ func packageNames(list []rpmPackage) []string {
 // delimiter byte. These assertions only pass against genuine rpm output.
 func assertRealRpmPackages(t *testing.T, path string, list []rpmPackage) {
 	t.Helper()
-	// A real rpm distro has hundreds of packages; the delimiter break produced
-	// an empty list. 50 is a generous floor that still catches that failure.
-	assert.Greaterf(t, len(list), 50, "%s path returned too few packages (delimiter/parse regression?)", path)
+	// The delimiter break produced an empty list. Even a minimal image has
+	// dozens of packages, so 20 is a safe floor that still catches that failure.
+	assert.Greaterf(t, len(list), 20, "%s path returned too few packages (delimiter/parse regression?)", path)
 
 	for _, p := range list {
 		assert.NotEmptyf(t, p.Name, "%s path: package with empty name", path)
 		assert.NotEmptyf(t, p.Version, "%s path: %q has empty version", path, p.Name)
 	}
 
-	// bash is present on every rpm base image and carries a normal arch and
-	// format, so it proves field splitting worked end to end. We assert these
-	// on bash rather than every package because gpg-pubkey (a GPG-key
-	// pseudo-package, not real software) has an empty arch and format.
-	bash, ok := hasPackage(list, "bash")
-	require.Truef(t, ok, "%s path: base package bash missing", path)
-	assert.NotEmptyf(t, bash.Arch, "%s path: bash has empty arch", path)
-	assert.Equalf(t, "rpm", bash.Format, "%s path: bash has unexpected format %q", path, bash.Format)
+	// glibc is present on every rpm image (including minimal variants) and
+	// carries a normal arch and format, so it proves field splitting worked end
+	// to end. We assert these on glibc rather than every package because
+	// gpg-pubkey (a GPG-key pseudo-package, not real software) has neither.
+	glibc, ok := hasPackage(list, "glibc")
+	require.Truef(t, ok, "%s path: base package glibc missing", path)
+	assert.NotEmptyf(t, glibc.Arch, "%s path: glibc has empty arch", path)
+	assert.Equalf(t, "rpm", glibc.Format, "%s path: glibc has unexpected format %q", path, glibc.Format)
 }
 
 // TestRpmPackages exercises both rpm package code paths against real rpm
@@ -150,6 +163,7 @@ func TestRpmPackages(t *testing.T) {
 			// parses the output with RPM_REGEX. This is the path the __ -> RS
 			// delimiter change broke and the reason mock fixtures could not.
 			id := dockerRunDetached(t, image)
+			requireRpmBinary(t, id)
 			runtime := queryRpmPackages(t, "docker", id)
 			assertRealRpmPackages(t, "runtime", runtime)
 
