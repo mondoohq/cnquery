@@ -5,8 +5,10 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/cli/config"
 )
 
@@ -19,6 +21,16 @@ var featuresCmd = &cobra.Command{
 		// prerequisite: features must be initialized via config on the root command
 		// otherwise config.Features won't contain anything useful
 		fmt.Println("Active features: " + config.Features.String())
+
+		var optIn []string
+		for _, b := range mql.AvailableFeatures {
+			if !config.Features.IsActive(mql.Feature(b)) {
+				optIn = append(optIn, mql.Feature(b).String())
+			}
+		}
+		if len(optIn) > 0 {
+			fmt.Println("Available (opt-in): " + strings.Join(optIn, ", "))
+		}
 	},
 }
 
