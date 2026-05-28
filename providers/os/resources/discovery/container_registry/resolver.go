@@ -29,7 +29,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 		return nil, err
 	}
 
-	imageFetcher := NewContainerRegistryResolver(opts...)
+	imageFetcher := NewImageLister(opts...)
 
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoo/client are converted

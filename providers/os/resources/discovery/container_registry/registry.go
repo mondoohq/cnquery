@@ -58,18 +58,22 @@ func RemoteOptionsFromConfigOptions(cfg *inventory.Config) ([]remote.Option, err
 	return opts, nil
 }
 
-func NewContainerRegistryResolver(opts ...remote.Option) *DockerRegistryImages {
-	return &DockerRegistryImages{
+// NewImageLister returns a helper that enumerates images and repositories in a
+// container registry. It is not a Resolver in the sense of [Resolver.Resolve] —
+// it lists what's there, it does not pick a connection type for a target.
+func NewImageLister(opts ...remote.Option) *ImageLister {
+	return &ImageLister{
 		opts: opts,
 	}
 }
 
-type DockerRegistryImages struct {
+// ImageLister enumerates images and repositories in a container registry.
+type ImageLister struct {
 	opts     []remote.Option
 	Insecure bool
 }
 
-func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
+func (a *ImageLister) remoteOptions(name string) []remote.Option {
 	// either use the provided options or the default options
 	if len(a.opts) > 0 {
 		return a.opts
@@ -78,7 +82,7 @@ func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
 	return auth.DefaultOpts(name, a.Insecure)
 }
 
-func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error) {
+func (a *ImageLister) Repositories(reg name.Registry) ([]string, error) {
 	n := 100
 	last := ""
 	var res []string
@@ -104,7 +108,7 @@ func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error)
 
 // ListRegistry tries to iterate over all repositories in one registry
 // eg. 1234567.dkr.ecr.us-east-1.amazonaws.com
-func (a *DockerRegistryImages) ListRegistry(registry string) ([]*inventory.Asset, error) {
+func (a *ImageLister) ListRegistry(registry string) ([]*inventory.Asset, error) {
 	reg, err := name.NewRegistry(registry)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve registry")
@@ -136,7 +140,7 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*inventory.Asset
 // index.docker.io/mondoo/client
 // harbor.lunalectric.com/library
 // harbor.lunalectric.com/library/ubuntu
-func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Asset, error) {
+func (a *ImageLister) ListRepository(repoName string) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 
 	repo, err := name.NewRepository(repoName)
@@ -181,7 +185,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Ass
 }
 
 // ListImages either takes a registry or a repository and tries to fetch as many images as possible
-func (a *DockerRegistryImages) ListImages(repoName string) ([]*inventory.Asset, error) {
+func (a *ImageLister) ListImages(repoName string) ([]*inventory.Asset, error) {
 	url, err := url.Parse("//" + repoName)
 	if err != nil {
 		return nil, fmt.Errorf("registries must be valid RFC 3986 URI authorities: %s", repoName)
@@ -196,11 +200,11 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*inventory.Asset, 
 	}
 }
 
-func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
+func (a *ImageLister) GetImage(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
 	return a.toAsset(ref, creds, opts...)
 }
 
-func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
+func (a *ImageLister) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
 	desc, err := image.GetImageDescriptor(ref, opts...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, ref.Name())

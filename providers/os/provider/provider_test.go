@@ -4,7 +4,6 @@
 package provider
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -103,26 +102,6 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
 	require.NotNil(t, shutdownconnectResp)
-}
-
-func TestIdentifyDockerString(t *testing.T) {
-	tests := []struct {
-		input string
-		want  string
-	}{
-		{"ubuntu:latest", "docker-image"},
-		{"docker.io/pmuench/dvwa-container-escape", "docker-image"},
-		{"registry.example.com:5000/myimage:latest", "docker-image"},
-		{"4e2474c968d6", "docker-container"},
-		{"my_container", "docker-container"},
-		{"anotherContainer123", "docker-container"},
-	}
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%s,%s", tt.input, tt.want), func(t *testing.T) {
-			result := identifyContainerType(tt.input)
-			assert.Equal(t, tt.want, result, "Mismatch for input: %s", tt.input)
-		})
-	}
 }
 
 func TestService_ParseCLI(t *testing.T) {

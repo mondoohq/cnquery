@@ -26,7 +26,7 @@ func TestDockerRegistry(t *testing.T) {
 		// t.Fatal(fmt.Errorf("registries must be valid RFC 3986 URI authorities: %s", name))
 	}
 
-	// r := docker.NewContainerRegistryResolver()
+	// r := docker.NewImageLister()
 	// assets, err := r.List(name)
 	// require.NoError(t, err)
 	// assert.True(t, len(assets) > 0)
@@ -45,7 +45,7 @@ func TestHarbor(t *testing.T) {
 		require.NoError(t, err, url)
 		assert.NotNil(t, ref, url)
 
-		dri := DockerRegistryImages{}
+		dri := ImageLister{}
 		a, err := dri.toAsset(ref, nil)
 		require.NoError(t, err, url)
 

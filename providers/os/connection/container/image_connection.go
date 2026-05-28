@@ -40,6 +40,18 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}
 	// ^^
+	return newImageTarConnection(id, conf, asset, img, ref, includeOciTar(conf), cleanupDirs...)
+}
+
+// newImageTarConnection extracts img's flattened filesystem to a temporary tar
+// file and wraps it in a tar.Connection. When includeOci is true and ref is
+// non-nil, it also writes a sibling OCI-format tarball alongside. The temp
+// files are removed on connection close, along with any cleanupDirs.
+func newImageTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image, ref name.Reference, includeOci bool, cleanupDirs ...string) (*tar.Connection, error) {
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+
 	extractedFsTar, err := tmp.File()
 	if err != nil {
 		return nil, err
@@ -47,7 +59,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	conf.Options[tar.OPTION_FILE] = extractedFsTar.Name()
 
 	var ociTar *os.File
-	if includeOciTar(conf) {
+	if includeOci && ref != nil {
 		ociTar, err = tmp.File()
 		if err != nil {
 			return nil, err
@@ -58,8 +70,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> starting image extract to temporary file")
-			err = saveImgTarToTmp(extractedFsTar, ociTar, img, ref, includeOciTar(conf))
-			if err != nil {
+			if err := tar.StreamToTmpFile(mutate.Extract(img), extractedFsTar); err != nil {
 				log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> failed to save image tar")
 				_ = os.Remove(extractedFsTar.Name())
 				if ociTar != nil {
@@ -67,7 +78,14 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 				}
 				return "", err
 			}
-
+			if ociTar != nil {
+				log.Debug().Str("oci_tar", ociTar.Name()).Msg("tar> saving image in oci format")
+				if err := tarball.Write(ref, img, ociTar); err != nil {
+					_ = os.Remove(extractedFsTar.Name())
+					_ = os.Remove(ociTar.Name())
+					return "", err
+				}
+			}
 			log.Debug().Str("tar", extractedFsTar.Name()).Msg("tar> extracted image to temporary file")
 			return extractedFsTar.Name(), nil
 		}),
@@ -88,20 +106,6 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 			}
 		}),
 	)
-}
-
-func saveImgTarToTmp(extractedTarFile, ociTarFile *os.File, img v1.Image, ref name.Reference, includeOciTar bool) error {
-	err := tar.StreamToTmpFile(mutate.Extract(img), extractedTarFile)
-	if err != nil {
-		return err
-	}
-
-	if includeOciTar {
-		log.Debug().Str("oci_tar", ociTarFile.Name()).Msg("tar> saving image in oci format")
-		return tarball.Write(ref, img, ociTarFile)
-	}
-
-	return nil
 }
 
 func includeOciTar(conf *inventory.Config) bool {
@@ -201,59 +205,28 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	return conn, err
 }
 
+// NewFromTar opens a container-image tar file (OCI format) and exposes its
+// flattened filesystem as a tar.Connection. The input tar is re-extracted to a
+// temporary flat tar; the original file is left untouched.
 func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
 	if conf == nil || len(conf.Options[tar.OPTION_FILE]) == 0 {
 		return nil, errors.New("tar provider requires a valid tar file")
 	}
 
-	if conf.Options == nil {
-		conf.Options = map[string]string{}
-	}
-
-	filename := conf.Options[tar.OPTION_FILE]
-	var identifier string
-
-	// try to determine if the tar is a container image
-	img, iErr := tarball.ImageFromPath(filename, nil)
-	if iErr != nil {
-		return nil, iErr
-	}
-
-	hash, err := img.Digest()
-	if err != nil {
-		return nil, err
-	}
-	identifier = containerid.MondooContainerImageID(hash.String())
-
-	// we need to extract the image from the tar file and create a new tar connection
-	imageFilename := ""
-
-	f, err := tmp.File()
-	if err != nil {
-		return nil, err
-	}
-	imageFilename = f.Name()
-	conf.Options[tar.OPTION_FILE] = imageFilename
-
-	c, err := tar.NewConnection(id, conf, asset,
-		tar.WithFetchFn(func() (string, error) {
-			err = tar.StreamToTmpFile(mutate.Extract(img), f)
-			if err != nil {
-				_ = os.Remove(imageFilename)
-				return imageFilename, err
-			}
-			return imageFilename, nil
-		}),
-		tar.WithCloseFn(func() {
-			// remove temporary file on stream close
-			log.Debug().Str("tar", imageFilename).Msg("tar> remove temporary flattened image file on connection close")
-			_ = os.Remove(imageFilename)
-		}),
-	)
+	img, err := tarball.ImageFromPath(conf.Options[tar.OPTION_FILE], nil)
 	if err != nil {
 		return nil, err
 	}
 
-	c.PlatformIdentifier = identifier
-	return c, nil
+	// includeOci=false because the input *is* an OCI tar already; we don't need
+	// to emit a second one. Pass nil ref since the OCI-write path is skipped.
+	conn, err := newImageTarConnection(id, conf, asset, img, nil, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if hash, hErr := img.Digest(); hErr == nil {
+		conn.PlatformIdentifier = containerid.MondooContainerImageID(hash.String())
+	}
+	return conn, nil
 }

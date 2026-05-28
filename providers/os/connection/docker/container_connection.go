@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/v13/providers/os/connection/tar"
 	"go.mondoo.com/mql/v13/providers/os/id/containerid"
+	"go.mondoo.com/mql/v13/providers/os/resources/discovery/container_registry"
 	dockerDiscovery "go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
 )
 
@@ -190,90 +191,76 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		return nil, err
 	}
 
+	platformID := containerid.MondooContainerID(ci.ID)
+	shortID := containerid.ShortContainerImageID(ci.ID)
+
+	asset.Name = ci.Name
+	asset.PlatformIds = []string{platformID}
+
 	if ci.Running {
 		log.Debug().Msg("found running container " + ci.ID)
-
-		conn, err := NewContainerConnection(id, &inventory.Config{
-			Host: ci.ID,
-		}, asset)
+		conn, err := NewContainerConnection(id, &inventory.Config{Host: ci.ID}, asset)
 		if err != nil {
 			return nil, err
 		}
-		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
-		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
+		conn.PlatformIdentifier = platformID
+		conn.Metadata.Name = shortID
 		conn.Metadata.Labels = ci.Labels
-		asset.Name = ci.Name
-		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
-		return conn, nil
-	} else {
-		log.Debug().Msg("found stopped container " + ci.ID)
-		conn, err := NewSnapshotConnection(id, &inventory.Config{
-			Host: ci.ID,
-		}, asset)
-		if err != nil {
-			return nil, err
-		}
-		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
-		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
-		conn.Metadata.Labels = ci.Labels
-		// FIXME: DEPRECATED, remove in v12.0 vv
-		// The DelayDiscovery flag should always be set from v12
-		if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
-			conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
-		}
-		// ^^
-		asset.Name = ci.Name
-		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
 	}
-}
 
-func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
-	disableInmemoryCache := false
-	if _, ok := conf.Options["disable-cache"]; ok {
-		var err error
-		disableInmemoryCache, err = strconv.ParseBool(conf.Options["disable-cache"])
-		if err != nil {
-			return nil, err
-		}
+	log.Debug().Msg("found stopped container " + ci.ID)
+	conn, err := NewSnapshotConnection(id, &inventory.Config{Host: ci.ID}, asset)
+	if err != nil {
+		return nil, err
 	}
-	if conf.Options == nil {
-		conf.Options = map[string]string{}
-	}
+	conn.PlatformIdentifier = platformID
+	conn.Metadata.Name = shortID
+	conn.Metadata.Labels = ci.Labels
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}
 	// ^^
-	// Determine whether the image is locally present or not.
-	resolver := dockerDiscovery.Resolver{}
-	resolvedAssets, err := resolver.Resolve(context.Background(), asset, conf, nil)
-	if err != nil {
-		return nil, err
+	return conn, nil
+}
+
+func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
 	}
 
-	if len(resolvedAssets) > 1 {
-		return nil, errors.New("provided image name resolved to more than one container image")
+	disableInmemoryCache := false
+	if v, ok := conf.Options["disable-cache"]; ok {
+		var err error
+		disableInmemoryCache, err = strconv.ParseBool(v)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// The requested image isn't locally available, but we can pull it from a remote registry.
-	if len(resolvedAssets) > 0 && resolvedAssets[0].Connections[0].Type == shared.Type_RegistryImage.String() {
-		asset.Name = resolvedAssets[0].Name
-		asset.PlatformIds = resolvedAssets[0].PlatformIds
-		asset.Labels = resolvedAssets[0].Labels
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// The DelayDiscovery flag should always be set from v12
+	if conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
+	}
+	// ^^
+
+	// Try the local docker engine first. If the image isn't present (or docker isn't
+	// available), pre-populate the asset metadata from the registry and then pull
+	// from there. The registry pre-fill keeps asset.Name keyed by the top-level
+	// manifest digest, which is stable across architectures for multi-arch tags.
+	ded, dockerErr := dockerDiscovery.NewDockerEngineDiscovery()
+	if dockerErr != nil {
+		fillAssetFromRegistry(asset, conf)
 		return container.NewRegistryImage(id, conf, asset)
-	}
-
-	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := dockerDiscovery.NewDockerEngineDiscovery()
-	if err != nil {
-		return nil, err
 	}
 
 	ii, err := ded.ImageInfo(conf.Host)
 	if err != nil {
-		return nil, err
+		fillAssetFromRegistry(asset, conf)
+		return container.NewRegistryImage(id, conf, asset)
 	}
 
 	labelImageId := ii.ID
@@ -343,6 +330,22 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	tarConn.Metadata.Name = ii.Name
 	tarConn.Metadata.Labels = ii.Labels
 	return tarConn, nil
+}
+
+// fillAssetFromRegistry pre-populates asset.Name, asset.PlatformIds, and asset.Labels
+// from the registry-side view of conf.Host. The follow-up registry pull will then
+// see those fields already set and skip its own (per-architecture) values, which
+// keeps asset.Name stable across architectures for multi-arch tags. Failures are
+// intentionally swallowed — the subsequent pull will surface a real error if the
+// registry is actually unreachable.
+func fillAssetFromRegistry(asset *inventory.Asset, conf *inventory.Config) {
+	resolved, err := (&container_registry.Resolver{NoStrictValidation: true}).Resolve(context.Background(), asset, conf, nil)
+	if err != nil || len(resolved) == 0 {
+		return
+	}
+	asset.Name = resolved[0].Name
+	asset.PlatformIds = resolved[0].PlatformIds
+	asset.Labels = resolved[0].Labels
 }
 
 func getImageStoreKind() string {

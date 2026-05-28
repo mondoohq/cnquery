@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -89,23 +90,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Type = shared.Type_Vagrant.String()
 	case "docker":
 		if len(req.Args) > 1 {
-			switch req.Args[0] {
-			case "image":
-				conf.Type = shared.Type_DockerImage.String()
-				conf.Host = req.Args[1]
-			case "registry":
-				conf.Type = shared.Type_DockerRegistry.String()
-				conf.Host = req.Args[1]
-				conf.DelayDiscovery = true
-			case "tar":
-				conf.Type = shared.Type_DockerSnapshot.String()
-				conf.Path = req.Args[1]
-			case "container":
-				conf.Type = shared.Type_DockerContainer.String()
-				conf.Host = req.Args[1]
-			case "file":
+			// `docker file <path>` is docker-only because a Dockerfile is a
+			// docker-specific build recipe, not a runnable container.
+			if req.Args[0] == "file" {
 				conf.Type = shared.Type_DockerFile.String()
 				conf.Path = req.Args[1]
+			} else {
+				parseContainerSubcommand(req.Args[0], req.Args[1], conf)
 			}
 		} else {
 			connType, err := docker.FindDockerObjectConnectionType(req.Args[0])
@@ -119,27 +110,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	case "container":
 		if len(req.Args) > 1 {
-			switch req.Args[0] {
-			case "image":
-				conf.Type = shared.Type_DockerImage.String()
-				conf.Host = req.Args[1]
-			case "registry":
-				conf.Type = shared.Type_DockerRegistry.String()
-				conf.Host = req.Args[1]
-				conf.DelayDiscovery = true
-			case "tar":
-				conf.Type = shared.Type_DockerSnapshot.String()
-				conf.Path = req.Args[1]
-			case "container":
-				conf.Type = shared.Type_DockerContainer.String()
-				conf.Host = req.Args[1]
-			}
+			parseContainerSubcommand(req.Args[0], req.Args[1], conf)
 		} else {
-			connType := identifyContainerType(req.Args[0])
-			conf.Type = connType
-			containerID := req.Args[0]
-			conf.Host = containerID
-			assetName = containerID
+			// Unlike `docker`, the `container` connector does not probe a runtime,
+			// so a bare argument can only be an image reference. Use explicit
+			// `container container <id>` to scan a specific running container.
+			if _, err := name.ParseReference(req.Args[0], name.WeakValidation); err != nil {
+				return nil, errors.New("`container " + req.Args[0] + "` is not a valid image reference; use `container container <id>` for a running container or `container image <ref>` for an image")
+			}
+			conf.Type = shared.Type_DockerImage.String()
+			conf.Host = req.Args[0]
+			assetName = req.Args[0]
 		}
 	case "filesystem", "fs":
 		conf.Type = shared.Type_FileSystem.String()
@@ -643,10 +624,24 @@ func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.In
 	return inventory, nil
 }
 
-func identifyContainerType(s string) string {
-	if strings.Contains(s, ":") || strings.Contains(s, "/") {
-		return "docker-image"
-	} else {
-		return "docker-container"
+// parseContainerSubcommand translates one of the shared `image|registry|tar|container`
+// subcommands (used by both the `docker` and `container` connectors) into the
+// matching conf.Type plus host/path assignment. Unknown subcommands are a no-op
+// so the caller can layer connector-specific subcommands (e.g. `docker file`).
+func parseContainerSubcommand(subcommand, target string, conf *inventory.Config) {
+	switch subcommand {
+	case "image":
+		conf.Type = shared.Type_DockerImage.String()
+		conf.Host = target
+	case "registry":
+		conf.Type = shared.Type_DockerRegistry.String()
+		conf.Host = target
+		conf.DelayDiscovery = true
+	case "tar":
+		conf.Type = shared.Type_DockerSnapshot.String()
+		conf.Path = target
+	case "container":
+		conf.Type = shared.Type_DockerContainer.String()
+		conf.Host = target
 	}
 }
