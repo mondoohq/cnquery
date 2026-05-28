@@ -4,10 +4,13 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"slices"
 	"testing"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	inventoryv1 "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"google.golang.org/api/googleapi"
@@ -224,4 +227,69 @@ func TestRunDiscoveryStep(t *testing.T) {
 		})
 		require.ErrorIs(t, err, orig)
 	})
+
+	t.Run("emits a one-line API-name message", func(t *testing.T) {
+		// Capture zerolog output into a buffer for inspection.
+		var buf bytes.Buffer
+		origLogger := log.Logger
+		log.Logger = zerolog.New(&buf)
+		defer func() { log.Logger = origLogger }()
+
+		err := runDiscoveryStep("memorystore-instances", func() error {
+			return &googleapi.Error{
+				Code:    403,
+				Message: "Memorystore API has not been used in project luna-common before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/memorystore.googleapis.com/overview?project=luna-common then retry.",
+			}
+		})
+		require.NoError(t, err)
+
+		out := buf.String()
+		require.Contains(t, out, `"message":"Memorystore API not available"`,
+			"log message should be the short, API-name form")
+		require.Contains(t, out, `"target":"memorystore-instances"`,
+			"log should carry the discovery target name")
+		require.NotContains(t, out, "console.developers.google.com",
+			"log line should not embed the full wrapped GCP error blob")
+	})
+}
+
+func TestGCPAPIServiceRe(t *testing.T) {
+	cases := []struct {
+		name string
+		msg  string
+		want string // captured group, "" means no match
+	}{
+		{
+			name: "googleapi 403, single-word service",
+			msg:  "googleapi: Error 403: Memorystore API has not been used in project luna-common before or it is disabled",
+			want: "Memorystore",
+		},
+		{
+			name: "gRPC PermissionDenied, multi-word service",
+			msg:  "rpc error: code = PermissionDenied desc = Cloud Memorystore for Memcached API has not been used in project luna-common before",
+			want: "Cloud Memorystore for Memcached",
+		},
+		{
+			name: "two-word service",
+			msg:  "googleapi: Error 403: Cloud KMS API has not been used in project foo",
+			want: "Cloud KMS",
+		},
+		{
+			name: "no match on plain permission denied",
+			msg:  "rpc error: code = PermissionDenied desc = caller does not have permission",
+			want: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := gcpAPIServiceRe.FindStringSubmatch(tc.msg)
+			if tc.want == "" {
+				require.Len(t, m, 0)
+				return
+			}
+			require.Len(t, m, 2)
+			require.Equal(t, tc.want, m[1])
+		})
+	}
 }

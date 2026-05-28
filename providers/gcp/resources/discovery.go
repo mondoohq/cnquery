@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -195,20 +196,29 @@ func isDiscoverySkippableErr(err error) bool {
 		strings.Contains(msg, "is not enabled")
 }
 
+// gcpAPIServiceRe matches a GCP service-disabled error message of the form
+// "<service> API has not been used in project ...". The captured group is
+// the human-readable service name (e.g. "Memorystore",
+// "Cloud Memorystore for Memcached", "Cloud KMS").
+var gcpAPIServiceRe = regexp.MustCompile(`([A-Z][A-Za-z0-9 &.,/-]*?) API has not been used`)
+
 // runDiscoveryStep runs fn for a single discovery target. A permission /
-// API-not-enabled error is logged and swallowed so the rest of discovery
-// can continue; any other error is propagated unchanged.
+// API-not-enabled error is logged on one line and swallowed so the rest
+// of discovery can continue; any other error is propagated unchanged.
 func runDiscoveryStep(target string, fn func() error) error {
 	err := fn()
 	if err == nil {
 		return nil
 	}
-	if isDiscoverySkippableErr(err) {
-		log.Warn().Err(err).Str("target", target).
-			Msg("gcp.discovery> skipping target, no access or service not enabled")
-		return nil
+	if !isDiscoverySkippableErr(err) {
+		return err
 	}
-	return err
+	if m := gcpAPIServiceRe.FindStringSubmatch(err.Error()); len(m) == 2 {
+		log.Warn().Str("target", target).Msgf("%s API not available", m[1])
+	} else {
+		log.Warn().Str("target", target).Msg("permission denied, skipping")
+	}
+	return nil
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
