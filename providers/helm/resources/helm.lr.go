@@ -16,18 +16,19 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceHelm                    string = "helm"
-	ResourceHelmChart               string = "helm.chart"
-	ResourceHelmDependency          string = "helm.dependency"
-	ResourceHelmOciRef              string = "helm.ociRef"
-	ResourceHelmMaintainer          string = "helm.maintainer"
-	ResourceHelmTemplate            string = "helm.template"
-	ResourceHelmDirective           string = "helm.directive"
-	ResourceHelmResource            string = "helm.resource"
-	ResourceHelmFile                string = "helm.file"
-	ResourceHelmChartDependencyLock string = "helm.chart.dependencyLock"
-	ResourceHelmChartLintResult     string = "helm.chart.lintResult"
-	ResourceHelmChartLintMessage    string = "helm.chart.lintMessage"
+	ResourceHelm                      string = "helm"
+	ResourceHelmChart                 string = "helm.chart"
+	ResourceHelmDependency            string = "helm.dependency"
+	ResourceHelmOciRef                string = "helm.ociRef"
+	ResourceHelmMaintainer            string = "helm.maintainer"
+	ResourceHelmTemplate              string = "helm.template"
+	ResourceHelmDirective             string = "helm.directive"
+	ResourceHelmResource              string = "helm.resource"
+	ResourceHelmFile                  string = "helm.file"
+	ResourceHelmChartDependencyLock   string = "helm.chart.dependencyLock"
+	ResourceHelmChartLintResult       string = "helm.chart.lintResult"
+	ResourceHelmChartLintMessage      string = "helm.chart.lintMessage"
+	ResourceHelmChartProvenanceRecord string = "helm.chart.provenanceRecord"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -81,6 +82,10 @@ func init() {
 		"helm.chart.lintMessage": {
 			// to override args, implement: initHelmChartLintMessage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHelmChartLintMessage,
+		},
+		"helm.chart.provenanceRecord": {
+			// to override args, implement: initHelmChartProvenanceRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHelmChartProvenanceRecord,
 		},
 	}
 }
@@ -242,6 +247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"helm.chart.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChart).GetParent()).ToDataRes(types.Resource("helm.chart"))
+	},
+	"helm.chart.provenance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChart).GetProvenance()).ToDataRes(types.Resource("helm.chart.provenanceRecord"))
 	},
 	"helm.dependency.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmDependency).GetName()).ToDataRes(types.String)
@@ -405,6 +413,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"helm.chart.lintMessage.message": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHelmChartLintMessage).GetMessage()).ToDataRes(types.String)
 	},
+	"helm.chart.provenanceRecord.signed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartProvenanceRecord).GetSigned()).ToDataRes(types.Bool)
+	},
+	"helm.chart.provenanceRecord.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartProvenanceRecord).GetDigest()).ToDataRes(types.String)
+	},
+	"helm.chart.provenanceRecord.digestMatches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartProvenanceRecord).GetDigestMatches()).ToDataRes(types.Bool)
+	},
+	"helm.chart.provenanceRecord.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHelmChartProvenanceRecord).GetKeyId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -543,6 +563,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"helm.chart.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHelmChart).Parent, ok = plugin.RawToTValue[*mqlHelmChart](v.Value, v.Error)
+		return
+	},
+	"helm.chart.provenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChart).Provenance, ok = plugin.RawToTValue[*mqlHelmChartProvenanceRecord](v.Value, v.Error)
 		return
 	},
 	"helm.dependency.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -801,6 +825,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHelmChartLintMessage).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"helm.chart.provenanceRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartProvenanceRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"helm.chart.provenanceRecord.signed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartProvenanceRecord).Signed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.provenanceRecord.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartProvenanceRecord).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"helm.chart.provenanceRecord.digestMatches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartProvenanceRecord).DigestMatches, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"helm.chart.provenanceRecord.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHelmChartProvenanceRecord).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -920,6 +964,7 @@ type mqlHelmChart struct {
 	Subcharts      plugin.TValue[[]any]
 	IsSubchart     plugin.TValue[bool]
 	Parent         plugin.TValue[*mqlHelmChart]
+	Provenance     plugin.TValue[*mqlHelmChartProvenanceRecord]
 }
 
 // createHelmChart creates a new instance of this resource
@@ -1212,6 +1257,22 @@ func (c *mqlHelmChart) GetParent() *plugin.TValue[*mqlHelmChart] {
 		}
 
 		return c.parent()
+	})
+}
+
+func (c *mqlHelmChart) GetProvenance() *plugin.TValue[*mqlHelmChartProvenanceRecord] {
+	return plugin.GetOrCompute[*mqlHelmChartProvenanceRecord](&c.Provenance, func() (*mqlHelmChartProvenanceRecord, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("helm.chart", c.__id, "provenance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHelmChartProvenanceRecord), nil
+			}
+		}
+
+		return c.provenance()
 	})
 }
 
@@ -1963,4 +2024,63 @@ func (c *mqlHelmChartLintMessage) GetPath() *plugin.TValue[string] {
 
 func (c *mqlHelmChartLintMessage) GetMessage() *plugin.TValue[string] {
 	return &c.Message
+}
+
+// mqlHelmChartProvenanceRecord for the helm.chart.provenanceRecord resource
+type mqlHelmChartProvenanceRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHelmChartProvenanceRecordInternal it will be used here
+	Signed        plugin.TValue[bool]
+	Digest        plugin.TValue[string]
+	DigestMatches plugin.TValue[bool]
+	KeyId         plugin.TValue[string]
+}
+
+// createHelmChartProvenanceRecord creates a new instance of this resource
+func createHelmChartProvenanceRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHelmChartProvenanceRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("helm.chart.provenanceRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHelmChartProvenanceRecord) MqlName() string {
+	return "helm.chart.provenanceRecord"
+}
+
+func (c *mqlHelmChartProvenanceRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHelmChartProvenanceRecord) GetSigned() *plugin.TValue[bool] {
+	return &c.Signed
+}
+
+func (c *mqlHelmChartProvenanceRecord) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlHelmChartProvenanceRecord) GetDigestMatches() *plugin.TValue[bool] {
+	return &c.DigestMatches
+}
+
+func (c *mqlHelmChartProvenanceRecord) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
 }

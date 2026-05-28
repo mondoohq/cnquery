@@ -44,6 +44,10 @@ func (r *mqlHelm) charts() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Provenance only exists for a chart fetched from a remote source
+		// that ships a .prov; it stays nil for local charts and subcharts.
+		mqlChart.provData = lc.ProvenanceData
+		mqlChart.archiveSHA256 = lc.ArchiveSHA256
 		mqlCharts = append(mqlCharts, mqlChart)
 	}
 	return mqlCharts, nil
@@ -60,6 +64,8 @@ type mqlHelmChartInternal struct {
 	renderedErr     error
 	resourcesOnce   sync.Once
 	cachedResources []any
+	provData        []byte // raw .prov contents; nil unless fetched with provenance
+	archiveSHA256   string // hex sha256 of the fetched archive; "" for local charts
 }
 
 // newMqlHelmChart materializes a *chart.Chart as a helm.chart resource.

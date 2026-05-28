@@ -141,6 +141,15 @@ helm.chart @defaults("name version") {
   // chart whose charts/ directory it was loaded from, enabling traversal
   // back up the dependency tree.
   parent() helm.chart
+  // Supply-chain provenance
+  //
+  // The PGP provenance Helm attaches to a signed, packaged chart (the .prov
+  // file produced by `helm package --sign`), recording the chart archive's
+  // sha256 digest and the signing key. Available only for a chart fetched
+  // from an OCI registry or an HTTP repository that ships a provenance file;
+  // null for charts loaded from a local path, for subcharts, and for fetched
+  // charts that carry no provenance. See helm.chart.provenanceRecord.
+  provenance() helm.chart.provenanceRecord
 }
 
 // Helm chart dependency
@@ -395,4 +404,38 @@ private helm.chart.lintMessage @defaults("severity message") {
   path string
   // Message text
   message string
+}
+
+// Helm chart provenance
+//
+// Examine the PGP provenance attached to a fetched chart — the .prov file
+// Helm writes with `helm package --sign`. Reports whether the chart is
+// signed, the sha256 digest the signature attests for the chart archive,
+// whether the archive actually fetched matches that digest, and the key ID
+// that produced the signature. Verification is offline: the digest is
+// recomputed locally and the issuer is read from the signature packet, so no
+// keyring and no registry round-trip are involved. Selected from a chart via
+// `helm.chart.provenance`.
+private helm.chart.provenanceRecord @defaults("signed digestMatches keyId") {
+  // Whether the provenance carries a PGP signature block
+  signed bool
+  // Digest the provenance attests for the chart archive
+  //
+  // The `sha256:...` value recorded in the signed `files:` block for the
+  // chart's .tgz. Empty when the provenance records no digest for the archive.
+  digest string
+  // Whether the fetched archive matches the attested digest
+  //
+  // True when the sha256 of the archive actually fetched equals digest. The
+  // hash is recomputed locally — no registry round-trip and no keyring — so a
+  // false value flags a tampered or stale provenance file. False when digest
+  // is empty or the archive couldn't be hashed.
+  digestMatches bool
+  // Key ID that produced the signature
+  //
+  // The 16-hexadecimal-character issuer key ID read from the signature packet
+  // (for example "1234567890ABCDEF"), identifying the signer without their
+  // public key. Empty when unsigned or the issuer can't be read. Full
+  // cryptographic verification against a keyring is out of scope.
+  keyId string
 }

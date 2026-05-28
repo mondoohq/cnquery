@@ -34,6 +34,12 @@ helm.chart.maintainers 13.0.0
 helm.chart.name 13.0.0
 helm.chart.notes 13.1.1
 helm.chart.parent 13.0.10
+helm.chart.provenance 13.2.1
+helm.chart.provenanceRecord 13.2.1
+helm.chart.provenanceRecord.digest 13.2.1
+helm.chart.provenanceRecord.digestMatches 13.2.1
+helm.chart.provenanceRecord.keyId 13.2.1
+helm.chart.provenanceRecord.signed 13.2.1
 helm.chart.renderedValues 13.1.1
 helm.chart.resources 13.0.0
 helm.chart.sources 13.0.0

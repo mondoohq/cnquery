@@ -21,9 +21,15 @@ var _ plugin.Connection = (*HelmConnection)(nil)
 // loaded from so the resource layer can distinguish two charts that
 // happen to share name + version (e.g., feature-branch forks of the
 // same chart in a multi-chart directory).
+//
+// ProvenanceData and ArchiveSHA256 are populated only for a chart fetched
+// from a remote source (OCI registry or HTTP repository) that ships a
+// provenance file; they stay empty for charts loaded from a local path.
 type LoadedChart struct {
-	Path  string
-	Chart *chart.Chart
+	Path           string
+	Chart          *chart.Chart
+	ProvenanceData []byte // raw .prov contents; nil when none was fetched
+	ArchiveSHA256  string // hex sha256 of the fetched archive; "" for local charts
 }
 
 type HelmConnection struct {
@@ -51,21 +57,29 @@ func NewHelmConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 	// Resolve a possibly-remote chart reference (oci://, http(s) .tgz, or a
 	// chart name with --repo) to a local path. Remote refs download to a
 	// temp dir that's cleaned up once the charts are read into memory.
-	chartPath, cleanup, err := resolveChartRef(cc.Options[OptionPath], cc.Options)
-	if cleanup != nil {
-		defer cleanup()
-	}
+	fetched, err := resolveChartRef(cc.Options[OptionPath], cc.Options)
 	if err != nil {
 		return nil, err
 	}
-	conn.path = chartPath
+	if fetched.cleanup != nil {
+		defer fetched.cleanup()
+	}
+	conn.path = fetched.localPath
 
-	charts, err := loadCharts(chartPath)
+	charts, err := loadCharts(fetched.localPath)
 	if err != nil {
 		return nil, err
 	}
 	if len(charts) == 0 {
-		return nil, errors.New("no Helm charts found at " + chartPath)
+		return nil, errors.New("no Helm charts found at " + fetched.localPath)
+	}
+
+	// A remote fetch resolves to exactly one chart archive, so its
+	// provenance and archive digest attach to that single loaded chart.
+	// Charts loaded from a local path carry no provenance.
+	if len(charts) == 1 && (fetched.provData != nil || fetched.archiveSHA256 != "") {
+		charts[0].ProvenanceData = fetched.provData
+		charts[0].ArchiveSHA256 = fetched.archiveSHA256
 	}
 	conn.charts = charts
 

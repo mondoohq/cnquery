@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,6 +20,18 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 )
 
+// fetchedChart is the result of resolving a (possibly remote) chart
+// reference to something loadCharts can read. For remote refs it also
+// carries the chart's provenance (.prov) bytes when the source ships one,
+// plus the sha256 of the fetched archive, so the resource layer can report
+// helm.chart.provenance without re-fetching or contacting the registry.
+type fetchedChart struct {
+	localPath     string
+	cleanup       func() // nil for local paths
+	provData      []byte // raw .prov contents; nil when no provenance was found
+	archiveSHA256 string // hex sha256 of the fetched archive; "" for local paths
+}
+
 // resolveChartRef turns a possibly-remote chart reference into a local
 // filesystem path that loadCharts can read:
 //
@@ -29,13 +43,14 @@ import (
 // For remote refs it downloads the chart archive into a temp directory and
 // returns a cleanup func that removes it; loadCharts reads the archive fully
 // into memory, so the caller can clean up immediately afterward. cleanup is
-// nil for local paths.
+// nil for local paths. Remote refs also surface the chart's provenance (when
+// the source ships a .prov) and the archive's sha256 on the returned struct.
 //
 // Fetching deliberately avoids helm's pkg/getter and pkg/repo, which pull in
 // the kube/kubectl stack (incompatible with our pinned k8s.io/api and useless
 // for static analysis). OCI uses pkg/registry directly; HTTP repositories and
 // index resolution use net/http.
-func resolveChartRef(rawPath string, opts map[string]string) (localPath string, cleanup func(), err error) {
+func resolveChartRef(rawPath string, opts map[string]string) (*fetchedChart, error) {
 	version := opts[OptionVersion]
 	username := opts[OptionUsername]
 	password := opts[OptionPassword]
@@ -44,21 +59,21 @@ func resolveChartRef(rawPath string, opts map[string]string) (localPath string, 
 	isOCI := strings.HasPrefix(rawPath, registry.OCIScheme+"://")
 	isHTTP := strings.HasPrefix(rawPath, "http://") || strings.HasPrefix(rawPath, "https://")
 
-	// Purely local chart: no fetching.
+	// Purely local chart: no fetching, no provenance.
 	if !isOCI && !isHTTP && repoURL == "" {
-		return filepath.Clean(rawPath), nil, nil
+		return &fetchedChart{localPath: filepath.Clean(rawPath)}, nil
 	}
 
-	data, err := fetchChartArchive(rawPath, repoURL, version, username, password, isOCI)
+	data, prov, err := fetchChartArchive(rawPath, repoURL, version, username, password, isOCI)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	dest, err := os.MkdirTemp("", "mql-helm-chart-*")
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	cleanup = func() {
+	cleanup := func() {
 		if rmErr := os.RemoveAll(dest); rmErr != nil {
 			log.Warn().Err(rmErr).Str("dir", dest).Msg("failed to clean up helm chart download dir")
 		}
@@ -67,17 +82,26 @@ func resolveChartRef(rawPath string, opts map[string]string) (localPath string, 
 	archive := filepath.Join(dest, "chart.tgz")
 	if err := os.WriteFile(archive, data, 0o600); err != nil {
 		cleanup()
-		return "", nil, err
+		return nil, err
 	}
-	return archive, cleanup, nil
+
+	sum := sha256.Sum256(data)
+	return &fetchedChart{
+		localPath:     archive,
+		cleanup:       cleanup,
+		provData:      prov,
+		archiveSHA256: hex.EncodeToString(sum[:]),
+	}, nil
 }
 
-// fetchChartArchive downloads the raw .tgz bytes of a remote chart.
-func fetchChartArchive(rawPath, repoURL, version, username, password string, isOCI bool) ([]byte, error) {
+// fetchChartArchive downloads the raw .tgz bytes of a remote chart, along
+// with its provenance (.prov) bytes when the source provides one. A missing
+// provenance is not an error — prov is simply nil.
+func fetchChartArchive(rawPath, repoURL, version, username, password string, isOCI bool) (archive, prov []byte, err error) {
 	if isOCI {
 		client, err := registry.NewClient()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		ref := strings.TrimPrefix(rawPath, registry.OCIScheme+"://")
 		// Append the requested version as a tag when the ref isn't already
@@ -85,11 +109,18 @@ func fetchChartArchive(rawPath, repoURL, version, username, password string, isO
 		if version != "" && !strings.ContainsAny(lastPathSegment(ref), ":@") {
 			ref += ":" + version
 		}
-		result, err := client.Pull(ref, registry.PullOptWithChart(true))
+		result, err := client.Pull(ref,
+			registry.PullOptWithChart(true),
+			registry.PullOptWithProv(true),
+			registry.PullOptIgnoreMissingProv(true),
+		)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return result.Chart.Data, nil
+		if result.Prov != nil {
+			prov = result.Prov.Data
+		}
+		return result.Chart.Data, prov, nil
 	}
 
 	chartURL := rawPath
@@ -97,12 +128,33 @@ func fetchChartArchive(rawPath, repoURL, version, username, password string, isO
 		// Resolve "chartName" against the repository's index.yaml.
 		resolved, err := resolveChartInRepo(repoURL, rawPath, version, username, password)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		chartURL = resolved
 	}
 
-	return httpGetBytes(chartURL, username, password)
+	archive, err = httpGetBytes(chartURL, username, password)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Provenance lives next to the archive at "<url>.prov" by Helm
+	// convention. Its absence is expected for unsigned charts, so a failed
+	// fetch is swallowed rather than failing the whole connection.
+	prov = fetchProvenanceHTTP(chartURL, username, password)
+	return archive, prov, nil
+}
+
+// fetchProvenanceHTTP best-effort downloads the provenance file that sits
+// next to a chart archive at "<chartURL>.prov". It returns nil for any
+// failure (missing file, network error, oversized response) because an
+// unsigned chart simply has no provenance.
+func fetchProvenanceHTTP(chartURL, username, password string) []byte {
+	prov, err := httpGetBytes(chartURL+".prov", username, password)
+	if err != nil {
+		log.Debug().Err(err).Str("url", chartURL+".prov").Msg("no helm chart provenance found")
+		return nil
+	}
+	return prov
 }
 
 // repoIndex is the subset of a Helm repository index.yaml we need to map a
