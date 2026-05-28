@@ -70,6 +70,18 @@ func initNpmPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[strin
 			}
 		}
 	}
+
+	if x, ok := args["contents"]; ok {
+		xv, ok := x.Value.(map[string]any)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'contents' in npm.packages initialization, it must be a map of string to string")
+		}
+		for k, v := range xv {
+			if _, ok := v.(string); !ok {
+				return nil, nil, fmt.Errorf("wrong type for 'contents[%q]' in npm.packages initialization, values must be strings", k)
+			}
+		}
+	}
 	return args, nil, nil
 }
 
@@ -77,6 +89,13 @@ func (r *mqlNpmPackages) id() (string, error) {
 	entries, err := r.getPaths()
 	if err != nil {
 		return "", err
+	}
+
+	// fold content-map keys into the id so two instances with different
+	// inputs do not collide in the runtime resource cache
+	if contentKeys := r.contentKeys(); len(contentKeys) > 0 {
+		entries = append(entries, contentKeys...)
+		sort.Strings(entries)
 	}
 
 	if len(entries) == 0 {
@@ -93,6 +112,16 @@ func (r *mqlNpmPackages) id() (string, error) {
 }
 
 func (r *mqlNpmPackages) paths() ([]any, error) {
+	// when content is supplied, advertise the supplied filenames rather than
+	// the filesystem-default search paths so consumers see the actual inputs
+	if contentKeys := r.contentKeys(); len(contentKeys) > 0 {
+		res := []any{}
+		for _, k := range contentKeys {
+			res = append(res, k)
+		}
+		return res, nil
+	}
+
 	paths, err := r.getPaths()
 	if err != nil {
 		return nil, err
@@ -102,6 +131,37 @@ func (r *mqlNpmPackages) paths() ([]any, error) {
 		res = append(res, paths[i])
 	}
 	return res, nil
+}
+
+// contentKeys returns the sorted set of filenames provided through the
+// `contents` init arg, or nil if none.
+func (r *mqlNpmPackages) contentKeys() []string {
+	m := r.contentMap()
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// contentMap returns the `contents` init arg as map[string]string.
+// The MQL compiler coerces literal map values typed as `any` to `string` at
+// the resource-arg site; the init function still asserts each value's type.
+func (r *mqlNpmPackages) contentMap() map[string]string {
+	if r.Contents.Error != nil || len(r.Contents.Data) == 0 {
+		return nil
+	}
+	out := make(map[string]string, len(r.Contents.Data))
+	for k, v := range r.Contents.Data {
+		if s, ok := v.(string); ok {
+			out[k] = s
+		}
+	}
+	return out
 }
 
 // gatherPackagesFromSystemDefaults returns
@@ -230,6 +290,78 @@ func hasLockfile(runtime *plugin.Runtime, fs afero.Fs, path string) bool {
 	return len(filteredSearchPath) > 0
 }
 
+// npmExtractorFor returns the parser matched by the filename suffix, or nil
+// if the path does not look like a supported JS package or lock file.
+func npmExtractorFor(path string) languages.Extractor {
+	switch {
+	case strings.HasSuffix(path, "package-lock.json"):
+		return &packagelockjson.Extractor{}
+	case strings.HasSuffix(path, "pnpm-lock.yaml"):
+		return &pnpmlock.Extractor{}
+	case strings.HasSuffix(path, "yarn.lock"):
+		return &yarnlock.Extractor{}
+	case strings.HasSuffix(path, "bun.lock"):
+		return &bunlock.Extractor{}
+	case strings.HasSuffix(path, "package.json"):
+		return &packagejson.Extractor{}
+	}
+	return nil
+}
+
+// collectNpmPackagesFromContents parses the supplied {path: content} map
+// directly, without touching the connection's filesystem. Lockfiles are
+// preferred over package.json when both are present so that resolved
+// versions win out.
+func collectNpmPackagesFromContents(contents map[string]string) (*languages.Package, []*languages.Package, []*languages.Package, []string, error) {
+	// Sort keys so output ordering is stable. Lockfiles are preferred — if
+	// any lockfile parses successfully we drop package.json results to avoid
+	// duplicates.
+	type entry struct {
+		path     string
+		isLock   bool
+		ext      languages.Extractor
+		contents string
+	}
+	var entries []entry
+	for path, content := range contents {
+		ext := npmExtractorFor(path)
+		if ext == nil {
+			continue
+		}
+		isLock := !strings.HasSuffix(path, "package.json")
+		entries = append(entries, entry{path: path, isLock: isLock, ext: ext, contents: content})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].path < entries[j].path })
+
+	var root *languages.Package
+	var direct []*languages.Package
+	var transitive []*languages.Package
+	var files []string
+	lockfileSucceeded := false
+
+	for _, e := range entries {
+		if lockfileSucceeded && !e.isLock {
+			continue
+		}
+		bom, err := e.ext.Parse(strings.NewReader(e.contents), e.path)
+		if err != nil {
+			log.Debug().Err(err).Str("file", e.path).Msg("failed to parse npm manifest content")
+			continue
+		}
+		files = append(files, e.path)
+		if r := bom.Root(); r != nil && root == nil {
+			root = r
+		}
+		direct = append(direct, bom.Direct()...)
+		transitive = append(transitive, bom.Transitive()...)
+		if e.isLock {
+			lockfileSucceeded = true
+		}
+	}
+
+	return root, direct, transitive, files, nil
+}
+
 func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (languages.Bom, error) {
 	// specific path was provided
 	afs := &afero.Afero{Fs: fs}
@@ -342,6 +474,23 @@ func (r *mqlNpmPackages) gatherData() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	var root *languages.Package
+	var directDependencies []*languages.Package
+	var transitiveDependencies []*languages.Package
+	var filePaths []string
+
+	// content-map branch: parse provided file contents directly, without
+	// touching the os connection. Used when running on a non-os connection
+	// (for example, feeding `github.file.content` from a github repo scan).
+	if contents := r.contentMap(); len(contents) > 0 {
+		var err error
+		root, directDependencies, transitiveDependencies, filePaths, err = collectNpmPackagesFromContents(contents)
+		if err != nil {
+			return err
+		}
+		return r.finalizeData(root, directDependencies, transitiveDependencies, filePaths)
+	}
+
 	// NOTE: that we do not get paths that are an empty slice here
 	paths, err := r.getPaths()
 	if err != nil {
@@ -352,10 +501,6 @@ func (r *mqlNpmPackages) gatherData() error {
 	// if it is a directory, we check if there is a package-lock.json or package.json file
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 
-	var root *languages.Package
-	var directDependencies []*languages.Package
-	var transitiveDependencies []*languages.Package
-	var filePaths []string
 	fs := conn.FileSystem()
 
 	if len(paths) > 1 {
@@ -382,6 +527,10 @@ func (r *mqlNpmPackages) gatherData() error {
 		}
 	}
 
+	return r.finalizeData(root, directDependencies, transitiveDependencies, filePaths)
+}
+
+func (r *mqlNpmPackages) finalizeData(root *languages.Package, directDependencies, transitiveDependencies []*languages.Package, filePaths []string) error {
 	// sort packages by name
 	slices.SortFunc(directDependencies, languages.SortFn)
 	slices.SortFunc(transitiveDependencies, languages.SortFn)
@@ -443,6 +592,34 @@ func (r *mqlNpmPackages) files() ([]any, error) {
 }
 
 func (r *mqlNpmPackages) scripts() (map[string]any, error) {
+	type packageJson struct {
+		Scripts map[string]string `json:"scripts"`
+	}
+
+	// when content is supplied, parse scripts out of the package.json entry
+	// (if any) without touching the filesystem
+	if contents := r.contentMap(); len(contents) > 0 {
+		var raw string
+		for path, c := range contents {
+			if strings.HasSuffix(path, "package.json") {
+				raw = c
+				break
+			}
+		}
+		if raw == "" {
+			return map[string]any{}, nil
+		}
+		pkgInfo := packageJson{}
+		if err := json.Unmarshal([]byte(raw), &pkgInfo); err != nil {
+			return nil, err
+		}
+		res := make(map[string]any)
+		for k, v := range pkgInfo.Scripts {
+			res[k] = v
+		}
+		return res, nil
+	}
+
 	if r.Path.Error != nil {
 		return nil, r.Path.Error
 	}
@@ -455,10 +632,6 @@ func (r *mqlNpmPackages) scripts() (map[string]any, error) {
 	content := f.GetContent()
 	if content.Error != nil {
 		return nil, content.Error
-	}
-
-	type packageJson struct {
-		Scripts map[string]string `json:"scripts"`
 	}
 
 	pkgInfo := packageJson{}

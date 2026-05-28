@@ -4,10 +4,13 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -54,10 +57,37 @@ func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		args["path"] = llx.StringData("")
 	}
 
+	if x, ok := args["contents"]; ok {
+		xv, ok := x.Value.(map[string]any)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'contents' in python initialization, it must be a map of string to string")
+		}
+		for k, v := range xv {
+			if _, ok := v.(string); !ok {
+				return nil, nil, fmt.Errorf("wrong type for 'contents[%q]' in python initialization, values must be strings", k)
+			}
+		}
+	}
+
 	return args, nil, nil
 }
 
 func (r *mqlPython) id() (string, error) {
+	// when content is supplied, fold the supplied filenames into the id so
+	// two instances with different inputs do not collide in the runtime
+	// resource cache
+	if contents := r.contentMap(); len(contents) > 0 {
+		keys := make([]string, 0, len(contents))
+		for k := range contents {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		hash := sha256.New()
+		for _, k := range keys {
+			hash.Write([]byte(k))
+		}
+		return "python/" + hex.EncodeToString(hash.Sum(nil)), nil
+	}
 	return "python", nil
 }
 
@@ -116,6 +146,13 @@ func (r *mqlPython) toplevel() ([]any, error) {
 }
 
 func (r *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
+	// content-map branch: parse provided file contents directly, without
+	// touching the os connection. Used when running on a non-os connection
+	// (for example, feeding `github.file.content` from a github repo scan).
+	if contents := r.contentMap(); len(contents) > 0 {
+		return collectPythonPackagesFromContents(contents), nil
+	}
+
 	conn, ok := r.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
 		return nil, fmt.Errorf("provider is not an operating system provider")
@@ -535,6 +572,117 @@ func languagePackagesToDetails(pkgs languages.Packages, file string) []python.Pa
 		})
 	}
 	return results
+}
+
+// contentMap returns the `contents` init arg as map[string]string, or nil
+// if none was supplied. The MQL compiler coerces literal map values typed
+// as `any` to `string` at the resource-arg site; the init function still
+// asserts each value's type.
+func (r *mqlPython) contentMap() map[string]string {
+	if r.Contents.Error != nil || len(r.Contents.Data) == 0 {
+		return nil
+	}
+	out := make(map[string]string, len(r.Contents.Data))
+	for k, v := range r.Contents.Data {
+		if s, ok := v.(string); ok {
+			out[k] = s
+		}
+	}
+	return out
+}
+
+// collectPythonPackagesFromContents parses the supplied {path: content} map
+// directly, without touching the connection's filesystem. Lockfiles are
+// preferred over requirements.txt / setup.py to match the on-disk priority.
+// Site-packages METADATA / PKG-INFO is install-only and not handled here.
+func collectPythonPackagesFromContents(contents map[string]string) []python.PackageDetails {
+	// Sort keys so output ordering is stable.
+	keys := make([]string, 0, len(contents))
+	for k := range contents {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// First pass: lock files take priority. If any parse succeeds we return
+	// the union of all lock-file results and skip lower-priority manifests
+	// to avoid duplicates.
+	var lockResults []python.PackageDetails
+	for _, key := range keys {
+		base := filepath.Base(key)
+		for _, mf := range pythonManifestFiles {
+			if base != mf.name {
+				continue
+			}
+			bom, err := mf.extractor.Parse(strings.NewReader(contents[key]), key)
+			if err != nil {
+				log.Debug().Err(err).Str("file", key).Msg("failed to parse python manifest content")
+				continue
+			}
+			if pkgs := bom.Transitive(); len(pkgs) > 0 {
+				lockResults = append(lockResults, languagePackagesToDetails(pkgs, key)...)
+			}
+		}
+	}
+	if len(lockResults) > 0 {
+		return lockResults
+	}
+
+	// Fall back to requirements.txt entries.
+	var reqResults []python.PackageDetails
+	for _, key := range keys {
+		if filepath.Base(key) != "requirements.txt" {
+			continue
+		}
+		reqs, err := requirements.ParseRequirementsTxt(strings.NewReader(contents[key]))
+		if err != nil {
+			log.Debug().Err(err).Str("file", key).Msg("failed to parse requirements.txt content")
+			continue
+		}
+		for _, req := range reqs {
+			if req.Name == "" {
+				continue
+			}
+			reqResults = append(reqResults, python.PackageDetails{
+				Name:    req.Name,
+				Version: req.Version,
+				File:    key,
+				Purl:    python.NewPackageUrl(req.Name, req.Version),
+				Cpes:    python.NewCpes(req.Name, req.Version),
+				IsLeaf:  true,
+			})
+		}
+	}
+	if len(reqResults) > 0 {
+		return reqResults
+	}
+
+	// Final fall back: setup.py / setup.cfg.
+	var setupResults []python.PackageDetails
+	for _, key := range keys {
+		base := filepath.Base(key)
+		if base != "setup.py" && base != "setup.cfg" {
+			continue
+		}
+		reqs, err := requirements.ParseSetupPy(strings.NewReader(contents[key]))
+		if err != nil {
+			log.Debug().Err(err).Str("file", key).Msg("failed to parse setup file content")
+			continue
+		}
+		for _, req := range reqs {
+			if req.Name == "" {
+				continue
+			}
+			setupResults = append(setupResults, python.PackageDetails{
+				Name:    req.Name,
+				Version: req.Version,
+				File:    key,
+				Purl:    python.NewPackageUrl(req.Name, req.Version),
+				Cpes:    python.NewCpes(req.Name, req.Version),
+				IsLeaf:  true,
+			})
+		}
+	}
+	return setupResults
 }
 
 // mergePythonPackages merges two slices of PackageDetails, deduplicating by name.

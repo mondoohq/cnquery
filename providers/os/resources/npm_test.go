@@ -98,6 +98,78 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
 }
 
+func TestCollectNpmPackagesFromContents(t *testing.T) {
+	t.Run("parses a package.json from in-memory content", func(t *testing.T) {
+		contents := map[string]string{
+			"package.json": `{
+				"name": "demo-app",
+				"version": "1.2.3",
+				"dependencies": {
+					"left-pad": "^1.3.0"
+				}
+			}`,
+		}
+		root, direct, transitive, files, err := collectNpmPackagesFromContents(contents)
+		require.NoError(t, err)
+		require.Equal(t, []string{"package.json"}, files)
+		require.NotNil(t, root)
+		require.Equal(t, "demo-app", root.Name)
+		require.Equal(t, "1.2.3", root.Version)
+		// direct + transitive shape depends on the extractor; at minimum
+		// the dependency should appear somewhere
+		names := map[string]bool{}
+		for _, p := range direct {
+			names[p.Name] = true
+		}
+		for _, p := range transitive {
+			names[p.Name] = true
+		}
+		require.True(t, names["left-pad"], "expected left-pad in parsed deps, got %v", names)
+	})
+
+	t.Run("skips package.json when a lockfile is also provided", func(t *testing.T) {
+		// A minimal v3 package-lock.json that resolves an exact version
+		// for left-pad. If the lockfile parses, the root package.json
+		// branch is suppressed.
+		contents := map[string]string{
+			"package.json": `{
+				"name": "demo-app",
+				"version": "1.2.3",
+				"dependencies": {"left-pad": "^1.3.0"}
+			}`,
+			"package-lock.json": `{
+				"name": "demo-app",
+				"version": "1.2.3",
+				"lockfileVersion": 3,
+				"packages": {
+					"": {
+						"name": "demo-app",
+						"version": "1.2.3",
+						"dependencies": {"left-pad": "^1.3.0"}
+					},
+					"node_modules/left-pad": {
+						"version": "1.3.0",
+						"resolved": "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz"
+					}
+				}
+			}`,
+		}
+		_, _, _, files, err := collectNpmPackagesFromContents(contents)
+		require.NoError(t, err)
+		// only the lockfile should contribute when both parsed successfully
+		require.Contains(t, files, "package-lock.json")
+		require.NotContains(t, files, "package.json", "package.json must be skipped when a lockfile is present")
+	})
+
+	t.Run("ignores unknown filenames", func(t *testing.T) {
+		_, _, _, files, err := collectNpmPackagesFromContents(map[string]string{
+			"README.md": "not a manifest",
+		})
+		require.NoError(t, err)
+		require.Empty(t, files)
+	})
+}
+
 func TestCollectNpmPackagesInPaths(t *testing.T) {
 	tests := []struct {
 		name     string

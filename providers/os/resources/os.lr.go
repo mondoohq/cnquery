@@ -6092,6 +6092,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"python.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPython).GetPath()).ToDataRes(types.String)
 	},
+	"python.contents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPython).GetContents()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"python.packages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPython).GetPackages()).ToDataRes(types.Array(types.Resource("python.package")))
 	},
@@ -6142,6 +6145,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"npm.packages.paths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNpmPackages).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"npm.packages.contents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetContents()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"npm.packages.root": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNpmPackages).GetRoot()).ToDataRes(types.Resource("npm.package"))
@@ -15559,6 +15565,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPython).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"python.contents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPython).Contents, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"python.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPython).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -15633,6 +15643,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"npm.packages.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNpmPackages).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"npm.packages.contents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).Contents, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"npm.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39906,6 +39920,7 @@ type mqlPython struct {
 	__id       string
 	// optional: if you define mqlPythonInternal it will be used here
 	Path     plugin.TValue[string]
+	Contents plugin.TValue[map[string]any]
 	Packages plugin.TValue[[]any]
 	Toplevel plugin.TValue[[]any]
 }
@@ -39949,6 +39964,10 @@ func (c *mqlPython) MqlID() string {
 
 func (c *mqlPython) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlPython) GetContents() *plugin.TValue[map[string]any] {
+	return &c.Contents
 }
 
 func (c *mqlPython) GetPackages() *plugin.TValue[[]any] {
@@ -40111,6 +40130,7 @@ type mqlNpmPackages struct {
 	mqlNpmPackagesInternal
 	Path               plugin.TValue[string]
 	Paths              plugin.TValue[[]any]
+	Contents           plugin.TValue[map[string]any]
 	Root               plugin.TValue[*mqlNpmPackage]
 	DirectDependencies plugin.TValue[[]any]
 	Files              plugin.TValue[[]any]
@@ -40163,6 +40183,10 @@ func (c *mqlNpmPackages) GetPaths() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
 		return c.paths()
 	})
+}
+
+func (c *mqlNpmPackages) GetContents() *plugin.TValue[map[string]any] {
+	return &c.Contents
 }
 
 func (c *mqlNpmPackages) GetRoot() *plugin.TValue[*mqlNpmPackage] {

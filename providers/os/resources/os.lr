@@ -4513,9 +4513,21 @@ kubelet {
 //
 // Examine all installed packages plus the explicitly-installed top level
 python {
-  init(path? string)
+  init(path? string, contents? map[string]string)
   // Path to a specific site-packages location to exclusively scan (empty means scan default locations)
   path string
+
+  // Optional: in-memory file contents keyed by filename
+  //
+  // Provide raw file contents (e.g., `requirements.txt`, `poetry.lock`,
+  // `Pipfile.lock`, `uv.lock`, `pdm.lock`, `setup.py`, `setup.cfg`) instead
+  // of reading from the connection's filesystem. The value must be a map
+  // from filename to string content; parser selection follows the filename
+  // suffix on each key, matching the on-disk behavior. Useful when feeding
+  // files discovered through another provider (for example,
+  // `github.file.content`) during a non-os scan. When set, both the
+  // `site-packages` walk and the on-disk manifest scan are skipped.
+  contents map[string]string
 
   // List of all discovered packages
   packages() []python.package
@@ -4566,7 +4578,7 @@ python.package @defaults("name version") {
 npm.packages {
   []npm.package
 
-  init(path? string)
+  init(path? string, contents? map[string]string)
 
   // Path to search for packages
   //
@@ -4575,6 +4587,17 @@ npm.packages {
 
   // Optional: list of paths searched for packages
   paths() []string
+
+  // Optional: in-memory file contents keyed by filename
+  //
+  // Provide raw file contents (e.g., `package.json`, `package-lock.json`,
+  // `yarn.lock`) instead of reading from the connection's filesystem. The
+  // value must be a map from filename to string content; parser selection
+  // follows the filename suffix on each key, matching the on-disk behavior.
+  // Useful when feeding files discovered through another provider (for
+  // example, `github.file.content`) during a non-os scan. When set, the
+  // filesystem walk is skipped entirely.
+  contents map[string]string
 
   // Root Package (may not exist)
   root() npm.package

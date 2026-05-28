@@ -870,6 +870,23 @@ func (c *compiler) unnamedResourceArgs(resource *resources.ResourceInfo, args []
 	return c.unnamedArgs("resource "+resource.Name, resource.Init, args)
 }
 
+// mapLiteralCoercibleTo reports whether a value of type `got` can be passed
+// where the resource field expects type `want` for the common case of an MQL
+// map literal whose inferred value-type was widened to `any`. Map literals
+// like `{"a": file(...).content}` come out as `map[string]any` even when all
+// values resolve to strings at runtime; the runtime init function is
+// responsible for asserting the actual element types. See `compileOperand`
+// where the value type is widened to `Any` for refs/mixed entries.
+func mapLiteralCoercibleTo(got, want types.Type) bool {
+	if !got.IsMap() || !want.IsMap() {
+		return false
+	}
+	if got.Key() != want.Key() {
+		return false
+	}
+	return got.Child() == types.Any
+}
+
 // resourceArgs turns the list of arguments for the resource into a list of
 // primitives that are used as arguments to initialize that resource
 // only works if len(args) > 0 !!
@@ -898,8 +915,14 @@ func (c *compiler) resourceArgs(resource *resources.ResourceInfo, args []*parser
 		}
 
 		ft := types.Type(field.Type)
-		if vt != ft {
-			return nil, errors.New("Wrong type for field " + arg.Name + " in resource " + resource.Name + ": expected " + ft.Label() + ", got " + vt.Label())
+		if vt != ft && ft != types.Any {
+			if !mapLiteralCoercibleTo(vt, ft) {
+				return nil, errors.New("Wrong type for field " + arg.Name + " in resource " + resource.Name + ": expected " + ft.Label() + ", got " + vt.Label())
+			}
+			// Coerce the literal map's type to match the field's expected
+			// type so downstream serialization knows the element type. The
+			// runtime init function still validates each element's type.
+			v.Type = string(ft)
 		}
 
 		res[idx*2] = llx.StringPrimitive(arg.Name)

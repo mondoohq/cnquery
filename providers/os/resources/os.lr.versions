@@ -1738,6 +1738,7 @@ npm.package.name 10.2.1
 npm.package.purl 10.2.1
 npm.package.version 10.2.1
 npm.packages 10.2.1
+npm.packages.contents 13.22.0
 npm.packages.directDependencies 10.2.1
 npm.packages.files 10.2.1
 npm.packages.list 10.2.1
@@ -2029,6 +2030,7 @@ prolog.packages.files 13.13.1
 prolog.packages.list 13.13.1
 prolog.packages.path 13.13.1
 python 9.0.1
+python.contents 13.22.0
 python.package 9.0.1
 python.package.author 9.0.1
 python.package.authorEmail 9.0.1
