@@ -253,13 +253,17 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	// manifest digest, which is stable across architectures for multi-arch tags.
 	ded, dockerErr := dockerDiscovery.NewDockerEngineDiscovery()
 	if dockerErr != nil {
-		fillAssetFromRegistry(asset, conf)
+		if err := fillAssetFromRegistry(asset, conf); err != nil {
+			return nil, err
+		}
 		return container.NewRegistryImage(id, conf, asset)
 	}
 
 	ii, err := ded.ImageInfo(conf.Host)
 	if err != nil {
-		fillAssetFromRegistry(asset, conf)
+		if err := fillAssetFromRegistry(asset, conf); err != nil {
+			return nil, err
+		}
 		return container.NewRegistryImage(id, conf, asset)
 	}
 
@@ -335,17 +339,23 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 // fillAssetFromRegistry pre-populates asset.Name, asset.PlatformIds, and asset.Labels
 // from the registry-side view of conf.Host. The follow-up registry pull will then
 // see those fields already set and skip its own (per-architecture) values, which
-// keeps asset.Name stable across architectures for multi-arch tags. Failures are
-// intentionally swallowed — the subsequent pull will surface a real error if the
-// registry is actually unreachable.
-func fillAssetFromRegistry(asset *inventory.Asset, conf *inventory.Config) {
+// keeps asset.Name stable across architectures for multi-arch tags. Errors are
+// returned so the caller can bail out — matching the pre-refactor behavior where
+// a registry resolution failure failed the connection attempt outright instead of
+// silently falling through to a pull that would either fail with a less specific
+// error or succeed with platform-specific (non-stable) identity.
+func fillAssetFromRegistry(asset *inventory.Asset, conf *inventory.Config) error {
 	resolved, err := (&container_registry.Resolver{NoStrictValidation: true}).Resolve(context.Background(), asset, conf, nil)
-	if err != nil || len(resolved) == 0 {
-		return
+	if err != nil {
+		return err
+	}
+	if len(resolved) == 0 {
+		return errors.New("could not resolve container image: " + conf.Host)
 	}
 	asset.Name = resolved[0].Name
 	asset.PlatformIds = resolved[0].PlatformIds
 	asset.Labels = resolved[0].Labels
+	return nil
 }
 
 func getImageStoreKind() string {
