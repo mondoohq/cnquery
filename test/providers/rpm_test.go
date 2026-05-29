@@ -13,10 +13,9 @@ import (
 	"go.mondoo.com/mql/v13/test"
 )
 
-// rpmTestImages are rpm-based images we exercise both package code paths
-// against. We deliberately use the *minimal* variants (~15-20 MB compressed)
-// to keep the pull cheap; they still ship the rpm CLI and a real rpm database,
-// which is all both code paths need.
+// rpmTestImages are rpm-based images this smoke test scans. We deliberately
+// use the *minimal* variants (~15-20 MB compressed) to keep the pull cheap;
+// they carry a real rpm database, which is what the static rpmdb path reads.
 var rpmTestImages = []string{
 	"redhat/ubi9-minimal",
 	"almalinux:9-minimal",
@@ -42,8 +41,9 @@ func requireDocker(t *testing.T) {
 }
 
 // dockerRunDetached starts a long-lived container from image and returns its
-// id. A *running* container is what routes mql to the runtime code path
-// (ContainerConnection.RunCommand -> real `rpm -qa --queryformat`).
+// id, so the scan goes through ContainerConnection rather than the image
+// snapshot connection. (Both still resolve to the static rpmdb path — see the
+// TestRpmPackages doc comment.)
 func dockerRunDetached(t *testing.T, image string) string {
 	t.Helper()
 	// Pull explicitly first: `docker run` prints image-pull progress, and if
@@ -63,17 +63,6 @@ func dockerRunDetached(t *testing.T, image string) string {
 		_ = exec.Command("docker", "rm", "-f", id).Run()
 	})
 	return id
-}
-
-// requireRpmBinary asserts the running container actually has the rpm CLI so
-// the runtime code path (`rpm -qa --queryformat`) is genuinely exercised. Some
-// minimal/micro images ship rpm-libs without /usr/bin/rpm; on those mql would
-// silently fall back to the static path, making this test pass while covering
-// nothing. Fail loudly instead so a bad image choice is obvious.
-func requireRpmBinary(t *testing.T, containerID string) {
-	t.Helper()
-	out, err := exec.Command("docker", "exec", containerID, "sh", "-c", "command -v rpm").CombinedOutput()
-	require.NoErrorf(t, err, "rpm CLI missing in container, runtime path would fall back to static: %s", string(out))
 }
 
 // queryPackages runs mql against the target and returns the parsed package
@@ -123,62 +112,65 @@ func packageNames(list []pkgInfo) []string {
 	return names
 }
 
-// assertRealRpmPackages is the core regression guard for the rpm queryformat
-// delimiter. The bug that triggered the revert (#7963 reverting #7818) made
-// the runtime path parse zero packages because rpm did not emit the assumed
-// delimiter byte. These assertions only pass against genuine rpm output.
-func assertRealRpmPackages(t *testing.T, path string, list []pkgInfo) {
+// assertRpmPackages smoke-checks that a real rpm database parsed into sane
+// packages via the static rpmdb path. It is NOT a guard for the queryformat
+// field separator — that lives on the runtime path and is covered by
+// TestRpmQueryFormatRoundTrip (see the TestRpmPackages doc comment).
+func assertRpmPackages(t *testing.T, conn string, list []pkgInfo) {
 	t.Helper()
-	// The delimiter break produced an empty list. Even a minimal image has
-	// dozens of packages, so 20 is a safe floor that still catches that failure.
-	assert.Greaterf(t, len(list), 20, "%s path returned too few packages (delimiter/parse regression?)", path)
+	// Even a minimal image has dozens of packages; 20 is a safe floor that
+	// catches a wholly broken read.
+	assert.Greaterf(t, len(list), 20, "%s: too few packages (broken rpmdb read?)", conn)
 
 	for _, p := range list {
-		assert.NotEmptyf(t, p.Name, "%s path: package with empty name", path)
-		assert.NotEmptyf(t, p.Version, "%s path: %q has empty version", path, p.Name)
+		assert.NotEmptyf(t, p.Name, "%s: package with empty name", conn)
+		assert.NotEmptyf(t, p.Version, "%s: %q has empty version", conn, p.Name)
 	}
 
 	// glibc is present on every rpm image (including minimal variants) and
-	// carries a normal arch and format, so it proves field splitting worked end
+	// carries a normal arch and format, so it proves field mapping worked end
 	// to end. We assert these on glibc rather than every package because
 	// gpg-pubkey (a GPG-key pseudo-package, not real software) has neither.
 	glibc, ok := hasPackage(list, "glibc")
-	require.Truef(t, ok, "%s path: base package glibc missing", path)
-	assert.NotEmptyf(t, glibc.Arch, "%s path: glibc has empty arch", path)
-	assert.Equalf(t, "rpm", glibc.Format, "%s path: glibc has unexpected format %q", path, glibc.Format)
+	require.Truef(t, ok, "%s: base package glibc missing", conn)
+	assert.NotEmptyf(t, glibc.Arch, "%s: glibc has empty arch", conn)
+	assert.Equalf(t, "rpm", glibc.Format, "%s: glibc has unexpected format %q", conn, glibc.Format)
 }
 
-// TestRpmPackages exercises both rpm package code paths against real rpm
-// images and cross-checks them. It deliberately requires docker rather than
-// skipping, because the whole point is to catch divergence between our
-// assumptions and what rpm actually emits.
+// TestRpmPackages is a smoke test that mql parses a real rpm database into
+// sane packages across distros, via both the running-container connection and
+// the image-snapshot connection.
+//
+// Both connections resolve to the *static* rpmdb path: rpm scans over the
+// docker transport do not reliably use the runtime `rpm -qa --queryformat`
+// path, because the exit code of `command -v rpm` is unreliable over docker,
+// so isStaticAnalysis() prefers the static read. This test therefore does NOT
+// guard the queryformat field separator — that bug (#7818, reverted in #7963)
+// lives on the runtime path and is covered deterministically by
+// TestRpmQueryFormatRoundTrip in providers/os/resources/packages.
+//
+// It requires docker rather than skipping, so a CI box without docker fails
+// loudly instead of silently covering nothing.
 func TestRpmPackages(t *testing.T) {
 	once.Do(setup)
 	requireDocker(t)
 
 	for _, image := range rpmTestImages {
 		t.Run(image, func(t *testing.T) {
-			// Runtime path: a running container routes to ContainerConnection,
-			// which runs the real `rpm -qa --queryformat '<queryFormat()>'` and
-			// parses the output with RPM_REGEX. This is the path the __ -> RS
-			// delimiter change broke and the reason mock fixtures could not.
+			// Scan via ContainerConnection (running container).
 			id := dockerRunDetached(t, image)
-			requireRpmBinary(t, id)
-			runtime := queryPackages(t, "docker", id)
-			assertRealRpmPackages(t, "runtime", runtime)
+			viaContainer := queryPackages(t, "docker", id)
+			assertRpmPackages(t, "container", viaContainer)
 
-			// Static path: the same image as an image reference routes to a
-			// snapshot connection, which reads the rpm database with the rpmdb
-			// library and never touches queryFormat/RPM_REGEX.
-			static := queryPackages(t, "docker", image)
-			assertRealRpmPackages(t, "static", static)
+			// Scan the same image as an image reference (snapshot connection).
+			viaImage := queryPackages(t, "docker", image)
+			assertRpmPackages(t, "image", viaImage)
 
-			// Both code paths enumerate the same installed rpm database, so the
-			// set of package names must match. This pins the runtime and static
-			// paths to each other and to real rpm, so neither can silently
-			// drift again.
-			assert.ElementsMatchf(t, packageNames(static), packageNames(runtime),
-				"runtime and static package sets diverge for %s", image)
+			// Both connections read the same installed rpm database, so the
+			// package name sets must match — a cross-check that the static read
+			// is consistent across connection types.
+			assert.ElementsMatchf(t, packageNames(viaImage), packageNames(viaContainer),
+				"container and image package sets diverge for %s", image)
 		})
 	}
 }
