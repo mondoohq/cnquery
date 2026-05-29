@@ -12184,6 +12184,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.task.stoppedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetStoppedAt()).ToDataRes(types.Time)
 	},
+	"aws.ecs.task.ephemeralStorageSizeInGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetEphemeralStorageSizeInGiB()).ToDataRes(types.Int)
+	},
+	"aws.ecs.task.fargateEphemeralStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetFargateEphemeralStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.ecs.container.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetName()).ToDataRes(types.String)
 	},
@@ -42388,6 +42394,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.task.stoppedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTask).StoppedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.ephemeralStorageSizeInGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).EphemeralStorageSizeInGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.fargateEphemeralStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).FargateEphemeralStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -99918,28 +99932,30 @@ type mqlAwsEcsTask struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEcsTaskInternal
-	Arn                  plugin.TValue[string]
-	ClusterName          plugin.TValue[string]
-	Connectivity         plugin.TValue[any]
-	LastStatus           plugin.TValue[string]
-	PlatformFamily       plugin.TValue[string]
-	PlatformVersion      plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	Region               plugin.TValue[string]
-	Containers           plugin.TValue[[]any]
-	TaskDefinition       plugin.TValue[*mqlAwsEcsTaskDefinition]
-	ContainerInstanceArn plugin.TValue[string]
-	Cpu                  plugin.TValue[string]
-	Memory               plugin.TValue[string]
-	HealthStatus         plugin.TValue[string]
-	LaunchType           plugin.TValue[string]
-	CapacityProviderName plugin.TValue[string]
-	Group                plugin.TValue[string]
-	EnableExecuteCommand plugin.TValue[bool]
-	StopCode             plugin.TValue[string]
-	StoppedReason        plugin.TValue[string]
-	StartedAt            plugin.TValue[*time.Time]
-	StoppedAt            plugin.TValue[*time.Time]
+	Arn                           plugin.TValue[string]
+	ClusterName                   plugin.TValue[string]
+	Connectivity                  plugin.TValue[any]
+	LastStatus                    plugin.TValue[string]
+	PlatformFamily                plugin.TValue[string]
+	PlatformVersion               plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+	Region                        plugin.TValue[string]
+	Containers                    plugin.TValue[[]any]
+	TaskDefinition                plugin.TValue[*mqlAwsEcsTaskDefinition]
+	ContainerInstanceArn          plugin.TValue[string]
+	Cpu                           plugin.TValue[string]
+	Memory                        plugin.TValue[string]
+	HealthStatus                  plugin.TValue[string]
+	LaunchType                    plugin.TValue[string]
+	CapacityProviderName          plugin.TValue[string]
+	Group                         plugin.TValue[string]
+	EnableExecuteCommand          plugin.TValue[bool]
+	StopCode                      plugin.TValue[string]
+	StoppedReason                 plugin.TValue[string]
+	StartedAt                     plugin.TValue[*time.Time]
+	StoppedAt                     plugin.TValue[*time.Time]
+	EphemeralStorageSizeInGiB     plugin.TValue[int64]
+	FargateEphemeralStorageKmsKey plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsEcsTask creates a new instance of this resource
@@ -100089,6 +100105,26 @@ func (c *mqlAwsEcsTask) GetStartedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsEcsTask) GetStoppedAt() *plugin.TValue[*time.Time] {
 	return &c.StoppedAt
+}
+
+func (c *mqlAwsEcsTask) GetEphemeralStorageSizeInGiB() *plugin.TValue[int64] {
+	return &c.EphemeralStorageSizeInGiB
+}
+
+func (c *mqlAwsEcsTask) GetFargateEphemeralStorageKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.FargateEphemeralStorageKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.task", c.__id, "fargateEphemeralStorageKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.fargateEphemeralStorageKmsKey()
+	})
 }
 
 // mqlAwsEcsContainer for the aws.ecs.container resource

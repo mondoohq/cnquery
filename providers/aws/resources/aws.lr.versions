@@ -3437,6 +3437,8 @@ aws.ecs.task.containerInstanceArn 13.29.1
 aws.ecs.task.containers 11.15.2
 aws.ecs.task.cpu 13.29.1
 aws.ecs.task.enableExecuteCommand 13.29.1
+aws.ecs.task.ephemeralStorageSizeInGiB 13.29.1
+aws.ecs.task.fargateEphemeralStorageKmsKey 13.29.1
 aws.ecs.task.group 13.29.1
 aws.ecs.task.healthStatus 13.29.1
 aws.ecs.task.lastStatus 11.15.2

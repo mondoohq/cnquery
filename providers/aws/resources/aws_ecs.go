@@ -480,6 +480,17 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["stoppedReason"] = llx.StringData(convert.ToValue(t.StoppedReason))
 	args["startedAt"] = llx.TimeDataPtr(t.StartedAt)
 	args["stoppedAt"] = llx.TimeDataPtr(t.StoppedAt)
+
+	// Ephemeral storage size: prefer the Fargate-specific value (which also
+	// carries the encryption key), otherwise the generic task ephemeral storage.
+	var ephemeralStorageSize int64
+	if t.FargateEphemeralStorage != nil {
+		ephemeralStorageSize = int64(t.FargateEphemeralStorage.SizeInGiB)
+	} else if t.EphemeralStorage != nil {
+		ephemeralStorageSize = int64(t.EphemeralStorage.SizeInGiB)
+	}
+	args["ephemeralStorageSizeInGiB"] = llx.IntData(ephemeralStorageSize)
+
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {
 		return args, nil, err
@@ -489,16 +500,33 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	res.(*mqlAwsEcsTask).attachments = t.Attachments
 	res.(*mqlAwsEcsTask).clusterName = clusterName
 	res.(*mqlAwsEcsTask).taskDefArn = t.TaskDefinitionArn
+	if t.FargateEphemeralStorage != nil {
+		res.(*mqlAwsEcsTask).fargateEphemeralStorageKmsKeyId = t.FargateEphemeralStorage.KmsKeyId
+	}
 
 	return args, res, nil
 }
 
 type mqlAwsEcsTaskInternal struct {
-	cacheContainers []ecstypes.Container
-	region          string
-	attachments     []ecstypes.Attachment
-	clusterName     string
-	taskDefArn      *string
+	cacheContainers                 []ecstypes.Container
+	region                          string
+	attachments                     []ecstypes.Attachment
+	clusterName                     string
+	taskDefArn                      *string
+	fargateEphemeralStorageKmsKeyId *string
+}
+
+func (t *mqlAwsEcsTask) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {
+	if t.fargateEphemeralStorageKmsKeyId == nil || *t.fargateEphemeralStorageKmsKeyId == "" {
+		t.FargateEphemeralStorageKmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(t.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(t.fargateEphemeralStorageKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcsTask) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {

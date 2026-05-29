@@ -6852,6 +6852,10 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   startedAt time
   // Time when the task was stopped
   stoppedAt time
+  // Size (in GiB) of ephemeral storage allocated to the task
+  ephemeralStorageSizeInGiB int
+  // KMS key encrypting the task's Fargate ephemeral storage (Fargate launch type)
+  fargateEphemeralStorageKmsKey() aws.kms.key
 }
 
 // Amazon ECS container
