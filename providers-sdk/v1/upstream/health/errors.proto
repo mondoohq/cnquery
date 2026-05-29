@@ -5,12 +5,18 @@ syntax = "proto3";
 
 package go.mondoo.health.v1;
 
+import "google/protobuf/struct.proto";
+
 option go_package = "go.mondoo.com/mondoo/health";
 
 // Error Reporting Service
 service ErrorReporting {
   // SendError sends an error to the Mondoo API
   rpc SendError(SendErrorReq) returns (SendErrorResp);
+  // SendReport sends a structured diagnostic report (e.g. health snapshot,
+  // resource discovery dump). The payload is intentionally schema-less —
+  // the report_type tells the server how to interpret it.
+  rpc SendReport(SendReportReq) returns (SendReportResp);
 }
 
 message SendErrorReq {
@@ -33,4 +39,23 @@ message ErrorInfo {
 }
 
 message SendErrorResp {
+}
+
+// SendReportReq carries a free-form structured report. The envelope
+// (service_account_mrn, agent_mrn, product, tags) mirrors SendErrorReq so
+// the platform can route both through the same auth and indexing path.
+// payload is a google.protobuf.Struct so callers can ship arbitrary
+// nested JSON-shaped data without the server needing a schema bump;
+// report_type disambiguates how to interpret the payload (e.g. "health",
+// "discovery").
+message SendReportReq {
+  string service_account_mrn = 1;
+  string agent_mrn = 2;
+  ProductInfo product = 3;
+  string report_type = 4;
+  google.protobuf.Struct payload = 5;
+  map<string, string> tags = 6;
+}
+
+message SendReportResp {
 }

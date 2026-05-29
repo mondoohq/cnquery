@@ -12,6 +12,7 @@ package health
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -248,11 +249,138 @@ func (*SendErrorResp) Descriptor() ([]byte, []int) {
 	return file_errors_proto_rawDescGZIP(), []int{3}
 }
 
+// SendReportReq carries a free-form structured report. The envelope
+// (service_account_mrn, agent_mrn, product, tags) mirrors SendErrorReq so
+// the platform can route both through the same auth and indexing path.
+// payload is a google.protobuf.Struct so callers can ship arbitrary
+// nested JSON-shaped data without the server needing a schema bump;
+// report_type disambiguates how to interpret the payload (e.g. "health",
+// "discovery").
+type SendReportReq struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ServiceAccountMrn string                 `protobuf:"bytes,1,opt,name=service_account_mrn,json=serviceAccountMrn,proto3" json:"service_account_mrn,omitempty"`
+	AgentMrn          string                 `protobuf:"bytes,2,opt,name=agent_mrn,json=agentMrn,proto3" json:"agent_mrn,omitempty"`
+	Product           *ProductInfo           `protobuf:"bytes,3,opt,name=product,proto3" json:"product,omitempty"`
+	ReportType        string                 `protobuf:"bytes,4,opt,name=report_type,json=reportType,proto3" json:"report_type,omitempty"`
+	Payload           *structpb.Struct       `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
+	Tags              map[string]string      `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *SendReportReq) Reset() {
+	*x = SendReportReq{}
+	mi := &file_errors_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendReportReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendReportReq) ProtoMessage() {}
+
+func (x *SendReportReq) ProtoReflect() protoreflect.Message {
+	mi := &file_errors_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendReportReq.ProtoReflect.Descriptor instead.
+func (*SendReportReq) Descriptor() ([]byte, []int) {
+	return file_errors_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SendReportReq) GetServiceAccountMrn() string {
+	if x != nil {
+		return x.ServiceAccountMrn
+	}
+	return ""
+}
+
+func (x *SendReportReq) GetAgentMrn() string {
+	if x != nil {
+		return x.AgentMrn
+	}
+	return ""
+}
+
+func (x *SendReportReq) GetProduct() *ProductInfo {
+	if x != nil {
+		return x.Product
+	}
+	return nil
+}
+
+func (x *SendReportReq) GetReportType() string {
+	if x != nil {
+		return x.ReportType
+	}
+	return ""
+}
+
+func (x *SendReportReq) GetPayload() *structpb.Struct {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *SendReportReq) GetTags() map[string]string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+type SendReportResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendReportResp) Reset() {
+	*x = SendReportResp{}
+	mi := &file_errors_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendReportResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendReportResp) ProtoMessage() {}
+
+func (x *SendReportResp) ProtoReflect() protoreflect.Message {
+	mi := &file_errors_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendReportResp.ProtoReflect.Descriptor instead.
+func (*SendReportResp) Descriptor() ([]byte, []int) {
+	return file_errors_proto_rawDescGZIP(), []int{5}
+}
+
 var File_errors_proto protoreflect.FileDescriptor
 
 const file_errors_proto_rawDesc = "" +
 	"\n" +
-	"\ferrors.proto\x12\x13go.mondoo.health.v1\"\xc7\x02\n" +
+	"\ferrors.proto\x12\x13go.mondoo.health.v1\x1a\x1cgoogle/protobuf/struct.proto\"\xc7\x02\n" +
 	"\fSendErrorReq\x12.\n" +
 	"\x13service_account_mrn\x18\x01 \x01(\tR\x11serviceAccountMrn\x12\x1b\n" +
 	"\tagent_mrn\x18\x02 \x01(\tR\bagentMrn\x12:\n" +
@@ -271,9 +399,23 @@ const file_errors_proto_rawDesc = "" +
 	"\n" +
 	"stacktrace\x18\x02 \x01(\tR\n" +
 	"stacktrace\"\x0f\n" +
-	"\rSendErrorResp2d\n" +
+	"\rSendErrorResp\"\xe7\x02\n" +
+	"\rSendReportReq\x12.\n" +
+	"\x13service_account_mrn\x18\x01 \x01(\tR\x11serviceAccountMrn\x12\x1b\n" +
+	"\tagent_mrn\x18\x02 \x01(\tR\bagentMrn\x12:\n" +
+	"\aproduct\x18\x03 \x01(\v2 .go.mondoo.health.v1.ProductInfoR\aproduct\x12\x1f\n" +
+	"\vreport_type\x18\x04 \x01(\tR\n" +
+	"reportType\x121\n" +
+	"\apayload\x18\x05 \x01(\v2\x17.google.protobuf.StructR\apayload\x12@\n" +
+	"\x04tags\x18\x06 \x03(\v2,.go.mondoo.health.v1.SendReportReq.TagsEntryR\x04tags\x1a7\n" +
+	"\tTagsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x10\n" +
+	"\x0eSendReportResp2\xbb\x01\n" +
 	"\x0eErrorReporting\x12R\n" +
-	"\tSendError\x12!.go.mondoo.health.v1.SendErrorReq\x1a\".go.mondoo.health.v1.SendErrorRespB\x1dZ\x1bgo.mondoo.com/mondoo/healthb\x06proto3"
+	"\tSendError\x12!.go.mondoo.health.v1.SendErrorReq\x1a\".go.mondoo.health.v1.SendErrorResp\x12U\n" +
+	"\n" +
+	"SendReport\x12\".go.mondoo.health.v1.SendReportReq\x1a#.go.mondoo.health.v1.SendReportRespB\x1dZ\x1bgo.mondoo.com/mondoo/healthb\x06proto3"
 
 var (
 	file_errors_proto_rawDescOnce sync.Once
@@ -287,25 +429,34 @@ func file_errors_proto_rawDescGZIP() []byte {
 	return file_errors_proto_rawDescData
 }
 
-var file_errors_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_errors_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_errors_proto_goTypes = []any{
-	(*SendErrorReq)(nil),  // 0: go.mondoo.health.v1.SendErrorReq
-	(*ProductInfo)(nil),   // 1: go.mondoo.health.v1.ProductInfo
-	(*ErrorInfo)(nil),     // 2: go.mondoo.health.v1.ErrorInfo
-	(*SendErrorResp)(nil), // 3: go.mondoo.health.v1.SendErrorResp
-	nil,                   // 4: go.mondoo.health.v1.SendErrorReq.TagsEntry
+	(*SendErrorReq)(nil),    // 0: go.mondoo.health.v1.SendErrorReq
+	(*ProductInfo)(nil),     // 1: go.mondoo.health.v1.ProductInfo
+	(*ErrorInfo)(nil),       // 2: go.mondoo.health.v1.ErrorInfo
+	(*SendErrorResp)(nil),   // 3: go.mondoo.health.v1.SendErrorResp
+	(*SendReportReq)(nil),   // 4: go.mondoo.health.v1.SendReportReq
+	(*SendReportResp)(nil),  // 5: go.mondoo.health.v1.SendReportResp
+	nil,                     // 6: go.mondoo.health.v1.SendErrorReq.TagsEntry
+	nil,                     // 7: go.mondoo.health.v1.SendReportReq.TagsEntry
+	(*structpb.Struct)(nil), // 8: google.protobuf.Struct
 }
 var file_errors_proto_depIdxs = []int32{
 	1, // 0: go.mondoo.health.v1.SendErrorReq.product:type_name -> go.mondoo.health.v1.ProductInfo
 	2, // 1: go.mondoo.health.v1.SendErrorReq.error:type_name -> go.mondoo.health.v1.ErrorInfo
-	4, // 2: go.mondoo.health.v1.SendErrorReq.tags:type_name -> go.mondoo.health.v1.SendErrorReq.TagsEntry
-	0, // 3: go.mondoo.health.v1.ErrorReporting.SendError:input_type -> go.mondoo.health.v1.SendErrorReq
-	3, // 4: go.mondoo.health.v1.ErrorReporting.SendError:output_type -> go.mondoo.health.v1.SendErrorResp
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 2: go.mondoo.health.v1.SendErrorReq.tags:type_name -> go.mondoo.health.v1.SendErrorReq.TagsEntry
+	1, // 3: go.mondoo.health.v1.SendReportReq.product:type_name -> go.mondoo.health.v1.ProductInfo
+	8, // 4: go.mondoo.health.v1.SendReportReq.payload:type_name -> google.protobuf.Struct
+	7, // 5: go.mondoo.health.v1.SendReportReq.tags:type_name -> go.mondoo.health.v1.SendReportReq.TagsEntry
+	0, // 6: go.mondoo.health.v1.ErrorReporting.SendError:input_type -> go.mondoo.health.v1.SendErrorReq
+	4, // 7: go.mondoo.health.v1.ErrorReporting.SendReport:input_type -> go.mondoo.health.v1.SendReportReq
+	3, // 8: go.mondoo.health.v1.ErrorReporting.SendError:output_type -> go.mondoo.health.v1.SendErrorResp
+	5, // 9: go.mondoo.health.v1.ErrorReporting.SendReport:output_type -> go.mondoo.health.v1.SendReportResp
+	8, // [8:10] is the sub-list for method output_type
+	6, // [6:8] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_errors_proto_init() }
@@ -319,7 +470,7 @@ func file_errors_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_errors_proto_rawDesc), len(file_errors_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -20,6 +20,7 @@ import (
 
 type ErrorReporting interface {
 	SendError(context.Context, *SendErrorReq) (*SendErrorResp, error)
+	SendReport(context.Context, *SendReportReq) (*SendReportResp, error)
 }
 
 // client implementation
@@ -53,6 +54,11 @@ func (c *ErrorReportingClient) SendError(ctx context.Context, in *SendErrorReq) 
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/SendError"}, ""), in, out)
 	return out, err
 }
+func (c *ErrorReportingClient) SendReport(ctx context.Context, in *SendReportReq) (*SendReportResp, error) {
+	out := new(SendReportResp)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/SendReport"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -76,7 +82,8 @@ func NewErrorReportingServer(handler ErrorReporting, opts ...ErrorReportingServe
 	service := ranger.Service{
 		Name: "ErrorReporting",
 		Methods: map[string]ranger.Method{
-			"SendError": srv.SendError,
+			"SendError":  srv.SendError,
+			"SendReport": srv.SendReport,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -110,4 +117,28 @@ func (p *ErrorReportingServer) SendError(ctx context.Context, reqBytes *[]byte) 
 		return nil, err
 	}
 	return p.handler.SendError(ctx, &req)
+}
+func (p *ErrorReportingServer) SendReport(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req SendReportReq
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.SendReport(ctx, &req)
 }
