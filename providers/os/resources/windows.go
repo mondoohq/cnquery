@@ -253,22 +253,43 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
-	obj, err := NewResource(runtime, "windows", nil)
+	conn, ok := runtime.Connection.(shared.Connection)
+	if !ok {
+		return args, nil, nil
+	}
+
+	// Look up only the requested feature instead of enumerating every optional
+	// feature in the image (`-FeatureName *`), which is significantly more
+	// expensive.
+	encodedCmd := powershell.Encode(windows.OptionalFeatureQuery(name))
+	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, nil, err
 	}
-	winResource := obj.(*mqlWindows)
 
-	features := winResource.GetOptionalFeatures()
-	if features.Error != nil {
-		return nil, nil, features.Error
+	// A non-zero exit status for a single-feature lookup means the feature name
+	// is unknown; preserve the historic "could not find feature" behavior.
+	if executedCmd.ExitStatus != 0 {
+		return nil, nil, errors.New("could not find feature " + name)
 	}
 
-	for i := range features.Data {
-		hf := features.Data[i].(*mqlWindowsOptionalFeature)
-		if hf.Name.Data == name {
-			return nil, hf, nil
+	features, err := windows.ParseWindowsOptionalFeatures(executedCmd.Stdout)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for i := range features {
+		feature := features[i]
+		if feature.Name != name {
+			continue
 		}
+		return map[string]*llx.RawData{
+			"name":        llx.StringData(feature.Name),
+			"displayName": llx.StringData(feature.DisplayName),
+			"description": llx.StringData(feature.Description),
+			"enabled":     llx.BoolData(feature.Enabled),
+			"state":       llx.IntData(feature.State),
+		}, nil, nil
 	}
 
 	// if the feature cannot be found we return an error
