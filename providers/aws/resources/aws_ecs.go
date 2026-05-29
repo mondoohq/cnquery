@@ -2665,7 +2665,10 @@ func (a *mqlAwsEcs) getECSAccountSettings(conn *connection.AwsConnection) []*job
 }
 
 func (a *mqlAwsEcsAccountSetting) id() (string, error) {
-	return a.Region.Data + "/" + a.Name.Data, nil
+	// principalArn is included so settings scoped to different principals in
+	// the same region don't collide (e.g. if a caller fetches non-effective
+	// settings).
+	return a.Region.Data + "/" + a.Name.Data + "/" + a.PrincipalArn.Data, nil
 }
 
 // ecsIamRoleRef resolves an IAM role ARN to a typed aws.iam.role reference,

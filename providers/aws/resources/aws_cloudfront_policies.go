@@ -239,10 +239,13 @@ func cloudfrontRemoveHeadersToList(c *types.ResponseHeadersPolicyRemoveHeadersCo
 	return out
 }
 
-func toAnySlice(in []string) []any {
+// toAnySlice converts a slice of any string-like type to []any. The ~string
+// constraint keeps it resilient to SDK fields typed as named string aliases
+// (e.g. enum element types) rather than plain string.
+func toAnySlice[T ~string](in []T) []any {
 	out := make([]any, 0, len(in))
 	for _, v := range in {
-		out = append(out, v)
+		out = append(out, string(v))
 	}
 	return out
 }
