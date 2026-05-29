@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.29.0",
-  "generated_at": "2026-05-28T09:42:35-07:00",
+  "generated_at": "2026-05-28T21:30:17-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -297,12 +297,14 @@
     "ecr:GetRegistryScanningConfiguration",
     "ecr:GetRepositoryPolicy",
     "ecr:ListTagsForResource",
+    "ecs:DescribeCapacityProviders",
     "ecs:DescribeClusters",
     "ecs:DescribeContainerInstances",
     "ecs:DescribeServices",
     "ecs:DescribeTaskDefinition",
     "ecs:DescribeTaskSets",
     "ecs:DescribeTasks",
+    "ecs:ListAccountSettings",
     "ecs:ListClusters",
     "ecs:ListContainerInstances",
     "ecs:ListServices",
@@ -2697,6 +2699,12 @@
       "source_file": "aws_ecr.go"
     },
     {
+      "permission": "ecs:DescribeCapacityProviders",
+      "service": "ecs",
+      "action": "DescribeCapacityProviders",
+      "source_file": "aws_ecs.go"
+    },
+    {
       "permission": "ecs:DescribeClusters",
       "service": "ecs",
       "action": "DescribeClusters",
@@ -2730,6 +2738,12 @@
       "permission": "ecs:DescribeTasks",
       "service": "ecs",
       "action": "DescribeTasks",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListAccountSettings",
+      "service": "ecs",
+      "action": "ListAccountSettings",
       "source_file": "aws_ecs.go"
     },
     {

@@ -318,13 +318,33 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
+				versionInfo, err := convert.JsonToDict(ci.VersionInfo)
+				if err != nil {
+					return nil, err
+				}
+				attributes, err := convert.JsonToDictSlice(ci.Attributes)
+				if err != nil {
+					return nil, err
+				}
+				healthStatus := ""
+				if ci.HealthStatus != nil {
+					healthStatus = string(ci.HealthStatus.OverallStatus)
+				}
 				// container instance assets
 				args := map[string]*llx.RawData{
-					"arn":              llx.StringData(convert.ToValue(ci.ContainerInstanceArn)),
-					"agentConnected":   llx.BoolData(ci.AgentConnected),
-					"id":               llx.StringData(convert.ToValue(ci.Ec2InstanceId)),
-					"capacityProvider": llx.StringData(convert.ToValue(ci.CapacityProviderName)),
-					"region":           llx.StringData(region),
+					"arn":               llx.StringData(convert.ToValue(ci.ContainerInstanceArn)),
+					"agentConnected":    llx.BoolData(ci.AgentConnected),
+					"id":                llx.StringData(convert.ToValue(ci.Ec2InstanceId)),
+					"capacityProvider":  llx.StringData(convert.ToValue(ci.CapacityProviderName)),
+					"region":            llx.StringData(region),
+					"status":            llx.StringData(convert.ToValue(ci.Status)),
+					"statusReason":      llx.StringData(convert.ToValue(ci.StatusReason)),
+					"healthStatus":      llx.StringData(healthStatus),
+					"runningTasksCount": llx.IntData(int64(ci.RunningTasksCount)),
+					"pendingTasksCount": llx.IntData(int64(ci.PendingTasksCount)),
+					"registeredAt":      llx.TimeDataPtr(ci.RegisteredAt),
+					"versionInfo":       llx.DictData(versionInfo),
+					"attributes":        llx.ArrayData(attributes, types.Dict),
 				}
 				if strings.HasPrefix(convert.ToValue(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
@@ -448,6 +468,18 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["platformVersion"] = llx.StringData(convert.ToValue(t.PlatformVersion))
 	args["tags"] = llx.MapData(ecsTagsToMap(t.Tags), types.String)
 	args["region"] = llx.StringData(region)
+	args["containerInstanceArn"] = llx.StringData(convert.ToValue(t.ContainerInstanceArn))
+	args["cpu"] = llx.StringData(convert.ToValue(t.Cpu))
+	args["memory"] = llx.StringData(convert.ToValue(t.Memory))
+	args["healthStatus"] = llx.StringData(string(t.HealthStatus))
+	args["launchType"] = llx.StringData(string(t.LaunchType))
+	args["capacityProviderName"] = llx.StringData(convert.ToValue(t.CapacityProviderName))
+	args["group"] = llx.StringData(convert.ToValue(t.Group))
+	args["enableExecuteCommand"] = llx.BoolData(t.EnableExecuteCommand)
+	args["stopCode"] = llx.StringData(string(t.StopCode))
+	args["stoppedReason"] = llx.StringData(convert.ToValue(t.StoppedReason))
+	args["startedAt"] = llx.TimeDataPtr(t.StartedAt)
+	args["stoppedAt"] = llx.TimeDataPtr(t.StoppedAt)
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {
 		return args, nil, err
@@ -467,6 +499,24 @@ type mqlAwsEcsTaskInternal struct {
 	attachments     []ecstypes.Attachment
 	clusterName     string
 	taskDefArn      *string
+}
+
+func (a *mqlAwsEcsTask) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
+	if a.taskDefArn == nil || *a.taskDefArn == "" {
+		a.TaskDefinition.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// Create the resource directly with arn + region so fields resolve lazily
+	// via fetchDetail, avoiding a full task-definition listing.
+	res, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+		map[string]*llx.RawData{
+			"arn":    llx.StringDataPtr(a.taskDefArn),
+			"region": llx.StringData(a.region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsTaskDefinition), nil
 }
 
 func (t *mqlAwsEcsTask) containers() ([]any, error) {
@@ -962,6 +1012,45 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 		resourceRequirements[string(rr.Type)] = convert.ToValue(rr.Value)
 	}
 
+	// Linux kernel capabilities (add/drop)
+	capAdd := []any{}
+	capDrop := []any{}
+	if cd.LinuxParameters != nil && cd.LinuxParameters.Capabilities != nil {
+		capAdd = toAnySlice(cd.LinuxParameters.Capabilities.Add)
+		capDrop = toAnySlice(cd.LinuxParameters.Capabilities.Drop)
+	}
+
+	dockerLabels := map[string]any{}
+	for k, v := range cd.DockerLabels {
+		dockerLabels[k] = v
+	}
+
+	healthCheck, err := convert.JsonToDict(cd.HealthCheck)
+	if err != nil {
+		return nil, err
+	}
+	mountPoints, err := convert.JsonToDictSlice(cd.MountPoints)
+	if err != nil {
+		return nil, err
+	}
+	volumesFrom, err := convert.JsonToDictSlice(cd.VolumesFrom)
+	if err != nil {
+		return nil, err
+	}
+	dependsOn, err := convert.JsonToDictSlice(cd.DependsOn)
+	if err != nil {
+		return nil, err
+	}
+	ulimits, err := convert.JsonToDictSlice(cd.Ulimits)
+	if err != nil {
+		return nil, err
+	}
+
+	repositoryCredentialsParameter := ""
+	if cd.RepositoryCredentials != nil {
+		repositoryCredentialsParameter = convert.ToValue(cd.RepositoryCredentials.CredentialsParameter)
+	}
+
 	// Type assert logConfig to Resource
 	logConfigResource, ok := logConfig.(plugin.Resource)
 	if !ok {
@@ -970,20 +1059,38 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 
 	return CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinition,
 		map[string]*llx.RawData{
-			"__id":                   llx.StringData(taskDefArn + "/container/" + name),
-			"name":                   llx.StringData(name),
-			"image":                  llx.StringData(image),
-			"privileged":             llx.BoolData(privileged),
-			"readonlyRootFilesystem": llx.BoolData(readonlyRootFilesystem),
-			"user":                   llx.StringData(user),
-			"environment":            llx.ArrayData(envVars, types.Resource("aws.ecs.taskDefinition.containerDefinition.environmentVariable")),
-			"secrets":                llx.ArrayData(secrets, types.Resource("aws.ecs.taskDefinition.containerDefinition.secret")),
-			"logConfiguration":       llx.ResourceData(logConfigResource, "aws.ecs.taskDefinition.containerDefinition.logConfiguration"),
-			"memory":                 llx.IntData(memory),
-			"cpu":                    llx.IntData(cpu),
-			"portMappings":           llx.ArrayData(portMappings, types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")),
-			"initProcessEnabled":     llx.BoolData(initProcessEnabled),
-			"resourceRequirements":   llx.MapData(resourceRequirements, types.String),
+			"__id":                           llx.StringData(taskDefArn + "/container/" + name),
+			"name":                           llx.StringData(name),
+			"image":                          llx.StringData(image),
+			"privileged":                     llx.BoolData(privileged),
+			"readonlyRootFilesystem":         llx.BoolData(readonlyRootFilesystem),
+			"user":                           llx.StringData(user),
+			"environment":                    llx.ArrayData(envVars, types.Resource("aws.ecs.taskDefinition.containerDefinition.environmentVariable")),
+			"secrets":                        llx.ArrayData(secrets, types.Resource("aws.ecs.taskDefinition.containerDefinition.secret")),
+			"logConfiguration":               llx.ResourceData(logConfigResource, "aws.ecs.taskDefinition.containerDefinition.logConfiguration"),
+			"memory":                         llx.IntData(memory),
+			"cpu":                            llx.IntData(cpu),
+			"portMappings":                   llx.ArrayData(portMappings, types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")),
+			"initProcessEnabled":             llx.BoolData(initProcessEnabled),
+			"resourceRequirements":           llx.MapData(resourceRequirements, types.String),
+			"essential":                      llx.BoolData(convert.ToValue(cd.Essential)),
+			"linuxCapabilitiesAdd":           llx.ArrayData(capAdd, types.String),
+			"linuxCapabilitiesDrop":          llx.ArrayData(capDrop, types.String),
+			"entryPoint":                     llx.ArrayData(toAnySlice(cd.EntryPoint), types.String),
+			"command":                        llx.ArrayData(toAnySlice(cd.Command), types.String),
+			"workingDirectory":               llx.StringData(convert.ToValue(cd.WorkingDirectory)),
+			"dockerLabels":                   llx.MapData(dockerLabels, types.String),
+			"healthCheck":                    llx.DictData(healthCheck),
+			"mountPoints":                    llx.ArrayData(mountPoints, types.Dict),
+			"volumesFrom":                    llx.ArrayData(volumesFrom, types.Dict),
+			"dependsOn":                      llx.ArrayData(dependsOn, types.Dict),
+			"ulimits":                        llx.ArrayData(ulimits, types.Dict),
+			"dnsServers":                     llx.ArrayData(toAnySlice(cd.DnsServers), types.String),
+			"repositoryCredentialsParameter": llx.StringData(repositoryCredentialsParameter),
+			"startTimeout":                   llx.IntData(int64(convert.ToValue(cd.StartTimeout))),
+			"stopTimeout":                    llx.IntData(int64(convert.ToValue(cd.StopTimeout))),
+			"pseudoTerminal":                 llx.BoolData(convert.ToValue(cd.PseudoTerminal)),
+			"interactive":                    llx.BoolData(convert.ToValue(cd.Interactive)),
 		})
 }
 
@@ -1388,6 +1495,72 @@ func (a *mqlAwsEcsTaskDefinition) executionRoleArn() (string, error) {
 		return "", err
 	}
 	return a.ExecutionRoleArn.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) taskRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return ecsIamRoleRef(a.MqlRuntime, a.cachedTD.TaskRoleArn, &a.TaskRole)
+}
+
+func (a *mqlAwsEcsTaskDefinition) executionRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return ecsIamRoleRef(a.MqlRuntime, a.cachedTD.ExecutionRoleArn, &a.ExecutionRole)
+}
+
+func (a *mqlAwsEcsTaskDefinition) requiresCompatibilities() ([]any, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	compat := make([]any, 0, len(a.cachedTD.RequiresCompatibilities))
+	for _, c := range a.cachedTD.RequiresCompatibilities {
+		compat = append(compat, string(c))
+	}
+	return compat, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) runtimePlatformCpuArchitecture() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	if a.cachedTD.RuntimePlatform == nil {
+		return "", nil
+	}
+	return string(a.cachedTD.RuntimePlatform.CpuArchitecture), nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) runtimePlatformOsFamily() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	if a.cachedTD.RuntimePlatform == nil {
+		return "", nil
+	}
+	return string(a.cachedTD.RuntimePlatform.OperatingSystemFamily), nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) proxyConfiguration() (any, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(a.cachedTD.ProxyConfiguration)
+}
+
+func (a *mqlAwsEcsTaskDefinition) placementConstraints() ([]any, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(a.cachedTD.PlacementConstraints)
+}
+
+func (a *mqlAwsEcsTaskDefinition) enableFaultInjection() (bool, error) {
+	if err := a.fetchDetail(); err != nil {
+		return false, err
+	}
+	return convert.ToValue(a.cachedTD.EnableFaultInjection), nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) cpu() (string, error) {
@@ -1883,7 +2056,53 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["platformVersion"] = llx.StringDataPtr(s.PlatformVersion)
 	args["healthCheckGracePeriodSeconds"] = llx.IntDataDefault(s.HealthCheckGracePeriodSeconds, 0)
 
-	return args, nil, nil
+	loadBalancers, err := convert.JsonToDictSlice(s.LoadBalancers)
+	if err != nil {
+		return nil, nil, err
+	}
+	serviceRegistries, err := convert.JsonToDictSlice(s.ServiceRegistries)
+	if err != nil {
+		return nil, nil, err
+	}
+	capacityProviderStrategy, err := convert.JsonToDictSlice(s.CapacityProviderStrategy)
+	if err != nil {
+		return nil, nil, err
+	}
+	placementConstraints, err := convert.JsonToDictSlice(s.PlacementConstraints)
+	if err != nil {
+		return nil, nil, err
+	}
+	placementStrategy, err := convert.JsonToDictSlice(s.PlacementStrategy)
+	if err != nil {
+		return nil, nil, err
+	}
+	deploymentController := ""
+	if s.DeploymentController != nil {
+		deploymentController = string(s.DeploymentController.Type)
+	}
+	args["loadBalancers"] = llx.ArrayData(loadBalancers, types.Dict)
+	args["serviceRegistries"] = llx.ArrayData(serviceRegistries, types.Dict)
+	args["capacityProviderStrategy"] = llx.ArrayData(capacityProviderStrategy, types.Dict)
+	args["placementConstraints"] = llx.ArrayData(placementConstraints, types.Dict)
+	args["placementStrategy"] = llx.ArrayData(placementStrategy, types.Dict)
+	args["deploymentController"] = llx.StringData(deploymentController)
+	args["propagateTags"] = llx.StringData(string(s.PropagateTags))
+	args["availabilityZoneRebalancing"] = llx.StringData(string(s.AvailabilityZoneRebalancing))
+
+	res, err := CreateResource(runtime, ResourceAwsEcsService, args)
+	if err != nil {
+		return args, nil, err
+	}
+	res.(*mqlAwsEcsService).cacheRoleArn = s.RoleArn
+	return args, res, nil
+}
+
+type mqlAwsEcsServiceInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsEcsService) iamRole() (*mqlAwsIamRole, error) {
+	return ecsIamRoleRef(a.MqlRuntime, a.cacheRoleArn, &a.IamRole)
 }
 
 func createDeploymentConfigurationResource(runtime *plugin.Runtime, dc *ecstypes.DeploymentConfiguration, serviceArn string) (any, error) {
@@ -2241,4 +2460,225 @@ func initAwsEcsTaskDefinition(runtime *plugin.Runtime, args map[string]*llx.RawD
 		}
 	}
 	return nil, nil, errors.New("aws ecs task definition does not exist: " + arnVal)
+}
+
+func (a *mqlAwsEcs) capacityProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getECSCapacityProviders(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEcs) getECSCapacityProviders(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for ri := range regions {
+		region := regions[ri]
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ecs(region)
+			ctx := context.Background()
+			res := []any{}
+			var nextToken *string
+			for {
+				resp, err := svc.DescribeCapacityProviders(ctx, &ecsservice.DescribeCapacityProvidersInput{NextToken: nextToken})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for ECS capacity providers")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather ecs capacity providers")
+				}
+				for i := range resp.CapacityProviders {
+					mqlCP, err := newMqlEcsCapacityProvider(a.MqlRuntime, region, &resp.CapacityProviders[i])
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlCP)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsEcsCapacityProviderInternal struct {
+	cacheAutoScalingGroupArn string
+	region                   string
+}
+
+func newMqlEcsCapacityProvider(runtime *plugin.Runtime, region string, cp *ecstypes.CapacityProvider) (plugin.Resource, error) {
+	var asgArn, managedScalingStatus, managedTerminationProtection, managedDraining string
+	var targetCapacity, minStep, maxStep, warmup int64
+	if asg := cp.AutoScalingGroupProvider; asg != nil {
+		asgArn = convert.ToValue(asg.AutoScalingGroupArn)
+		managedTerminationProtection = string(asg.ManagedTerminationProtection)
+		managedDraining = string(asg.ManagedDraining)
+		if ms := asg.ManagedScaling; ms != nil {
+			managedScalingStatus = string(ms.Status)
+			targetCapacity = int64(convert.ToValue(ms.TargetCapacity))
+			minStep = int64(convert.ToValue(ms.MinimumScalingStepSize))
+			maxStep = int64(convert.ToValue(ms.MaximumScalingStepSize))
+			warmup = int64(convert.ToValue(ms.InstanceWarmupPeriod))
+		}
+	}
+
+	managedInstancesProvider, err := convert.JsonToDict(cp.ManagedInstancesProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlCP, err := CreateResource(runtime, ResourceAwsEcsCapacityProvider,
+		map[string]*llx.RawData{
+			"arn":                                llx.StringDataPtr(cp.CapacityProviderArn),
+			"name":                               llx.StringDataPtr(cp.Name),
+			"region":                             llx.StringData(region),
+			"status":                             llx.StringData(string(cp.Status)),
+			"updateStatus":                       llx.StringData(string(cp.UpdateStatus)),
+			"tags":                               llx.MapData(ecsTagsToMap(cp.Tags), types.String),
+			"autoScalingGroupArn":                llx.StringData(asgArn),
+			"managedScalingStatus":               llx.StringData(managedScalingStatus),
+			"managedScalingTargetCapacity":       llx.IntData(targetCapacity),
+			"managedScalingMinimumStepSize":      llx.IntData(minStep),
+			"managedScalingMaximumStepSize":      llx.IntData(maxStep),
+			"managedScalingInstanceWarmupPeriod": llx.IntData(warmup),
+			"managedTerminationProtection":       llx.StringData(managedTerminationProtection),
+			"managedDraining":                    llx.StringData(managedDraining),
+			"managedInstancesProvider":           llx.DictData(managedInstancesProvider),
+		})
+	if err != nil {
+		return nil, err
+	}
+	cpRes := mqlCP.(*mqlAwsEcsCapacityProvider)
+	cpRes.cacheAutoScalingGroupArn = asgArn
+	cpRes.region = region
+	return mqlCP, nil
+}
+
+func (a *mqlAwsEcsCapacityProvider) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEcsCapacityProvider) autoScalingGroup() (*mqlAwsAutoscalingGroup, error) {
+	if a.cacheAutoScalingGroupArn == "" {
+		a.AutoScalingGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// The Auto Scaling group name is the segment after the final "/" in the ARN,
+	// e.g. arn:aws:autoscaling:...:autoScalingGroupName/my-asg -> my-asg
+	name := a.cacheAutoScalingGroupArn
+	if idx := strings.LastIndex(name, "/"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	if name == "" {
+		a.AutoScalingGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
+		map[string]*llx.RawData{
+			"name":   llx.StringData(name),
+			"region": llx.StringData(a.region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAutoscalingGroup), nil
+}
+
+func (a *mqlAwsEcs) accountSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getECSAccountSettings(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEcs) getECSAccountSettings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for ri := range regions {
+		region := regions[ri]
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ecs(region)
+			ctx := context.Background()
+			res := []any{}
+			var nextToken *string
+			for {
+				resp, err := svc.ListAccountSettings(ctx, &ecsservice.ListAccountSettingsInput{
+					EffectiveSettings: true,
+					NextToken:         nextToken,
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for ECS account settings")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather ecs account settings")
+				}
+				for _, s := range resp.Settings {
+					mqlSetting, err := CreateResource(a.MqlRuntime, ResourceAwsEcsAccountSetting,
+						map[string]*llx.RawData{
+							"name":         llx.StringData(string(s.Name)),
+							"value":        llx.StringData(convert.ToValue(s.Value)),
+							"region":       llx.StringData(region),
+							"principalArn": llx.StringData(convert.ToValue(s.PrincipalArn)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSetting)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsEcsAccountSetting) id() (string, error) {
+	return a.Region.Data + "/" + a.Name.Data, nil
+}
+
+// ecsIamRoleRef resolves an IAM role ARN to a typed aws.iam.role reference,
+// marking the field null when the ARN is empty.
+func ecsIamRoleRef(runtime *plugin.Runtime, arnPtr *string, field *plugin.TValue[*mqlAwsIamRole]) (*mqlAwsIamRole, error) {
+	if arnPtr == nil || *arnPtr == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(arnPtr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }

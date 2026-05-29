@@ -6649,6 +6649,75 @@ aws.ecs  @defaults("clusters containers containerInstances") {
   containerInstances() []aws.ecs.instance
   // List of AWS ECS Task Definitions
   taskDefinitions() []aws.ecs.taskDefinition
+  // List of AWS ECS capacity providers across all enabled regions
+  capacityProviders() []aws.ecs.capacityProvider
+  // Account-level ECS settings effective for the caller across all enabled regions
+  accountSettings() []aws.ecs.accountSetting
+}
+
+// Amazon ECS capacity provider
+//
+// Examine a capacity provider that determines the infrastructure a cluster's
+// tasks run on — either an EC2 Auto Scaling group (with managed scaling and
+// managed termination protection) or ECS Managed Instances. Traverse
+// `autoScalingGroup` for the backing group and inspect the `managedScaling*`
+// fields for the scaling policy. Select by `name`.
+private aws.ecs.capacityProvider @defaults("name status region") {
+  // ARN of the capacity provider
+  arn string
+  // Name of the capacity provider
+  name string
+  // Region where the capacity provider exists
+  region string
+  // Status of the capacity provider (ACTIVE, INACTIVE)
+  status string
+  // Update status
+  //
+  // One of DELETE_IN_PROGRESS, DELETE_COMPLETE, DELETE_FAILED, UPDATE_IN_PROGRESS, UPDATE_COMPLETE, or UPDATE_FAILED.
+  updateStatus string
+  // Tags for the capacity provider
+  tags map[string]string
+  // ARN of the EC2 Auto Scaling group backing this capacity provider
+  autoScalingGroupArn string
+  // EC2 Auto Scaling group backing this capacity provider
+  autoScalingGroup() aws.autoscaling.group
+  // Managed scaling status (ENABLED, DISABLED)
+  managedScalingStatus string
+  // Target capacity percentage for managed scaling (1-100)
+  managedScalingTargetCapacity int
+  // Minimum number of instances added per managed scaling action
+  managedScalingMinimumStepSize int
+  // Maximum number of instances added per managed scaling action
+  managedScalingMaximumStepSize int
+  // Instance warmup period in seconds for managed scaling
+  managedScalingInstanceWarmupPeriod int
+  // Managed termination protection (ENABLED, DISABLED)
+  managedTerminationProtection string
+  // Managed draining of instances on scale-in (ENABLED, DISABLED)
+  managedDraining string
+  // ECS Managed Instances provider configuration
+  managedInstancesProvider dict
+}
+
+// Amazon ECS account setting
+//
+// Examine an account-level or region-level ECS setting effective for the
+// caller — for example whether `guardDutyActivate` (ECS Runtime Monitoring)
+// or `containerInsights` is enabled, or which ARN/resource-ID format is in
+// use. Select by `name`.
+private aws.ecs.accountSetting @defaults("name value region") {
+  // Setting name
+  //
+  // For example guardDutyActivate, containerInsights, awsvpcTrunking,
+  // taskLongArnFormat, serviceLongArnFormat, containerLongArnFormat,
+  // fargateFIPSMode, fargateTaskRetirementWaitPeriod, or tagResourceAuthorization.
+  name string
+  // Effective value of the setting
+  value string
+  // Region where the setting is effective
+  region string
+  // ARN of the principal (IAM user or role) the setting applies to
+  principalArn string
 }
 
 // Amazon ECS cluster
@@ -6717,6 +6786,22 @@ private aws.ecs.instance {
   ec2Instance() aws.ec2.instance
   // Region for the container instance
   region string
+  // Status of the container instance (ACTIVE, DRAINING, REGISTERING, DEREGISTERING, REGISTRATION_FAILED)
+  status string
+  // Reason for the current status
+  statusReason string
+  // Health status of the container instance (OK, IMPAIRED, INITIALIZING, INSUFFICIENT_DATA)
+  healthStatus string
+  // Number of tasks in the RUNNING state on the container instance
+  runningTasksCount int
+  // Number of tasks in the PENDING state on the container instance
+  pendingTasksCount int
+  // Time when the container instance was registered
+  registeredAt time
+  // ECS container agent and Docker version information (agentVersion, agentHash, dockerVersion)
+  versionInfo dict
+  // Custom and built-in attributes attached to the container instance
+  attributes []dict
 }
 
 // Amazon ECS task
@@ -6739,6 +6824,34 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   region string
   // List of AWS ECS containers
   containers() []aws.ecs.container
+  // Task definition the task was launched from
+  taskDefinition() aws.ecs.taskDefinition
+  // ARN of the container instance the task is running on (EC2/external launch types)
+  containerInstanceArn string
+  // Number of CPU units used by the task (e.g., "256", "1024")
+  cpu string
+  // Amount of memory in MiB used by the task (e.g., "512", "2048")
+  memory string
+  // Health status of the task (HEALTHY, UNHEALTHY, UNKNOWN)
+  healthStatus string
+  // Launch type for the task (EC2, FARGATE, EXTERNAL)
+  launchType string
+  // Capacity provider that launched the task
+  capacityProviderName string
+  // Name of the task group
+  group string
+  // Whether the execute command functionality is enabled for the task
+  enableExecuteCommand bool
+  // How the task was stopped
+  //
+  // One of TaskFailedToStart, EssentialContainerExited, UserInitiated, ServiceSchedulerInitiated, SpotInterruption, or TerminationNotice.
+  stopCode string
+  // Reason the task was stopped
+  stoppedReason string
+  // Time when the task was started
+  startedAt time
+  // Time when the task was stopped
+  stoppedAt time
 }
 
 // Amazon ECS container
@@ -6819,6 +6932,10 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   taskRoleArn() string
   // ARN of the IAM role that the Amazon ECS container agent can assume
   executionRoleArn() string
+  // IAM role that containers in this task can assume
+  taskRole() aws.iam.role
+  // IAM role that the Amazon ECS container agent assumes
+  executionRole() aws.iam.role
   // List of container definitions in the task
   containerDefinitions() []aws.ecs.taskDefinition.containerDefinition
   // List of volumes configured for the task
@@ -6833,6 +6950,18 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   memory() string
   // When the task definition was registered
   registeredAt() time
+  // Launch types the task definition is compatible with (EC2, FARGATE, EXTERNAL)
+  requiresCompatibilities() []string
+  // CPU architecture the task runs on (X86_64, ARM64)
+  runtimePlatformCpuArchitecture() string
+  // Operating system family the task runs on (LINUX, WINDOWS_SERVER_2019_CORE, etc.)
+  runtimePlatformOsFamily() string
+  // App Mesh proxy configuration (type, containerName, properties)
+  proxyConfiguration() dict
+  // Placement constraints for the task (type, expression)
+  placementConstraints() []dict
+  // Whether fault injection is enabled for tasks using this definition
+  enableFaultInjection() bool
 }
 
 // Amazon ECS Service
@@ -6881,6 +7010,24 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   platformVersion string
   // Grace period in seconds after a new task starts before health check failures count
   healthCheckGracePeriodSeconds int
+  // IAM role that lets ECS make calls to your load balancers on your behalf
+  iamRole() aws.iam.role
+  // Load balancers attached to the service (targetGroupArn, loadBalancerName, containerName, containerPort)
+  loadBalancers []dict
+  // Service discovery registries the service is registered with (registryArn, containerName, containerPort, port)
+  serviceRegistries []dict
+  // Capacity provider strategy for the service (capacityProvider, base, weight)
+  capacityProviderStrategy []dict
+  // Deployment controller type (ECS, CODE_DEPLOY, EXTERNAL)
+  deploymentController string
+  // Placement constraints for service tasks (type, expression)
+  placementConstraints []dict
+  // Placement strategy for service tasks (type, field)
+  placementStrategy []dict
+  // How tags propagate to tasks (TASK_DEFINITION, SERVICE, NONE)
+  propagateTags string
+  // Availability Zone rebalancing setting (ENABLED, DISABLED)
+  availabilityZoneRebalancing string
 }
 
 // Amazon ECS Task Set
@@ -7023,6 +7170,42 @@ private aws.ecs.taskDefinition.containerDefinition @defaults("name image") {
   // Managed Instances only, at most one container per task). Empty when the
   // container reserves no accelerators.
   resourceRequirements map[string]string
+  // Whether the container is essential (the task stops if this container fails)
+  essential bool
+  // Linux kernel capabilities added to the container's default Docker configuration
+  linuxCapabilitiesAdd []string
+  // Linux kernel capabilities dropped from the container's default Docker configuration
+  linuxCapabilitiesDrop []string
+  // Entry point passed to the container
+  entryPoint []string
+  // Command passed to the container
+  command []string
+  // Working directory the command runs in
+  workingDirectory string
+  // Docker labels applied to the container
+  dockerLabels map[string]string
+  // Container health check (command, interval, timeout, retries, startPeriod)
+  healthCheck dict
+  // Volume mount points for the container (sourceVolume, containerPath, readOnly)
+  mountPoints []dict
+  // Volumes mounted from other containers (sourceContainer, readOnly)
+  volumesFrom []dict
+  // Container start/stop ordering dependencies (containerName, condition)
+  dependsOn []dict
+  // ulimit settings for the container (name, softLimit, hardLimit)
+  ulimits []dict
+  // DNS servers presented to the container
+  dnsServers []string
+  // ARN of the secret holding private registry credentials used to pull the image
+  repositoryCredentialsParameter string
+  // Time (seconds) to wait before giving up on resolving container start dependencies
+  startTimeout int
+  // Time (seconds) to wait before a container is forcefully killed if it does not exit normally
+  stopTimeout int
+  // Whether a TTY is allocated for the container
+  pseudoTerminal bool
+  // Whether the container is given stdin/stdout access for interactive use
+  interactive bool
 }
 
 // Amazon ECS Task Definition Container Environment Variable

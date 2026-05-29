@@ -274,6 +274,8 @@ const (
 	ResourceAwsSecretsmanagerSecretVersion                                      string = "aws.secretsmanager.secret.version"
 	ResourceAwsSecretsmanagerSecretRotationRules                                string = "aws.secretsmanager.secret.rotationRules"
 	ResourceAwsEcs                                                              string = "aws.ecs"
+	ResourceAwsEcsCapacityProvider                                              string = "aws.ecs.capacityProvider"
+	ResourceAwsEcsAccountSetting                                                string = "aws.ecs.accountSetting"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
 	ResourceAwsEcsClusterCapacityProviderStrategyItem                           string = "aws.ecs.cluster.capacityProviderStrategyItem"
 	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
@@ -1911,6 +1913,14 @@ func init() {
 		"aws.ecs": {
 			// to override args, implement: initAwsEcs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcs,
+		},
+		"aws.ecs.capacityProvider": {
+			// to override args, implement: initAwsEcsCapacityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsCapacityProvider,
+		},
+		"aws.ecs.accountSetting": {
+			// to override args, implement: initAwsEcsAccountSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsAccountSetting,
 		},
 		"aws.ecs.cluster": {
 			Init:   initAwsEcsCluster,
@@ -11934,6 +11944,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcs).GetTaskDefinitions()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition")))
 	},
+	"aws.ecs.capacityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcs).GetCapacityProviders()).ToDataRes(types.Array(types.Resource("aws.ecs.capacityProvider")))
+	},
+	"aws.ecs.accountSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcs).GetAccountSettings()).ToDataRes(types.Array(types.Resource("aws.ecs.accountSetting")))
+	},
+	"aws.ecs.capacityProvider.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.updateStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetUpdateStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.capacityProvider.autoScalingGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetAutoScalingGroupArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.autoScalingGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetAutoScalingGroup()).ToDataRes(types.Resource("aws.autoscaling.group"))
+	},
+	"aws.ecs.capacityProvider.managedScalingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedScalingStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.managedScalingTargetCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedScalingTargetCapacity()).ToDataRes(types.Int)
+	},
+	"aws.ecs.capacityProvider.managedScalingMinimumStepSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedScalingMinimumStepSize()).ToDataRes(types.Int)
+	},
+	"aws.ecs.capacityProvider.managedScalingMaximumStepSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedScalingMaximumStepSize()).ToDataRes(types.Int)
+	},
+	"aws.ecs.capacityProvider.managedScalingInstanceWarmupPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedScalingInstanceWarmupPeriod()).ToDataRes(types.Int)
+	},
+	"aws.ecs.capacityProvider.managedTerminationProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedTerminationProtection()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.managedDraining": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedDraining()).ToDataRes(types.String)
+	},
+	"aws.ecs.capacityProvider.managedInstancesProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCapacityProvider).GetManagedInstancesProvider()).ToDataRes(types.Dict)
+	},
+	"aws.ecs.accountSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsAccountSetting).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecs.accountSetting.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsAccountSetting).GetValue()).ToDataRes(types.String)
+	},
+	"aws.ecs.accountSetting.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsAccountSetting).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecs.accountSetting.principalArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsAccountSetting).GetPrincipalArn()).ToDataRes(types.String)
+	},
 	"aws.ecs.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -12018,6 +12094,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.instance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ecs.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.instance.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.ecs.instance.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetHealthStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.instance.runningTasksCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetRunningTasksCount()).ToDataRes(types.Int)
+	},
+	"aws.ecs.instance.pendingTasksCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetPendingTasksCount()).ToDataRes(types.Int)
+	},
+	"aws.ecs.instance.registeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetRegisteredAt()).ToDataRes(types.Time)
+	},
+	"aws.ecs.instance.versionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetVersionInfo()).ToDataRes(types.Dict)
+	},
+	"aws.ecs.instance.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetAttributes()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.ecs.task.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetArn()).ToDataRes(types.String)
 	},
@@ -12044,6 +12144,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.task.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetContainers()).ToDataRes(types.Array(types.Resource("aws.ecs.container")))
+	},
+	"aws.ecs.task.taskDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetTaskDefinition()).ToDataRes(types.Resource("aws.ecs.taskDefinition"))
+	},
+	"aws.ecs.task.containerInstanceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetContainerInstanceArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.cpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetCpu()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.memory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetMemory()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetHealthStatus()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.launchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetLaunchType()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.capacityProviderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetCapacityProviderName()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetGroup()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.enableExecuteCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetEnableExecuteCommand()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.task.stopCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetStopCode()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.stoppedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetStoppedReason()).ToDataRes(types.String)
+	},
+	"aws.ecs.task.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"aws.ecs.task.stoppedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetStoppedAt()).ToDataRes(types.Time)
 	},
 	"aws.ecs.container.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetName()).ToDataRes(types.String)
@@ -12144,6 +12283,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.executionRoleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetExecutionRoleArn()).ToDataRes(types.String)
 	},
+	"aws.ecs.taskDefinition.taskRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetTaskRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.ecs.taskDefinition.executionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.ecs.taskDefinition.containerDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetContainerDefinitions()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition")))
 	},
@@ -12164,6 +12309,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.taskDefinition.registeredAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetRegisteredAt()).ToDataRes(types.Time)
+	},
+	"aws.ecs.taskDefinition.requiresCompatibilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRequiresCompatibilities()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.runtimePlatformCpuArchitecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRuntimePlatformCpuArchitecture()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.runtimePlatformOsFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRuntimePlatformOsFamily()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.proxyConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetProxyConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.ecs.taskDefinition.placementConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetPlacementConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.taskDefinition.enableFaultInjection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetEnableFaultInjection()).ToDataRes(types.Bool)
 	},
 	"aws.ecs.service.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetArn()).ToDataRes(types.String)
@@ -12227,6 +12390,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.service.healthCheckGracePeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetHealthCheckGracePeriodSeconds()).ToDataRes(types.Int)
+	},
+	"aws.ecs.service.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.ecs.service.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetLoadBalancers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.service.serviceRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetServiceRegistries()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.service.capacityProviderStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetCapacityProviderStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.service.deploymentController": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetDeploymentController()).ToDataRes(types.String)
+	},
+	"aws.ecs.service.placementConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetPlacementConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.service.placementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetPlacementStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.service.propagateTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetPropagateTags()).ToDataRes(types.String)
+	},
+	"aws.ecs.service.availabilityZoneRebalancing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetAvailabilityZoneRebalancing()).ToDataRes(types.String)
 	},
 	"aws.ecs.taskSet.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskSet).GetArn()).ToDataRes(types.String)
@@ -12383,6 +12573,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.taskDefinition.containerDefinition.resourceRequirements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetResourceRequirements()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.essential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetEssential()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.linuxCapabilitiesAdd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetLinuxCapabilitiesAdd()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.linuxCapabilitiesDrop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetLinuxCapabilitiesDrop()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.entryPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetEntryPoint()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.workingDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetWorkingDirectory()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dockerLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetDockerLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.healthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetHealthCheck()).ToDataRes(types.Dict)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.mountPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetMountPoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.volumesFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetVolumesFrom()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dependsOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetDependsOn()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.ulimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetUlimits()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetDnsServers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.taskDefinition.containerDefinition.repositoryCredentialsParameter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetRepositoryCredentialsParameter()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.startTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetStartTimeout()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.stopTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetStopTimeout()).ToDataRes(types.Int)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.pseudoTerminal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetPseudoTerminal()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.interactive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetInteractive()).ToDataRes(types.Bool)
 	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).GetName()).ToDataRes(types.String)
@@ -41802,6 +42046,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcs).TaskDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.capacityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcs).CapacityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.accountSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcs).AccountSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.capacityProvider.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.updateStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).UpdateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.autoScalingGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).AutoScalingGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.autoScalingGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).AutoScalingGroup, ok = plugin.RawToTValue[*mqlAwsAutoscalingGroup](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedScalingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedScalingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedScalingTargetCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedScalingTargetCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedScalingMinimumStepSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedScalingMinimumStepSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedScalingMaximumStepSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedScalingMaximumStepSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedScalingInstanceWarmupPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedScalingInstanceWarmupPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedTerminationProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedTerminationProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedDraining": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedDraining, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.capacityProvider.managedInstancesProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCapacityProvider).ManagedInstancesProvider, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.accountSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsAccountSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.accountSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsAccountSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.accountSetting.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsAccountSetting).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.accountSetting.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsAccountSetting).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.accountSetting.principalArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsAccountSetting).PrincipalArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).__id, ok = v.Value.(string)
 		return
@@ -41926,6 +42266,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.runningTasksCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).RunningTasksCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.pendingTasksCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).PendingTasksCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.registeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).RegisteredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.versionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).VersionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTask).__id, ok = v.Value.(string)
 		return
@@ -41964,6 +42336,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.task.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTask).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).TaskDefinition, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinition](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.containerInstanceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).ContainerInstanceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.cpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).Cpu, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.memory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).Memory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).LaunchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.capacityProviderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).CapacityProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.enableExecuteCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).EnableExecuteCommand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.stopCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).StopCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.stoppedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).StoppedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.stoppedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).StoppedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42106,6 +42530,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsTaskDefinition).ExecutionRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.taskDefinition.taskRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).TaskRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.executionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).ExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.taskDefinition.containerDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinition).ContainerDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -42132,6 +42564,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.registeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinition).RegisteredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.requiresCompatibilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).RequiresCompatibilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.runtimePlatformCpuArchitecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).RuntimePlatformCpuArchitecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.runtimePlatformOsFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).RuntimePlatformOsFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.proxyConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).ProxyConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.placementConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).PlacementConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.enableFaultInjection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).EnableFaultInjection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42220,6 +42676,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.service.healthCheckGracePeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsService).HealthCheckGracePeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.serviceRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).ServiceRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.capacityProviderStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).CapacityProviderStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.deploymentController": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).DeploymentController, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.placementConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).PlacementConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.placementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).PlacementStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.propagateTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).PropagateTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.service.availabilityZoneRebalancing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).AvailabilityZoneRebalancing, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42456,6 +42948,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.containerDefinition.resourceRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).ResourceRequirements, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.essential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Essential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.linuxCapabilitiesAdd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).LinuxCapabilitiesAdd, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.linuxCapabilitiesDrop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).LinuxCapabilitiesDrop, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.entryPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).EntryPoint, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.workingDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).WorkingDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dockerLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).DockerLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).HealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.mountPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).MountPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.volumesFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).VolumesFrom, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.ulimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Ulimits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.dnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).DnsServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.repositoryCredentialsParameter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).RepositoryCredentialsParameter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.startTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).StartTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.stopTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).StopTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.pseudoTerminal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).PseudoTerminal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.interactive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).Interactive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -98633,6 +99197,8 @@ type mqlAwsEcs struct {
 	Containers         plugin.TValue[[]any]
 	ContainerInstances plugin.TValue[[]any]
 	TaskDefinitions    plugin.TValue[[]any]
+	CapacityProviders  plugin.TValue[[]any]
+	AccountSettings    plugin.TValue[[]any]
 }
 
 // createAwsEcs creates a new instance of this resource
@@ -98734,6 +99300,238 @@ func (c *mqlAwsEcs) GetTaskDefinitions() *plugin.TValue[[]any] {
 
 		return c.taskDefinitions()
 	})
+}
+
+func (c *mqlAwsEcs) GetCapacityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapacityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "capacityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capacityProviders()
+	})
+}
+
+func (c *mqlAwsEcs) GetAccountSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccountSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs", c.__id, "accountSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accountSettings()
+	})
+}
+
+// mqlAwsEcsCapacityProvider for the aws.ecs.capacityProvider resource
+type mqlAwsEcsCapacityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEcsCapacityProviderInternal
+	Arn                                plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Status                             plugin.TValue[string]
+	UpdateStatus                       plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	AutoScalingGroupArn                plugin.TValue[string]
+	AutoScalingGroup                   plugin.TValue[*mqlAwsAutoscalingGroup]
+	ManagedScalingStatus               plugin.TValue[string]
+	ManagedScalingTargetCapacity       plugin.TValue[int64]
+	ManagedScalingMinimumStepSize      plugin.TValue[int64]
+	ManagedScalingMaximumStepSize      plugin.TValue[int64]
+	ManagedScalingInstanceWarmupPeriod plugin.TValue[int64]
+	ManagedTerminationProtection       plugin.TValue[string]
+	ManagedDraining                    plugin.TValue[string]
+	ManagedInstancesProvider           plugin.TValue[any]
+}
+
+// createAwsEcsCapacityProvider creates a new instance of this resource
+func createAwsEcsCapacityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsCapacityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.capacityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsCapacityProvider) MqlName() string {
+	return "aws.ecs.capacityProvider"
+}
+
+func (c *mqlAwsEcsCapacityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetUpdateStatus() *plugin.TValue[string] {
+	return &c.UpdateStatus
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetAutoScalingGroupArn() *plugin.TValue[string] {
+	return &c.AutoScalingGroupArn
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetAutoScalingGroup() *plugin.TValue[*mqlAwsAutoscalingGroup] {
+	return plugin.GetOrCompute[*mqlAwsAutoscalingGroup](&c.AutoScalingGroup, func() (*mqlAwsAutoscalingGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.capacityProvider", c.__id, "autoScalingGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAutoscalingGroup), nil
+			}
+		}
+
+		return c.autoScalingGroup()
+	})
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedScalingStatus() *plugin.TValue[string] {
+	return &c.ManagedScalingStatus
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedScalingTargetCapacity() *plugin.TValue[int64] {
+	return &c.ManagedScalingTargetCapacity
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedScalingMinimumStepSize() *plugin.TValue[int64] {
+	return &c.ManagedScalingMinimumStepSize
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedScalingMaximumStepSize() *plugin.TValue[int64] {
+	return &c.ManagedScalingMaximumStepSize
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedScalingInstanceWarmupPeriod() *plugin.TValue[int64] {
+	return &c.ManagedScalingInstanceWarmupPeriod
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedTerminationProtection() *plugin.TValue[string] {
+	return &c.ManagedTerminationProtection
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedDraining() *plugin.TValue[string] {
+	return &c.ManagedDraining
+}
+
+func (c *mqlAwsEcsCapacityProvider) GetManagedInstancesProvider() *plugin.TValue[any] {
+	return &c.ManagedInstancesProvider
+}
+
+// mqlAwsEcsAccountSetting for the aws.ecs.accountSetting resource
+type mqlAwsEcsAccountSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsAccountSettingInternal it will be used here
+	Name         plugin.TValue[string]
+	Value        plugin.TValue[string]
+	Region       plugin.TValue[string]
+	PrincipalArn plugin.TValue[string]
+}
+
+// createAwsEcsAccountSetting creates a new instance of this resource
+func createAwsEcsAccountSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsAccountSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.accountSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsAccountSetting) MqlName() string {
+	return "aws.ecs.accountSetting"
+}
+
+func (c *mqlAwsEcsAccountSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsAccountSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcsAccountSetting) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlAwsEcsAccountSetting) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEcsAccountSetting) GetPrincipalArn() *plugin.TValue[string] {
+	return &c.PrincipalArn
 }
 
 // mqlAwsEcsCluster for the aws.ecs.cluster resource
@@ -98994,12 +99792,20 @@ type mqlAwsEcsInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsInstanceInternal it will be used here
-	AgentConnected   plugin.TValue[bool]
-	Id               plugin.TValue[string]
-	Arn              plugin.TValue[string]
-	CapacityProvider plugin.TValue[string]
-	Ec2Instance      plugin.TValue[*mqlAwsEc2Instance]
-	Region           plugin.TValue[string]
+	AgentConnected    plugin.TValue[bool]
+	Id                plugin.TValue[string]
+	Arn               plugin.TValue[string]
+	CapacityProvider  plugin.TValue[string]
+	Ec2Instance       plugin.TValue[*mqlAwsEc2Instance]
+	Region            plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusReason      plugin.TValue[string]
+	HealthStatus      plugin.TValue[string]
+	RunningTasksCount plugin.TValue[int64]
+	PendingTasksCount plugin.TValue[int64]
+	RegisteredAt      plugin.TValue[*time.Time]
+	VersionInfo       plugin.TValue[any]
+	Attributes        plugin.TValue[[]any]
 }
 
 // createAwsEcsInstance creates a new instance of this resource
@@ -99075,20 +99881,65 @@ func (c *mqlAwsEcsInstance) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsEcsInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEcsInstance) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsEcsInstance) GetHealthStatus() *plugin.TValue[string] {
+	return &c.HealthStatus
+}
+
+func (c *mqlAwsEcsInstance) GetRunningTasksCount() *plugin.TValue[int64] {
+	return &c.RunningTasksCount
+}
+
+func (c *mqlAwsEcsInstance) GetPendingTasksCount() *plugin.TValue[int64] {
+	return &c.PendingTasksCount
+}
+
+func (c *mqlAwsEcsInstance) GetRegisteredAt() *plugin.TValue[*time.Time] {
+	return &c.RegisteredAt
+}
+
+func (c *mqlAwsEcsInstance) GetVersionInfo() *plugin.TValue[any] {
+	return &c.VersionInfo
+}
+
+func (c *mqlAwsEcsInstance) GetAttributes() *plugin.TValue[[]any] {
+	return &c.Attributes
+}
+
 // mqlAwsEcsTask for the aws.ecs.task resource
 type mqlAwsEcsTask struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEcsTaskInternal
-	Arn             plugin.TValue[string]
-	ClusterName     plugin.TValue[string]
-	Connectivity    plugin.TValue[any]
-	LastStatus      plugin.TValue[string]
-	PlatformFamily  plugin.TValue[string]
-	PlatformVersion plugin.TValue[string]
-	Tags            plugin.TValue[map[string]any]
-	Region          plugin.TValue[string]
-	Containers      plugin.TValue[[]any]
+	Arn                  plugin.TValue[string]
+	ClusterName          plugin.TValue[string]
+	Connectivity         plugin.TValue[any]
+	LastStatus           plugin.TValue[string]
+	PlatformFamily       plugin.TValue[string]
+	PlatformVersion      plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	Region               plugin.TValue[string]
+	Containers           plugin.TValue[[]any]
+	TaskDefinition       plugin.TValue[*mqlAwsEcsTaskDefinition]
+	ContainerInstanceArn plugin.TValue[string]
+	Cpu                  plugin.TValue[string]
+	Memory               plugin.TValue[string]
+	HealthStatus         plugin.TValue[string]
+	LaunchType           plugin.TValue[string]
+	CapacityProviderName plugin.TValue[string]
+	Group                plugin.TValue[string]
+	EnableExecuteCommand plugin.TValue[bool]
+	StopCode             plugin.TValue[string]
+	StoppedReason        plugin.TValue[string]
+	StartedAt            plugin.TValue[*time.Time]
+	StoppedAt            plugin.TValue[*time.Time]
 }
 
 // createAwsEcsTask creates a new instance of this resource
@@ -99174,6 +100025,70 @@ func (c *mqlAwsEcsTask) GetContainers() *plugin.TValue[[]any] {
 
 		return c.containers()
 	})
+}
+
+func (c *mqlAwsEcsTask) GetTaskDefinition() *plugin.TValue[*mqlAwsEcsTaskDefinition] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinition](&c.TaskDefinition, func() (*mqlAwsEcsTaskDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.task", c.__id, "taskDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinition), nil
+			}
+		}
+
+		return c.taskDefinition()
+	})
+}
+
+func (c *mqlAwsEcsTask) GetContainerInstanceArn() *plugin.TValue[string] {
+	return &c.ContainerInstanceArn
+}
+
+func (c *mqlAwsEcsTask) GetCpu() *plugin.TValue[string] {
+	return &c.Cpu
+}
+
+func (c *mqlAwsEcsTask) GetMemory() *plugin.TValue[string] {
+	return &c.Memory
+}
+
+func (c *mqlAwsEcsTask) GetHealthStatus() *plugin.TValue[string] {
+	return &c.HealthStatus
+}
+
+func (c *mqlAwsEcsTask) GetLaunchType() *plugin.TValue[string] {
+	return &c.LaunchType
+}
+
+func (c *mqlAwsEcsTask) GetCapacityProviderName() *plugin.TValue[string] {
+	return &c.CapacityProviderName
+}
+
+func (c *mqlAwsEcsTask) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAwsEcsTask) GetEnableExecuteCommand() *plugin.TValue[bool] {
+	return &c.EnableExecuteCommand
+}
+
+func (c *mqlAwsEcsTask) GetStopCode() *plugin.TValue[string] {
+	return &c.StopCode
+}
+
+func (c *mqlAwsEcsTask) GetStoppedReason() *plugin.TValue[string] {
+	return &c.StoppedReason
+}
+
+func (c *mqlAwsEcsTask) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlAwsEcsTask) GetStoppedAt() *plugin.TValue[*time.Time] {
+	return &c.StoppedAt
 }
 
 // mqlAwsEcsContainer for the aws.ecs.container resource
@@ -99364,23 +100279,31 @@ type mqlAwsEcsTaskDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEcsTaskDefinitionInternal
-	Arn                  plugin.TValue[string]
-	Region               plugin.TValue[string]
-	Family               plugin.TValue[string]
-	Revision             plugin.TValue[int64]
-	Status               plugin.TValue[string]
-	NetworkMode          plugin.TValue[string]
-	PidMode              plugin.TValue[string]
-	IpcMode              plugin.TValue[string]
-	TaskRoleArn          plugin.TValue[string]
-	ExecutionRoleArn     plugin.TValue[string]
-	ContainerDefinitions plugin.TValue[[]any]
-	Volumes              plugin.TValue[[]any]
-	EphemeralStorage     plugin.TValue[*mqlAwsEcsTaskDefinitionEphemeralStorage]
-	Tags                 plugin.TValue[map[string]any]
-	Cpu                  plugin.TValue[string]
-	Memory               plugin.TValue[string]
-	RegisteredAt         plugin.TValue[*time.Time]
+	Arn                            plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	Family                         plugin.TValue[string]
+	Revision                       plugin.TValue[int64]
+	Status                         plugin.TValue[string]
+	NetworkMode                    plugin.TValue[string]
+	PidMode                        plugin.TValue[string]
+	IpcMode                        plugin.TValue[string]
+	TaskRoleArn                    plugin.TValue[string]
+	ExecutionRoleArn               plugin.TValue[string]
+	TaskRole                       plugin.TValue[*mqlAwsIamRole]
+	ExecutionRole                  plugin.TValue[*mqlAwsIamRole]
+	ContainerDefinitions           plugin.TValue[[]any]
+	Volumes                        plugin.TValue[[]any]
+	EphemeralStorage               plugin.TValue[*mqlAwsEcsTaskDefinitionEphemeralStorage]
+	Tags                           plugin.TValue[map[string]any]
+	Cpu                            plugin.TValue[string]
+	Memory                         plugin.TValue[string]
+	RegisteredAt                   plugin.TValue[*time.Time]
+	RequiresCompatibilities        plugin.TValue[[]any]
+	RuntimePlatformCpuArchitecture plugin.TValue[string]
+	RuntimePlatformOsFamily        plugin.TValue[string]
+	ProxyConfiguration             plugin.TValue[any]
+	PlacementConstraints           plugin.TValue[[]any]
+	EnableFaultInjection           plugin.TValue[bool]
 }
 
 // createAwsEcsTaskDefinition creates a new instance of this resource
@@ -99476,6 +100399,38 @@ func (c *mqlAwsEcsTaskDefinition) GetExecutionRoleArn() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsEcsTaskDefinition) GetTaskRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.TaskRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition", c.__id, "taskRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.taskRole()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition", c.__id, "executionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.executionRole()
+	})
+}
+
 func (c *mqlAwsEcsTaskDefinition) GetContainerDefinitions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ContainerDefinitions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -99548,11 +100503,47 @@ func (c *mqlAwsEcsTaskDefinition) GetRegisteredAt() *plugin.TValue[*time.Time] {
 	})
 }
 
+func (c *mqlAwsEcsTaskDefinition) GetRequiresCompatibilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RequiresCompatibilities, func() ([]any, error) {
+		return c.requiresCompatibilities()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetRuntimePlatformCpuArchitecture() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RuntimePlatformCpuArchitecture, func() (string, error) {
+		return c.runtimePlatformCpuArchitecture()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetRuntimePlatformOsFamily() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RuntimePlatformOsFamily, func() (string, error) {
+		return c.runtimePlatformOsFamily()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetProxyConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ProxyConfiguration, func() (any, error) {
+		return c.proxyConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetPlacementConstraints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PlacementConstraints, func() ([]any, error) {
+		return c.placementConstraints()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinition) GetEnableFaultInjection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableFaultInjection, func() (bool, error) {
+		return c.enableFaultInjection()
+	})
+}
+
 // mqlAwsEcsService for the aws.ecs.service resource
 type mqlAwsEcsService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcsServiceInternal it will be used here
+	mqlAwsEcsServiceInternal
 	Arn                           plugin.TValue[string]
 	Name                          plugin.TValue[string]
 	Cluster                       plugin.TValue[*mqlAwsEcsCluster]
@@ -99574,6 +100565,15 @@ type mqlAwsEcsService struct {
 	PlatformFamily                plugin.TValue[string]
 	PlatformVersion               plugin.TValue[string]
 	HealthCheckGracePeriodSeconds plugin.TValue[int64]
+	IamRole                       plugin.TValue[*mqlAwsIamRole]
+	LoadBalancers                 plugin.TValue[[]any]
+	ServiceRegistries             plugin.TValue[[]any]
+	CapacityProviderStrategy      plugin.TValue[[]any]
+	DeploymentController          plugin.TValue[string]
+	PlacementConstraints          plugin.TValue[[]any]
+	PlacementStrategy             plugin.TValue[[]any]
+	PropagateTags                 plugin.TValue[string]
+	AvailabilityZoneRebalancing   plugin.TValue[string]
 }
 
 // createAwsEcsService creates a new instance of this resource
@@ -99743,6 +100743,54 @@ func (c *mqlAwsEcsService) GetPlatformVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsService) GetHealthCheckGracePeriodSeconds() *plugin.TValue[int64] {
 	return &c.HealthCheckGracePeriodSeconds
+}
+
+func (c *mqlAwsEcsService) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsEcsService) GetLoadBalancers() *plugin.TValue[[]any] {
+	return &c.LoadBalancers
+}
+
+func (c *mqlAwsEcsService) GetServiceRegistries() *plugin.TValue[[]any] {
+	return &c.ServiceRegistries
+}
+
+func (c *mqlAwsEcsService) GetCapacityProviderStrategy() *plugin.TValue[[]any] {
+	return &c.CapacityProviderStrategy
+}
+
+func (c *mqlAwsEcsService) GetDeploymentController() *plugin.TValue[string] {
+	return &c.DeploymentController
+}
+
+func (c *mqlAwsEcsService) GetPlacementConstraints() *plugin.TValue[[]any] {
+	return &c.PlacementConstraints
+}
+
+func (c *mqlAwsEcsService) GetPlacementStrategy() *plugin.TValue[[]any] {
+	return &c.PlacementStrategy
+}
+
+func (c *mqlAwsEcsService) GetPropagateTags() *plugin.TValue[string] {
+	return &c.PropagateTags
+}
+
+func (c *mqlAwsEcsService) GetAvailabilityZoneRebalancing() *plugin.TValue[string] {
+	return &c.AvailabilityZoneRebalancing
 }
 
 // mqlAwsEcsTaskSet for the aws.ecs.taskSet resource
@@ -100249,19 +101297,37 @@ type mqlAwsEcsTaskDefinitionContainerDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsTaskDefinitionContainerDefinitionInternal it will be used here
-	Name                   plugin.TValue[string]
-	Image                  plugin.TValue[string]
-	Privileged             plugin.TValue[bool]
-	ReadonlyRootFilesystem plugin.TValue[bool]
-	User                   plugin.TValue[string]
-	Environment            plugin.TValue[[]any]
-	Secrets                plugin.TValue[[]any]
-	LogConfiguration       plugin.TValue[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration]
-	Memory                 plugin.TValue[int64]
-	Cpu                    plugin.TValue[int64]
-	PortMappings           plugin.TValue[[]any]
-	InitProcessEnabled     plugin.TValue[bool]
-	ResourceRequirements   plugin.TValue[map[string]any]
+	Name                           plugin.TValue[string]
+	Image                          plugin.TValue[string]
+	Privileged                     plugin.TValue[bool]
+	ReadonlyRootFilesystem         plugin.TValue[bool]
+	User                           plugin.TValue[string]
+	Environment                    plugin.TValue[[]any]
+	Secrets                        plugin.TValue[[]any]
+	LogConfiguration               plugin.TValue[*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration]
+	Memory                         plugin.TValue[int64]
+	Cpu                            plugin.TValue[int64]
+	PortMappings                   plugin.TValue[[]any]
+	InitProcessEnabled             plugin.TValue[bool]
+	ResourceRequirements           plugin.TValue[map[string]any]
+	Essential                      plugin.TValue[bool]
+	LinuxCapabilitiesAdd           plugin.TValue[[]any]
+	LinuxCapabilitiesDrop          plugin.TValue[[]any]
+	EntryPoint                     plugin.TValue[[]any]
+	Command                        plugin.TValue[[]any]
+	WorkingDirectory               plugin.TValue[string]
+	DockerLabels                   plugin.TValue[map[string]any]
+	HealthCheck                    plugin.TValue[any]
+	MountPoints                    plugin.TValue[[]any]
+	VolumesFrom                    plugin.TValue[[]any]
+	DependsOn                      plugin.TValue[[]any]
+	Ulimits                        plugin.TValue[[]any]
+	DnsServers                     plugin.TValue[[]any]
+	RepositoryCredentialsParameter plugin.TValue[string]
+	StartTimeout                   plugin.TValue[int64]
+	StopTimeout                    plugin.TValue[int64]
+	PseudoTerminal                 plugin.TValue[bool]
+	Interactive                    plugin.TValue[bool]
 }
 
 // createAwsEcsTaskDefinitionContainerDefinition creates a new instance of this resource
@@ -100399,6 +101465,78 @@ func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetInitProcessEnabled() *pl
 
 func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetResourceRequirements() *plugin.TValue[map[string]any] {
 	return &c.ResourceRequirements
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetEssential() *plugin.TValue[bool] {
+	return &c.Essential
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetLinuxCapabilitiesAdd() *plugin.TValue[[]any] {
+	return &c.LinuxCapabilitiesAdd
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetLinuxCapabilitiesDrop() *plugin.TValue[[]any] {
+	return &c.LinuxCapabilitiesDrop
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetEntryPoint() *plugin.TValue[[]any] {
+	return &c.EntryPoint
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetCommand() *plugin.TValue[[]any] {
+	return &c.Command
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetWorkingDirectory() *plugin.TValue[string] {
+	return &c.WorkingDirectory
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetDockerLabels() *plugin.TValue[map[string]any] {
+	return &c.DockerLabels
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetHealthCheck() *plugin.TValue[any] {
+	return &c.HealthCheck
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetMountPoints() *plugin.TValue[[]any] {
+	return &c.MountPoints
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetVolumesFrom() *plugin.TValue[[]any] {
+	return &c.VolumesFrom
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetDependsOn() *plugin.TValue[[]any] {
+	return &c.DependsOn
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetUlimits() *plugin.TValue[[]any] {
+	return &c.Ulimits
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetDnsServers() *plugin.TValue[[]any] {
+	return &c.DnsServers
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetRepositoryCredentialsParameter() *plugin.TValue[string] {
+	return &c.RepositoryCredentialsParameter
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetStartTimeout() *plugin.TValue[int64] {
+	return &c.StartTimeout
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetStopTimeout() *plugin.TValue[int64] {
+	return &c.StopTimeout
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetPseudoTerminal() *plugin.TValue[bool] {
+	return &c.PseudoTerminal
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetInteractive() *plugin.TValue[bool] {
+	return &c.Interactive
 }
 
 // mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable for the aws.ecs.taskDefinition.containerDefinition.environmentVariable resource
