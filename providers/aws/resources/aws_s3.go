@@ -1493,7 +1493,7 @@ func (a *mqlAwsS3Bucket) eventNotifications() ([]any, error) {
 		}
 		return CreateResource(a.MqlRuntime, "aws.s3.bucket.eventNotification",
 			map[string]*llx.RawData{
-				"__id":   llx.StringData(fmt.Sprintf("%s/notification/%s/%s", a.Arn.Data, notifType, id+targetArn)),
+				"__id":   llx.StringData(fmt.Sprintf("%s/notification/%s/%s/%s", a.Arn.Data, notifType, id, targetArn)),
 				"id":     llx.StringData(id),
 				"type":   llx.StringData(notifType),
 				"arn":    llx.StringData(targetArn),

@@ -1344,18 +1344,29 @@ func (a *mqlAwsVpc) defaultNetworkAcl() (*mqlAwsEc2Networkacl, error) {
 
 func (a *mqlAwsVpc) blockPublicAccessOptions() (any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(a.Region.Data)
+	region := a.Region.Data
+
+	// VPC Block Public Access is account/region-scoped, so every VPC in a
+	// region returns identical data — cache it per region on the connection.
+	cacheKey := "_vpc_bpa_" + region
+	if cached, ok := conn.GetCachedValue(cacheKey); ok {
+		return cached, nil
+	}
+
+	svc := conn.Ec2(region)
 	ctx := context.Background()
 
 	resp, err := svc.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			conn.SetCachedValue(cacheKey, nil)
 			return nil, nil
 		}
 		return nil, err
 	}
 	opts := resp.VpcBlockPublicAccessOptions
 	if opts == nil {
+		conn.SetCachedValue(cacheKey, nil)
 		return nil, nil
 	}
 	lastUpdate := ""

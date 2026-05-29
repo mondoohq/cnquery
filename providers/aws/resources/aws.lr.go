@@ -110029,7 +110029,7 @@ func (c *mqlAwsCloudfrontAnycastIpList) GetRegion() *plugin.TValue[string] {
 type mqlAwsCloudfrontDistribution struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsCloudfrontDistributionInternal it will be used here
+	mqlAwsCloudfrontDistributionInternal
 	Arn                          plugin.TValue[string]
 	Status                       plugin.TValue[string]
 	DomainName                   plugin.TValue[string]

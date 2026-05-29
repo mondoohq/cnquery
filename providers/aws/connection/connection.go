@@ -141,6 +141,23 @@ func (c *AwsConnection) SetAccountId(id string) {
 	}
 }
 
+// GetCachedValue returns a previously cached value for the given key. It is
+// connection-scoped and safe for concurrent use, intended for account- or
+// region-level data that multiple resources would otherwise re-fetch.
+func (c *AwsConnection) GetCachedValue(key string) (any, bool) {
+	entry, ok := c.clientcache.Load(key)
+	if !ok {
+		return nil, false
+	}
+	return entry.Data, true
+}
+
+// SetCachedValue stores a value under the given key for the lifetime of the
+// connection. See GetCachedValue.
+func (c *AwsConnection) SetCachedValue(key string, val any) {
+	c.clientcache.Store(key, &CacheEntry{Data: val})
+}
+
 func (p *AwsConnection) AccountId() string {
 	return p.accountId
 }

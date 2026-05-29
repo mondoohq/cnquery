@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -175,24 +176,60 @@ func (a *mqlAwsCloudfrontDistribution) webAcl() (*mqlAwsWafAcl, error) {
 	return res.(*mqlAwsWafAcl), nil
 }
 
-func (a *mqlAwsCloudfrontDistribution) continuousDeploymentPolicyId() (string, error) {
+type mqlAwsCloudfrontDistributionInternal struct {
+	detailFetched bool
+	detailErr     error
+	detailLock    sync.Mutex
+	detail        *cloudfront.GetDistributionOutput
+}
+
+// fetchDistributionDetail lazily loads the full distribution via GetDistribution
+// and caches it (double-check locking) so fields backed by the same call —
+// logging() and continuousDeploymentPolicyId() — share one API request.
+func (a *mqlAwsCloudfrontDistribution) fetchDistributionDetail() (*cloudfront.GetDistributionOutput, error) {
+	if a.detailFetched {
+		return a.detail, a.detailErr
+	}
+	a.detailLock.Lock()
+	defer a.detailLock.Unlock()
+	if a.detailFetched {
+		return a.detail, a.detailErr
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Cloudfront("") // global service
 	ctx := context.Background()
 
+	// Extract distribution ID from ARN: arn:aws:cloudfront::ACCOUNT:distribution/DIST_ID
 	parsedArn, err := arn.Parse(a.Arn.Data)
 	if err != nil {
-		return "", errors.Wrap(err, "could not parse cloudfront distribution ARN")
+		a.detailErr = errors.Wrap(err, "could not parse cloudfront distribution ARN")
+		a.detailFetched = true
+		return nil, a.detailErr
 	}
 	parts := strings.SplitN(parsedArn.Resource, "/", 2)
 	if len(parts) < 2 {
-		return "", fmt.Errorf("unexpected cloudfront distribution ARN resource format: %s", parsedArn.Resource)
+		a.detailErr = fmt.Errorf("unexpected cloudfront distribution ARN resource format: %s", parsedArn.Resource)
+		a.detailFetched = true
+		return nil, a.detailErr
 	}
 	distID := parts[1]
 
 	resp, err := svc.GetDistribution(ctx, &cloudfront.GetDistributionInput{Id: &distID})
 	if err != nil {
-		return "", errors.Wrap(err, "could not get cloudfront distribution details")
+		a.detailErr = errors.Wrap(err, "could not get cloudfront distribution details")
+		a.detailFetched = true
+		return nil, a.detailErr
+	}
+	a.detail = resp
+	a.detailFetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) continuousDeploymentPolicyId() (string, error) {
+	resp, err := a.fetchDistributionDetail()
+	if err != nil {
+		return "", err
 	}
 	if resp.Distribution == nil || resp.Distribution.DistributionConfig == nil {
 		return "", nil
@@ -201,28 +238,9 @@ func (a *mqlAwsCloudfrontDistribution) continuousDeploymentPolicyId() (string, e
 }
 
 func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Cloudfront("") // global service
-	ctx := context.Background()
-
-	// Extract distribution ID from ARN: arn:aws:cloudfront::ACCOUNT:distribution/DIST_ID
-	distArn := a.Arn.Data
-	parsedArn, err := arn.Parse(distArn)
+	resp, err := a.fetchDistributionDetail()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse cloudfront distribution ARN")
-	}
-	// Resource is "distribution/DIST_ID"
-	parts := strings.SplitN(parsedArn.Resource, "/", 2)
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("unexpected cloudfront distribution ARN resource format: %s", parsedArn.Resource)
-	}
-	distID := parts[1]
-
-	resp, err := svc.GetDistribution(ctx, &cloudfront.GetDistributionInput{
-		Id: &distID,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not get cloudfront distribution details")
+		return nil, err
 	}
 
 	if resp.Distribution == nil || resp.Distribution.DistributionConfig == nil || resp.Distribution.DistributionConfig.Logging == nil {
@@ -233,7 +251,7 @@ func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionL
 	logging := resp.Distribution.DistributionConfig.Logging
 	mqlLogging, err := CreateResource(a.MqlRuntime, ResourceAwsCloudfrontDistributionLoggingConfig,
 		map[string]*llx.RawData{
-			"__id":           llx.StringData(distArn + "/logging"),
+			"__id":           llx.StringData(a.Arn.Data + "/logging"),
 			"enabled":        llx.BoolDataPtr(logging.Enabled),
 			"bucket":         llx.StringDataPtr(logging.Bucket),
 			"prefix":         llx.StringDataPtr(logging.Prefix),
