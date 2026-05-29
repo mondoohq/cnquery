@@ -631,7 +631,9 @@ func TestRpmQueryFormatRoundTrip(t *testing.T) {
 	// Cover both queryFormat() variants: EPOCHNUM + modularity (redhat/centos 7+)
 	// and EPOCH without modularity (suse).
 	platforms := []*inventory.Platform{
-		{Name: "redhat", Version: "8.10", Arch: "x86_64"},
+		// redhat with a plain-integer version >=7 takes the EPOCHNUM branch in
+		// queryFormat() (ParseInt rejects "8.10", so "8" is required to hit it).
+		{Name: "redhat", Version: "8", Arch: "x86_64"},
 		{Name: "oraclelinux", Version: "9", Arch: "x86_64"},
 		{Name: "suse", Version: "15.6", Arch: "x86_64"},
 	}
