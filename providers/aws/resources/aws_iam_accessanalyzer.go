@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-func (a *mqlAwsIamAccessanalyzerAnalyzer) id() (string, error) {
+func (a *mqlAwsIamAccessAnalyzerAnalyzer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
@@ -104,7 +104,7 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzerMap() (map[string][]string, error) 
 		return nil, analyzerList.Error
 	}
 	for _, analyzer := range analyzerList.Data {
-		analyzerInstance, ok := analyzer.(*mqlAwsIamAccessanalyzerAnalyzer)
+		analyzerInstance, ok := analyzer.(*mqlAwsIamAccessAnalyzerAnalyzer)
 		if !ok {
 			return nil, errors.New("error casting to analyzer instance")
 		}

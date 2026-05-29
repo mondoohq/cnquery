@@ -8,6 +8,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/aws/resources"
 
 alias aws.accessanalyzer = aws.iam.accessAnalyzer
 alias aws.accessanalyzer.analyzer = aws.iam.accessAnalyzer.analyzer
+alias aws.accessAnalyzer = aws.iam.accessAnalyzer
+alias aws.accessAnalyzer.analyzer = aws.iam.accessAnalyzer.analyzer
+alias aws.iam.accessanalyzer.analyzer = aws.iam.accessAnalyzer.analyzer
+alias aws.iam.accessanalyzer.finding = aws.iam.accessAnalyzer.finding
 
 // Amazon Web Services account
 //
