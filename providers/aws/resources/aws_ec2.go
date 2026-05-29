@@ -1400,10 +1400,12 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			args["httpEndpoint"] = llx.StringData(string(instance.MetadataOptions.HttpEndpoint))
 			args["httpTokens"] = llx.StringData(string(instance.MetadataOptions.HttpTokens))
 			args["httpPutResponseHopLimit"] = llx.IntDataDefault(instance.MetadataOptions.HttpPutResponseHopLimit, 1)
+			args["imdsv2Required"] = llx.BoolData(instance.MetadataOptions.HttpTokens == ec2types.HttpTokensStateRequired)
 		} else {
 			args["httpEndpoint"] = llx.NilData
 			args["httpTokens"] = llx.NilData
 			args["httpPutResponseHopLimit"] = llx.IntData(1)
+			args["imdsv2Required"] = llx.BoolData(false)
 		}
 		// add vpc if there is one
 		if instance.VpcId != nil {

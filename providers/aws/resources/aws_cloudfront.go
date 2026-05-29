@@ -159,6 +159,47 @@ func (a *mqlAwsCloudfrontDistributionLoggingConfig) id() (string, error) {
 	return a.__id, nil
 }
 
+func (a *mqlAwsCloudfrontDistribution) webAcl() (*mqlAwsWafAcl, error) {
+	arnVal := a.WebAclId.Data
+	// WAFv2 associations store the full ARN; WAF Classic stores a bare ID that
+	// the aws.waf.acl resource cannot resolve, so only build the ref for an ARN.
+	if !strings.HasPrefix(arnVal, "arn:") {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.waf.acl",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWafAcl), nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) continuousDeploymentPolicyId() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("") // global service
+	ctx := context.Background()
+
+	parsedArn, err := arn.Parse(a.Arn.Data)
+	if err != nil {
+		return "", errors.Wrap(err, "could not parse cloudfront distribution ARN")
+	}
+	parts := strings.SplitN(parsedArn.Resource, "/", 2)
+	if len(parts) < 2 {
+		return "", fmt.Errorf("unexpected cloudfront distribution ARN resource format: %s", parsedArn.Resource)
+	}
+	distID := parts[1]
+
+	resp, err := svc.GetDistribution(ctx, &cloudfront.GetDistributionInput{Id: &distID})
+	if err != nil {
+		return "", errors.Wrap(err, "could not get cloudfront distribution details")
+	}
+	if resp.Distribution == nil || resp.Distribution.DistributionConfig == nil {
+		return "", nil
+	}
+	return convert.ToValue(resp.Distribution.DistributionConfig.ContinuousDeploymentPolicyId), nil
+}
+
 func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Cloudfront("") // global service

@@ -1274,6 +1274,7 @@ aws.cloudfront.distribution.arn 11.15.2
 aws.cloudfront.distribution.cacheBehaviors 11.15.2
 aws.cloudfront.distribution.cnames 11.15.2
 aws.cloudfront.distribution.comment 11.15.2
+aws.cloudfront.distribution.continuousDeploymentPolicyId 13.29.1
 aws.cloudfront.distribution.defaultCacheBehavior 11.15.2
 aws.cloudfront.distribution.domainName 11.15.2
 aws.cloudfront.distribution.enabled 11.15.2
@@ -1305,6 +1306,7 @@ aws.cloudfront.distribution.status 11.15.2
 aws.cloudfront.distribution.viewerMtlsMode 13.25.1
 aws.cloudfront.distribution.viewerMtlsTrustStoreId 13.25.1
 aws.cloudfront.distribution.viewerProtocolPolicy 11.15.2
+aws.cloudfront.distribution.webAcl 13.29.1
 aws.cloudfront.distribution.webAclId 11.15.2
 aws.cloudfront.distributions 11.15.2
 aws.cloudfront.fieldLevelEncryptionConfig 13.26.3
@@ -2605,6 +2607,7 @@ aws.dynamodb.table.globalSecondaryIndexes 13.6.3
 aws.dynamodb.table.globalTableVersion 11.15.2
 aws.dynamodb.table.id 11.15.2
 aws.dynamodb.table.items 11.15.2
+aws.dynamodb.table.kmsMasterKeyId 13.29.1
 aws.dynamodb.table.latestStreamArn 11.15.2
 aws.dynamodb.table.latestStreamLabel 11.15.2
 aws.dynamodb.table.name 11.15.2
@@ -2782,6 +2785,7 @@ aws.ec2.instance.httpTokens 11.15.2
 aws.ec2.instance.hypervisor 11.15.2
 aws.ec2.instance.iamInstanceProfile 11.15.2
 aws.ec2.instance.image 11.15.2
+aws.ec2.instance.imdsv2Required 13.29.1
 aws.ec2.instance.instanceId 11.15.2
 aws.ec2.instance.instanceLifecycle 11.15.2
 aws.ec2.instance.instanceStatus 11.15.2
@@ -5611,6 +5615,7 @@ aws.lambda.function.provisionedConcurrencyConfig.requestedConcurrentExecutions 1
 aws.lambda.function.provisionedConcurrencyConfig.status 11.15.2
 aws.lambda.function.provisionedConcurrencyConfig.statusReason 11.15.2
 aws.lambda.function.provisionedConcurrencyConfigs 11.15.2
+aws.lambda.function.recursiveLoop 13.29.1
 aws.lambda.function.region 11.15.2
 aws.lambda.function.resolvedImageUri 13.26.2
 aws.lambda.function.role 11.15.2
@@ -7303,6 +7308,7 @@ aws.s3.bucket.accessPoint.publicAccessBlock 13.26.2
 aws.s3.bucket.accessPoint.vpc 13.26.2
 aws.s3.bucket.accessPoints 13.26.2
 aws.s3.bucket.acl 11.15.2
+aws.s3.bucket.analyticsConfigurations 13.29.1
 aws.s3.bucket.arn 11.15.2
 aws.s3.bucket.cors 11.15.2
 aws.s3.bucket.corsrule 11.15.2
@@ -7321,12 +7327,23 @@ aws.s3.bucket.encryptionRule.id 11.15.2
 aws.s3.bucket.encryptionRule.kmsMasterKeyId 11.15.2
 aws.s3.bucket.encryptionRule.sseAlgorithm 11.15.2
 aws.s3.bucket.encryptionRules 11.15.2
+aws.s3.bucket.eventNotification 13.29.1
+aws.s3.bucket.eventNotification.arn 13.29.1
+aws.s3.bucket.eventNotification.events 13.29.1
+aws.s3.bucket.eventNotification.id 13.29.1
+aws.s3.bucket.eventNotification.lambdaFunction 13.29.1
+aws.s3.bucket.eventNotification.queue 13.29.1
+aws.s3.bucket.eventNotification.topic 13.29.1
+aws.s3.bucket.eventNotification.type 13.29.1
+aws.s3.bucket.eventNotifications 13.29.1
 aws.s3.bucket.exists 11.15.2
 aws.s3.bucket.grant 11.15.2
 aws.s3.bucket.grant.grantee 11.15.2
 aws.s3.bucket.grant.id 11.15.2
 aws.s3.bucket.grant.name 11.15.2
 aws.s3.bucket.grant.permission 11.15.2
+aws.s3.bucket.intelligentTieringConfigurations 13.29.1
+aws.s3.bucket.inventoryConfigurations 13.29.1
 aws.s3.bucket.lifecycleRule 13.6.3
 aws.s3.bucket.lifecycleRule.abortIncompleteMultipartUploadDays 13.6.3
 aws.s3.bucket.lifecycleRule.expiration 13.6.3
@@ -7371,8 +7388,10 @@ aws.s3.bucket.replicationRule.priority 11.15.2
 aws.s3.bucket.replicationRule.resourceId 11.15.2
 aws.s3.bucket.replicationRule.status 11.15.2
 aws.s3.bucket.replicationRules 11.15.2
+aws.s3.bucket.requestPayment 13.29.1
 aws.s3.bucket.staticWebsiteHosting 11.15.2
 aws.s3.bucket.tags 11.15.2
+aws.s3.bucket.transferAcceleration 13.29.1
 aws.s3.bucket.versioning 11.15.2
 aws.s3.bucket.website 11.15.2
 aws.s3.bucket.websiteConfiguration 11.15.2
@@ -9031,8 +9050,11 @@ aws.verifiedaccess.trustProvider.verifiedAccessTrustProviderId 13.10.0
 aws.verifiedaccess.trustProviders 13.10.0
 aws.vpc 11.15.2
 aws.vpc.arn 11.15.2
+aws.vpc.blockPublicAccessOptions 13.29.1
 aws.vpc.cidrBlock 11.15.2
 aws.vpc.cidrBlockAssociations 13.6.3
+aws.vpc.defaultNetworkAcl 13.29.1
+aws.vpc.defaultSecurityGroup 13.29.1
 aws.vpc.dhcpOptions 13.6.3
 aws.vpc.dhcpOptionsId 11.15.2
 aws.vpc.enableDnsHostnames 13.6.3

@@ -314,8 +314,18 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   internetGateways() []aws.ec2.internetgateway
   // Security groups in this VPC
   securityGroups() []aws.ec2.securitygroup
+  // Default security group of the VPC (the group named "default")
+  defaultSecurityGroup() aws.ec2.securitygroup
   // Network ACLs in this VPC
   networkAcls() []aws.ec2.networkacl
+  // Default network ACL of the VPC
+  defaultNetworkAcl() aws.ec2.networkacl
+  // Account- and region-level VPC Block Public Access options that apply to the VPC
+  //
+  // A dict with `internetGatewayBlockMode`, `state`, `exclusionsAllowed`,
+  // `managedBy`, `reason`, and `lastUpdateTimestamp`. Empty when VPC Block
+  // Public Access has never been configured in the region.
+  blockPublicAccessOptions() dict
   // Virtual private gateways attached to the VPC
   vpnGateways() []aws.vpc.vpnGateway
   // DHCP options set associated with the VPC
@@ -9017,6 +9027,10 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   sslSupportMethod string
   // ARN of the AWS WAF web ACL associated with the distribution (empty string if none)
   webAclId string
+  // AWS WAF web ACL associated with the distribution
+  webAcl() aws.waf.acl
+  // ID of the continuous deployment policy associated with the distribution (empty string when none)
+  continuousDeploymentPolicyId() string
   // Type of geographic restriction applied to the distribution (none, whitelist, or blacklist)
   geoRestrictionType string
   // When the distribution was last modified
@@ -9788,14 +9802,59 @@ private aws.s3.bucket @defaults("name location public") {
   lifecycleRules() []aws.s3.bucket.lifecycleRule
   // Notification configuration for the bucket (Lambda, SQS, SNS, EventBridge)
   notificationConfiguration() dict
+  // Event notification targets configured on the bucket (Lambda, SQS, and SNS)
+  eventNotifications() []aws.s3.bucket.eventNotification
   // Object ownership setting: BucketOwnerEnforced, BucketOwnerPreferred, or ObjectWriter
   ownershipControls() string
+  // S3 Intelligent-Tiering configurations on the bucket
+  //
+  // Each entry is a dict with `id`, `status`, and `tierings` (the
+  // access-tier transition rules).
+  intelligentTieringConfigurations() []dict
+  // S3 Inventory configurations on the bucket
+  //
+  // Each entry is a dict with `id`, `isEnabled`, `includedObjectVersions`,
+  // `destination`, `schedule`, and `optionalFields`.
+  inventoryConfigurations() []dict
+  // S3 Analytics (storage class analysis) configurations on the bucket
+  //
+  // Each entry is a dict with `id`, `filter`, and `storageClassAnalysis`.
+  analyticsConfigurations() []dict
+  // Request payment configuration: "BucketOwner" (default) or "Requester"
+  requestPayment() string
+  // S3 Transfer Acceleration status: "Enabled", "Suspended", or empty when never configured
+  transferAcceleration() string
   // Amazon Macie coverage record for this bucket
   //
   // Reports sensitivity score, public-access summary, encryption defaults, and automated-discovery status. Null when Macie is not enabled in the bucket's region or the bucket is outside Macie's monitored set.
   macieCoverage() aws.macie.bucket
   // S3 access points attached to the bucket
   accessPoints() []aws.s3.bucket.accessPoint
+}
+
+// Amazon S3 bucket event notification
+//
+// Examine a single event-notification target configured on a bucket. The
+// `type` field distinguishes the destination — `lambda`, `queue` (SQS), or
+// `topic` (SNS) — and `events` lists the S3 event types that trigger it
+// (for example `s3:ObjectCreated:*`). The matching typed reference among
+// `lambdaFunction()`, `queue()`, and `topic()` resolves to the destination
+// resource; the other two are null.
+private aws.s3.bucket.eventNotification @defaults("id type events") {
+  // Notification configuration ID assigned to the target
+  id string
+  // Destination type, one of "lambda", "queue", or "topic"
+  type string
+  // ARN of the destination Lambda function, SQS queue, or SNS topic
+  arn string
+  // S3 event types that trigger the notification, for example s3:ObjectCreated:*
+  events []string
+  // Lambda function the notification invokes, when the destination is a Lambda function
+  lambdaFunction() aws.lambda.function
+  // SQS queue the notification sends to, when the destination is an SQS queue
+  queue() aws.sqs.queue
+  // SNS topic the notification publishes to, when the destination is an SNS topic
+  topic() aws.sns.topic
 }
 
 // Amazon S3 bucket access point
@@ -10739,6 +10798,8 @@ private aws.dynamodb.table @defaults("name region") {
   sseDescription() dict
   // Type of server-side encryption: "AES256" (AWS-owned) or "KMS" (customer-managed or AWS-managed KMS key)
   sseType() string
+  // ARN of the KMS key used for server-side encryption at rest
+  kmsMasterKeyId() string
   // KMS key used for server-side encryption at rest
   sseKmsKey() aws.kms.key
   // Provisioned throughput settings for the table
@@ -13613,6 +13674,8 @@ private aws.lambda.function @defaults("arn") {
   concurrency() int
   // Target ARN of the dead-letter queue config
   dlqTargetArn string
+  // Recursive loop detection mode, either "Allow" or "Terminate"
+  recursiveLoop() string
   // Policy for the function
   policy() dict
   // Raw VPC configuration for the Lambda function
@@ -15141,6 +15204,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   httpEndpoint string
   // Maximum number of hops for the instance metadata PUT response (1-64); values >1 increase SSRF risk
   httpPutResponseHopLimit int
+  // Whether IMDSv2 is required (httpTokens is "required"), enforcing session-token-authenticated metadata access
+  imdsv2Required bool
   // Whether the instance is enabled for AWS Nitro Enclaves
   enclaveEnabled bool
   // Patch state information about the instance

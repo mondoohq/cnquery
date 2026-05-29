@@ -1464,6 +1464,256 @@ func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
 	return result, nil
 }
 
+func (a *mqlAwsS3Bucket) eventNotifications() ([]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
+	bucketname := a.Name.Data
+	region := a.Location.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	build := func(notifType, id, targetArn string, events []s3types.Event) (any, error) {
+		eventList := make([]any, 0, len(events))
+		for _, e := range events {
+			eventList = append(eventList, string(e))
+		}
+		return CreateResource(a.MqlRuntime, "aws.s3.bucket.eventNotification",
+			map[string]*llx.RawData{
+				"__id":   llx.StringData(fmt.Sprintf("%s/notification/%s/%s", a.Arn.Data, notifType, id+targetArn)),
+				"id":     llx.StringData(id),
+				"type":   llx.StringData(notifType),
+				"arn":    llx.StringData(targetArn),
+				"events": llx.ArrayData(eventList, types.String),
+			})
+	}
+
+	res := []any{}
+	for _, lc := range resp.LambdaFunctionConfigurations {
+		mql, err := build("lambda", aws.ToString(lc.Id), aws.ToString(lc.LambdaFunctionArn), lc.Events)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mql)
+	}
+	for _, qc := range resp.QueueConfigurations {
+		mql, err := build("queue", aws.ToString(qc.Id), aws.ToString(qc.QueueArn), qc.Events)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mql)
+	}
+	for _, tc := range resp.TopicConfigurations {
+		mql, err := build("topic", aws.ToString(tc.Id), aws.ToString(tc.TopicArn), tc.Events)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mql)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3BucketEventNotification) lambdaFunction() (*mqlAwsLambdaFunction, error) {
+	if a.Type.Data != "lambda" || a.Arn.Data == "" {
+		a.LambdaFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.lambda.function",
+		map[string]*llx.RawData{"arn": llx.StringData(a.Arn.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunction), nil
+}
+
+func (a *mqlAwsS3BucketEventNotification) queue() (*mqlAwsSqsQueue, error) {
+	if a.Type.Data != "queue" || a.Arn.Data == "" {
+		a.Queue.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sqs.queue",
+		map[string]*llx.RawData{"arn": llx.StringData(a.Arn.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSqsQueue), nil
+}
+
+func (a *mqlAwsS3BucketEventNotification) topic() (*mqlAwsSnsTopic, error) {
+	if a.Type.Data != "topic" || a.Arn.Data == "" {
+		a.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringData(a.Arn.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSnsTopic), nil
+}
+
+func (a *mqlAwsS3Bucket) intelligentTieringConfigurations() ([]any, error) {
+	if !a.Exists.Data {
+		return nil, nil
+	}
+	bucketName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(a.Location.Data)
+	ctx := context.Background()
+
+	res := []any{}
+	var token *string
+	for {
+		resp, err := svc.ListBucketIntelligentTieringConfigurations(ctx, &s3.ListBucketIntelligentTieringConfigurationsInput{
+			Bucket:            &bucketName,
+			ContinuationToken: token,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, c := range resp.IntelligentTieringConfigurationList {
+			d, err := convert.JsonToDict(c)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, d)
+		}
+		if resp.IsTruncated == nil || !*resp.IsTruncated {
+			break
+		}
+		token = resp.NextContinuationToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3Bucket) inventoryConfigurations() ([]any, error) {
+	if !a.Exists.Data {
+		return nil, nil
+	}
+	bucketName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(a.Location.Data)
+	ctx := context.Background()
+
+	res := []any{}
+	var token *string
+	for {
+		resp, err := svc.ListBucketInventoryConfigurations(ctx, &s3.ListBucketInventoryConfigurationsInput{
+			Bucket:            &bucketName,
+			ContinuationToken: token,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, c := range resp.InventoryConfigurationList {
+			d, err := convert.JsonToDict(c)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, d)
+		}
+		if resp.IsTruncated == nil || !*resp.IsTruncated {
+			break
+		}
+		token = resp.NextContinuationToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3Bucket) analyticsConfigurations() ([]any, error) {
+	if !a.Exists.Data {
+		return nil, nil
+	}
+	bucketName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(a.Location.Data)
+	ctx := context.Background()
+
+	res := []any{}
+	var token *string
+	for {
+		resp, err := svc.ListBucketAnalyticsConfigurations(ctx, &s3.ListBucketAnalyticsConfigurationsInput{
+			Bucket:            &bucketName,
+			ContinuationToken: token,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, c := range resp.AnalyticsConfigurationList {
+			d, err := convert.JsonToDict(c)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, d)
+		}
+		if resp.IsTruncated == nil || !*resp.IsTruncated {
+			break
+		}
+		token = resp.NextContinuationToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3Bucket) requestPayment() (string, error) {
+	if !a.Exists.Data {
+		return "", nil
+	}
+	bucketName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(a.Location.Data)
+	ctx := context.Background()
+
+	resp, err := svc.GetBucketRequestPayment(ctx, &s3.GetBucketRequestPaymentInput{Bucket: &bucketName})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return string(resp.Payer), nil
+}
+
+func (a *mqlAwsS3Bucket) transferAcceleration() (string, error) {
+	if !a.Exists.Data {
+		return "", nil
+	}
+	bucketName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(a.Location.Data)
+	ctx := context.Background()
+
+	resp, err := svc.GetBucketAccelerateConfiguration(ctx, &s3.GetBucketAccelerateConfigurationInput{Bucket: &bucketName})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return string(resp.Status), nil
+}
+
 func (a *mqlAwsS3Bucket) ownershipControls() (string, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	if !a.Exists.Data {

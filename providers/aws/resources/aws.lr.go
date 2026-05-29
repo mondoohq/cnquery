@@ -404,6 +404,7 @@ const (
 	ResourceAwsS3control                                                        string = "aws.s3control"
 	ResourceAwsS3                                                               string = "aws.s3"
 	ResourceAwsS3Bucket                                                         string = "aws.s3.bucket"
+	ResourceAwsS3BucketEventNotification                                        string = "aws.s3.bucket.eventNotification"
 	ResourceAwsS3BucketAccessPoint                                              string = "aws.s3.bucket.accessPoint"
 	ResourceAwsS3BucketGrant                                                    string = "aws.s3.bucket.grant"
 	ResourceAwsS3BucketCorsrule                                                 string = "aws.s3.bucket.corsrule"
@@ -2433,6 +2434,10 @@ func init() {
 		"aws.s3.bucket": {
 			Init:   initAwsS3Bucket,
 			Create: createAwsS3Bucket,
+		},
+		"aws.s3.bucket.eventNotification": {
+			// to override args, implement: initAwsS3BucketEventNotification(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketEventNotification,
 		},
 		"aws.s3.bucket.accessPoint": {
 			// to override args, implement: initAwsS3BucketAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4663,8 +4668,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.vpc.defaultSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetDefaultSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
 	"aws.vpc.networkAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetNetworkAcls()).ToDataRes(types.Array(types.Resource("aws.ec2.networkacl")))
+	},
+	"aws.vpc.defaultNetworkAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetDefaultNetworkAcl()).ToDataRes(types.Resource("aws.ec2.networkacl"))
+	},
+	"aws.vpc.blockPublicAccessOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessOptions()).ToDataRes(types.Dict)
 	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetVpnGateways()).ToDataRes(types.Array(types.Resource("aws.vpc.vpnGateway")))
@@ -14479,6 +14493,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.distribution.webAclId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetWebAclId()).ToDataRes(types.String)
 	},
+	"aws.cloudfront.distribution.webAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetWebAcl()).ToDataRes(types.Resource("aws.waf.acl"))
+	},
+	"aws.cloudfront.distribution.continuousDeploymentPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetContinuousDeploymentPolicyId()).ToDataRes(types.String)
+	},
 	"aws.cloudfront.distribution.geoRestrictionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetGeoRestrictionType()).ToDataRes(types.String)
 	},
@@ -15208,14 +15228,53 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.notificationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetNotificationConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.s3.bucket.eventNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetEventNotifications()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.eventNotification")))
+	},
 	"aws.s3.bucket.ownershipControls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetOwnershipControls()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.intelligentTieringConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetIntelligentTieringConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.s3.bucket.inventoryConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetInventoryConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.s3.bucket.analyticsConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetAnalyticsConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.s3.bucket.requestPayment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetRequestPayment()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.transferAcceleration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetTransferAcceleration()).ToDataRes(types.String)
 	},
 	"aws.s3.bucket.macieCoverage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetMacieCoverage()).ToDataRes(types.Resource("aws.macie.bucket"))
 	},
 	"aws.s3.bucket.accessPoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.accessPoint")))
+	},
+	"aws.s3.bucket.eventNotification.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.eventNotification.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetType()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.eventNotification.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetArn()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.eventNotification.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetEvents()).ToDataRes(types.Array(types.String))
+	},
+	"aws.s3.bucket.eventNotification.lambdaFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetLambdaFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.s3.bucket.eventNotification.queue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.s3.bucket.eventNotification.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketEventNotification).GetTopic()).ToDataRes(types.Resource("aws.sns.topic"))
 	},
 	"aws.s3.bucket.accessPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetArn()).ToDataRes(types.String)
@@ -16251,6 +16310,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dynamodb.table.sseType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetSseType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.kmsMasterKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetKmsMasterKeyId()).ToDataRes(types.String)
 	},
 	"aws.dynamodb.table.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
@@ -19435,6 +19497,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.dlqTargetArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetDlqTargetArn()).ToDataRes(types.String)
 	},
+	"aws.lambda.function.recursiveLoop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetRecursiveLoop()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetPolicy()).ToDataRes(types.Dict)
 	},
@@ -21273,6 +21338,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
+	},
+	"aws.ec2.instance.imdsv2Required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetImdsv2Required()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.instance.enclaveEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetEnclaveEnabled()).ToDataRes(types.Bool)
@@ -31352,8 +31420,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpc).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.defaultSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).DefaultSecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.networkAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).NetworkAcls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.defaultNetworkAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).DefaultNetworkAcl, ok = plugin.RawToTValue[*mqlAwsEc2Networkacl](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45836,6 +45916,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfrontDistribution).WebAclId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.distribution.webAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).WebAcl, ok = plugin.RawToTValue[*mqlAwsWafAcl](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.continuousDeploymentPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).ContinuousDeploymentPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.distribution.geoRestrictionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).GeoRestrictionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -46924,8 +47012,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).NotificationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.eventNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).EventNotifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.ownershipControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).OwnershipControls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.intelligentTieringConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).IntelligentTieringConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.inventoryConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).InventoryConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.analyticsConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).AnalyticsConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.requestPayment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).RequestPayment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.transferAcceleration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).TransferAcceleration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.macieCoverage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46934,6 +47046,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.eventNotification.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.lambdaFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).LambdaFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.queue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Queue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.eventNotification.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketEventNotification).Topic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.accessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48470,6 +48614,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dynamodb.table.sseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).SseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.kmsMasterKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).KmsMasterKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53048,6 +53196,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).DlqTargetArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.recursiveLoop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).RecursiveLoop, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -55738,6 +55890,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.imdsv2Required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Imdsv2Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.enclaveEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70755,7 +70911,10 @@ type mqlAwsVpc struct {
 	DhcpOptionsId             plugin.TValue[string]
 	InternetGateways          plugin.TValue[[]any]
 	SecurityGroups            plugin.TValue[[]any]
+	DefaultSecurityGroup      plugin.TValue[*mqlAwsEc2Securitygroup]
 	NetworkAcls               plugin.TValue[[]any]
+	DefaultNetworkAcl         plugin.TValue[*mqlAwsEc2Networkacl]
+	BlockPublicAccessOptions  plugin.TValue[any]
 	VpnGateways               plugin.TValue[[]any]
 	DhcpOptions               plugin.TValue[*mqlAwsEc2DhcpOptions]
 	EnableDnsSupport          plugin.TValue[bool]
@@ -70989,6 +71148,22 @@ func (c *mqlAwsVpc) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsVpc) GetDefaultSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.DefaultSecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "defaultSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.defaultSecurityGroup()
+	})
+}
+
 func (c *mqlAwsVpc) GetNetworkAcls() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.NetworkAcls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -71002,6 +71177,28 @@ func (c *mqlAwsVpc) GetNetworkAcls() *plugin.TValue[[]any] {
 		}
 
 		return c.networkAcls()
+	})
+}
+
+func (c *mqlAwsVpc) GetDefaultNetworkAcl() *plugin.TValue[*mqlAwsEc2Networkacl] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkacl](&c.DefaultNetworkAcl, func() (*mqlAwsEc2Networkacl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "defaultNetworkAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkacl), nil
+			}
+		}
+
+		return c.defaultNetworkAcl()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BlockPublicAccessOptions, func() (any, error) {
+		return c.blockPublicAccessOptions()
 	})
 }
 
@@ -109833,27 +110030,29 @@ type mqlAwsCloudfrontDistribution struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudfrontDistributionInternal it will be used here
-	Arn                    plugin.TValue[string]
-	Status                 plugin.TValue[string]
-	DomainName             plugin.TValue[string]
-	Origins                plugin.TValue[[]any]
-	DefaultCacheBehavior   plugin.TValue[any]
-	CacheBehaviors         plugin.TValue[[]any]
-	HttpVersion            plugin.TValue[string]
-	IsIPV6Enabled          plugin.TValue[bool]
-	Enabled                plugin.TValue[bool]
-	PriceClass             plugin.TValue[string]
-	Cnames                 plugin.TValue[[]any]
-	ViewerProtocolPolicy   plugin.TValue[string]
-	MinimumProtocolVersion plugin.TValue[string]
-	SslSupportMethod       plugin.TValue[string]
-	WebAclId               plugin.TValue[string]
-	GeoRestrictionType     plugin.TValue[string]
-	LastModifiedAt         plugin.TValue[*time.Time]
-	Comment                plugin.TValue[string]
-	Logging                plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig]
-	ViewerMtlsMode         plugin.TValue[string]
-	ViewerMtlsTrustStoreId plugin.TValue[string]
+	Arn                          plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	DomainName                   plugin.TValue[string]
+	Origins                      plugin.TValue[[]any]
+	DefaultCacheBehavior         plugin.TValue[any]
+	CacheBehaviors               plugin.TValue[[]any]
+	HttpVersion                  plugin.TValue[string]
+	IsIPV6Enabled                plugin.TValue[bool]
+	Enabled                      plugin.TValue[bool]
+	PriceClass                   plugin.TValue[string]
+	Cnames                       plugin.TValue[[]any]
+	ViewerProtocolPolicy         plugin.TValue[string]
+	MinimumProtocolVersion       plugin.TValue[string]
+	SslSupportMethod             plugin.TValue[string]
+	WebAclId                     plugin.TValue[string]
+	WebAcl                       plugin.TValue[*mqlAwsWafAcl]
+	ContinuousDeploymentPolicyId plugin.TValue[string]
+	GeoRestrictionType           plugin.TValue[string]
+	LastModifiedAt               plugin.TValue[*time.Time]
+	Comment                      plugin.TValue[string]
+	Logging                      plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig]
+	ViewerMtlsMode               plugin.TValue[string]
+	ViewerMtlsTrustStoreId       plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -109951,6 +110150,28 @@ func (c *mqlAwsCloudfrontDistribution) GetSslSupportMethod() *plugin.TValue[stri
 
 func (c *mqlAwsCloudfrontDistribution) GetWebAclId() *plugin.TValue[string] {
 	return &c.WebAclId
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetWebAcl() *plugin.TValue[*mqlAwsWafAcl] {
+	return plugin.GetOrCompute[*mqlAwsWafAcl](&c.WebAcl, func() (*mqlAwsWafAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront.distribution", c.__id, "webAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafAcl), nil
+			}
+		}
+
+		return c.webAcl()
+	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetContinuousDeploymentPolicyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ContinuousDeploymentPolicyId, func() (string, error) {
+		return c.continuousDeploymentPolicyId()
+	})
 }
 
 func (c *mqlAwsCloudfrontDistribution) GetGeoRestrictionType() *plugin.TValue[string] {
@@ -112627,34 +112848,40 @@ type mqlAwsS3Bucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsS3BucketInternal
-	Arn                       plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	Policy                    plugin.TValue[*mqlAwsS3BucketPolicy]
-	Tags                      plugin.TValue[map[string]any]
-	Acl                       plugin.TValue[[]any]
-	Owner                     plugin.TValue[map[string]any]
-	Public                    plugin.TValue[bool]
-	Cors                      plugin.TValue[[]any]
-	Location                  plugin.TValue[string]
-	Versioning                plugin.TValue[map[string]any]
-	Logging                   plugin.TValue[map[string]any]
-	StaticWebsiteHosting      plugin.TValue[map[string]any]
-	Website                   plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration]
-	DefaultLock               plugin.TValue[string]
-	Replication               plugin.TValue[any]
-	Encryption                plugin.TValue[any]
-	EncryptionRules           plugin.TValue[[]any]
-	ReplicationRules          plugin.TValue[[]any]
-	PublicAccessBlock         plugin.TValue[any]
-	ObjectLockEnabled         plugin.TValue[bool]
-	MetricsConfigurations     plugin.TValue[[]any]
-	Exists                    plugin.TValue[bool]
-	CreatedAt                 plugin.TValue[*time.Time]
-	LifecycleRules            plugin.TValue[[]any]
-	NotificationConfiguration plugin.TValue[any]
-	OwnershipControls         plugin.TValue[string]
-	MacieCoverage             plugin.TValue[*mqlAwsMacieBucket]
-	AccessPoints              plugin.TValue[[]any]
+	Arn                              plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Policy                           plugin.TValue[*mqlAwsS3BucketPolicy]
+	Tags                             plugin.TValue[map[string]any]
+	Acl                              plugin.TValue[[]any]
+	Owner                            plugin.TValue[map[string]any]
+	Public                           plugin.TValue[bool]
+	Cors                             plugin.TValue[[]any]
+	Location                         plugin.TValue[string]
+	Versioning                       plugin.TValue[map[string]any]
+	Logging                          plugin.TValue[map[string]any]
+	StaticWebsiteHosting             plugin.TValue[map[string]any]
+	Website                          plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration]
+	DefaultLock                      plugin.TValue[string]
+	Replication                      plugin.TValue[any]
+	Encryption                       plugin.TValue[any]
+	EncryptionRules                  plugin.TValue[[]any]
+	ReplicationRules                 plugin.TValue[[]any]
+	PublicAccessBlock                plugin.TValue[any]
+	ObjectLockEnabled                plugin.TValue[bool]
+	MetricsConfigurations            plugin.TValue[[]any]
+	Exists                           plugin.TValue[bool]
+	CreatedAt                        plugin.TValue[*time.Time]
+	LifecycleRules                   plugin.TValue[[]any]
+	NotificationConfiguration        plugin.TValue[any]
+	EventNotifications               plugin.TValue[[]any]
+	OwnershipControls                plugin.TValue[string]
+	IntelligentTieringConfigurations plugin.TValue[[]any]
+	InventoryConfigurations          plugin.TValue[[]any]
+	AnalyticsConfigurations          plugin.TValue[[]any]
+	RequestPayment                   plugin.TValue[string]
+	TransferAcceleration             plugin.TValue[string]
+	MacieCoverage                    plugin.TValue[*mqlAwsMacieBucket]
+	AccessPoints                     plugin.TValue[[]any]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -112916,9 +113143,55 @@ func (c *mqlAwsS3Bucket) GetNotificationConfiguration() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsS3Bucket) GetEventNotifications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventNotifications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "eventNotifications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventNotifications()
+	})
+}
+
 func (c *mqlAwsS3Bucket) GetOwnershipControls() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.OwnershipControls, func() (string, error) {
 		return c.ownershipControls()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetIntelligentTieringConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntelligentTieringConfigurations, func() ([]any, error) {
+		return c.intelligentTieringConfigurations()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetInventoryConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InventoryConfigurations, func() ([]any, error) {
+		return c.inventoryConfigurations()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetAnalyticsConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AnalyticsConfigurations, func() ([]any, error) {
+		return c.analyticsConfigurations()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetRequestPayment() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RequestPayment, func() (string, error) {
+		return c.requestPayment()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetTransferAcceleration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TransferAcceleration, func() (string, error) {
+		return c.transferAcceleration()
 	})
 }
 
@@ -112951,6 +113224,116 @@ func (c *mqlAwsS3Bucket) GetAccessPoints() *plugin.TValue[[]any] {
 		}
 
 		return c.accessPoints()
+	})
+}
+
+// mqlAwsS3BucketEventNotification for the aws.s3.bucket.eventNotification resource
+type mqlAwsS3BucketEventNotification struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketEventNotificationInternal it will be used here
+	Id             plugin.TValue[string]
+	Type           plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	Events         plugin.TValue[[]any]
+	LambdaFunction plugin.TValue[*mqlAwsLambdaFunction]
+	Queue          plugin.TValue[*mqlAwsSqsQueue]
+	Topic          plugin.TValue[*mqlAwsSnsTopic]
+}
+
+// createAwsS3BucketEventNotification creates a new instance of this resource
+func createAwsS3BucketEventNotification(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketEventNotification{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.eventNotification", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketEventNotification) MqlName() string {
+	return "aws.s3.bucket.eventNotification"
+}
+
+func (c *mqlAwsS3BucketEventNotification) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetEvents() *plugin.TValue[[]any] {
+	return &c.Events
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetLambdaFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.LambdaFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.eventNotification", c.__id, "lambdaFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambdaFunction()
+	})
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.Queue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.eventNotification", c.__id, "queue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.queue()
+	})
+}
+
+func (c *mqlAwsS3BucketEventNotification) GetTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.Topic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.eventNotification", c.__id, "topic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.topic()
 	})
 }
 
@@ -116859,6 +117242,7 @@ type mqlAwsDynamodbTable struct {
 	Backups                   plugin.TValue[[]any]
 	SseDescription            plugin.TValue[any]
 	SseType                   plugin.TValue[string]
+	KmsMasterKeyId            plugin.TValue[string]
 	SseKmsKey                 plugin.TValue[*mqlAwsKmsKey]
 	ProvisionedThroughput     plugin.TValue[any]
 	ContinuousBackups         plugin.TValue[any]
@@ -116948,6 +117332,12 @@ func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[any] {
 func (c *mqlAwsDynamodbTable) GetSseType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SseType, func() (string, error) {
 		return c.sseType()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetKmsMasterKeyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KmsMasterKeyId, func() (string, error) {
+		return c.kmsMasterKeyId()
 	})
 }
 
@@ -127777,6 +128167,7 @@ type mqlAwsLambdaFunction struct {
 	Runtime                       plugin.TValue[string]
 	Concurrency                   plugin.TValue[int64]
 	DlqTargetArn                  plugin.TValue[string]
+	RecursiveLoop                 plugin.TValue[string]
 	Policy                        plugin.TValue[any]
 	VpcConfig                     plugin.TValue[any]
 	Vpc                           plugin.TValue[*mqlAwsVpc]
@@ -127879,6 +128270,12 @@ func (c *mqlAwsLambdaFunction) GetConcurrency() *plugin.TValue[int64] {
 
 func (c *mqlAwsLambdaFunction) GetDlqTargetArn() *plugin.TValue[string] {
 	return &c.DlqTargetArn
+}
+
+func (c *mqlAwsLambdaFunction) GetRecursiveLoop() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RecursiveLoop, func() (string, error) {
+		return c.recursiveLoop()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetPolicy() *plugin.TValue[any] {
@@ -134525,6 +134922,7 @@ type mqlAwsEc2Instance struct {
 	HttpTokens              plugin.TValue[string]
 	HttpEndpoint            plugin.TValue[string]
 	HttpPutResponseHopLimit plugin.TValue[int64]
+	Imdsv2Required          plugin.TValue[bool]
 	EnclaveEnabled          plugin.TValue[bool]
 	PatchState              plugin.TValue[any]
 	State                   plugin.TValue[string]
@@ -134658,6 +135056,10 @@ func (c *mqlAwsEc2Instance) GetHttpEndpoint() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
 	return &c.HttpPutResponseHopLimit
+}
+
+func (c *mqlAwsEc2Instance) GetImdsv2Required() *plugin.TValue[bool] {
+	return &c.Imdsv2Required
 }
 
 func (c *mqlAwsEc2Instance) GetEnclaveEnabled() *plugin.TValue[bool] {

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.29.0",
-  "generated_at": "2026-05-28T21:30:17-07:00",
+  "generated_at": "2026-05-28T22:36:52-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -272,6 +272,7 @@
     "ec2:DescribeVerifiedAccessTrustProviders",
     "ec2:DescribeVolumes",
     "ec2:DescribeVpcAttribute",
+    "ec2:DescribeVpcBlockPublicAccessOptions",
     "ec2:DescribeVpcEndpointConnections",
     "ec2:DescribeVpcEndpointServiceConfigurations",
     "ec2:DescribeVpcEndpointServicePermissions",
@@ -513,6 +514,7 @@
     "lambda:GetFunctionCodeSigningConfig",
     "lambda:GetFunctionConcurrency",
     "lambda:GetFunctionEventInvokeConfig",
+    "lambda:GetFunctionRecursionConfig",
     "lambda:GetFunctionUrlConfig",
     "lambda:GetPolicy",
     "lambda:GetRuntimeManagementConfig",
@@ -651,6 +653,7 @@
     "route53resolver:ListResolverRules",
     "s3:GetAccessPoint",
     "s3:GetAccessPointPolicy",
+    "s3:GetBucketAccelerateConfiguration",
     "s3:GetBucketAcl",
     "s3:GetBucketCors",
     "s3:GetBucketEncryption",
@@ -661,12 +664,16 @@
     "s3:GetBucketOwnershipControls",
     "s3:GetBucketPolicy",
     "s3:GetBucketReplication",
+    "s3:GetBucketRequestPayment",
     "s3:GetBucketTagging",
     "s3:GetBucketVersioning",
     "s3:GetBucketWebsite",
     "s3:GetObjectLockConfiguration",
     "s3:GetPublicAccessBlock",
     "s3:ListAccessPoints",
+    "s3:ListBucketAnalyticsConfigurations",
+    "s3:ListBucketIntelligentTieringConfigurations",
+    "s3:ListBucketInventoryConfigurations",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
     "sagemaker:DescribeAction",
@@ -2543,6 +2550,12 @@
       "source_file": "aws_vpc.go"
     },
     {
+      "permission": "ec2:DescribeVpcBlockPublicAccessOptions",
+      "service": "ec2",
+      "action": "DescribeVpcBlockPublicAccessOptions",
+      "source_file": "aws_vpc.go"
+    },
+    {
       "permission": "ec2:DescribeVpcEndpointConnections",
       "service": "ec2",
       "action": "DescribeVpcEndpointConnections",
@@ -4013,6 +4026,12 @@
       "source_file": "aws_lambda.go"
     },
     {
+      "permission": "lambda:GetFunctionRecursionConfig",
+      "service": "lambda",
+      "action": "GetFunctionRecursionConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
       "permission": "lambda:GetFunctionUrlConfig",
       "service": "lambda",
       "action": "GetFunctionUrlConfig",
@@ -4913,6 +4932,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "s3:GetBucketAccelerateConfiguration",
+      "service": "s3",
+      "action": "GetBucketAccelerateConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:GetBucketAcl",
       "service": "s3",
       "action": "GetBucketAcl",
@@ -4973,6 +4998,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "s3:GetBucketRequestPayment",
+      "service": "s3",
+      "action": "GetBucketRequestPayment",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:GetBucketTagging",
       "service": "s3",
       "action": "GetBucketTagging",
@@ -5006,6 +5037,24 @@
       "permission": "s3:ListAccessPoints",
       "service": "s3",
       "action": "ListAccessPoints",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:ListBucketAnalyticsConfigurations",
+      "service": "s3",
+      "action": "ListBucketAnalyticsConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:ListBucketIntelligentTieringConfigurations",
+      "service": "s3",
+      "action": "ListBucketIntelligentTieringConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:ListBucketInventoryConfigurations",
+      "service": "s3",
+      "action": "ListBucketInventoryConfigurations",
       "source_file": "aws_s3.go"
     },
     {

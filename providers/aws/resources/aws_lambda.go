@@ -495,6 +495,24 @@ func (a *mqlAwsLambdaFunction) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
+func (a *mqlAwsLambdaFunction) recursiveLoop() (string, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+
+	cfg, err := svc.GetFunctionRecursionConfig(ctx, &lambda.GetFunctionRecursionConfigInput{FunctionName: &funcName})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", errors.Wrap(err, "could not gather aws lambda function recursion config")
+	}
+	return string(cfg.RecursiveLoop), nil
+}
+
 func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	funcName := a.Name.Data
 	region := a.Region.Data

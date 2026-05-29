@@ -609,6 +609,7 @@ func (a *mqlAwsDynamodbTable) fetchDetail() error {
 
 	a.SseDescription = plugin.TValue[any]{Data: sseDict, State: plugin.StateIsSet}
 	a.SseType = plugin.TValue[string]{Data: sseType, State: plugin.StateIsSet}
+	a.KmsMasterKeyId = plugin.TValue[string]{Data: convert.ToValue(a.cacheSseKmsKeyArn), State: plugin.StateIsSet}
 	a.ProvisionedThroughput = plugin.TValue[any]{Data: throughputDict, State: plugin.StateIsSet}
 	a.CreatedAt = plugin.TValue[*time.Time]{Data: table.Table.CreationDateTime, State: plugin.StateIsSet}
 	a.DeletionProtectionEnabled = plugin.TValue[bool]{Data: convert.ToValue(table.Table.DeletionProtectionEnabled), State: plugin.StateIsSet}
@@ -641,6 +642,10 @@ func (a *mqlAwsDynamodbTable) sseDescription() (any, error) {
 }
 
 func (a *mqlAwsDynamodbTable) sseType() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) kmsMasterKeyId() (string, error) {
 	return "", a.fetchDetail()
 }
 
