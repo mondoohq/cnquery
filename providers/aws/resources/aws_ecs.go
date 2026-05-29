@@ -482,14 +482,17 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["stoppedAt"] = llx.TimeDataPtr(t.StoppedAt)
 
 	// Ephemeral storage size: prefer the Fargate-specific value (which also
-	// carries the encryption key), otherwise the generic task ephemeral storage.
-	var ephemeralStorageSize int64
-	if t.FargateEphemeralStorage != nil {
-		ephemeralStorageSize = int64(t.FargateEphemeralStorage.SizeInGiB)
-	} else if t.EphemeralStorage != nil {
-		ephemeralStorageSize = int64(t.EphemeralStorage.SizeInGiB)
+	// carries the encryption key), otherwise the generic task ephemeral
+	// storage. The API only reports these when explicitly configured, so leave
+	// the field null otherwise rather than implying 0 GiB is allocated.
+	switch {
+	case t.FargateEphemeralStorage != nil:
+		args["ephemeralStorageSizeInGiB"] = llx.IntData(int64(t.FargateEphemeralStorage.SizeInGiB))
+	case t.EphemeralStorage != nil:
+		args["ephemeralStorageSizeInGiB"] = llx.IntData(int64(t.EphemeralStorage.SizeInGiB))
+	default:
+		args["ephemeralStorageSizeInGiB"] = llx.NilData
 	}
-	args["ephemeralStorageSizeInGiB"] = llx.IntData(ephemeralStorageSize)
 
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {

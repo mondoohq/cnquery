@@ -6853,6 +6853,10 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   // Time when the task was stopped
   stoppedAt time
   // Size (in GiB) of ephemeral storage allocated to the task
+  //
+  // Null when the API does not report a value (for example EC2-launch tasks
+  // that use the default ephemeral storage); a number when ephemeral storage
+  // is explicitly configured.
   ephemeralStorageSizeInGiB int
   // KMS key encrypting the task's Fargate ephemeral storage (Fargate launch type)
   fargateEphemeralStorageKmsKey() aws.kms.key
