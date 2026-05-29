@@ -6,6 +6,7 @@ package packages
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -552,6 +553,108 @@ func TestModularitySupportedByPlatform(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, modularitySupportedByPlatform(tt.platform))
+		})
+	}
+}
+
+// renderRpmQueryFormat models how rpm renders a --queryformat string so we can
+// check the round-trip without a real rpm binary. rpm interprets only the
+// named C escapes (\a \b \f \n \r \t \v); for ANY other backslash sequence it
+// drops the backslash and keeps the following byte(s) literally. Crucially,
+// rpm's queryformat does NOT support \NNN octal or \xNN hex escapes — `\036`
+// renders to the literal string "036", and `\x1e` to "x1e". (Confirmed against
+// rpm 4.20.1: `rpm -q --qf 'A\tB\036C\x1eD\n'` emits "A<TAB>B036Cx1eD<LF>".)
+// %{TAG} tokens contain no backslash, so escape processing leaves them intact;
+// we substitute them afterwards with literal sample values.
+func renderRpmQueryFormat(format string, fields map[string]string) string {
+	var b strings.Builder
+	for i := 0; i < len(format); i++ {
+		if format[i] == '\\' && i+1 < len(format) {
+			switch format[i+1] {
+			case 'a':
+				b.WriteByte('\a')
+			case 'b':
+				b.WriteByte('\b')
+			case 'f':
+				b.WriteByte('\f')
+			case 'n':
+				b.WriteByte('\n')
+			case 'r':
+				b.WriteByte('\r')
+			case 't':
+				b.WriteByte('\t')
+			case 'v':
+				b.WriteByte('\v')
+			default:
+				// unknown escape (incl. \NNN and \xNN): backslash dropped, byte kept
+				b.WriteByte(format[i+1])
+			}
+			i++
+			continue
+		}
+		b.WriteByte(format[i])
+	}
+	rendered := b.String()
+	for tag, val := range fields {
+		rendered = strings.ReplaceAll(rendered, "%{"+tag+"}", val)
+	}
+	return rendered
+}
+
+// TestRpmQueryFormatRoundTrip guards the queryformat field separator against
+// the class of bug that caused the #7818 incident (reverted in #7963): the
+// separator emitted by queryFormat() must be something rpm can actually render
+// AND something RPM_REGEX can split on. #7818 switched the separator to `\036`
+// (intending ASCII RS, 0x1E), but rpm's queryformat has no octal escape, so it
+// emitted the literal "036"; RPM_REGEX expected the 0x1E byte, matched nothing,
+// and every rpm asset reported zero packages.
+//
+// This renders the real queryFormat() output exactly the way rpm does, then
+// feeds it back through ParseRpmPackages. Any separator rpm can't emit (or that
+// the regex can't split on) fails here — deterministically, with no rpm binary,
+// container, or VM.
+func TestRpmQueryFormatRoundTrip(t *testing.T) {
+	fields := map[string]string{
+		"NAME":            "glibc",
+		"EPOCH":           "0",
+		"EPOCHNUM":        "0",
+		"VERSION":         "2.34",
+		"RELEASE":         "100.el8",
+		"ARCH":            "x86_64",
+		"VENDOR":          "Red Hat, Inc.",
+		"SUMMARY":         "The GNU libc libraries",
+		"LICENSE":         "LGPLv2+",
+		"INSTALLTIME":     "1700000000",
+		"MODULARITYLABEL": "(none)", // rpm emits "(none)" for non-modular packages
+	}
+
+	// Cover both queryFormat() variants: EPOCHNUM + modularity (redhat/centos 7+)
+	// and EPOCH without modularity (suse).
+	platforms := []*inventory.Platform{
+		{Name: "redhat", Version: "8.10", Arch: "x86_64"},
+		{Name: "oraclelinux", Version: "9", Arch: "x86_64"},
+		{Name: "suse", Version: "15.6", Arch: "x86_64"},
+	}
+
+	for _, pf := range platforms {
+		t.Run(pf.Name, func(t *testing.T) {
+			mgr := &RpmPkgManager{platform: pf}
+			format := mgr.queryFormat()
+
+			output := renderRpmQueryFormat(format, fields)
+
+			pkgs := ParseRpmPackages(pf, strings.NewReader(output))
+			require.Lenf(t, pkgs, 1,
+				"queryFormat() output is not parseable by RPM_REGEX — the field separator is not something rpm emits (octal/hex escape?). format=%q rendered=%q",
+				format, output)
+
+			p := pkgs[0]
+			assert.Equal(t, "glibc", p.Name)
+			assert.Equal(t, "2.34-100.el8", p.Version)
+			assert.Equal(t, "x86_64", p.Arch)
+			assert.Equal(t, "Red Hat, Inc.", p.Vendor)
+			assert.Equal(t, "The GNU libc libraries", p.Description)
+			assert.Equal(t, "LGPLv2+", p.License)
 		})
 	}
 }
