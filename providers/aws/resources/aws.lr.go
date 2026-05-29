@@ -124,6 +124,7 @@ const (
 	ResourceAwsSagemakerInferenceComponent                                      string = "aws.sagemaker.inferenceComponent"
 	ResourceAwsSagemakerCluster                                                 string = "aws.sagemaker.cluster"
 	ResourceAwsSagemakerClusterInstanceGroup                                    string = "aws.sagemaker.clusterInstanceGroup"
+	ResourceAwsSagemakerClusterRestrictedInstanceGroup                          string = "aws.sagemaker.clusterRestrictedInstanceGroup"
 	ResourceAwsSagemakerClusterInstanceGroupInstanceTypeDetail                  string = "aws.sagemaker.clusterInstanceGroup.instanceTypeDetail"
 	ResourceAwsSagemakerClusterNode                                             string = "aws.sagemaker.clusterNode"
 	ResourceAwsSagemakerFeatureGroup                                            string = "aws.sagemaker.featureGroup"
@@ -1310,6 +1311,10 @@ func init() {
 		"aws.sagemaker.clusterInstanceGroup": {
 			// to override args, implement: initAwsSagemakerClusterInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerClusterInstanceGroup,
+		},
+		"aws.sagemaker.clusterRestrictedInstanceGroup": {
+			// to override args, implement: initAwsSagemakerClusterRestrictedInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerClusterRestrictedInstanceGroup,
 		},
 		"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail": {
 			// to override args, implement: initAwsSagemakerClusterInstanceGroupInstanceTypeDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7405,6 +7410,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.cluster.nodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerCluster).GetNodes()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterNode")))
 	},
+	"aws.sagemaker.cluster.restrictedInstanceGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetRestrictedInstanceGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterRestrictedInstanceGroup")))
+	},
+	"aws.sagemaker.cluster.tieredStorageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetTieredStorageEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.cluster.tieredStorageMemoryAllocationPercentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetTieredStorageMemoryAllocationPercentage()).ToDataRes(types.Int)
+	},
 	"aws.sagemaker.clusterInstanceGroup.instanceGroupName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceGroupName()).ToDataRes(types.String)
 	},
@@ -7443,6 +7457,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.clusterInstanceGroup.imageVersionStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetImageVersionStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetInstanceGroupName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.currentCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetCurrentCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.targetCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetTargetCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.fsxLustrePerUnitStorageThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetFsxLustrePerUnitStorageThroughput()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.fsxLustreSizeInGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetFsxLustreSizeInGiB()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.s3OutputPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetS3OutputPath()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.onStartDeepHealthChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetOnStartDeepHealthChecks()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceStorageConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetInstanceStorageConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.scheduledUpdateConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).GetScheduledUpdateConfig()).ToDataRes(types.Dict)
 	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetInstanceType()).ToDataRes(types.String)
@@ -12324,6 +12380,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.taskDefinition.containerDefinition.initProcessEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetInitProcessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.taskDefinition.containerDefinition.resourceRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetResourceRequirements()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).GetName()).ToDataRes(types.String)
@@ -35107,6 +35166,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerCluster).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.cluster.restrictedInstanceGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).RestrictedInstanceGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.tieredStorageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).TieredStorageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.tieredStorageMemoryAllocationPercentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).TieredStorageMemoryAllocationPercentage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.clusterInstanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterInstanceGroup).__id, ok = v.Value.(string)
 		return
@@ -35161,6 +35232,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.clusterInstanceGroup.imageVersionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterInstanceGroup).ImageVersionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).InstanceGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.currentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).CurrentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.targetCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).TargetCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.fsxLustrePerUnitStorageThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).FsxLustrePerUnitStorageThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.fsxLustreSizeInGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).FsxLustreSizeInGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.s3OutputPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).S3OutputPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.onStartDeepHealthChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).OnStartDeepHealthChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.instanceStorageConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).InstanceStorageConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterRestrictedInstanceGroup.scheduledUpdateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterRestrictedInstanceGroup).ScheduledUpdateConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42321,6 +42452,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.containerDefinition.initProcessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).InitProcessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.resourceRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).ResourceRequirements, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81244,20 +81379,23 @@ type mqlAwsSagemakerCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerClusterInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Region               plugin.TValue[string]
-	Status               plugin.TValue[string]
-	CreatedAt            plugin.TValue[*time.Time]
-	Tags                 plugin.TValue[map[string]any]
-	IamRole              plugin.TValue[*mqlAwsIamRole]
-	InstanceGroups       plugin.TValue[[]any]
-	Orchestrator         plugin.TValue[any]
-	Vpc                  plugin.TValue[*mqlAwsVpc]
-	NodeRecovery         plugin.TValue[string]
-	NodeProvisioningMode plugin.TValue[string]
-	FailureMessage       plugin.TValue[string]
-	Nodes                plugin.TValue[[]any]
+	Arn                                     plugin.TValue[string]
+	Name                                    plugin.TValue[string]
+	Region                                  plugin.TValue[string]
+	Status                                  plugin.TValue[string]
+	CreatedAt                               plugin.TValue[*time.Time]
+	Tags                                    plugin.TValue[map[string]any]
+	IamRole                                 plugin.TValue[*mqlAwsIamRole]
+	InstanceGroups                          plugin.TValue[[]any]
+	Orchestrator                            plugin.TValue[any]
+	Vpc                                     plugin.TValue[*mqlAwsVpc]
+	NodeRecovery                            plugin.TValue[string]
+	NodeProvisioningMode                    plugin.TValue[string]
+	FailureMessage                          plugin.TValue[string]
+	Nodes                                   plugin.TValue[[]any]
+	RestrictedInstanceGroups                plugin.TValue[[]any]
+	TieredStorageEnabled                    plugin.TValue[bool]
+	TieredStorageMemoryAllocationPercentage plugin.TValue[int64]
 }
 
 // createAwsSagemakerCluster creates a new instance of this resource
@@ -81411,6 +81549,34 @@ func (c *mqlAwsSagemakerCluster) GetNodes() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsSagemakerCluster) GetRestrictedInstanceGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RestrictedInstanceGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.cluster", c.__id, "restrictedInstanceGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.restrictedInstanceGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetTieredStorageEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TieredStorageEnabled, func() (bool, error) {
+		return c.tieredStorageEnabled()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetTieredStorageMemoryAllocationPercentage() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TieredStorageMemoryAllocationPercentage, func() (int64, error) {
+		return c.tieredStorageMemoryAllocationPercentage()
+	})
+}
+
 // mqlAwsSagemakerClusterInstanceGroup for the aws.sagemaker.clusterInstanceGroup resource
 type mqlAwsSagemakerClusterInstanceGroup struct {
 	MqlRuntime *plugin.Runtime
@@ -81532,6 +81698,144 @@ func (c *mqlAwsSagemakerClusterInstanceGroup) GetNetworkInterfaceType() *plugin.
 
 func (c *mqlAwsSagemakerClusterInstanceGroup) GetImageVersionStatus() *plugin.TValue[string] {
 	return &c.ImageVersionStatus
+}
+
+// mqlAwsSagemakerClusterRestrictedInstanceGroup for the aws.sagemaker.clusterRestrictedInstanceGroup resource
+type mqlAwsSagemakerClusterRestrictedInstanceGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerClusterRestrictedInstanceGroupInternal
+	InstanceGroupName                 plugin.TValue[string]
+	InstanceType                      plugin.TValue[string]
+	Region                            plugin.TValue[string]
+	Status                            plugin.TValue[string]
+	CurrentCount                      plugin.TValue[int64]
+	TargetCount                       plugin.TValue[int64]
+	IamRole                           plugin.TValue[*mqlAwsIamRole]
+	Vpc                               plugin.TValue[*mqlAwsVpc]
+	FsxLustrePerUnitStorageThroughput plugin.TValue[int64]
+	FsxLustreSizeInGiB                plugin.TValue[int64]
+	S3OutputPath                      plugin.TValue[string]
+	OnStartDeepHealthChecks           plugin.TValue[[]any]
+	InstanceStorageConfigs            plugin.TValue[[]any]
+	ScheduledUpdateConfig             plugin.TValue[any]
+}
+
+// createAwsSagemakerClusterRestrictedInstanceGroup creates a new instance of this resource
+func createAwsSagemakerClusterRestrictedInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerClusterRestrictedInstanceGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.clusterRestrictedInstanceGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) MqlName() string {
+	return "aws.sagemaker.clusterRestrictedInstanceGroup"
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetInstanceGroupName() *plugin.TValue[string] {
+	return &c.InstanceGroupName
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetCurrentCount() *plugin.TValue[int64] {
+	return &c.CurrentCount
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetTargetCount() *plugin.TValue[int64] {
+	return &c.TargetCount
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.clusterRestrictedInstanceGroup", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.clusterRestrictedInstanceGroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetFsxLustrePerUnitStorageThroughput() *plugin.TValue[int64] {
+	return &c.FsxLustrePerUnitStorageThroughput
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetFsxLustreSizeInGiB() *plugin.TValue[int64] {
+	return &c.FsxLustreSizeInGiB
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetS3OutputPath() *plugin.TValue[string] {
+	return &c.S3OutputPath
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetOnStartDeepHealthChecks() *plugin.TValue[[]any] {
+	return &c.OnStartDeepHealthChecks
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetInstanceStorageConfigs() *plugin.TValue[[]any] {
+	return &c.InstanceStorageConfigs
+}
+
+func (c *mqlAwsSagemakerClusterRestrictedInstanceGroup) GetScheduledUpdateConfig() *plugin.TValue[any] {
+	return &c.ScheduledUpdateConfig
 }
 
 // mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail for the aws.sagemaker.clusterInstanceGroup.instanceTypeDetail resource
@@ -99957,6 +100261,7 @@ type mqlAwsEcsTaskDefinitionContainerDefinition struct {
 	Cpu                    plugin.TValue[int64]
 	PortMappings           plugin.TValue[[]any]
 	InitProcessEnabled     plugin.TValue[bool]
+	ResourceRequirements   plugin.TValue[map[string]any]
 }
 
 // createAwsEcsTaskDefinitionContainerDefinition creates a new instance of this resource
@@ -100090,6 +100395,10 @@ func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetPortMappings() *plugin.T
 
 func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetInitProcessEnabled() *plugin.TValue[bool] {
 	return &c.InitProcessEnabled
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetResourceRequirements() *plugin.TValue[map[string]any] {
+	return &c.ResourceRequirements
 }
 
 // mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable for the aws.ecs.taskDefinition.containerDefinition.environmentVariable resource

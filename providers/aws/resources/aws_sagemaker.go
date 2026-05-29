@@ -2582,6 +2582,127 @@ func (a *mqlAwsSagemakerCluster) nodes() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsSagemakerCluster) tieredStorageEnabled() (bool, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return false, err
+	}
+	if resp.TieredStorageConfig == nil {
+		return false, nil
+	}
+	return resp.TieredStorageConfig.Mode == sagemakerTypes.ClusterConfigModeEnable, nil
+}
+
+func (a *mqlAwsSagemakerCluster) tieredStorageMemoryAllocationPercentage() (int64, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	if resp.TieredStorageConfig == nil || resp.TieredStorageConfig.InstanceMemoryAllocationPercentage == nil {
+		return 0, nil
+	}
+	return int64(*resp.TieredStorageConfig.InstanceMemoryAllocationPercentage), nil
+}
+
+func (a *mqlAwsSagemakerCluster) restrictedInstanceGroups() ([]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(resp.RestrictedInstanceGroups))
+	for _, rig := range resp.RestrictedInstanceGroups {
+		var currentCount, targetCount int64
+		if rig.CurrentCount != nil {
+			currentCount = int64(*rig.CurrentCount)
+		}
+		if rig.TargetCount != nil {
+			targetCount = int64(*rig.TargetCount)
+		}
+
+		var fsxThroughput, fsxSize int64
+		var s3OutputPath string
+		if rig.EnvironmentConfig != nil {
+			s3OutputPath = convert.ToValue(rig.EnvironmentConfig.S3OutputPath)
+			if fsx := rig.EnvironmentConfig.FSxLustreConfig; fsx != nil {
+				if fsx.PerUnitStorageThroughput != nil {
+					fsxThroughput = int64(*fsx.PerUnitStorageThroughput)
+				}
+				if fsx.SizeInGiB != nil {
+					fsxSize = int64(*fsx.SizeInGiB)
+				}
+			}
+		}
+
+		deepHealthChecks := make([]any, 0, len(rig.OnStartDeepHealthChecks))
+		for _, dhc := range rig.OnStartDeepHealthChecks {
+			deepHealthChecks = append(deepHealthChecks, string(dhc))
+		}
+
+		instanceStorageConfigs, err := convert.JsonToDictSlice(rig.InstanceStorageConfigs)
+		if err != nil {
+			return nil, err
+		}
+		scheduledUpdateConfig, err := convert.JsonToDict(rig.ScheduledUpdateConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlRIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterRestrictedInstanceGroup,
+			map[string]*llx.RawData{
+				"instanceGroupName":                 llx.StringDataPtr(rig.InstanceGroupName),
+				"instanceType":                      llx.StringData(string(rig.InstanceType)),
+				"region":                            llx.StringData(a.Region.Data),
+				"status":                            llx.StringData(string(rig.Status)),
+				"currentCount":                      llx.IntData(currentCount),
+				"targetCount":                       llx.IntData(targetCount),
+				"fsxLustrePerUnitStorageThroughput": llx.IntData(fsxThroughput),
+				"fsxLustreSizeInGiB":                llx.IntData(fsxSize),
+				"s3OutputPath":                      llx.StringData(s3OutputPath),
+				"onStartDeepHealthChecks":           llx.ArrayData(deepHealthChecks, types.String),
+				"instanceStorageConfigs":            llx.ArrayData(instanceStorageConfigs, types.Dict),
+				"scheduledUpdateConfig":             llx.DictData(scheduledUpdateConfig),
+			})
+		if err != nil {
+			return nil, err
+		}
+		rigRes := mqlRIG.(*mqlAwsSagemakerClusterRestrictedInstanceGroup)
+		rigRes.cacheClusterName = a.Name.Data
+		rigRes.cacheExecutionRole = rig.ExecutionRole
+		if rig.OverrideVpcConfig != nil {
+			rigRes.cacheOverrideSubnets = rig.OverrideVpcConfig.Subnets
+		}
+		res = append(res, mqlRIG)
+	}
+	return res, nil
+}
+
+type mqlAwsSagemakerClusterRestrictedInstanceGroupInternal struct {
+	cacheClusterName     string
+	cacheExecutionRole   *string
+	cacheOverrideSubnets []string
+}
+
+func (a *mqlAwsSagemakerClusterRestrictedInstanceGroup) id() (string, error) {
+	return a.Region.Data + "/" + a.cacheClusterName + "/" + a.InstanceGroupName.Data, nil
+}
+
+func (a *mqlAwsSagemakerClusterRestrictedInstanceGroup) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheExecutionRole == nil || *a.cacheExecutionRole == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheExecutionRole)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsSagemakerClusterRestrictedInstanceGroup) vpc() (*mqlAwsVpc, error) {
+	return sagemakerResolveVpc(a.MqlRuntime, a.Region.Data, a.cacheOverrideSubnets, &a.Vpc)
+}
+
 type mqlAwsSagemakerClusterInstanceGroupInternal struct {
 	cacheClusterName     string
 	cacheExecutionRole   *string

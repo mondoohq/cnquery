@@ -2715,6 +2715,12 @@ private aws.sagemaker.cluster @defaults("arn name status") {
   failureMessage() string
   // Nodes in the cluster
   nodes() []aws.sagemaker.clusterNode
+  // Restricted instance groups (specialized groups for training models such as Amazon Nova, sharing an FSx for Lustre environment)
+  restrictedInstanceGroups() []aws.sagemaker.clusterRestrictedInstanceGroup
+  // Whether managed tier checkpointing is enabled (cluster memory used as disaggregated checkpoint storage)
+  tieredStorageEnabled() bool
+  // Percentage of cluster memory allocated for tiered checkpoint storage
+  tieredStorageMemoryAllocationPercentage() int
 }
 
 // AWS SageMaker HyperPod cluster instance group
@@ -2745,6 +2751,45 @@ private aws.sagemaker.clusterInstanceGroup @defaults("instanceGroupName instance
   networkInterfaceType string
   // Image-version status for the group: LatestVersion or NewVersionAvailable
   imageVersionStatus string
+}
+
+// SageMaker HyperPod cluster restricted instance group
+//
+// Examine a specialized instance group used for training models such as
+// Amazon Nova, where instances share an Amazon FSx for Lustre environment
+// for cross-group workload scheduling. Select by `instanceGroupName`. The
+// `fsxLustre*` and `s3OutputPath` fields describe the shared environment;
+// traverse `iamRole` for the execution role and `vpc` for the network
+// override.
+private aws.sagemaker.clusterRestrictedInstanceGroup @defaults("instanceGroupName instanceType status") {
+  // Name of the restricted instance group
+  instanceGroupName string
+  // ML instance type for the group
+  instanceType string
+  // Region where the cluster exists
+  region string
+  // Status: InService, Creating, Updating, Failed, Degraded, or Deleting
+  status string
+  // Current number of instances in the group
+  currentCount int
+  // Target number of instances in the group
+  targetCount int
+  // Execution role the restricted instance group assumes
+  iamRole() aws.iam.role
+  // VPC override granting the group access to your resources
+  vpc() aws.vpc
+  // FSx for Lustre throughput capacity, in MB/s per TiB of storage
+  fsxLustrePerUnitStorageThroughput int
+  // FSx for Lustre storage capacity, in GiB
+  fsxLustreSizeInGiB int
+  // S3 path where output data from the group's environment is stored
+  s3OutputPath string
+  // Deep health checks performed when the group is created or updated
+  onStartDeepHealthChecks []string
+  // Additional per-instance storage configurations
+  instanceStorageConfigs []dict
+  // Schedule SageMaker follows when updating the group's AMI
+  scheduledUpdateConfig dict
 }
 
 // Instance type detail within a flexible SageMaker HyperPod instance group
@@ -6970,6 +7015,14 @@ private aws.ecs.taskDefinition.containerDefinition @defaults("name image") {
   portMappings() []aws.ecs.taskDefinition.containerDefinition.portMapping
   // Whether the container uses an init process (from linuxParameters)
   initProcessEnabled bool
+  // Accelerator resources reserved for the container
+  //
+  // Keyed by resource type: `GPU` (number of physical GPUs, or `ALL` for
+  // every GPU on the instance), `InferenceAccelerator` (the matching device
+  // name), or `NeuronDevice` (`ALL`; AWS Neuron accelerators, supported on
+  // Managed Instances only, at most one container per task). Empty when the
+  // container reserves no accelerators.
+  resourceRequirements map[string]string
 }
 
 // Amazon ECS Task Definition Container Environment Variable

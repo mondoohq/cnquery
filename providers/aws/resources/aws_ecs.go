@@ -955,6 +955,13 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 		}
 	}
 
+	// Accelerator resource requirements, keyed by resource type (GPU,
+	// InferenceAccelerator, NeuronDevice)
+	resourceRequirements := map[string]any{}
+	for _, rr := range cd.ResourceRequirements {
+		resourceRequirements[string(rr.Type)] = convert.ToValue(rr.Value)
+	}
+
 	// Type assert logConfig to Resource
 	logConfigResource, ok := logConfig.(plugin.Resource)
 	if !ok {
@@ -976,6 +983,7 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 			"cpu":                    llx.IntData(cpu),
 			"portMappings":           llx.ArrayData(portMappings, types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")),
 			"initProcessEnabled":     llx.BoolData(initProcessEnabled),
+			"resourceRequirements":   llx.MapData(resourceRequirements, types.String),
 		})
 }
 
