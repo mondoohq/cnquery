@@ -6,8 +6,8 @@ import "../../network/resources/network.lr"
 option provider = "go.mondoo.com/cnquery/v9/providers/aws"
 option go_package = "go.mondoo.com/mql/v13/providers/aws/resources"
 
-alias aws.accessAnalyzer = aws.iam.accessAnalyzer
-alias aws.accessAnalyzer.analyzer = aws.iam.accessanalyzer.analyzer
+alias aws.accessanalyzer = aws.iam.accessAnalyzer
+alias aws.accessanalyzer.analyzer = aws.iam.accessAnalyzer.analyzer
 
 // Amazon Web Services account
 //
@@ -2110,15 +2110,15 @@ private aws.iam.oidcProvider @defaults("arn url") {
 // for findings that have been resolved or suppressed.
 aws.iam.accessAnalyzer @defaults("analyzers") {
   // List of `aws.iam.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
-  analyzers() []aws.iam.accessanalyzer.analyzer
+  analyzers() []aws.iam.accessAnalyzer.analyzer
   // List of all active findings for all analyzers and regions
-  findings() []aws.iam.accessanalyzer.finding
+  findings() []aws.iam.accessAnalyzer.finding
   // List of all archived findings for all analyzers and regions
-  archivedFindings() []aws.iam.accessanalyzer.finding
+  archivedFindings() []aws.iam.accessAnalyzer.finding
 }
 
 // AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
-private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
+private aws.iam.accessAnalyzer.analyzer @defaults("name type region status") {
   // ARN for the analyzer
   arn string
   // Name for the analyzer
@@ -2140,7 +2140,7 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
 }
 
 // AWS IAM Access Analyzer finding
-private aws.iam.accessanalyzer.finding @defaults("resourceType region type status") {
+private aws.iam.accessAnalyzer.finding @defaults("resourceType region type status") {
   // ID of the finding
   id string
   // Error message describing why analysis failed (if any)

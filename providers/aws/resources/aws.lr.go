@@ -104,8 +104,8 @@ const (
 	ResourceAwsIamSamlProvider                                                  string = "aws.iam.samlProvider"
 	ResourceAwsIamOidcProvider                                                  string = "aws.iam.oidcProvider"
 	ResourceAwsIamAccessAnalyzer                                                string = "aws.iam.accessAnalyzer"
-	ResourceAwsIamAccessanalyzerAnalyzer                                        string = "aws.iam.accessanalyzer.analyzer"
-	ResourceAwsIamAccessanalyzerFinding                                         string = "aws.iam.accessanalyzer.finding"
+	ResourceAwsIamAccessAnalyzerAnalyzer                                        string = "aws.iam.accessAnalyzer.analyzer"
+	ResourceAwsIamAccessAnalyzerFinding                                         string = "aws.iam.accessAnalyzer.finding"
 	ResourceAwsSagemaker                                                        string = "aws.sagemaker"
 	ResourceAwsSagemakerNotebookinstance                                        string = "aws.sagemaker.notebookinstance"
 	ResourceAwsSagemakerNotebookinstancedetails                                 string = "aws.sagemaker.notebookinstancedetails"
@@ -1239,13 +1239,13 @@ func init() {
 			// to override args, implement: initAwsIamAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamAccessAnalyzer,
 		},
-		"aws.iam.accessanalyzer.analyzer": {
-			// to override args, implement: initAwsIamAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsIamAccessanalyzerAnalyzer,
+		"aws.iam.accessAnalyzer.analyzer": {
+			// to override args, implement: initAwsIamAccessAnalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamAccessAnalyzerAnalyzer,
 		},
-		"aws.iam.accessanalyzer.finding": {
-			// to override args, implement: initAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsIamAccessanalyzerFinding,
+		"aws.iam.accessAnalyzer.finding": {
+			// to override args, implement: initAwsIamAccessAnalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamAccessAnalyzerFinding,
 		},
 		"aws.sagemaker": {
 			// to override args, implement: initAwsSagemaker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6669,76 +6669,76 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsIamOidcProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.iam.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.analyzer")))
+		return (r.(*mqlAwsIamAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.analyzer")))
 	},
 	"aws.iam.accessAnalyzer.findings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessAnalyzer).GetFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.finding")))
+		return (r.(*mqlAwsIamAccessAnalyzer).GetFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
 	"aws.iam.accessAnalyzer.archivedFindings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessAnalyzer).GetArchivedFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessanalyzer.finding")))
+		return (r.(*mqlAwsIamAccessAnalyzer).GetArchivedFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
-	"aws.iam.accessanalyzer.analyzer.arn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetArn()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetArn()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetName()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetName()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetStatus()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetStatus()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetType()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetType()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetRegion()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetRegion()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	"aws.iam.accessAnalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.iam.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetLastResourceAnalyzed()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetLastResourceAnalyzed()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetLastResourceAnalyzedAt()).ToDataRes(types.Time)
+	"aws.iam.accessAnalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetLastResourceAnalyzedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.accessanalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
+	"aws.iam.accessAnalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.accessanalyzer.finding.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetId()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetId()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.error": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetError()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetError()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.resourceArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceArn()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetResourceArn()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.resourceOwnerAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceOwnerAccount()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.resourceOwnerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetResourceOwnerAccount()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.resourceType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetResourceType()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetResourceType()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetType()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetType()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetStatus()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetStatus()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.analyzedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetAnalyzedAt()).ToDataRes(types.Time)
+	"aws.iam.accessAnalyzer.finding.analyzedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetAnalyzedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.accessanalyzer.finding.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetCreatedAt()).ToDataRes(types.Time)
+	"aws.iam.accessAnalyzer.finding.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.accessanalyzer.finding.updatedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetUpdatedAt()).ToDataRes(types.Time)
+	"aws.iam.accessAnalyzer.finding.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetUpdatedAt()).ToDataRes(types.Time)
 	},
-	"aws.iam.accessanalyzer.finding.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetRegion()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetRegion()).ToDataRes(types.String)
 	},
-	"aws.iam.accessanalyzer.finding.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamAccessanalyzerFinding).GetAnalyzerArn()).ToDataRes(types.String)
+	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetAnalyzerArn()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.sagemaker.endpoint")))
@@ -34581,96 +34581,96 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamAccessAnalyzer).ArchivedFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).__id, ok = v.Value.(string)
+	"aws.iam.accessAnalyzer.analyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).__id, ok = v.Value.(string)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).LastResourceAnalyzed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).LastResourceAnalyzed, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).LastResourceAnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).LastResourceAnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).__id, ok = v.Value.(string)
+	"aws.iam.accessAnalyzer.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).__id, ok = v.Value.(string)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.resourceOwnerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).ResourceOwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.resourceOwnerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).ResourceOwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.analyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).AnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.analyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).AnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.iam.accessanalyzer.finding.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamAccessanalyzerFinding).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerFinding).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79590,11 +79590,11 @@ func (c *mqlAwsIamAccessAnalyzer) GetArchivedFindings() *plugin.TValue[[]any] {
 	})
 }
 
-// mqlAwsIamAccessanalyzerAnalyzer for the aws.iam.accessanalyzer.analyzer resource
-type mqlAwsIamAccessanalyzerAnalyzer struct {
+// mqlAwsIamAccessAnalyzerAnalyzer for the aws.iam.accessAnalyzer.analyzer resource
+type mqlAwsIamAccessAnalyzerAnalyzer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamAccessanalyzerAnalyzerInternal it will be used here
+	// optional: if you define mqlAwsIamAccessAnalyzerAnalyzerInternal it will be used here
 	Arn                    plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	Status                 plugin.TValue[string]
@@ -79606,9 +79606,9 @@ type mqlAwsIamAccessanalyzerAnalyzer struct {
 	CreatedAt              plugin.TValue[*time.Time]
 }
 
-// createAwsIamAccessanalyzerAnalyzer creates a new instance of this resource
-func createAwsIamAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsIamAccessanalyzerAnalyzer{
+// createAwsIamAccessAnalyzerAnalyzer creates a new instance of this resource
+func createAwsIamAccessAnalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamAccessAnalyzerAnalyzer{
 		MqlRuntime: runtime,
 	}
 
@@ -79617,15 +79617,10 @@ func createAwsIamAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.iam.accessanalyzer.analyzer", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.iam.accessAnalyzer.analyzer", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -79635,55 +79630,55 @@ func createAwsIamAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string
 	return res, nil
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) MqlName() string {
-	return "aws.iam.accessanalyzer.analyzer"
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) MqlName() string {
+	return "aws.iam.accessAnalyzer.analyzer"
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) MqlID() string {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetArn() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetName() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetStatus() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetType() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetRegion() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]any] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetLastResourceAnalyzed() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetLastResourceAnalyzed() *plugin.TValue[string] {
 	return &c.LastResourceAnalyzed
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TValue[*time.Time] {
 	return &c.LastResourceAnalyzedAt
 }
 
-func (c *mqlAwsIamAccessanalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-// mqlAwsIamAccessanalyzerFinding for the aws.iam.accessanalyzer.finding resource
-type mqlAwsIamAccessanalyzerFinding struct {
+// mqlAwsIamAccessAnalyzerFinding for the aws.iam.accessAnalyzer.finding resource
+type mqlAwsIamAccessAnalyzerFinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamAccessanalyzerFindingInternal it will be used here
+	// optional: if you define mqlAwsIamAccessAnalyzerFindingInternal it will be used here
 	Id                   plugin.TValue[string]
 	Error                plugin.TValue[string]
 	ResourceArn          plugin.TValue[string]
@@ -79698,9 +79693,9 @@ type mqlAwsIamAccessanalyzerFinding struct {
 	AnalyzerArn          plugin.TValue[string]
 }
 
-// createAwsIamAccessanalyzerFinding creates a new instance of this resource
-func createAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsIamAccessanalyzerFinding{
+// createAwsIamAccessAnalyzerFinding creates a new instance of this resource
+func createAwsIamAccessAnalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamAccessAnalyzerFinding{
 		MqlRuntime: runtime,
 	}
 
@@ -79712,7 +79707,7 @@ func createAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.iam.accessanalyzer.finding", res.__id)
+		args, err = runtime.ResourceFromRecording("aws.iam.accessAnalyzer.finding", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -79722,59 +79717,59 @@ func createAwsIamAccessanalyzerFinding(runtime *plugin.Runtime, args map[string]
 	return res, nil
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) MqlName() string {
-	return "aws.iam.accessanalyzer.finding"
+func (c *mqlAwsIamAccessAnalyzerFinding) MqlName() string {
+	return "aws.iam.accessAnalyzer.finding"
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) MqlID() string {
+func (c *mqlAwsIamAccessAnalyzerFinding) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetId() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetError() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetError() *plugin.TValue[string] {
 	return &c.Error
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetResourceArn() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetResourceArn() *plugin.TValue[string] {
 	return &c.ResourceArn
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetResourceOwnerAccount() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetResourceOwnerAccount() *plugin.TValue[string] {
 	return &c.ResourceOwnerAccount
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetResourceType() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetResourceType() *plugin.TValue[string] {
 	return &c.ResourceType
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetType() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetStatus() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetAnalyzedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetAnalyzedAt() *plugin.TValue[*time.Time] {
 	return &c.AnalyzedAt
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetCreatedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetUpdatedAt() *plugin.TValue[*time.Time] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetRegion() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsIamAccessanalyzerFinding) GetAnalyzerArn() *plugin.TValue[string] {
+func (c *mqlAwsIamAccessAnalyzerFinding) GetAnalyzerArn() *plugin.TValue[string] {
 	return &c.AnalyzerArn
 }
 
