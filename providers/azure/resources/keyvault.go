@@ -1103,6 +1103,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 					"validityInMonths": llx.IntData(0),
 					"keyUsage":         llx.ArrayData([]any{}, types.String),
 					"ekus":             llx.ArrayData([]any{}, types.String),
+					"sanDnsNames":      llx.ArrayData([]any{}, types.String),
+					"sanEmails":        llx.ArrayData([]any{}, types.String),
+					"sanUpns":          llx.ArrayData([]any{}, types.String),
+					"sanIpAddresses":   llx.ArrayData([]any{}, types.String),
+					"sanUris":          llx.ArrayData([]any{}, types.String),
 				},
 			)
 			if err != nil {
@@ -1162,6 +1167,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 	validityInMonths := int64(0)
 	keyUsage := []any{}
 	ekus := []any{}
+	sanDnsNames := []any{}
+	sanEmails := []any{}
+	sanUpns := []any{}
+	sanIpAddresses := []any{}
+	sanUris := []any{}
 
 	if policyResp.X509CertificateProperties != nil {
 		if policyResp.X509CertificateProperties.Subject != nil {
@@ -1184,6 +1194,13 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 				}
 			}
 		}
+		if san := policyResp.X509CertificateProperties.SubjectAlternativeNames; san != nil {
+			sanDnsNames = convert.SliceStrPtrToInterface(san.DNSNames)
+			sanEmails = convert.SliceStrPtrToInterface(san.Emails)
+			sanUpns = convert.SliceStrPtrToInterface(san.UserPrincipalNames)
+			sanIpAddresses = convert.SliceStrPtrToInterface(san.IPAddresses)
+			sanUris = convert.SliceStrPtrToInterface(san.URIs)
+		}
 	}
 
 	// Create X.509 properties resource
@@ -1195,6 +1212,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 			"validityInMonths": llx.IntData(validityInMonths),
 			"keyUsage":         llx.ArrayData(keyUsage, types.String),
 			"ekus":             llx.ArrayData(ekus, types.String),
+			"sanDnsNames":      llx.ArrayData(sanDnsNames, types.String),
+			"sanEmails":        llx.ArrayData(sanEmails, types.String),
+			"sanUpns":          llx.ArrayData(sanUpns, types.String),
+			"sanIpAddresses":   llx.ArrayData(sanIpAddresses, types.String),
+			"sanUris":          llx.ArrayData(sanUris, types.String),
 		},
 	)
 	if err != nil {
@@ -1411,6 +1433,61 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) previousVersion() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	id := a.Id.Data
+	kvid, err := parseKeyVaultId(id)
+	if err != nil {
+		return nil, err
+	}
+	if kvid.Type != "secrets" {
+		return nil, errors.New("only secret ids are supported")
+	}
+
+	client, err := azsecrets.NewClient(kvid.BaseUrl, conn.Token(), &azsecrets.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := client.GetSecret(ctx, kvid.Name, kvid.Version, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.PreviousVersion == nil || *resp.PreviousVersion == "" {
+		a.PreviousVersion.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	prev, err := client.GetSecret(ctx, kvid.Name, *resp.PreviousVersion, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var attrs azsecrets.SecretAttributes
+	if prev.Attributes != nil {
+		attrs = *prev.Attributes
+	}
+	mqlPrev, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
+		map[string]*llx.RawData{
+			"id":          llx.StringDataPtr((*string)(prev.ID)),
+			"tags":        llx.MapData(convert.PtrMapStrToInterface(prev.Tags), types.String),
+			"contentType": llx.StringDataPtr(prev.ContentType),
+			"managed":     llx.BoolDataPtr(prev.Managed),
+			"enabled":     llx.BoolDataPtr(attrs.Enabled),
+			"created":     llx.TimeDataPtr(attrs.Created),
+			"updated":     llx.TimeDataPtr(attrs.Updated),
+			"expires":     llx.TimeDataPtr(attrs.Expires),
+			"notBefore":   llx.TimeDataPtr(attrs.NotBefore),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPrev.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
 }
 
 func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

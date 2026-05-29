@@ -5953,6 +5953,16 @@ private azure.subscription.keyVaultService.certificate.policy.x509CertificatePro
   keyUsage []string
   // Extended key usage OIDs
   ekus []string
+  // Subject alternative name DNS domain names
+  sanDnsNames []string
+  // Subject alternative name email addresses
+  sanEmails []string
+  // Subject alternative name user principal names (UPNs)
+  sanUpns []string
+  // Subject alternative name IP addresses (IPv4 and IPv6)
+  sanIpAddresses []string
+  // Subject alternative name URIs
+  sanUris []string
 }
 
 // Azure Key Vault secret
@@ -5981,6 +5991,10 @@ private azure.subscription.keyVaultService.secret @defaults("id secretName") {
   version() string
   // List of secret versions
   versions() []azure.subscription.keyVaultService.secret
+  // Previous version of the secret
+  //
+  // Set for certificate-backed secrets created after 2025-06-01.
+  previousVersion() azure.subscription.keyVaultService.secret
 }
 
 // Azure Monitor

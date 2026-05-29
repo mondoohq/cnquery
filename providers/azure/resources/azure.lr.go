@@ -8708,6 +8708,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.ekus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetEkus()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanDnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSanDnsNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanEmails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSanEmails()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUpns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSanUpns()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSanIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).GetSanUris()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.keyVaultService.secret.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceSecret).GetId()).ToDataRes(types.String)
 	},
@@ -8743,6 +8758,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.secret.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceSecret).GetVersions()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.secret")))
+	},
+	"azure.subscription.keyVaultService.secret.previousVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceSecret).GetPreviousVersion()).ToDataRes(types.Resource("azure.subscription.keyVaultService.secret"))
 	},
 	"azure.subscription.monitorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorService).GetSubscriptionId()).ToDataRes(types.String)
@@ -23545,6 +23563,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).Ekus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanDnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).SanDnsNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).SanEmails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUpns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).SanUpns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).SanIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties).SanUris, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceSecret).__id, ok = v.Value.(string)
 		return
@@ -23595,6 +23633,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.secret.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceSecret).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.secret.previousVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceSecret).PreviousVersion, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceSecret](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54251,6 +54293,11 @@ type mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperti
 	ValidityInMonths plugin.TValue[int64]
 	KeyUsage         plugin.TValue[[]any]
 	Ekus             plugin.TValue[[]any]
+	SanDnsNames      plugin.TValue[[]any]
+	SanEmails        plugin.TValue[[]any]
+	SanUpns          plugin.TValue[[]any]
+	SanIpAddresses   plugin.TValue[[]any]
+	SanUris          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties creates a new instance of this resource
@@ -54306,23 +54353,44 @@ func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProp
 	return &c.Ekus
 }
 
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) GetSanDnsNames() *plugin.TValue[[]any] {
+	return &c.SanDnsNames
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) GetSanEmails() *plugin.TValue[[]any] {
+	return &c.SanEmails
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) GetSanUpns() *plugin.TValue[[]any] {
+	return &c.SanUpns
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) GetSanIpAddresses() *plugin.TValue[[]any] {
+	return &c.SanIpAddresses
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties) GetSanUris() *plugin.TValue[[]any] {
+	return &c.SanUris
+}
+
 // mqlAzureSubscriptionKeyVaultServiceSecret for the azure.subscription.keyVaultService.secret resource
 type mqlAzureSubscriptionKeyVaultServiceSecret struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceSecretInternal it will be used here
-	Id          plugin.TValue[string]
-	Tags        plugin.TValue[map[string]any]
-	ContentType plugin.TValue[string]
-	Managed     plugin.TValue[bool]
-	Enabled     plugin.TValue[bool]
-	NotBefore   plugin.TValue[*time.Time]
-	Expires     plugin.TValue[*time.Time]
-	Created     plugin.TValue[*time.Time]
-	Updated     plugin.TValue[*time.Time]
-	SecretName  plugin.TValue[string]
-	Version     plugin.TValue[string]
-	Versions    plugin.TValue[[]any]
+	Id              plugin.TValue[string]
+	Tags            plugin.TValue[map[string]any]
+	ContentType     plugin.TValue[string]
+	Managed         plugin.TValue[bool]
+	Enabled         plugin.TValue[bool]
+	NotBefore       plugin.TValue[*time.Time]
+	Expires         plugin.TValue[*time.Time]
+	Created         plugin.TValue[*time.Time]
+	Updated         plugin.TValue[*time.Time]
+	SecretName      plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Versions        plugin.TValue[[]any]
+	PreviousVersion plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret]
 }
 
 // createAzureSubscriptionKeyVaultServiceSecret creates a new instance of this resource
@@ -54423,6 +54491,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceSecret) GetVersions() *plugin.TValue
 		}
 
 		return c.versions()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceSecret) GetPreviousVersion() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceSecret](&c.PreviousVersion, func() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.secret", c.__id, "previousVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
+			}
+		}
+
+		return c.previousVersion()
 	})
 }
 

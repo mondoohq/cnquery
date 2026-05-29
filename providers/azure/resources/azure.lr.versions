@@ -1892,6 +1892,11 @@ azure.subscription.keyVaultService.certificate.policy.keyProperties.reuseKey 11.
 azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties 11.4.26
 azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.ekus 11.4.26
 azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.keyUsage 11.4.26
+azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanDnsNames 13.14.1
+azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanEmails 13.14.1
+azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanIpAddresses 13.14.1
+azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUpns 13.14.1
+azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.sanUris 13.14.1
 azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.subject 11.4.26
 azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties.validityInMonths 11.4.26
 azure.subscription.keyVaultService.certificate.recoveryLevel 9.0.1
@@ -1953,6 +1958,7 @@ azure.subscription.keyVaultService.secret.expires 9.0.1
 azure.subscription.keyVaultService.secret.id 9.0.1
 azure.subscription.keyVaultService.secret.managed 9.0.1
 azure.subscription.keyVaultService.secret.notBefore 9.0.1
+azure.subscription.keyVaultService.secret.previousVersion 13.14.1
 azure.subscription.keyVaultService.secret.secretName 9.0.1
 azure.subscription.keyVaultService.secret.tags 9.0.1
 azure.subscription.keyVaultService.secret.updated 9.0.1
