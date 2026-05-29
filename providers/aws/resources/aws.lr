@@ -22284,6 +22284,174 @@ private aws.ram.resourceShare @defaults("arn name status") {
   resources() []dict
 }
 
+// AWS Storage Gateway
+//
+// Use the Storage Gateway namespace to enumerate hybrid cloud storage
+// gateways that connect on-premises environments to AWS storage. Iterate
+// `gateways()` for every File, Volume, and Tape gateway in the account,
+// then traverse into each gateway's `fileShares()` and `volumes()` to
+// audit encryption, logging, and access configuration.
+aws.storagegateway {
+  // List of Storage Gateway gateways across all regions
+  gateways() []aws.storagegateway.gateway
+}
+
+// Storage Gateway gateway
+//
+// Examine a single hybrid storage gateway, selected by `arn` — for example
+// `aws.storagegateway.gateways.where(arn == "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12A3456B")`.
+// Summary fields (type, operational state, host environment, software
+// version) come from the gateway list; detail fields (endpoint type,
+// CloudWatch log group, VPC endpoint, network interfaces, capacity, and
+// software-update dates) describe the gateway's configuration and patch
+// posture. Traverse `fileShares()` and `volumes()` for the storage exposed
+// through the gateway.
+private aws.storagegateway.gateway @defaults("name type operationalState region") {
+  // Gateway ARN
+  arn string
+  // Gateway ID
+  id string
+  // Gateway name
+  name string
+  // Gateway type
+  //
+  // One of FILE_S3, FILE_FSX_SMB, STORED, CACHED, VTL, or VTL_SNOW.
+  type string
+  // Operational state of the gateway, for example ACTIVE or DISABLED
+  operationalState string
+  // ID of the EC2 instance backing the gateway, when applicable
+  ec2InstanceId string
+  // Region of the EC2 instance backing the gateway
+  ec2InstanceRegion string
+  // Hardware or software platform the gateway runs on
+  //
+  // One of VMWARE, HYPER-V, EC2, KVM, OTHER, or SNOWBALL.
+  hostEnvironment string
+  // Unique identifier for the host platform instance running the gateway
+  hostEnvironmentId string
+  // Version of the software running on the gateway appliance
+  softwareVersion string
+  // Date after which the gateway stops receiving software updates
+  deprecationDate string
+  // Region where the gateway resides
+  region string
+  // Endpoint type used to connect to the gateway, for example STANDARD or FIPS
+  endpointType() string
+  // Configured cache capacity of the gateway, for example Small, Medium, or Large
+  gatewayCapacity() string
+  // Cache capacities the gateway supports
+  supportedGatewayCapacities() []string
+  // Current state of the gateway, for example RUNNING or SHUTDOWN
+  state() string
+  // Time zone configured on the gateway, for example GMT-8:00
+  timezone() string
+  // Date of the most recent software update applied to the gateway
+  lastSoftwareUpdate() string
+  // Date the next software update becomes available
+  nextUpdateAvailabilityDate() string
+  // Date after which the gateway version no longer receives software updates
+  softwareUpdatesEndDate() string
+  // ARN of the CloudWatch log group that receives the gateway's health logs
+  cloudWatchLogGroupArn() string
+  // VPC endpoint the gateway connects through, when configured for PrivateLink
+  vpcEndpoint() string
+  // Network interfaces attached to the gateway
+  //
+  // Each entry is a dict with `ipv4Address`, `ipv6Address`, and `macAddress`.
+  networkInterfaces() []dict
+  // Resource tags
+  tags() map[string]string
+  // File shares exposed through the gateway (NFS and SMB)
+  fileShares() []aws.storagegateway.fileShare
+  // iSCSI volumes exposed through the gateway (cached and stored)
+  volumes() []aws.storagegateway.volume
+}
+
+// Storage Gateway file share
+//
+// Examine a single NFS or SMB file share backed by an S3 bucket, selected
+// by `arn`. Summary fields (type, status) come from the file-share list;
+// detail fields describe how data is encrypted (`kmsEncrypted`,
+// `encryptionType`, `kmsKey()`), the S3 location it maps to
+// (`locationArn`, `bucketRegion`), the access posture (`readOnly`,
+// `requesterPays`, `objectAcl`), and the IAM role the gateway assumes
+// (`iamRole()`).
+private aws.storagegateway.fileShare @defaults("id type status region") {
+  // File share ARN
+  arn string
+  // File share ID
+  id string
+  // File share protocol, either NFS or SMB
+  type string
+  // File share status, for example AVAILABLE or CREATING
+  status string
+  // ARN of the gateway that hosts the file share
+  gatewayArn string
+  // Region where the file share resides
+  region string
+  // File share name
+  name() string
+  // Whether the file share encrypts objects with a KMS key
+  kmsEncrypted() bool
+  // Server-side encryption type, for example SseS3, SseKms, or DsseKms
+  encryptionType() string
+  // KMS key used to encrypt objects stored through the file share
+  kmsKey() aws.kms.key
+  // Default S3 storage class for new objects, for example S3_STANDARD
+  defaultStorageClass() string
+  // S3 object access control applied to new objects, for example bucket-owner-full-control
+  objectAcl() string
+  // Whether the file share is read-only
+  readOnly() bool
+  // Whether the requester pays for S3 access charges
+  requesterPays() bool
+  // Whether the gateway infers the MIME type of uploaded objects
+  guessMimeTypeEnabled() bool
+  // ARN of the S3 bucket (and prefix) the file share maps to
+  locationArn() string
+  // Region of the backing S3 bucket
+  bucketRegion() string
+  // ARN of the CloudWatch log group that receives file-share audit logs
+  auditDestinationArn() string
+  // IAM role the gateway assumes to access the backing S3 bucket
+  iamRole() aws.iam.role
+}
+
+// Storage Gateway iSCSI volume
+//
+// Examine a single cached or stored iSCSI volume exposed by a Volume
+// Gateway, selected by `arn`. Summary fields (type, size, attachment
+// state) come from the volume list; detail fields describe the volume's
+// status, source snapshot, and encryption key (`encrypted`, `kmsKey()`).
+private aws.storagegateway.volume @defaults("id type sizeInBytes region") {
+  // Volume ARN
+  arn string
+  // Volume ID
+  id string
+  // Volume type, for example CACHED iSCSI or STORED iSCSI
+  type string
+  // Volume size in bytes
+  sizeInBytes int
+  // Attachment status of the volume, for example ATTACHED
+  attachmentStatus string
+  // ARN of the gateway that hosts the volume
+  gatewayArn string
+  // ID of the gateway that hosts the volume
+  gatewayId string
+  // Region where the volume resides
+  region string
+  // Volume status, for example AVAILABLE or PASS THROUGH
+  status() string
+  // Time the volume was created
+  createdAt() time
+  // ID of the snapshot the volume was created from, when applicable
+  sourceSnapshotId() string
+  // Whether the volume is encrypted with a KMS key
+  encrypted() bool
+  // KMS key used to encrypt the volume
+  kmsKey() aws.kms.key
+}
+
 // AWS Transfer Family
 //
 // Use the Transfer Family namespace to enumerate the file-transfer

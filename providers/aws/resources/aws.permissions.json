@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.29.0",
-  "generated_at": "2026-05-28T21:30:17-07:00",
+  "generated_at": "2026-05-28T22:36:52-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -837,6 +837,14 @@
     "states:ListStateMachineVersions",
     "states:ListStateMachines",
     "states:ListTagsForResource",
+    "storagegateway:DescribeCachediSCSIVolumes",
+    "storagegateway:DescribeGatewayInformation",
+    "storagegateway:DescribeNFSFileShares",
+    "storagegateway:DescribeSMBFileShares",
+    "storagegateway:DescribeStorediSCSIVolumes",
+    "storagegateway:ListFileShares",
+    "storagegateway:ListGateways",
+    "storagegateway:ListVolumes",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
     "timestream-influxdb:ListDbClusters",
@@ -6063,6 +6071,54 @@
       "service": "states",
       "action": "ListTagsForResource",
       "source_file": "aws_stepfunctions.go"
+    },
+    {
+      "permission": "storagegateway:DescribeCachediSCSIVolumes",
+      "service": "storagegateway",
+      "action": "DescribeCachediSCSIVolumes",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:DescribeGatewayInformation",
+      "service": "storagegateway",
+      "action": "DescribeGatewayInformation",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:DescribeNFSFileShares",
+      "service": "storagegateway",
+      "action": "DescribeNFSFileShares",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:DescribeSMBFileShares",
+      "service": "storagegateway",
+      "action": "DescribeSMBFileShares",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:DescribeStorediSCSIVolumes",
+      "service": "storagegateway",
+      "action": "DescribeStorediSCSIVolumes",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:ListFileShares",
+      "service": "storagegateway",
+      "action": "ListFileShares",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:ListGateways",
+      "service": "storagegateway",
+      "action": "ListGateways",
+      "source_file": "aws_storagegateway.go"
+    },
+    {
+      "permission": "storagegateway:ListVolumes",
+      "service": "storagegateway",
+      "action": "ListVolumes",
+      "source_file": "aws_storagegateway.go"
     },
     {
       "permission": "timestream-influxdb:GetDbCluster",

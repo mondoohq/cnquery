@@ -820,6 +820,10 @@ const (
 	ResourceAwsSfnActivity                                                      string = "aws.sfn.activity"
 	ResourceAwsRam                                                              string = "aws.ram"
 	ResourceAwsRamResourceShare                                                 string = "aws.ram.resourceShare"
+	ResourceAwsStoragegateway                                                   string = "aws.storagegateway"
+	ResourceAwsStoragegatewayGateway                                            string = "aws.storagegateway.gateway"
+	ResourceAwsStoragegatewayFileShare                                          string = "aws.storagegateway.fileShare"
+	ResourceAwsStoragegatewayVolume                                             string = "aws.storagegateway.volume"
 	ResourceAwsTransfer                                                         string = "aws.transfer"
 	ResourceAwsTransferConnector                                                string = "aws.transfer.connector"
 	ResourceAwsTransferWebApp                                                   string = "aws.transfer.webApp"
@@ -4097,6 +4101,22 @@ func init() {
 		"aws.ram.resourceShare": {
 			// to override args, implement: initAwsRamResourceShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRamResourceShare,
+		},
+		"aws.storagegateway": {
+			// to override args, implement: initAwsStoragegateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsStoragegateway,
+		},
+		"aws.storagegateway.gateway": {
+			Init:   initAwsStoragegatewayGateway,
+			Create: createAwsStoragegatewayGateway,
+		},
+		"aws.storagegateway.fileShare": {
+			// to override args, implement: initAwsStoragegatewayFileShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsStoragegatewayFileShare,
+		},
+		"aws.storagegateway.volume": {
+			// to override args, implement: initAwsStoragegatewayVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsStoragegatewayVolume,
 		},
 		"aws.transfer": {
 			// to override args, implement: initAwsTransfer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -29385,6 +29405,183 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ram.resourceShare.resources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRamResourceShare).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.storagegateway.gateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegateway).GetGateways()).ToDataRes(types.Array(types.Resource("aws.storagegateway.gateway")))
+	},
+	"aws.storagegateway.gateway.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetName()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetType()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.operationalState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetOperationalState()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.ec2InstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetEc2InstanceId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.ec2InstanceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetEc2InstanceRegion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.hostEnvironment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetHostEnvironment()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.hostEnvironmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetHostEnvironmentId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.softwareVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetSoftwareVersion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.deprecationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetDeprecationDate()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.endpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetEndpointType()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.gatewayCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetGatewayCapacity()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.supportedGatewayCapacities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetSupportedGatewayCapacities()).ToDataRes(types.Array(types.String))
+	},
+	"aws.storagegateway.gateway.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetState()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetTimezone()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.lastSoftwareUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetLastSoftwareUpdate()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.nextUpdateAvailabilityDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetNextUpdateAvailabilityDate()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.softwareUpdatesEndDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetSoftwareUpdatesEndDate()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.cloudWatchLogGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetCloudWatchLogGroupArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.vpcEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetVpcEndpoint()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.gateway.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetNetworkInterfaces()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.storagegateway.gateway.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.storagegateway.gateway.fileShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetFileShares()).ToDataRes(types.Array(types.Resource("aws.storagegateway.fileShare")))
+	},
+	"aws.storagegateway.gateway.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayGateway).GetVolumes()).ToDataRes(types.Array(types.Resource("aws.storagegateway.volume")))
+	},
+	"aws.storagegateway.fileShare.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetType()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.gatewayArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetGatewayArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetName()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.kmsEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetKmsEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.storagegateway.fileShare.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.storagegateway.fileShare.defaultStorageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetDefaultStorageClass()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.objectAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetObjectAcl()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.readOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetReadOnly()).ToDataRes(types.Bool)
+	},
+	"aws.storagegateway.fileShare.requesterPays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetRequesterPays()).ToDataRes(types.Bool)
+	},
+	"aws.storagegateway.fileShare.guessMimeTypeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetGuessMimeTypeEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.storagegateway.fileShare.locationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetLocationArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.bucketRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetBucketRegion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.auditDestinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetAuditDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.fileShare.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayFileShare).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.storagegateway.volume.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetType()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.sizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetSizeInBytes()).ToDataRes(types.Int)
+	},
+	"aws.storagegateway.volume.attachmentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetAttachmentStatus()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.gatewayArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetGatewayArn()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.gatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetGatewayId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.storagegateway.volume.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetSourceSnapshotId()).ToDataRes(types.String)
+	},
+	"aws.storagegateway.volume.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.storagegateway.volume.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsStoragegatewayVolume).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.transfer.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTransfer).GetServers()).ToDataRes(types.Array(types.Resource("aws.transfer.server")))
@@ -67490,6 +67687,258 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ram.resourceShare.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRamResourceShare).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegateway).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.storagegateway.gateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegateway).Gateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.storagegateway.gateway.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.operationalState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).OperationalState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.ec2InstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Ec2InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.ec2InstanceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Ec2InstanceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.hostEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).HostEnvironment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.hostEnvironmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).HostEnvironmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.softwareVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).SoftwareVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.deprecationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).DeprecationDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.endpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).EndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.gatewayCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).GatewayCapacity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.supportedGatewayCapacities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).SupportedGatewayCapacities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.lastSoftwareUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).LastSoftwareUpdate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.nextUpdateAvailabilityDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).NextUpdateAvailabilityDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.softwareUpdatesEndDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).SoftwareUpdatesEndDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.cloudWatchLogGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).CloudWatchLogGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.vpcEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).VpcEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.fileShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).FileShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.gateway.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayGateway).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.storagegateway.fileShare.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.gatewayArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).GatewayArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.kmsEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).KmsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.defaultStorageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).DefaultStorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.objectAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).ObjectAcl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.readOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.requesterPays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).RequesterPays, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.guessMimeTypeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).GuessMimeTypeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.locationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).LocationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.bucketRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).BucketRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.auditDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).AuditDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.fileShare.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayFileShare).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.storagegateway.volume.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.sizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).SizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.attachmentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).AttachmentStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.gatewayArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).GatewayArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.gatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).GatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.sourceSnapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.storagegateway.volume.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsStoragegatewayVolume).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.transfer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -163638,6 +164087,603 @@ func (c *mqlAwsRamResourceShare) GetPrincipals() *plugin.TValue[[]any] {
 func (c *mqlAwsRamResourceShare) GetResources() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
 		return c.resources()
+	})
+}
+
+// mqlAwsStoragegateway for the aws.storagegateway resource
+type mqlAwsStoragegateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsStoragegatewayInternal it will be used here
+	Gateways plugin.TValue[[]any]
+}
+
+// createAwsStoragegateway creates a new instance of this resource
+func createAwsStoragegateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsStoragegateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.storagegateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsStoragegateway) MqlName() string {
+	return "aws.storagegateway"
+}
+
+func (c *mqlAwsStoragegateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsStoragegateway) GetGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Gateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway", c.__id, "gateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.gateways()
+	})
+}
+
+// mqlAwsStoragegatewayGateway for the aws.storagegateway.gateway resource
+type mqlAwsStoragegatewayGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsStoragegatewayGatewayInternal
+	Arn                        plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	OperationalState           plugin.TValue[string]
+	Ec2InstanceId              plugin.TValue[string]
+	Ec2InstanceRegion          plugin.TValue[string]
+	HostEnvironment            plugin.TValue[string]
+	HostEnvironmentId          plugin.TValue[string]
+	SoftwareVersion            plugin.TValue[string]
+	DeprecationDate            plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	EndpointType               plugin.TValue[string]
+	GatewayCapacity            plugin.TValue[string]
+	SupportedGatewayCapacities plugin.TValue[[]any]
+	State                      plugin.TValue[string]
+	Timezone                   plugin.TValue[string]
+	LastSoftwareUpdate         plugin.TValue[string]
+	NextUpdateAvailabilityDate plugin.TValue[string]
+	SoftwareUpdatesEndDate     plugin.TValue[string]
+	CloudWatchLogGroupArn      plugin.TValue[string]
+	VpcEndpoint                plugin.TValue[string]
+	NetworkInterfaces          plugin.TValue[[]any]
+	Tags                       plugin.TValue[map[string]any]
+	FileShares                 plugin.TValue[[]any]
+	Volumes                    plugin.TValue[[]any]
+}
+
+// createAwsStoragegatewayGateway creates a new instance of this resource
+func createAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsStoragegatewayGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.storagegateway.gateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsStoragegatewayGateway) MqlName() string {
+	return "aws.storagegateway.gateway"
+}
+
+func (c *mqlAwsStoragegatewayGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetOperationalState() *plugin.TValue[string] {
+	return &c.OperationalState
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetEc2InstanceId() *plugin.TValue[string] {
+	return &c.Ec2InstanceId
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetEc2InstanceRegion() *plugin.TValue[string] {
+	return &c.Ec2InstanceRegion
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetHostEnvironment() *plugin.TValue[string] {
+	return &c.HostEnvironment
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetHostEnvironmentId() *plugin.TValue[string] {
+	return &c.HostEnvironmentId
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetSoftwareVersion() *plugin.TValue[string] {
+	return &c.SoftwareVersion
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetDeprecationDate() *plugin.TValue[string] {
+	return &c.DeprecationDate
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetEndpointType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointType, func() (string, error) {
+		return c.endpointType()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetGatewayCapacity() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GatewayCapacity, func() (string, error) {
+		return c.gatewayCapacity()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetSupportedGatewayCapacities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SupportedGatewayCapacities, func() ([]any, error) {
+		return c.supportedGatewayCapacities()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetTimezone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Timezone, func() (string, error) {
+		return c.timezone()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetLastSoftwareUpdate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastSoftwareUpdate, func() (string, error) {
+		return c.lastSoftwareUpdate()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetNextUpdateAvailabilityDate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NextUpdateAvailabilityDate, func() (string, error) {
+		return c.nextUpdateAvailabilityDate()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetSoftwareUpdatesEndDate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SoftwareUpdatesEndDate, func() (string, error) {
+		return c.softwareUpdatesEndDate()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetCloudWatchLogGroupArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CloudWatchLogGroupArn, func() (string, error) {
+		return c.cloudWatchLogGroupArn()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetVpcEndpoint() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VpcEndpoint, func() (string, error) {
+		return c.vpcEndpoint()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetNetworkInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkInterfaces, func() ([]any, error) {
+		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetFileShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway.gateway", c.__id, "fileShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileShares()
+	})
+}
+
+func (c *mqlAwsStoragegatewayGateway) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway.gateway", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+// mqlAwsStoragegatewayFileShare for the aws.storagegateway.fileShare resource
+type mqlAwsStoragegatewayFileShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsStoragegatewayFileShareInternal
+	Arn                  plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Type                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	GatewayArn           plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	KmsEncrypted         plugin.TValue[bool]
+	EncryptionType       plugin.TValue[string]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	DefaultStorageClass  plugin.TValue[string]
+	ObjectAcl            plugin.TValue[string]
+	ReadOnly             plugin.TValue[bool]
+	RequesterPays        plugin.TValue[bool]
+	GuessMimeTypeEnabled plugin.TValue[bool]
+	LocationArn          plugin.TValue[string]
+	BucketRegion         plugin.TValue[string]
+	AuditDestinationArn  plugin.TValue[string]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+}
+
+// createAwsStoragegatewayFileShare creates a new instance of this resource
+func createAwsStoragegatewayFileShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsStoragegatewayFileShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.storagegateway.fileShare", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsStoragegatewayFileShare) MqlName() string {
+	return "aws.storagegateway.fileShare"
+}
+
+func (c *mqlAwsStoragegatewayFileShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetGatewayArn() *plugin.TValue[string] {
+	return &c.GatewayArn
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetKmsEncrypted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KmsEncrypted, func() (bool, error) {
+		return c.kmsEncrypted()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway.fileShare", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetDefaultStorageClass() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultStorageClass, func() (string, error) {
+		return c.defaultStorageClass()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetObjectAcl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObjectAcl, func() (string, error) {
+		return c.objectAcl()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetReadOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReadOnly, func() (bool, error) {
+		return c.readOnly()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetRequesterPays() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequesterPays, func() (bool, error) {
+		return c.requesterPays()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetGuessMimeTypeEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GuessMimeTypeEnabled, func() (bool, error) {
+		return c.guessMimeTypeEnabled()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetLocationArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LocationArn, func() (string, error) {
+		return c.locationArn()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetBucketRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BucketRegion, func() (string, error) {
+		return c.bucketRegion()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetAuditDestinationArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditDestinationArn, func() (string, error) {
+		return c.auditDestinationArn()
+	})
+}
+
+func (c *mqlAwsStoragegatewayFileShare) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway.fileShare", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+// mqlAwsStoragegatewayVolume for the aws.storagegateway.volume resource
+type mqlAwsStoragegatewayVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsStoragegatewayVolumeInternal
+	Arn              plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Type             plugin.TValue[string]
+	SizeInBytes      plugin.TValue[int64]
+	AttachmentStatus plugin.TValue[string]
+	GatewayArn       plugin.TValue[string]
+	GatewayId        plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Status           plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	SourceSnapshotId plugin.TValue[string]
+	Encrypted        plugin.TValue[bool]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsStoragegatewayVolume creates a new instance of this resource
+func createAwsStoragegatewayVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsStoragegatewayVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.storagegateway.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsStoragegatewayVolume) MqlName() string {
+	return "aws.storagegateway.volume"
+}
+
+func (c *mqlAwsStoragegatewayVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetSizeInBytes() *plugin.TValue[int64] {
+	return &c.SizeInBytes
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetAttachmentStatus() *plugin.TValue[string] {
+	return &c.AttachmentStatus
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetGatewayArn() *plugin.TValue[string] {
+	return &c.GatewayArn
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetGatewayId() *plugin.TValue[string] {
+	return &c.GatewayId
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetSourceSnapshotId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SourceSnapshotId, func() (string, error) {
+		return c.sourceSnapshotId()
+	})
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetEncrypted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Encrypted, func() (bool, error) {
+		return c.encrypted()
+	})
+}
+
+func (c *mqlAwsStoragegatewayVolume) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.storagegateway.volume", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 

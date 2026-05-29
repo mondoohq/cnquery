@@ -108,6 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.28
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.7
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.17
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.24

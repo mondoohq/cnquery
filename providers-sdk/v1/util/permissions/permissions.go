@@ -482,6 +482,7 @@ func awsConnectionMethodToService(method string) string {
 		"kms":                      "kms",
 		"sns":                      "sns",
 		"sqs":                      "sqs",
+		"storagegateway":           "storagegateway",
 		"redshift":                 "redshift",
 		"cloudfront":               "cloudfront",
 		"cloudformation":           "cloudformation",
