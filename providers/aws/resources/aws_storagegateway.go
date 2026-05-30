@@ -703,6 +703,11 @@ func (a *mqlAwsStoragegatewayVolume) sourceSnapshotId() (string, error) {
 	return d.sourceSnapshotId, nil
 }
 
+// encrypted reports whether the volume is encrypted at rest. Storage Gateway
+// volumes support only SSE-KMS, and the SDK's CachediSCSIVolume /
+// StorediSCSIVolume types expose only KMSKey — there is no KMSEncrypted bool or
+// EncryptionType field as there is on the file-share types. KMSKey is populated
+// whenever the volume is KMS-encrypted, so its presence is the canonical signal.
 func (a *mqlAwsStoragegatewayVolume) encrypted() (bool, error) {
 	d, err := a.fetchDetail()
 	if err != nil || d == nil {
