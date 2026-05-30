@@ -72,6 +72,11 @@ func (a *mqlAwsStoragegateway) getGateways(conn *connection.AwsConnection) []*jo
 				}
 
 				for _, gw := range page.Gateways {
+					if gw.GatewayARN == nil {
+						// ARN is the cache key; without it the resource can't be
+						// addressed or de-duplicated, so skip it.
+						continue
+					}
 					args := map[string]*llx.RawData{
 						"__id":              llx.StringDataPtr(gw.GatewayARN),
 						"arn":               llx.StringDataPtr(gw.GatewayARN),
@@ -164,8 +169,9 @@ func (a *mqlAwsStoragegatewayGateway) fetchInfo() (*storagegateway.DescribeGatew
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.StorageGateway(a.Region.Data)
+	arn := a.Arn.Data
 	out, err := svc.DescribeGatewayInformation(context.Background(), &storagegateway.DescribeGatewayInformationInput{
-		GatewayARN: &a.Arn.Data,
+		GatewayARN: &arn,
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
@@ -293,8 +299,9 @@ func (a *mqlAwsStoragegatewayGateway) fileShares() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
+	arn := a.Arn.Data
 	paginator := storagegateway.NewListFileSharesPaginator(svc, &storagegateway.ListFileSharesInput{
-		GatewayARN: &a.Arn.Data,
+		GatewayARN: &arn,
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
@@ -331,8 +338,9 @@ func (a *mqlAwsStoragegatewayGateway) volumes() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
+	arn := a.Arn.Data
 	paginator := storagegateway.NewListVolumesPaginator(svc, &storagegateway.ListVolumesInput{
-		GatewayARN: &a.Arn.Data,
+		GatewayARN: &arn,
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
@@ -636,7 +644,7 @@ func (a *mqlAwsStoragegatewayVolume) fetchDetail() (*sgwVolumeDetail, error) {
 	arns := []string{a.Arn.Data}
 
 	var detail *sgwVolumeDetail
-	if strings.Contains(strings.ToUpper(a.Type.Data), "STORED") {
+	if strings.HasPrefix(strings.ToUpper(a.Type.Data), "STORED") {
 		out, err := svc.DescribeStorediSCSIVolumes(ctx, &storagegateway.DescribeStorediSCSIVolumesInput{VolumeARNs: arns})
 		if err != nil {
 			if Is400AccessDeniedError(err) {
