@@ -2113,7 +2113,7 @@ private aws.iam.oidcProvider @defaults("arn url") {
 // active findings produced by those analyzers, and `archivedFindings()`
 // for findings that have been resolved or suppressed.
 aws.iam.accessAnalyzer @defaults("analyzers") {
-  // List of `aws.iam.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
+  // List of `aws.iam.accessAnalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
   analyzers() []aws.iam.accessAnalyzer.analyzer
   // List of all active findings for all analyzers and regions
   findings() []aws.iam.accessAnalyzer.finding
