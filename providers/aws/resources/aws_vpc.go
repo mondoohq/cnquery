@@ -1373,14 +1373,16 @@ func (a *mqlAwsVpc) blockPublicAccessOptions() (any, error) {
 	if opts.LastUpdateTimestamp != nil {
 		lastUpdate = opts.LastUpdateTimestamp.Format(time.RFC3339)
 	}
-	return map[string]any{
+	result := map[string]any{
 		"internetGatewayBlockMode": string(opts.InternetGatewayBlockMode),
 		"state":                    string(opts.State),
 		"exclusionsAllowed":        string(opts.ExclusionsAllowed),
 		"managedBy":                string(opts.ManagedBy),
 		"reason":                   convert.ToValue(opts.Reason),
 		"lastUpdateTimestamp":      lastUpdate,
-	}, nil
+	}
+	conn.SetCachedValue(cacheKey, result)
+	return result, nil
 }
 
 // VPN Gateway implementation
