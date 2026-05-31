@@ -314,13 +314,13 @@ func ListAll() ([]*Provider, error) {
 			continue
 		}
 
-		if err := provider.LoadResources(); err != nil {
-			log.Error().Err(err).
-				Str("provider", provider.Name).
-				Str("path", provider.Path).
-				Msg("failed to load provider resources")
-			continue
-		}
+		// Note: we intentionally do NOT parse the provider's resource schema
+		// here. Schemas are large (multiple megabytes across all installed
+		// providers, and growing) and are loaded lazily the moment a provider is
+		// actually connected (see (*coordinator).LoadSchema / Connect) or its
+		// dependencies are inspected (installDependencies). Parsing every
+		// provider's schema up front just to build the CLI wastes startup time
+		// and memory for providers we never use.
 
 		res = append(res, provider)
 	}
@@ -472,10 +472,17 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 // installDependencies ensures all dependencies of a provider are installed
 func installDependencies(provider *Provider, existing Providers) error {
 	if provider.Schema == nil {
-		// every provider must have a schema but, instead of throwing a panic here
-		// let's print a helpful message to the user and continue execution
-		log.Error().Str("provider", provider.Name).Msg("provider without schema, unable to look up dependencies")
-		return nil
+		// Schemas are loaded lazily (see readProviderDir / ListAll), so most
+		// providers reach this point without one. Load just this provider's
+		// schema on demand to inspect its dependencies — builtins have no path
+		// and legitimately carry no file-backed schema, so skip those.
+		if provider.Path == "" {
+			return nil
+		}
+		if err := provider.LoadResources(); err != nil {
+			log.Error().Err(err).Str("provider", provider.Name).Msg("failed to load provider schema, unable to look up dependencies")
+			return nil
+		}
 	}
 
 	for _, dependency := range provider.Schema.AllDependencies() {
@@ -854,7 +861,12 @@ func readProviderDir(pdir string) (*Provider, error) {
 		Provider: &plugin.Provider{
 			Name: name,
 		},
-		Schema:    MustLoadSchemaFromFile(name, resources),
+		// Schema is loaded lazily via (*coordinator).LoadSchema when a
+		// provider is actually connected. We verified the resources file
+		// exists above (ProbeFile); parsing every provider's schema (multiple
+		// megabytes in total) up front is wasted work for the providers we
+		// never touch.
+		Schema:    nil,
 		Path:      pdir,
 		HasBinary: config.ProbeFile(bin),
 	}, nil
@@ -956,9 +968,15 @@ func (p *Provider) LoadResources() error {
 		return errors.New("failed to read provider resources json from " + path + ": " + err.Error())
 	}
 
-	if err := json.Unmarshal(res, &p.Schema); err != nil {
+	// Unmarshal into a concrete *resources.Schema rather than the
+	// resources.ResourcesSchema interface field directly: json.Unmarshal
+	// cannot target a nil interface. Previously this worked only because the
+	// field was pre-populated with a concrete value before LoadResources ran.
+	var schema resources.Schema
+	if err := json.Unmarshal(res, &schema); err != nil {
 		return errors.New("failed to parse provider resources json from " + path + ": " + err.Error())
 	}
+	p.Schema = &schema
 	return nil
 }
 
