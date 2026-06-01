@@ -9,6 +9,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // Use the OpenStack provider to query identity, compute, network, storage, and
 // other service resources within a scoped project. The root resource exposes
 // Keystone principals (`projects`, `users`, `roles`, `domains`, `groups`),
+// Keystone credentials and the service catalog (`credentials`, `trusts`,
+// `identityServices`, `identityEndpoints`, `regions`),
 // Nova compute assets (`servers`, `flavors`, `keypairs`, `serverGroups`,
 // `hypervisors`, `computeServices`, `aggregates`, `computeLimits`), Neutron
 // networking (`networks`, `subnets`, `routers`, `ports`, `floatingIps`,
@@ -39,6 +41,16 @@ openstack {
   domains() []openstack.domain
   // Keystone groups (typically admin-only)
   groups() []openstack.group
+  // Keystone credentials such as EC2 access keys and X.509 certs (typically admin-only)
+  credentials() []openstack.credential
+  // Keystone trusts delegating authorization between users (typically admin-only)
+  trusts() []openstack.trust
+  // Keystone service-catalog services (typically admin-only)
+  identityServices() []openstack.identity.service
+  // Keystone service-catalog endpoints (typically admin-only)
+  identityEndpoints() []openstack.identity.endpoint
+  // Keystone regions
+  regions() []openstack.identity.region
 
   // Nova compute servers (instances) in the scoped project
   servers() []openstack.compute.server
@@ -168,6 +180,8 @@ private openstack.user @defaults("id name enabled") {
   groups() []openstack.group
   // Application credentials owned by this user
   applicationCredentials() []openstack.applicationCredential
+  // EC2-compatible access credentials owned by this user
+  ec2Credentials() []openstack.ec2Credential
 }
 
 // OpenStack Keystone role
@@ -1593,6 +1607,166 @@ private openstack.applicationCredential @defaults("id name unrestricted expiresA
   user() openstack.user
   // Project the credential is scoped to
   project() openstack.project
+}
+
+// OpenStack Keystone credential
+//
+// Examine a stored authentication credential — most commonly an EC2-style
+// access/secret key pair (`type` ec2) or an X.509 certificate (`type` cert) —
+// owned by a user and scoped to a project. Select a credential by its `id`.
+// The secret material (the credential blob) is intentionally not exposed;
+// query `type`, `user`, and `project` to audit who holds long-lived
+// credentials.
+private openstack.credential @defaults("id type userId projectId") {
+  init(id? string)
+  // Credential ID (UUID)
+  id string
+  // Credential type
+  //
+  // Common values are `ec2` (an access/secret key pair) and `cert` (an X.509
+  // certificate).
+  type string
+  // Owning user ID
+  userId string
+  // Project the credential is scoped to
+  projectId string
+  // Owning user
+  user() openstack.user
+  // Project the credential is scoped to
+  project() openstack.project
+}
+
+// OpenStack Keystone EC2-compatible credential
+//
+// Examine an EC2-style access credential owned by a user, used by EC2/S3-
+// compatible API clients. Select a credential by its `access` key. The secret
+// key is intentionally not exposed; query `access`, `user`, `project`, and
+// `trust` to audit long-lived programmatic access.
+private openstack.ec2Credential @defaults("access userId projectId") {
+  init(access? string)
+  // Access key (UUID) identifying the credential
+  access string
+  // Owning user ID
+  userId string
+  // Project (tenant) the credential is scoped to
+  projectId string
+  // Trust ID scoping the credential when created from a trust; empty otherwise
+  trustId string
+  // Owning user
+  user() openstack.user
+  // Project the credential is scoped to
+  project() openstack.project
+  // Trust scoping the credential; null when not trust-scoped
+  trust() openstack.trust
+}
+
+// OpenStack Keystone trust
+//
+// Examine a delegation of authorization from a trustor user to a trustee user,
+// optionally limited to a subset of roles on a project, with optional
+// impersonation and re-delegation. Select a trust by its `id`. Trusts that
+// allow impersonation or unlimited uses grant standing access on the trustor's
+// behalf and should be reviewed closely.
+private openstack.trust @defaults("id trustorUserId trusteeUserId impersonation") {
+  init(id? string)
+  // Trust ID (UUID)
+  id string
+  // Whether the trustee may impersonate the trustor
+  impersonation bool
+  // Trustee user ID (the principal granted authorization)
+  trusteeUserId string
+  // Trustor user ID (the principal delegating authorization)
+  trustorUserId string
+  // Project the delegated roles apply to; empty for an unscoped trust
+  projectId string
+  // Role names delegated by this trust
+  roleNames []string
+  // Whether the trustee may re-delegate the trust to another user
+  allowRedelegation bool
+  // Remaining number of times the trust can be used; 0 when unlimited
+  remainingUses int
+  // ID of the trust this one was re-delegated from; empty when not re-delegated
+  redelegatedTrustId string
+  // Expiration timestamp; null when the trust never expires
+  expiresAt time
+  // Trustee user (the principal granted authorization)
+  trustee() openstack.user
+  // Trustor user (the principal delegating authorization)
+  trustor() openstack.user
+  // Project the delegated roles apply to; null for an unscoped trust
+  project() openstack.project
+}
+
+// OpenStack Keystone service-catalog service
+//
+// Examine a registered service in the Keystone catalog — the abstract service
+// (such as `compute`, `identity`, or `network`) that endpoints are attached to.
+// Select a service by its `id`. Query `type` and `enabled` to inventory which
+// services the deployment advertises.
+private openstack.identity.service @defaults("id name type enabled") {
+  init(id? string)
+  // Service ID (UUID)
+  id string
+  // Service name
+  name string
+  // Service type
+  //
+  // The catalog type such as `identity`, `compute`, `network`, `image`, or
+  // `object-store`.
+  type string
+  // Description
+  description string
+  // Whether the service is enabled
+  enabled bool
+}
+
+// OpenStack Keystone service-catalog endpoint
+//
+// Examine a single URL at which a service is reachable, for one interface type
+// (public, internal, or admin) in one region. Select an endpoint by its `id`.
+// Auditing which services expose `public` endpoints, and on which URLs, is the
+// primary use.
+private openstack.identity.endpoint @defaults("id interface url region") {
+  init(id? string)
+  // Endpoint ID (UUID)
+  id string
+  // Interface type
+  //
+  // One of `public`, `internal`, or `admin`.
+  interface string
+  // Endpoint name
+  name string
+  // Region ID the endpoint is located in
+  region string
+  // ID of the service this endpoint exposes
+  serviceId string
+  // Endpoint URL
+  url string
+  // Whether the endpoint is enabled
+  enabled bool
+  // Description
+  description string
+  // Service this endpoint exposes
+  service() openstack.identity.service
+  // Region the endpoint is located in
+  regionRef() openstack.identity.region
+}
+
+// OpenStack Keystone region
+//
+// Examine a region — a logical grouping of service endpoints, optionally nested
+// under a parent region. Select a region by its `id`. Query `parentRegion` to
+// walk the region hierarchy.
+private openstack.identity.region @defaults("id parentRegionId") {
+  init(id? string)
+  // Region ID
+  id string
+  // Description
+  description string
+  // ID of the parent region; empty for a top-level region
+  parentRegionId string
+  // Parent region; null for a top-level region
+  parentRegion() openstack.identity.region
 }
 
 // OpenStack Nova host aggregate

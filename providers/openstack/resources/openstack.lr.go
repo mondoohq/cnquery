@@ -63,6 +63,12 @@ const (
 	ResourceOpenstackBlockstorageBackup     string = "openstack.blockstorage.backup"
 	ResourceOpenstackImageMember            string = "openstack.image.member"
 	ResourceOpenstackApplicationCredential  string = "openstack.applicationCredential"
+	ResourceOpenstackCredential             string = "openstack.credential"
+	ResourceOpenstackEc2Credential          string = "openstack.ec2Credential"
+	ResourceOpenstackTrust                  string = "openstack.trust"
+	ResourceOpenstackIdentityService        string = "openstack.identity.service"
+	ResourceOpenstackIdentityEndpoint       string = "openstack.identity.endpoint"
+	ResourceOpenstackIdentityRegion         string = "openstack.identity.region"
 	ResourceOpenstackComputeAggregate       string = "openstack.compute.aggregate"
 	ResourceOpenstackComputeLimits          string = "openstack.compute.limits"
 	ResourceOpenstackBlockstorageQuotaSet   string = "openstack.blockstorage.quotaSet"
@@ -262,6 +268,30 @@ func init() {
 			Init:   initOpenstackApplicationCredential,
 			Create: createOpenstackApplicationCredential,
 		},
+		"openstack.credential": {
+			Init:   initOpenstackCredential,
+			Create: createOpenstackCredential,
+		},
+		"openstack.ec2Credential": {
+			Init:   initOpenstackEc2Credential,
+			Create: createOpenstackEc2Credential,
+		},
+		"openstack.trust": {
+			Init:   initOpenstackTrust,
+			Create: createOpenstackTrust,
+		},
+		"openstack.identity.service": {
+			Init:   initOpenstackIdentityService,
+			Create: createOpenstackIdentityService,
+		},
+		"openstack.identity.endpoint": {
+			Init:   initOpenstackIdentityEndpoint,
+			Create: createOpenstackIdentityEndpoint,
+		},
+		"openstack.identity.region": {
+			Init:   initOpenstackIdentityRegion,
+			Create: createOpenstackIdentityRegion,
+		},
 		"openstack.compute.aggregate": {
 			Init:   initOpenstackComputeAggregate,
 			Create: createOpenstackComputeAggregate,
@@ -376,6 +406,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetGroups()).ToDataRes(types.Array(types.Resource("openstack.group")))
+	},
+	"openstack.credentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetCredentials()).ToDataRes(types.Array(types.Resource("openstack.credential")))
+	},
+	"openstack.trusts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetTrusts()).ToDataRes(types.Array(types.Resource("openstack.trust")))
+	},
+	"openstack.identityServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetIdentityServices()).ToDataRes(types.Array(types.Resource("openstack.identity.service")))
+	},
+	"openstack.identityEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetIdentityEndpoints()).ToDataRes(types.Array(types.Resource("openstack.identity.endpoint")))
+	},
+	"openstack.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetRegions()).ToDataRes(types.Array(types.Resource("openstack.identity.region")))
 	},
 	"openstack.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetServers()).ToDataRes(types.Array(types.Resource("openstack.compute.server")))
@@ -547,6 +592,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.user.applicationCredentials": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackUser).GetApplicationCredentials()).ToDataRes(types.Array(types.Resource("openstack.applicationCredential")))
+	},
+	"openstack.user.ec2Credentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackUser).GetEc2Credentials()).ToDataRes(types.Array(types.Resource("openstack.ec2Credential")))
 	},
 	"openstack.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackRole).GetId()).ToDataRes(types.String)
@@ -2348,6 +2396,141 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.applicationCredential.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackApplicationCredential).GetProject()).ToDataRes(types.Resource("openstack.project"))
 	},
+	"openstack.credential.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetId()).ToDataRes(types.String)
+	},
+	"openstack.credential.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetType()).ToDataRes(types.String)
+	},
+	"openstack.credential.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetUserId()).ToDataRes(types.String)
+	},
+	"openstack.credential.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.credential.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetUser()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.credential.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackCredential).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.ec2Credential.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetAccess()).ToDataRes(types.String)
+	},
+	"openstack.ec2Credential.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetUserId()).ToDataRes(types.String)
+	},
+	"openstack.ec2Credential.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.ec2Credential.trustId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetTrustId()).ToDataRes(types.String)
+	},
+	"openstack.ec2Credential.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetUser()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.ec2Credential.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.ec2Credential.trust": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackEc2Credential).GetTrust()).ToDataRes(types.Resource("openstack.trust"))
+	},
+	"openstack.trust.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetId()).ToDataRes(types.String)
+	},
+	"openstack.trust.impersonation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetImpersonation()).ToDataRes(types.Bool)
+	},
+	"openstack.trust.trusteeUserId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetTrusteeUserId()).ToDataRes(types.String)
+	},
+	"openstack.trust.trustorUserId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetTrustorUserId()).ToDataRes(types.String)
+	},
+	"openstack.trust.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.trust.roleNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetRoleNames()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.trust.allowRedelegation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetAllowRedelegation()).ToDataRes(types.Bool)
+	},
+	"openstack.trust.remainingUses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetRemainingUses()).ToDataRes(types.Int)
+	},
+	"openstack.trust.redelegatedTrustId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetRedelegatedTrustId()).ToDataRes(types.String)
+	},
+	"openstack.trust.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"openstack.trust.trustee": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetTrustee()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.trust.trustor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetTrustor()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.trust.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.identity.service.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityService).GetId()).ToDataRes(types.String)
+	},
+	"openstack.identity.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityService).GetName()).ToDataRes(types.String)
+	},
+	"openstack.identity.service.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityService).GetType()).ToDataRes(types.String)
+	},
+	"openstack.identity.service.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityService).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.identity.service.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.identity.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetInterface()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.serviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetServiceId()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetUrl()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.identity.endpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.identity.endpoint.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetService()).ToDataRes(types.Resource("openstack.identity.service"))
+	},
+	"openstack.identity.endpoint.regionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetRegionRef()).ToDataRes(types.Resource("openstack.identity.region"))
+	},
+	"openstack.identity.region.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityRegion).GetId()).ToDataRes(types.String)
+	},
+	"openstack.identity.region.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityRegion).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.identity.region.parentRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityRegion).GetParentRegionId()).ToDataRes(types.String)
+	},
+	"openstack.identity.region.parentRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityRegion).GetParentRegion()).ToDataRes(types.Resource("openstack.identity.region"))
+	},
 	"openstack.compute.aggregate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeAggregate).GetId()).ToDataRes(types.Int)
 	},
@@ -2541,6 +2724,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Credentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.trusts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Trusts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.identityServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).IdentityServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.identityEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).IdentityEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2777,6 +2980,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.user.applicationCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackUser).ApplicationCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.user.ec2Credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackUser).Ec2Credentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5355,6 +5562,210 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackApplicationCredential).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
+	"openstack.credential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.credential.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.credential.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.credential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.credential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.credential.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).User, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.credential.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackCredential).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.ec2Credential.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.trustId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).TrustId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).User, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.ec2Credential.trust": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackEc2Credential).Trust, ok = plugin.RawToTValue[*mqlOpenstackTrust](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.trust.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.impersonation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Impersonation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.trusteeUserId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).TrusteeUserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.trustorUserId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).TrustorUserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.roleNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).RoleNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.allowRedelegation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).AllowRedelegation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.remainingUses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).RemainingUses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.redelegatedTrustId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).RedelegatedTrustId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.trustee": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Trustee, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.trustor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Trustor, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.identity.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.service.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.service.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.service.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.identity.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).ServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Service, ok = plugin.RawToTValue[*mqlOpenstackIdentityService](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.endpoint.regionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).RegionRef, ok = plugin.RawToTValue[*mqlOpenstackIdentityRegion](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRegion).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.identity.region.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRegion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.region.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRegion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.region.parentRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRegion).ParentRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.identity.region.parentRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityRegion).ParentRegion, ok = plugin.RawToTValue[*mqlOpenstackIdentityRegion](v.Value, v.Error)
+		return
+	},
 	"openstack.compute.aggregate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackComputeAggregate).__id, ok = v.Value.(string)
 		return
@@ -5608,6 +6019,11 @@ type mqlOpenstack struct {
 	Roles                   plugin.TValue[[]any]
 	Domains                 plugin.TValue[[]any]
 	Groups                  plugin.TValue[[]any]
+	Credentials             plugin.TValue[[]any]
+	Trusts                  plugin.TValue[[]any]
+	IdentityServices        plugin.TValue[[]any]
+	IdentityEndpoints       plugin.TValue[[]any]
+	Regions                 plugin.TValue[[]any]
 	Servers                 plugin.TValue[[]any]
 	Flavors                 plugin.TValue[[]any]
 	Keypairs                plugin.TValue[[]any]
@@ -5774,6 +6190,86 @@ func (c *mqlOpenstack) GetGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.groups()
+	})
+}
+
+func (c *mqlOpenstack) GetCredentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Credentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "credentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.credentials()
+	})
+}
+
+func (c *mqlOpenstack) GetTrusts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Trusts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "trusts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trusts()
+	})
+}
+
+func (c *mqlOpenstack) GetIdentityServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "identityServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityServices()
+	})
+}
+
+func (c *mqlOpenstack) GetIdentityEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "identityEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityEndpoints()
+	})
+}
+
+func (c *mqlOpenstack) GetRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Regions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "regions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.regions()
 	})
 }
 
@@ -6509,6 +7005,7 @@ type mqlOpenstackUser struct {
 	Roles                        plugin.TValue[[]any]
 	Groups                       plugin.TValue[[]any]
 	ApplicationCredentials       plugin.TValue[[]any]
+	Ec2Credentials               plugin.TValue[[]any]
 }
 
 // createOpenstackUser creates a new instance of this resource
@@ -6649,6 +7146,22 @@ func (c *mqlOpenstackUser) GetApplicationCredentials() *plugin.TValue[[]any] {
 		}
 
 		return c.applicationCredentials()
+	})
+}
+
+func (c *mqlOpenstackUser) GetEc2Credentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ec2Credentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.user", c.__id, "ec2Credentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ec2Credentials()
 	})
 }
 
@@ -12895,6 +13408,627 @@ func (c *mqlOpenstackApplicationCredential) GetProject() *plugin.TValue[*mqlOpen
 		}
 
 		return c.project()
+	})
+}
+
+// mqlOpenstackCredential for the openstack.credential resource
+type mqlOpenstackCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackCredentialInternal it will be used here
+	Id        plugin.TValue[string]
+	Type      plugin.TValue[string]
+	UserId    plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	User      plugin.TValue[*mqlOpenstackUser]
+	Project   plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackCredential creates a new instance of this resource
+func createOpenstackCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.credential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackCredential) MqlName() string {
+	return "openstack.credential"
+}
+
+func (c *mqlOpenstackCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackCredential) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackCredential) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenstackCredential) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlOpenstackCredential) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackCredential) GetUser() *plugin.TValue[*mqlOpenstackUser] {
+	return plugin.GetOrCompute[*mqlOpenstackUser](&c.User, func() (*mqlOpenstackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.credential", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlOpenstackCredential) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.credential", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackEc2Credential for the openstack.ec2Credential resource
+type mqlOpenstackEc2Credential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackEc2CredentialInternal it will be used here
+	Access    plugin.TValue[string]
+	UserId    plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	TrustId   plugin.TValue[string]
+	User      plugin.TValue[*mqlOpenstackUser]
+	Project   plugin.TValue[*mqlOpenstackProject]
+	Trust     plugin.TValue[*mqlOpenstackTrust]
+}
+
+// createOpenstackEc2Credential creates a new instance of this resource
+func createOpenstackEc2Credential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackEc2Credential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.ec2Credential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackEc2Credential) MqlName() string {
+	return "openstack.ec2Credential"
+}
+
+func (c *mqlOpenstackEc2Credential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackEc2Credential) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlOpenstackEc2Credential) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlOpenstackEc2Credential) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackEc2Credential) GetTrustId() *plugin.TValue[string] {
+	return &c.TrustId
+}
+
+func (c *mqlOpenstackEc2Credential) GetUser() *plugin.TValue[*mqlOpenstackUser] {
+	return plugin.GetOrCompute[*mqlOpenstackUser](&c.User, func() (*mqlOpenstackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.ec2Credential", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlOpenstackEc2Credential) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.ec2Credential", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOpenstackEc2Credential) GetTrust() *plugin.TValue[*mqlOpenstackTrust] {
+	return plugin.GetOrCompute[*mqlOpenstackTrust](&c.Trust, func() (*mqlOpenstackTrust, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.ec2Credential", c.__id, "trust")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackTrust), nil
+			}
+		}
+
+		return c.trust()
+	})
+}
+
+// mqlOpenstackTrust for the openstack.trust resource
+type mqlOpenstackTrust struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackTrustInternal it will be used here
+	Id                 plugin.TValue[string]
+	Impersonation      plugin.TValue[bool]
+	TrusteeUserId      plugin.TValue[string]
+	TrustorUserId      plugin.TValue[string]
+	ProjectId          plugin.TValue[string]
+	RoleNames          plugin.TValue[[]any]
+	AllowRedelegation  plugin.TValue[bool]
+	RemainingUses      plugin.TValue[int64]
+	RedelegatedTrustId plugin.TValue[string]
+	ExpiresAt          plugin.TValue[*time.Time]
+	Trustee            plugin.TValue[*mqlOpenstackUser]
+	Trustor            plugin.TValue[*mqlOpenstackUser]
+	Project            plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackTrust creates a new instance of this resource
+func createOpenstackTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackTrust{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.trust", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackTrust) MqlName() string {
+	return "openstack.trust"
+}
+
+func (c *mqlOpenstackTrust) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackTrust) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackTrust) GetImpersonation() *plugin.TValue[bool] {
+	return &c.Impersonation
+}
+
+func (c *mqlOpenstackTrust) GetTrusteeUserId() *plugin.TValue[string] {
+	return &c.TrusteeUserId
+}
+
+func (c *mqlOpenstackTrust) GetTrustorUserId() *plugin.TValue[string] {
+	return &c.TrustorUserId
+}
+
+func (c *mqlOpenstackTrust) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackTrust) GetRoleNames() *plugin.TValue[[]any] {
+	return &c.RoleNames
+}
+
+func (c *mqlOpenstackTrust) GetAllowRedelegation() *plugin.TValue[bool] {
+	return &c.AllowRedelegation
+}
+
+func (c *mqlOpenstackTrust) GetRemainingUses() *plugin.TValue[int64] {
+	return &c.RemainingUses
+}
+
+func (c *mqlOpenstackTrust) GetRedelegatedTrustId() *plugin.TValue[string] {
+	return &c.RedelegatedTrustId
+}
+
+func (c *mqlOpenstackTrust) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlOpenstackTrust) GetTrustee() *plugin.TValue[*mqlOpenstackUser] {
+	return plugin.GetOrCompute[*mqlOpenstackUser](&c.Trustee, func() (*mqlOpenstackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.trust", c.__id, "trustee")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackUser), nil
+			}
+		}
+
+		return c.trustee()
+	})
+}
+
+func (c *mqlOpenstackTrust) GetTrustor() *plugin.TValue[*mqlOpenstackUser] {
+	return plugin.GetOrCompute[*mqlOpenstackUser](&c.Trustor, func() (*mqlOpenstackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.trust", c.__id, "trustor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackUser), nil
+			}
+		}
+
+		return c.trustor()
+	})
+}
+
+func (c *mqlOpenstackTrust) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.trust", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackIdentityService for the openstack.identity.service resource
+type mqlOpenstackIdentityService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackIdentityServiceInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+}
+
+// createOpenstackIdentityService creates a new instance of this resource
+func createOpenstackIdentityService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackIdentityService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.identity.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackIdentityService) MqlName() string {
+	return "openstack.identity.service"
+}
+
+func (c *mqlOpenstackIdentityService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackIdentityService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackIdentityService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackIdentityService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenstackIdentityService) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackIdentityService) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlOpenstackIdentityEndpoint for the openstack.identity.endpoint resource
+type mqlOpenstackIdentityEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackIdentityEndpointInternal it will be used here
+	Id          plugin.TValue[string]
+	Interface   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	ServiceId   plugin.TValue[string]
+	Url         plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	Description plugin.TValue[string]
+	Service     plugin.TValue[*mqlOpenstackIdentityService]
+	RegionRef   plugin.TValue[*mqlOpenstackIdentityRegion]
+}
+
+// createOpenstackIdentityEndpoint creates a new instance of this resource
+func createOpenstackIdentityEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackIdentityEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.identity.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackIdentityEndpoint) MqlName() string {
+	return "openstack.identity.endpoint"
+}
+
+func (c *mqlOpenstackIdentityEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetServiceId() *plugin.TValue[string] {
+	return &c.ServiceId
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetService() *plugin.TValue[*mqlOpenstackIdentityService] {
+	return plugin.GetOrCompute[*mqlOpenstackIdentityService](&c.Service, func() (*mqlOpenstackIdentityService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.identity.endpoint", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackIdentityService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlOpenstackIdentityEndpoint) GetRegionRef() *plugin.TValue[*mqlOpenstackIdentityRegion] {
+	return plugin.GetOrCompute[*mqlOpenstackIdentityRegion](&c.RegionRef, func() (*mqlOpenstackIdentityRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.identity.endpoint", c.__id, "regionRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackIdentityRegion), nil
+			}
+		}
+
+		return c.regionRef()
+	})
+}
+
+// mqlOpenstackIdentityRegion for the openstack.identity.region resource
+type mqlOpenstackIdentityRegion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackIdentityRegionInternal it will be used here
+	Id             plugin.TValue[string]
+	Description    plugin.TValue[string]
+	ParentRegionId plugin.TValue[string]
+	ParentRegion   plugin.TValue[*mqlOpenstackIdentityRegion]
+}
+
+// createOpenstackIdentityRegion creates a new instance of this resource
+func createOpenstackIdentityRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackIdentityRegion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.identity.region", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackIdentityRegion) MqlName() string {
+	return "openstack.identity.region"
+}
+
+func (c *mqlOpenstackIdentityRegion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackIdentityRegion) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackIdentityRegion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackIdentityRegion) GetParentRegionId() *plugin.TValue[string] {
+	return &c.ParentRegionId
+}
+
+func (c *mqlOpenstackIdentityRegion) GetParentRegion() *plugin.TValue[*mqlOpenstackIdentityRegion] {
+	return plugin.GetOrCompute[*mqlOpenstackIdentityRegion](&c.ParentRegion, func() (*mqlOpenstackIdentityRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.identity.region", c.__id, "parentRegion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackIdentityRegion), nil
+			}
+		}
+
+		return c.parentRegion()
 	})
 }
 
