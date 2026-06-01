@@ -33,6 +33,7 @@ func (m *mqlMondooSpace) id() (string, error) {
 
 func (m *mqlMondooSpace) assets() ([]any, error) {
 	conn := m.MqlRuntime.Connection.(*connection.Connection)
+	ctx := context.Background()
 
 	var q struct {
 		Assets struct {
@@ -54,35 +55,50 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 					}
 				}
 			}
-		} `graphql:"assets(spaceMrn: $spaceMrn, first: $first)"`
-	}
-	vars := map[string]any{
-		"spaceMrn": mondoogql.String(m.Mrn.Data),
-		"first":    mondoogql.NewIntPtr(100),
-	}
-
-	err := conn.Client.Query(context.Background(), &q, vars)
-	if err != nil {
-		return nil, err
+			PageInfo struct {
+				HasNextPage bool
+				EndCursor   string
+			} `graphql:"pageInfo"`
+		} `graphql:"assets(spaceMrn: $spaceMrn, first: $first, after: $after)"`
 	}
 
-	res := make([]any, len(q.Assets.Edges))
-	for i := range q.Assets.Edges {
-		e := q.Assets.Edges[i]
-		raw, err := CreateResource(m.MqlRuntime, "mondoo.asset", map[string]*llx.RawData{
-			"name":        llx.StringData(e.Node.Name),
-			"mrn":         llx.StringData(e.Node.Mrn),
-			"platform":    llx.StringData(e.Node.AssetType),
-			"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
-			"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
-			"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
-			"scoreGrade":  llx.StringData(e.Node.Score.Grade),
-			"scoreValue":  llx.IntData(e.Node.Score.Value),
-		})
-		if err != nil {
+	res := []any{}
+	// after is nil for the first page; subsequent pages use the previous
+	// page's endCursor. We keep fetching until hasNextPage is false.
+	var after *mondoogql.String
+	for {
+		vars := map[string]any{
+			"spaceMrn": mondoogql.String(m.Mrn.Data),
+			"first":    mondoogql.NewIntPtr(100),
+			"after":    after,
+		}
+
+		if err := conn.Client.Query(ctx, &q, vars); err != nil {
 			return nil, err
 		}
-		res[i] = raw
+
+		for i := range q.Assets.Edges {
+			e := q.Assets.Edges[i]
+			raw, err := CreateResource(m.MqlRuntime, "mondoo.asset", map[string]*llx.RawData{
+				"name":        llx.StringData(e.Node.Name),
+				"mrn":         llx.StringData(e.Node.Mrn),
+				"platform":    llx.StringData(e.Node.AssetType),
+				"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
+				"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
+				"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
+				"scoreGrade":  llx.StringData(e.Node.Score.Grade),
+				"scoreValue":  llx.IntData(e.Node.Score.Value),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, raw)
+		}
+
+		if !q.Assets.PageInfo.HasNextPage {
+			break
+		}
+		after = mondoogql.NewStringPtr(mondoogql.String(q.Assets.PageInfo.EndCursor))
 	}
 
 	return res, nil
