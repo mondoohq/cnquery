@@ -213,9 +213,14 @@ func ParseWindowsHotfixes(input io.Reader) ([]PowershellWinHotFix, error) {
 func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
 	pkgs := make([]Package, len(hotfixes))
 	for i := range hotfixes {
+		// Defense-in-depth — Get-HotFix's Description is typically a short
+		// string like "Update" / "Security Update", but it comes through the
+		// same PowerShell→JSON path as the registry packages, so apply the
+		// same sanitization so a stray control character can't corrupt the
+		// downstream SBOM projection.
 		pkgs[i] = Package{
-			Name:        hotfixes[i].HotFixId,
-			Description: hotfixes[i].Description,
+			Name:        sanitizePackageField(hotfixes[i].HotFixId),
+			Description: sanitizePackageField(hotfixes[i].Description),
 			Format:      "windows/hotfix",
 		}
 	}
@@ -806,10 +811,17 @@ func normalizeMsSqlVersion(version string) string {
 }
 
 // sanitizePackageField removes control characters (e.g. \r, \n, \t) from a
-// package name or version and trims surrounding whitespace. Windows registry
-// DisplayName/DisplayVersion values occasionally contain trailing control
-// characters, which produce invalid purls such as
-// "pkg:windows/windows/Foo%0D%0A@1.2.3" and fail to parse as URLs.
+// registry-derived string and trims surrounding whitespace. Apply it to ANY
+// REG_SZ value that ends up in the Package struct: name + version started the
+// problem (control characters there produced invalid purls \u2014 issue #7975),
+// but downstream consumers also serialize vendor/publisher and installLocation
+// into JSON projections (mondoohq/server's mondoo-sbom-internal-packages
+// bundle pulls vendor in alongside name/version/purl), and an unsanitized
+// `\r`/`\n` or unpaired quote in any of those fields produces JSON like
+// `{"name":"foo","vendor":"bar"description":...}` \u2014 JSON the server cannot
+// decode, with the downstream effect that the asset's package_scores get
+// silently emptied. The Windows packages provider is the one place that owns
+// registry-derived field plumbing, so it is the right layer to sanitize at.
 func sanitizePackageField(s string) string {
 	s = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) {
@@ -830,10 +842,15 @@ func createPackage(name, version, format, arch, publisher, installLocation strin
 	// replace non-breaking spaces with regular spaces
 	name = strings.ReplaceAll(name, "\u00a0", " ")
 	// Windows registry values can carry trailing control characters (e.g. \r\n).
-	// These break purl generation ("net/url: invalid control character in URL"),
-	// so strip control characters and surrounding whitespace from name and version.
+	// Strip them from every REG_SZ field that lands on the Package \u2014 name and
+	// version (purl correctness, #7975) and publisher and installLocation
+	// (JSON-projection correctness \u2014 these become Vendor and Files[0].Path,
+	// and an unsanitized control char in either silently corrupts the SBOM
+	// projection the server pulls them out of).
 	name = sanitizePackageField(name)
 	version = sanitizePackageField(version)
+	publisher = sanitizePackageField(publisher)
+	installLocation = sanitizePackageField(installLocation)
 	pkg := &Package{
 		Name:    name,
 		Version: version,

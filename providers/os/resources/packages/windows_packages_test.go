@@ -4,6 +4,7 @@
 package packages
 
 import (
+	"encoding/json"
 	"net/url"
 	"os"
 	"strings"
@@ -905,6 +906,88 @@ func TestCreatePackage(t *testing.T) {
 		assert.NotContains(t, pkg.PUrl, "%0D")
 		assert.NotContains(t, pkg.PUrl, "%0A")
 	})
+
+	t.Run("create package strips control characters from publisher", func(t *testing.T) {
+		// Defends against the JSON-projection corruption mode mondoohq/server
+		// observed: an Add/Remove entry whose Publisher carries a stray \r
+		// can produce JSON like `{"vendor":"foo"\r"description":"…"}` after
+		// PowerShell's ConvertTo-Json -Compress in some configurations,
+		// which on the server side surfaces as
+		// "invalid character 'd' after object key:value pair" inside
+		// json.Unmarshal — and silently drops the entire OS-packages list.
+		pkg := createPackage("SomeApp", "1.2.3", "windows/app", "x86_64", "Acme Corp\r\n", "", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+		assert.Equal(t, "Acme Corp", pkg.Vendor,
+			"vendor must be free of control characters so it round-trips cleanly through JSON")
+		assert.NotContains(t, pkg.Vendor, "\r")
+		assert.NotContains(t, pkg.Vendor, "\n")
+	})
+
+	t.Run("create package strips control characters from installLocation", func(t *testing.T) {
+		// Same class of bug as vendor: installLocation lands on
+		// pkg.Files[0].Path and is serialized through the same SBOM
+		// projection.
+		pkg := createPackage("SomeApp", "1.2.3", "windows/app", "x86_64", "Vendor",
+			"C:\\Program Files\\Acme\r\n", nil)
+		require.NotNil(t, pkg, "expected package to be created")
+		require.Len(t, pkg.Files, 1, "installLocation must produce a Files entry")
+		assert.Equal(t, "C:\\Program Files\\Acme", pkg.Files[0].Path,
+			"installLocation path must be free of control characters")
+	})
+
+	t.Run("vendor + installLocation + name + version stay clean when ALL carry rot", func(t *testing.T) {
+		// End-to-end check: a single Add/Remove entry where every
+		// registry-derived field is dirty must still produce a clean
+		// Package whose every projected field is safe to drop into a
+		// JSON object body.
+		pkg := createPackage(
+			"SomeApp\r\n", "1.2.3\r\n", "windows/app", "x86_64",
+			"Acme Corp\r\n", "C:\\Program Files\\Acme\r\n", nil)
+		require.NotNil(t, pkg)
+		assert.Equal(t, "SomeApp", pkg.Name)
+		assert.Equal(t, "1.2.3", pkg.Version)
+		assert.Equal(t, "Acme Corp", pkg.Vendor)
+		require.Len(t, pkg.Files, 1)
+		assert.Equal(t, "C:\\Program Files\\Acme", pkg.Files[0].Path)
+
+		// Final guard: the projected fields together must serialize to a
+		// JSON object Go's encoding/json can decode back. That's the
+		// shape the server's convertPackages call would see.
+		marshalled, err := json.Marshal(map[string]string{
+			"name":            pkg.Name,
+			"version":         pkg.Version,
+			"vendor":          pkg.Vendor,
+			"installLocation": pkg.Files[0].Path,
+		})
+		require.NoError(t, err)
+		var roundtrip map[string]string
+		require.NoError(t, json.Unmarshal(marshalled, &roundtrip),
+			"the SBOM-shape JSON object must decode cleanly")
+		assert.Equal(t, "SomeApp", roundtrip["name"])
+		assert.Equal(t, "Acme Corp", roundtrip["vendor"])
+	})
+}
+
+// TestHotFixesToPackages_SanitizesFields pins the analogous fix for the
+// Get-HotFix path: Description goes through the same PowerShell→JSON
+// pipeline, so any control character there has to be stripped before it
+// reaches the Package.
+func TestHotFixesToPackages_SanitizesFields(t *testing.T) {
+	hotfixes := []PowershellWinHotFix{
+		{HotFixId: "KB5005112\r\n", Description: "Security Update\r\n"},
+		{HotFixId: "KB5023789", Description: "Update"},
+	}
+	pkgs := HotFixesToPackages(hotfixes)
+	require.Len(t, pkgs, 2)
+
+	assert.Equal(t, "KB5005112", pkgs[0].Name, "hotfix id must be sanitized")
+	assert.Equal(t, "Security Update", pkgs[0].Description, "hotfix description must be sanitized")
+	assert.NotContains(t, pkgs[0].Name, "\r")
+	assert.NotContains(t, pkgs[0].Description, "\n")
+
+	// Clean inputs must pass through unchanged.
+	assert.Equal(t, "KB5023789", pkgs[1].Name)
+	assert.Equal(t, "Update", pkgs[1].Description)
 }
 
 func TestFindAndUpdateMsExchangeSU_en(t *testing.T) {
