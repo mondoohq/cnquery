@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
@@ -18,7 +17,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/openstack/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -750,14 +748,10 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 	}
 
 	// Prime the per-connection name->ID cache from this list call so that
-	// Nova security-group-by-name lookups (lookupSecurityGroupIDByName)
-	// reuse it instead of re-listing Neutron. First-writer-wins: whichever
-	// path populates the cache first (this accessor or
-	// lookupSecurityGroupIDByName) sets the canonical name->ID map for the
-	// connection's lifetime. Both paths list with default scope, so the
-	// result sets are equivalent; if scoping ever diverges, the second
-	// caller's data is silently ignored — at which point the cache should
-	// move into the lookup function itself.
+	// Nova security-group-by-name lookups (lookupSecurityGroupIDByName) reuse
+	// it instead of issuing a second Neutron list. This accessor is the sole
+	// source of the cache: lookupSecurityGroupIDByName routes through here via
+	// GetSecurityGroups rather than listing groups itself.
 	c.SGNameCacheLock.Lock()
 	if c.SGNameCache == nil {
 		cache := make(map[string]string, len(items))
@@ -865,32 +859,46 @@ func (r *mqlOpenstackSecurityGroupRule) remoteGroup() (*mqlOpenstackSecurityGrou
 
 // lookupSecurityGroupIDByName resolves a security-group name to an ID using a
 // per-connection cache. Nova reports server security groups by name, but
-// Neutron is the source of truth for IDs, so each connection lists groups
-// once and consults its cache thereafter. The lock single-flights the first
-// fetch; on success or auth-translated failure the cache map is non-nil and
-// subsequent callers fast-path. Real errors leave the cache nil so the next
-// call retries instead of inheriting a stale error.
-func lookupSecurityGroupIDByName(c *connection.OpenstackConnection, client *gophercloud.ServiceClient, name string) (string, error) {
+// Neutron is the source of truth for IDs. Rather than issue its own
+// groups.List, this primes the cache from the root securityGroups list
+// (memoized once per scan via GetSecurityGroups) — o.securityGroups() sets
+// SGNameCache as a side effect, so resolving a server's groups by name no
+// longer costs a second Neutron list. A non-nil cache map is the "ready"
+// signal; the lock single-flights the first fetch and concurrent callers wait.
+func lookupSecurityGroupIDByName(runtime *plugin.Runtime, name string) (string, error) {
+	c := conn(runtime)
+
+	c.SGNameCacheLock.Lock()
+	cached := c.SGNameCache
+	c.SGNameCacheLock.Unlock()
+	if cached != nil {
+		return cached[name], nil
+	}
+
+	// GetSecurityGroups() runs o.securityGroups(), which lists Neutron groups
+	// once and primes SGNameCache. Don't hold SGNameCacheLock across this call:
+	// o.securityGroups() takes the same lock to prime the cache, so holding it
+	// here would deadlock.
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return "", err
+	}
+	list := root.(*mqlOpenstack).GetSecurityGroups()
+	if list.Error != nil {
+		return "", list.Error
+	}
+
 	c.SGNameCacheLock.Lock()
 	defer c.SGNameCacheLock.Unlock()
-	if c.SGNameCache != nil {
-		return c.SGNameCache[name], nil
-	}
-	pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
-	if err != nil {
-		if translateOpenstackError(err) == nil {
-			c.SGNameCache = map[string]string{}
-			return "", nil
+	if c.SGNameCache == nil {
+		// Defensive: build the map from the resource list if priming didn't
+		// occur (e.g. the list came back via a path that left the cache unset).
+		cache := make(map[string]string, len(list.Data))
+		for _, raw := range list.Data {
+			sg := raw.(*mqlOpenstackSecurityGroup)
+			cache[sg.Name.Data] = sg.Id.Data
 		}
-		return "", err
-	}
-	items, err := groups.ExtractGroups(pages)
-	if err != nil {
-		return "", err
-	}
-	c.SGNameCache = make(map[string]string, len(items))
-	for _, sg := range items {
-		c.SGNameCache[sg.Name] = sg.ID
+		c.SGNameCache = cache
 	}
 	return c.SGNameCache[name], nil
 }

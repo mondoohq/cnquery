@@ -250,15 +250,9 @@ func (r *mqlOpenstackComputeServer) securityGroups() ([]any, error) {
 		return []any{}, nil
 	}
 
-	c := conn(r.MqlRuntime)
-	client, err := c.NetworkClient()
-	if err != nil {
-		return nil, err
-	}
-
 	out := make([]any, 0, len(r.cacheSecurityGroupSGs))
 	for _, name := range r.cacheSecurityGroupSGs {
-		id, err := lookupSecurityGroupIDByName(c, client, name)
+		id, err := lookupSecurityGroupIDByName(r.MqlRuntime, name)
 		if err != nil {
 			return nil, err
 		}
