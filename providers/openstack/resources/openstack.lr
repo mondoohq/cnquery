@@ -32,7 +32,7 @@ openstack {
   // Scoped project ID
   projectId string
   // Region the connection is targeting
-  region string
+  region() openstack.identity.region
 
   // Keystone projects visible to the authenticated user (admin scope returns all)
   projects() []openstack.project
@@ -1750,7 +1750,7 @@ private openstack.identity.service @defaults("id name type enabled") {
 // (public, internal, or admin) in one region. Select an endpoint by its `id`.
 // Auditing which services expose `public` endpoints, and on which URLs, is the
 // primary use.
-private openstack.identity.endpoint @defaults("id interface url region") {
+private openstack.identity.endpoint @defaults("id interface url") {
   init(id? string)
   // Endpoint ID (UUID)
   id string
@@ -1760,8 +1760,6 @@ private openstack.identity.endpoint @defaults("id interface url region") {
   interface string
   // Endpoint name
   name string
-  // Region ID the endpoint is located in
-  region string
   // ID of the service this endpoint exposes
   serviceId string
   // Endpoint URL
@@ -1772,8 +1770,8 @@ private openstack.identity.endpoint @defaults("id interface url region") {
   description string
   // Service this endpoint exposes
   service() openstack.identity.service
-  // Region the endpoint is located in
-  regionRef() openstack.identity.region
+  // Region the endpoint is located in; null when the endpoint has no region or the region is not listed
+  region() openstack.identity.region
 }
 
 // OpenStack Keystone region

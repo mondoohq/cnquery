@@ -331,6 +331,10 @@ func (o *mqlOpenstack) identityServices() ([]any, error) {
 
 // ---- openstack.identity.endpoint ----
 
+type mqlOpenstackIdentityEndpointInternal struct {
+	cacheRegion string
+}
+
 func (r *mqlOpenstackIdentityEndpoint) id() (string, error) {
 	return "openstack.identity.endpoint/" + r.Id.Data, nil
 }
@@ -383,7 +387,6 @@ func (o *mqlOpenstack) identityEndpoints() ([]any, error) {
 			"id":          llx.StringData(e.ID),
 			"interface":   llx.StringData(string(e.Availability)),
 			"name":        llx.StringData(e.Name),
-			"region":      llx.StringData(e.Region),
 			"serviceId":   llx.StringData(e.ServiceID),
 			"url":         llx.StringData(e.URL),
 			"enabled":     llx.BoolData(e.Enabled),
@@ -392,9 +395,24 @@ func (o *mqlOpenstack) identityEndpoints() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlOpenstackIdentityEndpoint).cacheRegion = e.Region
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+func (r *mqlOpenstackIdentityEndpoint) region() (*mqlOpenstackIdentityRegion, error) {
+	if r.cacheRegion == "" {
+		r.Region.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.identity.region", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheRegion),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackIdentityRegion), nil
 }
 
 func (r *mqlOpenstackIdentityEndpoint) service() (*mqlOpenstackIdentityService, error) {
@@ -409,20 +427,6 @@ func (r *mqlOpenstackIdentityEndpoint) service() (*mqlOpenstackIdentityService, 
 		return nil, err
 	}
 	return res.(*mqlOpenstackIdentityService), nil
-}
-
-func (r *mqlOpenstackIdentityEndpoint) regionRef() (*mqlOpenstackIdentityRegion, error) {
-	if r.Region.Data == "" {
-		r.RegionRef.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.identity.region", map[string]*llx.RawData{
-		"id": llx.StringData(r.Region.Data),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackIdentityRegion), nil
 }
 
 // ---- openstack.identity.region ----

@@ -440,7 +440,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlOpenstack).GetProjectId()).ToDataRes(types.String)
 	},
 	"openstack.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstack).GetRegion()).ToDataRes(types.String)
+		return (r.(*mqlOpenstack).GetRegion()).ToDataRes(types.Resource("openstack.identity.region"))
 	},
 	"openstack.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetProjects()).ToDataRes(types.Array(types.Resource("openstack.project")))
@@ -2572,9 +2572,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.identity.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityEndpoint).GetName()).ToDataRes(types.String)
 	},
-	"openstack.identity.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackIdentityEndpoint).GetRegion()).ToDataRes(types.String)
-	},
 	"openstack.identity.endpoint.serviceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityEndpoint).GetServiceId()).ToDataRes(types.String)
 	},
@@ -2590,8 +2587,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.identity.endpoint.service": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityEndpoint).GetService()).ToDataRes(types.Resource("openstack.identity.service"))
 	},
-	"openstack.identity.endpoint.regionRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackIdentityEndpoint).GetRegionRef()).ToDataRes(types.Resource("openstack.identity.region"))
+	"openstack.identity.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackIdentityEndpoint).GetRegion()).ToDataRes(types.Resource("openstack.identity.region"))
 	},
 	"openstack.identity.region.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityRegion).GetId()).ToDataRes(types.String)
@@ -3320,7 +3317,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"openstack.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstack).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlOpenstack).Region, ok = plugin.RawToTValue[*mqlOpenstackIdentityRegion](v.Value, v.Error)
 		return
 	},
 	"openstack.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6367,10 +6364,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackIdentityEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"openstack.identity.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackIdentityEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"openstack.identity.endpoint.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackIdentityEndpoint).ServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6391,8 +6384,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackIdentityEndpoint).Service, ok = plugin.RawToTValue[*mqlOpenstackIdentityService](v.Value, v.Error)
 		return
 	},
-	"openstack.identity.endpoint.regionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackIdentityEndpoint).RegionRef, ok = plugin.RawToTValue[*mqlOpenstackIdentityRegion](v.Value, v.Error)
+	"openstack.identity.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackIdentityEndpoint).Region, ok = plugin.RawToTValue[*mqlOpenstackIdentityRegion](v.Value, v.Error)
 		return
 	},
 	"openstack.identity.region.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7426,7 +7419,7 @@ type mqlOpenstack struct {
 	// optional: if you define mqlOpenstackInternal it will be used here
 	AuthUrl                 plugin.TValue[string]
 	ProjectId               plugin.TValue[string]
-	Region                  plugin.TValue[string]
+	Region                  plugin.TValue[*mqlOpenstackIdentityRegion]
 	Projects                plugin.TValue[[]any]
 	Users                   plugin.TValue[[]any]
 	Roles                   plugin.TValue[[]any]
@@ -7530,8 +7523,20 @@ func (c *mqlOpenstack) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
 }
 
-func (c *mqlOpenstack) GetRegion() *plugin.TValue[string] {
-	return &c.Region
+func (c *mqlOpenstack) GetRegion() *plugin.TValue[*mqlOpenstackIdentityRegion] {
+	return plugin.GetOrCompute[*mqlOpenstackIdentityRegion](&c.Region, func() (*mqlOpenstackIdentityRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackIdentityRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlOpenstack) GetProjects() *plugin.TValue[[]any] {
@@ -15391,17 +15396,16 @@ func (c *mqlOpenstackIdentityService) GetEnabled() *plugin.TValue[bool] {
 type mqlOpenstackIdentityEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenstackIdentityEndpointInternal it will be used here
+	mqlOpenstackIdentityEndpointInternal
 	Id          plugin.TValue[string]
 	Interface   plugin.TValue[string]
 	Name        plugin.TValue[string]
-	Region      plugin.TValue[string]
 	ServiceId   plugin.TValue[string]
 	Url         plugin.TValue[string]
 	Enabled     plugin.TValue[bool]
 	Description plugin.TValue[string]
 	Service     plugin.TValue[*mqlOpenstackIdentityService]
-	RegionRef   plugin.TValue[*mqlOpenstackIdentityRegion]
+	Region      plugin.TValue[*mqlOpenstackIdentityRegion]
 }
 
 // createOpenstackIdentityEndpoint creates a new instance of this resource
@@ -15453,10 +15457,6 @@ func (c *mqlOpenstackIdentityEndpoint) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlOpenstackIdentityEndpoint) GetRegion() *plugin.TValue[string] {
-	return &c.Region
-}
-
 func (c *mqlOpenstackIdentityEndpoint) GetServiceId() *plugin.TValue[string] {
 	return &c.ServiceId
 }
@@ -15489,10 +15489,10 @@ func (c *mqlOpenstackIdentityEndpoint) GetService() *plugin.TValue[*mqlOpenstack
 	})
 }
 
-func (c *mqlOpenstackIdentityEndpoint) GetRegionRef() *plugin.TValue[*mqlOpenstackIdentityRegion] {
-	return plugin.GetOrCompute[*mqlOpenstackIdentityRegion](&c.RegionRef, func() (*mqlOpenstackIdentityRegion, error) {
+func (c *mqlOpenstackIdentityEndpoint) GetRegion() *plugin.TValue[*mqlOpenstackIdentityRegion] {
+	return plugin.GetOrCompute[*mqlOpenstackIdentityRegion](&c.Region, func() (*mqlOpenstackIdentityRegion, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.identity.endpoint", c.__id, "regionRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.identity.endpoint", c.__id, "region")
 			if err != nil {
 				return nil, err
 			}
@@ -15501,7 +15501,7 @@ func (c *mqlOpenstackIdentityEndpoint) GetRegionRef() *plugin.TValue[*mqlOpensta
 			}
 		}
 
-		return c.regionRef()
+		return c.region()
 	})
 }
 

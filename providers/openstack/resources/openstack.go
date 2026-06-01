@@ -24,8 +24,24 @@ func initOpenstack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if _, ok := args["projectId"]; !ok {
 		args["projectId"] = llx.StringData(c.ProjectID())
 	}
-	if _, ok := args["region"]; !ok {
-		args["region"] = llx.StringData(c.Region())
-	}
 	return args, nil, nil
+}
+
+// region resolves the connection's target region to a typed Keystone region
+// reference. The raw region id remains available via `region.id` even when the
+// region list can't be read (e.g. a non-admin token), since it is the cache
+// key. Null when the connection is not bound to a region.
+func (r *mqlOpenstack) region() (*mqlOpenstackIdentityRegion, error) {
+	name := conn(r.MqlRuntime).Region()
+	if name == "" {
+		r.Region.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.identity.region", map[string]*llx.RawData{
+		"id": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackIdentityRegion), nil
 }

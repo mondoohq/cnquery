@@ -459,7 +459,6 @@ openstack.identity.endpoint.id 13.1.4
 openstack.identity.endpoint.interface 13.1.4
 openstack.identity.endpoint.name 13.1.4
 openstack.identity.endpoint.region 13.1.4
-openstack.identity.endpoint.regionRef 13.1.4
 openstack.identity.endpoint.service 13.1.4
 openstack.identity.endpoint.serviceId 13.1.4
 openstack.identity.endpoint.url 13.1.4
