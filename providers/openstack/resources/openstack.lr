@@ -23,8 +23,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
 // Designate DNS (`dnsZones`), Manila shared file systems (`shares`,
 // `securityServices`, `shareNetworks`), Magnum container infrastructure
-// (`clusters`, `clusterTemplates`), and Trove databases (`databaseInstances`).
-// `authUrl`, `projectId`, and `region` identify the connection scope.
+// (`clusters`, `clusterTemplates`), Trove databases (`databaseInstances`), and
+// Ironic bare metal (`baremetalNodes`). `authUrl`, `projectId`, and `region`
+// identify the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
   authUrl string
@@ -149,6 +150,9 @@ openstack {
 
   // Trove managed database instances in the scoped project
   databaseInstances() []openstack.db.instance
+
+  // Ironic bare-metal nodes in the scoped project
+  baremetalNodes() []openstack.baremetal.node
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -2252,4 +2256,101 @@ private openstack.db.instance @defaults("id name status datastoreType datastoreV
   databases() []dict
   // Database user accounts on the instance ([{name, databases: [string]}]); passwords are not included
   users() []dict
+}
+
+// OpenStack Ironic bare-metal node
+//
+// Examine a physical machine managed by Ironic. Select a node by its `id`
+// (UUID). Query `provisionState`, `maintenance`, and `instance` to see whether
+// the node is in service and which Nova instance (if any) it backs, and
+// `owner`/`lessee` for multi-tenant ownership.
+private openstack.baremetal.node @defaults("id name provisionState powerState maintenance") {
+  init(id? string)
+  // Node ID (UUID)
+  id string
+  // Node name; empty when the node has no name
+  name string
+  // Current power state (for example `power on`, `power off`, or null when unknown)
+  powerState string
+  // Requested power state during a transition; empty when stable
+  targetPowerState string
+  // Current provisioning state (for example `active`, `available`, `manageable`, or `enroll`)
+  provisionState string
+  // Requested provisioning state during a transition; empty when stable
+  targetProvisionState string
+  // Whether the node is in maintenance mode (excluded from scheduling)
+  maintenance bool
+  // Reason the node was put into maintenance; empty when not in maintenance
+  maintenanceReason string
+  // Fault detected on the node (for example `power failure`); empty when healthy
+  fault string
+  // Last error recorded for the node; empty when none
+  lastError string
+  // Driver managing the node (for example `ipmi` or `redfish`)
+  driver string
+  // Scheduling resource class advertised to Nova
+  resourceClass string
+  // Conductor group the node belongs to
+  conductorGroup string
+  // Conductor currently responsible for the node
+  conductor string
+  // Project that owns the node
+  owner string
+  // Project the node is leased to; empty when not leased
+  lessee string
+  // Whether the node is protected from undeploy/deletion
+  protected bool
+  // Reason the node is protected; empty when not protected
+  protectedReason string
+  // Free-form description of the node
+  description string
+  // Whether serial console access is enabled
+  consoleEnabled bool
+  // Boot interface driver (for example `pxe` or `ipxe`)
+  bootInterface string
+  // Deploy interface driver (for example `direct` or `iscsi`)
+  deployInterface string
+  // Network interface driver (for example `flat` or `neutron`)
+  networkInterface string
+  // Traits advertised by the node for scheduling
+  traits []string
+  // UUID of the Nova instance deployed on this node; empty when the node is not in use
+  instanceUuid string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Nova instance deployed on this node; null when the node is not in use
+  instance() openstack.compute.server
+  // Network ports attached to the node
+  ports() []openstack.baremetal.port
+}
+
+// OpenStack Ironic bare-metal port
+//
+// Examine a network port (NIC) on a bare-metal node — its MAC address, PXE
+// setting, and physical-network binding. Select a port by its `id` (UUID).
+private openstack.baremetal.port @defaults("id address nodeUuid pxeEnabled") {
+  // Port ID (UUID)
+  id string
+  // MAC address of the port
+  address string
+  // UUID of the node this port belongs to
+  nodeUuid string
+  // Whether PXE is enabled on this port
+  pxeEnabled bool
+  // Physical network the port is mapped to; empty when unset
+  physicalNetwork string
+  // Port group UUID this port is a member of; empty when standalone
+  portgroupUuid string
+  // Whether the port is on a smart NIC
+  isSmartNic bool
+  // Local link connection details (switch ID/port, e.g. `{switch_id, port_id, switch_info}`)
+  localLinkConnection dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Node this port belongs to
+  node() openstack.baremetal.node
 }

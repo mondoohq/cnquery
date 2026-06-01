@@ -81,6 +81,8 @@ const (
 	ResourceOpenstackContainerinfraCluster           string = "openstack.containerinfra.cluster"
 	ResourceOpenstackContainerinfraClusterTemplate   string = "openstack.containerinfra.clusterTemplate"
 	ResourceOpenstackDbInstance                      string = "openstack.db.instance"
+	ResourceOpenstackBaremetalNode                   string = "openstack.baremetal.node"
+	ResourceOpenstackBaremetalPort                   string = "openstack.baremetal.port"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -347,6 +349,14 @@ func init() {
 			Init:   initOpenstackDbInstance,
 			Create: createOpenstackDbInstance,
 		},
+		"openstack.baremetal.node": {
+			Init:   initOpenstackBaremetalNode,
+			Create: createOpenstackBaremetalNode,
+		},
+		"openstack.baremetal.port": {
+			// to override args, implement: initOpenstackBaremetalPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackBaremetalPort,
+		},
 	}
 }
 
@@ -588,6 +598,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.databaseInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetDatabaseInstances()).ToDataRes(types.Array(types.Resource("openstack.db.instance")))
+	},
+	"openstack.baremetalNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetBaremetalNodes()).ToDataRes(types.Array(types.Resource("openstack.baremetal.node")))
 	},
 	"openstack.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackProject).GetId()).ToDataRes(types.String)
@@ -3121,6 +3134,126 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.db.instance.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackDbInstance).GetUsers()).ToDataRes(types.Array(types.Dict))
 	},
+	"openstack.baremetal.node.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetId()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetName()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.powerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetPowerState()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.targetPowerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetTargetPowerState()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.provisionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetProvisionState()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.targetProvisionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetTargetProvisionState()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.maintenance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetMaintenance()).ToDataRes(types.Bool)
+	},
+	"openstack.baremetal.node.maintenanceReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetMaintenanceReason()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.fault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetFault()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.lastError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetLastError()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.driver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetDriver()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.resourceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetResourceClass()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.conductorGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetConductorGroup()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.conductor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetConductor()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetOwner()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.lessee": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetLessee()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.protected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetProtected()).ToDataRes(types.Bool)
+	},
+	"openstack.baremetal.node.protectedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetProtectedReason()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.consoleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetConsoleEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.baremetal.node.bootInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetBootInterface()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.deployInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetDeployInterface()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetNetworkInterface()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.traits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetTraits()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.baremetal.node.instanceUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetInstanceUuid()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.node.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.baremetal.node.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.baremetal.node.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetInstance()).ToDataRes(types.Resource("openstack.compute.server"))
+	},
+	"openstack.baremetal.node.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalNode).GetPorts()).ToDataRes(types.Array(types.Resource("openstack.baremetal.port")))
+	},
+	"openstack.baremetal.port.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetId()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.port.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetAddress()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.port.nodeUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetNodeUuid()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.port.pxeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetPxeEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.baremetal.port.physicalNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetPhysicalNetwork()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.port.portgroupUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetPortgroupUuid()).ToDataRes(types.String)
+	},
+	"openstack.baremetal.port.isSmartNic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetIsSmartNic()).ToDataRes(types.Bool)
+	},
+	"openstack.baremetal.port.localLinkConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetLocalLinkConnection()).ToDataRes(types.Dict)
+	},
+	"openstack.baremetal.port.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.baremetal.port.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.baremetal.port.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBaremetalPort).GetNode()).ToDataRes(types.Resource("openstack.baremetal.node"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -3363,6 +3496,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.databaseInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).DatabaseInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetalNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).BaremetalNodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6997,6 +7134,174 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackDbInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"openstack.baremetal.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.baremetal.node.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.powerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).PowerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.targetPowerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).TargetPowerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.provisionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).ProvisionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.targetProvisionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).TargetProvisionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.maintenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Maintenance, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.maintenanceReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).MaintenanceReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.fault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Fault, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.lastError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).LastError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.driver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Driver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.resourceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).ResourceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.conductorGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).ConductorGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.conductor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Conductor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.lessee": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Lessee, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.protectedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).ProtectedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.consoleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).ConsoleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.bootInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).BootInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.deployInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).DeployInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).NetworkInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.traits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Traits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.instanceUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).InstanceUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Instance, ok = plugin.RawToTValue[*mqlOpenstackComputeServer](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.node.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalNode).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.baremetal.port.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.nodeUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).NodeUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.pxeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).PxeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.physicalNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).PhysicalNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.portgroupUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).PortgroupUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.isSmartNic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).IsSmartNic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.localLinkConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).LocalLinkConnection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.baremetal.port.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBaremetalPort).Node, ok = plugin.RawToTValue[*mqlOpenstackBaremetalNode](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -7083,6 +7388,7 @@ type mqlOpenstack struct {
 	Clusters                plugin.TValue[[]any]
 	ClusterTemplates        plugin.TValue[[]any]
 	DatabaseInstances       plugin.TValue[[]any]
+	BaremetalNodes          plugin.TValue[[]any]
 }
 
 // createOpenstack creates a new instance of this resource
@@ -7995,6 +8301,22 @@ func (c *mqlOpenstack) GetDatabaseInstances() *plugin.TValue[[]any] {
 		}
 
 		return c.databaseInstances()
+	})
+}
+
+func (c *mqlOpenstack) GetBaremetalNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BaremetalNodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "baremetalNodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.baremetalNodes()
 	})
 }
 
@@ -16825,5 +17147,329 @@ func (c *mqlOpenstackDbInstance) GetDatabases() *plugin.TValue[[]any] {
 func (c *mqlOpenstackDbInstance) GetUsers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
 		return c.users()
+	})
+}
+
+// mqlOpenstackBaremetalNode for the openstack.baremetal.node resource
+type mqlOpenstackBaremetalNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackBaremetalNodeInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	PowerState           plugin.TValue[string]
+	TargetPowerState     plugin.TValue[string]
+	ProvisionState       plugin.TValue[string]
+	TargetProvisionState plugin.TValue[string]
+	Maintenance          plugin.TValue[bool]
+	MaintenanceReason    plugin.TValue[string]
+	Fault                plugin.TValue[string]
+	LastError            plugin.TValue[string]
+	Driver               plugin.TValue[string]
+	ResourceClass        plugin.TValue[string]
+	ConductorGroup       plugin.TValue[string]
+	Conductor            plugin.TValue[string]
+	Owner                plugin.TValue[string]
+	Lessee               plugin.TValue[string]
+	Protected            plugin.TValue[bool]
+	ProtectedReason      plugin.TValue[string]
+	Description          plugin.TValue[string]
+	ConsoleEnabled       plugin.TValue[bool]
+	BootInterface        plugin.TValue[string]
+	DeployInterface      plugin.TValue[string]
+	NetworkInterface     plugin.TValue[string]
+	Traits               plugin.TValue[[]any]
+	InstanceUuid         plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	Instance             plugin.TValue[*mqlOpenstackComputeServer]
+	Ports                plugin.TValue[[]any]
+}
+
+// createOpenstackBaremetalNode creates a new instance of this resource
+func createOpenstackBaremetalNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBaremetalNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.baremetal.node", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBaremetalNode) MqlName() string {
+	return "openstack.baremetal.node"
+}
+
+func (c *mqlOpenstackBaremetalNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBaremetalNode) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackBaremetalNode) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackBaremetalNode) GetPowerState() *plugin.TValue[string] {
+	return &c.PowerState
+}
+
+func (c *mqlOpenstackBaremetalNode) GetTargetPowerState() *plugin.TValue[string] {
+	return &c.TargetPowerState
+}
+
+func (c *mqlOpenstackBaremetalNode) GetProvisionState() *plugin.TValue[string] {
+	return &c.ProvisionState
+}
+
+func (c *mqlOpenstackBaremetalNode) GetTargetProvisionState() *plugin.TValue[string] {
+	return &c.TargetProvisionState
+}
+
+func (c *mqlOpenstackBaremetalNode) GetMaintenance() *plugin.TValue[bool] {
+	return &c.Maintenance
+}
+
+func (c *mqlOpenstackBaremetalNode) GetMaintenanceReason() *plugin.TValue[string] {
+	return &c.MaintenanceReason
+}
+
+func (c *mqlOpenstackBaremetalNode) GetFault() *plugin.TValue[string] {
+	return &c.Fault
+}
+
+func (c *mqlOpenstackBaremetalNode) GetLastError() *plugin.TValue[string] {
+	return &c.LastError
+}
+
+func (c *mqlOpenstackBaremetalNode) GetDriver() *plugin.TValue[string] {
+	return &c.Driver
+}
+
+func (c *mqlOpenstackBaremetalNode) GetResourceClass() *plugin.TValue[string] {
+	return &c.ResourceClass
+}
+
+func (c *mqlOpenstackBaremetalNode) GetConductorGroup() *plugin.TValue[string] {
+	return &c.ConductorGroup
+}
+
+func (c *mqlOpenstackBaremetalNode) GetConductor() *plugin.TValue[string] {
+	return &c.Conductor
+}
+
+func (c *mqlOpenstackBaremetalNode) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlOpenstackBaremetalNode) GetLessee() *plugin.TValue[string] {
+	return &c.Lessee
+}
+
+func (c *mqlOpenstackBaremetalNode) GetProtected() *plugin.TValue[bool] {
+	return &c.Protected
+}
+
+func (c *mqlOpenstackBaremetalNode) GetProtectedReason() *plugin.TValue[string] {
+	return &c.ProtectedReason
+}
+
+func (c *mqlOpenstackBaremetalNode) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackBaremetalNode) GetConsoleEnabled() *plugin.TValue[bool] {
+	return &c.ConsoleEnabled
+}
+
+func (c *mqlOpenstackBaremetalNode) GetBootInterface() *plugin.TValue[string] {
+	return &c.BootInterface
+}
+
+func (c *mqlOpenstackBaremetalNode) GetDeployInterface() *plugin.TValue[string] {
+	return &c.DeployInterface
+}
+
+func (c *mqlOpenstackBaremetalNode) GetNetworkInterface() *plugin.TValue[string] {
+	return &c.NetworkInterface
+}
+
+func (c *mqlOpenstackBaremetalNode) GetTraits() *plugin.TValue[[]any] {
+	return &c.Traits
+}
+
+func (c *mqlOpenstackBaremetalNode) GetInstanceUuid() *plugin.TValue[string] {
+	return &c.InstanceUuid
+}
+
+func (c *mqlOpenstackBaremetalNode) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackBaremetalNode) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackBaremetalNode) GetInstance() *plugin.TValue[*mqlOpenstackComputeServer] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeServer](&c.Instance, func() (*mqlOpenstackComputeServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.baremetal.node", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeServer), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlOpenstackBaremetalNode) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.baremetal.node", c.__id, "ports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ports()
+	})
+}
+
+// mqlOpenstackBaremetalPort for the openstack.baremetal.port resource
+type mqlOpenstackBaremetalPort struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackBaremetalPortInternal it will be used here
+	Id                  plugin.TValue[string]
+	Address             plugin.TValue[string]
+	NodeUuid            plugin.TValue[string]
+	PxeEnabled          plugin.TValue[bool]
+	PhysicalNetwork     plugin.TValue[string]
+	PortgroupUuid       plugin.TValue[string]
+	IsSmartNic          plugin.TValue[bool]
+	LocalLinkConnection plugin.TValue[any]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Node                plugin.TValue[*mqlOpenstackBaremetalNode]
+}
+
+// createOpenstackBaremetalPort creates a new instance of this resource
+func createOpenstackBaremetalPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBaremetalPort{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.baremetal.port", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBaremetalPort) MqlName() string {
+	return "openstack.baremetal.port"
+}
+
+func (c *mqlOpenstackBaremetalPort) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBaremetalPort) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackBaremetalPort) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlOpenstackBaremetalPort) GetNodeUuid() *plugin.TValue[string] {
+	return &c.NodeUuid
+}
+
+func (c *mqlOpenstackBaremetalPort) GetPxeEnabled() *plugin.TValue[bool] {
+	return &c.PxeEnabled
+}
+
+func (c *mqlOpenstackBaremetalPort) GetPhysicalNetwork() *plugin.TValue[string] {
+	return &c.PhysicalNetwork
+}
+
+func (c *mqlOpenstackBaremetalPort) GetPortgroupUuid() *plugin.TValue[string] {
+	return &c.PortgroupUuid
+}
+
+func (c *mqlOpenstackBaremetalPort) GetIsSmartNic() *plugin.TValue[bool] {
+	return &c.IsSmartNic
+}
+
+func (c *mqlOpenstackBaremetalPort) GetLocalLinkConnection() *plugin.TValue[any] {
+	return &c.LocalLinkConnection
+}
+
+func (c *mqlOpenstackBaremetalPort) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackBaremetalPort) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackBaremetalPort) GetNode() *plugin.TValue[*mqlOpenstackBaremetalNode] {
+	return plugin.GetOrCompute[*mqlOpenstackBaremetalNode](&c.Node, func() (*mqlOpenstackBaremetalNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.baremetal.port", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBaremetalNode), nil
+			}
+		}
+
+		return c.node()
 	})
 }

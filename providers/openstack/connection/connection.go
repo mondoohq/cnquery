@@ -49,6 +49,7 @@ type OpenstackConnection struct {
 	sharedFileSystem *gophercloud.ServiceClient
 	containerInfra   *gophercloud.ServiceClient
 	database         *gophercloud.ServiceClient
+	bareMetal        *gophercloud.ServiceClient
 
 	// Name->ID caches for Nova-reported references that Neutron/Compute
 	// expose only by ID. A non-nil map is the "ready" signal so we don't
@@ -332,5 +333,27 @@ func (c *OpenstackConnection) DatabaseClient() (*gophercloud.ServiceClient, erro
 		return nil, fmt.Errorf("failed to initialize Trove client: %w", err)
 	}
 	c.database = client
+	return client, nil
+}
+
+// bareMetalMicroversion pins the Ironic API microversion. 1.65 exposes node
+// ownership fields (`owner`, `lessee`) along with `protected`, `description`,
+// and `fault`; it has been available since OpenStack Ussuri (2020). Clouds
+// whose maximum supported microversion is lower return 406, which the resource
+// layer treats as "no data".
+const bareMetalMicroversion = "1.65"
+
+func (c *OpenstackConnection) BareMetalClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.bareMetal != nil {
+		return c.bareMetal, nil
+	}
+	client, err := openstack.NewBareMetalV1(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Ironic client: %w", err)
+	}
+	client.Microversion = bareMetalMicroversion
+	c.bareMetal = client
 	return client, nil
 }
