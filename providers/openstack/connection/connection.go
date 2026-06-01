@@ -50,6 +50,7 @@ type OpenstackConnection struct {
 	containerInfra   *gophercloud.ServiceClient
 	database         *gophercloud.ServiceClient
 	bareMetal        *gophercloud.ServiceClient
+	orchestration    *gophercloud.ServiceClient
 
 	// Name->ID caches for Nova-reported references that Neutron/Compute
 	// expose only by ID. A non-nil map is the "ready" signal so we don't
@@ -355,5 +356,19 @@ func (c *OpenstackConnection) BareMetalClient() (*gophercloud.ServiceClient, err
 	}
 	client.Microversion = bareMetalMicroversion
 	c.bareMetal = client
+	return client, nil
+}
+
+func (c *OpenstackConnection) OrchestrationClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.orchestration != nil {
+		return c.orchestration, nil
+	}
+	client, err := openstack.NewOrchestrationV1(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Heat client: %w", err)
+	}
+	c.orchestration = client
 	return client, nil
 }

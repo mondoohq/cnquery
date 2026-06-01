@@ -762,6 +762,18 @@ openstack.octavia.pool.tags 13.0.1
 openstack.octavia.pool.tlsCiphers 13.0.1
 openstack.octavia.pool.tlsEnabled 13.0.1
 openstack.octavia.pool.tlsVersions 13.0.1
+openstack.orchestration.stack 13.1.4
+openstack.orchestration.stack.createdAt 13.1.4
+openstack.orchestration.stack.description 13.1.4
+openstack.orchestration.stack.disableRollback 13.1.4
+openstack.orchestration.stack.id 13.1.4
+openstack.orchestration.stack.name 13.1.4
+openstack.orchestration.stack.parameters 13.1.4
+openstack.orchestration.stack.status 13.1.4
+openstack.orchestration.stack.statusReason 13.1.4
+openstack.orchestration.stack.tags 13.1.4
+openstack.orchestration.stack.timeoutMinutes 13.1.4
+openstack.orchestration.stack.updatedAt 13.1.4
 openstack.pools 13.0.1
 openstack.port 13.0.1
 openstack.port.adminStateUp 13.0.1
@@ -926,6 +938,7 @@ openstack.sharedfilesystem.shareNetwork.subnet 13.1.4
 openstack.sharedfilesystem.shareNetwork.updatedAt 13.1.4
 openstack.shares 13.1.4
 openstack.snapshots 13.0.1
+openstack.stacks 13.1.4
 openstack.subnet 13.0.1
 openstack.subnet.allocationPools 13.0.1
 openstack.subnet.cidr 13.0.1

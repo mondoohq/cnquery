@@ -83,6 +83,7 @@ const (
 	ResourceOpenstackDbInstance                      string = "openstack.db.instance"
 	ResourceOpenstackBaremetalNode                   string = "openstack.baremetal.node"
 	ResourceOpenstackBaremetalPort                   string = "openstack.baremetal.port"
+	ResourceOpenstackOrchestrationStack              string = "openstack.orchestration.stack"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -357,6 +358,10 @@ func init() {
 			// to override args, implement: initOpenstackBaremetalPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenstackBaremetalPort,
 		},
+		"openstack.orchestration.stack": {
+			Init:   initOpenstackOrchestrationStack,
+			Create: createOpenstackOrchestrationStack,
+		},
 	}
 }
 
@@ -601,6 +606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.baremetalNodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetBaremetalNodes()).ToDataRes(types.Array(types.Resource("openstack.baremetal.node")))
+	},
+	"openstack.stacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetStacks()).ToDataRes(types.Array(types.Resource("openstack.orchestration.stack")))
 	},
 	"openstack.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackProject).GetId()).ToDataRes(types.String)
@@ -3254,6 +3262,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.baremetal.port.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBaremetalPort).GetNode()).ToDataRes(types.Resource("openstack.baremetal.node"))
 	},
+	"openstack.orchestration.stack.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetId()).ToDataRes(types.String)
+	},
+	"openstack.orchestration.stack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetName()).ToDataRes(types.String)
+	},
+	"openstack.orchestration.stack.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.orchestration.stack.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.orchestration.stack.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetStatusReason()).ToDataRes(types.String)
+	},
+	"openstack.orchestration.stack.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.orchestration.stack.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.orchestration.stack.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.orchestration.stack.disableRollback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetDisableRollback()).ToDataRes(types.Bool)
+	},
+	"openstack.orchestration.stack.timeoutMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetTimeoutMinutes()).ToDataRes(types.Int)
+	},
+	"openstack.orchestration.stack.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOrchestrationStack).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -3500,6 +3541,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.baremetalNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).BaremetalNodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.stacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Stacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7302,6 +7347,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackBaremetalPort).Node, ok = plugin.RawToTValue[*mqlOpenstackBaremetalNode](v.Value, v.Error)
 		return
 	},
+	"openstack.orchestration.stack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.orchestration.stack.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.disableRollback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).DisableRollback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.timeoutMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).TimeoutMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.orchestration.stack.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOrchestrationStack).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -7389,6 +7482,7 @@ type mqlOpenstack struct {
 	ClusterTemplates        plugin.TValue[[]any]
 	DatabaseInstances       plugin.TValue[[]any]
 	BaremetalNodes          plugin.TValue[[]any]
+	Stacks                  plugin.TValue[[]any]
 }
 
 // createOpenstack creates a new instance of this resource
@@ -8317,6 +8411,22 @@ func (c *mqlOpenstack) GetBaremetalNodes() *plugin.TValue[[]any] {
 		}
 
 		return c.baremetalNodes()
+	})
+}
+
+func (c *mqlOpenstack) GetStacks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stacks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "stacks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stacks()
 	})
 }
 
@@ -17471,5 +17581,110 @@ func (c *mqlOpenstackBaremetalPort) GetNode() *plugin.TValue[*mqlOpenstackBareme
 		}
 
 		return c.node()
+	})
+}
+
+// mqlOpenstackOrchestrationStack for the openstack.orchestration.stack resource
+type mqlOpenstackOrchestrationStack struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackOrchestrationStackInternal
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Status          plugin.TValue[string]
+	StatusReason    plugin.TValue[string]
+	Tags            plugin.TValue[[]any]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	DisableRollback plugin.TValue[bool]
+	TimeoutMinutes  plugin.TValue[int64]
+	Parameters      plugin.TValue[map[string]any]
+}
+
+// createOpenstackOrchestrationStack creates a new instance of this resource
+func createOpenstackOrchestrationStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackOrchestrationStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.orchestration.stack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackOrchestrationStack) MqlName() string {
+	return "openstack.orchestration.stack"
+}
+
+func (c *mqlOpenstackOrchestrationStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetDisableRollback() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableRollback, func() (bool, error) {
+		return c.disableRollback()
+	})
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetTimeoutMinutes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TimeoutMinutes, func() (int64, error) {
+		return c.timeoutMinutes()
+	})
+}
+
+func (c *mqlOpenstackOrchestrationStack) GetParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
+		return c.parameters()
 	})
 }

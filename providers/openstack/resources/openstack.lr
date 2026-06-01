@@ -23,9 +23,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
 // Designate DNS (`dnsZones`), Manila shared file systems (`shares`,
 // `securityServices`, `shareNetworks`), Magnum container infrastructure
-// (`clusters`, `clusterTemplates`), Trove databases (`databaseInstances`), and
-// Ironic bare metal (`baremetalNodes`). `authUrl`, `projectId`, and `region`
-// identify the connection scope.
+// (`clusters`, `clusterTemplates`), Trove databases (`databaseInstances`),
+// Ironic bare metal (`baremetalNodes`), and Heat orchestration (`stacks`).
+// `authUrl`, `projectId`, and `region` identify the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
   authUrl string
@@ -153,6 +153,9 @@ openstack {
 
   // Ironic bare-metal nodes in the scoped project
   baremetalNodes() []openstack.baremetal.node
+
+  // Heat orchestration stacks in the scoped project
+  stacks() []openstack.orchestration.stack
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -2353,4 +2356,39 @@ private openstack.baremetal.port @defaults("id address nodeUuid pxeEnabled") {
   updatedAt time
   // Node this port belongs to
   node() openstack.baremetal.node
+}
+
+// OpenStack Heat orchestration stack
+//
+// Examine a Heat stack — a set of OpenStack resources deployed and managed
+// together from a template (OpenStack's infrastructure-as-code). Select a stack
+// by its `id`. Query `status` to track deployment/drift state and
+// `disableRollback` to flag stacks that won't roll back on failure.
+private openstack.orchestration.stack @defaults("id name status") {
+  init(id? string)
+  // Stack ID (UUID)
+  id string
+  // Stack name
+  name string
+  // Description
+  description string
+  // Stack status (for example `CREATE_COMPLETE`, `UPDATE_FAILED`, or `ROLLBACK_COMPLETE`)
+  status string
+  // Human-readable reason for the current status
+  statusReason string
+  // Tags applied to the stack
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Whether rollback on failure is disabled
+  //
+  // True leaves a failed stack in place instead of rolling back; failed
+  // deployments then linger with partially created resources.
+  disableRollback() bool
+  // Stack timeout in minutes; 0 when no timeout is set
+  timeoutMinutes() int
+  // Input parameters the stack was deployed with
+  parameters() map[string]string
 }
