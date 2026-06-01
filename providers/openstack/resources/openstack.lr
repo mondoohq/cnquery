@@ -22,9 +22,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // (`loadBalancers`, `listeners`, `pools`, `healthMonitors`, `l7Policies`),
 // Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
 // Designate DNS (`dnsZones`), Manila shared file systems (`shares`,
-// `securityServices`, `shareNetworks`), and Magnum container infrastructure
-// (`clusters`, `clusterTemplates`). `authUrl`, `projectId`, and `region`
-// identify the connection scope.
+// `securityServices`, `shareNetworks`), Magnum container infrastructure
+// (`clusters`, `clusterTemplates`), and Trove databases (`databaseInstances`).
+// `authUrl`, `projectId`, and `region` identify the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
   authUrl string
@@ -146,6 +146,9 @@ openstack {
   clusters() []openstack.containerinfra.cluster
   // Magnum cluster templates (blueprints for new clusters)
   clusterTemplates() []openstack.containerinfra.clusterTemplate
+
+  // Trove managed database instances in the scoped project
+  databaseInstances() []openstack.db.instance
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -2216,4 +2219,37 @@ private openstack.containerinfra.clusterTemplate @defaults("id name coe tlsDisab
   masterFlavor() openstack.compute.flavor
   // SSH key pair injected into cluster nodes
   keypair() openstack.compute.keypair
+}
+
+// OpenStack Trove database instance
+//
+// Examine a managed database instance provisioned by Trove. Select an instance
+// by its `id`. Query `addresses` and `hostname` to see how the database is
+// reachable, and `datastoreType`/`datastoreVersion` to flag outdated engines.
+// The `databases` and `users` accessors enumerate the logical databases and
+// accounts on the instance; user passwords are intentionally not exposed.
+private openstack.db.instance @defaults("id name status datastoreType datastoreVersion") {
+  init(id? string)
+  // Instance ID (UUID)
+  id string
+  // Instance name
+  name string
+  // Build/lifecycle status (for example `ACTIVE`, `BUILD`, or `ERROR`)
+  status string
+  // DNS-resolvable hostname of the instance; empty when only IP addresses are assigned
+  hostname string
+  // Datastore type (the database engine, for example `mysql`, `postgresql`, or `mariadb`)
+  datastoreType string
+  // Datastore version (the engine version, for example `5.7`)
+  datastoreVersion string
+  // Size of the attached data volume in gibibytes
+  volumeSize int
+  // Network addresses assigned to the instance ([{type, address}]); `type` is for example `public` or `private`
+  addresses []dict
+  // Flavor (compute size) the instance runs on
+  flavor() openstack.compute.flavor
+  // Logical databases hosted on the instance ([{name, charset, collate}])
+  databases() []dict
+  // Database user accounts on the instance ([{name, databases: [string]}]); passwords are not included
+  users() []dict
 }

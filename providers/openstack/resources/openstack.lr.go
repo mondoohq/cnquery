@@ -80,6 +80,7 @@ const (
 	ResourceOpenstackSharedfilesystemShareNetwork    string = "openstack.sharedfilesystem.shareNetwork"
 	ResourceOpenstackContainerinfraCluster           string = "openstack.containerinfra.cluster"
 	ResourceOpenstackContainerinfraClusterTemplate   string = "openstack.containerinfra.clusterTemplate"
+	ResourceOpenstackDbInstance                      string = "openstack.db.instance"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -342,6 +343,10 @@ func init() {
 			Init:   initOpenstackContainerinfraClusterTemplate,
 			Create: createOpenstackContainerinfraClusterTemplate,
 		},
+		"openstack.db.instance": {
+			Init:   initOpenstackDbInstance,
+			Create: createOpenstackDbInstance,
+		},
 	}
 }
 
@@ -580,6 +585,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.clusterTemplates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetClusterTemplates()).ToDataRes(types.Array(types.Resource("openstack.containerinfra.clusterTemplate")))
+	},
+	"openstack.databaseInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetDatabaseInstances()).ToDataRes(types.Array(types.Resource("openstack.db.instance")))
 	},
 	"openstack.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackProject).GetId()).ToDataRes(types.String)
@@ -3080,6 +3088,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.containerinfra.clusterTemplate.keypair": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetKeypair()).ToDataRes(types.Resource("openstack.compute.keypair"))
 	},
+	"openstack.db.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetId()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetName()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetHostname()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.datastoreType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetDatastoreType()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.datastoreVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetDatastoreVersion()).ToDataRes(types.String)
+	},
+	"openstack.db.instance.volumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetVolumeSize()).ToDataRes(types.Int)
+	},
+	"openstack.db.instance.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"openstack.db.instance.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetFlavor()).ToDataRes(types.Resource("openstack.compute.flavor"))
+	},
+	"openstack.db.instance.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetDatabases()).ToDataRes(types.Array(types.Dict))
+	},
+	"openstack.db.instance.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetUsers()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -3318,6 +3359,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.clusterTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).ClusterTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.databaseInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).DatabaseInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6904,6 +6949,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackContainerinfraClusterTemplate).Keypair, ok = plugin.RawToTValue[*mqlOpenstackComputeKeypair](v.Value, v.Error)
 		return
 	},
+	"openstack.db.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.db.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.datastoreType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).DatastoreType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.datastoreVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).DatastoreVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).VolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Flavor, ok = plugin.RawToTValue[*mqlOpenstackComputeFlavor](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -6989,6 +7082,7 @@ type mqlOpenstack struct {
 	ShareNetworks           plugin.TValue[[]any]
 	Clusters                plugin.TValue[[]any]
 	ClusterTemplates        plugin.TValue[[]any]
+	DatabaseInstances       plugin.TValue[[]any]
 }
 
 // createOpenstack creates a new instance of this resource
@@ -7885,6 +7979,22 @@ func (c *mqlOpenstack) GetClusterTemplates() *plugin.TValue[[]any] {
 		}
 
 		return c.clusterTemplates()
+	})
+}
+
+func (c *mqlOpenstack) GetDatabaseInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DatabaseInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "databaseInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databaseInstances()
 	})
 }
 
@@ -16600,5 +16710,120 @@ func (c *mqlOpenstackContainerinfraClusterTemplate) GetKeypair() *plugin.TValue[
 		}
 
 		return c.keypair()
+	})
+}
+
+// mqlOpenstackDbInstance for the openstack.db.instance resource
+type mqlOpenstackDbInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackDbInstanceInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Hostname         plugin.TValue[string]
+	DatastoreType    plugin.TValue[string]
+	DatastoreVersion plugin.TValue[string]
+	VolumeSize       plugin.TValue[int64]
+	Addresses        plugin.TValue[[]any]
+	Flavor           plugin.TValue[*mqlOpenstackComputeFlavor]
+	Databases        plugin.TValue[[]any]
+	Users            plugin.TValue[[]any]
+}
+
+// createOpenstackDbInstance creates a new instance of this resource
+func createOpenstackDbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackDbInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.db.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackDbInstance) MqlName() string {
+	return "openstack.db.instance"
+}
+
+func (c *mqlOpenstackDbInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackDbInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackDbInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackDbInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackDbInstance) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlOpenstackDbInstance) GetDatastoreType() *plugin.TValue[string] {
+	return &c.DatastoreType
+}
+
+func (c *mqlOpenstackDbInstance) GetDatastoreVersion() *plugin.TValue[string] {
+	return &c.DatastoreVersion
+}
+
+func (c *mqlOpenstackDbInstance) GetVolumeSize() *plugin.TValue[int64] {
+	return &c.VolumeSize
+}
+
+func (c *mqlOpenstackDbInstance) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlOpenstackDbInstance) GetFlavor() *plugin.TValue[*mqlOpenstackComputeFlavor] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeFlavor](&c.Flavor, func() (*mqlOpenstackComputeFlavor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.db.instance", c.__id, "flavor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeFlavor), nil
+			}
+		}
+
+		return c.flavor()
+	})
+}
+
+func (c *mqlOpenstackDbInstance) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		return c.databases()
+	})
+}
+
+func (c *mqlOpenstackDbInstance) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		return c.users()
 	})
 }
