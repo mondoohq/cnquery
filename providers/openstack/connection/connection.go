@@ -36,16 +36,17 @@ type OpenstackConnection struct {
 	projectID string
 	domainID  string
 
-	clientLock    sync.Mutex
-	identity      *gophercloud.ServiceClient
-	compute       *gophercloud.ServiceClient
-	network       *gophercloud.ServiceClient
-	blockStorage  *gophercloud.ServiceClient
-	image         *gophercloud.ServiceClient
-	keyManager    *gophercloud.ServiceClient
-	loadBalancer  *gophercloud.ServiceClient
-	objectStorage *gophercloud.ServiceClient
-	dns           *gophercloud.ServiceClient
+	clientLock       sync.Mutex
+	identity         *gophercloud.ServiceClient
+	compute          *gophercloud.ServiceClient
+	network          *gophercloud.ServiceClient
+	blockStorage     *gophercloud.ServiceClient
+	image            *gophercloud.ServiceClient
+	keyManager       *gophercloud.ServiceClient
+	loadBalancer     *gophercloud.ServiceClient
+	objectStorage    *gophercloud.ServiceClient
+	dns              *gophercloud.ServiceClient
+	sharedFileSystem *gophercloud.ServiceClient
 
 	// Name->ID caches for Nova-reported references that Neutron/Compute
 	// expose only by ID. A non-nil map is the "ready" signal so we don't
@@ -279,5 +280,27 @@ func (c *OpenstackConnection) DNSClient() (*gophercloud.ServiceClient, error) {
 		return nil, fmt.Errorf("failed to initialize Designate client: %w", err)
 	}
 	c.dns = client
+	return client, nil
+}
+
+// sharedFileSystemMicroversion pins the Manila API microversion. 2.45 is the
+// version that introduced the dedicated share access-rules API and the modern
+// share detail fields; it has been available since OpenStack Queens (2018).
+// Clouds whose maximum supported microversion is lower will return 406 for
+// these calls, which the resource layer treats as "no data".
+const sharedFileSystemMicroversion = "2.45"
+
+func (c *OpenstackConnection) SharedFileSystemClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.sharedFileSystem != nil {
+		return c.sharedFileSystem, nil
+	}
+	client, err := openstack.NewSharedFileSystemV2(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Manila client: %w", err)
+	}
+	client.Microversion = sharedFileSystemMicroversion
+	c.sharedFileSystem = client
 	return client, nil
 }

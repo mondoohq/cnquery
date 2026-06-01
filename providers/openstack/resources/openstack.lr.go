@@ -16,64 +16,68 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceOpenstack                       string = "openstack"
-	ResourceOpenstackProject                string = "openstack.project"
-	ResourceOpenstackUser                   string = "openstack.user"
-	ResourceOpenstackRole                   string = "openstack.role"
-	ResourceOpenstackDomain                 string = "openstack.domain"
-	ResourceOpenstackGroup                  string = "openstack.group"
-	ResourceOpenstackComputeServer          string = "openstack.compute.server"
-	ResourceOpenstackComputeFlavor          string = "openstack.compute.flavor"
-	ResourceOpenstackComputeKeypair         string = "openstack.compute.keypair"
-	ResourceOpenstackComputeServerGroup     string = "openstack.compute.serverGroup"
-	ResourceOpenstackNetwork                string = "openstack.network"
-	ResourceOpenstackSubnet                 string = "openstack.subnet"
-	ResourceOpenstackRouter                 string = "openstack.router"
-	ResourceOpenstackPort                   string = "openstack.port"
-	ResourceOpenstackFloatingIp             string = "openstack.floatingIp"
-	ResourceOpenstackSecurityGroup          string = "openstack.securityGroup"
-	ResourceOpenstackSecurityGroupRule      string = "openstack.securityGroup.rule"
-	ResourceOpenstackBlockstorageVolume     string = "openstack.blockstorage.volume"
-	ResourceOpenstackBlockstorageSnapshot   string = "openstack.blockstorage.snapshot"
-	ResourceOpenstackImage                  string = "openstack.image"
-	ResourceOpenstackKeymanagerSecret       string = "openstack.keymanager.secret"
-	ResourceOpenstackKeymanagerContainer    string = "openstack.keymanager.container"
-	ResourceOpenstackKeymanagerOrder        string = "openstack.keymanager.order"
-	ResourceOpenstackOctaviaLoadBalancer    string = "openstack.octavia.loadBalancer"
-	ResourceOpenstackOctaviaListener        string = "openstack.octavia.listener"
-	ResourceOpenstackOctaviaPool            string = "openstack.octavia.pool"
-	ResourceOpenstackOctaviaMember          string = "openstack.octavia.member"
-	ResourceOpenstackOctaviaHealthMonitor   string = "openstack.octavia.healthMonitor"
-	ResourceOpenstackOctaviaL7Policy        string = "openstack.octavia.l7Policy"
-	ResourceOpenstackOctaviaL7Rule          string = "openstack.octavia.l7Rule"
-	ResourceOpenstackSubnetPool             string = "openstack.subnetPool"
-	ResourceOpenstackQosPolicy              string = "openstack.qosPolicy"
-	ResourceOpenstackTrunk                  string = "openstack.trunk"
-	ResourceOpenstackFirewallGroup          string = "openstack.firewall.group"
-	ResourceOpenstackFirewallPolicy         string = "openstack.firewall.policy"
-	ResourceOpenstackFirewallRule           string = "openstack.firewall.rule"
-	ResourceOpenstackObjectstorageAccount   string = "openstack.objectstorage.account"
-	ResourceOpenstackObjectstorageContainer string = "openstack.objectstorage.container"
-	ResourceOpenstackObjectstorageObject    string = "openstack.objectstorage.object"
-	ResourceOpenstackDnsZone                string = "openstack.dns.zone"
-	ResourceOpenstackDnsRecordset           string = "openstack.dns.recordset"
-	ResourceOpenstackComputeHypervisor      string = "openstack.compute.hypervisor"
-	ResourceOpenstackComputeService         string = "openstack.compute.service"
-	ResourceOpenstackBlockstorageVolumeType string = "openstack.blockstorage.volumeType"
-	ResourceOpenstackBlockstorageBackup     string = "openstack.blockstorage.backup"
-	ResourceOpenstackImageMember            string = "openstack.image.member"
-	ResourceOpenstackApplicationCredential  string = "openstack.applicationCredential"
-	ResourceOpenstackCredential             string = "openstack.credential"
-	ResourceOpenstackEc2Credential          string = "openstack.ec2Credential"
-	ResourceOpenstackTrust                  string = "openstack.trust"
-	ResourceOpenstackIdentityService        string = "openstack.identity.service"
-	ResourceOpenstackIdentityEndpoint       string = "openstack.identity.endpoint"
-	ResourceOpenstackIdentityRegion         string = "openstack.identity.region"
-	ResourceOpenstackComputeAggregate       string = "openstack.compute.aggregate"
-	ResourceOpenstackComputeLimits          string = "openstack.compute.limits"
-	ResourceOpenstackBlockstorageQuotaSet   string = "openstack.blockstorage.quotaSet"
-	ResourceOpenstackNetworkQuotaSet        string = "openstack.network.quotaSet"
-	ResourceOpenstackKeymanagerAcl          string = "openstack.keymanager.acl"
+	ResourceOpenstack                                string = "openstack"
+	ResourceOpenstackProject                         string = "openstack.project"
+	ResourceOpenstackUser                            string = "openstack.user"
+	ResourceOpenstackRole                            string = "openstack.role"
+	ResourceOpenstackDomain                          string = "openstack.domain"
+	ResourceOpenstackGroup                           string = "openstack.group"
+	ResourceOpenstackComputeServer                   string = "openstack.compute.server"
+	ResourceOpenstackComputeFlavor                   string = "openstack.compute.flavor"
+	ResourceOpenstackComputeKeypair                  string = "openstack.compute.keypair"
+	ResourceOpenstackComputeServerGroup              string = "openstack.compute.serverGroup"
+	ResourceOpenstackNetwork                         string = "openstack.network"
+	ResourceOpenstackSubnet                          string = "openstack.subnet"
+	ResourceOpenstackRouter                          string = "openstack.router"
+	ResourceOpenstackPort                            string = "openstack.port"
+	ResourceOpenstackFloatingIp                      string = "openstack.floatingIp"
+	ResourceOpenstackSecurityGroup                   string = "openstack.securityGroup"
+	ResourceOpenstackSecurityGroupRule               string = "openstack.securityGroup.rule"
+	ResourceOpenstackBlockstorageVolume              string = "openstack.blockstorage.volume"
+	ResourceOpenstackBlockstorageSnapshot            string = "openstack.blockstorage.snapshot"
+	ResourceOpenstackImage                           string = "openstack.image"
+	ResourceOpenstackKeymanagerSecret                string = "openstack.keymanager.secret"
+	ResourceOpenstackKeymanagerContainer             string = "openstack.keymanager.container"
+	ResourceOpenstackKeymanagerOrder                 string = "openstack.keymanager.order"
+	ResourceOpenstackOctaviaLoadBalancer             string = "openstack.octavia.loadBalancer"
+	ResourceOpenstackOctaviaListener                 string = "openstack.octavia.listener"
+	ResourceOpenstackOctaviaPool                     string = "openstack.octavia.pool"
+	ResourceOpenstackOctaviaMember                   string = "openstack.octavia.member"
+	ResourceOpenstackOctaviaHealthMonitor            string = "openstack.octavia.healthMonitor"
+	ResourceOpenstackOctaviaL7Policy                 string = "openstack.octavia.l7Policy"
+	ResourceOpenstackOctaviaL7Rule                   string = "openstack.octavia.l7Rule"
+	ResourceOpenstackSubnetPool                      string = "openstack.subnetPool"
+	ResourceOpenstackQosPolicy                       string = "openstack.qosPolicy"
+	ResourceOpenstackTrunk                           string = "openstack.trunk"
+	ResourceOpenstackFirewallGroup                   string = "openstack.firewall.group"
+	ResourceOpenstackFirewallPolicy                  string = "openstack.firewall.policy"
+	ResourceOpenstackFirewallRule                    string = "openstack.firewall.rule"
+	ResourceOpenstackObjectstorageAccount            string = "openstack.objectstorage.account"
+	ResourceOpenstackObjectstorageContainer          string = "openstack.objectstorage.container"
+	ResourceOpenstackObjectstorageObject             string = "openstack.objectstorage.object"
+	ResourceOpenstackDnsZone                         string = "openstack.dns.zone"
+	ResourceOpenstackDnsRecordset                    string = "openstack.dns.recordset"
+	ResourceOpenstackComputeHypervisor               string = "openstack.compute.hypervisor"
+	ResourceOpenstackComputeService                  string = "openstack.compute.service"
+	ResourceOpenstackBlockstorageVolumeType          string = "openstack.blockstorage.volumeType"
+	ResourceOpenstackBlockstorageBackup              string = "openstack.blockstorage.backup"
+	ResourceOpenstackImageMember                     string = "openstack.image.member"
+	ResourceOpenstackApplicationCredential           string = "openstack.applicationCredential"
+	ResourceOpenstackCredential                      string = "openstack.credential"
+	ResourceOpenstackEc2Credential                   string = "openstack.ec2Credential"
+	ResourceOpenstackTrust                           string = "openstack.trust"
+	ResourceOpenstackIdentityService                 string = "openstack.identity.service"
+	ResourceOpenstackIdentityEndpoint                string = "openstack.identity.endpoint"
+	ResourceOpenstackIdentityRegion                  string = "openstack.identity.region"
+	ResourceOpenstackComputeAggregate                string = "openstack.compute.aggregate"
+	ResourceOpenstackComputeLimits                   string = "openstack.compute.limits"
+	ResourceOpenstackBlockstorageQuotaSet            string = "openstack.blockstorage.quotaSet"
+	ResourceOpenstackNetworkQuotaSet                 string = "openstack.network.quotaSet"
+	ResourceOpenstackKeymanagerAcl                   string = "openstack.keymanager.acl"
+	ResourceOpenstackSharedfilesystemShare           string = "openstack.sharedfilesystem.share"
+	ResourceOpenstackSharedfilesystemShareAccessRule string = "openstack.sharedfilesystem.share.accessRule"
+	ResourceOpenstackSharedfilesystemSecurityService string = "openstack.sharedfilesystem.securityService"
+	ResourceOpenstackSharedfilesystemShareNetwork    string = "openstack.sharedfilesystem.shareNetwork"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -312,6 +316,22 @@ func init() {
 			// to override args, implement: initOpenstackKeymanagerAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenstackKeymanagerAcl,
 		},
+		"openstack.sharedfilesystem.share": {
+			Init:   initOpenstackSharedfilesystemShare,
+			Create: createOpenstackSharedfilesystemShare,
+		},
+		"openstack.sharedfilesystem.share.accessRule": {
+			// to override args, implement: initOpenstackSharedfilesystemShareAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackSharedfilesystemShareAccessRule,
+		},
+		"openstack.sharedfilesystem.securityService": {
+			Init:   initOpenstackSharedfilesystemSecurityService,
+			Create: createOpenstackSharedfilesystemSecurityService,
+		},
+		"openstack.sharedfilesystem.shareNetwork": {
+			Init:   initOpenstackSharedfilesystemShareNetwork,
+			Create: createOpenstackSharedfilesystemShareNetwork,
+		},
 	}
 }
 
@@ -535,6 +555,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.dnsZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetDnsZones()).ToDataRes(types.Array(types.Resource("openstack.dns.zone")))
+	},
+	"openstack.shares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetShares()).ToDataRes(types.Array(types.Resource("openstack.sharedfilesystem.share")))
+	},
+	"openstack.securityServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetSecurityServices()).ToDataRes(types.Array(types.Resource("openstack.sharedfilesystem.securityService")))
+	},
+	"openstack.shareNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetShareNetworks()).ToDataRes(types.Array(types.Resource("openstack.sharedfilesystem.shareNetwork")))
 	},
 	"openstack.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackProject).GetId()).ToDataRes(types.String)
@@ -2678,6 +2707,186 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.keymanager.acl.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerAcl).GetEntries()).ToDataRes(types.Dict)
 	},
+	"openstack.sharedfilesystem.share.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetName()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.shareProto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetShareProto()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetSize()).ToDataRes(types.Int)
+	},
+	"openstack.sharedfilesystem.share.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"openstack.sharedfilesystem.share.shareType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetShareType()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.shareTypeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetShareTypeName()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetHost()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.hasReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetHasReplicas()).ToDataRes(types.Bool)
+	},
+	"openstack.sharedfilesystem.share.replicationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetReplicationType()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.snapshotSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetSnapshotSupport()).ToDataRes(types.Bool)
+	},
+	"openstack.sharedfilesystem.share.snapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetSnapshotId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.sharedfilesystem.share.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.share.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.share.shareNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetShareNetwork()).ToDataRes(types.Resource("openstack.sharedfilesystem.shareNetwork"))
+	},
+	"openstack.sharedfilesystem.share.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.sharedfilesystem.share.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShare).GetAccessRules()).ToDataRes(types.Array(types.Resource("openstack.sharedfilesystem.share.accessRule")))
+	},
+	"openstack.sharedfilesystem.share.accessRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetAccessType()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetAccessTo()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetAccessLevel()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetState()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.shareId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetShareId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.share.accessRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.share.accessRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.share.accessRule.share": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareAccessRule).GetShare()).ToDataRes(types.Resource("openstack.sharedfilesystem.share"))
+	},
+	"openstack.sharedfilesystem.securityService.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetName()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetType()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetDomain()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.dnsIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetDnsIp()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.ou": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetOu()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetUser()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetServer()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.securityService.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.securityService.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.securityService.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemSecurityService).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.sharedfilesystem.shareNetwork.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetName()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.neutronNetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetNeutronNetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.neutronSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetNeutronSubnetId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetNetworkType()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.segmentationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetSegmentationId()).ToDataRes(types.Int)
+	},
+	"openstack.sharedfilesystem.shareNetwork.cidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetCidr()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.ipVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetIpVersion()).ToDataRes(types.Int)
+	},
+	"openstack.sharedfilesystem.shareNetwork.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.sharedfilesystem.shareNetwork.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.shareNetwork.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.sharedfilesystem.shareNetwork.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetNetwork()).ToDataRes(types.Resource("openstack.network"))
+	},
+	"openstack.sharedfilesystem.shareNetwork.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetSubnet()).ToDataRes(types.Resource("openstack.subnet"))
+	},
+	"openstack.sharedfilesystem.shareNetwork.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2896,6 +3105,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.dnsZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).DnsZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.shares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Shares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.securityServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).SecurityServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.shareNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).ShareNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5982,6 +6203,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackKeymanagerAcl).Entries, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"openstack.sharedfilesystem.share.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.sharedfilesystem.share.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.shareProto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ShareProto, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.shareType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ShareType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.shareTypeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ShareTypeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.hasReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).HasReplicas, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.replicationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ReplicationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.snapshotSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).SnapshotSupport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.shareNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).ShareNetwork, ok = plugin.RawToTValue[*mqlOpenstackSharedfilesystemShareNetwork](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShare).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).AccessTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.accessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).AccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.shareId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).ShareId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.share.accessRule.share": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareAccessRule).Share, ok = plugin.RawToTValue[*mqlOpenstackSharedfilesystemShare](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.dnsIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).DnsIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.ou": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Ou, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.securityService.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemSecurityService).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.neutronNetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).NeutronNetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.neutronSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).NeutronSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.segmentationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).SegmentationId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.cidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Cidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.ipVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).IpVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Network, ok = plugin.RawToTValue[*mqlOpenstackNetwork](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Subnet, ok = plugin.RawToTValue[*mqlOpenstackSubnet](v.Value, v.Error)
+		return
+	},
+	"openstack.sharedfilesystem.shareNetwork.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSharedfilesystemShareNetwork).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -6062,6 +6539,9 @@ type mqlOpenstack struct {
 	ObjectStorageAccount    plugin.TValue[*mqlOpenstackObjectstorageAccount]
 	ObjectStorageContainers plugin.TValue[[]any]
 	DnsZones                plugin.TValue[[]any]
+	Shares                  plugin.TValue[[]any]
+	SecurityServices        plugin.TValue[[]any]
+	ShareNetworks           plugin.TValue[[]any]
 }
 
 // createOpenstack creates a new instance of this resource
@@ -6878,6 +7358,54 @@ func (c *mqlOpenstack) GetDnsZones() *plugin.TValue[[]any] {
 		}
 
 		return c.dnsZones()
+	})
+}
+
+func (c *mqlOpenstack) GetShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Shares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "shares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.shares()
+	})
+}
+
+func (c *mqlOpenstack) GetSecurityServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "securityServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityServices()
+	})
+}
+
+func (c *mqlOpenstack) GetShareNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ShareNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "shareNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.shareNetworks()
 	})
 }
 
@@ -14495,4 +15023,576 @@ func (c *mqlOpenstackKeymanagerAcl) MqlID() string {
 
 func (c *mqlOpenstackKeymanagerAcl) GetEntries() *plugin.TValue[any] {
 	return &c.Entries
+}
+
+// mqlOpenstackSharedfilesystemShare for the openstack.sharedfilesystem.share resource
+type mqlOpenstackSharedfilesystemShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackSharedfilesystemShareInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Status           plugin.TValue[string]
+	ShareProto       plugin.TValue[string]
+	Size             plugin.TValue[int64]
+	IsPublic         plugin.TValue[bool]
+	ShareType        plugin.TValue[string]
+	ShareTypeName    plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
+	Host             plugin.TValue[string]
+	HasReplicas      plugin.TValue[bool]
+	ReplicationType  plugin.TValue[string]
+	SnapshotSupport  plugin.TValue[bool]
+	SnapshotId       plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	Metadata         plugin.TValue[map[string]any]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	ShareNetwork     plugin.TValue[*mqlOpenstackSharedfilesystemShareNetwork]
+	Project          plugin.TValue[*mqlOpenstackProject]
+	AccessRules      plugin.TValue[[]any]
+}
+
+// createOpenstackSharedfilesystemShare creates a new instance of this resource
+func createOpenstackSharedfilesystemShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackSharedfilesystemShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.sharedfilesystem.share", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) MqlName() string {
+	return "openstack.sharedfilesystem.share"
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetShareProto() *plugin.TValue[string] {
+	return &c.ShareProto
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetIsPublic() *plugin.TValue[bool] {
+	return &c.IsPublic
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetShareType() *plugin.TValue[string] {
+	return &c.ShareType
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetShareTypeName() *plugin.TValue[string] {
+	return &c.ShareTypeName
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetHasReplicas() *plugin.TValue[bool] {
+	return &c.HasReplicas
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetReplicationType() *plugin.TValue[string] {
+	return &c.ReplicationType
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetSnapshotSupport() *plugin.TValue[bool] {
+	return &c.SnapshotSupport
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetSnapshotId() *plugin.TValue[string] {
+	return &c.SnapshotId
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetShareNetwork() *plugin.TValue[*mqlOpenstackSharedfilesystemShareNetwork] {
+	return plugin.GetOrCompute[*mqlOpenstackSharedfilesystemShareNetwork](&c.ShareNetwork, func() (*mqlOpenstackSharedfilesystemShareNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.share", c.__id, "shareNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackSharedfilesystemShareNetwork), nil
+			}
+		}
+
+		return c.shareNetwork()
+	})
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.share", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOpenstackSharedfilesystemShare) GetAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.share", c.__id, "accessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRules()
+	})
+}
+
+// mqlOpenstackSharedfilesystemShareAccessRule for the openstack.sharedfilesystem.share.accessRule resource
+type mqlOpenstackSharedfilesystemShareAccessRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackSharedfilesystemShareAccessRuleInternal it will be used here
+	Id          plugin.TValue[string]
+	AccessType  plugin.TValue[string]
+	AccessTo    plugin.TValue[string]
+	AccessLevel plugin.TValue[string]
+	State       plugin.TValue[string]
+	ShareId     plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	Share       plugin.TValue[*mqlOpenstackSharedfilesystemShare]
+}
+
+// createOpenstackSharedfilesystemShareAccessRule creates a new instance of this resource
+func createOpenstackSharedfilesystemShareAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackSharedfilesystemShareAccessRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.sharedfilesystem.share.accessRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) MqlName() string {
+	return "openstack.sharedfilesystem.share.accessRule"
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetAccessType() *plugin.TValue[string] {
+	return &c.AccessType
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetAccessTo() *plugin.TValue[string] {
+	return &c.AccessTo
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetAccessLevel() *plugin.TValue[string] {
+	return &c.AccessLevel
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetShareId() *plugin.TValue[string] {
+	return &c.ShareId
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShareAccessRule) GetShare() *plugin.TValue[*mqlOpenstackSharedfilesystemShare] {
+	return plugin.GetOrCompute[*mqlOpenstackSharedfilesystemShare](&c.Share, func() (*mqlOpenstackSharedfilesystemShare, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.share.accessRule", c.__id, "share")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackSharedfilesystemShare), nil
+			}
+		}
+
+		return c.share()
+	})
+}
+
+// mqlOpenstackSharedfilesystemSecurityService for the openstack.sharedfilesystem.securityService resource
+type mqlOpenstackSharedfilesystemSecurityService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackSharedfilesystemSecurityServiceInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Domain      plugin.TValue[string]
+	DnsIp       plugin.TValue[string]
+	Ou          plugin.TValue[string]
+	User        plugin.TValue[string]
+	Server      plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	Project     plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackSharedfilesystemSecurityService creates a new instance of this resource
+func createOpenstackSharedfilesystemSecurityService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackSharedfilesystemSecurityService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.sharedfilesystem.securityService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) MqlName() string {
+	return "openstack.sharedfilesystem.securityService"
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetDnsIp() *plugin.TValue[string] {
+	return &c.DnsIp
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetOu() *plugin.TValue[string] {
+	return &c.Ou
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemSecurityService) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.securityService", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackSharedfilesystemShareNetwork for the openstack.sharedfilesystem.shareNetwork resource
+type mqlOpenstackSharedfilesystemShareNetwork struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackSharedfilesystemShareNetworkInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	NeutronNetId    plugin.TValue[string]
+	NeutronSubnetId plugin.TValue[string]
+	NetworkType     plugin.TValue[string]
+	SegmentationId  plugin.TValue[int64]
+	Cidr            plugin.TValue[string]
+	IpVersion       plugin.TValue[int64]
+	ProjectId       plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	Network         plugin.TValue[*mqlOpenstackNetwork]
+	Subnet          plugin.TValue[*mqlOpenstackSubnet]
+	Project         plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackSharedfilesystemShareNetwork creates a new instance of this resource
+func createOpenstackSharedfilesystemShareNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackSharedfilesystemShareNetwork{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.sharedfilesystem.shareNetwork", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) MqlName() string {
+	return "openstack.sharedfilesystem.shareNetwork"
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetNeutronNetId() *plugin.TValue[string] {
+	return &c.NeutronNetId
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetNeutronSubnetId() *plugin.TValue[string] {
+	return &c.NeutronSubnetId
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetSegmentationId() *plugin.TValue[int64] {
+	return &c.SegmentationId
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetCidr() *plugin.TValue[string] {
+	return &c.Cidr
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetIpVersion() *plugin.TValue[int64] {
+	return &c.IpVersion
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetNetwork() *plugin.TValue[*mqlOpenstackNetwork] {
+	return plugin.GetOrCompute[*mqlOpenstackNetwork](&c.Network, func() (*mqlOpenstackNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.shareNetwork", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetSubnet() *plugin.TValue[*mqlOpenstackSubnet] {
+	return plugin.GetOrCompute[*mqlOpenstackSubnet](&c.Subnet, func() (*mqlOpenstackSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.shareNetwork", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOpenstackSharedfilesystemShareNetwork) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.sharedfilesystem.shareNetwork", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }

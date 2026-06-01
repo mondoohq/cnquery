@@ -21,8 +21,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // `secretContainers`, `secretOrders`), Octavia load balancing
 // (`loadBalancers`, `listeners`, `pools`, `healthMonitors`, `l7Policies`),
 // Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
-// and Designate DNS (`dnsZones`). `authUrl`, `projectId`, and `region` identify
-// the connection scope.
+// Designate DNS (`dnsZones`), and Manila shared file systems (`shares`,
+// `securityServices`, `shareNetworks`). `authUrl`, `projectId`, and `region`
+// identify the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
   authUrl string
@@ -132,6 +133,13 @@ openstack {
 
   // Designate DNS zones visible to the scoped project
   dnsZones() []openstack.dns.zone
+
+  // Manila shared file systems (NFS/CIFS shares) in the scoped project
+  shares() []openstack.sharedfilesystem.share
+  // Manila security services (Active Directory, LDAP, or Kerberos) backing share networks
+  securityServices() []openstack.sharedfilesystem.securityService
+  // Manila share networks tying shares to Neutron networks and subnets
+  shareNetworks() []openstack.sharedfilesystem.shareNetwork
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -1890,4 +1898,171 @@ private openstack.network.quotaSet @defaults("network subnet port floatingIp rou
 private openstack.keymanager.acl @defaults("entries") {
   // ACL entries keyed by operation (e.g. "read"); each entry contains `{users: [string], project_access: bool, created, updated}`
   entries dict
+}
+
+// OpenStack Manila shared file system
+//
+// Examine a shared file system (an NFS or CIFS/SMB export) provisioned by
+// Manila. Select a share by its `id`. Query `isPublic`, `shareProto`, and
+// `accessRules` to audit who can reach the share, and `shareNetwork` to see
+// which Neutron network it is attached to.
+private openstack.sharedfilesystem.share @defaults("id name shareProto status size isPublic") {
+  init(id? string)
+  // Share ID (UUID)
+  id string
+  // Share name
+  name string
+  // Description
+  description string
+  // Build/availability status (for example `available`, `creating`, or `error`)
+  status string
+  // Share protocol
+  //
+  // One of `NFS`, `CIFS`, `CEPHFS`, `GLUSTERFS`, `HDFS`, or `MAPRFS`.
+  shareProto string
+  // Size of the share in gibibytes
+  size int
+  // Whether the share is visible to all projects
+  isPublic bool
+  // Share type ID
+  shareType string
+  // Share type name
+  shareTypeName string
+  // Availability zone the share lives in
+  availabilityZone string
+  // Backend host serving the share
+  host string
+  // Whether the share has replicas
+  hasReplicas bool
+  // Replication type; empty when replication is not configured
+  replicationType string
+  // Whether the backend supports creating snapshots of the share
+  snapshotSupport bool
+  // Snapshot ID the share was created from; empty when not created from a snapshot
+  snapshotId string
+  // Project that owns the share
+  projectId string
+  // User-defined metadata
+  metadata map[string]string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Network the share is exported on
+  shareNetwork() openstack.sharedfilesystem.shareNetwork
+  // Project that owns the share
+  project() openstack.project
+  // Access rules granting clients access to the share
+  accessRules() []openstack.sharedfilesystem.share.accessRule
+}
+
+// OpenStack Manila share access rule
+//
+// Examine a single rule granting a client access to a share — the access type
+// (IP, user, or certificate), the value it matches, and the level (read-only or
+// read-write). The access key/secret is intentionally not exposed.
+private openstack.sharedfilesystem.share.accessRule @defaults("id accessType accessTo accessLevel state") {
+  // Access rule ID (UUID)
+  id string
+  // Access type
+  //
+  // One of `ip`, `user`, `cert`, or `cephx`.
+  accessType string
+  // Value the rule grants access to (for example a CIDR, user name, or common name)
+  accessTo string
+  // Access level
+  //
+  // Either `rw` (read-write) or `ro` (read-only).
+  accessLevel string
+  // Rule state (for example `active`, `new`, or `error`)
+  state string
+  // ID of the share this rule applies to
+  shareId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Share this rule applies to
+  share() openstack.sharedfilesystem.share
+}
+
+// OpenStack Manila security service
+//
+// Examine a security service — the Active Directory, LDAP, or Kerberos
+// configuration that share networks authenticate against. Select a service by
+// its `id`. Stored credentials (the bind password) are intentionally not
+// exposed; query `type`, `server`, `domain`, and `user` to audit directory
+// integration.
+private openstack.sharedfilesystem.securityService @defaults("id name type status") {
+  init(id? string)
+  // Security service ID (UUID)
+  id string
+  // Service name
+  name string
+  // Description
+  description string
+  // Security service type
+  //
+  // One of `active_directory`, `ldap`, or `kerberos`.
+  type string
+  // Status
+  status string
+  // Domain the service authenticates against
+  domain string
+  // DNS IP address used to resolve the directory server
+  dnsIp string
+  // Organizational unit (OU) within the directory
+  ou string
+  // Bind/service account user name
+  user string
+  // Directory server hostname or IP address
+  server string
+  // Project that owns the security service
+  projectId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns the security service
+  project() openstack.project
+}
+
+// OpenStack Manila share network
+//
+// Examine a share network — the binding of Manila shares to a Neutron network
+// and subnet, with the CIDR and segmentation used to reach the share servers.
+// Select a share network by its `id`. Query `network` and `subnet` to trace
+// shares back to their L2/L3 placement.
+private openstack.sharedfilesystem.shareNetwork @defaults("id name networkType cidr") {
+  init(id? string)
+  // Share network ID (UUID)
+  id string
+  // Share network name
+  name string
+  // Description
+  description string
+  // Neutron network ID the share servers attach to
+  neutronNetId string
+  // Neutron subnet ID the share servers attach to
+  neutronSubnetId string
+  // Network type (for example `vlan`, `vxlan`, or `flat`)
+  networkType string
+  // Segmentation ID (VLAN/VXLAN tag); 0 when not segmented
+  segmentationId int
+  // CIDR of the share network
+  cidr string
+  // IP version (4 or 6)
+  ipVersion int
+  // Project that owns the share network
+  projectId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Neutron network the share servers attach to
+  network() openstack.network
+  // Neutron subnet the share servers attach to
+  subnet() openstack.subnet
+  // Project that owns the share network
+  project() openstack.project
 }

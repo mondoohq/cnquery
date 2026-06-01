@@ -2,6 +2,7 @@ ACCOUNTADMIN
 AIBOM
 BXdl
 Beixb
+CEPHFS
 CPWn
 Ciphersuites
 DATAUSER
@@ -9,6 +10,7 @@ DRdf
 Duf
 FEBLx
 FWaa
+GLUSTERFS
 GOSUMDB
 HBFNV
 IBgt
@@ -18,6 +20,7 @@ JFi
 JWKS
 KVCACHE
 Laravel
+MAPRFS
 Mnfz
 NINEl
 NSGs
@@ -59,6 +62,7 @@ bwawxf
 cafd
 cbf
 ccf
+cephx
 cetypes
 chabc
 ciscocatalyst
@@ -95,6 +99,7 @@ fdrl
 fortios
 freetier
 functionapp
+gibibytes
 githubactions
 godo
 gophercloud
@@ -208,7 +213,9 @@ vcpus
 vendored
 venv
 virtio
+vlan
 vllm
+vxlan
 wordpress
 worktree
 wrkspc
