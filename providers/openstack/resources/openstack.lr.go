@@ -78,6 +78,8 @@ const (
 	ResourceOpenstackSharedfilesystemShareAccessRule string = "openstack.sharedfilesystem.share.accessRule"
 	ResourceOpenstackSharedfilesystemSecurityService string = "openstack.sharedfilesystem.securityService"
 	ResourceOpenstackSharedfilesystemShareNetwork    string = "openstack.sharedfilesystem.shareNetwork"
+	ResourceOpenstackContainerinfraCluster           string = "openstack.containerinfra.cluster"
+	ResourceOpenstackContainerinfraClusterTemplate   string = "openstack.containerinfra.clusterTemplate"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -332,6 +334,14 @@ func init() {
 			Init:   initOpenstackSharedfilesystemShareNetwork,
 			Create: createOpenstackSharedfilesystemShareNetwork,
 		},
+		"openstack.containerinfra.cluster": {
+			Init:   initOpenstackContainerinfraCluster,
+			Create: createOpenstackContainerinfraCluster,
+		},
+		"openstack.containerinfra.clusterTemplate": {
+			Init:   initOpenstackContainerinfraClusterTemplate,
+			Create: createOpenstackContainerinfraClusterTemplate,
+		},
 	}
 }
 
@@ -564,6 +574,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.shareNetworks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetShareNetworks()).ToDataRes(types.Array(types.Resource("openstack.sharedfilesystem.shareNetwork")))
+	},
+	"openstack.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetClusters()).ToDataRes(types.Array(types.Resource("openstack.containerinfra.cluster")))
+	},
+	"openstack.clusterTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetClusterTemplates()).ToDataRes(types.Array(types.Resource("openstack.containerinfra.clusterTemplate")))
 	},
 	"openstack.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackProject).GetId()).ToDataRes(types.String)
@@ -2887,6 +2903,183 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.sharedfilesystem.shareNetwork.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSharedfilesystemShareNetwork).GetProject()).ToDataRes(types.Resource("openstack.project"))
 	},
+	"openstack.containerinfra.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetName()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetStatusReason()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetHealthStatus()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.coeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetCoeVersion()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.apiAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetApiAddress()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.masterCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetMasterCount()).ToDataRes(types.Int)
+	},
+	"openstack.containerinfra.cluster.nodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetNodeCount()).ToDataRes(types.Int)
+	},
+	"openstack.containerinfra.cluster.masterAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetMasterAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.containerinfra.cluster.nodeAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetNodeAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.containerinfra.cluster.dockerVolumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetDockerVolumeSize()).ToDataRes(types.Int)
+	},
+	"openstack.containerinfra.cluster.floatingIpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetFloatingIpEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.cluster.masterLbEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetMasterLbEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.cluster.discoveryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetDiscoveryUrl()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.stackId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetStackId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.containerinfra.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetUserId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.containerinfra.cluster.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.containerinfra.cluster.clusterTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetClusterTemplate()).ToDataRes(types.Resource("openstack.containerinfra.clusterTemplate"))
+	},
+	"openstack.containerinfra.cluster.keypair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetKeypair()).ToDataRes(types.Resource("openstack.compute.keypair"))
+	},
+	"openstack.containerinfra.cluster.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetFlavor()).ToDataRes(types.Resource("openstack.compute.flavor"))
+	},
+	"openstack.containerinfra.cluster.masterFlavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetMasterFlavor()).ToDataRes(types.Resource("openstack.compute.flavor"))
+	},
+	"openstack.containerinfra.cluster.fixedNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetFixedNetwork()).ToDataRes(types.Resource("openstack.network"))
+	},
+	"openstack.containerinfra.cluster.fixedSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetFixedSubnet()).ToDataRes(types.Resource("openstack.subnet"))
+	},
+	"openstack.containerinfra.cluster.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraCluster).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.containerinfra.clusterTemplate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetName()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.coe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetCoe()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.clusterDistro": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetClusterDistro()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.serverType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetServerType()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.tlsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetTlsDisabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetPublic()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetHidden()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.registryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetRegistryEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.insecureRegistry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetInsecureRegistry()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.floatingIpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetFloatingIpEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.masterLbEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetMasterLbEnabled()).ToDataRes(types.Bool)
+	},
+	"openstack.containerinfra.clusterTemplate.networkDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetNetworkDriver()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.volumeDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetVolumeDriver()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.dockerStorageDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetDockerStorageDriver()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.dockerVolumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetDockerVolumeSize()).ToDataRes(types.Int)
+	},
+	"openstack.containerinfra.clusterTemplate.dnsNameserver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetDnsNameserver()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.apiServerPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetApiServerPort()).ToDataRes(types.Int)
+	},
+	"openstack.containerinfra.clusterTemplate.httpProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetHttpProxy()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.httpsProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetHttpsProxy()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.noProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetNoProxy()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.containerinfra.clusterTemplate.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetUserId()).ToDataRes(types.String)
+	},
+	"openstack.containerinfra.clusterTemplate.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.containerinfra.clusterTemplate.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.containerinfra.clusterTemplate.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetImage()).ToDataRes(types.Resource("openstack.image"))
+	},
+	"openstack.containerinfra.clusterTemplate.externalNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetExternalNetwork()).ToDataRes(types.Resource("openstack.network"))
+	},
+	"openstack.containerinfra.clusterTemplate.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetFlavor()).ToDataRes(types.Resource("openstack.compute.flavor"))
+	},
+	"openstack.containerinfra.clusterTemplate.masterFlavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetMasterFlavor()).ToDataRes(types.Resource("openstack.compute.flavor"))
+	},
+	"openstack.containerinfra.clusterTemplate.keypair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackContainerinfraClusterTemplate).GetKeypair()).ToDataRes(types.Resource("openstack.compute.keypair"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -3117,6 +3310,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.shareNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).ShareNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.clusterTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).ClusterTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6459,6 +6660,250 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackSharedfilesystemShareNetwork).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
+	"openstack.containerinfra.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.containerinfra.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.coeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).CoeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.apiAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).ApiAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.masterCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).MasterCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).NodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.masterAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).MasterAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.nodeAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).NodeAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.dockerVolumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).DockerVolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.floatingIpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).FloatingIpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.masterLbEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).MasterLbEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.discoveryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).DiscoveryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.stackId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).StackId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.clusterTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).ClusterTemplate, ok = plugin.RawToTValue[*mqlOpenstackContainerinfraClusterTemplate](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.keypair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Keypair, ok = plugin.RawToTValue[*mqlOpenstackComputeKeypair](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Flavor, ok = plugin.RawToTValue[*mqlOpenstackComputeFlavor](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.masterFlavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).MasterFlavor, ok = plugin.RawToTValue[*mqlOpenstackComputeFlavor](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.fixedNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).FixedNetwork, ok = plugin.RawToTValue[*mqlOpenstackNetwork](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.fixedSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).FixedSubnet, ok = plugin.RawToTValue[*mqlOpenstackSubnet](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.cluster.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraCluster).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.coe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Coe, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.clusterDistro": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).ClusterDistro, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.serverType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).ServerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.tlsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).TlsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.registryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).RegistryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.insecureRegistry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).InsecureRegistry, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.floatingIpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).FloatingIpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.masterLbEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).MasterLbEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.networkDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).NetworkDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.volumeDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).VolumeDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.dockerStorageDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).DockerStorageDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.dockerVolumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).DockerVolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.dnsNameserver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).DnsNameserver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.apiServerPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).ApiServerPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.httpProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).HttpProxy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.httpsProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).HttpsProxy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.noProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).NoProxy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Image, ok = plugin.RawToTValue[*mqlOpenstackImage](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.externalNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).ExternalNetwork, ok = plugin.RawToTValue[*mqlOpenstackNetwork](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Flavor, ok = plugin.RawToTValue[*mqlOpenstackComputeFlavor](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.masterFlavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).MasterFlavor, ok = plugin.RawToTValue[*mqlOpenstackComputeFlavor](v.Value, v.Error)
+		return
+	},
+	"openstack.containerinfra.clusterTemplate.keypair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackContainerinfraClusterTemplate).Keypair, ok = plugin.RawToTValue[*mqlOpenstackComputeKeypair](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -6542,6 +6987,8 @@ type mqlOpenstack struct {
 	Shares                  plugin.TValue[[]any]
 	SecurityServices        plugin.TValue[[]any]
 	ShareNetworks           plugin.TValue[[]any]
+	Clusters                plugin.TValue[[]any]
+	ClusterTemplates        plugin.TValue[[]any]
 }
 
 // createOpenstack creates a new instance of this resource
@@ -7406,6 +7853,38 @@ func (c *mqlOpenstack) GetShareNetworks() *plugin.TValue[[]any] {
 		}
 
 		return c.shareNetworks()
+	})
+}
+
+func (c *mqlOpenstack) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlOpenstack) GetClusterTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "clusterTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusterTemplates()
 	})
 }
 
@@ -15594,5 +16073,532 @@ func (c *mqlOpenstackSharedfilesystemShareNetwork) GetProject() *plugin.TValue[*
 		}
 
 		return c.project()
+	})
+}
+
+// mqlOpenstackContainerinfraCluster for the openstack.containerinfra.cluster resource
+type mqlOpenstackContainerinfraCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackContainerinfraClusterInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusReason      plugin.TValue[string]
+	HealthStatus      plugin.TValue[string]
+	CoeVersion        plugin.TValue[string]
+	ApiAddress        plugin.TValue[string]
+	MasterCount       plugin.TValue[int64]
+	NodeCount         plugin.TValue[int64]
+	MasterAddresses   plugin.TValue[[]any]
+	NodeAddresses     plugin.TValue[[]any]
+	DockerVolumeSize  plugin.TValue[int64]
+	FloatingIpEnabled plugin.TValue[bool]
+	MasterLbEnabled   plugin.TValue[bool]
+	DiscoveryUrl      plugin.TValue[string]
+	StackId           plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	ProjectId         plugin.TValue[string]
+	UserId            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	ClusterTemplate   plugin.TValue[*mqlOpenstackContainerinfraClusterTemplate]
+	Keypair           plugin.TValue[*mqlOpenstackComputeKeypair]
+	Flavor            plugin.TValue[*mqlOpenstackComputeFlavor]
+	MasterFlavor      plugin.TValue[*mqlOpenstackComputeFlavor]
+	FixedNetwork      plugin.TValue[*mqlOpenstackNetwork]
+	FixedSubnet       plugin.TValue[*mqlOpenstackSubnet]
+	Project           plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackContainerinfraCluster creates a new instance of this resource
+func createOpenstackContainerinfraCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackContainerinfraCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.containerinfra.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackContainerinfraCluster) MqlName() string {
+	return "openstack.containerinfra.cluster"
+}
+
+func (c *mqlOpenstackContainerinfraCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetHealthStatus() *plugin.TValue[string] {
+	return &c.HealthStatus
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetCoeVersion() *plugin.TValue[string] {
+	return &c.CoeVersion
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetApiAddress() *plugin.TValue[string] {
+	return &c.ApiAddress
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetMasterCount() *plugin.TValue[int64] {
+	return &c.MasterCount
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetNodeCount() *plugin.TValue[int64] {
+	return &c.NodeCount
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetMasterAddresses() *plugin.TValue[[]any] {
+	return &c.MasterAddresses
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetNodeAddresses() *plugin.TValue[[]any] {
+	return &c.NodeAddresses
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetDockerVolumeSize() *plugin.TValue[int64] {
+	return &c.DockerVolumeSize
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetFloatingIpEnabled() *plugin.TValue[bool] {
+	return &c.FloatingIpEnabled
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetMasterLbEnabled() *plugin.TValue[bool] {
+	return &c.MasterLbEnabled
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetDiscoveryUrl() *plugin.TValue[string] {
+	return &c.DiscoveryUrl
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetStackId() *plugin.TValue[string] {
+	return &c.StackId
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetClusterTemplate() *plugin.TValue[*mqlOpenstackContainerinfraClusterTemplate] {
+	return plugin.GetOrCompute[*mqlOpenstackContainerinfraClusterTemplate](&c.ClusterTemplate, func() (*mqlOpenstackContainerinfraClusterTemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "clusterTemplate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackContainerinfraClusterTemplate), nil
+			}
+		}
+
+		return c.clusterTemplate()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetKeypair() *plugin.TValue[*mqlOpenstackComputeKeypair] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeKeypair](&c.Keypair, func() (*mqlOpenstackComputeKeypair, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "keypair")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeKeypair), nil
+			}
+		}
+
+		return c.keypair()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetFlavor() *plugin.TValue[*mqlOpenstackComputeFlavor] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeFlavor](&c.Flavor, func() (*mqlOpenstackComputeFlavor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "flavor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeFlavor), nil
+			}
+		}
+
+		return c.flavor()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetMasterFlavor() *plugin.TValue[*mqlOpenstackComputeFlavor] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeFlavor](&c.MasterFlavor, func() (*mqlOpenstackComputeFlavor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "masterFlavor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeFlavor), nil
+			}
+		}
+
+		return c.masterFlavor()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetFixedNetwork() *plugin.TValue[*mqlOpenstackNetwork] {
+	return plugin.GetOrCompute[*mqlOpenstackNetwork](&c.FixedNetwork, func() (*mqlOpenstackNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "fixedNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetwork), nil
+			}
+		}
+
+		return c.fixedNetwork()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetFixedSubnet() *plugin.TValue[*mqlOpenstackSubnet] {
+	return plugin.GetOrCompute[*mqlOpenstackSubnet](&c.FixedSubnet, func() (*mqlOpenstackSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "fixedSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackSubnet), nil
+			}
+		}
+
+		return c.fixedSubnet()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraCluster) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.cluster", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackContainerinfraClusterTemplate for the openstack.containerinfra.clusterTemplate resource
+type mqlOpenstackContainerinfraClusterTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackContainerinfraClusterTemplateInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Coe                 plugin.TValue[string]
+	ClusterDistro       plugin.TValue[string]
+	ServerType          plugin.TValue[string]
+	TlsDisabled         plugin.TValue[bool]
+	Public              plugin.TValue[bool]
+	Hidden              plugin.TValue[bool]
+	RegistryEnabled     plugin.TValue[bool]
+	InsecureRegistry    plugin.TValue[string]
+	FloatingIpEnabled   plugin.TValue[bool]
+	MasterLbEnabled     plugin.TValue[bool]
+	NetworkDriver       plugin.TValue[string]
+	VolumeDriver        plugin.TValue[string]
+	DockerStorageDriver plugin.TValue[string]
+	DockerVolumeSize    plugin.TValue[int64]
+	DnsNameserver       plugin.TValue[string]
+	ApiServerPort       plugin.TValue[int64]
+	HttpProxy           plugin.TValue[string]
+	HttpsProxy          plugin.TValue[string]
+	NoProxy             plugin.TValue[string]
+	Labels              plugin.TValue[map[string]any]
+	ProjectId           plugin.TValue[string]
+	UserId              plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Image               plugin.TValue[*mqlOpenstackImage]
+	ExternalNetwork     plugin.TValue[*mqlOpenstackNetwork]
+	Flavor              plugin.TValue[*mqlOpenstackComputeFlavor]
+	MasterFlavor        plugin.TValue[*mqlOpenstackComputeFlavor]
+	Keypair             plugin.TValue[*mqlOpenstackComputeKeypair]
+}
+
+// createOpenstackContainerinfraClusterTemplate creates a new instance of this resource
+func createOpenstackContainerinfraClusterTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackContainerinfraClusterTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.containerinfra.clusterTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) MqlName() string {
+	return "openstack.containerinfra.clusterTemplate"
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetCoe() *plugin.TValue[string] {
+	return &c.Coe
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetClusterDistro() *plugin.TValue[string] {
+	return &c.ClusterDistro
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetServerType() *plugin.TValue[string] {
+	return &c.ServerType
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetTlsDisabled() *plugin.TValue[bool] {
+	return &c.TlsDisabled
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetPublic() *plugin.TValue[bool] {
+	return &c.Public
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetRegistryEnabled() *plugin.TValue[bool] {
+	return &c.RegistryEnabled
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetInsecureRegistry() *plugin.TValue[string] {
+	return &c.InsecureRegistry
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetFloatingIpEnabled() *plugin.TValue[bool] {
+	return &c.FloatingIpEnabled
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetMasterLbEnabled() *plugin.TValue[bool] {
+	return &c.MasterLbEnabled
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetNetworkDriver() *plugin.TValue[string] {
+	return &c.NetworkDriver
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetVolumeDriver() *plugin.TValue[string] {
+	return &c.VolumeDriver
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetDockerStorageDriver() *plugin.TValue[string] {
+	return &c.DockerStorageDriver
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetDockerVolumeSize() *plugin.TValue[int64] {
+	return &c.DockerVolumeSize
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetDnsNameserver() *plugin.TValue[string] {
+	return &c.DnsNameserver
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetApiServerPort() *plugin.TValue[int64] {
+	return &c.ApiServerPort
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetHttpProxy() *plugin.TValue[string] {
+	return &c.HttpProxy
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetHttpsProxy() *plugin.TValue[string] {
+	return &c.HttpsProxy
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetNoProxy() *plugin.TValue[string] {
+	return &c.NoProxy
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetImage() *plugin.TValue[*mqlOpenstackImage] {
+	return plugin.GetOrCompute[*mqlOpenstackImage](&c.Image, func() (*mqlOpenstackImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.clusterTemplate", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetExternalNetwork() *plugin.TValue[*mqlOpenstackNetwork] {
+	return plugin.GetOrCompute[*mqlOpenstackNetwork](&c.ExternalNetwork, func() (*mqlOpenstackNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.clusterTemplate", c.__id, "externalNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetwork), nil
+			}
+		}
+
+		return c.externalNetwork()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetFlavor() *plugin.TValue[*mqlOpenstackComputeFlavor] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeFlavor](&c.Flavor, func() (*mqlOpenstackComputeFlavor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.clusterTemplate", c.__id, "flavor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeFlavor), nil
+			}
+		}
+
+		return c.flavor()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetMasterFlavor() *plugin.TValue[*mqlOpenstackComputeFlavor] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeFlavor](&c.MasterFlavor, func() (*mqlOpenstackComputeFlavor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.clusterTemplate", c.__id, "masterFlavor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeFlavor), nil
+			}
+		}
+
+		return c.masterFlavor()
+	})
+}
+
+func (c *mqlOpenstackContainerinfraClusterTemplate) GetKeypair() *plugin.TValue[*mqlOpenstackComputeKeypair] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeKeypair](&c.Keypair, func() (*mqlOpenstackComputeKeypair, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.containerinfra.clusterTemplate", c.__id, "keypair")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeKeypair), nil
+			}
+		}
+
+		return c.keypair()
 	})
 }

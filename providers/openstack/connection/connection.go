@@ -47,6 +47,7 @@ type OpenstackConnection struct {
 	objectStorage    *gophercloud.ServiceClient
 	dns              *gophercloud.ServiceClient
 	sharedFileSystem *gophercloud.ServiceClient
+	containerInfra   *gophercloud.ServiceClient
 
 	// Name->ID caches for Nova-reported references that Neutron/Compute
 	// expose only by ID. A non-nil map is the "ready" signal so we don't
@@ -302,5 +303,19 @@ func (c *OpenstackConnection) SharedFileSystemClient() (*gophercloud.ServiceClie
 	}
 	client.Microversion = sharedFileSystemMicroversion
 	c.sharedFileSystem = client
+	return client, nil
+}
+
+func (c *OpenstackConnection) ContainerInfraClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.containerInfra != nil {
+		return c.containerInfra, nil
+	}
+	client, err := openstack.NewContainerInfraV1(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Magnum client: %w", err)
+	}
+	c.containerInfra = client
 	return client, nil
 }

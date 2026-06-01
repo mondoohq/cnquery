@@ -21,8 +21,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // `secretContainers`, `secretOrders`), Octavia load balancing
 // (`loadBalancers`, `listeners`, `pools`, `healthMonitors`, `l7Policies`),
 // Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
-// Designate DNS (`dnsZones`), and Manila shared file systems (`shares`,
-// `securityServices`, `shareNetworks`). `authUrl`, `projectId`, and `region`
+// Designate DNS (`dnsZones`), Manila shared file systems (`shares`,
+// `securityServices`, `shareNetworks`), and Magnum container infrastructure
+// (`clusters`, `clusterTemplates`). `authUrl`, `projectId`, and `region`
 // identify the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
@@ -140,6 +141,11 @@ openstack {
   securityServices() []openstack.sharedfilesystem.securityService
   // Manila share networks tying shares to Neutron networks and subnets
   shareNetworks() []openstack.sharedfilesystem.shareNetwork
+
+  // Magnum container-orchestration clusters (Kubernetes, Docker Swarm) in the scoped project
+  clusters() []openstack.containerinfra.cluster
+  // Magnum cluster templates (blueprints for new clusters)
+  clusterTemplates() []openstack.containerinfra.clusterTemplate
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -2065,4 +2071,149 @@ private openstack.sharedfilesystem.shareNetwork @defaults("id name networkType c
   subnet() openstack.subnet
   // Project that owns the share network
   project() openstack.project
+}
+
+// OpenStack Magnum cluster
+//
+// Examine a container-orchestration cluster (typically Kubernetes) provisioned
+// by Magnum from a cluster template. Select a cluster by its `id`. Query
+// `apiAddress` and `floatingIpEnabled` to see whether the control plane is
+// reachable externally, and `clusterTemplate` for the security posture it was
+// built from (TLS, registry, network).
+private openstack.containerinfra.cluster @defaults("id name status nodeCount masterCount") {
+  init(id? string)
+  // Cluster ID (UUID)
+  id string
+  // Cluster name
+  name string
+  // Lifecycle status (for example `CREATE_COMPLETE` or `CREATE_FAILED`)
+  status string
+  // Human-readable reason for the current status
+  statusReason string
+  // Health status (for example `HEALTHY` or `UNHEALTHY`)
+  healthStatus string
+  // Container-orchestration engine version (for example the Kubernetes version)
+  coeVersion string
+  // API endpoint address of the cluster control plane
+  apiAddress string
+  // Number of master (control-plane) nodes
+  masterCount int
+  // Number of worker nodes
+  nodeCount int
+  // IP addresses of the master nodes
+  masterAddresses []string
+  // IP addresses of the worker nodes
+  nodeAddresses []string
+  // Per-node Docker volume size in gibibytes
+  dockerVolumeSize int
+  // Whether nodes are assigned floating (public) IPs
+  floatingIpEnabled bool
+  // Whether the master nodes sit behind a load balancer
+  masterLbEnabled bool
+  // etcd discovery URL used during cluster bootstrap
+  discoveryUrl string
+  // Heat stack ID backing the cluster
+  stackId string
+  // Labels (key/value tuning and feature flags) applied to the cluster
+  labels map[string]string
+  // Project that owns the cluster
+  projectId string
+  // User that created the cluster
+  userId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Template the cluster was created from
+  clusterTemplate() openstack.containerinfra.clusterTemplate
+  // SSH key pair injected into the nodes
+  keypair() openstack.compute.keypair
+  // Flavor used for the worker nodes
+  flavor() openstack.compute.flavor
+  // Flavor used for the master nodes
+  masterFlavor() openstack.compute.flavor
+  // Fixed (private) network the cluster runs on; null when unset or when the API returned a name that does not resolve to a known network
+  fixedNetwork() openstack.network
+  // Fixed (private) subnet the cluster runs on; null when unset or when the API returned a name that does not resolve to a known subnet
+  fixedSubnet() openstack.subnet
+  // Project that owns the cluster
+  project() openstack.project
+}
+
+// OpenStack Magnum cluster template
+//
+// Examine a cluster template — the reusable blueprint that defines how Magnum
+// builds clusters (orchestration engine, image, network, TLS, and registry
+// settings). Select a template by its `id`. `tlsDisabled`, `public`, and
+// `floatingIpEnabled` are the key security toggles to audit.
+private openstack.containerinfra.clusterTemplate @defaults("id name coe tlsDisabled public") {
+  init(id? string)
+  // Cluster template ID (UUID)
+  id string
+  // Template name
+  name string
+  // Container-orchestration engine
+  //
+  // One of `kubernetes`, `swarm`, `swarm-mode`, or `mesos`.
+  coe string
+  // Base OS distribution for cluster nodes (for example `fedora-coreos`)
+  clusterDistro string
+  // Node server type (`vm` or `bm` for bare metal)
+  serverType string
+  // Whether TLS is disabled for the cluster API
+  //
+  // True disables TLS on the control-plane API — clusters built from this
+  // template expose an unauthenticated/unencrypted endpoint and should be
+  // flagged.
+  tlsDisabled bool
+  // Whether the template is visible to all projects
+  public bool
+  // Whether the template is hidden from the default template list
+  hidden bool
+  // Whether a private container registry is enabled in the cluster
+  registryEnabled bool
+  // Insecure (non-TLS) registry the cluster is allowed to pull from; empty when unset
+  insecureRegistry string
+  // Whether nodes are assigned floating (public) IPs
+  floatingIpEnabled bool
+  // Whether the master nodes sit behind a load balancer
+  masterLbEnabled bool
+  // Container network driver (for example `flannel` or `calico`)
+  networkDriver string
+  // Container volume driver (for example `cinder`)
+  volumeDriver string
+  // Docker storage driver (for example `overlay2`)
+  dockerStorageDriver string
+  // Per-node Docker volume size in gibibytes
+  dockerVolumeSize int
+  // DNS nameserver configured for cluster nodes
+  dnsNameserver string
+  // API server port
+  apiServerPort int
+  // HTTP proxy configured for cluster nodes; empty when unset
+  httpProxy string
+  // HTTPS proxy configured for cluster nodes; empty when unset
+  httpsProxy string
+  // Hosts excluded from proxying; empty when unset
+  noProxy string
+  // Labels (key/value tuning and feature flags) applied to clusters
+  labels map[string]string
+  // Project that owns the template
+  projectId string
+  // User that created the template
+  userId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Glance image used for cluster nodes
+  image() openstack.image
+  // External (public) network clusters attach to
+  externalNetwork() openstack.network
+  // Flavor used for worker nodes
+  flavor() openstack.compute.flavor
+  // Flavor used for master nodes
+  masterFlavor() openstack.compute.flavor
+  // SSH key pair injected into cluster nodes
+  keypair() openstack.compute.keypair
 }
