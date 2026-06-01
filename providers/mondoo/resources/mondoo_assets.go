@@ -20,12 +20,13 @@ func (m *mqlMondooAsset) id() (string, error) {
 }
 
 type gqlAsset struct {
-	ID        string
-	Mrn       string
-	State     string
-	Name      string
-	AssetType string `graphql:"asset_type"`
-	UpdatedAt *string
+	ID                  string
+	Mrn                 string
+	State               string
+	Name                string
+	AssetType           string `graphql:"asset_type"`
+	UpdatedAt           *string
+	LastScoreUpdateTime *string
 	// Annotations map[string]string
 	Annotations []keyValue
 	Labels      []keyValue
@@ -59,6 +60,7 @@ func initMondooAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["annotations"] = llx.MapData(keyvals2map(asset.Annotations), types.Map(types.String, types.String))
 	args["labels"] = llx.MapData(keyvals2map(asset.Labels), types.Map(types.String, types.String))
 	args["updatedAt"] = llx.TimeDataPtr(string2time(asset.UpdatedAt))
+	args["lastScoreUpdateTime"] = llx.TimeDataPtr(string2time(asset.LastScoreUpdateTime))
 	args["scoreGrade"] = llx.StringData(asset.Score.Grade)
 	args["scoreValue"] = llx.IntData(asset.Score.Value)
 

@@ -59,6 +59,8 @@ private mondoo.asset @defaults("name platform") {
   labels map[string]string
   // Time this asset was last updated
   updatedAt time
+  // Time this asset's score was last updated
+  lastScoreUpdateTime time
   // Asset score value
   scoreValue int
   // Asset score grade

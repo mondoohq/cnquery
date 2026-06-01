@@ -157,6 +157,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mondoo.asset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"mondoo.asset.lastScoreUpdateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetLastScoreUpdateTime()).ToDataRes(types.Time)
+	},
 	"mondoo.asset.scoreValue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetScoreValue()).ToDataRes(types.Int)
 	},
@@ -250,6 +253,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mondoo.asset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooAsset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.lastScoreUpdateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).LastScoreUpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.scoreValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -491,15 +498,16 @@ type mqlMondooAsset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMondooAssetInternal it will be used here
-	Name        plugin.TValue[string]
-	Mrn         plugin.TValue[string]
-	Platform    plugin.TValue[string]
-	Annotations plugin.TValue[map[string]any]
-	Labels      plugin.TValue[map[string]any]
-	UpdatedAt   plugin.TValue[*time.Time]
-	ScoreValue  plugin.TValue[int64]
-	ScoreGrade  plugin.TValue[string]
-	Resources   plugin.TValue[[]any]
+	Name                plugin.TValue[string]
+	Mrn                 plugin.TValue[string]
+	Platform            plugin.TValue[string]
+	Annotations         plugin.TValue[map[string]any]
+	Labels              plugin.TValue[map[string]any]
+	UpdatedAt           plugin.TValue[*time.Time]
+	LastScoreUpdateTime plugin.TValue[*time.Time]
+	ScoreValue          plugin.TValue[int64]
+	ScoreGrade          plugin.TValue[string]
+	Resources           plugin.TValue[[]any]
 }
 
 // createMondooAsset creates a new instance of this resource
@@ -561,6 +569,10 @@ func (c *mqlMondooAsset) GetLabels() *plugin.TValue[map[string]any] {
 
 func (c *mqlMondooAsset) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlMondooAsset) GetLastScoreUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.LastScoreUpdateTime
 }
 
 func (c *mqlMondooAsset) GetScoreValue() *plugin.TValue[int64] {

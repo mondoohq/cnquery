@@ -40,12 +40,13 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 			TotalCount int `graphql:"totalCount"`
 			Edges      []struct {
 				Node struct {
-					ID        string
-					Mrn       string
-					State     string
-					Name      string
-					AssetType string `graphql:"asset_type"`
-					UpdatedAt *string
+					ID                  string
+					Mrn                 string
+					State               string
+					Name                string
+					AssetType           string `graphql:"asset_type"`
+					UpdatedAt           *string
+					LastScoreUpdateTime *string
 					// Annotations map[string]string
 					Annotations []keyValue
 					Labels      []keyValue
@@ -80,14 +81,15 @@ func (m *mqlMondooSpace) assets() ([]any, error) {
 		for i := range q.Assets.Edges {
 			e := q.Assets.Edges[i]
 			raw, err := CreateResource(m.MqlRuntime, "mondoo.asset", map[string]*llx.RawData{
-				"name":        llx.StringData(e.Node.Name),
-				"mrn":         llx.StringData(e.Node.Mrn),
-				"platform":    llx.StringData(e.Node.AssetType),
-				"annotations": llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
-				"labels":      llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
-				"updatedAt":   llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
-				"scoreGrade":  llx.StringData(e.Node.Score.Grade),
-				"scoreValue":  llx.IntData(e.Node.Score.Value),
+				"name":                llx.StringData(e.Node.Name),
+				"mrn":                 llx.StringData(e.Node.Mrn),
+				"platform":            llx.StringData(e.Node.AssetType),
+				"annotations":         llx.MapData(keyvals2map(e.Node.Annotations), types.Map(types.String, types.String)),
+				"labels":              llx.MapData(keyvals2map(e.Node.Labels), types.Map(types.String, types.String)),
+				"updatedAt":           llx.TimeDataPtr(string2time(e.Node.UpdatedAt)),
+				"lastScoreUpdateTime": llx.TimeDataPtr(string2time(e.Node.LastScoreUpdateTime)),
+				"scoreGrade":          llx.StringData(e.Node.Score.Grade),
+				"scoreValue":          llx.IntData(e.Node.Score.Value),
 			})
 			if err != nil {
 				return nil, err
