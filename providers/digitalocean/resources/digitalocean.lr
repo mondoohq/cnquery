@@ -30,6 +30,10 @@ digitalocean {
   vectorDatabases() []digitalocean.vectorDatabase
   // GenAI (GradientAI) platform
   gradientai() digitalocean.gradientai
+  // Security scans
+  securityScans() []digitalocean.securityScan
+  // Most recent security scan; null when no scan has run
+  latestSecurityScan() digitalocean.securityScan
   // Domains
   domains() []digitalocean.domain
   // Block storage volumes
@@ -1951,4 +1955,52 @@ private digitalocean.gradientai.batchJob @defaults("batchId provider status") {
   updatedAt time
   // Time the job expires, if applicable
   expiresAt time
+}
+
+// DigitalOcean security scan
+//
+// Examine a DigitalOcean managed security scan of the account's
+// resources. Surfaces the scan `status` and creation time, and iterates
+// `findings()` for the issues the scan detected. Select a scan by id
+// with `digitalocean.securityScan(id: "...")`, or use
+// `digitalocean.latestSecurityScan` for the most recent run.
+private digitalocean.securityScan @defaults("id status createdAt") {
+  // Scan ID
+  id string
+  // Scan status
+  status string
+  // Time the scan was created
+  createdAt time
+  // Findings detected by the scan
+  findings() []digitalocean.securityScan.finding
+}
+
+// DigitalOcean security scan finding
+//
+// Examine a single finding from a security scan. `severity` and
+// `businessImpact` classify the issue, `details` and `technicalDetails`
+// describe it, `mitigationSteps` lists the remediation guidance, and
+// `affectedResources()` enumerates the resources the finding applies to
+// (`affectedResourcesCount` is the total).
+private digitalocean.securityScan.finding @defaults("name severity") {
+  // UUID of the rule that produced the finding
+  ruleUuid string
+  // Finding name
+  name string
+  // Severity (e.g., critical, high, medium, low)
+  severity string
+  // Business impact summary
+  businessImpact string
+  // Human-readable details
+  details string
+  // Technical details
+  technicalDetails string
+  // Time the finding was first detected
+  foundAt time
+  // Number of resources affected by the finding
+  affectedResourcesCount int
+  // Ordered remediation steps (each dict: step, title, description)
+  mitigationSteps []dict
+  // Resources affected by the finding (each dict: urn, name, type)
+  affectedResources() []dict
 }

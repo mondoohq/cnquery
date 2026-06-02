@@ -76,6 +76,8 @@ const (
 	ResourceDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator string = "digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator"
 	ResourceDigitaloceanGradientaiDedicatedInferenceEndpointToken       string = "digitalocean.gradientai.dedicatedInferenceEndpoint.token"
 	ResourceDigitaloceanGradientaiBatchJob                              string = "digitalocean.gradientai.batchJob"
+	ResourceDigitaloceanSecurityScan                                    string = "digitalocean.securityScan"
+	ResourceDigitaloceanSecurityScanFinding                             string = "digitalocean.securityScan.finding"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -322,6 +324,14 @@ func init() {
 			// to override args, implement: initDigitaloceanGradientaiBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanGradientaiBatchJob,
 		},
+		"digitalocean.securityScan": {
+			// to override args, implement: initDigitaloceanSecurityScan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanSecurityScan,
+		},
+		"digitalocean.securityScan.finding": {
+			// to override args, implement: initDigitaloceanSecurityScanFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanSecurityScanFinding,
+		},
 	}
 }
 
@@ -407,6 +417,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.gradientai": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetGradientai()).ToDataRes(types.Resource("digitalocean.gradientai"))
+	},
+	"digitalocean.securityScans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetSecurityScans()).ToDataRes(types.Array(types.Resource("digitalocean.securityScan")))
+	},
+	"digitalocean.latestSecurityScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetLatestSecurityScan()).ToDataRes(types.Resource("digitalocean.securityScan"))
 	},
 	"digitalocean.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetDomains()).ToDataRes(types.Array(types.Resource("digitalocean.domain")))
@@ -2370,6 +2386,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.gradientai.batchJob.expiresAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetExpiresAt()).ToDataRes(types.Time)
 	},
+	"digitalocean.securityScan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScan).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScan).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScan).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.securityScan.findings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScan).GetFindings()).ToDataRes(types.Array(types.Resource("digitalocean.securityScan.finding")))
+	},
+	"digitalocean.securityScan.finding.ruleUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetRuleUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetSeverity()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.businessImpact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetBusinessImpact()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetDetails()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.technicalDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetTechnicalDetails()).ToDataRes(types.String)
+	},
+	"digitalocean.securityScan.finding.foundAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetFoundAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.securityScan.finding.affectedResourcesCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetAffectedResourcesCount()).ToDataRes(types.Int)
+	},
+	"digitalocean.securityScan.finding.mitigationSteps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetMitigationSteps()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.securityScan.finding.affectedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSecurityScanFinding).GetAffectedResources()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2404,6 +2462,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.gradientai": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).Gradientai, ok = plugin.RawToTValue[*mqlDigitaloceanGradientai](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).SecurityScans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.latestSecurityScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).LatestSecurityScan, ok = plugin.RawToTValue[*mqlDigitaloceanSecurityScan](v.Value, v.Error)
 		return
 	},
 	"digitalocean.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5258,6 +5324,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanGradientaiBatchJob).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"digitalocean.securityScan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScan).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.securityScan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScan).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScan).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScan).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.securityScan.finding.ruleUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).RuleUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.businessImpact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).BusinessImpact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).Details, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.technicalDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).TechnicalDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.foundAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).FoundAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.affectedResourcesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).AffectedResourcesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.mitigationSteps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).MitigationSteps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.securityScan.finding.affectedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSecurityScanFinding).AffectedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -5292,6 +5422,8 @@ type mqlDigitalocean struct {
 	Databases             plugin.TValue[[]any]
 	VectorDatabases       plugin.TValue[[]any]
 	Gradientai            plugin.TValue[*mqlDigitaloceanGradientai]
+	SecurityScans         plugin.TValue[[]any]
+	LatestSecurityScan    plugin.TValue[*mqlDigitaloceanSecurityScan]
 	Domains               plugin.TValue[[]any]
 	Volumes               plugin.TValue[[]any]
 	Images                plugin.TValue[[]any]
@@ -5433,6 +5565,38 @@ func (c *mqlDigitalocean) GetGradientai() *plugin.TValue[*mqlDigitaloceanGradien
 		}
 
 		return c.gradientai()
+	})
+}
+
+func (c *mqlDigitalocean) GetSecurityScans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityScans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "securityScans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityScans()
+	})
+}
+
+func (c *mqlDigitalocean) GetLatestSecurityScan() *plugin.TValue[*mqlDigitaloceanSecurityScan] {
+	return plugin.GetOrCompute[*mqlDigitaloceanSecurityScan](&c.LatestSecurityScan, func() (*mqlDigitaloceanSecurityScan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "latestSecurityScan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanSecurityScan), nil
+			}
+		}
+
+		return c.latestSecurityScan()
 	})
 }
 
@@ -12219,4 +12383,171 @@ func (c *mqlDigitaloceanGradientaiBatchJob) GetUpdatedAt() *plugin.TValue[*time.
 
 func (c *mqlDigitaloceanGradientaiBatchJob) GetExpiresAt() *plugin.TValue[*time.Time] {
 	return &c.ExpiresAt
+}
+
+// mqlDigitaloceanSecurityScan for the digitalocean.securityScan resource
+type mqlDigitaloceanSecurityScan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanSecurityScanInternal it will be used here
+	Id        plugin.TValue[string]
+	Status    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Findings  plugin.TValue[[]any]
+}
+
+// createDigitaloceanSecurityScan creates a new instance of this resource
+func createDigitaloceanSecurityScan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanSecurityScan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.securityScan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanSecurityScan) MqlName() string {
+	return "digitalocean.securityScan"
+}
+
+func (c *mqlDigitaloceanSecurityScan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanSecurityScan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanSecurityScan) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanSecurityScan) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanSecurityScan) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.securityScan", c.__id, "findings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.findings()
+	})
+}
+
+// mqlDigitaloceanSecurityScanFinding for the digitalocean.securityScan.finding resource
+type mqlDigitaloceanSecurityScanFinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanSecurityScanFindingInternal
+	RuleUuid               plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Severity               plugin.TValue[string]
+	BusinessImpact         plugin.TValue[string]
+	Details                plugin.TValue[string]
+	TechnicalDetails       plugin.TValue[string]
+	FoundAt                plugin.TValue[*time.Time]
+	AffectedResourcesCount plugin.TValue[int64]
+	MitigationSteps        plugin.TValue[[]any]
+	AffectedResources      plugin.TValue[[]any]
+}
+
+// createDigitaloceanSecurityScanFinding creates a new instance of this resource
+func createDigitaloceanSecurityScanFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanSecurityScanFinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.securityScan.finding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) MqlName() string {
+	return "digitalocean.securityScan.finding"
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetRuleUuid() *plugin.TValue[string] {
+	return &c.RuleUuid
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetBusinessImpact() *plugin.TValue[string] {
+	return &c.BusinessImpact
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetDetails() *plugin.TValue[string] {
+	return &c.Details
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetTechnicalDetails() *plugin.TValue[string] {
+	return &c.TechnicalDetails
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetFoundAt() *plugin.TValue[*time.Time] {
+	return &c.FoundAt
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetAffectedResourcesCount() *plugin.TValue[int64] {
+	return &c.AffectedResourcesCount
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetMitigationSteps() *plugin.TValue[[]any] {
+	return &c.MitigationSteps
+}
+
+func (c *mqlDigitaloceanSecurityScanFinding) GetAffectedResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AffectedResources, func() ([]any, error) {
+		return c.affectedResources()
+	})
 }
