@@ -224,7 +224,11 @@ func (g *mqlGcpProjectCloudFunction) kmsKey() (*mqlGcpProjectKmsServiceKeyringCr
 // iampbBindingsToMql converts IAM policy bindings (from the cloud.google.com/go
 // iampb package) into gcp.resourcemanager.binding resources, preserving any
 // IAM condition attached to each binding. Shared by the Cloud Functions,
-// Cloud Tasks, and service-account IAM accessors.
+// Cloud Tasks, KMS, and service-account IAM accessors.
+//
+// Keep in sync with dataprocBindingsToMql (dataproc.go), which does the same
+// mapping for the REST client's *dataproc.Binding type — if a field is added
+// to gcp.resourcemanager.binding, update both.
 func iampbBindingsToMql(runtime *plugin.Runtime, resourcePath string, bindings []*iampb.Binding) ([]any, error) {
 	res := make([]any, 0, len(bindings))
 	for i, b := range bindings {

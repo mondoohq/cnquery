@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
@@ -563,26 +562,19 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]any, error) {
 	}
 	defer kmsSvc.Close()
 
-	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: cryptokey})
+	// Request policy schema version 3 so conditional bindings aren't silently
+	// stripped from the result.
+	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: cryptokey,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
 	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
 		return nil, err
 	}
-	res := make([]any, 0, len(policy.Bindings))
-	for i, b := range policy.Bindings {
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":                   llx.StringData(cryptokey + "-" + strconv.Itoa(i)),
-			"role":                 llx.StringData(b.Role),
-			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
-			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),
-			"conditionExpression":  llx.StringData(b.GetCondition().GetExpression()),
-			"conditionDescription": llx.StringData(b.GetCondition().GetDescription()),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
-	}
-	return res, nil
+	return iampbBindingsToMql(g.MqlRuntime, cryptokey, policy.Bindings)
 }
 
 // newKmsCryptoKeyRef returns a typed gcp.project.kmsService.keyring.cryptokey
@@ -631,7 +623,12 @@ func (g *mqlGcpProjectKmsServiceKeyring) iamPolicy() ([]any, error) {
 	}
 	defer kmsSvc.Close()
 
-	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: keyring})
+	// Request policy schema version 3 so conditional bindings (e.g. a
+	// condition-scoped allUsers grant) aren't silently stripped from the result.
+	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{
+		Resource: keyring,
+		Options:  &iampb.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			return nil, nil

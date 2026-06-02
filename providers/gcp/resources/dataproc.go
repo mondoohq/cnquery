@@ -740,7 +740,8 @@ func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
 // into gcp.resourcemanager.binding resources, preserving IAM conditions. It
 // mirrors iampbBindingsToMql, but for the REST *dataproc.Binding type, whose
 // condition lives in a different struct than the protobuf bindings used by the
-// gRPC-based accessors elsewhere in this provider.
+// gRPC-based accessors elsewhere in this provider. Keep the two in sync — if a
+// field is added to gcp.resourcemanager.binding, update both.
 func dataprocBindingsToMql(runtime *plugin.Runtime, resource string, bindings []*dataproc.Binding) ([]any, error) {
 	res := make([]any, 0, len(bindings))
 	for i, b := range bindings {
