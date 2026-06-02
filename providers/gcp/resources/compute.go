@@ -518,20 +518,21 @@ func newMqlAttachedDisk(id string, projectId string, runtime *plugin.Runtime, at
 	}
 
 	mqlAttachedDisk, err := CreateResource(runtime, "gcp.project.computeService.attachedDisk", map[string]*llx.RawData{
-		"id":              llx.StringData(id),
-		"projectId":       llx.StringData(projectId),
-		"architecture":    llx.StringData(attachedDisk.Architecture),
-		"autoDelete":      llx.BoolData(attachedDisk.AutoDelete),
-		"boot":            llx.BoolData(attachedDisk.Boot),
-		"deviceName":      llx.StringData(attachedDisk.DeviceName),
-		"diskSizeGb":      llx.IntData(attachedDisk.DiskSizeGb),
-		"forceAttach":     llx.BoolData(attachedDisk.ForceAttach),
-		"guestOsFeatures": llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
-		"index":           llx.IntData(attachedDisk.Index),
-		"interface":       llx.StringData(attachedDisk.Interface),
-		"licenses":        llx.ArrayData(convert.SliceAnyToInterface(attachedDisk.Licenses), types.String),
-		"mode":            llx.StringData(attachedDisk.Mode),
-		"type":            llx.StringData(attachedDisk.Type),
+		"id":                llx.StringData(id),
+		"projectId":         llx.StringData(projectId),
+		"architecture":      llx.StringData(attachedDisk.Architecture),
+		"autoDelete":        llx.BoolData(attachedDisk.AutoDelete),
+		"boot":              llx.BoolData(attachedDisk.Boot),
+		"deviceName":        llx.StringData(attachedDisk.DeviceName),
+		"diskSizeGb":        llx.IntData(attachedDisk.DiskSizeGb),
+		"forceAttach":       llx.BoolData(attachedDisk.ForceAttach),
+		"guestOsFeatures":   llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
+		"index":             llx.IntData(attachedDisk.Index),
+		"interface":         llx.StringData(attachedDisk.Interface),
+		"licenses":          llx.ArrayData(convert.SliceAnyToInterface(attachedDisk.Licenses), types.String),
+		"mode":              llx.StringData(attachedDisk.Mode),
+		"type":              llx.StringData(attachedDisk.Type),
+		"diskEncryptionKey": llx.DictData(customerEncryptionKeyToDict(attachedDisk.DiskEncryptionKey)),
 	})
 	if err != nil {
 		return nil, err
@@ -1375,6 +1376,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"sourceDisk":                     llx.StringData(snapshot.SourceDisk),
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
+				"snapshotEncryptionKey":          llx.DictData(customerEncryptionKeyToDict(snapshot.SnapshotEncryptionKey)),
 			})
 			if err != nil {
 				return err
@@ -1567,23 +1569,33 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 	req := computeSvc.Images.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ImageList) error {
 		for _, image := range page.Items {
+			var shieldedInitialState map[string]any
+			if image.ShieldedInstanceInitialState != nil {
+				d, err := convert.JsonToDict(image.ShieldedInstanceInitialState)
+				if err != nil {
+					return err
+				}
+				shieldedInitialState = d
+			}
 			mqlImage, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
-				"id":                        llx.StringData(strconv.FormatUint(image.Id, 10)),
-				"projectId":                 llx.StringData(projectId),
-				"name":                      llx.StringData(image.Name),
-				"description":               llx.StringData(image.Description),
-				"architecture":              llx.StringData(image.Architecture),
-				"archiveSizeBytes":          llx.IntData(image.ArchiveSizeBytes),
-				"diskSizeGb":                llx.IntData(image.DiskSizeGb),
-				"family":                    llx.StringData(image.Family),
-				"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(image.Licenses), types.String),
-				"labels":                    llx.MapData(convert.MapToInterfaceMap(image.Labels), types.String),
-				"status":                    llx.StringData(image.Status),
-				"created":                   llx.TimeDataPtr(parseTime(image.CreationTimestamp)),
-				"enableConfidentialCompute": llx.BoolData(image.EnableConfidentialCompute),
-				"satisfiesPzi":              llx.BoolData(image.SatisfiesPzi),
-				"satisfiesPzs":              llx.BoolData(image.SatisfiesPzs),
-				"storageLocations":          llx.ArrayData(convert.SliceAnyToInterface(image.StorageLocations), types.String),
+				"id":                           llx.StringData(strconv.FormatUint(image.Id, 10)),
+				"projectId":                    llx.StringData(projectId),
+				"name":                         llx.StringData(image.Name),
+				"description":                  llx.StringData(image.Description),
+				"architecture":                 llx.StringData(image.Architecture),
+				"archiveSizeBytes":             llx.IntData(image.ArchiveSizeBytes),
+				"diskSizeGb":                   llx.IntData(image.DiskSizeGb),
+				"family":                       llx.StringData(image.Family),
+				"licenses":                     llx.ArrayData(convert.SliceAnyToInterface(image.Licenses), types.String),
+				"labels":                       llx.MapData(convert.MapToInterfaceMap(image.Labels), types.String),
+				"status":                       llx.StringData(image.Status),
+				"created":                      llx.TimeDataPtr(parseTime(image.CreationTimestamp)),
+				"enableConfidentialCompute":    llx.BoolData(image.EnableConfidentialCompute),
+				"satisfiesPzi":                 llx.BoolData(image.SatisfiesPzi),
+				"satisfiesPzs":                 llx.BoolData(image.SatisfiesPzs),
+				"storageLocations":             llx.ArrayData(convert.SliceAnyToInterface(image.StorageLocations), types.String),
+				"imageEncryptionKey":           llx.DictData(customerEncryptionKeyToDict(image.ImageEncryptionKey)),
+				"shieldedInstanceInitialState": llx.DictData(shieldedInitialState),
 			})
 			if err != nil {
 				return err

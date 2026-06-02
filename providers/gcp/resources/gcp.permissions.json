@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.19.1",
-  "generated_at": "2026-06-01T22:12:21-07:00",
+  "generated_at": "2026-06-01T23:01:28-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -47,6 +47,7 @@
     "clouddeploy.releases.list",
     "clouddeploy.targets.list",
     "cloudfunctions.functions.list",
+    "cloudfunctions.iamPolicy.get",
     "cloudidentity.groups.list",
     "cloudidentity.memberships.list",
     "cloudkms.cryptoKeyVersions.list",
@@ -507,6 +508,18 @@
       "permission": "cloudfunctions.functions.list",
       "service": "cloudfunctions",
       "action": "ListFunctions",
+      "source_file": "cloud_functions_v2.go"
+    },
+    {
+      "permission": "cloudfunctions.iamPolicy.get",
+      "service": "cloudfunctions",
+      "action": "GetIamPolicy",
+      "source_file": "cloud_functions.go"
+    },
+    {
+      "permission": "cloudfunctions.iamPolicy.get",
+      "service": "cloudfunctions",
+      "action": "GetIamPolicy",
       "source_file": "cloud_functions_v2.go"
     },
     {

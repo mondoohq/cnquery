@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,9 +17,12 @@ import (
 
 	functions "cloud.google.com/go/functions/apiv1"
 	"cloud.google.com/go/functions/apiv1/functionspb"
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	"go.mondoo.com/mql/v13/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
@@ -215,6 +219,72 @@ func (g *mqlGcpProjectCloudFunction) kmsKey() (*mqlGcpProjectKmsServiceKeyringCr
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+// iampbBindingsToMql converts IAM policy bindings (from the cloud.google.com/go
+// iampb package) into gcp.resourcemanager.binding resources. Shared by the
+// Cloud Functions v1 and v2 IAM accessors.
+func iampbBindingsToMql(runtime *plugin.Runtime, resourcePath string, bindings []*iampb.Binding) ([]any, error) {
+	res := make([]any, 0, len(bindings))
+	for i, b := range bindings {
+		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectCloudFunction) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Location.Error != nil {
+		return nil, g.Location.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	location := g.Location.Data
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(functions.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer cloudFuncSvc.Close()
+
+	resourcePath := fmt.Sprintf("projects/%s/locations/%s/functions/%s", projectId, location, name)
+	policy, err := cloudFuncSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			log.Warn().Str("project", projectId).Str("function", name).Err(err).Msg("could not retrieve cloud function IAM policy")
+			return nil, nil
+		}
+		return nil, err
+	}
+	return iampbBindingsToMql(g.MqlRuntime, resourcePath, policy.Bindings)
+}
+
+func (g *mqlGcpProjectCloudFunction) allowsUnauthenticated() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
 }
 
 func (g *mqlGcpProjectCloudFunction) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {

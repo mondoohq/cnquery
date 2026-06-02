@@ -268,6 +268,7 @@ gcp.project.alloydbService.instance.connectionPoolConfig 13.12.2
 gcp.project.alloydbService.instance.createdAt 11.3.1
 gcp.project.alloydbService.instance.databaseFlags 11.3.1
 gcp.project.alloydbService.instance.displayName 11.3.1
+gcp.project.alloydbService.instance.enablePublicIp 13.19.2
 gcp.project.alloydbService.instance.etag 11.3.1
 gcp.project.alloydbService.instance.gceZone 11.3.1
 gcp.project.alloydbService.instance.instanceType 11.3.1
@@ -275,7 +276,9 @@ gcp.project.alloydbService.instance.ipAddress 11.3.1
 gcp.project.alloydbService.instance.labels 11.3.1
 gcp.project.alloydbService.instance.machineConfig 11.3.1
 gcp.project.alloydbService.instance.name 11.3.1
+gcp.project.alloydbService.instance.networkConfig 13.19.2
 gcp.project.alloydbService.instance.nodes 11.3.1
+gcp.project.alloydbService.instance.outboundPublicIpAddresses 13.19.2
 gcp.project.alloydbService.instance.projectId 11.3.1
 gcp.project.alloydbService.instance.pscInstanceConfig 11.3.1
 gcp.project.alloydbService.instance.publicIpAddress 11.3.1
@@ -1009,6 +1012,7 @@ gcp.project.cloudDomainsService.registration.state 13.18.1
 gcp.project.cloudDomainsService.registration.transferLockState 13.18.1
 gcp.project.cloudDomainsService.registrations 13.18.1
 gcp.project.cloudFunction 9.0.0
+gcp.project.cloudFunction.allowsUnauthenticated 13.19.2
 gcp.project.cloudFunction.availableMemoryMb 9.0.0
 gcp.project.cloudFunction.buildEnvVars 9.0.0
 gcp.project.cloudFunction.buildId 9.0.0
@@ -1022,6 +1026,7 @@ gcp.project.cloudFunction.entryPoint 9.0.0
 gcp.project.cloudFunction.envVars 9.0.0
 gcp.project.cloudFunction.eventTrigger 9.0.0
 gcp.project.cloudFunction.httpsTrigger 9.0.0
+gcp.project.cloudFunction.iamPolicy 13.19.2
 gcp.project.cloudFunction.ingressSettings 9.0.0
 gcp.project.cloudFunction.kmsKey 13.2.3
 gcp.project.cloudFunction.kmsKeyName 9.0.0
@@ -1046,6 +1051,7 @@ gcp.project.cloudFunction.updated 9.0.0
 gcp.project.cloudFunction.versionId 9.0.0
 gcp.project.cloudFunction.vpcConnector 9.0.0
 gcp.project.cloudFunctionV2 13.7.2
+gcp.project.cloudFunctionV2.allowsUnauthenticated 13.19.2
 gcp.project.cloudFunctionV2.buildConfig 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.buildWorkerPool 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.dockerRepository 13.7.2
@@ -1070,6 +1076,7 @@ gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.topic 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.trigger 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.triggerRegion 13.7.2
+gcp.project.cloudFunctionV2.iamPolicy 13.19.2
 gcp.project.cloudFunctionV2.kmsKey 13.7.2
 gcp.project.cloudFunctionV2.kmsKeyName 13.7.2
 gcp.project.cloudFunctionV2.labels 13.7.2
@@ -1316,6 +1323,7 @@ gcp.project.computeService.attachedDisk.architecture 9.0.0
 gcp.project.computeService.attachedDisk.autoDelete 9.0.0
 gcp.project.computeService.attachedDisk.boot 9.0.0
 gcp.project.computeService.attachedDisk.deviceName 9.0.0
+gcp.project.computeService.attachedDisk.diskEncryptionKey 13.19.2
 gcp.project.computeService.attachedDisk.diskSizeGb 9.0.0
 gcp.project.computeService.attachedDisk.forceAttach 9.0.0
 gcp.project.computeService.attachedDisk.guestOsFeatures 9.0.0
@@ -1589,6 +1597,7 @@ gcp.project.computeService.image.enableConfidentialCompute 11.6.6
 gcp.project.computeService.image.family 9.0.0
 gcp.project.computeService.image.iamPolicy 13.10.1
 gcp.project.computeService.image.id 9.0.0
+gcp.project.computeService.image.imageEncryptionKey 13.19.2
 gcp.project.computeService.image.kmsKey 13.12.2
 gcp.project.computeService.image.labels 9.0.0
 gcp.project.computeService.image.licenses 9.0.0
@@ -1597,6 +1606,7 @@ gcp.project.computeService.image.projectId 9.0.0
 gcp.project.computeService.image.public 13.12.2
 gcp.project.computeService.image.satisfiesPzi 11.6.6
 gcp.project.computeService.image.satisfiesPzs 11.6.6
+gcp.project.computeService.image.shieldedInstanceInitialState 13.19.2
 gcp.project.computeService.image.sourceDisk 13.1.2
 gcp.project.computeService.image.sourceImage 13.1.2
 gcp.project.computeService.image.sourceSnapshot 13.1.2
@@ -2051,6 +2061,7 @@ gcp.project.computeService.snapshot.projectId 13.10.1
 gcp.project.computeService.snapshot.public 13.12.2
 gcp.project.computeService.snapshot.satisfiesPzi 11.6.6
 gcp.project.computeService.snapshot.satisfiesPzs 11.6.6
+gcp.project.computeService.snapshot.snapshotEncryptionKey 13.19.2
 gcp.project.computeService.snapshot.snapshotType 9.0.0
 gcp.project.computeService.snapshot.sourceDisk 11.6.6
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicy 13.1.2
@@ -3055,6 +3066,7 @@ gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.sysctls 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.localSsdCount 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.localSsdEncryptionMode 13.19.2
 gcp.project.gkeService.cluster.nodepool.config.machineType 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.metadata 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.minCpuPlatform 9.0.0

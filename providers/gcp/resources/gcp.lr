@@ -1771,6 +1771,11 @@ private gcp.project.computeService.attachedDisk {
   source() gcp.project.computeService.disk
   // Disk type
   type string
+  // Encryption key protecting this attached disk
+  //
+  // Distinguishes customer-managed (kmsKeyName), customer-supplied
+  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
+  diskEncryptionKey dict
 }
 
 // Google Cloud (GCP) Compute Engine persistent disk snapshot
@@ -1835,6 +1840,11 @@ private gcp.project.computeService.snapshot @defaults("name") {
   sourceSnapshotSchedulePolicyId string
   // Customer-managed KMS key used for snapshot encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Encryption key protecting the snapshot
+  //
+  // Distinguishes customer-managed (kmsKeyName), customer-supplied
+  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
+  snapshotEncryptionKey dict
   // IAM policy bindings for this snapshot (includes allUsers / allAuthenticatedUsers grants when the snapshot is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
@@ -1892,6 +1902,13 @@ private gcp.project.computeService.image @defaults("id name") {
   sourceSnapshot() gcp.project.computeService.snapshot
   // Customer-managed KMS key used for image encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Encryption key protecting the image
+  //
+  // Distinguishes customer-managed (kmsKeyName), customer-supplied
+  // (rawKey / rsaEncryptedKey), and Google-managed (empty) encryption.
+  imageEncryptionKey dict
+  // Secure Boot trust anchors (PK, KEKs, db, dbx) that VMs booted from this image will trust
+  shieldedInstanceInitialState dict
   // IAM policy bindings for this image (includes allUsers / allAuthenticatedUsers grants when the image is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the image's IAM policy grants any role to allUsers or allAuthenticatedUsers
@@ -4259,6 +4276,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   kubeletConfig gcp.project.gkeService.cluster.nodepool.config.kubeletConfig
   // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
   bootDiskKmsKey string
+  // Encryption mode for node Local SSDs (STANDARD_ENCRYPTION uses Google-managed keys; EPHEMERAL_KEY_ENCRYPTION uses per-boot ephemeral keys)
+  localSsdEncryptionMode string
   // Google Container File System (image streaming) configuration
   gcfsConfig gcp.project.gkeService.cluster.nodepool.config.gcfsConfig
   // Whether Google Container File System (image streaming) is enabled for nodes in this pool
@@ -5478,6 +5497,10 @@ private gcp.project.cloudFunction @defaults("name") {
   dockerRepository string
   // Docker registry to use for this deployment
   dockerRegistry string
+  // IAM policy bindings controlling who can invoke and manage the function
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the IAM policy grants an invoker role to allUsers or allAuthenticatedUsers, making the function callable without authentication
+  allowsUnauthenticated() bool
 }
 
 // Google Cloud (GCP) Cloud Function (v2 / 2nd gen)
@@ -5507,6 +5530,10 @@ private gcp.project.cloudFunctionV2 @defaults("name state environment") {
   kmsKeyName string
   // Cloud KMS key used to encrypt/decrypt function resources
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // IAM policy bindings controlling who can invoke and manage the function
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the IAM policy grants an invoker role to allUsers or allAuthenticatedUsers, making the function callable without authentication
+  allowsUnauthenticated() bool
   // Build configuration
   buildConfig gcp.project.cloudFunctionV2.buildConfig
   // Service (Cloud Run) configuration
@@ -7636,6 +7663,12 @@ private gcp.project.alloydbService.instance @defaults("name") {
   ipAddress string
   // Public IP address of the instance
   publicIpAddress string
+  // Network configuration, including the public-IP setting and the list of authorized external networks permitted to reach the public endpoint
+  networkConfig dict
+  // Whether the instance has a public IP endpoint enabled
+  enablePublicIp bool
+  // Outbound public IP addresses assigned to the instance for egress to the internet
+  outboundPublicIpAddresses []string
   // Database flags
   databaseFlags map[string]string
   // Labels for the instance

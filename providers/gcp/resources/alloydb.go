@@ -410,6 +410,14 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		networkConfig, err := protoToDict(inst.NetworkConfig)
+		if err != nil {
+			return nil, err
+		}
+		var enablePublicIp bool
+		if inst.NetworkConfig != nil {
+			enablePublicIp = inst.NetworkConfig.EnablePublicIp
+		}
 		connectionPoolConfig, err := protoToDict(inst.ConnectionPoolConfig)
 		if err != nil {
 			return nil, err
@@ -443,32 +451,35 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 		}
 
 		mqlInst, err := CreateResource(g.MqlRuntime, "gcp.project.alloydbService.instance", map[string]*llx.RawData{
-			"projectId":              llx.StringData(projectId),
-			"clusterName":            llx.StringData(clusterName),
-			"name":                   llx.StringData(inst.Name),
-			"displayName":            llx.StringData(inst.DisplayName),
-			"uid":                    llx.StringData(inst.Uid),
-			"state":                  llx.StringData(inst.State.String()),
-			"instanceType":           llx.StringData(inst.InstanceType.String()),
-			"machineConfig":          llx.DictData(machineConfig),
-			"availabilityType":       llx.StringData(inst.AvailabilityType.String()),
-			"gceZone":                llx.StringData(inst.GceZone),
-			"ipAddress":              llx.StringData(inst.IpAddress),
-			"publicIpAddress":        llx.StringData(inst.PublicIpAddress),
-			"databaseFlags":          llx.MapData(convert.MapToInterfaceMap(inst.DatabaseFlags), types.String),
-			"labels":                 llx.MapData(convert.MapToInterfaceMap(inst.Labels), types.String),
-			"queryInsightsConfig":    llx.DictData(queryInsightsConfig),
-			"readPoolConfig":         llx.DictData(readPoolConfig),
-			"clientConnectionConfig": llx.DictData(clientConnectionConfig),
-			"pscInstanceConfig":      llx.DictData(pscInstanceConfig),
-			"activationPolicy":       llx.StringData(inst.ActivationPolicy.String()),
-			"connectionPoolConfig":   llx.DictData(connectionPoolConfig),
-			"nodes":                  llx.ArrayData(nodes, types.Dict),
-			"writableNode":           llx.DictData(writableNode),
-			"reconciling":            llx.BoolData(inst.Reconciling),
-			"etag":                   llx.StringData(inst.Etag),
-			"createdAt":              createdAt,
-			"updatedAt":              updatedAt,
+			"projectId":                 llx.StringData(projectId),
+			"clusterName":               llx.StringData(clusterName),
+			"name":                      llx.StringData(inst.Name),
+			"displayName":               llx.StringData(inst.DisplayName),
+			"uid":                       llx.StringData(inst.Uid),
+			"state":                     llx.StringData(inst.State.String()),
+			"instanceType":              llx.StringData(inst.InstanceType.String()),
+			"machineConfig":             llx.DictData(machineConfig),
+			"availabilityType":          llx.StringData(inst.AvailabilityType.String()),
+			"gceZone":                   llx.StringData(inst.GceZone),
+			"ipAddress":                 llx.StringData(inst.IpAddress),
+			"publicIpAddress":           llx.StringData(inst.PublicIpAddress),
+			"networkConfig":             llx.DictData(networkConfig),
+			"enablePublicIp":            llx.BoolData(enablePublicIp),
+			"outboundPublicIpAddresses": llx.ArrayData(convert.SliceAnyToInterface(inst.OutboundPublicIpAddresses), types.String),
+			"databaseFlags":             llx.MapData(convert.MapToInterfaceMap(inst.DatabaseFlags), types.String),
+			"labels":                    llx.MapData(convert.MapToInterfaceMap(inst.Labels), types.String),
+			"queryInsightsConfig":       llx.DictData(queryInsightsConfig),
+			"readPoolConfig":            llx.DictData(readPoolConfig),
+			"clientConnectionConfig":    llx.DictData(clientConnectionConfig),
+			"pscInstanceConfig":         llx.DictData(pscInstanceConfig),
+			"activationPolicy":          llx.StringData(inst.ActivationPolicy.String()),
+			"connectionPoolConfig":      llx.DictData(connectionPoolConfig),
+			"nodes":                     llx.ArrayData(nodes, types.Dict),
+			"writableNode":              llx.DictData(writableNode),
+			"reconciling":               llx.BoolData(inst.Reconciling),
+			"etag":                      llx.StringData(inst.Etag),
+			"createdAt":                 createdAt,
+			"updatedAt":                 updatedAt,
 		})
 		if err != nil {
 			return nil, err
