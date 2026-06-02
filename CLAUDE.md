@@ -23,7 +23,7 @@ Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). T
 
 Every top-level resource (anything users will query directly — including singular records like `aws.ec2.instance` and namespace roots like `aws`) must have a two-part doc-comment immediately above the `resource {` line:
 
-1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. **Titles must not start with "deprecated"** (enforced) — deprecation is expressed via `@maturity("deprecated")`, not in the title. **Max 150 characters (enforced).** Titles render in CLI tables, auto-complete prompts, and the website resource docs, so they have a length cap; descriptions don't.
+1. **Title.** A simple, technically correct one-line name — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" / "configuration analysis". The title is *what the resource is*, not what you do with it. **Must not start with "deprecated"** (enforced) — use `@maturity("deprecated")` instead. **Max 150 characters (enforced).**
 2. **Single empty `//` line.**
 3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity. **Descriptions must not start with "Deprecated." or "Deprecated:" (enforced).** The only accepted leading phrases that contain the word "deprecated" are `Deprecated in favor of ...` and `Deprecated, please use ...`; any other variant must be rewritten so the deprecation notice comes after the resource/field summary.
 
@@ -50,8 +50,6 @@ arista.eos.runningConfig.section { ... }
 ```
 
 **Style rules:**
-- Title is a name-like noun phrase. No leading "A" / "An". No "static analysis" / "configuration analysis" verbs in the title. Never start a title with "deprecated" (case-insensitive) — that's signaled via `@maturity("deprecated")` and mentioned in the description.
-- Exactly one blank `//` separator between title and description.
 - Don't reference the parent resource as a navigation hint ("read from the parent device as ...", "iterate from the parent ..."). Just describe what *this* resource examines.
 - Don't use developer jargon ("Singleton", "Top-level entry point" is OK if it adds meaning, otherwise drop it). Write user-facing prose.
 - Cross-reference sibling resources only when it genuinely helps the reader — e.g., pointing from a raw view (`apache2.conf`) at a richer typed view (`apache2.conf.module`).
@@ -66,9 +64,9 @@ A doc-comment is **either**:
 
 **There is no third option.** Two contiguous comment lines with no blank `//` between them — the pattern you'd produce when wrapping a long one-liner across two source lines for readability — is **rejected at parse time**. The validator (`lrcore/lr.go: validateDocCommentStructure`) will fail the build with a precise location.
 
-**Title length:** the title line is capped at **150 characters** (`lrcore.MaxTitleLength`, also enforced at parse time, rune-counted so multi-byte characters count as one). Descriptions have no cap. If a title doesn't fit in 150 chars, that's a signal that some of what you wrote belongs in the description — split using the two-part form.
+**Title length:** capped at **150 characters** (`lrcore.MaxTitleLength`, rune-counted, enforced at parse time). Descriptions have no cap. If a title doesn't fit, some of what you wrote belongs in the description — use the two-part form.
 
-**Why this is enforced:** the parser is positional — line 1 → `title`, everything after → `desc`. A wrapped one-liner produces a title truncated mid-clause (often with a trailing comma) and an orphaned description fragment. The blank `//` rule eliminates the ambiguity. The length cap keeps titles usable in the UI surfaces that show them: CLI tables, auto-complete prompts, and the rendered docs.
+**Why:** the parser is positional — line 1 → `title`, everything after → `desc`. A wrapped one-liner produces a title truncated mid-clause and an orphaned description fragment; the blank `//` removes the ambiguity. The cap keeps titles usable in CLI tables, auto-complete prompts, and rendered docs.
 
 ```
 // One-line summary, complete on its own.
@@ -216,7 +214,7 @@ Multiple computed methods can share the same fetch function to batch-load relate
   }
   output := cmd.Stdout.Data
   ```
-  **Why?** The `command` resource ensures proper execution context, authentication, connection handling, and works seamlessly across different connection types (local, SSH, container, etc.). See [lsblk.go](providers/os/resources/lsblk.go) for a complete example.
+  **Why?** The `command` resource handles execution context, auth, and connection handling across all connection types (local, SSH, container, etc.). See [lsblk.go](providers/os/resources/lsblk.go) for a full example.
 
 - **Never `return nil, nil` from a singular resource accessor without setting `StateIsNull` first.** When an accessor returns a single resource pointer (e.g., `(*mqlAwsSomeResource, error)`) and the value is legitimately null, you **must** set the field's state before returning. Otherwise the runtime doesn't know the field was resolved and may panic or re-fetch indefinitely.
   ```go
@@ -420,11 +418,7 @@ Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LL
 - The runtime checks cache before fetching: `if x, ok := runtime.Resources.Get(id); ok { return x, nil }`
 - Results are cached automatically after first fetch
 
-**Why `__id` matters:**
-- Prevents redundant API calls for the same resource
-- Enables resource sharing across queries
-- Must be unique and stable (ARN, UUID, or composite key)
-- If `__id` is empty or duplicate, caching breaks and performance degrades
+**Why `__id` matters:** it prevents redundant API calls and enables resource sharing across queries. It must be unique and stable (ARN, UUID, or composite key); if empty or duplicated, caching breaks and performance degrades.
 
 **Hide synthetic `__id` values; don't expose them as `id` fields.** When a sub-resource's cache key is purely internal — a parent-qualified path like `<parentId>/confidentialCompute`, not something a user would ever query by — do NOT declare `id string` in the `.lr` block. Pass the cache key directly via the magic `"__id"` argument to `CreateResource`, and omit the `id()` Go method:
 
@@ -451,12 +445,7 @@ Reserve a public `id string` field for resources whose id carries user-meaningfu
 - Use `init` functions for expensive operations to enable result sharing across queries
 
 ### Code Generation Dependencies
-The build process has several code generation steps:
-1. Protocol buffers (`.proto` → `.pb.go`)
-2. Resource definitions (`.lr` → `.lr.go`)
-3. Provider configurations (`providers.yaml` → `builtin_dev.go`)
-
-Always run `make mql/generate` after modifying any of these source files.
+Three codegen steps feed the build: protobuf (`.proto` → `.pb.go`), resources (`.lr` → `.lr.go`), and provider config (`providers.yaml` → `builtin_dev.go`). Run `make mql/generate` after modifying any of these.
 
 ### Key Data Structures
 When navigating the codebase, these are the critical types you'll encounter:
@@ -495,10 +484,9 @@ Every source file (`.go`, `.lr`, `.proto`, etc.) must begin with:
 The format is `2024, <current year>` (comma-separated, not a dash). The first year (2024) is fixed; the second year should be the current calendar year. This is enforced by the `copywrite` tool installed via `make prep/tools`.
 
 ### Provider Connection Management
-- Implement proper connection lifecycle: `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
-- Handle authentication failures gracefully with `Is400AccessDeniedError()` checks
-- Use connection pooling where possible to optimize API calls
-- Implement timeout handling for long-running API operations
+- Implement the full lifecycle: `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
+- Handle auth failures gracefully with `Is400AccessDeniedError()` checks
+- Use connection pooling where possible; add timeout handling for long-running API calls
 
 ### Error Handling Patterns
 - Use `Is400AccessDeniedError(err)` for permission issues (returns `nil` result, not error)
@@ -559,7 +547,7 @@ for {
   - **Use `map[string]string`** for name/value pair lists that would otherwise be a struct with two string fields (e.g. `environmentVariables map[string]string` rather than a `{name, value}` sub-resource — keys of `GPU`/`MEMORY`/`VCPU` work the same way for resource requirements).
   - **Use `[]dict`** for small heterogeneous structs (e.g. Linux devices, tmpfs mounts, evaluate-on-exit conditions) where no individual field warrants its own typed audit query.
 
-  **Why:** A sub-resource has real cost — a generated struct, `__id` stability, serialization, test surface, and a new entry in `.lr.versions` for every field. Creating them for pure data containers bloats the schema without giving auditors new query power. Scalars on the parent are already queryable; a map lets you do `resourceRequirements["GPU"]` without a new resource type.
+  **Why:** A sub-resource has real cost — a generated struct, `__id` stability, serialization, test surface, and a `.lr.versions` entry per field. Creating them for pure data containers bloats the schema without new query power; scalars and maps on the parent are already queryable (e.g. `resourceRequirements["GPU"]`).
 
   **Examples (Batch):**
   - ✓ `aws.batch.jobQueue.computeEnvironmentOrder` — nests typed `computeEnvironment()` ref
@@ -573,7 +561,7 @@ for {
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
-- **Skip deprecated SDK fields and methods.** Before exposing a proto field or calling a method, check the SDK's `// Deprecated:` comment. Deprecated fields often return empty/zero on modern instances because the data has moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`). Modeling them anyway adds dead schema that looks queryable but never returns data. Same goes for `Get*`/`List*` methods marked deprecated — pick the replacement. If you genuinely need a deprecated field for backward-compat with old API responses, leave a comment explaining why.
+- **Skip deprecated SDK fields and methods.** Check the SDK's `// Deprecated:` comment before exposing a field or calling a method. Deprecated fields often return empty/zero on modern instances because the data moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`) — modeling them adds dead schema. Same for deprecated `Get*`/`List*` methods; pick the replacement. If you genuinely need one for backward-compat, leave a comment explaining why.
 - **Deprecating fields and resources — use `@maturity`.** When a field or resource is being kept for backward-compat but should not be used by new audits, mark it with `@maturity("deprecated")` in the `.lr` schema. The title stays a plain noun phrase (titles starting with "deprecated" are rejected by the parser); the deprecation notice and the replacement go in the description. The description must lead with either `Deprecated in favor of ...` or `Deprecated, please use ...` — `Deprecated.` / `Deprecated:` are rejected. Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
   ```
   // Legacy endpoint dict
@@ -596,18 +584,13 @@ for {
   Keep the existing `.lr.versions` entry at its original version — deprecation does not bump the version.
 
 ### Provider Modules & Dependencies
-- Each provider in `providers/` has its own `go.mod` for isolation
-- Core mql has dependencies that providers don't need (and vice versa)
-- This keeps provider binaries smaller and dependency trees isolated
+- Each provider in `providers/` has its own `go.mod` for isolation, keeping binaries smaller and dependency trees separate (core mql has deps providers don't need, and vice versa)
 - Update provider versions using the version utility to maintain compatibility
 
 ### Built-in vs External Providers
 - Core provider is always compiled into mql (provides universal resources)
-- Other providers can be:
-    - External plugins (default): separate binaries loaded at runtime via gRPC
-    - Built-in (for debugging): compiled into mql by modifying `providers.yaml`
-- Built-in mode enables easier debugging but requires provider cleanup before commits
-- And speaking of debugging: use a debugger mcp if available, so you set breakpoints instead of stdout debugging.
+- Others default to external plugins (separate binaries loaded at runtime via gRPC); for debugging they can be made built-in via `providers.yaml` — requires cleanup before commits
+- For debugging, use a debugger mcp if available, so you set breakpoints instead of stdout debugging.
 
 ### Code Generation Gotchas
 - Always run `make mql/generate` after modifying `.lr`, `.proto`, or `providers.yaml` files
