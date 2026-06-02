@@ -508,3 +508,80 @@ func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
 func (o *mqlOciObjectStorageRetentionRule) id() (string, error) {
 	return "oci.objectStorage.retentionRule/" + o.Id.Data, nil
 }
+
+func (o *mqlOciObjectStorageBucket) preauthenticatedRequests() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	region := o.GetRegion()
+	if region.Error != nil {
+		return nil, region.Error
+	}
+
+	client, err := conn.ObjectStorageClient(region.Data.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace := o.GetNamespace()
+	if namespace.Error != nil {
+		return nil, namespace.Error
+	}
+
+	name := o.GetName()
+	if name.Error != nil {
+		return nil, name.Error
+	}
+
+	ctx := context.Background()
+	var pars []objectstorage.PreauthenticatedRequestSummary
+	var page *string
+	for {
+		response, err := client.ListPreauthenticatedRequests(ctx, objectstorage.ListPreauthenticatedRequestsRequest{
+			NamespaceName: common.String(namespace.Data),
+			BucketName:    common.String(name.Data),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		pars = append(pars, response.Items...)
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(pars))
+	for i := range pars {
+		p := pars[i]
+
+		var created *time.Time
+		if p.TimeCreated != nil {
+			created = &p.TimeCreated.Time
+		}
+		var timeExpires *time.Time
+		if p.TimeExpires != nil {
+			timeExpires = &p.TimeExpires.Time
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.preauthenticatedRequest", map[string]*llx.RawData{
+			"id":                  llx.StringDataPtr(p.Id),
+			"name":                llx.StringDataPtr(p.Name),
+			"accessType":          llx.StringData(string(p.AccessType)),
+			"objectName":          llx.StringDataPtr(p.ObjectName),
+			"bucketListingAction": llx.StringData(string(p.BucketListingAction)),
+			"timeExpires":         llx.TimeDataPtr(timeExpires),
+			"created":             llx.TimeDataPtr(created),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciObjectStoragePreauthenticatedRequest) id() (string, error) {
+	return "oci.objectStorage.preauthenticatedRequest/" + o.Id.Data, nil
+}

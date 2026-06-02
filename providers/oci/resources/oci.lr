@@ -625,6 +625,44 @@ oci.network {
   natGateways() []oci.network.natGateway
   // Route tables
   routeTables() []oci.network.routeTable
+  // Reserved and regional public IP addresses in the tenancy
+  publicIps() []oci.network.publicIp
+}
+
+// Oracle Cloud Infrastructure (OCI) public IP address
+//
+// Examine a reserved or regional public IP address in the tenancy.
+// `lifetime` is `RESERVED` (you control its life; persists unassigned) or
+// `EPHEMERAL` (tied to the entity it is attached to, such as a NAT gateway).
+// `assignedEntityType` and `assignedEntityId` identify what the address is
+// routed to — a `PRIVATE_IP` (a compute VNIC) or a `NAT_GATEWAY`; an empty
+// `assignedEntityId` on a `RESERVED` address is an unattached, billable, and
+// reusable public address. `scope` distinguishes region-wide addresses from
+// availability-domain-scoped ones. Use this to inventory the tenancy's
+// internet-facing address surface and find orphaned reservations.
+private oci.network.publicIp @defaults("ipAddress lifetime assignedEntityType") {
+  // Public IP OCID
+  id string
+  // The public IP address
+  ipAddress string
+  // Display name
+  name string
+  // Compartment OCID containing the public IP
+  compartmentID string
+  // Allocation lifetime (EPHEMERAL or RESERVED)
+  lifetime string
+  // Whether the address is region-wide or availability-domain scoped (REGION, AVAILABILITY_DOMAIN)
+  scope string
+  // Type of entity the address is assigned to (PRIVATE_IP, NAT_GATEWAY); empty when unassigned
+  assignedEntityType string
+  // OCID of the entity the address is assigned to; empty when unassigned
+  assignedEntityId string
+  // Availability domain, set only for availability-domain-scoped addresses
+  availabilityDomain string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, ASSIGNING, ASSIGNED, UNASSIGNING, UNASSIGNED, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
 }
 
 // Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
@@ -1062,6 +1100,37 @@ private oci.objectStorage.bucket {
   definedTags() map[string]map[string]string
   // Retention rules for immutability/WORM compliance
   retentionRules() []oci.objectStorage.retentionRule
+  // Pre-authenticated requests granting credential-free access to the bucket or its objects
+  preauthenticatedRequests() []oci.objectStorage.preauthenticatedRequest
+}
+
+// Oracle Cloud Infrastructure (OCI) Object Storage pre-authenticated request
+//
+// Examine a pre-authenticated request (PAR) — a URL that grants access to
+// the bucket or a specific object without any IAM credential or audit
+// trail for the duration of its validity. `accessType` is one of
+// `ObjectRead`, `ObjectWrite`, `ObjectReadWrite`, `AnyObjectRead`,
+// `AnyObjectWrite`, or `AnyObjectReadWrite`; the `AnyObject*` forms apply to
+// the whole bucket. `objectName` names the single object a PAR is scoped to,
+// and is null for bucket-level PARs. `bucketListingAction` (`Deny` or
+// `ListObjects`) decides whether the holder can enumerate bucket contents.
+// `timeExpires` is when the URL stops working — a far-future value is an
+// effectively permanent anonymous grant.
+private oci.objectStorage.preauthenticatedRequest @defaults("name accessType timeExpires") {
+  // Pre-authenticated request identifier
+  id string
+  // Display name
+  name string
+  // Operation the request grants (ObjectRead, ObjectWrite, ObjectReadWrite, AnyObjectRead, AnyObjectWrite, AnyObjectReadWrite)
+  accessType string
+  // Object the request is scoped to; null when the request grants access to the entire bucket
+  objectName string
+  // Whether the holder may list bucket contents (Deny or ListObjects)
+  bucketListingAction string
+  // Expiration time after which the request is no longer valid
+  timeExpires time
+  // Creation time
+  created time
 }
 
 // Oracle Cloud Infrastructure (OCI) Object Storage retention rule
@@ -1535,6 +1604,8 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   shape string
   // Whether the load balancer is private (no public IP)
   isPrivate bool
+  // Assigned IP addresses, each with an `ipAddress` and an `isPublic` flag indicating internet reachability
+  ipAddresses []dict
   // Whether delete protection is enabled
   isDeleteProtectionEnabled bool
   // Lifecycle state (e.g., CREATING, ACTIVE, FAILED, DELETING, DELETED)
@@ -2187,6 +2258,13 @@ private oci.database.autonomousDatabase @defaults("name") {
   //
   // Covers SQL Developer Web, APEX, GraphStudio, ORDS, MongoDB, Machine Learning Notebook/User Management, and Database Transforms. Populated when the database is publicly accessible or reachable via an allowed private endpoint.
   connectionUrls dict
+  // Connection URLs reachable over the public internet
+  //
+  // The same management and user interfaces as connectionUrls, but the
+  // copies served on the database's public endpoint. Populated only when
+  // the database exposes a public endpoint, so a non-empty value means
+  // those interfaces are reachable from the internet.
+  publicConnectionUrls dict
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY.

@@ -1479,3 +1479,115 @@ func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
 	}
 	return mqlRt.(*mqlOciNetworkRouteTable), nil
 }
+
+func (o *mqlOciNetwork) publicIps() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getPublicIps(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciNetwork) getPublicIps(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci public ips with region %s", regionResource.Id.Data)
+
+			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			// Region-scoped listing covers reserved public IPs (which persist
+			// unattached) and the ephemeral public IPs held by regional
+			// entities such as NAT gateways. The OCI API requires a separate
+			// call per lifetime at REGION scope.
+			publicIps := []core.PublicIp{}
+			for _, lifetime := range []core.ListPublicIpsLifetimeEnum{
+				core.ListPublicIpsLifetimeReserved,
+				core.ListPublicIpsLifetimeEphemeral,
+			} {
+				var page *string
+				for {
+					response, err := svc.ListPublicIps(ctx, core.ListPublicIpsRequest{
+						Scope:         core.ListPublicIpsScopeRegion,
+						CompartmentId: common.String(conn.TenantID()),
+						Lifetime:      lifetime,
+						Page:          page,
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					publicIps = append(publicIps, response.Items...)
+
+					if response.OpcNextPage == nil {
+						break
+					}
+					page = response.OpcNextPage
+				}
+			}
+
+			var res []any
+			for i := range publicIps {
+				publicIp := publicIps[i]
+
+				var created *time.Time
+				if publicIp.TimeCreated != nil {
+					created = &publicIp.TimeCreated.Time
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.publicIp", map[string]*llx.RawData{
+					"id":                 llx.StringDataPtr(publicIp.Id),
+					"ipAddress":          llx.StringDataPtr(publicIp.IpAddress),
+					"name":               llx.StringDataPtr(publicIp.DisplayName),
+					"compartmentID":      llx.StringDataPtr(publicIp.CompartmentId),
+					"lifetime":           llx.StringData(string(publicIp.Lifetime)),
+					"scope":              llx.StringData(string(publicIp.Scope)),
+					"assignedEntityType": llx.StringData(string(publicIp.AssignedEntityType)),
+					"assignedEntityId":   llx.StringDataPtr(publicIp.AssignedEntityId),
+					"availabilityDomain": llx.StringDataPtr(publicIp.AvailabilityDomain),
+					"state":              llx.StringData(string(publicIp.LifecycleState)),
+					"created":            llx.TimeDataPtr(created),
+				})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlInstance)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (o *mqlOciNetworkPublicIp) id() (string, error) {
+	return "oci.network.publicIp/" + o.Id.Data, nil
+}

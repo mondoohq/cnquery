@@ -103,12 +103,21 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					definedTags[k] = v
 				}
 
+				ipAddresses := make([]any, 0, len(lb.IpAddresses))
+				for _, ip := range lb.IpAddresses {
+					ipAddresses = append(ipAddresses, map[string]any{
+						"ipAddress": stringValue(ip.IpAddress),
+						"isPublic":  boolValue(ip.IsPublic),
+					})
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
 					"id":                        llx.StringDataPtr(lb.Id),
 					"name":                      llx.StringDataPtr(lb.DisplayName),
 					"compartmentID":             llx.StringDataPtr(lb.CompartmentId),
 					"shape":                     llx.StringDataPtr(lb.ShapeName),
 					"isPrivate":                 llx.BoolDataPtr(lb.IsPrivate),
+					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),

@@ -42,6 +42,7 @@ const (
 	ResourceOciComputeBlockVolume                                    string = "oci.compute.blockVolume"
 	ResourceOciComputeBootVolume                                     string = "oci.compute.bootVolume"
 	ResourceOciNetwork                                               string = "oci.network"
+	ResourceOciNetworkPublicIp                                       string = "oci.network.publicIp"
 	ResourceOciNetworkVcn                                            string = "oci.network.vcn"
 	ResourceOciNetworkSubnet                                         string = "oci.network.subnet"
 	ResourceOciNetworkSecurityList                                   string = "oci.network.securityList"
@@ -58,6 +59,7 @@ const (
 	ResourceOciKmsKeyVersion                                         string = "oci.kms.keyVersion"
 	ResourceOciObjectStorage                                         string = "oci.objectStorage"
 	ResourceOciObjectStorageBucket                                   string = "oci.objectStorage.bucket"
+	ResourceOciObjectStoragePreauthenticatedRequest                  string = "oci.objectStorage.preauthenticatedRequest"
 	ResourceOciObjectStorageRetentionRule                            string = "oci.objectStorage.retentionRule"
 	ResourceOciFileStorage                                           string = "oci.fileStorage"
 	ResourceOciFileStorageFileSystem                                 string = "oci.fileStorage.fileSystem"
@@ -246,6 +248,10 @@ func init() {
 			// to override args, implement: initOciNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetwork,
 		},
+		"oci.network.publicIp": {
+			// to override args, implement: initOciNetworkPublicIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkPublicIp,
+		},
 		"oci.network.vcn": {
 			Init:   initOciNetworkVcn,
 			Create: createOciNetworkVcn,
@@ -309,6 +315,10 @@ func init() {
 		"oci.objectStorage.bucket": {
 			Init:   initOciObjectStorageBucket,
 			Create: createOciObjectStorageBucket,
+		},
+		"oci.objectStorage.preauthenticatedRequest": {
+			// to override args, implement: initOciObjectStoragePreauthenticatedRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciObjectStoragePreauthenticatedRequest,
 		},
 		"oci.objectStorage.retentionRule": {
 			// to override args, implement: initOciObjectStorageRetentionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1389,6 +1399,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetwork).GetRouteTables()).ToDataRes(types.Array(types.Resource("oci.network.routeTable")))
 	},
+	"oci.network.publicIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetPublicIps()).ToDataRes(types.Array(types.Resource("oci.network.publicIp")))
+	},
+	"oci.network.publicIp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetIpAddress()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.lifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetLifetime()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetScope()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.assignedEntityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetAssignedEntityType()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.assignedEntityId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetAssignedEntityId()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.availabilityDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetAvailabilityDomain()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.publicIp.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkPublicIp).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.network.vcn.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkVcn).GetId()).ToDataRes(types.String)
 	},
@@ -1875,6 +1921,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.objectStorage.bucket.retentionRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageBucket).GetRetentionRules()).ToDataRes(types.Array(types.Resource("oci.objectStorage.retentionRule")))
 	},
+	"oci.objectStorage.bucket.preauthenticatedRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStorageBucket).GetPreauthenticatedRequests()).ToDataRes(types.Array(types.Resource("oci.objectStorage.preauthenticatedRequest")))
+	},
+	"oci.objectStorage.preauthenticatedRequest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetId()).ToDataRes(types.String)
+	},
+	"oci.objectStorage.preauthenticatedRequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetName()).ToDataRes(types.String)
+	},
+	"oci.objectStorage.preauthenticatedRequest.accessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetAccessType()).ToDataRes(types.String)
+	},
+	"oci.objectStorage.preauthenticatedRequest.objectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetObjectName()).ToDataRes(types.String)
+	},
+	"oci.objectStorage.preauthenticatedRequest.bucketListingAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetBucketListingAction()).ToDataRes(types.String)
+	},
+	"oci.objectStorage.preauthenticatedRequest.timeExpires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetTimeExpires()).ToDataRes(types.Time)
+	},
+	"oci.objectStorage.preauthenticatedRequest.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciObjectStoragePreauthenticatedRequest).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.objectStorage.retentionRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciObjectStorageRetentionRule).GetId()).ToDataRes(types.String)
 	},
@@ -2330,6 +2400,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.loadBalancer.isPrivate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetIsPrivate()).ToDataRes(types.Bool)
+	},
+	"oci.loadBalancer.loadBalancer.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetIpAddresses()).ToDataRes(types.Array(types.Dict))
 	},
 	"oci.loadBalancer.loadBalancer.isDeleteProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetIsDeleteProtectionEnabled()).ToDataRes(types.Bool)
@@ -3080,6 +3153,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.database.autonomousDatabase.connectionUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetConnectionUrls()).ToDataRes(types.Dict)
+	},
+	"oci.database.autonomousDatabase.publicConnectionUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetPublicConnectionUrls()).ToDataRes(types.Dict)
 	},
 	"oci.database.autonomousDatabase.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetState()).ToDataRes(types.String)
@@ -5247,6 +5323,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetwork).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.publicIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).PublicIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.publicIp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.lifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).Lifetime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.assignedEntityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).AssignedEntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.assignedEntityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).AssignedEntityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.availabilityDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).AvailabilityDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.publicIp.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkPublicIp).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.network.vcn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkVcn).__id, ok = v.Value.(string)
 		return
@@ -5959,6 +6087,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciObjectStorageBucket).RetentionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.objectStorage.bucket.preauthenticatedRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStorageBucket).PreauthenticatedRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.objectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).ObjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.bucketListingAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).BucketListingAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.timeExpires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).TimeExpires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.objectStorage.preauthenticatedRequest.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciObjectStoragePreauthenticatedRequest).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.objectStorage.retentionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciObjectStorageRetentionRule).__id, ok = v.Value.(string)
 		return
@@ -6661,6 +6825,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.loadBalancer.isPrivate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).IsPrivate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.loadBalancer.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.loadBalancer.isDeleteProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7749,6 +7917,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.autonomousDatabase.connectionUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).ConnectionUrls, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.publicConnectionUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).PublicConnectionUrls, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12070,6 +12242,7 @@ type mqlOciNetwork struct {
 	InternetGateways      plugin.TValue[[]any]
 	NatGateways           plugin.TValue[[]any]
 	RouteTables           plugin.TValue[[]any]
+	PublicIps             plugin.TValue[[]any]
 }
 
 // createOciNetwork creates a new instance of this resource
@@ -12219,6 +12392,121 @@ func (c *mqlOciNetwork) GetRouteTables() *plugin.TValue[[]any] {
 
 		return c.routeTables()
 	})
+}
+
+func (c *mqlOciNetwork) GetPublicIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "publicIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publicIps()
+	})
+}
+
+// mqlOciNetworkPublicIp for the oci.network.publicIp resource
+type mqlOciNetworkPublicIp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkPublicIpInternal it will be used here
+	Id                 plugin.TValue[string]
+	IpAddress          plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	Lifetime           plugin.TValue[string]
+	Scope              plugin.TValue[string]
+	AssignedEntityType plugin.TValue[string]
+	AssignedEntityId   plugin.TValue[string]
+	AvailabilityDomain plugin.TValue[string]
+	State              plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+}
+
+// createOciNetworkPublicIp creates a new instance of this resource
+func createOciNetworkPublicIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkPublicIp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.publicIp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkPublicIp) MqlName() string {
+	return "oci.network.publicIp"
+}
+
+func (c *mqlOciNetworkPublicIp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkPublicIp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkPublicIp) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlOciNetworkPublicIp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkPublicIp) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkPublicIp) GetLifetime() *plugin.TValue[string] {
+	return &c.Lifetime
+}
+
+func (c *mqlOciNetworkPublicIp) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlOciNetworkPublicIp) GetAssignedEntityType() *plugin.TValue[string] {
+	return &c.AssignedEntityType
+}
+
+func (c *mqlOciNetworkPublicIp) GetAssignedEntityId() *plugin.TValue[string] {
+	return &c.AssignedEntityId
+}
+
+func (c *mqlOciNetworkPublicIp) GetAvailabilityDomain() *plugin.TValue[string] {
+	return &c.AvailabilityDomain
+}
+
+func (c *mqlOciNetworkPublicIp) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkPublicIp) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlOciNetworkVcn for the oci.network.vcn resource
@@ -13910,6 +14198,7 @@ type mqlOciObjectStorageBucket struct {
 	FreeformTags              plugin.TValue[map[string]any]
 	DefinedTags               plugin.TValue[map[string]any]
 	RetentionRules            plugin.TValue[[]any]
+	PreauthenticatedRequests  plugin.TValue[[]any]
 }
 
 // createOciObjectStorageBucket creates a new instance of this resource
@@ -14071,6 +14360,101 @@ func (c *mqlOciObjectStorageBucket) GetRetentionRules() *plugin.TValue[[]any] {
 
 		return c.retentionRules()
 	})
+}
+
+func (c *mqlOciObjectStorageBucket) GetPreauthenticatedRequests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PreauthenticatedRequests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.objectStorage.bucket", c.__id, "preauthenticatedRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.preauthenticatedRequests()
+	})
+}
+
+// mqlOciObjectStoragePreauthenticatedRequest for the oci.objectStorage.preauthenticatedRequest resource
+type mqlOciObjectStoragePreauthenticatedRequest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciObjectStoragePreauthenticatedRequestInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	AccessType          plugin.TValue[string]
+	ObjectName          plugin.TValue[string]
+	BucketListingAction plugin.TValue[string]
+	TimeExpires         plugin.TValue[*time.Time]
+	Created             plugin.TValue[*time.Time]
+}
+
+// createOciObjectStoragePreauthenticatedRequest creates a new instance of this resource
+func createOciObjectStoragePreauthenticatedRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciObjectStoragePreauthenticatedRequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.objectStorage.preauthenticatedRequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) MqlName() string {
+	return "oci.objectStorage.preauthenticatedRequest"
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetAccessType() *plugin.TValue[string] {
+	return &c.AccessType
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetObjectName() *plugin.TValue[string] {
+	return &c.ObjectName
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetBucketListingAction() *plugin.TValue[string] {
+	return &c.BucketListingAction
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetTimeExpires() *plugin.TValue[*time.Time] {
+	return &c.TimeExpires
+}
+
+func (c *mqlOciObjectStoragePreauthenticatedRequest) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlOciObjectStorageRetentionRule for the oci.objectStorage.retentionRule resource
@@ -16182,6 +16566,7 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	CompartmentID             plugin.TValue[string]
 	Shape                     plugin.TValue[string]
 	IsPrivate                 plugin.TValue[bool]
+	IpAddresses               plugin.TValue[[]any]
 	IsDeleteProtectionEnabled plugin.TValue[bool]
 	State                     plugin.TValue[string]
 	Listeners                 plugin.TValue[[]any]
@@ -16246,6 +16631,10 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetShape() *plugin.TValue[string] {
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetIsPrivate() *plugin.TValue[bool] {
 	return &c.IsPrivate
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
 }
 
 func (c *mqlOciLoadBalancerLoadBalancer) GetIsDeleteProtectionEnabled() *plugin.TValue[bool] {
@@ -18740,6 +19129,7 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	PrivateEndpointIp        plugin.TValue[string]
 	PrivateEndpointLabel     plugin.TValue[string]
 	ConnectionUrls           plugin.TValue[any]
+	PublicConnectionUrls     plugin.TValue[any]
 	State                    plugin.TValue[string]
 	Created                  plugin.TValue[*time.Time]
 	FreeformTags             plugin.TValue[map[string]any]
@@ -18954,6 +19344,10 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetPrivateEndpointLabel() *plugin.TVa
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetConnectionUrls() *plugin.TValue[any] {
 	return &c.ConnectionUrls
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetPublicConnectionUrls() *plugin.TValue[any] {
+	return &c.PublicConnectionUrls
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetState() *plugin.TValue[string] {
