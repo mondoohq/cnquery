@@ -24,6 +24,8 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProjectKmsService) id() (string, error) {
@@ -631,24 +633,12 @@ func (g *mqlGcpProjectKmsServiceKeyring) iamPolicy() ([]any, error) {
 
 	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: keyring})
 	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
 		return nil, err
 	}
-	res := make([]any, 0, len(policy.Bindings))
-	for i, b := range policy.Bindings {
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":                   llx.StringData(keyring + "-" + strconv.Itoa(i)),
-			"role":                 llx.StringData(b.Role),
-			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
-			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),
-			"conditionExpression":  llx.StringData(b.GetCondition().GetExpression()),
-			"conditionDescription": llx.StringData(b.GetCondition().GetDescription()),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
-	}
-	return res, nil
+	return iampbBindingsToMql(g.MqlRuntime, keyring, policy.Bindings)
 }
 
 func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (plugin.Resource, error) {

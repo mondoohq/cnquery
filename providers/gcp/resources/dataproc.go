@@ -733,8 +733,17 @@ func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	res := make([]any, 0, len(policy.Bindings))
-	for i, b := range policy.Bindings {
+	return dataprocBindingsToMql(g.MqlRuntime, resource, policy.Bindings)
+}
+
+// dataprocBindingsToMql converts the dataproc REST client's IAM policy bindings
+// into gcp.resourcemanager.binding resources, preserving IAM conditions. It
+// mirrors iampbBindingsToMql, but for the REST *dataproc.Binding type, whose
+// condition lives in a different struct than the protobuf bindings used by the
+// gRPC-based accessors elsewhere in this provider.
+func dataprocBindingsToMql(runtime *plugin.Runtime, resource string, bindings []*dataproc.Binding) ([]any, error) {
+	res := make([]any, 0, len(bindings))
+	for i, b := range bindings {
 		conditionTitle := ""
 		conditionExpression := ""
 		conditionDescription := ""
@@ -743,7 +752,7 @@ func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
 			conditionExpression = b.Condition.Expression
 			conditionDescription = b.Condition.Description
 		}
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
 			"id":                   llx.StringData(resource + "-" + strconv.Itoa(i)),
 			"role":                 llx.StringData(b.Role),
 			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
