@@ -36,6 +36,7 @@ digitalocean.app.spec 13.0.1
 digitalocean.app.updatedAt 13.0.1
 digitalocean.apps 13.0.1
 digitalocean.cdn 13.0.1
+digitalocean.cdn.certificate 13.4.2
 digitalocean.cdn.certificateId 13.0.1
 digitalocean.cdn.createdAt 13.0.1
 digitalocean.cdn.customDomain 13.0.1
@@ -57,6 +58,7 @@ digitalocean.certificates 13.0.1
 digitalocean.database 13.0.1
 digitalocean.database.backup 13.2.1
 digitalocean.database.backup.createdAt 13.2.1
+digitalocean.database.backup.database 13.4.2
 digitalocean.database.backup.databaseId 13.2.1
 digitalocean.database.backup.sizeGigabytes 13.2.1
 digitalocean.database.backupCount 13.2.1
@@ -76,6 +78,7 @@ digitalocean.database.name 13.0.1
 digitalocean.database.numNodes 13.0.1
 digitalocean.database.pool 13.0.1
 digitalocean.database.pool.database 13.0.1
+digitalocean.database.pool.databaseCluster 13.4.2
 digitalocean.database.pool.databaseId 13.0.1
 digitalocean.database.pool.mode 13.0.1
 digitalocean.database.pool.name 13.0.1
@@ -89,6 +92,7 @@ digitalocean.database.projectId 13.1.7
 digitalocean.database.region 13.0.1
 digitalocean.database.replica 13.0.1
 digitalocean.database.replica.createdAt 13.0.1
+digitalocean.database.replica.database 13.4.2
 digitalocean.database.replica.databaseId 13.0.1
 digitalocean.database.replica.name 13.0.1
 digitalocean.database.replica.region 13.0.1
@@ -101,6 +105,7 @@ digitalocean.database.status 13.0.1
 digitalocean.database.storageSizeMib 13.1.7
 digitalocean.database.tags 13.0.1
 digitalocean.database.user 13.0.1
+digitalocean.database.user.database 13.4.2
 digitalocean.database.user.databaseId 13.0.1
 digitalocean.database.user.name 13.0.1
 digitalocean.database.user.role 13.0.1
@@ -483,6 +488,7 @@ digitalocean.kubernetes.cluster.vpc 13.0.2
 digitalocean.kubernetes.cluster.vpcUuid 13.0.1
 digitalocean.kubernetes.nodePool 13.0.1
 digitalocean.kubernetes.nodePool.autoScale 13.0.1
+digitalocean.kubernetes.nodePool.cluster 13.4.2
 digitalocean.kubernetes.nodePool.clusterId 13.0.1
 digitalocean.kubernetes.nodePool.count 13.0.1
 digitalocean.kubernetes.nodePool.id 13.0.1
@@ -586,9 +592,11 @@ digitalocean.registryRepositories 13.0.1
 digitalocean.reservedIPs 13.0.1
 digitalocean.reservedIPv6s 13.4.2
 digitalocean.reservedIp 13.0.1
+digitalocean.reservedIp.droplet 13.4.2
 digitalocean.reservedIp.dropletId 13.0.1
 digitalocean.reservedIp.ip 13.0.1
 digitalocean.reservedIp.locked 13.0.1
+digitalocean.reservedIp.project 13.4.2
 digitalocean.reservedIp.projectId 13.0.1
 digitalocean.reservedIp.region 13.0.1
 digitalocean.reservedIpV6 13.4.2
@@ -673,6 +681,7 @@ digitalocean.vectorDatabase.backup.backupId 13.4.2
 digitalocean.vectorDatabase.backup.completedAt 13.4.2
 digitalocean.vectorDatabase.backup.startedAt 13.4.2
 digitalocean.vectorDatabase.backup.status 13.4.2
+digitalocean.vectorDatabase.backup.vectorDatabase 13.4.2
 digitalocean.vectorDatabase.backup.vectorDatabaseId 13.4.2
 digitalocean.vectorDatabase.backups 13.4.2
 digitalocean.vectorDatabase.createdAt 13.4.2
@@ -735,5 +744,6 @@ digitalocean.vpcPeering.id 13.0.1
 digitalocean.vpcPeering.name 13.0.1
 digitalocean.vpcPeering.status 13.0.1
 digitalocean.vpcPeering.vpcIds 13.0.1
+digitalocean.vpcPeering.vpcs 13.4.2
 digitalocean.vpcPeerings 13.0.1
 digitalocean.vpcs 13.0.1

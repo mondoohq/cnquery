@@ -34,6 +34,18 @@ type mqlDigitaloceanInternal struct {
 	databaseIndex     map[string]*mqlDigitaloceanDatabase
 	databaseIndexErr  error
 
+	vectorDatabaseIndexOnce sync.Once
+	vectorDatabaseIndex     map[string]*mqlDigitaloceanVectorDatabase
+	vectorDatabaseIndexErr  error
+
+	certificateIndexOnce sync.Once
+	certificateIndex     map[string]*mqlDigitaloceanCertificate
+	certificateIndexErr  error
+
+	k8sClusterIndexOnce sync.Once
+	k8sClusterIndex     map[string]*mqlDigitaloceanKubernetesCluster
+	k8sClusterIndexErr  error
+
 	firewallIndexOnce sync.Once
 	firewallByDroplet map[int64][]*mqlDigitaloceanFirewall
 	firewallByTag     map[string][]*mqlDigitaloceanFirewall
@@ -106,6 +118,66 @@ func (r *mqlDigitalocean) databaseByID(id string) (*mqlDigitaloceanDatabase, err
 		return nil, r.databaseIndexErr
 	}
 	return r.databaseIndex[id], nil
+}
+
+func (r *mqlDigitalocean) vectorDatabaseByID(id string) (*mqlDigitaloceanVectorDatabase, error) {
+	r.vectorDatabaseIndexOnce.Do(func() {
+		vdbs := r.GetVectorDatabases()
+		if vdbs.Error != nil {
+			r.vectorDatabaseIndexErr = vdbs.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanVectorDatabase, len(vdbs.Data))
+		for _, v := range vdbs.Data {
+			mv := v.(*mqlDigitaloceanVectorDatabase)
+			idx[mv.Id.Data] = mv
+		}
+		r.vectorDatabaseIndex = idx
+	})
+	if r.vectorDatabaseIndexErr != nil {
+		return nil, r.vectorDatabaseIndexErr
+	}
+	return r.vectorDatabaseIndex[id], nil
+}
+
+func (r *mqlDigitalocean) certificateByID(id string) (*mqlDigitaloceanCertificate, error) {
+	r.certificateIndexOnce.Do(func() {
+		certs := r.GetCertificates()
+		if certs.Error != nil {
+			r.certificateIndexErr = certs.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanCertificate, len(certs.Data))
+		for _, c := range certs.Data {
+			mc := c.(*mqlDigitaloceanCertificate)
+			idx[mc.Id.Data] = mc
+		}
+		r.certificateIndex = idx
+	})
+	if r.certificateIndexErr != nil {
+		return nil, r.certificateIndexErr
+	}
+	return r.certificateIndex[id], nil
+}
+
+func (r *mqlDigitalocean) kubernetesClusterByID(id string) (*mqlDigitaloceanKubernetesCluster, error) {
+	r.k8sClusterIndexOnce.Do(func() {
+		clusters := r.GetKubernetesClusters()
+		if clusters.Error != nil {
+			r.k8sClusterIndexErr = clusters.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanKubernetesCluster, len(clusters.Data))
+		for _, c := range clusters.Data {
+			mc := c.(*mqlDigitaloceanKubernetesCluster)
+			idx[mc.Id.Data] = mc
+		}
+		r.k8sClusterIndex = idx
+	})
+	if r.k8sClusterIndexErr != nil {
+		return nil, r.k8sClusterIndexErr
+	}
+	return r.k8sClusterIndex[id], nil
 }
 
 func (r *mqlDigitalocean) dropletByIDs(ids []any) ([]any, error) {
