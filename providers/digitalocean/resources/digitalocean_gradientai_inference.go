@@ -265,25 +265,36 @@ func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) accelerators() ([]
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	accelerators, _, err := client.DedicatedInference.ListAccelerators(context.Background(), r.Id.Data, nil)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]interface{}, 0, len(accelerators))
-	for i := range accelerators {
-		a := accelerators[i]
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator", map[string]*llx.RawData{
-			"__id":      llx.StringData(r.Id.Data + "/" + a.ID),
-			"id":        llx.StringData(a.ID),
-			"name":      llx.StringData(a.Name),
-			"slug":      llx.StringData(a.Slug),
-			"status":    llx.StringData(a.Status),
-			"createdAt": llx.TimeData(a.CreatedAt),
-		})
+	var out []interface{}
+	opt := &godo.DedicatedInferenceListAcceleratorsOptions{ListOptions: godo.ListOptions{PerPage: 200}}
+	for {
+		accelerators, resp, err := client.DedicatedInference.ListAccelerators(context.Background(), r.Id.Data, opt)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		for i := range accelerators {
+			a := accelerators[i]
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator", map[string]*llx.RawData{
+				"__id":      llx.StringData(r.Id.Data + "/" + a.ID),
+				"id":        llx.StringData(a.ID),
+				"name":      llx.StringData(a.Name),
+				"slug":      llx.StringData(a.Slug),
+				"status":    llx.StringData(a.Status),
+				"createdAt": llx.TimeData(a.CreatedAt),
+			})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+		}
+		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return nil, err
+		}
+		opt.Page = page + 1
 	}
 	return out, nil
 }
@@ -332,44 +343,52 @@ func (r *mqlDigitaloceanGradientai) batchJobs() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	resp, _, err := client.BatchInference.ListJobs(context.Background(), nil)
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return []interface{}{}, nil
-	}
-
 	var all []interface{}
-	for i := range resp.Edges {
-		b := resp.Edges[i].Node
-		counts := map[string]interface{}{}
-		if b.RequestCounts != nil {
-			counts = map[string]interface{}{
-				"total":     int64(b.RequestCounts.Total),
-				"completed": int64(b.RequestCounts.Completed),
-				"failed":    int64(b.RequestCounts.Failed),
-			}
-		}
-		res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.batchJob", map[string]*llx.RawData{
-			"__id":              llx.StringData(b.BatchID),
-			"batchId":           llx.StringData(b.BatchID),
-			"provider":          llx.StringData(b.Provider),
-			"fileId":            llx.StringData(b.FileID),
-			"completionWindow":  llx.StringData(b.CompletionWindow),
-			"status":            llx.StringData(b.Status),
-			"requestId":         llx.StringData(b.RequestID),
-			"resultAvailable":   llx.BoolData(b.ResultAvailable),
-			"requestCounts":     llx.DictData(counts),
-			"cancelRequestedAt": llx.TimeDataPtr(parseBatchTime(b.CancelRequestedAt)),
-			"createdAt":         llx.TimeDataPtr(parseBatchTimeStr(b.CreatedAt)),
-			"updatedAt":         llx.TimeDataPtr(parseBatchTimeStr(b.UpdatedAt)),
-			"expiresAt":         llx.TimeDataPtr(parseBatchTime(b.ExpiresAt)),
-		})
+	// Batch jobs use cursor pagination: advance `After` with the response's
+	// EndCursor until HasNextPage is false.
+	opts := &godo.ListBatchesOptions{Limit: 200}
+	for {
+		resp, _, err := client.BatchInference.ListJobs(context.Background(), opts)
 		if err != nil {
 			return nil, err
 		}
-		all = append(all, res)
+		if resp == nil {
+			break
+		}
+		for i := range resp.Edges {
+			b := resp.Edges[i].Node
+			counts := map[string]interface{}{}
+			if b.RequestCounts != nil {
+				counts = map[string]interface{}{
+					"total":     int64(b.RequestCounts.Total),
+					"completed": int64(b.RequestCounts.Completed),
+					"failed":    int64(b.RequestCounts.Failed),
+				}
+			}
+			res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.batchJob", map[string]*llx.RawData{
+				"__id":              llx.StringData(b.BatchID),
+				"batchId":           llx.StringData(b.BatchID),
+				"provider":          llx.StringData(b.Provider),
+				"fileId":            llx.StringData(b.FileID),
+				"completionWindow":  llx.StringData(b.CompletionWindow),
+				"status":            llx.StringData(b.Status),
+				"requestId":         llx.StringData(b.RequestID),
+				"resultAvailable":   llx.BoolData(b.ResultAvailable),
+				"requestCounts":     llx.DictData(counts),
+				"cancelRequestedAt": llx.TimeDataPtr(parseBatchTime(b.CancelRequestedAt)),
+				"createdAt":         llx.TimeDataPtr(parseBatchTimeStr(b.CreatedAt)),
+				"updatedAt":         llx.TimeDataPtr(parseBatchTimeStr(b.UpdatedAt)),
+				"expiresAt":         llx.TimeDataPtr(parseBatchTime(b.ExpiresAt)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+		if !resp.PageInfo.HasNextPage || resp.PageInfo.EndCursor == "" {
+			break
+		}
+		opts.After = resp.PageInfo.EndCursor
 	}
 	return all, nil
 }

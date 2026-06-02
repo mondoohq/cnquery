@@ -154,7 +154,9 @@ func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			all = append(all, res)
+			if res != nil {
+				all = append(all, res)
+			}
 		}
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
 			break
@@ -168,6 +170,10 @@ func (r *mqlDigitaloceanGradientai) agents() ([]interface{}, error) {
 	return all, nil
 }
 
+// newMqlGradientaiAgent builds an agent resource from a godo Agent. It
+// returns (nil, nil) for a nil input; every caller iterates a list and
+// skips nil results, so it is never used as a single-resource accessor
+// that would need StateIsNull bookkeeping.
 func newMqlGradientaiAgent(runtime *plugin.Runtime, a *godo.Agent) (*mqlDigitaloceanGradientaiAgent, error) {
 	if a == nil {
 		return nil, nil
