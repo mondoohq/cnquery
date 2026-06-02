@@ -12619,13 +12619,85 @@ private aws.route53.resolver.firewallRuleGroup @defaults("id name ruleCount stat
   modificationTime string
   // Caller-supplied request id used to create the rule group
   creatorRequestId string
-  // Ordered list of rules in the group
+  // Ordered list of rules in the group as raw dicts
   //
-  // Each entry has `name`, `priority`, `action`
-  // (`ALLOW`/`BLOCK`/`ALERT`), `blockResponse`, `blockOverrideDomain`,
-  // `blockOverrideDnsType`, `blockOverrideTtl`, `firewallDomainListId`,
-  // `qtype`, `creationTime`, and `modificationTime`.
-  rules() []dict
+  // Deprecated in favor of `firewallRules`, which returns typed
+  // `aws.route53.resolver.firewallRule` resources that also expose the
+  // rule classification (`firewallRuleType`), DNS threat protection
+  // settings, and a `firewallDomainList()` reference. Each dict entry has
+  // `name`, `priority`, `action` (`ALLOW`/`BLOCK`/`ALERT`),
+  // `blockResponse`, `blockOverrideDomain`, `blockOverrideDnsType`,
+  // `blockOverrideTtl`, `firewallDomainListId`, `qtype`, `creationTime`,
+  // and `modificationTime`.
+  rules() @maturity("deprecated") []dict
+  // Ordered list of rules in the group
+  firewallRules() []aws.route53.resolver.firewallRule
+}
+
+// Route 53 Resolver DNS Firewall rule
+//
+// Examine a single rule within a DNS Firewall rule group. `action`
+// decides what happens to a matching DNS query — `ALLOW` lets it through,
+// `BLOCK` stops resolution, and `ALERT` permits it while recording a
+// finding. `priority` sets evaluation order within the group (lower runs
+// first). A rule matches either a domain list — reachable through
+// `firewallDomainList()` — or, for managed threat rules, AWS DNS threat
+// protection (`dnsThreatProtection`, `confidenceThreshold`). `BLOCK`
+// rules carry `blockResponse` and the `blockOverride*` fields.
+private aws.route53.resolver.firewallRule @defaults("name priority action") {
+  // Name of the rule
+  name string
+  // ID of the rule group this rule belongs to
+  firewallRuleGroupId string
+  // Evaluation priority within the rule group (lower values run first)
+  priority int
+  // Action taken on a matching query: ALLOW, BLOCK, or ALERT
+  action string
+  // Response for BLOCK rules
+  //
+  // One of `NODATA`, `NXDOMAIN`, or `OVERRIDE`.
+  blockResponse string
+  // Custom domain returned when blockResponse is OVERRIDE
+  blockOverrideDomain string
+  // DNS record type for the override response (CNAME)
+  blockOverrideDnsType string
+  // TTL for the override response, in seconds
+  blockOverrideTtl int
+  // ID of the domain list this rule matches against
+  firewallDomainListId string
+  // Domain list this rule matches against
+  firewallDomainList() aws.route53.resolver.firewallDomainList
+  // How matched domains are redirected during resolution
+  //
+  // One of `INSPECT_REDIRECTION_DOMAIN` or `TRUST_REDIRECTION_DOMAIN`.
+  firewallDomainRedirectionAction string
+  // DNS query type the rule applies to (e.g., A, AAAA, or empty for all)
+  qtype string
+  // Advanced DNS Firewall rule type for threat detection
+  //
+  // One of `DGA` (domain generation algorithm detection), `DNS_TUNNELING`,
+  // or empty for non-advanced rules.
+  dnsThreatProtection string
+  // Confidence threshold for advanced threat detection
+  //
+  // One of `LOW`, `MEDIUM`, or `HIGH`; empty for non-advanced rules.
+  confidenceThreshold string
+  // Advanced rule-type configuration
+  //
+  // Present for advanced and threat-protection rules; exactly one of the
+  // following keys is populated. `dnsThreatProtection`:
+  // `{confidenceThreshold, value}` where value is `DGA` or `DNS_TUNNELING`.
+  // `firewallAdvancedContentCategory`: `{category}`.
+  // `firewallAdvancedThreatCategory`: `{category}`.
+  firewallRuleType dict
+  // ID of the threat protection configuration backing a threat-protection rule
+  firewallThreatProtectionId string
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+  // Caller-supplied request id used to create the rule
+  creatorRequestId string
 }
 
 // Route 53 Resolver DNS Firewall rule group association
@@ -12692,6 +12764,15 @@ private aws.route53.resolver.firewallDomainList @defaults("id name domainCount s
   region string
   // Number of domains in the list
   domainCount int
+  // Domain names in the list
+  domains() []string
+  // Category of the domain list (e.g., AWS_MANAGED or empty for customer-managed lists)
+  category string
+  // Managed-list type for AWS-managed lists
+  //
+  // One of `AWS_MANAGED_DOMAIN_LIST`, `ACCOUNT_MANAGED_DOMAIN_LIST`, or
+  // empty for customer-managed lists.
+  managedListType string
   // Domain list status
   status string
   // Status message returned by the Route 53 Resolver API

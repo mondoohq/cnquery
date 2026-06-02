@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.29.0",
-  "generated_at": "2026-05-28T22:36:52-07:00",
+  "version": "13.30.0",
+  "generated_at": "2026-06-01T17:18:27-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -642,6 +642,7 @@
     "route53resolver:GetFirewallRuleGroup",
     "route53resolver:ListFirewallConfigs",
     "route53resolver:ListFirewallDomainLists",
+    "route53resolver:ListFirewallDomains",
     "route53resolver:ListFirewallRuleGroupAssociations",
     "route53resolver:ListFirewallRuleGroups",
     "route53resolver:ListFirewallRules",
@@ -4871,6 +4872,12 @@
       "permission": "route53resolver:ListFirewallDomainLists",
       "service": "route53resolver",
       "action": "ListFirewallDomainLists",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallDomains",
+      "service": "route53resolver",
+      "action": "ListFirewallDomains",
       "source_file": "aws_route53_resolver.go"
     },
     {

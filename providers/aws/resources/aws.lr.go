@@ -491,6 +491,7 @@ const (
 	ResourceAwsRoute53ResolverQueryLogConfig                                    string = "aws.route53.resolver.queryLogConfig"
 	ResourceAwsRoute53ResolverQueryLogConfigAssociation                         string = "aws.route53.resolver.queryLogConfigAssociation"
 	ResourceAwsRoute53ResolverFirewallRuleGroup                                 string = "aws.route53.resolver.firewallRuleGroup"
+	ResourceAwsRoute53ResolverFirewallRule                                      string = "aws.route53.resolver.firewallRule"
 	ResourceAwsRoute53ResolverFirewallRuleGroupAssociation                      string = "aws.route53.resolver.firewallRuleGroupAssociation"
 	ResourceAwsRoute53ResolverFirewallDomainList                                string = "aws.route53.resolver.firewallDomainList"
 	ResourceAwsRoute53ResolverFirewallConfig                                    string = "aws.route53.resolver.firewallConfig"
@@ -2786,6 +2787,10 @@ func init() {
 		"aws.route53.resolver.firewallRuleGroup": {
 			Init:   initAwsRoute53ResolverFirewallRuleGroup,
 			Create: createAwsRoute53ResolverFirewallRuleGroup,
+		},
+		"aws.route53.resolver.firewallRule": {
+			// to override args, implement: initAwsRoute53ResolverFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverFirewallRule,
 		},
 		"aws.route53.resolver.firewallRuleGroupAssociation": {
 			// to override args, implement: initAwsRoute53ResolverFirewallRuleGroupAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18398,6 +18403,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.resolver.firewallRuleGroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.route53.resolver.firewallRuleGroup.firewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetFirewallRules()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.firewallRule")))
+	},
+	"aws.route53.resolver.firewallRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.firewallRuleGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallRuleGroupId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetAction()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.blockResponse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetBlockResponse()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetBlockOverrideDomain()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideDnsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetBlockOverrideDnsType()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetBlockOverrideTtl()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainListId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallDomainListId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallDomainList()).ToDataRes(types.Resource("aws.route53.resolver.firewallDomainList"))
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainRedirectionAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallDomainRedirectionAction()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.qtype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetQtype()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.dnsThreatProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetDnsThreatProtection()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.confidenceThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetConfidenceThreshold()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.firewallRuleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallRuleType()).ToDataRes(types.Dict)
+	},
+	"aws.route53.resolver.firewallRule.firewallThreatProtectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetFirewallThreatProtectionId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRule.creatorRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRule).GetCreatorRequestId()).ToDataRes(types.String)
+	},
 	"aws.route53.resolver.firewallRuleGroupAssociation.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetId()).ToDataRes(types.String)
 	},
@@ -18460,6 +18525,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.route53.resolver.firewallDomainList.domainCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetDomainCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallDomainList.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetDomains()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.resolver.firewallDomainList.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetCategory()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.managedListType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetManagedListType()).ToDataRes(types.String)
 	},
 	"aws.route53.resolver.firewallDomainList.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetStatus()).ToDataRes(types.String)
@@ -51757,6 +51831,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.route53.resolver.firewallRuleGroup.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.firewallRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallRuleGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallRuleGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.blockResponse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).BlockResponse, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).BlockOverrideDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideDnsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).BlockOverrideDnsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.blockOverrideTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).BlockOverrideTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainListId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallDomainListId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallDomainList, ok = plugin.RawToTValue[*mqlAwsRoute53ResolverFirewallDomainList](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallDomainRedirectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallDomainRedirectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.qtype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).Qtype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.dnsThreatProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).DnsThreatProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.confidenceThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).ConfidenceThreshold, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallRuleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallRuleType, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.firewallThreatProtectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).FirewallThreatProtectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRule.creatorRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRule).CreatorRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.route53.resolver.firewallRuleGroupAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).__id, ok = v.Value.(string)
 		return
@@ -51847,6 +52005,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.resolver.firewallDomainList.domainCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53ResolverFirewallDomainList).DomainCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.managedListType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).ManagedListType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.route53.resolver.firewallDomainList.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -124502,6 +124672,7 @@ type mqlAwsRoute53ResolverFirewallRuleGroup struct {
 	ModificationTime plugin.TValue[string]
 	CreatorRequestId plugin.TValue[string]
 	Rules            plugin.TValue[[]any]
+	FirewallRules    plugin.TValue[[]any]
 }
 
 // createAwsRoute53ResolverFirewallRuleGroup creates a new instance of this resource
@@ -124593,6 +124764,168 @@ func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetRules() *plugin.TValue[[]any
 	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
 		return c.rules()
 	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetFirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.firewallRuleGroup", c.__id, "firewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRules()
+	})
+}
+
+// mqlAwsRoute53ResolverFirewallRule for the aws.route53.resolver.firewallRule resource
+type mqlAwsRoute53ResolverFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53ResolverFirewallRuleInternal
+	Name                            plugin.TValue[string]
+	FirewallRuleGroupId             plugin.TValue[string]
+	Priority                        plugin.TValue[int64]
+	Action                          plugin.TValue[string]
+	BlockResponse                   plugin.TValue[string]
+	BlockOverrideDomain             plugin.TValue[string]
+	BlockOverrideDnsType            plugin.TValue[string]
+	BlockOverrideTtl                plugin.TValue[int64]
+	FirewallDomainListId            plugin.TValue[string]
+	FirewallDomainList              plugin.TValue[*mqlAwsRoute53ResolverFirewallDomainList]
+	FirewallDomainRedirectionAction plugin.TValue[string]
+	Qtype                           plugin.TValue[string]
+	DnsThreatProtection             plugin.TValue[string]
+	ConfidenceThreshold             plugin.TValue[string]
+	FirewallRuleType                plugin.TValue[any]
+	FirewallThreatProtectionId      plugin.TValue[string]
+	CreationTime                    plugin.TValue[string]
+	ModificationTime                plugin.TValue[string]
+	CreatorRequestId                plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverFirewallRule creates a new instance of this resource
+func createAwsRoute53ResolverFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) MqlName() string {
+	return "aws.route53.resolver.firewallRule"
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallRuleGroupId() *plugin.TValue[string] {
+	return &c.FirewallRuleGroupId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetBlockResponse() *plugin.TValue[string] {
+	return &c.BlockResponse
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetBlockOverrideDomain() *plugin.TValue[string] {
+	return &c.BlockOverrideDomain
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetBlockOverrideDnsType() *plugin.TValue[string] {
+	return &c.BlockOverrideDnsType
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetBlockOverrideTtl() *plugin.TValue[int64] {
+	return &c.BlockOverrideTtl
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallDomainListId() *plugin.TValue[string] {
+	return &c.FirewallDomainListId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallDomainList() *plugin.TValue[*mqlAwsRoute53ResolverFirewallDomainList] {
+	return plugin.GetOrCompute[*mqlAwsRoute53ResolverFirewallDomainList](&c.FirewallDomainList, func() (*mqlAwsRoute53ResolverFirewallDomainList, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.firewallRule", c.__id, "firewallDomainList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53ResolverFirewallDomainList), nil
+			}
+		}
+
+		return c.firewallDomainList()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallDomainRedirectionAction() *plugin.TValue[string] {
+	return &c.FirewallDomainRedirectionAction
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetQtype() *plugin.TValue[string] {
+	return &c.Qtype
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetDnsThreatProtection() *plugin.TValue[string] {
+	return &c.DnsThreatProtection
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetConfidenceThreshold() *plugin.TValue[string] {
+	return &c.ConfidenceThreshold
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallRuleType() *plugin.TValue[any] {
+	return &c.FirewallRuleType
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetFirewallThreatProtectionId() *plugin.TValue[string] {
+	return &c.FirewallThreatProtectionId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRule) GetCreatorRequestId() *plugin.TValue[string] {
+	return &c.CreatorRequestId
 }
 
 // mqlAwsRoute53ResolverFirewallRuleGroupAssociation for the aws.route53.resolver.firewallRuleGroupAssociation resource
@@ -124753,6 +125086,9 @@ type mqlAwsRoute53ResolverFirewallDomainList struct {
 	Name             plugin.TValue[string]
 	Region           plugin.TValue[string]
 	DomainCount      plugin.TValue[int64]
+	Domains          plugin.TValue[[]any]
+	Category         plugin.TValue[string]
+	ManagedListType  plugin.TValue[string]
 	Status           plugin.TValue[string]
 	StatusMessage    plugin.TValue[string]
 	ManagedOwnerName plugin.TValue[string]
@@ -124816,6 +125152,20 @@ func (c *mqlAwsRoute53ResolverFirewallDomainList) GetRegion() *plugin.TValue[str
 
 func (c *mqlAwsRoute53ResolverFirewallDomainList) GetDomainCount() *plugin.TValue[int64] {
 	return &c.DomainCount
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		return c.domains()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetManagedListType() *plugin.TValue[string] {
+	return &c.ManagedListType
 }
 
 func (c *mqlAwsRoute53ResolverFirewallDomainList) GetStatus() *plugin.TValue[string] {

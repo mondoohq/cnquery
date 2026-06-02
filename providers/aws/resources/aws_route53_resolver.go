@@ -846,6 +846,114 @@ func (a *mqlAwsRoute53ResolverFirewallRuleGroup) rules() ([]any, error) {
 	return res, nil
 }
 
+type mqlAwsRoute53ResolverFirewallRuleInternal struct {
+	region string
+}
+
+func (a *mqlAwsRoute53ResolverFirewallRuleGroup) firewallRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Route53Resolver(a.region)
+	ctx := context.Background()
+	id := a.Id.Data
+
+	res := []any{}
+	paginator := route53resolver.NewListFirewallRulesPaginator(svc, &route53resolver.ListFirewallRulesInput{
+		FirewallRuleGroupId: &id,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for i := range page.FirewallRules {
+			mqlRule, err := newMqlAwsRoute53ResolverFirewallRule(a.MqlRuntime, a.region, &page.FirewallRules[i])
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsRoute53ResolverFirewallRule(runtime *plugin.Runtime, region string, rule *resolvertypes.FirewallRule) (*mqlAwsRoute53ResolverFirewallRule, error) {
+	groupID := convert.ToValue(rule.FirewallRuleGroupId)
+	// Priority is unique within a rule group, so it makes a stable key.
+	priority := int64(0)
+	if rule.Priority != nil {
+		priority = int64(*rule.Priority)
+	}
+	resource, err := CreateResource(runtime, "aws.route53.resolver.firewallRule", map[string]*llx.RawData{
+		"__id":                            llx.StringData(fmt.Sprintf("%s/%s/%d", region, groupID, priority)),
+		"name":                            llx.StringData(convert.ToValue(rule.Name)),
+		"firewallRuleGroupId":             llx.StringData(groupID),
+		"priority":                        llx.IntData(priority),
+		"action":                          llx.StringData(string(rule.Action)),
+		"blockResponse":                   llx.StringData(string(rule.BlockResponse)),
+		"blockOverrideDomain":             llx.StringData(convert.ToValue(rule.BlockOverrideDomain)),
+		"blockOverrideDnsType":            llx.StringData(string(rule.BlockOverrideDnsType)),
+		"blockOverrideTtl":                llx.IntData(int64(convert.ToValue(rule.BlockOverrideTtl))),
+		"firewallDomainListId":            llx.StringData(convert.ToValue(rule.FirewallDomainListId)),
+		"firewallDomainRedirectionAction": llx.StringData(string(rule.FirewallDomainRedirectionAction)),
+		"qtype":                           llx.StringData(convert.ToValue(rule.Qtype)),
+		"dnsThreatProtection":             llx.StringData(string(rule.DnsThreatProtection)),
+		"confidenceThreshold":             llx.StringData(string(rule.ConfidenceThreshold)),
+		"firewallRuleType":                llx.DictData(firewallRuleTypeToDict(rule.FirewallRuleType)),
+		"firewallThreatProtectionId":      llx.StringData(convert.ToValue(rule.FirewallThreatProtectionId)),
+		"creationTime":                    llx.StringData(convert.ToValue(rule.CreationTime)),
+		"modificationTime":                llx.StringData(convert.ToValue(rule.ModificationTime)),
+		"creatorRequestId":                llx.StringData(convert.ToValue(rule.CreatorRequestId)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlRule := resource.(*mqlAwsRoute53ResolverFirewallRule)
+	mqlRule.region = region
+	return mqlRule, nil
+}
+
+// firewallRuleTypeToDict flattens the FirewallRuleType union into a dict
+// keyed by the populated member. Returns nil when no member is set.
+func firewallRuleTypeToDict(rt *resolvertypes.FirewallRuleType) any {
+	if rt == nil {
+		return nil
+	}
+	out := map[string]any{}
+	if rt.DnsThreatProtection != nil {
+		out["dnsThreatProtection"] = map[string]any{
+			"confidenceThreshold": string(rt.DnsThreatProtection.ConfidenceThreshold),
+			"value":               convert.ToValue(rt.DnsThreatProtection.Value),
+		}
+	}
+	if rt.FirewallAdvancedContentCategory != nil {
+		out["firewallAdvancedContentCategory"] = map[string]any{
+			"category": convert.ToValue(rt.FirewallAdvancedContentCategory.Category),
+		}
+	}
+	if rt.FirewallAdvancedThreatCategory != nil {
+		out["firewallAdvancedThreatCategory"] = map[string]any{
+			"category": convert.ToValue(rt.FirewallAdvancedThreatCategory.Category),
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func (a *mqlAwsRoute53ResolverFirewallRule) firewallDomainList() (*mqlAwsRoute53ResolverFirewallDomainList, error) {
+	domainListID := a.FirewallDomainListId.Data
+	if domainListID == "" {
+		a.FirewallDomainList.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fetchAndCreateFirewallDomainList(a.MqlRuntime, conn, a.region, &resolvertypes.FirewallDomainListMetadata{Id: &domainListID})
+}
+
 // ----- DNS Firewall rule group associations -----
 
 func (a *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) id() (string, error) {
@@ -1052,6 +1160,8 @@ func newMqlAwsRoute53ResolverFirewallDomainListFromMeta(runtime *plugin.Runtime,
 		"name":             llx.StringData(convert.ToValue(meta.Name)),
 		"region":           llx.StringData(region),
 		"domainCount":      llx.IntData(0),
+		"category":         llx.StringData(convert.ToValue(meta.Category)),
+		"managedListType":  llx.StringData(string(meta.ManagedListType)),
 		"status":           llx.StringData(""),
 		"statusMessage":    llx.StringData(""),
 		"managedOwnerName": llx.StringData(convert.ToValue(meta.ManagedOwnerName)),
@@ -1078,6 +1188,8 @@ func newMqlAwsRoute53ResolverFirewallDomainList(runtime *plugin.Runtime, region 
 		"name":             llx.StringData(convert.ToValue(list.Name)),
 		"region":           llx.StringData(region),
 		"domainCount":      llx.IntData(domainCount),
+		"category":         llx.StringData(convert.ToValue(list.Category)),
+		"managedListType":  llx.StringData(string(list.ManagedListType)),
 		"status":           llx.StringData(string(list.Status)),
 		"statusMessage":    llx.StringData(convert.ToValue(list.StatusMessage)),
 		"managedOwnerName": llx.StringData(convert.ToValue(list.ManagedOwnerName)),
@@ -1089,6 +1201,31 @@ func newMqlAwsRoute53ResolverFirewallDomainList(runtime *plugin.Runtime, region 
 		return nil, err
 	}
 	return resource.(*mqlAwsRoute53ResolverFirewallDomainList), nil
+}
+
+func (a *mqlAwsRoute53ResolverFirewallDomainList) domains() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Route53Resolver(a.Region.Data)
+	ctx := context.Background()
+	id := a.Id.Data
+
+	res := []any{}
+	paginator := route53resolver.NewListFirewallDomainsPaginator(svc, &route53resolver.ListFirewallDomainsInput{
+		FirewallDomainListId: &id,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, domain := range page.Domains {
+			res = append(res, domain)
+		}
+	}
+	return res, nil
 }
 
 // ----- DNS Firewall configs -----
