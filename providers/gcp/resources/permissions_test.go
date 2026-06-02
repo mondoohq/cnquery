@@ -81,6 +81,7 @@ var validatedGCPPermissions = []string{
 	"clouddeploy.releases.list",
 	"clouddeploy.targets.list",
 	"cloudfunctions.functions.list",
+	"cloudfunctions.iamPolicy.get",
 	"cloudidentity.groups.list",
 	"cloudidentity.memberships.list",
 	"cloudkms.cryptoKeyVersions.list",
