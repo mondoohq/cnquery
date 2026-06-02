@@ -1536,7 +1536,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDigitaloceanNfs).GetVpcs()).ToDataRes(types.Array(types.Resource("digitalocean.vpc")))
 	},
 	"digitalocean.nfs.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDigitaloceanNfs).GetCreatedAt()).ToDataRes(types.String)
+		return (r.(*mqlDigitaloceanNfs).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.reservedIpV6.ip": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanReservedIpV6).GetIp()).ToDataRes(types.String)
@@ -3417,7 +3417,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"digitalocean.nfs.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDigitaloceanNfs).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlDigitaloceanNfs).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"digitalocean.reservedIpV6.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7948,7 +7948,7 @@ type mqlDigitaloceanNfs struct {
 	MountPath       plugin.TValue[string]
 	VpcIds          plugin.TValue[[]any]
 	Vpcs            plugin.TValue[[]any]
-	CreatedAt       plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
 }
 
 // createDigitaloceanNfs creates a new instance of this resource
@@ -8035,7 +8035,7 @@ func (c *mqlDigitaloceanNfs) GetVpcs() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlDigitaloceanNfs) GetCreatedAt() *plugin.TValue[string] {
+func (c *mqlDigitaloceanNfs) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 

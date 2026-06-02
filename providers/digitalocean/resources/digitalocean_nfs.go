@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
@@ -42,6 +43,11 @@ func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
 					vpcIDs[i] = v
 				}
 
+				var createdAt *time.Time
+				if t, perr := time.Parse(time.RFC3339, s.CreatedAt); perr == nil {
+					createdAt = &t
+				}
+
 				res, err := CreateResource(r.MqlRuntime, "digitalocean.nfs", map[string]*llx.RawData{
 					"id":              llx.StringData(s.ID),
 					"name":            llx.StringData(s.Name),
@@ -52,7 +58,7 @@ func (r *mqlDigitalocean) nfsShares() ([]interface{}, error) {
 					"host":            llx.StringData(s.Host),
 					"mountPath":       llx.StringData(s.MountPath),
 					"vpcIds":          llx.ArrayData(vpcIDs, "\x02"),
-					"createdAt":       llx.StringData(s.CreatedAt),
+					"createdAt":       llx.TimeDataPtr(createdAt),
 				})
 				if err != nil {
 					return nil, err

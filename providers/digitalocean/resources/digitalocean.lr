@@ -1258,7 +1258,7 @@ digitalocean.nfs @defaults("id name region status") {
   // VPCs the share is reachable from
   vpcs() []digitalocean.vpc
   // Time the share was created
-  createdAt string
+  createdAt time
 }
 
 // DigitalOcean reserved IPv6 address
