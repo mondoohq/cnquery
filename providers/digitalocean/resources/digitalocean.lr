@@ -26,7 +26,7 @@ digitalocean {
   firewalls() []digitalocean.firewall
   // Managed databases
   databases() []digitalocean.database
-  // Managed vector databases (Weaviate)
+  // Managed vector databases
   vectorDatabases() []digitalocean.vectorDatabase
   // Domains
   domains() []digitalocean.domain

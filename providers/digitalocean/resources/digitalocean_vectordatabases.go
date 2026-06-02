@@ -86,6 +86,9 @@ func (r *mqlDigitaloceanVectorDatabase) backups() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
+	// The vector DB backups endpoint is not paginated: ListBackups takes no
+	// ListOptions and the response carries no pagination links, so a single
+	// call returns the full set.
 	backups, _, err := client.VectorDBs.ListBackups(context.Background(), r.Id.Data)
 	if err != nil {
 		return nil, err
