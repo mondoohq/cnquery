@@ -201,6 +201,33 @@ jobs:
             gsutil -m cp -c dist/${pkg}_provider.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/provider.json
           done
 
+      - name: "Annotate Grafana"
+        if: ${{ ! inputs.skip_publish }}
+        # Non-blocking: a Grafana failure must never fail a provider release, but
+        # we still want the step to go red so a broken token/URL is visible.
+        continue-on-error: true
+        env:
+          GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+          GRAFANA_API_TOKEN: ${{ secrets.GRAFANA_API_TOKEN }}
+        run: |
+          # PROVIDER/VERSION are cut from goreleaser dist filenames
+          # (name_version_os_arch.ext): a lowercase-alnum provider name and a
+          # semver, so manual JSON is safe. We avoid jq here because this job
+          # runs on the self-hosted runner where jq isn't guaranteed.
+          fail=0
+          for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
+            PROVIDER=$(echo $pkg | cut -f1 -d_)
+            VERSION=$(echo $pkg | cut -f2 -d_)
+            echo "Annotating Grafana: $PROVIDER $VERSION"
+            payload="{\"text\":\"${PROVIDER} provider ${VERSION} released\",\"tags\":[\"release\",\"provider\",\"${PROVIDER}\"]}"
+            curl -sS --fail -X POST "${GRAFANA_URL%/}/api/annotations" \
+              -H "Authorization: Bearer ${GRAFANA_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$payload" \
+              || { echo "::warning::Failed to annotate Grafana for ${PROVIDER} ${VERSION}"; fail=1; }
+          done
+          exit $fail
+
       - name: "Save Artifacts"
         if: ${{ inputs.skip_publish }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
