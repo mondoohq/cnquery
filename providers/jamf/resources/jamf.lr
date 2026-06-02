@@ -328,7 +328,7 @@ private jamf.package @defaults("name fileName") {
   // SHA-256 hash of the package contents
   sha256 string
 
-  // Size of the package on disk, in bytes
+  // Size of the package on disk, as reported by Jamf Pro
   size string
 
   // Package file format
