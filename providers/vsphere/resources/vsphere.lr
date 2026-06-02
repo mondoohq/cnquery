@@ -393,6 +393,8 @@ private vsphere.cluster @defaults("moid name") {
   hosts() []vsphere.host
   // Whether vSAN is enabled on the cluster
   vsanEnabled bool
+  // vSAN service configuration; null when vSAN is not enabled on the cluster
+  vsan() vsphere.cluster.vsan
   // Whether vSphere HA (Distributed Availability Service) is enabled
   haEnabled bool
   // Whether DRS (Distributed Resource Scheduler) is enabled
@@ -487,6 +489,90 @@ private vsphere.host @defaults("moid name") {
   dnsConfig() vsphere.host.dnsConfig
   // Host IP routing (default gateways)
   ipRouteConfig() vsphere.host.ipRouteConfig
+  // vSAN host configuration; null when the host does not participate in vSAN
+  vsanConfig() vsphere.host.vsanConfig
+}
+
+// vSAN Cluster Configuration
+//
+// Examine the vSAN service configuration of a cluster: the storage
+// architecture (`esaEnabled` distinguishes Express Storage Architecture from
+// the original architecture) and the security-relevant data services. Space
+// efficiency is reported by `dedupEnabled` and `compressionEnabled`; data
+// integrity by `checksumEnabled`; data-at-rest encryption by
+// `encryptionEnabled`, its key-management cluster (`kmsProvider`), key
+// identifier (`kekId`), and disk-wipe policy (`eraseDisksBeforeUse`);
+// data-in-transit encryption by `inTransitEncryptionEnabled` and
+// `rekeyIntervalMinutes`. `fileServiceEnabled` and `perfServiceEnabled`
+// report the file and performance services, and `health` summarizes overall
+// vSAN object health. Reached from `vsphere.cluster.vsan`.
+private vsphere.cluster.vsan @defaults("esaEnabled encryptionEnabled checksumEnabled") {
+  // vSAN datastore UUID for the cluster
+  uuid string
+  // Whether vSAN Express Storage Architecture (ESA) is enabled (vSphere 8.0 or later)
+  esaEnabled bool
+  // Whether checksum protection is enforced across vSAN disks
+  checksumEnabled bool
+  // Whether deduplication is enabled
+  dedupEnabled bool
+  // Whether compression is enabled
+  compressionEnabled bool
+  // Whether data-at-rest encryption is enabled
+  encryptionEnabled bool
+  // Key-management cluster backing data-at-rest encryption; null when encryption is disabled or the provider is not registered
+  kmsProvider() vsphere.kmsCluster
+  // Key encryption key (KEK) identifier for data-at-rest encryption
+  kekId string
+  // Whether disks are wiped before being claimed for encrypted vSAN
+  eraseDisksBeforeUse bool
+  // Whether data-in-transit encryption is enabled
+  inTransitEncryptionEnabled bool
+  // Rekey interval in minutes for data-in-transit encryption; zero when disabled
+  rekeyIntervalMinutes int
+  // Whether vSAN file service is enabled
+  fileServiceEnabled bool
+  // Whether the vSAN performance service is enabled
+  perfServiceEnabled bool
+  // Overall vSAN object health summary; null when the health service is unavailable
+  health() dict
+}
+
+// vSAN Host Configuration
+//
+// Examine how a single ESXi host participates in vSAN: whether the service is
+// `enabled`, whether the host automatically claims local disks
+// (`autoClaimStorage`), whether `checksumEnabled` integrity protection is in
+// force, and the `diskGroups` of cache and capacity disks the host
+// contributes to the vSAN datastore. Reached from `vsphere.host.vsanConfig`.
+private vsphere.host.vsanConfig @defaults("enabled checksumEnabled") {
+  // Whether vSAN is enabled on the host
+  enabled bool
+  // Whether the host automatically claims eligible local disks for vSAN
+  autoClaimStorage bool
+  // Whether checksum protection is enforced on the host's vSAN disks
+  checksumEnabled bool
+  // vSAN disk groups claimed on the host
+  diskGroups() []vsphere.host.vsan.diskGroup
+}
+
+// vSAN Disk Group
+//
+// Examine a single vSAN disk group on a host: one cache (flash) disk fronting
+// a set of capacity disks. The `cacheDiskUuid` selects the group, `cacheDisk`
+// and `capacityDisks` give the device canonical names, and `capacityBytes`
+// reports the total raw capacity backing the group. Iterate from
+// `vsphere.host.vsanConfig.diskGroups`.
+private vsphere.host.vsan.diskGroup @defaults("cacheDiskUuid capacityDiskCount capacityBytes") {
+  // Cache (flash) disk UUID — unique identifier for the disk group
+  cacheDiskUuid string
+  // Cache (flash) disk canonical device name
+  cacheDisk string
+  // Capacity disk canonical device names
+  capacityDisks []string
+  // Number of capacity disks in the group
+  capacityDiskCount int
+  // Total raw capacity of the capacity disks in bytes
+  capacityBytes int
 }
 
 // ESXi Host Boot and BIOS Information

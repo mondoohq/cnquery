@@ -19,6 +19,7 @@ import (
 	"github.com/vmware/govmomi/sts"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vim25/soap"
+	"github.com/vmware/govmomi/vsan"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -34,6 +35,9 @@ type VsphereConnection struct {
 
 	ssoMu     sync.Mutex
 	ssoClient *ssoadmin.Client
+
+	vsanMu     sync.Mutex
+	vsanClient *vsan.Client
 }
 
 func vSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {
@@ -161,6 +165,25 @@ func (c *VsphereConnection) SsoAdminClient(ctx context.Context) (*ssoadmin.Clien
 
 	c.ssoClient = admin
 	return admin, nil
+}
+
+// VsanClient returns a vSAN management client for this connection, creating
+// it on the first call. The vSAN API lives at a separate (/vsanHealth) SOAP
+// endpoint but reuses the existing vim25 session, so there's no extra login
+// and nothing to log out — the client is just memoized to avoid rebuilding
+// the SOAP stub on every cluster/host lookup.
+func (c *VsphereConnection) VsanClient(ctx context.Context) (*vsan.Client, error) {
+	c.vsanMu.Lock()
+	defer c.vsanMu.Unlock()
+	if c.vsanClient != nil {
+		return c.vsanClient, nil
+	}
+	vc, err := vsan.NewClient(ctx, c.client.Client)
+	if err != nil {
+		return nil, err
+	}
+	c.vsanClient = vc
+	return vc, nil
 }
 
 func (c *VsphereConnection) Close() {

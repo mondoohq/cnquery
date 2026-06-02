@@ -34,6 +34,9 @@ const (
 	ResourceVsphereDatastore                string = "vsphere.datastore"
 	ResourceVsphereCluster                  string = "vsphere.cluster"
 	ResourceVsphereHost                     string = "vsphere.host"
+	ResourceVsphereClusterVsan              string = "vsphere.cluster.vsan"
+	ResourceVsphereHostVsanConfig           string = "vsphere.host.vsanConfig"
+	ResourceVsphereHostVsanDiskGroup        string = "vsphere.host.vsan.diskGroup"
 	ResourceVsphereHostBootInfo             string = "vsphere.host.bootInfo"
 	ResourceVsphereHostSystemInfo           string = "vsphere.host.systemInfo"
 	ResourceVsphereHostDnsConfig            string = "vsphere.host.dnsConfig"
@@ -153,6 +156,18 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"vsphere.cluster.vsan": {
+			// to override args, implement: initVsphereClusterVsan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereClusterVsan,
+		},
+		"vsphere.host.vsanConfig": {
+			// to override args, implement: initVsphereHostVsanConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostVsanConfig,
+		},
+		"vsphere.host.vsan.diskGroup": {
+			// to override args, implement: initVsphereHostVsanDiskGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostVsanDiskGroup,
 		},
 		"vsphere.host.bootInfo": {
 			// to override args, implement: initVsphereHostBootInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -729,6 +744,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.cluster.vsanEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetVsanEnabled()).ToDataRes(types.Bool)
 	},
+	"vsphere.cluster.vsan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetVsan()).ToDataRes(types.Resource("vsphere.cluster.vsan"))
+	},
 	"vsphere.cluster.haEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetHaEnabled()).ToDataRes(types.Bool)
 	},
@@ -848,6 +866,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.ipRouteConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetIpRouteConfig()).ToDataRes(types.Resource("vsphere.host.ipRouteConfig"))
+	},
+	"vsphere.host.vsanConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetVsanConfig()).ToDataRes(types.Resource("vsphere.host.vsanConfig"))
+	},
+	"vsphere.cluster.vsan.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetUuid()).ToDataRes(types.String)
+	},
+	"vsphere.cluster.vsan.esaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetEsaEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.checksumEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetChecksumEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.dedupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetDedupEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.compressionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetCompressionEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.encryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.kmsProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetKmsProvider()).ToDataRes(types.Resource("vsphere.kmsCluster"))
+	},
+	"vsphere.cluster.vsan.kekId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetKekId()).ToDataRes(types.String)
+	},
+	"vsphere.cluster.vsan.eraseDisksBeforeUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetEraseDisksBeforeUse()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.inTransitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetInTransitEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.rekeyIntervalMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetRekeyIntervalMinutes()).ToDataRes(types.Int)
+	},
+	"vsphere.cluster.vsan.fileServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetFileServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.perfServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetPerfServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.vsan.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereClusterVsan).GetHealth()).ToDataRes(types.Dict)
+	},
+	"vsphere.host.vsanConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.vsanConfig.autoClaimStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanConfig).GetAutoClaimStorage()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.vsanConfig.checksumEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanConfig).GetChecksumEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.vsanConfig.diskGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanConfig).GetDiskGroups()).ToDataRes(types.Array(types.Resource("vsphere.host.vsan.diskGroup")))
+	},
+	"vsphere.host.vsan.diskGroup.cacheDiskUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanDiskGroup).GetCacheDiskUuid()).ToDataRes(types.String)
+	},
+	"vsphere.host.vsan.diskGroup.cacheDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanDiskGroup).GetCacheDisk()).ToDataRes(types.String)
+	},
+	"vsphere.host.vsan.diskGroup.capacityDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanDiskGroup).GetCapacityDisks()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.vsan.diskGroup.capacityDiskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanDiskGroup).GetCapacityDiskCount()).ToDataRes(types.Int)
+	},
+	"vsphere.host.vsan.diskGroup.capacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVsanDiskGroup).GetCapacityBytes()).ToDataRes(types.Int)
 	},
 	"vsphere.host.bootInfo.bootTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHostBootInfo).GetBootTime()).ToDataRes(types.Time)
@@ -2328,6 +2418,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereCluster).VsanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"vsphere.cluster.vsan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).Vsan, ok = plugin.RawToTValue[*mqlVsphereClusterVsan](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.haEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).HaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2490,6 +2584,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.ipRouteConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).IpRouteConfig, ok = plugin.RawToTValue[*mqlVsphereHostIpRouteConfig](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsanConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).VsanConfig, ok = plugin.RawToTValue[*mqlVsphereHostVsanConfig](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.cluster.vsan.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.esaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).EsaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.checksumEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).ChecksumEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.dedupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).DedupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.compressionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).CompressionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.encryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).EncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.kmsProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).KmsProvider, ok = plugin.RawToTValue[*mqlVsphereKmsCluster](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.kekId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).KekId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.eraseDisksBeforeUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).EraseDisksBeforeUse, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.inTransitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).InTransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.rekeyIntervalMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).RekeyIntervalMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.fileServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).FileServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.perfServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).PerfServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsan.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereClusterVsan).Health, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsanConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.vsanConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsanConfig.autoClaimStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanConfig).AutoClaimStorage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsanConfig.checksumEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanConfig).ChecksumEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsanConfig.diskGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanConfig).DiskGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.cacheDiskUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).CacheDiskUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.cacheDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).CacheDisk, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.capacityDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).CapacityDisks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.capacityDiskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).CapacityDiskCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vsan.diskGroup.capacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVsanDiskGroup).CapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.bootInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5435,6 +5637,7 @@ type mqlVsphereCluster struct {
 	Properties    plugin.TValue[any]
 	Hosts         plugin.TValue[[]any]
 	VsanEnabled   plugin.TValue[bool]
+	Vsan          plugin.TValue[*mqlVsphereClusterVsan]
 	HaEnabled     plugin.TValue[bool]
 	DrsEnabled    plugin.TValue[bool]
 	EvcMode       plugin.TValue[string]
@@ -5513,6 +5716,22 @@ func (c *mqlVsphereCluster) GetVsanEnabled() *plugin.TValue[bool] {
 	return &c.VsanEnabled
 }
 
+func (c *mqlVsphereCluster) GetVsan() *plugin.TValue[*mqlVsphereClusterVsan] {
+	return plugin.GetOrCompute[*mqlVsphereClusterVsan](&c.Vsan, func() (*mqlVsphereClusterVsan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.cluster", c.__id, "vsan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereClusterVsan), nil
+			}
+		}
+
+		return c.vsan()
+	})
+}
+
 func (c *mqlVsphereCluster) GetHaEnabled() *plugin.TValue[bool] {
 	return &c.HaEnabled
 }
@@ -5567,6 +5786,7 @@ type mqlVsphereHost struct {
 	SystemInfo              plugin.TValue[*mqlVsphereHostSystemInfo]
 	DnsConfig               plugin.TValue[*mqlVsphereHostDnsConfig]
 	IpRouteConfig           plugin.TValue[*mqlVsphereHostIpRouteConfig]
+	VsanConfig              plugin.TValue[*mqlVsphereHostVsanConfig]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -5974,6 +6194,285 @@ func (c *mqlVsphereHost) GetIpRouteConfig() *plugin.TValue[*mqlVsphereHostIpRout
 
 		return c.ipRouteConfig()
 	})
+}
+
+func (c *mqlVsphereHost) GetVsanConfig() *plugin.TValue[*mqlVsphereHostVsanConfig] {
+	return plugin.GetOrCompute[*mqlVsphereHostVsanConfig](&c.VsanConfig, func() (*mqlVsphereHostVsanConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "vsanConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostVsanConfig), nil
+			}
+		}
+
+		return c.vsanConfig()
+	})
+}
+
+// mqlVsphereClusterVsan for the vsphere.cluster.vsan resource
+type mqlVsphereClusterVsan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereClusterVsanInternal
+	Uuid                       plugin.TValue[string]
+	EsaEnabled                 plugin.TValue[bool]
+	ChecksumEnabled            plugin.TValue[bool]
+	DedupEnabled               plugin.TValue[bool]
+	CompressionEnabled         plugin.TValue[bool]
+	EncryptionEnabled          plugin.TValue[bool]
+	KmsProvider                plugin.TValue[*mqlVsphereKmsCluster]
+	KekId                      plugin.TValue[string]
+	EraseDisksBeforeUse        plugin.TValue[bool]
+	InTransitEncryptionEnabled plugin.TValue[bool]
+	RekeyIntervalMinutes       plugin.TValue[int64]
+	FileServiceEnabled         plugin.TValue[bool]
+	PerfServiceEnabled         plugin.TValue[bool]
+	Health                     plugin.TValue[any]
+}
+
+// createVsphereClusterVsan creates a new instance of this resource
+func createVsphereClusterVsan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereClusterVsan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.cluster.vsan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereClusterVsan) MqlName() string {
+	return "vsphere.cluster.vsan"
+}
+
+func (c *mqlVsphereClusterVsan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereClusterVsan) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlVsphereClusterVsan) GetEsaEnabled() *plugin.TValue[bool] {
+	return &c.EsaEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetChecksumEnabled() *plugin.TValue[bool] {
+	return &c.ChecksumEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetDedupEnabled() *plugin.TValue[bool] {
+	return &c.DedupEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetCompressionEnabled() *plugin.TValue[bool] {
+	return &c.CompressionEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.EncryptionEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetKmsProvider() *plugin.TValue[*mqlVsphereKmsCluster] {
+	return plugin.GetOrCompute[*mqlVsphereKmsCluster](&c.KmsProvider, func() (*mqlVsphereKmsCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.cluster.vsan", c.__id, "kmsProvider")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereKmsCluster), nil
+			}
+		}
+
+		return c.kmsProvider()
+	})
+}
+
+func (c *mqlVsphereClusterVsan) GetKekId() *plugin.TValue[string] {
+	return &c.KekId
+}
+
+func (c *mqlVsphereClusterVsan) GetEraseDisksBeforeUse() *plugin.TValue[bool] {
+	return &c.EraseDisksBeforeUse
+}
+
+func (c *mqlVsphereClusterVsan) GetInTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.InTransitEncryptionEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetRekeyIntervalMinutes() *plugin.TValue[int64] {
+	return &c.RekeyIntervalMinutes
+}
+
+func (c *mqlVsphereClusterVsan) GetFileServiceEnabled() *plugin.TValue[bool] {
+	return &c.FileServiceEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetPerfServiceEnabled() *plugin.TValue[bool] {
+	return &c.PerfServiceEnabled
+}
+
+func (c *mqlVsphereClusterVsan) GetHealth() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Health, func() (any, error) {
+		return c.health()
+	})
+}
+
+// mqlVsphereHostVsanConfig for the vsphere.host.vsanConfig resource
+type mqlVsphereHostVsanConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereHostVsanConfigInternal
+	Enabled          plugin.TValue[bool]
+	AutoClaimStorage plugin.TValue[bool]
+	ChecksumEnabled  plugin.TValue[bool]
+	DiskGroups       plugin.TValue[[]any]
+}
+
+// createVsphereHostVsanConfig creates a new instance of this resource
+func createVsphereHostVsanConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostVsanConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.vsanConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostVsanConfig) MqlName() string {
+	return "vsphere.host.vsanConfig"
+}
+
+func (c *mqlVsphereHostVsanConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostVsanConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereHostVsanConfig) GetAutoClaimStorage() *plugin.TValue[bool] {
+	return &c.AutoClaimStorage
+}
+
+func (c *mqlVsphereHostVsanConfig) GetChecksumEnabled() *plugin.TValue[bool] {
+	return &c.ChecksumEnabled
+}
+
+func (c *mqlVsphereHostVsanConfig) GetDiskGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiskGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host.vsanConfig", c.__id, "diskGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diskGroups()
+	})
+}
+
+// mqlVsphereHostVsanDiskGroup for the vsphere.host.vsan.diskGroup resource
+type mqlVsphereHostVsanDiskGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostVsanDiskGroupInternal it will be used here
+	CacheDiskUuid     plugin.TValue[string]
+	CacheDisk         plugin.TValue[string]
+	CapacityDisks     plugin.TValue[[]any]
+	CapacityDiskCount plugin.TValue[int64]
+	CapacityBytes     plugin.TValue[int64]
+}
+
+// createVsphereHostVsanDiskGroup creates a new instance of this resource
+func createVsphereHostVsanDiskGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostVsanDiskGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.vsan.diskGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) MqlName() string {
+	return "vsphere.host.vsan.diskGroup"
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) GetCacheDiskUuid() *plugin.TValue[string] {
+	return &c.CacheDiskUuid
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) GetCacheDisk() *plugin.TValue[string] {
+	return &c.CacheDisk
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) GetCapacityDisks() *plugin.TValue[[]any] {
+	return &c.CapacityDisks
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) GetCapacityDiskCount() *plugin.TValue[int64] {
+	return &c.CapacityDiskCount
+}
+
+func (c *mqlVsphereHostVsanDiskGroup) GetCapacityBytes() *plugin.TValue[int64] {
+	return &c.CapacityBytes
 }
 
 // mqlVsphereHostBootInfo for the vsphere.host.bootInfo resource
