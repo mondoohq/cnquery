@@ -159,8 +159,10 @@ func (v *mqlVsphereClusterVsan) kmsProvider() (*mqlVsphereKmsCluster, error) {
 
 // mqlVsphereHostVsanConfigInternal caches the host's claimed disk groups so the
 // diskGroups() accessor can build typed sub-resources without re-fetching the
-// HostVsanSystem managed object.
+// HostVsanSystem managed object. cacheHostMoid scopes each disk group's __id to
+// its host so a cache-disk UUID seen on two hosts can't collide in the cache.
 type mqlVsphereHostVsanConfigInternal struct {
+	cacheHostMoid     string
 	cacheDiskMappings []vimtypes.VsanHostDiskMapping
 }
 
@@ -206,12 +208,14 @@ func (v *mqlVsphereHost) vsanConfig() (*mqlVsphereHostVsanConfig, error) {
 		return nil, err
 	}
 	mqlVsanConfig := res.(*mqlVsphereHostVsanConfig)
+	mqlVsanConfig.cacheHostMoid = v.Moid.Data
 	mqlVsanConfig.cacheDiskMappings = diskMappings
 	return mqlVsanConfig, nil
 }
 
-// diskGroups builds one vsphere.host.vsan.diskGroup per claimed disk group,
-// keyed by the cache disk UUID.
+// diskGroups builds one vsphere.host.vsan.diskGroup per claimed disk group. The
+// __id is host-scoped (<hostMoid>/vsanDiskGroup/<cacheDiskUuid>) so the same
+// cache-disk UUID appearing on two hosts can't collide in the resource cache.
 func (v *mqlVsphereHostVsanConfig) diskGroups() ([]any, error) {
 	mqlDiskGroups := make([]any, 0, len(v.cacheDiskMappings))
 	for _, dm := range v.cacheDiskMappings {
@@ -223,6 +227,7 @@ func (v *mqlVsphereHostVsanConfig) diskGroups() ([]any, error) {
 		}
 
 		res, err := CreateResource(v.MqlRuntime, "vsphere.host.vsan.diskGroup", map[string]*llx.RawData{
+			"__id":              llx.StringData(v.cacheHostMoid + "/vsanDiskGroup/" + dm.Ssd.Uuid),
 			"cacheDiskUuid":     llx.StringData(dm.Ssd.Uuid),
 			"cacheDisk":         llx.StringData(scsiDiskName(dm.Ssd)),
 			"capacityDisks":     llx.ArrayData(capacityDisks, types.String),
@@ -235,10 +240,6 @@ func (v *mqlVsphereHostVsanConfig) diskGroups() ([]any, error) {
 		mqlDiskGroups = append(mqlDiskGroups, res)
 	}
 	return mqlDiskGroups, nil
-}
-
-func (v *mqlVsphereHostVsanDiskGroup) id() (string, error) {
-	return v.CacheDiskUuid.Data, nil
 }
 
 // scsiDiskName prefers the canonical name (e.g. "naa.…"), falling back to the
