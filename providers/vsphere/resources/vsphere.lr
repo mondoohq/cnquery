@@ -455,6 +455,12 @@ private vsphere.host @defaults("moid name") {
   firewallOutgoingBlocked bool
   // Whether the host firmware reports UEFI Secure Boot was used during system boot (requires vSphere 8.0.3 or later)
   secureBootEnabled bool
+  // Last time the host booted; zero time if vCenter has never observed a boot
+  bootTime time
+  // Whether the host is currently in maintenance mode
+  inMaintenanceMode bool
+  // Whether the host needs a reboot to finish a pending configuration change (e.g. a staged patch or VIB install)
+  rebootRequired bool
   // Host SSL/TLS certificate
   certificate() vsphere.host.certificate
   // Hardware vendor (as reported by SMBIOS)

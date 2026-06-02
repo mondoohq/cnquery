@@ -801,6 +801,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
 	},
+	"vsphere.host.bootTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetBootTime()).ToDataRes(types.Time)
+	},
+	"vsphere.host.inMaintenanceMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetInMaintenanceMode()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.rebootRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetRebootRequired()).ToDataRes(types.Bool)
+	},
 	"vsphere.host.certificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetCertificate()).ToDataRes(types.Resource("vsphere.host.certificate"))
 	},
@@ -2417,6 +2426,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).BootTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.inMaintenanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).InMaintenanceMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.rebootRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).RebootRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5530,6 +5551,9 @@ type mqlVsphereHost struct {
 	FirewallIncomingBlocked plugin.TValue[bool]
 	FirewallOutgoingBlocked plugin.TValue[bool]
 	SecureBootEnabled       plugin.TValue[bool]
+	BootTime                plugin.TValue[*time.Time]
+	InMaintenanceMode       plugin.TValue[bool]
+	RebootRequired          plugin.TValue[bool]
 	Certificate             plugin.TValue[*mqlVsphereHostCertificate]
 	Vendor                  plugin.TValue[string]
 	Model                   plugin.TValue[string]
@@ -5778,6 +5802,18 @@ func (c *mqlVsphereHost) GetFirewallOutgoingBlocked() *plugin.TValue[bool] {
 
 func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
 	return &c.SecureBootEnabled
+}
+
+func (c *mqlVsphereHost) GetBootTime() *plugin.TValue[*time.Time] {
+	return &c.BootTime
+}
+
+func (c *mqlVsphereHost) GetInMaintenanceMode() *plugin.TValue[bool] {
+	return &c.InMaintenanceMode
+}
+
+func (c *mqlVsphereHost) GetRebootRequired() *plugin.TValue[bool] {
+	return &c.RebootRequired
 }
 
 func (c *mqlVsphereHost) GetCertificate() *plugin.TValue[*mqlVsphereHostCertificate] {

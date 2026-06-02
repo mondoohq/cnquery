@@ -86,6 +86,9 @@ type stagedHost struct {
 	firewallIncomingBlocked bool
 	firewallOutgoingBlocked bool
 	secureBootEnabled       bool
+	bootTime                *time.Time
+	inMaintenanceMode       bool
+	rebootRequired          bool
 	vendor                  string
 	model                   string
 	cpuMhz                  int64
@@ -129,6 +132,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 				s.tags = extractTagKeys(hostInfo.Tag)
 			}
 			s.lockdownMode, s.firewallIncomingBlocked, s.firewallOutgoingBlocked, s.secureBootEnabled = hostHardeningArgs(hostInfo)
+			s.bootTime, s.inMaintenanceMode, s.rebootRequired = hostRuntimeArgs(hostInfo)
 			if hostInfo != nil {
 				hw := hostInfo.Summary.Hardware
 				if hw != nil {
@@ -160,6 +164,9 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			"firewallIncomingBlocked": llx.BoolData(s.firewallIncomingBlocked),
 			"firewallOutgoingBlocked": llx.BoolData(s.firewallOutgoingBlocked),
 			"secureBootEnabled":       llx.BoolData(s.secureBootEnabled),
+			"bootTime":                llx.TimeDataPtr(s.bootTime),
+			"inMaintenanceMode":       llx.BoolData(s.inMaintenanceMode),
+			"rebootRequired":          llx.BoolData(s.rebootRequired),
 			"vendor":                  llx.StringData(s.vendor),
 			"model":                   llx.StringData(s.model),
 			"cpuMhz":                  llx.IntData(s.cpuMhz),

@@ -146,6 +146,7 @@ vsphere.host.bootInfo.biosVersion 13.1.1
 vsphere.host.bootInfo.bootTime 13.1.1
 vsphere.host.bootInfo.firmwareMajorRelease 13.1.1
 vsphere.host.bootInfo.firmwareMinorRelease 13.1.1
+vsphere.host.bootTime 13.2.5
 vsphere.host.certificate 13.0.12
 vsphere.host.certificate.id 13.1.1
 vsphere.host.certificate.issuer 13.1.1
@@ -191,6 +192,7 @@ vsphere.host.firewallRuleset.required 13.1.1
 vsphere.host.firewallRuleset.rules 13.1.1
 vsphere.host.firewallRuleset.service 13.1.1
 vsphere.host.firewallRulesets 13.0.12
+vsphere.host.inMaintenanceMode 13.2.5
 vsphere.host.inventoryPath 9.0.0
 vsphere.host.ipRouteConfig 13.1.1
 vsphere.host.ipRouteConfig.defaultGateway 13.1.1
@@ -232,6 +234,7 @@ vsphere.host.ntpConfig.server 13.1.1
 vsphere.host.numCpuCores 13.0.12
 vsphere.host.packages 9.0.0
 vsphere.host.properties 9.0.0
+vsphere.host.rebootRequired 13.2.5
 vsphere.host.secureBootEnabled 13.0.10
 vsphere.host.service 13.1.1
 vsphere.host.service.key 13.1.1

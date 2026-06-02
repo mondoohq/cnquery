@@ -68,6 +68,19 @@ func hostHardeningArgs(hostInfo *mo.HostSystem) (lockdownMode string, firewallIn
 	return
 }
 
+// hostRuntimeArgs extracts operational state from mo.HostSystem: the last-boot
+// timestamp and maintenance-mode flag from HostRuntimeInfo, and the pending-reboot
+// flag from the host summary (set when a staged patch or VIB install needs a reboot).
+func hostRuntimeArgs(hostInfo *mo.HostSystem) (bootTime *time.Time, inMaintenanceMode, rebootRequired bool) {
+	if hostInfo == nil {
+		return
+	}
+	bootTime = hostInfo.Runtime.BootTime
+	inMaintenanceMode = hostInfo.Runtime.InMaintenanceMode
+	rebootRequired = hostInfo.Summary.RebootRequired
+	return
+}
+
 func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -90,6 +103,7 @@ func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	lockdownMode, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled := hostHardeningArgs(hostInfo)
+	bootTime, inMaintenanceMode, rebootRequired := hostRuntimeArgs(hostInfo)
 
 	args["moid"] = llx.StringData(h.Reference().Encode())
 	args["name"] = llx.StringData(name)
@@ -99,6 +113,9 @@ func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["firewallIncomingBlocked"] = llx.BoolData(firewallIncomingBlocked)
 	args["firewallOutgoingBlocked"] = llx.BoolData(firewallOutgoingBlocked)
 	args["secureBootEnabled"] = llx.BoolData(secureBootEnabled)
+	args["bootTime"] = llx.TimeDataPtr(bootTime)
+	args["inMaintenanceMode"] = llx.BoolData(inMaintenanceMode)
+	args["rebootRequired"] = llx.BoolData(rebootRequired)
 
 	return args, nil, nil
 }
