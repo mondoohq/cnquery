@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciNetworkFirewall) id() (string, error) {
@@ -98,15 +99,16 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.firewall", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(fw.Id),
-					"name":          llx.StringDataPtr(fw.DisplayName),
-					"compartmentID": llx.StringDataPtr(fw.CompartmentId),
-					"ipv4Address":   llx.StringDataPtr(fw.Ipv4Address),
-					"ipv6Address":   llx.StringDataPtr(fw.Ipv6Address),
-					"shape":         llx.StringDataPtr(fw.Shape),
-					"state":         llx.StringData(string(fw.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"timeUpdated":   llx.TimeDataPtr(timeUpdated),
+					"id":                 llx.StringDataPtr(fw.Id),
+					"name":               llx.StringDataPtr(fw.DisplayName),
+					"compartmentID":      llx.StringDataPtr(fw.CompartmentId),
+					"ipv4Address":        llx.StringDataPtr(fw.Ipv4Address),
+					"ipv6Address":        llx.StringDataPtr(fw.Ipv6Address),
+					"shape":              llx.StringDataPtr(fw.Shape),
+					"state":              llx.StringData(string(fw.LifecycleState)),
+					"created":            llx.TimeDataPtr(created),
+					"timeUpdated":        llx.TimeDataPtr(timeUpdated),
+					"securityAttributes": llx.MapData(definedTagsToAny(fw.SecurityAttributes), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -114,6 +116,7 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 				mqlFw := mqlInstance.(*mqlOciNetworkFirewallFirewall)
 				mqlFw.cacheSubnetId = stringValue(fw.SubnetId)
 				mqlFw.cachePolicyId = stringValue(fw.NetworkFirewallPolicyId)
+				mqlFw.region = regionResource.Id.Data
 				res = append(res, mqlFw)
 			}
 
@@ -127,10 +130,26 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 type mqlOciNetworkFirewallFirewallInternal struct {
 	cacheSubnetId string
 	cachePolicyId string
+	region        string
 }
 
 func (o *mqlOciNetworkFirewallFirewall) id() (string, error) {
 	return "oci.networkFirewall.firewall/" + o.Id.Data, nil
+}
+
+func (o *mqlOciNetworkFirewallFirewall) healthStatus() (string, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	svc, err := conn.NetworkFirewallClient(o.region)
+	if err != nil {
+		return "", err
+	}
+	resp, err := svc.GetNetworkFirewallHealthStatus(context.Background(), networkfirewall.GetNetworkFirewallHealthStatusRequest{
+		NetworkFirewallId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(resp.Status), nil
 }
 
 func (o *mqlOciNetworkFirewallFirewall) subnet() (*mqlOciNetworkSubnet, error) {

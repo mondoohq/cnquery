@@ -2424,6 +2424,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.networkFirewall.firewall.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallFirewall).GetTimeUpdated()).ToDataRes(types.Time)
 	},
+	"oci.networkFirewall.firewall.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallFirewall).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.networkFirewall.firewall.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallFirewall).GetHealthStatus()).ToDataRes(types.String)
+	},
 	"oci.networkFirewall.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -2501,6 +2507,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.oke.cluster.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeCluster).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.oke.cluster.securityAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeCluster).GetSecurityAttributes()).ToDataRes(types.Map(types.String, types.Dict))
 	},
 	"oci.oke.nodePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetId()).ToDataRes(types.String)
@@ -6794,6 +6803,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkFirewallFirewall).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"oci.networkFirewall.firewall.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallFirewall).SecurityAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.firewall.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallFirewall).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"oci.networkFirewall.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkFirewallPolicy).__id, ok = v.Value.(string)
 		return
@@ -6908,6 +6925,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.oke.cluster.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeCluster).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.oke.cluster.securityAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeCluster).SecurityAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.oke.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16505,17 +16526,19 @@ type mqlOciNetworkFirewallFirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkFirewallFirewallInternal
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	CompartmentID plugin.TValue[string]
-	Subnet        plugin.TValue[*mqlOciNetworkSubnet]
-	Policy        plugin.TValue[*mqlOciNetworkFirewallPolicy]
-	Ipv4Address   plugin.TValue[string]
-	Ipv6Address   plugin.TValue[string]
-	Shape         plugin.TValue[string]
-	State         plugin.TValue[string]
-	Created       plugin.TValue[*time.Time]
-	TimeUpdated   plugin.TValue[*time.Time]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	CompartmentID      plugin.TValue[string]
+	Subnet             plugin.TValue[*mqlOciNetworkSubnet]
+	Policy             plugin.TValue[*mqlOciNetworkFirewallPolicy]
+	Ipv4Address        plugin.TValue[string]
+	Ipv6Address        plugin.TValue[string]
+	Shape              plugin.TValue[string]
+	State              plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	TimeUpdated        plugin.TValue[*time.Time]
+	SecurityAttributes plugin.TValue[map[string]any]
+	HealthStatus       plugin.TValue[string]
 }
 
 // createOciNetworkFirewallFirewall creates a new instance of this resource
@@ -16621,6 +16644,16 @@ func (c *mqlOciNetworkFirewallFirewall) GetCreated() *plugin.TValue[*time.Time] 
 
 func (c *mqlOciNetworkFirewallFirewall) GetTimeUpdated() *plugin.TValue[*time.Time] {
 	return &c.TimeUpdated
+}
+
+func (c *mqlOciNetworkFirewallFirewall) GetSecurityAttributes() *plugin.TValue[map[string]any] {
+	return &c.SecurityAttributes
+}
+
+func (c *mqlOciNetworkFirewallFirewall) GetHealthStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HealthStatus, func() (string, error) {
+		return c.healthStatus()
+	})
 }
 
 // mqlOciNetworkFirewallPolicy for the oci.networkFirewall.policy resource
@@ -16790,6 +16823,7 @@ type mqlOciOkeCluster struct {
 	Created                     plugin.TValue[*time.Time]
 	FreeformTags                plugin.TValue[map[string]any]
 	DefinedTags                 plugin.TValue[map[string]any]
+	SecurityAttributes          plugin.TValue[map[string]any]
 }
 
 // createOciOkeCluster creates a new instance of this resource
@@ -16935,6 +16969,10 @@ func (c *mqlOciOkeCluster) GetFreeformTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlOciOkeCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
+}
+
+func (c *mqlOciOkeCluster) GetSecurityAttributes() *plugin.TValue[map[string]any] {
+	return &c.SecurityAttributes
 }
 
 // mqlOciOkeNodePool for the oci.oke.nodePool resource

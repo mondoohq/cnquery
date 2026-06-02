@@ -97,8 +97,10 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 
 				// Extract endpoint config
 				var isPublicEndpointEnabled bool
+				var securityAttributes map[string]any
 				if cluster.EndpointConfig != nil {
 					isPublicEndpointEnabled = boolValue(cluster.EndpointConfig.IsPublicIpEnabled)
+					securityAttributes = definedTagsToAny(cluster.EndpointConfig.SecurityAttributes)
 				}
 
 				// Extract endpoints
@@ -151,6 +153,7 @@ func (o *mqlOciOke) getClusters(conn *connection.OciConnection, regions []any) [
 					"created":                     llx.TimeDataPtr(created),
 					"freeformTags":                llx.MapData(freeformTags, types.String),
 					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"securityAttributes":          llx.MapData(securityAttributes, types.Dict),
 				})
 				if err != nil {
 					return nil, err

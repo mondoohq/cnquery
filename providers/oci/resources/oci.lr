@@ -1620,6 +1620,12 @@ private oci.networkFirewall.firewall @defaults("name") {
   created time
   // Last update time
   timeUpdated time
+  // Zero Trust Packet Routing security attributes enforced on the firewall
+  securityAttributes map[string]dict
+  // Overall firewall health status
+  //
+  // One of OK, WARNING, CRITICAL, or UNKNOWN.
+  healthStatus() string
 }
 
 // Oracle Cloud Infrastructure (OCI) network firewall policy
@@ -1693,6 +1699,8 @@ private oci.oke.cluster @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // Zero Trust Packet Routing security attributes on the cluster API endpoint
+  securityAttributes map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) OKE node pool

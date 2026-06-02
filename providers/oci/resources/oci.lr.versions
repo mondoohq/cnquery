@@ -923,11 +923,13 @@ oci.networkFirewall 13.0.6
 oci.networkFirewall.firewall 13.0.6
 oci.networkFirewall.firewall.compartmentID 13.0.6
 oci.networkFirewall.firewall.created 13.0.6
+oci.networkFirewall.firewall.healthStatus 13.8.2
 oci.networkFirewall.firewall.id 13.0.6
 oci.networkFirewall.firewall.ipv4Address 13.0.6
 oci.networkFirewall.firewall.ipv6Address 13.0.6
 oci.networkFirewall.firewall.name 13.0.6
 oci.networkFirewall.firewall.policy 13.0.6
+oci.networkFirewall.firewall.securityAttributes 13.8.2
 oci.networkFirewall.firewall.shape 13.0.6
 oci.networkFirewall.firewall.state 13.0.6
 oci.networkFirewall.firewall.subnet 13.0.6
@@ -992,6 +994,7 @@ oci.oke.cluster.name 13.0.6
 oci.oke.cluster.nodePools 13.0.6
 oci.oke.cluster.privateEndpoint 13.0.6
 oci.oke.cluster.publicEndpoint 13.0.6
+oci.oke.cluster.securityAttributes 13.8.2
 oci.oke.cluster.state 13.0.6
 oci.oke.cluster.type 13.0.6
 oci.oke.cluster.vcn 13.0.6
