@@ -1609,7 +1609,11 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   shape string
   // Whether the load balancer is private (no public IP)
   isPrivate bool
-  // Assigned IP addresses, each with an `ipAddress`, an `isPublic` flag indicating internet reachability, and a `reservedIpId` (the oci.network.publicIp OCID) when the address is backed by a reserved public IP
+  // Assigned IP addresses
+  //
+  // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
+  // internet reachability, and a `reservedIpId` (the oci.network.publicIp
+  // OCID) when the address is backed by a reserved public IP.
   ipAddresses []dict
   // Whether delete protection is enabled
   isDeleteProtectionEnabled bool
