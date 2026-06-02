@@ -8108,6 +8108,8 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   publishCaCert bool
   // Whether each CA's certificate revocation list is published and referenced in the CRL Distribution Points X.509 extension of issued certificates
   publishCrl bool
+  // Customer-managed Cloud KMS key that encrypts the Subject, Subject Alternative Names, and PEM-encoded certificate of issued certificates at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Certificate authorities in this pool
@@ -8190,6 +8192,8 @@ private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   issuerCertificateAuthority string
   // Certificate lifetime
   lifetime string
+  // Requester-pinned start of the validity period, before which the issued certificate is not valid
+  requestedNotBeforeTime time
   // Subject description
   subjectDescription dict
   // Certificate description (config)

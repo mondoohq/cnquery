@@ -10353,6 +10353,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.certificateAuthorityService.caPool.publishCrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetPublishCrl()).ToDataRes(types.Bool)
 	},
+	"gcp.project.certificateAuthorityService.caPool.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.certificateAuthorityService.caPool.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -10439,6 +10442,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.certificateAuthorityService.certificate.lifetime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCertificate).GetLifetime()).ToDataRes(types.String)
+	},
+	"gcp.project.certificateAuthorityService.certificate.requestedNotBeforeTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCertificateAuthorityServiceCertificate).GetRequestedNotBeforeTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.certificateAuthorityService.certificate.subjectDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateAuthorityServiceCertificate).GetSubjectDescription()).ToDataRes(types.Dict)
@@ -27204,6 +27210,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).PublishCrl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.certificateAuthorityService.caPool.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.certificateAuthorityService.caPool.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateAuthorityServiceCaPool).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -27326,6 +27336,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.certificateAuthorityService.certificate.lifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCertificateAuthorityServiceCertificate).Lifetime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.certificateAuthorityService.certificate.requestedNotBeforeTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCertificateAuthorityServiceCertificate).RequestedNotBeforeTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.certificateAuthorityService.certificate.subjectDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62499,7 +62513,7 @@ func (c *mqlGcpProjectCertificateAuthorityService) GetCaPools() *plugin.TValue[[
 type mqlGcpProjectCertificateAuthorityServiceCaPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCertificateAuthorityServiceCaPoolInternal it will be used here
+	mqlGcpProjectCertificateAuthorityServiceCaPoolInternal
 	ProjectId              plugin.TValue[string]
 	ResourcePath           plugin.TValue[string]
 	Name                   plugin.TValue[string]
@@ -62509,6 +62523,7 @@ type mqlGcpProjectCertificateAuthorityServiceCaPool struct {
 	PublishingOptions      plugin.TValue[any]
 	PublishCaCert          plugin.TValue[bool]
 	PublishCrl             plugin.TValue[bool]
+	KmsKey                 plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Labels                 plugin.TValue[map[string]any]
 	CertificateAuthorities plugin.TValue[[]any]
 	Certificates           plugin.TValue[[]any]
@@ -62585,6 +62600,22 @@ func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetPublishCaCert() *plu
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetPublishCrl() *plugin.TValue[bool] {
 	return &c.PublishCrl
+}
+
+func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.certificateAuthorityService.caPool", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCaPool) GetLabels() *plugin.TValue[map[string]any] {
@@ -62774,6 +62805,7 @@ type mqlGcpProjectCertificateAuthorityServiceCertificate struct {
 	CaPool                     plugin.TValue[string]
 	IssuerCertificateAuthority plugin.TValue[string]
 	Lifetime                   plugin.TValue[string]
+	RequestedNotBeforeTime     plugin.TValue[*time.Time]
 	SubjectDescription         plugin.TValue[any]
 	CertDescription            plugin.TValue[any]
 	PemCertificate             plugin.TValue[string]
@@ -62847,6 +62879,10 @@ func (c *mqlGcpProjectCertificateAuthorityServiceCertificate) GetIssuerCertifica
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCertificate) GetLifetime() *plugin.TValue[string] {
 	return &c.Lifetime
+}
+
+func (c *mqlGcpProjectCertificateAuthorityServiceCertificate) GetRequestedNotBeforeTime() *plugin.TValue[*time.Time] {
+	return &c.RequestedNotBeforeTime
 }
 
 func (c *mqlGcpProjectCertificateAuthorityServiceCertificate) GetSubjectDescription() *plugin.TValue[any] {

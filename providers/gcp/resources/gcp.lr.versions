@@ -738,6 +738,7 @@ gcp.project.certificateAuthorityService.caPool 11.5.1
 gcp.project.certificateAuthorityService.caPool.certificateAuthorities 11.5.1
 gcp.project.certificateAuthorityService.caPool.certificates 11.5.1
 gcp.project.certificateAuthorityService.caPool.issuancePolicy 11.5.1
+gcp.project.certificateAuthorityService.caPool.kmsKey 13.19.2
 gcp.project.certificateAuthorityService.caPool.labels 11.5.1
 gcp.project.certificateAuthorityService.caPool.location 11.5.1
 gcp.project.certificateAuthorityService.caPool.name 11.5.1
@@ -760,6 +761,7 @@ gcp.project.certificateAuthorityService.certificate.name 11.5.1
 gcp.project.certificateAuthorityService.certificate.pemCertificate 11.5.1
 gcp.project.certificateAuthorityService.certificate.pemCertificateChain 11.5.1
 gcp.project.certificateAuthorityService.certificate.projectId 11.5.1
+gcp.project.certificateAuthorityService.certificate.requestedNotBeforeTime 13.19.2
 gcp.project.certificateAuthorityService.certificate.resourcePath 11.5.1
 gcp.project.certificateAuthorityService.certificate.revocationDetails 11.5.1
 gcp.project.certificateAuthorityService.certificate.subjectDescription 11.5.1

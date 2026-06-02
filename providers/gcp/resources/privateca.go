@@ -128,10 +128,17 @@ func (g *mqlGcpProjectCertificateAuthorityService) caPools() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if pool.EncryptionSpec != nil {
+			mqlPool.(*mqlGcpProjectCertificateAuthorityServiceCaPool).cacheKmsKeyName = pool.EncryptionSpec.CloudKmsKey
+		}
 		res = append(res, mqlPool)
 	}
 
 	return res, nil
+}
+
+type mqlGcpProjectCertificateAuthorityServiceCaPoolInternal struct {
+	cacheKmsKeyName string
 }
 
 func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) id() (string, error) {
@@ -139,6 +146,19 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) id() (string, error) {
 		return "", g.ResourcePath.Error
 	}
 	return g.ResourcePath.Data, nil
+}
+
+func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificateAuthorities() ([]any, error) {
@@ -328,6 +348,13 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificates() ([]any, 
 			updatedAt = llx.NilData
 		}
 
+		var requestedNotBeforeTime *llx.RawData
+		if cert.RequestedNotBeforeTime != nil {
+			requestedNotBeforeTime = llx.TimeData(cert.RequestedNotBeforeTime.AsTime())
+		} else {
+			requestedNotBeforeTime = llx.NilData
+		}
+
 		mqlCert, err := CreateResource(g.MqlRuntime, "gcp.project.certificateAuthorityService.certificate", map[string]*llx.RawData{
 			"projectId":                  llx.StringData(projectId),
 			"resourcePath":               llx.StringData(cert.Name),
@@ -336,6 +363,7 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificates() ([]any, 
 			"caPool":                     llx.StringData(caPoolName),
 			"issuerCertificateAuthority": llx.StringData(cert.IssuerCertificateAuthority),
 			"lifetime":                   llx.StringData(cert.Lifetime.String()),
+			"requestedNotBeforeTime":     requestedNotBeforeTime,
 			"subjectDescription":         llx.DictData(subjectDescription),
 			"certDescription":            llx.DictData(certConfig),
 			"pemCertificate":             llx.StringData(cert.PemCertificate),
