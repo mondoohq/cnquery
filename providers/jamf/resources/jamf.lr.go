@@ -16,14 +16,19 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceJamf                 string = "jamf"
-	ResourceJamfUserByName       string = "jamf.userByName"
-	ResourceJamfComputerGroup    string = "jamf.computerGroup"
-	ResourceJamfComputer         string = "jamf.computer"
-	ResourceJamfLocalUserAccount string = "jamf.localUserAccount"
-	ResourceJamfSsoSettings      string = "jamf.ssoSettings"
-	ResourceJamfUser             string = "jamf.user"
-	ResourceJamfPackage          string = "jamf.package"
+	ResourceJamf                   string = "jamf"
+	ResourceJamfUserByName         string = "jamf.userByName"
+	ResourceJamfComputerGroup      string = "jamf.computerGroup"
+	ResourceJamfComputer           string = "jamf.computer"
+	ResourceJamfLocalUserAccount   string = "jamf.localUserAccount"
+	ResourceJamfSsoSettings        string = "jamf.ssoSettings"
+	ResourceJamfUser               string = "jamf.user"
+	ResourceJamfPackage            string = "jamf.package"
+	ResourceJamfScript             string = "jamf.script"
+	ResourceJamfRestrictedSoftware string = "jamf.restrictedSoftware"
+	ResourceJamfPolicy             string = "jamf.policy"
+	ResourceJamfPolicyPackage      string = "jamf.policy.package"
+	ResourceJamfPolicyScript       string = "jamf.policy.script"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -61,6 +66,26 @@ func init() {
 		"jamf.package": {
 			Init:   initJamfPackage,
 			Create: createJamfPackage,
+		},
+		"jamf.script": {
+			Init:   initJamfScript,
+			Create: createJamfScript,
+		},
+		"jamf.restrictedSoftware": {
+			// to override args, implement: initJamfRestrictedSoftware(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJamfRestrictedSoftware,
+		},
+		"jamf.policy": {
+			// to override args, implement: initJamfPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJamfPolicy,
+		},
+		"jamf.policy.package": {
+			// to override args, implement: initJamfPolicyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJamfPolicyPackage,
+		},
+		"jamf.policy.script": {
+			// to override args, implement: initJamfPolicyScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJamfPolicyScript,
 		},
 	}
 }
@@ -153,6 +178,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"jamf.computerGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamf).GetComputerGroups()).ToDataRes(types.Array(types.Resource("jamf.computerGroup")))
+	},
+	"jamf.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamf).GetPolicies()).ToDataRes(types.Array(types.Resource("jamf.policy")))
+	},
+	"jamf.scripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamf).GetScripts()).ToDataRes(types.Array(types.Resource("jamf.script")))
+	},
+	"jamf.restrictedSoftware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamf).GetRestrictedSoftware()).ToDataRes(types.Array(types.Resource("jamf.restrictedSoftware")))
 	},
 	"jamf.userByName.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfUserByName).GetId()).ToDataRes(types.Int)
@@ -469,6 +503,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"jamf.package.parentPackage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfPackage).GetParentPackage()).ToDataRes(types.Resource("jamf.package"))
 	},
+	"jamf.script.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetId()).ToDataRes(types.String)
+	},
+	"jamf.script.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetName()).ToDataRes(types.String)
+	},
+	"jamf.script.categoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetCategoryId()).ToDataRes(types.String)
+	},
+	"jamf.script.categoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetCategoryName()).ToDataRes(types.String)
+	},
+	"jamf.script.info": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetInfo()).ToDataRes(types.String)
+	},
+	"jamf.script.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetNotes()).ToDataRes(types.String)
+	},
+	"jamf.script.osRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetOsRequirements()).ToDataRes(types.String)
+	},
+	"jamf.script.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetPriority()).ToDataRes(types.String)
+	},
+	"jamf.script.scriptContents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetScriptContents()).ToDataRes(types.String)
+	},
+	"jamf.script.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfScript).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jamf.restrictedSoftware.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetId()).ToDataRes(types.String)
+	},
+	"jamf.restrictedSoftware.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetName()).ToDataRes(types.String)
+	},
+	"jamf.restrictedSoftware.processName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetProcessName()).ToDataRes(types.String)
+	},
+	"jamf.restrictedSoftware.matchExactProcessName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetMatchExactProcessName()).ToDataRes(types.Bool)
+	},
+	"jamf.restrictedSoftware.sendNotification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetSendNotification()).ToDataRes(types.Bool)
+	},
+	"jamf.restrictedSoftware.killProcess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetKillProcess()).ToDataRes(types.Bool)
+	},
+	"jamf.restrictedSoftware.deleteExecutable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetDeleteExecutable()).ToDataRes(types.Bool)
+	},
+	"jamf.restrictedSoftware.displayMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetDisplayMessage()).ToDataRes(types.String)
+	},
+	"jamf.restrictedSoftware.siteName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetSiteName()).ToDataRes(types.String)
+	},
+	"jamf.restrictedSoftware.allComputers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetAllComputers()).ToDataRes(types.Bool)
+	},
+	"jamf.restrictedSoftware.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfRestrictedSoftware).GetScope()).ToDataRes(types.Dict)
+	},
+	"jamf.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetId()).ToDataRes(types.String)
+	},
+	"jamf.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetName()).ToDataRes(types.String)
+	},
+	"jamf.policy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.frequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetFrequency()).ToDataRes(types.String)
+	},
+	"jamf.policy.trigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTrigger()).ToDataRes(types.String)
+	},
+	"jamf.policy.triggerCheckin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerCheckin()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerEnrollmentComplete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerEnrollmentComplete()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerLogin()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerLogout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerLogout()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerNetworkStateChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerNetworkStateChanged()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerStartup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerStartup()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.triggerOther": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTriggerOther()).ToDataRes(types.String)
+	},
+	"jamf.policy.retryEvent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetRetryEvent()).ToDataRes(types.String)
+	},
+	"jamf.policy.retryAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetRetryAttempts()).ToDataRes(types.Int)
+	},
+	"jamf.policy.offline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetOffline()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.targetDrive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetTargetDrive()).ToDataRes(types.String)
+	},
+	"jamf.policy.networkRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetNetworkRequirements()).ToDataRes(types.String)
+	},
+	"jamf.policy.categoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetCategoryId()).ToDataRes(types.String)
+	},
+	"jamf.policy.categoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetCategoryName()).ToDataRes(types.String)
+	},
+	"jamf.policy.siteName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetSiteName()).ToDataRes(types.String)
+	},
+	"jamf.policy.selfServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetSelfServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.selfServiceDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetSelfServiceDisplayName()).ToDataRes(types.String)
+	},
+	"jamf.policy.selfServiceDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetSelfServiceDescription()).ToDataRes(types.String)
+	},
+	"jamf.policy.scopeAllComputers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetScopeAllComputers()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetScope()).ToDataRes(types.Dict)
+	},
+	"jamf.policy.filesProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetFilesProcesses()).ToDataRes(types.Dict)
+	},
+	"jamf.policy.packages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetPackages()).ToDataRes(types.Array(types.Resource("jamf.policy.package")))
+	},
+	"jamf.policy.scripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicy).GetScripts()).ToDataRes(types.Array(types.Resource("jamf.policy.script")))
+	},
+	"jamf.policy.package.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyPackage).GetAction()).ToDataRes(types.String)
+	},
+	"jamf.policy.package.fillUserTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyPackage).GetFillUserTemplate()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.package.fillExistingUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyPackage).GetFillExistingUsers()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.package.updateAutorun": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyPackage).GetUpdateAutorun()).ToDataRes(types.Bool)
+	},
+	"jamf.policy.package.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyPackage).GetPackage()).ToDataRes(types.Resource("jamf.package"))
+	},
+	"jamf.policy.script.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyScript).GetPriority()).ToDataRes(types.String)
+	},
+	"jamf.policy.script.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyScript).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"jamf.policy.script.script": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPolicyScript).GetScript()).ToDataRes(types.Resource("jamf.script"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -511,6 +716,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"jamf.computerGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJamf).ComputerGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jamf.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamf).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jamf.scripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamf).Scripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamf).RestrictedSoftware, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"jamf.userByName.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -961,6 +1178,254 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlJamfPackage).ParentPackage, ok = plugin.RawToTValue[*mqlJamfPackage](v.Value, v.Error)
 		return
 	},
+	"jamf.script.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).__id, ok = v.Value.(string)
+		return
+	},
+	"jamf.script.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.categoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).CategoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.categoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).CategoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Info, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.osRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).OsRequirements, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Priority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.scriptContents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).ScriptContents, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.script.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfScript).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).__id, ok = v.Value.(string)
+		return
+	},
+	"jamf.restrictedSoftware.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.processName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).ProcessName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.matchExactProcessName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).MatchExactProcessName, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.sendNotification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).SendNotification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.killProcess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).KillProcess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.deleteExecutable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).DeleteExecutable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.displayMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).DisplayMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.siteName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).SiteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.allComputers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).AllComputers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.restrictedSoftware.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfRestrictedSoftware).Scope, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"jamf.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.frequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Frequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.trigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Trigger, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerCheckin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerCheckin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerEnrollmentComplete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerEnrollmentComplete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerLogin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerLogout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerLogout, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerNetworkStateChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerNetworkStateChanged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerStartup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.triggerOther": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TriggerOther, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.retryEvent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).RetryEvent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.retryAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).RetryAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.offline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Offline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.targetDrive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).TargetDrive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.networkRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).NetworkRequirements, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.categoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).CategoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.categoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).CategoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.siteName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).SiteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.selfServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).SelfServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.selfServiceDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).SelfServiceDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.selfServiceDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).SelfServiceDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.scopeAllComputers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).ScopeAllComputers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Scope, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.filesProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).FilesProcesses, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.scripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicy).Scripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"jamf.policy.package.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.package.fillUserTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).FillUserTemplate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.package.fillExistingUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).FillExistingUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.package.updateAutorun": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).UpdateAutorun, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.package.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyPackage).Package, ok = plugin.RawToTValue[*mqlJamfPackage](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.script.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyScript).__id, ok = v.Value.(string)
+		return
+	},
+	"jamf.policy.script.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyScript).Priority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.script.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyScript).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"jamf.policy.script.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPolicyScript).Script, ok = plugin.RawToTValue[*mqlJamfScript](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -997,6 +1462,9 @@ type mqlJamf struct {
 	Version                plugin.TValue[string]
 	Users                  plugin.TValue[[]any]
 	ComputerGroups         plugin.TValue[[]any]
+	Policies               plugin.TValue[[]any]
+	Scripts                plugin.TValue[[]any]
+	RestrictedSoftware     plugin.TValue[[]any]
 }
 
 // createJamf creates a new instance of this resource
@@ -1125,6 +1593,54 @@ func (c *mqlJamf) GetComputerGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.computerGroups()
+	})
+}
+
+func (c *mqlJamf) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlJamf) GetScripts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Scripts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf", c.__id, "scripts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scripts()
+	})
+}
+
+func (c *mqlJamf) GetRestrictedSoftware() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RestrictedSoftware, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf", c.__id, "restrictedSoftware")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.restrictedSoftware()
 	})
 }
 
@@ -1977,5 +2493,614 @@ func (c *mqlJamfPackage) GetParentPackage() *plugin.TValue[*mqlJamfPackage] {
 		}
 
 		return c.parentPackage()
+	})
+}
+
+// mqlJamfScript for the jamf.script resource
+type mqlJamfScript struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJamfScriptInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	CategoryId     plugin.TValue[string]
+	CategoryName   plugin.TValue[string]
+	Info           plugin.TValue[string]
+	Notes          plugin.TValue[string]
+	OsRequirements plugin.TValue[string]
+	Priority       plugin.TValue[string]
+	ScriptContents plugin.TValue[string]
+	Parameters     plugin.TValue[map[string]any]
+}
+
+// createJamfScript creates a new instance of this resource
+func createJamfScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJamfScript{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jamf.script", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJamfScript) MqlName() string {
+	return "jamf.script"
+}
+
+func (c *mqlJamfScript) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJamfScript) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlJamfScript) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJamfScript) GetCategoryId() *plugin.TValue[string] {
+	return &c.CategoryId
+}
+
+func (c *mqlJamfScript) GetCategoryName() *plugin.TValue[string] {
+	return &c.CategoryName
+}
+
+func (c *mqlJamfScript) GetInfo() *plugin.TValue[string] {
+	return &c.Info
+}
+
+func (c *mqlJamfScript) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlJamfScript) GetOsRequirements() *plugin.TValue[string] {
+	return &c.OsRequirements
+}
+
+func (c *mqlJamfScript) GetPriority() *plugin.TValue[string] {
+	return &c.Priority
+}
+
+func (c *mqlJamfScript) GetScriptContents() *plugin.TValue[string] {
+	return &c.ScriptContents
+}
+
+func (c *mqlJamfScript) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+// mqlJamfRestrictedSoftware for the jamf.restrictedSoftware resource
+type mqlJamfRestrictedSoftware struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJamfRestrictedSoftwareInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	ProcessName           plugin.TValue[string]
+	MatchExactProcessName plugin.TValue[bool]
+	SendNotification      plugin.TValue[bool]
+	KillProcess           plugin.TValue[bool]
+	DeleteExecutable      plugin.TValue[bool]
+	DisplayMessage        plugin.TValue[string]
+	SiteName              plugin.TValue[string]
+	AllComputers          plugin.TValue[bool]
+	Scope                 plugin.TValue[any]
+}
+
+// createJamfRestrictedSoftware creates a new instance of this resource
+func createJamfRestrictedSoftware(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJamfRestrictedSoftware{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jamf.restrictedSoftware", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJamfRestrictedSoftware) MqlName() string {
+	return "jamf.restrictedSoftware"
+}
+
+func (c *mqlJamfRestrictedSoftware) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJamfRestrictedSoftware) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlJamfRestrictedSoftware) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJamfRestrictedSoftware) GetProcessName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProcessName, func() (string, error) {
+		return c.processName()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetMatchExactProcessName() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MatchExactProcessName, func() (bool, error) {
+		return c.matchExactProcessName()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetSendNotification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendNotification, func() (bool, error) {
+		return c.sendNotification()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetKillProcess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KillProcess, func() (bool, error) {
+		return c.killProcess()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetDeleteExecutable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeleteExecutable, func() (bool, error) {
+		return c.deleteExecutable()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetDisplayMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DisplayMessage, func() (string, error) {
+		return c.displayMessage()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetSiteName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SiteName, func() (string, error) {
+		return c.siteName()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetAllComputers() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllComputers, func() (bool, error) {
+		return c.allComputers()
+	})
+}
+
+func (c *mqlJamfRestrictedSoftware) GetScope() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Scope, func() (any, error) {
+		return c.scope()
+	})
+}
+
+// mqlJamfPolicy for the jamf.policy resource
+type mqlJamfPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJamfPolicyInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Enabled                    plugin.TValue[bool]
+	Frequency                  plugin.TValue[string]
+	Trigger                    plugin.TValue[string]
+	TriggerCheckin             plugin.TValue[bool]
+	TriggerEnrollmentComplete  plugin.TValue[bool]
+	TriggerLogin               plugin.TValue[bool]
+	TriggerLogout              plugin.TValue[bool]
+	TriggerNetworkStateChanged plugin.TValue[bool]
+	TriggerStartup             plugin.TValue[bool]
+	TriggerOther               plugin.TValue[string]
+	RetryEvent                 plugin.TValue[string]
+	RetryAttempts              plugin.TValue[int64]
+	Offline                    plugin.TValue[bool]
+	TargetDrive                plugin.TValue[string]
+	NetworkRequirements        plugin.TValue[string]
+	CategoryId                 plugin.TValue[string]
+	CategoryName               plugin.TValue[string]
+	SiteName                   plugin.TValue[string]
+	SelfServiceEnabled         plugin.TValue[bool]
+	SelfServiceDisplayName     plugin.TValue[string]
+	SelfServiceDescription     plugin.TValue[string]
+	ScopeAllComputers          plugin.TValue[bool]
+	Scope                      plugin.TValue[any]
+	FilesProcesses             plugin.TValue[any]
+	Packages                   plugin.TValue[[]any]
+	Scripts                    plugin.TValue[[]any]
+}
+
+// createJamfPolicy creates a new instance of this resource
+func createJamfPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJamfPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jamf.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJamfPolicy) MqlName() string {
+	return "jamf.policy"
+}
+
+func (c *mqlJamfPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJamfPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlJamfPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJamfPolicy) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlJamfPolicy) GetFrequency() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Frequency, func() (string, error) {
+		return c.frequency()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTrigger() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Trigger, func() (string, error) {
+		return c.trigger()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerCheckin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerCheckin, func() (bool, error) {
+		return c.triggerCheckin()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerEnrollmentComplete() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerEnrollmentComplete, func() (bool, error) {
+		return c.triggerEnrollmentComplete()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerLogin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerLogin, func() (bool, error) {
+		return c.triggerLogin()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerLogout() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerLogout, func() (bool, error) {
+		return c.triggerLogout()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerNetworkStateChanged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerNetworkStateChanged, func() (bool, error) {
+		return c.triggerNetworkStateChanged()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerStartup() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TriggerStartup, func() (bool, error) {
+		return c.triggerStartup()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTriggerOther() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TriggerOther, func() (string, error) {
+		return c.triggerOther()
+	})
+}
+
+func (c *mqlJamfPolicy) GetRetryEvent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RetryEvent, func() (string, error) {
+		return c.retryEvent()
+	})
+}
+
+func (c *mqlJamfPolicy) GetRetryAttempts() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RetryAttempts, func() (int64, error) {
+		return c.retryAttempts()
+	})
+}
+
+func (c *mqlJamfPolicy) GetOffline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Offline, func() (bool, error) {
+		return c.offline()
+	})
+}
+
+func (c *mqlJamfPolicy) GetTargetDrive() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetDrive, func() (string, error) {
+		return c.targetDrive()
+	})
+}
+
+func (c *mqlJamfPolicy) GetNetworkRequirements() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkRequirements, func() (string, error) {
+		return c.networkRequirements()
+	})
+}
+
+func (c *mqlJamfPolicy) GetCategoryId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CategoryId, func() (string, error) {
+		return c.categoryId()
+	})
+}
+
+func (c *mqlJamfPolicy) GetCategoryName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CategoryName, func() (string, error) {
+		return c.categoryName()
+	})
+}
+
+func (c *mqlJamfPolicy) GetSiteName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SiteName, func() (string, error) {
+		return c.siteName()
+	})
+}
+
+func (c *mqlJamfPolicy) GetSelfServiceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SelfServiceEnabled, func() (bool, error) {
+		return c.selfServiceEnabled()
+	})
+}
+
+func (c *mqlJamfPolicy) GetSelfServiceDisplayName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SelfServiceDisplayName, func() (string, error) {
+		return c.selfServiceDisplayName()
+	})
+}
+
+func (c *mqlJamfPolicy) GetSelfServiceDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SelfServiceDescription, func() (string, error) {
+		return c.selfServiceDescription()
+	})
+}
+
+func (c *mqlJamfPolicy) GetScopeAllComputers() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ScopeAllComputers, func() (bool, error) {
+		return c.scopeAllComputers()
+	})
+}
+
+func (c *mqlJamfPolicy) GetScope() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Scope, func() (any, error) {
+		return c.scope()
+	})
+}
+
+func (c *mqlJamfPolicy) GetFilesProcesses() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FilesProcesses, func() (any, error) {
+		return c.filesProcesses()
+	})
+}
+
+func (c *mqlJamfPolicy) GetPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Packages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf.policy", c.__id, "packages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.packages()
+	})
+}
+
+func (c *mqlJamfPolicy) GetScripts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Scripts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf.policy", c.__id, "scripts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scripts()
+	})
+}
+
+// mqlJamfPolicyPackage for the jamf.policy.package resource
+type mqlJamfPolicyPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJamfPolicyPackageInternal
+	Action            plugin.TValue[string]
+	FillUserTemplate  plugin.TValue[bool]
+	FillExistingUsers plugin.TValue[bool]
+	UpdateAutorun     plugin.TValue[bool]
+	Package           plugin.TValue[*mqlJamfPackage]
+}
+
+// createJamfPolicyPackage creates a new instance of this resource
+func createJamfPolicyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJamfPolicyPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jamf.policy.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJamfPolicyPackage) MqlName() string {
+	return "jamf.policy.package"
+}
+
+func (c *mqlJamfPolicyPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJamfPolicyPackage) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlJamfPolicyPackage) GetFillUserTemplate() *plugin.TValue[bool] {
+	return &c.FillUserTemplate
+}
+
+func (c *mqlJamfPolicyPackage) GetFillExistingUsers() *plugin.TValue[bool] {
+	return &c.FillExistingUsers
+}
+
+func (c *mqlJamfPolicyPackage) GetUpdateAutorun() *plugin.TValue[bool] {
+	return &c.UpdateAutorun
+}
+
+func (c *mqlJamfPolicyPackage) GetPackage() *plugin.TValue[*mqlJamfPackage] {
+	return plugin.GetOrCompute[*mqlJamfPackage](&c.Package, func() (*mqlJamfPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf.policy.package", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJamfPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
+// mqlJamfPolicyScript for the jamf.policy.script resource
+type mqlJamfPolicyScript struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJamfPolicyScriptInternal
+	Priority   plugin.TValue[string]
+	Parameters plugin.TValue[map[string]any]
+	Script     plugin.TValue[*mqlJamfScript]
+}
+
+// createJamfPolicyScript creates a new instance of this resource
+func createJamfPolicyScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJamfPolicyScript{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jamf.policy.script", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJamfPolicyScript) MqlName() string {
+	return "jamf.policy.script"
+}
+
+func (c *mqlJamfPolicyScript) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJamfPolicyScript) GetPriority() *plugin.TValue[string] {
+	return &c.Priority
+}
+
+func (c *mqlJamfPolicyScript) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlJamfPolicyScript) GetScript() *plugin.TValue[*mqlJamfScript] {
+	return plugin.GetOrCompute[*mqlJamfScript](&c.Script, func() (*mqlJamfScript, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf.policy.script", c.__id, "script")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJamfScript), nil
+			}
+		}
+
+		return c.script()
 	})
 }

@@ -33,6 +33,15 @@ jamf {
 
   // Retrieve all computer groups (both smart and static); inspect the `smartGroup` field on each entry to distinguish the two
   computerGroups() []jamf.computerGroup
+
+  // Retrieve a list of all policies configured in Jamf Pro
+  policies() []jamf.policy
+
+  // Retrieve a list of all scripts configured in Jamf Pro
+  scripts() []jamf.script
+
+  // Retrieve a list of all restricted software definitions configured in Jamf Pro
+  restrictedSoftware() []jamf.restrictedSoftware
 }
 
 // Jamf Pro user lookup by username
@@ -402,4 +411,244 @@ private jamf.package @defaults("name fileName") {
   // Resolves parentPackageId to the originating package. Null when the
   // package has no parent.
   parentPackage() jamf.package
+}
+
+// Jamf Pro script
+//
+// Examine a script available for deployment through Jamf Pro policies. The
+// `id` field selects a single script — for example `jamf.script(id: "12")`.
+// Each script exposes its shell `scriptContents`, the execution `priority`
+// (Before, After, or At Reboot), operating system requirements, and the
+// labeled runtime parameters that policies pass in.
+private jamf.script @defaults("name priority") {
+  // Script ID
+  id string
+
+  // Name of the script
+  name string
+
+  // ID of the category assigned to the script
+  categoryId string
+
+  // Name of the category assigned to the script
+  categoryName string
+
+  // Administrator-facing information shown for the script
+  info string
+
+  // Administrator-facing notes attached to the script
+  notes string
+
+  // Operating system requirements that must be met to run the script
+  osRequirements string
+
+  // Stage at which the script runs
+  //
+  // One of Before, After, or At Reboot.
+  priority string
+
+  // Shell contents of the script
+  scriptContents string
+
+  // Labeled runtime parameters passed to the script
+  //
+  // Keyed by parameter slot (parameter4 through parameter11); each value is
+  // the administrator-assigned label for that positional argument.
+  parameters map[string]string
+}
+
+// Jamf Pro restricted software definition
+//
+// Examine a restricted software rule that blocks or frustrates a macOS
+// process across scoped computers. The `id` field selects a single rule —
+// for example `jamf.restrictedSoftware(id: "3")`. Each rule names the
+// `processName` it matches and the enforcement actions taken when the process
+// runs — `killProcess`, `deleteExecutable`, and whether the user is notified.
+// The `scope` field reports which computers the rule applies to.
+private jamf.restrictedSoftware @defaults("name processName killProcess") {
+  // Restricted software ID
+  id string
+
+  // Name of the restricted software definition
+  name string
+
+  // Process name that the rule matches
+  processName() string
+
+  // Whether the process name must match exactly
+  matchExactProcessName() bool
+
+  // Whether a notification is sent when the matched process is found
+  sendNotification() bool
+
+  // Whether the matched process is killed
+  killProcess() bool
+
+  // Whether the matched executable is deleted
+  deleteExecutable() bool
+
+  // Message displayed to the user when the process is restricted
+  displayMessage() string
+
+  // Name of the site the definition belongs to
+  siteName() string
+
+  // Whether the rule applies to all computers
+  allComputers() bool
+
+  // Computers, groups, buildings, and departments the rule targets
+  //
+  // Reports the scope and exclusion entities by id and name under the
+  // `computers`, `computerGroups`, `buildings`, `departments`, and
+  // `exclusions` keys.
+  scope() dict
+}
+
+// Jamf Pro policy
+//
+// Examine a policy that runs scripts, installs packages, and performs
+// maintenance on scoped computers in Jamf Pro. The `id` field selects a
+// single policy — for example `jamf.policy(id: "42")`. Each policy reports
+// what triggers it (`frequency`, check-in, login, enrollment, startup), the
+// `packages` it installs and `scripts` it runs, any `filesProcesses` command
+// it executes, its Self Service presentation, and the computers in `scope`.
+private jamf.policy @defaults("name enabled frequency") {
+  // Policy ID
+  id string
+
+  // Name of the policy
+  name string
+
+  // Whether the policy is enabled
+  enabled() bool
+
+  // How often the policy runs
+  //
+  // For example "Once per computer", "Once per user per computer", or
+  // "Ongoing".
+  frequency() string
+
+  // Trigger event the policy responds to
+  trigger() string
+
+  // Whether the policy runs at recurring check-in
+  triggerCheckin() bool
+
+  // Whether the policy runs when enrollment completes
+  triggerEnrollmentComplete() bool
+
+  // Whether the policy runs at login
+  triggerLogin() bool
+
+  // Whether the policy runs at logout
+  triggerLogout() bool
+
+  // Whether the policy runs on a network state change
+  triggerNetworkStateChanged() bool
+
+  // Whether the policy runs at startup
+  triggerStartup() bool
+
+  // Custom trigger event name that runs the policy
+  triggerOther() string
+
+  // Event that causes the policy to retry
+  retryEvent() string
+
+  // Number of times the policy retries
+  retryAttempts() int
+
+  // Whether the policy runs while the computer is offline
+  offline() bool
+
+  // Target drive the policy runs against
+  targetDrive() string
+
+  // Network requirement for the policy to run
+  networkRequirements() string
+
+  // ID of the category assigned to the policy
+  categoryId() string
+
+  // Name of the category assigned to the policy
+  categoryName() string
+
+  // Name of the site the policy belongs to
+  siteName() string
+
+  // Whether the policy is available in Self Service
+  selfServiceEnabled() bool
+
+  // Display name shown for the policy in Self Service
+  selfServiceDisplayName() string
+
+  // Description shown for the policy in Self Service
+  selfServiceDescription() string
+
+  // Whether the policy targets all computers
+  scopeAllComputers() bool
+
+  // Computers, groups, and other entities the policy targets
+  //
+  // Reports the scope targets, scope limitations, and exclusions by id and
+  // name under the `computers`, `computerGroups`, `buildings`,
+  // `departments`, `limitations`, and `exclusions` keys.
+  scope() dict
+
+  // Files and processes the policy acts on
+  //
+  // Includes the search-by-path and process-search settings and the shell
+  // command the policy runs (`runCommand`), along with the related delete and
+  // kill flags.
+  filesProcesses() dict
+
+  // Packages the policy installs, caches, or removes
+  packages() []jamf.policy.package
+
+  // Scripts the policy runs
+  scripts() []jamf.policy.script
+}
+
+// Package action within a Jamf Pro policy
+//
+// Examine a single package entry on a policy: the `action` taken (Install,
+// Cache, or Uninstall) and the install options. The `package` field resolves
+// to the full package definition.
+private jamf.policy.package @defaults("action") {
+  // Action taken for the package
+  //
+  // One of Install, Cache, or Uninstall.
+  action string
+
+  // Whether the package fills the user template
+  fillUserTemplate bool
+
+  // Whether the package fills existing user home directories
+  fillExistingUsers bool
+
+  // Whether installing the package updates the autorun setting
+  updateAutorun bool
+
+  // Package this entry deploys
+  package() jamf.package
+}
+
+// Script action within a Jamf Pro policy
+//
+// Examine a single script entry on a policy: its execution `priority` and the
+// runtime `parameters` the policy passes. The `script` field resolves to the
+// full script definition.
+private jamf.policy.script @defaults("priority") {
+  // Stage at which the script runs
+  //
+  // One of Before, After, or At Reboot.
+  priority string
+
+  // Runtime parameters the policy passes to the script
+  //
+  // Keyed by parameter slot (parameter4 through parameter11).
+  parameters map[string]string
+
+  // Script this entry runs
+  script() jamf.script
 }
