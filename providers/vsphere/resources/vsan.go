@@ -109,10 +109,12 @@ func (v *mqlVsphereCluster) vsan() (*mqlVsphereClusterVsan, error) {
 	return mqlVsan, nil
 }
 
-// health returns a best-effort overall vSAN object-health summary, or null
-// when the health/performance service is unavailable. It runs its own
+// health returns an overall vSAN object-health summary, or null when vCenter
+// reports no health data for the cluster. It runs its own
 // VsanQueryObjectIdentities call, kept out of the base vsan() build so that
-// querying only the encryption/efficiency scalars doesn't pay for it.
+// querying only the encryption/efficiency scalars doesn't pay for it. Genuine
+// query failures (network, auth) are propagated rather than masked as null so
+// they're distinguishable from a cluster that simply has no health data.
 func (v *mqlVsphereClusterVsan) health() (map[string]any, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	ctx := context.Background()
@@ -123,7 +125,10 @@ func (v *mqlVsphereClusterVsan) health() (map[string]any, error) {
 	}
 
 	identities, err := vc.VsanQueryObjectIdentities(ctx, v.cacheClusterRef)
-	if err != nil || identities == nil || identities.Health == nil {
+	if err != nil {
+		return nil, err
+	}
+	if identities == nil || identities.Health == nil {
 		v.Health.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -157,21 +162,21 @@ func (v *mqlVsphereClusterVsan) kmsProvider() (*mqlVsphereKmsCluster, error) {
 	return nil, nil
 }
 
-// mqlVsphereHostVsanConfigInternal caches the host's claimed disk groups so the
+// mqlVsphereHostVsanInternal caches the host's claimed disk groups so the
 // diskGroups() accessor can build typed sub-resources without re-fetching the
 // HostVsanSystem managed object. cacheHostMoid scopes each disk group's __id to
 // its host so a cache-disk UUID seen on two hosts can't collide in the cache.
-type mqlVsphereHostVsanConfigInternal struct {
+type mqlVsphereHostVsanInternal struct {
 	cacheHostMoid     string
 	cacheDiskMappings []vimtypes.VsanHostDiskMapping
 }
 
-// vsanConfig returns the host's vSAN configuration, or null when the host does
-// not participate in vSAN. The configuration is read from the host's
+// vsan returns the host's vSAN configuration, or null when the host does not
+// participate in vSAN. The configuration is read from the host's
 // HostVsanSystem managed object (ConfigManager.vsanSystem).
-func (v *mqlVsphereHost) vsanConfig() (*mqlVsphereHostVsanConfig, error) {
+func (v *mqlVsphereHost) vsan() (*mqlVsphereHostVsan, error) {
 	if v.host == nil || v.host.ConfigManager.VsanSystem == nil {
-		v.VsanConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		v.Vsan.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -185,7 +190,7 @@ func (v *mqlVsphereHost) vsanConfig() (*mqlVsphereHostVsanConfig, error) {
 	}
 	config := props.Config
 	if config.Enabled == nil || !*config.Enabled {
-		v.VsanConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		v.Vsan.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -198,8 +203,8 @@ func (v *mqlVsphereHost) vsanConfig() (*mqlVsphereHostVsanConfig, error) {
 		diskMappings = si.DiskMapping
 	}
 
-	res, err := CreateResource(v.MqlRuntime, "vsphere.host.vsanConfig", map[string]*llx.RawData{
-		"__id":             llx.StringData(v.Moid.Data + "/vsanConfig"),
+	res, err := CreateResource(v.MqlRuntime, "vsphere.host.vsan", map[string]*llx.RawData{
+		"__id":             llx.StringData(v.Moid.Data + "/vsan"),
 		"enabled":          llx.BoolData(true),
 		"autoClaimStorage": llx.BoolData(autoClaim),
 		"checksumEnabled":  llx.BoolData(checksum),
@@ -207,16 +212,16 @@ func (v *mqlVsphereHost) vsanConfig() (*mqlVsphereHostVsanConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlVsanConfig := res.(*mqlVsphereHostVsanConfig)
-	mqlVsanConfig.cacheHostMoid = v.Moid.Data
-	mqlVsanConfig.cacheDiskMappings = diskMappings
-	return mqlVsanConfig, nil
+	mqlVsan := res.(*mqlVsphereHostVsan)
+	mqlVsan.cacheHostMoid = v.Moid.Data
+	mqlVsan.cacheDiskMappings = diskMappings
+	return mqlVsan, nil
 }
 
 // diskGroups builds one vsphere.host.vsan.diskGroup per claimed disk group. The
 // __id is host-scoped (<hostMoid>/vsanDiskGroup/<cacheDiskUuid>) so the same
 // cache-disk UUID appearing on two hosts can't collide in the resource cache.
-func (v *mqlVsphereHostVsanConfig) diskGroups() ([]any, error) {
+func (v *mqlVsphereHostVsan) diskGroups() ([]any, error) {
 	mqlDiskGroups := make([]any, 0, len(v.cacheDiskMappings))
 	for _, dm := range v.cacheDiskMappings {
 		capacityDisks := make([]any, 0, len(dm.NonSsd))

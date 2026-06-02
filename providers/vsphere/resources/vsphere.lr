@@ -490,7 +490,7 @@ private vsphere.host @defaults("moid name") {
   // Host IP routing (default gateways)
   ipRouteConfig() vsphere.host.ipRouteConfig
   // vSAN host configuration; null when the host does not participate in vSAN
-  vsanConfig() vsphere.host.vsanConfig
+  vsan() vsphere.host.vsan
 }
 
 // vSAN Cluster Configuration
@@ -533,7 +533,7 @@ private vsphere.cluster.vsan @defaults("esaEnabled encryptionEnabled checksumEna
   fileServiceEnabled bool
   // Whether the vSAN performance service is enabled
   perfServiceEnabled bool
-  // Overall vSAN object health summary; null when the health service is unavailable
+  // Overall vSAN object health summary; null when vCenter reports no health data
   health() dict
 }
 
@@ -543,8 +543,8 @@ private vsphere.cluster.vsan @defaults("esaEnabled encryptionEnabled checksumEna
 // `enabled`, whether the host automatically claims local disks
 // (`autoClaimStorage`), whether `checksumEnabled` integrity protection is in
 // force, and the `diskGroups` of cache and capacity disks the host
-// contributes to the vSAN datastore. Reached from `vsphere.host.vsanConfig`.
-private vsphere.host.vsanConfig @defaults("enabled checksumEnabled") {
+// contributes to the vSAN datastore. Reached from `vsphere.host.vsan`.
+private vsphere.host.vsan @defaults("enabled checksumEnabled") {
   // Whether vSAN is enabled on the host
   enabled bool
   // Whether the host automatically claims eligible local disks for vSAN
@@ -561,7 +561,7 @@ private vsphere.host.vsanConfig @defaults("enabled checksumEnabled") {
 // a set of capacity disks. The `cacheDiskUuid` selects the group, `cacheDisk`
 // and `capacityDisks` give the device canonical names, and `capacityBytes`
 // reports the total raw capacity backing the group. Iterate from
-// `vsphere.host.vsanConfig.diskGroups`.
+// `vsphere.host.vsan.diskGroups`.
 private vsphere.host.vsan.diskGroup @defaults("cacheDiskUuid capacityDiskCount capacityBytes") {
   // Cache (flash) disk UUID — unique identifier for the disk group
   cacheDiskUuid string
