@@ -631,15 +631,20 @@ oci.network {
 
 // Oracle Cloud Infrastructure (OCI) public IP address
 //
-// Examine a reserved or regional public IP address in the tenancy.
-// `lifetime` is `RESERVED` (you control its life; persists unassigned) or
-// `EPHEMERAL` (tied to the entity it is attached to, such as a NAT gateway).
-// `assignedEntityType` and `assignedEntityId` identify what the address is
-// routed to — a `PRIVATE_IP` (a compute VNIC) or a `NAT_GATEWAY`; an empty
-// `assignedEntityId` on a `RESERVED` address is an unattached, billable, and
-// reusable public address. `scope` distinguishes region-wide addresses from
-// availability-domain-scoped ones. Use this to inventory the tenancy's
-// internet-facing address surface and find orphaned reservations.
+// Examine a region-scoped public IP address in the tenancy — every
+// `RESERVED` address (whether attached or not) plus the `EPHEMERAL`
+// addresses held by regional entities such as NAT gateways. `lifetime` is
+// `RESERVED` (you control its life; persists unassigned) or `EPHEMERAL`
+// (tied to the entity it is attached to). `assignedEntityType` and
+// `assignedEntityId` identify what the address is routed to — a `PRIVATE_IP`
+// (a compute VNIC) or a `NAT_GATEWAY`; an empty `assignedEntityId` on a
+// `RESERVED` address is an unattached, billable, and reusable public address.
+// Use this to inventory the tenancy's internet-facing address surface and
+// find orphaned reservations.
+//
+// Availability-domain-scoped ephemeral public IPs — the addresses
+// auto-assigned to compute instance VNICs — are not listed here; read
+// `oci.compute.vnic.publicIp` for the per-instance view of those.
 private oci.network.publicIp @defaults("ipAddress lifetime assignedEntityType") {
   // Public IP OCID
   id string
@@ -1604,7 +1609,7 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   shape string
   // Whether the load balancer is private (no public IP)
   isPrivate bool
-  // Assigned IP addresses, each with an `ipAddress` and an `isPublic` flag indicating internet reachability
+  // Assigned IP addresses, each with an `ipAddress`, an `isPublic` flag indicating internet reachability, and a `reservedIpId` (the oci.network.publicIp OCID) when the address is backed by a reserved public IP
   ipAddresses []dict
   // Whether delete protection is enabled
   isDeleteProtectionEnabled bool
