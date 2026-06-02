@@ -156,13 +156,16 @@ digitalocean.dropletAutoscalePool.currentMemoryUtilization 13.4.2
 digitalocean.dropletAutoscalePool.dropletTemplate 13.4.2
 digitalocean.dropletAutoscalePool.id 13.4.2
 digitalocean.dropletAutoscalePool.maxInstances 13.4.2
+digitalocean.dropletAutoscalePool.members 13.4.2
 digitalocean.dropletAutoscalePool.minInstances 13.4.2
 digitalocean.dropletAutoscalePool.name 13.4.2
+digitalocean.dropletAutoscalePool.project 13.4.2
 digitalocean.dropletAutoscalePool.status 13.4.2
 digitalocean.dropletAutoscalePool.targetCpuUtilization 13.4.2
 digitalocean.dropletAutoscalePool.targetMemoryUtilization 13.4.2
 digitalocean.dropletAutoscalePool.targetNumberInstances 13.4.2
 digitalocean.dropletAutoscalePool.updatedAt 13.4.2
+digitalocean.dropletAutoscalePool.vpc 13.4.2
 digitalocean.dropletAutoscalePools 13.4.2
 digitalocean.droplets 13.0.1
 digitalocean.firewall 13.0.1
@@ -345,6 +348,7 @@ digitalocean.reservedIp.locked 13.0.1
 digitalocean.reservedIp.projectId 13.0.1
 digitalocean.reservedIp.region 13.0.1
 digitalocean.reservedIpV6 13.4.2
+digitalocean.reservedIpV6.droplet 13.4.2
 digitalocean.reservedIpV6.dropletId 13.4.2
 digitalocean.reservedIpV6.ip 13.4.2
 digitalocean.reservedIpV6.region 13.4.2
@@ -453,6 +457,7 @@ digitalocean.vpcNatGateway.icmpTimeoutSeconds 13.4.2
 digitalocean.vpcNatGateway.id 13.4.2
 digitalocean.vpcNatGateway.ingressVpcs 13.4.2
 digitalocean.vpcNatGateway.name 13.4.2
+digitalocean.vpcNatGateway.project 13.4.2
 digitalocean.vpcNatGateway.projectId 13.4.2
 digitalocean.vpcNatGateway.region 13.4.2
 digitalocean.vpcNatGateway.size 13.4.2

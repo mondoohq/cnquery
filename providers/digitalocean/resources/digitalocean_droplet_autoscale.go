@@ -11,6 +11,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 )
 
+type mqlDigitaloceanDropletAutoscalePoolInternal struct {
+	templateVpcUUID   string
+	templateProjectID string
+}
+
 func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
@@ -90,6 +95,11 @@ func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlPool := res.(*mqlDigitaloceanDropletAutoscalePool)
+			if t := p.DropletTemplate; t != nil {
+				mqlPool.templateVpcUUID = t.VpcUUID
+				mqlPool.templateProjectID = t.ProjectID
+			}
 			all = append(all, res)
 		}
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
@@ -102,4 +112,46 @@ func (r *mqlDigitalocean) dropletAutoscalePools() ([]interface{}, error) {
 		opt.Page = page + 1
 	}
 	return all, nil
+}
+
+func (r *mqlDigitaloceanDropletAutoscalePool) members() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	var dropletIDs []any
+	opt := &godo.ListOptions{PerPage: 200}
+	for {
+		members, resp, err := client.DropletAutoscale.ListMembers(ctx, r.Id.Data, opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range members {
+			if m != nil {
+				dropletIDs = append(dropletIDs, int64(m.DropletID))
+			}
+		}
+		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return nil, err
+		}
+		opt.Page = page + 1
+	}
+
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.dropletByIDs(dropletIDs)
+}
+
+func (r *mqlDigitaloceanDropletAutoscalePool) project() (*mqlDigitaloceanProject, error) {
+	return projectRef(r.MqlRuntime, r.templateProjectID, &r.Project)
+}
+
+func (r *mqlDigitaloceanDropletAutoscalePool) vpc() (*mqlDigitaloceanVpc, error) {
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.templateVpcUUID)
 }

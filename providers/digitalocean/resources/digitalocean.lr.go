@@ -1496,6 +1496,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.vpcNatGateway.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcNatGateway).GetProjectId()).ToDataRes(types.String)
 	},
+	"digitalocean.vpcNatGateway.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetProject()).ToDataRes(types.Resource("digitalocean.project"))
+	},
 	"digitalocean.vpcNatGateway.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcNatGateway).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1547,6 +1550,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.reservedIpV6.dropletId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanReservedIpV6).GetDropletId()).ToDataRes(types.Int)
 	},
+	"digitalocean.reservedIpV6.droplet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanReservedIpV6).GetDroplet()).ToDataRes(types.Resource("digitalocean.droplet"))
+	},
 	"digitalocean.dropletAutoscalePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetId()).ToDataRes(types.String)
 	},
@@ -1582,6 +1588,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.dropletAutoscalePool.dropletTemplate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetDropletTemplate()).ToDataRes(types.Dict)
+	},
+	"digitalocean.dropletAutoscalePool.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetMembers()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
+	},
+	"digitalocean.dropletAutoscalePool.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetProject()).ToDataRes(types.Resource("digitalocean.project"))
+	},
+	"digitalocean.dropletAutoscalePool.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetVpc()).ToDataRes(types.Resource("digitalocean.vpc"))
 	},
 	"digitalocean.dropletAutoscalePool.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetCreatedAt()).ToDataRes(types.Time)
@@ -3345,6 +3360,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanVpcNatGateway).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"digitalocean.vpcNatGateway.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Project, ok = plugin.RawToTValue[*mqlDigitaloceanProject](v.Value, v.Error)
+		return
+	},
 	"digitalocean.vpcNatGateway.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVpcNatGateway).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -3421,6 +3440,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanReservedIpV6).DropletId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"digitalocean.reservedIpV6.droplet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).Droplet, ok = plugin.RawToTValue[*mqlDigitaloceanDroplet](v.Value, v.Error)
+		return
+	},
 	"digitalocean.dropletAutoscalePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDropletAutoscalePool).__id, ok = v.Value.(string)
 		return
@@ -3471,6 +3494,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.dropletAutoscalePool.dropletTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDropletAutoscalePool).DropletTemplate, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Project, ok = plugin.RawToTValue[*mqlDigitaloceanProject](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Vpc, ok = plugin.RawToTValue[*mqlDigitaloceanVpc](v.Value, v.Error)
 		return
 	},
 	"digitalocean.dropletAutoscalePool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7773,6 +7808,7 @@ type mqlDigitaloceanVpcNatGateway struct {
 	IcmpTimeoutSeconds     plugin.TValue[int64]
 	TcpTimeoutSeconds      plugin.TValue[int64]
 	ProjectId              plugin.TValue[string]
+	Project                plugin.TValue[*mqlDigitaloceanProject]
 	CreatedAt              plugin.TValue[*time.Time]
 	UpdatedAt              plugin.TValue[*time.Time]
 }
@@ -7871,6 +7907,22 @@ func (c *mqlDigitaloceanVpcNatGateway) GetTcpTimeoutSeconds() *plugin.TValue[int
 
 func (c *mqlDigitaloceanVpcNatGateway) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetProject() *plugin.TValue[*mqlDigitaloceanProject] {
+	return plugin.GetOrCompute[*mqlDigitaloceanProject](&c.Project, func() (*mqlDigitaloceanProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpcNatGateway", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 func (c *mqlDigitaloceanVpcNatGateway) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -7996,6 +8048,7 @@ type mqlDigitaloceanReservedIpV6 struct {
 	Region     plugin.TValue[string]
 	ReservedAt plugin.TValue[*time.Time]
 	DropletId  plugin.TValue[int64]
+	Droplet    plugin.TValue[*mqlDigitaloceanDroplet]
 }
 
 // createDigitaloceanReservedIpV6 creates a new instance of this resource
@@ -8051,11 +8104,27 @@ func (c *mqlDigitaloceanReservedIpV6) GetDropletId() *plugin.TValue[int64] {
 	return &c.DropletId
 }
 
+func (c *mqlDigitaloceanReservedIpV6) GetDroplet() *plugin.TValue[*mqlDigitaloceanDroplet] {
+	return plugin.GetOrCompute[*mqlDigitaloceanDroplet](&c.Droplet, func() (*mqlDigitaloceanDroplet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.reservedIpV6", c.__id, "droplet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanDroplet), nil
+			}
+		}
+
+		return c.droplet()
+	})
+}
+
 // mqlDigitaloceanDropletAutoscalePool for the digitalocean.dropletAutoscalePool resource
 type mqlDigitaloceanDropletAutoscalePool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDigitaloceanDropletAutoscalePoolInternal it will be used here
+	mqlDigitaloceanDropletAutoscalePoolInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Status                   plugin.TValue[string]
@@ -8068,6 +8137,9 @@ type mqlDigitaloceanDropletAutoscalePool struct {
 	CurrentCpuUtilization    plugin.TValue[float64]
 	CurrentMemoryUtilization plugin.TValue[float64]
 	DropletTemplate          plugin.TValue[any]
+	Members                  plugin.TValue[[]any]
+	Project                  plugin.TValue[*mqlDigitaloceanProject]
+	Vpc                      plugin.TValue[*mqlDigitaloceanVpc]
 	CreatedAt                plugin.TValue[*time.Time]
 	UpdatedAt                plugin.TValue[*time.Time]
 }
@@ -8150,6 +8222,54 @@ func (c *mqlDigitaloceanDropletAutoscalePool) GetCurrentMemoryUtilization() *plu
 
 func (c *mqlDigitaloceanDropletAutoscalePool) GetDropletTemplate() *plugin.TValue[any] {
 	return &c.DropletTemplate
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.dropletAutoscalePool", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetProject() *plugin.TValue[*mqlDigitaloceanProject] {
+	return plugin.GetOrCompute[*mqlDigitaloceanProject](&c.Project, func() (*mqlDigitaloceanProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.dropletAutoscalePool", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetVpc() *plugin.TValue[*mqlDigitaloceanVpc] {
+	return plugin.GetOrCompute[*mqlDigitaloceanVpc](&c.Vpc, func() (*mqlDigitaloceanVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.dropletAutoscalePool", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlDigitaloceanDropletAutoscalePool) GetCreatedAt() *plugin.TValue[*time.Time] {

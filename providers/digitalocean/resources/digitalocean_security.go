@@ -26,6 +26,10 @@ type mqlDigitaloceanInternal struct {
 	dropletIndex     map[int64]*mqlDigitaloceanDroplet
 	dropletIndexErr  error
 
+	projectIndexOnce sync.Once
+	projectIndex     map[string]*mqlDigitaloceanProject
+	projectIndexErr  error
+
 	firewallIndexOnce sync.Once
 	firewallByDroplet map[int64][]*mqlDigitaloceanFirewall
 	firewallByTag     map[string][]*mqlDigitaloceanFirewall
@@ -58,6 +62,26 @@ func (r *mqlDigitalocean) vpcByID(uuid string) (*mqlDigitaloceanVpc, error) {
 		return nil, r.vpcIndexErr
 	}
 	return r.vpcIndex[uuid], nil
+}
+
+func (r *mqlDigitalocean) projectByID(id string) (*mqlDigitaloceanProject, error) {
+	r.projectIndexOnce.Do(func() {
+		projects := r.GetProjects()
+		if projects.Error != nil {
+			r.projectIndexErr = projects.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanProject, len(projects.Data))
+		for _, p := range projects.Data {
+			mp := p.(*mqlDigitaloceanProject)
+			idx[mp.Id.Data] = mp
+		}
+		r.projectIndex = idx
+	})
+	if r.projectIndexErr != nil {
+		return nil, r.projectIndexErr
+	}
+	return r.projectIndex[id], nil
 }
 
 func (r *mqlDigitalocean) dropletByIDs(ids []any) ([]any, error) {
@@ -172,6 +196,50 @@ func resolveVpcRef(runtime *plugin.Runtime, target *plugin.TValue[*mqlDigitaloce
 		return nil, nil
 	}
 	return vpc, nil
+}
+
+// projectRef sets the StateIsSet|StateIsNull bookkeeping on the target
+// field and resolves the project from the parent resource's cached index.
+func projectRef(runtime *plugin.Runtime, projectID string, target *plugin.TValue[*mqlDigitaloceanProject]) (*mqlDigitaloceanProject, error) {
+	if strings.TrimSpace(projectID) == "" {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parent, err := parentDigitalocean(runtime)
+	if err != nil {
+		return nil, err
+	}
+	project, err := parent.projectByID(projectID)
+	if err != nil {
+		return nil, err
+	}
+	if project == nil {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
+}
+
+// dropletRef resolves a single droplet by id from the parent's cached
+// index, setting StateIsSet|StateIsNull when the id is unset or unknown.
+func dropletRef(runtime *plugin.Runtime, dropletID int64, target *plugin.TValue[*mqlDigitaloceanDroplet]) (*mqlDigitaloceanDroplet, error) {
+	if dropletID == 0 {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parent, err := parentDigitalocean(runtime)
+	if err != nil {
+		return nil, err
+	}
+	droplets, err := parent.dropletByIDs([]any{dropletID})
+	if err != nil {
+		return nil, err
+	}
+	if len(droplets) == 0 {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return droplets[0].(*mqlDigitaloceanDroplet), nil
 }
 
 // --- Droplet typed refs / computed fields ---

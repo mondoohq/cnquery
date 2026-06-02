@@ -1220,6 +1220,8 @@ digitalocean.vpcNatGateway @defaults("id name region state") {
   tcpTimeoutSeconds int
   // ID of the project the gateway belongs to
   projectId string
+  // Project the gateway belongs to
+  project() digitalocean.project
   // Time the gateway was created
   createdAt time
   // Time the gateway was last updated
@@ -1275,6 +1277,8 @@ digitalocean.reservedIpV6 @defaults("ip region") {
   reservedAt time
   // Droplet ID the address is assigned to (0 if unassigned)
   dropletId int
+  // Droplet the address is assigned to; null when unassigned
+  droplet() digitalocean.droplet
 }
 
 // DigitalOcean droplet autoscale pool
@@ -1316,6 +1320,12 @@ digitalocean.dropletAutoscalePool @defaults("id name status") {
   // `projectId`, `ipv6`, `withDropletAgent`, `publicNetworking`, and
   // `userData`.
   dropletTemplate dict
+  // Droplets that are currently members of the pool
+  members() []digitalocean.droplet
+  // Project new members are created in
+  project() digitalocean.project
+  // VPC new members are attached to
+  vpc() digitalocean.vpc
   // Time the pool was created
   createdAt time
   // Time the pool was last updated

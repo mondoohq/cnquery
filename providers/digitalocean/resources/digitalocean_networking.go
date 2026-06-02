@@ -96,10 +96,22 @@ func (r *mqlDigitaloceanVpcNatGateway) vpcs() ([]interface{}, error) {
 	return vpcRefsByUUIDs(r.MqlRuntime, r.vpcUUIDs)
 }
 
+func (r *mqlDigitaloceanVpcNatGateway) project() (*mqlDigitaloceanProject, error) {
+	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+}
+
 // ----- Reserved IPv6 addresses -----
 
 func (r *mqlDigitaloceanReservedIpV6) id() (string, error) {
 	return "digitalocean.reservedIpV6/" + r.Ip.Data, nil
+}
+
+func (r *mqlDigitaloceanReservedIpV6) droplet() (*mqlDigitaloceanDroplet, error) {
+	if r.DropletId.Data == 0 {
+		r.Droplet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return dropletRef(r.MqlRuntime, r.DropletId.Data, &r.Droplet)
 }
 
 func (r *mqlDigitalocean) reservedIPv6s() ([]interface{}, error) {
