@@ -28,6 +28,8 @@ digitalocean {
   databases() []digitalocean.database
   // Managed vector databases
   vectorDatabases() []digitalocean.vectorDatabase
+  // GenAI (GradientAI) platform
+  gradientai() digitalocean.gradientai
   // Domains
   domains() []digitalocean.domain
   // Block storage volumes
@@ -1330,4 +1332,623 @@ digitalocean.dropletAutoscalePool @defaults("id name status") {
   createdAt time
   // Time the pool was last updated
   updatedAt time
+}
+
+// DigitalOcean GenAI (GradientAI) platform
+//
+// Use the GradientAI namespace as the entry point for DigitalOcean's
+// GenAI platform. Iterate `agents()` for deployed AI agents, `models()`
+// for the available foundation-model catalog, `customModels()` for
+// account-uploaded models, `knowledgeBases()` for RAG knowledge bases,
+// `indexingJobs()` for knowledge-base indexing runs,
+// `anthropicApiKeys()` and `openaiApiKeys()` for registered external
+// provider keys, `dedicatedInferenceEndpoints()` for dedicated GPU
+// inference, and `batchJobs()` for batch inference jobs.
+digitalocean.gradientai {
+  // GenAI agents
+  agents() []digitalocean.gradientai.agent
+  // Available foundation models
+  models() []digitalocean.gradientai.model
+  // Account-uploaded custom models
+  customModels() []digitalocean.gradientai.customModel
+  // RAG knowledge bases
+  knowledgeBases() []digitalocean.gradientai.knowledgeBase
+  // Knowledge-base indexing jobs
+  indexingJobs() []digitalocean.gradientai.indexingJob
+  // Registered Anthropic API keys
+  anthropicApiKeys() []digitalocean.gradientai.anthropicApiKey
+  // Registered OpenAI API keys
+  openaiApiKeys() []digitalocean.gradientai.openaiApiKey
+  // Dedicated GPU inference endpoints
+  dedicatedInferenceEndpoints() []digitalocean.gradientai.dedicatedInferenceEndpoint
+  // Batch inference jobs
+  batchJobs() []digitalocean.gradientai.batchJob
+}
+
+// DigitalOcean GradientAI agent
+//
+// Examine a deployed GenAI agent. Surfaces the `instruction` (system
+// prompt), generation parameters (`temperature`, `topP`, `maxTokens`,
+// `k`, `retrievalMethod`), and the security-relevant posture: whether
+// the agent is publicly exposed (`deploymentVisibility`), whether
+// prompts and responses are logged (`conversationLogsEnabled`), whether
+// citations are provided, and the attached `guardrails()`. Reach the
+// backing `model()`, the RAG `knowledgeBases()`, the `project()` and
+// `vpc()` it runs in, the external `anthropicApiKey()`/`openaiApiKey()`
+// it uses, and the agent routing graph through `childAgents()` and
+// `parentAgents()`. Select an agent by uuid with
+// `digitalocean.gradientai.agent(uuid: "...")`.
+private digitalocean.gradientai.agent @defaults("uuid name region") {
+  // Agent UUID
+  uuid string
+  // Name
+  name string
+  // Description
+  description string
+  // Region slug
+  region string
+  // System prompt / instruction given to the agent
+  instruction string
+  // Sampling temperature
+  temperature float
+  // Nucleus sampling top-p
+  topP float
+  // Maximum tokens generated per response
+  maxTokens int
+  // Number of knowledge-base results retrieved per query
+  k int
+  // Retrieval method used against attached knowledge bases
+  retrievalMethod string
+  // Whether the agent returns citations for retrieved content
+  provideCitations bool
+  // Whether prompts and responses are logged
+  conversationLogsEnabled bool
+  // Routing condition expression for child-agent routing
+  ifCase string
+  // Routing UUID
+  routeUuid string
+  // Routing name
+  routeName string
+  // Public agent URL
+  url string
+  // ID of the user that owns the agent
+  userId string
+  // Hash of the currently applied agent version
+  versionHash string
+  // ID of the project the agent belongs to
+  projectId string
+  // UUID of the VPC the agent runs in
+  vpcUuid string
+  // Public IPs the agent egresses from
+  vpcEgressIps []string
+  // Tags applied to the agent
+  tags []string
+  // Deployment name
+  deploymentName string
+  // Deployment lifecycle status
+  deploymentStatus string
+  // Deployment exposure
+  //
+  // Indicates whether the deployed agent is reachable publicly or only
+  // privately (e.g., VISIBILITY_PUBLIC or VISIBILITY_PRIVATE).
+  deploymentVisibility string
+  // Deployment URL
+  deploymentUrl string
+  // Deployment UUID
+  deploymentUuid string
+  // Chatbot widget configuration (name, colors, starting message, logo)
+  chatbot dict
+  // Time the agent was created
+  createdAt time
+  // Time the agent was last updated
+  updatedAt time
+  // Backing foundation model
+  model() digitalocean.gradientai.model
+  // RAG knowledge bases attached to the agent
+  knowledgeBases() []digitalocean.gradientai.knowledgeBase
+  // Child agents this agent can route to
+  childAgents() []digitalocean.gradientai.agent
+  // Parent agents that can route to this agent
+  parentAgents() []digitalocean.gradientai.agent
+  // Project the agent belongs to
+  project() digitalocean.project
+  // VPC the agent runs in
+  vpc() digitalocean.vpc
+  // Registered Anthropic API key the agent uses, if any
+  anthropicApiKey() digitalocean.gradientai.anthropicApiKey
+  // Registered OpenAI API key the agent uses, if any
+  openaiApiKey() digitalocean.gradientai.openaiApiKey
+  // Content guardrails attached to the agent
+  guardrails() []digitalocean.gradientai.agent.guardrail
+  // Tool / function-calling definitions attached to the agent
+  functions() []digitalocean.gradientai.agent.function
+  // Version history of the agent
+  versions() []digitalocean.gradientai.agent.version
+  // API keys issued for the agent (secret values are never exposed)
+  apiKeys() []digitalocean.gradientai.agent.apiKey
+}
+
+// DigitalOcean GradientAI agent guardrail
+//
+// Examine a content guardrail attached to an agent. Use `type` and
+// `isAttached`/`isDefault` to confirm which guardrails are actively
+// enforced, and `defaultResponse` for the canned reply returned on a
+// guardrail trip.
+private digitalocean.gradientai.agent.guardrail @defaults("uuid name type") {
+  // Guardrail UUID
+  uuid string
+  // UUID of the agent the guardrail is attached to
+  agentUuid string
+  // Name
+  name string
+  // Guardrail type
+  type string
+  // Description
+  description string
+  // Canned response returned when the guardrail trips
+  defaultResponse string
+  // Evaluation priority
+  priority int
+  // Whether the guardrail is currently attached
+  isAttached bool
+  // Whether the guardrail is a default
+  isDefault bool
+  // Time the guardrail was created
+  createdAt time
+  // Time the guardrail was last updated
+  updatedAt time
+}
+
+// DigitalOcean GradientAI agent function
+//
+// Examine a tool / function-calling definition attached to an agent.
+// Surfaces the backing serverless function (`faasName`,
+// `faasNamespace`) and its `url`. The function's API key is never
+// exposed.
+private digitalocean.gradientai.agent.function @defaults("uuid name") {
+  // Function UUID
+  uuid string
+  // Name
+  name string
+  // Description
+  description string
+  // Backing serverless function name
+  faasName string
+  // Backing serverless function namespace
+  faasNamespace string
+  // Invocation URL
+  url string
+  // UUID of an associated guardrail, if any
+  guardrailUuid string
+  // Time the function was created
+  createdAt time
+  // Time the function was last updated
+  updatedAt time
+}
+
+// DigitalOcean GradientAI agent version
+//
+// Examine a single version in an agent's history. `currentlyApplied`
+// marks the live version and `canRollback` indicates whether the agent
+// can be reverted to it. The instruction, model, and generation
+// parameters captured at version time are also surfaced.
+private digitalocean.gradientai.agent.version @defaults("id name versionHash") {
+  // Version ID
+  id string
+  // UUID of the agent this version belongs to
+  agentUuid string
+  // Name
+  name string
+  // Description
+  description string
+  // System prompt / instruction captured in this version
+  instruction string
+  // Model name captured in this version
+  modelName string
+  // Version hash
+  versionHash string
+  // Whether this version is currently applied to the agent
+  currentlyApplied bool
+  // Whether the agent can be rolled back to this version
+  canRollback bool
+  // Email of the user that created the version
+  createdByEmail string
+  // Sampling temperature
+  temperature float
+  // Nucleus sampling top-p
+  topP float
+  // Maximum tokens generated per response
+  maxTokens int
+  // Number of knowledge-base results retrieved per query
+  k int
+  // Whether the agent returns citations
+  provideCitations bool
+  // Retrieval method
+  retrievalMethod string
+  // Trigger action that created the version
+  triggerAction string
+  // Tags
+  tags []string
+  // Time the version was created
+  createdAt time
+}
+
+// DigitalOcean GradientAI agent API key
+//
+// Examine an API key issued for an agent. The secret value is never
+// exposed; only metadata (`name`, `createdBy`, timestamps) is surfaced.
+private digitalocean.gradientai.agent.apiKey @defaults("uuid name") {
+  // API key UUID
+  uuid string
+  // UUID of the agent the key belongs to
+  agentUuid string
+  // Name
+  name string
+  // User that created the key
+  createdBy string
+  // Time the key was created
+  createdAt time
+  // Time the key was deleted, if applicable
+  deletedAt time
+}
+
+// DigitalOcean GradientAI model
+//
+// Examine a foundation model available on the GradientAI platform.
+// Surfaces the `provider`, model `type`, whether it is foundational,
+// `modelAvailability`, declared `capabilities` and `usecases`, the
+// `contextWindow`, `parameterCount`, supported `modalities`, and
+// `pricing`. Select a model by uuid with
+// `digitalocean.gradientai.model(uuid: "...")`.
+private digitalocean.gradientai.model @defaults("uuid name provider") {
+  // Model UUID
+  uuid string
+  // Name
+  name string
+  // Provider (e.g., anthropic, openai, meta)
+  provider string
+  // Model type
+  type string
+  // Whether the model is a foundational model
+  isFoundational bool
+  // Availability status
+  modelAvailability string
+  // Inference name
+  inferenceName string
+  // Inference version
+  inferenceVersion string
+  // Whether upload of the model completed
+  uploadComplete bool
+  // Model URL
+  url string
+  // Context window size
+  contextWindow string
+  // Parameter count
+  parameterCount float
+  // Declared capabilities
+  capabilities []string
+  // Declared use cases
+  usecases []string
+  // Supported input/output modalities
+  modalities dict
+  // Pricing breakdown (per-million tokens, per image, per second, etc.)
+  pricing dict
+  // Semantic version (major, minor, patch)
+  version dict
+  // Name of the usage agreement, if any
+  agreementName string
+  // URL of the usage agreement, if any
+  agreementUrl string
+  // Time the model was created
+  createdAt time
+  // Time the model was last updated
+  updatedAt time
+}
+
+// DigitalOcean GradientAI custom model
+//
+// Examine an account-uploaded custom model. Surfaces the `status`,
+// `architecture`, `sourceType`, total size and file count, declared
+// modalities, context length, monthly cost estimate, and the
+// `activeDeployments` currently serving it.
+private digitalocean.gradientai.customModel @defaults("uuid name status") {
+  // Custom model UUID
+  uuid string
+  // Name
+  name string
+  // Description
+  description string
+  // Lifecycle status
+  status string
+  // Model architecture
+  architecture string
+  // Source type the model was imported from
+  sourceType string
+  // Total size of the model, in bytes
+  totalSizeBytes string
+  // Number of files comprising the model
+  fileCount int
+  // License
+  license string
+  // Context length
+  contextLength int
+  // Estimated monthly serving cost
+  costEstimatePerMonth int
+  // Supported input modalities
+  inputModalities []string
+  // Supported output modalities
+  outputModalities []string
+  // Parameter count description
+  parameters string
+  // ID of the owning team
+  teamId string
+  // Region the model is stored in
+  storageRegion string
+  // Deployments currently serving the model
+  activeDeployments []dict
+  // Time the model was created
+  createdAt time
+  // Time the model was last updated
+  updatedAt time
+}
+
+// DigitalOcean GradientAI knowledge base
+//
+// Examine a RAG knowledge base. `isPublic` flags publicly readable
+// knowledge bases. Reach the `embeddingModel()` used to vectorize
+// content, the backing `database()` (a managed pgvector cluster), and
+// the `project()` it belongs to. Iterate `dataSources()` for the
+// configured sources and inspect `lastIndexingJob` for the most recent
+// indexing run. Select by uuid with
+// `digitalocean.gradientai.knowledgeBase(uuid: "...")`.
+private digitalocean.gradientai.knowledgeBase @defaults("uuid name region") {
+  // Knowledge base UUID
+  uuid string
+  // Name
+  name string
+  // Region slug
+  region string
+  // Whether the knowledge base is publicly readable
+  isPublic bool
+  // UUID of the embedding model used to vectorize content
+  embeddingModelUuid string
+  // ID of the backing managed database cluster
+  databaseId string
+  // ID of the project the knowledge base belongs to
+  projectId string
+  // Tags
+  tags []string
+  // Summary of the most recent indexing job (status, phase, counts, timestamps)
+  lastIndexingJob dict
+  // Time the knowledge base was added to an agent, if applicable
+  addedToAgentAt time
+  // Time the knowledge base was created
+  createdAt time
+  // Time the knowledge base was last updated
+  updatedAt time
+  // Whether the knowledge base has been deleted
+  isDeleted bool
+  // Embedding model used to vectorize content
+  embeddingModel() digitalocean.gradientai.model
+  // Backing managed database cluster (pgvector)
+  database() digitalocean.database
+  // Project the knowledge base belongs to
+  project() digitalocean.project
+  // Configured data sources
+  dataSources() []digitalocean.gradientai.knowledgeBase.dataSource
+}
+
+// DigitalOcean GradientAI knowledge base data source
+//
+// Examine a single data source feeding a knowledge base. `type`
+// identifies the source kind; the matching `webCrawler`, `spaces`, or
+// `fileUpload` dict carries its detail, and `lastIndexingJob` reports
+// the most recent indexing run for the source.
+private digitalocean.gradientai.knowledgeBase.dataSource @defaults("uuid type") {
+  // Data source UUID
+  uuid string
+  // Source kind: web_crawler, spaces, or file_upload
+  type string
+  // Web-crawler source detail (baseUrl, crawlingOption, embedMedia)
+  webCrawler dict
+  // Spaces source detail (bucketName, itemPath, region)
+  spaces dict
+  // File-upload source detail (originalFileName, size, storedObjectKey)
+  fileUpload dict
+  // Summary of the most recent indexing job for the source
+  lastIndexingJob dict
+  // Time the data source was created
+  createdAt time
+  // Time the data source was last updated
+  updatedAt time
+}
+
+// DigitalOcean GradientAI indexing job
+//
+// Examine a knowledge-base indexing run. Surfaces the `phase` and
+// `status`, the tokens processed, datasource progress
+// (`completedDatasources`/`totalDatasources`), and item counts. Reach
+// the `knowledgeBase()` being indexed.
+private digitalocean.gradientai.indexingJob @defaults("uuid status phase") {
+  // Indexing job UUID
+  uuid string
+  // UUID of the knowledge base being indexed
+  knowledgeBaseUuid string
+  // Current phase
+  phase string
+  // Status
+  status string
+  // Tokens processed
+  tokens int
+  // Number of data sources completed
+  completedDatasources int
+  // Total number of data sources
+  totalDatasources int
+  // Total items indexed
+  totalItemsIndexed string
+  // Total items that failed
+  totalItemsFailed string
+  // Total items skipped
+  totalItemsSkipped string
+  // UUIDs of the data sources covered by the job
+  dataSourceUuids []string
+  // Time the job started
+  startedAt time
+  // Time the job finished
+  finishedAt time
+  // Time the job was created
+  createdAt time
+  // Time the job was last updated
+  updatedAt time
+  // Knowledge base being indexed
+  knowledgeBase() digitalocean.gradientai.knowledgeBase
+}
+
+// DigitalOcean GradientAI Anthropic API key
+//
+// Examine a registered Anthropic API key. The secret value is never
+// exposed; only metadata is surfaced. Reach the `agents()` that use the
+// key.
+private digitalocean.gradientai.anthropicApiKey @defaults("uuid name") {
+  // API key UUID
+  uuid string
+  // Name
+  name string
+  // User that created the key
+  createdBy string
+  // Time the key was created
+  createdAt time
+  // Time the key was last updated
+  updatedAt time
+  // Time the key was deleted, if applicable
+  deletedAt time
+  // Agents that use this key
+  agents() []digitalocean.gradientai.agent
+}
+
+// DigitalOcean GradientAI OpenAI API key
+//
+// Examine a registered OpenAI API key. The secret value is never
+// exposed; only metadata is surfaced. Reach the `models()` enabled by
+// the key and the `agents()` that use it.
+private digitalocean.gradientai.openaiApiKey @defaults("uuid name") {
+  // API key UUID
+  uuid string
+  // Name
+  name string
+  // User that created the key
+  createdBy string
+  // Time the key was created
+  createdAt time
+  // Time the key was last updated
+  updatedAt time
+  // Time the key was deleted, if applicable
+  deletedAt time
+  // Models enabled by this key
+  models() []digitalocean.gradientai.model
+  // Agents that use this key
+  agents() []digitalocean.gradientai.agent
+}
+
+// DigitalOcean GradientAI dedicated inference endpoint
+//
+// Examine a dedicated GPU inference endpoint. Surfaces the lifecycle
+// `status`, the `region`, the public and private endpoint FQDNs, and
+// the `providerModelIds` served. Reach the `vpc()` it runs in, and
+// iterate `accelerators()` and `tokens()` (token secret values are
+// never exposed). Select by id with
+// `digitalocean.gradientai.dedicatedInferenceEndpoint(id: "...")`.
+private digitalocean.gradientai.dedicatedInferenceEndpoint @defaults("id name region status") {
+  // Endpoint ID
+  id string
+  // Name
+  name string
+  // Region slug
+  region string
+  // Lifecycle status
+  status string
+  // UUID of the VPC the endpoint runs in
+  vpcUuid string
+  // Model IDs served by the endpoint
+  providerModelIds []string
+  // Public endpoint FQDN
+  publicEndpointFqdn string
+  // Private endpoint FQDN
+  privateEndpointFqdn string
+  // Time the endpoint was created
+  createdAt time
+  // Time the endpoint was last updated
+  updatedAt time
+  // VPC the endpoint runs in
+  vpc() digitalocean.vpc
+  // GPU accelerators backing the endpoint
+  accelerators() []digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator
+  // Access tokens issued for the endpoint (secret values are never exposed)
+  tokens() []digitalocean.gradientai.dedicatedInferenceEndpoint.token
+}
+
+// DigitalOcean GradientAI dedicated inference accelerator
+//
+// Examine a GPU accelerator backing a dedicated inference endpoint.
+private digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator @defaults("id name status") {
+  // Accelerator ID
+  id string
+  // Name
+  name string
+  // Size slug
+  slug string
+  // Status
+  status string
+  // Time the accelerator was created
+  createdAt time
+}
+
+// DigitalOcean GradientAI dedicated inference token
+//
+// Examine an access token issued for a dedicated inference endpoint. The
+// token's secret value is never exposed; `isManaged` indicates whether
+// the token is platform-managed.
+private digitalocean.gradientai.dedicatedInferenceEndpoint.token @defaults("id name") {
+  // Token ID
+  id string
+  // Name
+  name string
+  // Whether the token is platform-managed
+  isManaged bool
+  // Time the token was created
+  createdAt time
+}
+
+// DigitalOcean GradientAI batch inference job
+//
+// Examine a batch inference job. Surfaces the `provider`, the input
+// `fileId`, the `completionWindow`, lifecycle `status`, whether a
+// result is available, and the `requestCounts` (total, completed,
+// failed). Select by batch id with
+// `digitalocean.gradientai.batchJob(batchId: "...")`.
+private digitalocean.gradientai.batchJob @defaults("batchId provider status") {
+  // Batch job ID
+  batchId string
+  // Inference provider
+  provider string
+  // ID of the input file
+  fileId string
+  // Completion window
+  completionWindow string
+  // Lifecycle status
+  status string
+  // Request ID
+  requestId string
+  // Whether a result is available for download
+  resultAvailable bool
+  // Request counts (total, completed, failed)
+  requestCounts dict
+  // Time cancellation was requested, if applicable
+  cancelRequestedAt time
+  // Time the job was created
+  createdAt time
+  // Time the job was last updated
+  updatedAt time
+  // Time the job expires, if applicable
+  expiresAt time
 }

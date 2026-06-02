@@ -30,6 +30,10 @@ type mqlDigitaloceanInternal struct {
 	projectIndex     map[string]*mqlDigitaloceanProject
 	projectIndexErr  error
 
+	databaseIndexOnce sync.Once
+	databaseIndex     map[string]*mqlDigitaloceanDatabase
+	databaseIndexErr  error
+
 	firewallIndexOnce sync.Once
 	firewallByDroplet map[int64][]*mqlDigitaloceanFirewall
 	firewallByTag     map[string][]*mqlDigitaloceanFirewall
@@ -82,6 +86,26 @@ func (r *mqlDigitalocean) projectByID(id string) (*mqlDigitaloceanProject, error
 		return nil, r.projectIndexErr
 	}
 	return r.projectIndex[id], nil
+}
+
+func (r *mqlDigitalocean) databaseByID(id string) (*mqlDigitaloceanDatabase, error) {
+	r.databaseIndexOnce.Do(func() {
+		databases := r.GetDatabases()
+		if databases.Error != nil {
+			r.databaseIndexErr = databases.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanDatabase, len(databases.Data))
+		for _, d := range databases.Data {
+			md := d.(*mqlDigitaloceanDatabase)
+			idx[md.Id.Data] = md
+		}
+		r.databaseIndex = idx
+	})
+	if r.databaseIndexErr != nil {
+		return nil, r.databaseIndexErr
+	}
+	return r.databaseIndex[id], nil
 }
 
 func (r *mqlDigitalocean) dropletByIDs(ids []any) ([]any, error) {

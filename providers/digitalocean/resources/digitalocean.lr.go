@@ -16,49 +16,66 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceDigitalocean                           string = "digitalocean"
-	ResourceDigitaloceanAccount                    string = "digitalocean.account"
-	ResourceDigitaloceanDroplet                    string = "digitalocean.droplet"
-	ResourceDigitaloceanFirewall                   string = "digitalocean.firewall"
-	ResourceDigitaloceanDatabase                   string = "digitalocean.database"
-	ResourceDigitaloceanDatabaseBackup             string = "digitalocean.database.backup"
-	ResourceDigitaloceanDatabaseUser               string = "digitalocean.database.user"
-	ResourceDigitaloceanDatabaseReplica            string = "digitalocean.database.replica"
-	ResourceDigitaloceanDatabasePool               string = "digitalocean.database.pool"
-	ResourceDigitaloceanVectorDatabase             string = "digitalocean.vectorDatabase"
-	ResourceDigitaloceanVectorDatabaseBackup       string = "digitalocean.vectorDatabase.backup"
-	ResourceDigitaloceanDomain                     string = "digitalocean.domain"
-	ResourceDigitaloceanDomainRecord               string = "digitalocean.domain.record"
-	ResourceDigitaloceanVolume                     string = "digitalocean.volume"
-	ResourceDigitaloceanLoadBalancer               string = "digitalocean.loadBalancer"
-	ResourceDigitaloceanVpc                        string = "digitalocean.vpc"
-	ResourceDigitaloceanVpcPeering                 string = "digitalocean.vpcPeering"
-	ResourceDigitaloceanKubernetesCluster          string = "digitalocean.kubernetes.cluster"
-	ResourceDigitaloceanKubernetesNodePool         string = "digitalocean.kubernetes.nodePool"
-	ResourceDigitaloceanProject                    string = "digitalocean.project"
-	ResourceDigitaloceanSshKey                     string = "digitalocean.sshKey"
-	ResourceDigitaloceanCertificate                string = "digitalocean.certificate"
-	ResourceDigitaloceanRegistry                   string = "digitalocean.registry"
-	ResourceDigitaloceanRegistryRepository         string = "digitalocean.registry.repository"
-	ResourceDigitaloceanRegistryRepositoryTag      string = "digitalocean.registry.repository.tag"
-	ResourceDigitaloceanRegistryRepositoryManifest string = "digitalocean.registry.repository.manifest"
-	ResourceDigitaloceanRegistryGarbageCollection  string = "digitalocean.registry.garbageCollection"
-	ResourceDigitaloceanReservedIp                 string = "digitalocean.reservedIp"
-	ResourceDigitaloceanApp                        string = "digitalocean.app"
-	ResourceDigitaloceanAlertPolicy                string = "digitalocean.alertPolicy"
-	ResourceDigitaloceanUptimeCheck                string = "digitalocean.uptimeCheck"
-	ResourceDigitaloceanCdn                        string = "digitalocean.cdn"
-	ResourceDigitaloceanTag                        string = "digitalocean.tag"
-	ResourceDigitaloceanSpacesKey                  string = "digitalocean.spacesKey"
-	ResourceDigitaloceanSpacesBucket               string = "digitalocean.spacesBucket"
-	ResourceDigitaloceanImage                      string = "digitalocean.image"
-	ResourceDigitaloceanSnapshot                   string = "digitalocean.snapshot"
-	ResourceDigitaloceanFunctionNamespace          string = "digitalocean.function.namespace"
-	ResourceDigitaloceanFunctionTrigger            string = "digitalocean.function.trigger"
-	ResourceDigitaloceanVpcNatGateway              string = "digitalocean.vpcNatGateway"
-	ResourceDigitaloceanNfs                        string = "digitalocean.nfs"
-	ResourceDigitaloceanReservedIpV6               string = "digitalocean.reservedIpV6"
-	ResourceDigitaloceanDropletAutoscalePool       string = "digitalocean.dropletAutoscalePool"
+	ResourceDigitalocean                                                string = "digitalocean"
+	ResourceDigitaloceanAccount                                         string = "digitalocean.account"
+	ResourceDigitaloceanDroplet                                         string = "digitalocean.droplet"
+	ResourceDigitaloceanFirewall                                        string = "digitalocean.firewall"
+	ResourceDigitaloceanDatabase                                        string = "digitalocean.database"
+	ResourceDigitaloceanDatabaseBackup                                  string = "digitalocean.database.backup"
+	ResourceDigitaloceanDatabaseUser                                    string = "digitalocean.database.user"
+	ResourceDigitaloceanDatabaseReplica                                 string = "digitalocean.database.replica"
+	ResourceDigitaloceanDatabasePool                                    string = "digitalocean.database.pool"
+	ResourceDigitaloceanVectorDatabase                                  string = "digitalocean.vectorDatabase"
+	ResourceDigitaloceanVectorDatabaseBackup                            string = "digitalocean.vectorDatabase.backup"
+	ResourceDigitaloceanDomain                                          string = "digitalocean.domain"
+	ResourceDigitaloceanDomainRecord                                    string = "digitalocean.domain.record"
+	ResourceDigitaloceanVolume                                          string = "digitalocean.volume"
+	ResourceDigitaloceanLoadBalancer                                    string = "digitalocean.loadBalancer"
+	ResourceDigitaloceanVpc                                             string = "digitalocean.vpc"
+	ResourceDigitaloceanVpcPeering                                      string = "digitalocean.vpcPeering"
+	ResourceDigitaloceanKubernetesCluster                               string = "digitalocean.kubernetes.cluster"
+	ResourceDigitaloceanKubernetesNodePool                              string = "digitalocean.kubernetes.nodePool"
+	ResourceDigitaloceanProject                                         string = "digitalocean.project"
+	ResourceDigitaloceanSshKey                                          string = "digitalocean.sshKey"
+	ResourceDigitaloceanCertificate                                     string = "digitalocean.certificate"
+	ResourceDigitaloceanRegistry                                        string = "digitalocean.registry"
+	ResourceDigitaloceanRegistryRepository                              string = "digitalocean.registry.repository"
+	ResourceDigitaloceanRegistryRepositoryTag                           string = "digitalocean.registry.repository.tag"
+	ResourceDigitaloceanRegistryRepositoryManifest                      string = "digitalocean.registry.repository.manifest"
+	ResourceDigitaloceanRegistryGarbageCollection                       string = "digitalocean.registry.garbageCollection"
+	ResourceDigitaloceanReservedIp                                      string = "digitalocean.reservedIp"
+	ResourceDigitaloceanApp                                             string = "digitalocean.app"
+	ResourceDigitaloceanAlertPolicy                                     string = "digitalocean.alertPolicy"
+	ResourceDigitaloceanUptimeCheck                                     string = "digitalocean.uptimeCheck"
+	ResourceDigitaloceanCdn                                             string = "digitalocean.cdn"
+	ResourceDigitaloceanTag                                             string = "digitalocean.tag"
+	ResourceDigitaloceanSpacesKey                                       string = "digitalocean.spacesKey"
+	ResourceDigitaloceanSpacesBucket                                    string = "digitalocean.spacesBucket"
+	ResourceDigitaloceanImage                                           string = "digitalocean.image"
+	ResourceDigitaloceanSnapshot                                        string = "digitalocean.snapshot"
+	ResourceDigitaloceanFunctionNamespace                               string = "digitalocean.function.namespace"
+	ResourceDigitaloceanFunctionTrigger                                 string = "digitalocean.function.trigger"
+	ResourceDigitaloceanVpcNatGateway                                   string = "digitalocean.vpcNatGateway"
+	ResourceDigitaloceanNfs                                             string = "digitalocean.nfs"
+	ResourceDigitaloceanReservedIpV6                                    string = "digitalocean.reservedIpV6"
+	ResourceDigitaloceanDropletAutoscalePool                            string = "digitalocean.dropletAutoscalePool"
+	ResourceDigitaloceanGradientai                                      string = "digitalocean.gradientai"
+	ResourceDigitaloceanGradientaiAgent                                 string = "digitalocean.gradientai.agent"
+	ResourceDigitaloceanGradientaiAgentGuardrail                        string = "digitalocean.gradientai.agent.guardrail"
+	ResourceDigitaloceanGradientaiAgentFunction                         string = "digitalocean.gradientai.agent.function"
+	ResourceDigitaloceanGradientaiAgentVersion                          string = "digitalocean.gradientai.agent.version"
+	ResourceDigitaloceanGradientaiAgentApiKey                           string = "digitalocean.gradientai.agent.apiKey"
+	ResourceDigitaloceanGradientaiModel                                 string = "digitalocean.gradientai.model"
+	ResourceDigitaloceanGradientaiCustomModel                           string = "digitalocean.gradientai.customModel"
+	ResourceDigitaloceanGradientaiKnowledgeBase                         string = "digitalocean.gradientai.knowledgeBase"
+	ResourceDigitaloceanGradientaiKnowledgeBaseDataSource               string = "digitalocean.gradientai.knowledgeBase.dataSource"
+	ResourceDigitaloceanGradientaiIndexingJob                           string = "digitalocean.gradientai.indexingJob"
+	ResourceDigitaloceanGradientaiAnthropicApiKey                       string = "digitalocean.gradientai.anthropicApiKey"
+	ResourceDigitaloceanGradientaiOpenaiApiKey                          string = "digitalocean.gradientai.openaiApiKey"
+	ResourceDigitaloceanGradientaiDedicatedInferenceEndpoint            string = "digitalocean.gradientai.dedicatedInferenceEndpoint"
+	ResourceDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator string = "digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator"
+	ResourceDigitaloceanGradientaiDedicatedInferenceEndpointToken       string = "digitalocean.gradientai.dedicatedInferenceEndpoint.token"
+	ResourceDigitaloceanGradientaiBatchJob                              string = "digitalocean.gradientai.batchJob"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -237,6 +254,74 @@ func init() {
 			// to override args, implement: initDigitaloceanDropletAutoscalePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanDropletAutoscalePool,
 		},
+		"digitalocean.gradientai": {
+			// to override args, implement: initDigitaloceanGradientai(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientai,
+		},
+		"digitalocean.gradientai.agent": {
+			// to override args, implement: initDigitaloceanGradientaiAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAgent,
+		},
+		"digitalocean.gradientai.agent.guardrail": {
+			// to override args, implement: initDigitaloceanGradientaiAgentGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAgentGuardrail,
+		},
+		"digitalocean.gradientai.agent.function": {
+			// to override args, implement: initDigitaloceanGradientaiAgentFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAgentFunction,
+		},
+		"digitalocean.gradientai.agent.version": {
+			// to override args, implement: initDigitaloceanGradientaiAgentVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAgentVersion,
+		},
+		"digitalocean.gradientai.agent.apiKey": {
+			// to override args, implement: initDigitaloceanGradientaiAgentApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAgentApiKey,
+		},
+		"digitalocean.gradientai.model": {
+			// to override args, implement: initDigitaloceanGradientaiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiModel,
+		},
+		"digitalocean.gradientai.customModel": {
+			// to override args, implement: initDigitaloceanGradientaiCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiCustomModel,
+		},
+		"digitalocean.gradientai.knowledgeBase": {
+			// to override args, implement: initDigitaloceanGradientaiKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiKnowledgeBase,
+		},
+		"digitalocean.gradientai.knowledgeBase.dataSource": {
+			// to override args, implement: initDigitaloceanGradientaiKnowledgeBaseDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiKnowledgeBaseDataSource,
+		},
+		"digitalocean.gradientai.indexingJob": {
+			// to override args, implement: initDigitaloceanGradientaiIndexingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiIndexingJob,
+		},
+		"digitalocean.gradientai.anthropicApiKey": {
+			// to override args, implement: initDigitaloceanGradientaiAnthropicApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiAnthropicApiKey,
+		},
+		"digitalocean.gradientai.openaiApiKey": {
+			// to override args, implement: initDigitaloceanGradientaiOpenaiApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiOpenaiApiKey,
+		},
+		"digitalocean.gradientai.dedicatedInferenceEndpoint": {
+			// to override args, implement: initDigitaloceanGradientaiDedicatedInferenceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiDedicatedInferenceEndpoint,
+		},
+		"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator": {
+			// to override args, implement: initDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator,
+		},
+		"digitalocean.gradientai.dedicatedInferenceEndpoint.token": {
+			// to override args, implement: initDigitaloceanGradientaiDedicatedInferenceEndpointToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiDedicatedInferenceEndpointToken,
+		},
+		"digitalocean.gradientai.batchJob": {
+			// to override args, implement: initDigitaloceanGradientaiBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanGradientaiBatchJob,
+		},
 	}
 }
 
@@ -319,6 +404,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.vectorDatabases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetVectorDatabases()).ToDataRes(types.Array(types.Resource("digitalocean.vectorDatabase")))
+	},
+	"digitalocean.gradientai": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetGradientai()).ToDataRes(types.Resource("digitalocean.gradientai"))
 	},
 	"digitalocean.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetDomains()).ToDataRes(types.Array(types.Resource("digitalocean.domain")))
@@ -1604,6 +1692,684 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.dropletAutoscalePool.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"digitalocean.gradientai.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetAgents()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent")))
+	},
+	"digitalocean.gradientai.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetModels()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.model")))
+	},
+	"digitalocean.gradientai.customModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetCustomModels()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.customModel")))
+	},
+	"digitalocean.gradientai.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetKnowledgeBases()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.knowledgeBase")))
+	},
+	"digitalocean.gradientai.indexingJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetIndexingJobs()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.indexingJob")))
+	},
+	"digitalocean.gradientai.anthropicApiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetAnthropicApiKeys()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.anthropicApiKey")))
+	},
+	"digitalocean.gradientai.openaiApiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetOpenaiApiKeys()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.openaiApiKey")))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetDedicatedInferenceEndpoints()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.dedicatedInferenceEndpoint")))
+	},
+	"digitalocean.gradientai.batchJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientai).GetBatchJobs()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.batchJob")))
+	},
+	"digitalocean.gradientai.agent.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDescription()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.instruction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetInstruction()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.temperature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetTemperature()).ToDataRes(types.Float)
+	},
+	"digitalocean.gradientai.agent.topP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetTopP()).ToDataRes(types.Float)
+	},
+	"digitalocean.gradientai.agent.maxTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetMaxTokens()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.agent.k": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetK()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.agent.retrievalMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetRetrievalMethod()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.provideCitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetProvideCitations()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.conversationLogsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetConversationLogsEnabled()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.ifCase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetIfCase()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.routeUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetRouteUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.routeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetRouteName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetUserId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.versionHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetVersionHash()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetProjectId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.vpcUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetVpcUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.vpcEgressIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetVpcEgressIps()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.agent.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.agent.deploymentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDeploymentName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.deploymentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDeploymentStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.deploymentVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDeploymentVisibility()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.deploymentUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDeploymentUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.deploymentUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetDeploymentUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.chatbot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetChatbot()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.agent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetModel()).ToDataRes(types.Resource("digitalocean.gradientai.model"))
+	},
+	"digitalocean.gradientai.agent.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetKnowledgeBases()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.knowledgeBase")))
+	},
+	"digitalocean.gradientai.agent.childAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetChildAgents()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent")))
+	},
+	"digitalocean.gradientai.agent.parentAgents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetParentAgents()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent")))
+	},
+	"digitalocean.gradientai.agent.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetProject()).ToDataRes(types.Resource("digitalocean.project"))
+	},
+	"digitalocean.gradientai.agent.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetVpc()).ToDataRes(types.Resource("digitalocean.vpc"))
+	},
+	"digitalocean.gradientai.agent.anthropicApiKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetAnthropicApiKey()).ToDataRes(types.Resource("digitalocean.gradientai.anthropicApiKey"))
+	},
+	"digitalocean.gradientai.agent.openaiApiKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetOpenaiApiKey()).ToDataRes(types.Resource("digitalocean.gradientai.openaiApiKey"))
+	},
+	"digitalocean.gradientai.agent.guardrails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetGuardrails()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent.guardrail")))
+	},
+	"digitalocean.gradientai.agent.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetFunctions()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent.function")))
+	},
+	"digitalocean.gradientai.agent.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetVersions()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent.version")))
+	},
+	"digitalocean.gradientai.agent.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgent).GetApiKeys()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent.apiKey")))
+	},
+	"digitalocean.gradientai.agent.guardrail.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.agentUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetAgentUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetDescription()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.defaultResponse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetDefaultResponse()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.guardrail.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetPriority()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.agent.guardrail.isAttached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetIsAttached()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.guardrail.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.guardrail.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.guardrail.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentGuardrail).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.function.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetDescription()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.faasName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetFaasName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.faasNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetFaasNamespace()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.guardrailUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetGuardrailUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.function.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.function.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentFunction).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.version.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.agentUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetAgentUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.instruction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetInstruction()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetModelName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.versionHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetVersionHash()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.currentlyApplied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetCurrentlyApplied()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.version.canRollback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetCanRollback()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.version.createdByEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetCreatedByEmail()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.temperature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetTemperature()).ToDataRes(types.Float)
+	},
+	"digitalocean.gradientai.agent.version.topP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetTopP()).ToDataRes(types.Float)
+	},
+	"digitalocean.gradientai.agent.version.maxTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetMaxTokens()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.agent.version.k": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetK()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.agent.version.provideCitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetProvideCitations()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.agent.version.retrievalMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetRetrievalMethod()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.triggerAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetTriggerAction()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.version.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.agent.version.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentVersion).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.apiKey.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.apiKey.agentUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetAgentUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.apiKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.apiKey.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.agent.apiKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.agent.apiKey.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAgentApiKey).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.model.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetProvider()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.isFoundational": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetIsFoundational()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.model.modelAvailability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetModelAvailability()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.inferenceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetInferenceName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.inferenceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetInferenceVersion()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.uploadComplete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetUploadComplete()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.model.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.contextWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetContextWindow()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.parameterCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetParameterCount()).ToDataRes(types.Float)
+	},
+	"digitalocean.gradientai.model.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.model.usecases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetUsecases()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.model.modalities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetModalities()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.model.pricing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetPricing()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.model.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetVersion()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.model.agreementName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetAgreementName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.agreementUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetAgreementUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.model.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.model.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiModel).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.customModel.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetDescription()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetArchitecture()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetSourceType()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.totalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetTotalSizeBytes()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.fileCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetFileCount()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.customModel.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetLicense()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.contextLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetContextLength()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.customModel.costEstimatePerMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetCostEstimatePerMonth()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.customModel.inputModalities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetInputModalities()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.customModel.outputModalities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetOutputModalities()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.customModel.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetParameters()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.teamId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetTeamId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.storageRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetStorageRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.customModel.activeDeployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetActiveDeployments()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.gradientai.customModel.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.customModel.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.knowledgeBase.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.knowledgeBase.embeddingModelUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetEmbeddingModelUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.databaseId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetDatabaseId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetProjectId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.knowledgeBase.lastIndexingJob": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetLastIndexingJob()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.knowledgeBase.addedToAgentAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetAddedToAgentAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.knowledgeBase.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.knowledgeBase.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.knowledgeBase.isDeleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetIsDeleted()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.knowledgeBase.embeddingModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetEmbeddingModel()).ToDataRes(types.Resource("digitalocean.gradientai.model"))
+	},
+	"digitalocean.gradientai.knowledgeBase.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetDatabase()).ToDataRes(types.Resource("digitalocean.database"))
+	},
+	"digitalocean.gradientai.knowledgeBase.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetProject()).ToDataRes(types.Resource("digitalocean.project"))
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBase).GetDataSources()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.knowledgeBase.dataSource")))
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.webCrawler": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetWebCrawler()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.spaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetSpaces()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.fileUpload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetFileUpload()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.lastIndexingJob": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetLastIndexingJob()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.indexingJob.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.knowledgeBaseUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetKnowledgeBaseUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.phase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetPhase()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetTokens()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.indexingJob.completedDatasources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetCompletedDatasources()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.indexingJob.totalDatasources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetTotalDatasources()).ToDataRes(types.Int)
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsIndexed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetTotalItemsIndexed()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsFailed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetTotalItemsFailed()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsSkipped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetTotalItemsSkipped()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.indexingJob.dataSourceUuids": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetDataSourceUuids()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.indexingJob.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.indexingJob.finishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetFinishedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.indexingJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.indexingJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.indexingJob.knowledgeBase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiIndexingJob).GetKnowledgeBase()).ToDataRes(types.Resource("digitalocean.gradientai.knowledgeBase"))
+	},
+	"digitalocean.gradientai.anthropicApiKey.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.anthropicApiKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.anthropicApiKey.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.anthropicApiKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.anthropicApiKey.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.anthropicApiKey.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.anthropicApiKey.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiAnthropicApiKey).GetAgents()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent")))
+	},
+	"digitalocean.gradientai.openaiApiKey.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.openaiApiKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.openaiApiKey.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.openaiApiKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.openaiApiKey.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.openaiApiKey.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetDeletedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.openaiApiKey.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetModels()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.model")))
+	},
+	"digitalocean.gradientai.openaiApiKey.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiOpenaiApiKey).GetAgents()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.agent")))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.vpcUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetVpcUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.providerModelIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetProviderModelIds()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.publicEndpointFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetPublicEndpointFqdn()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.privateEndpointFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetPrivateEndpointFqdn()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetVpc()).ToDataRes(types.Resource("digitalocean.vpc"))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetAccelerators()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator")))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).GetTokens()).ToDataRes(types.Array(types.Resource("digitalocean.gradientai.dedicatedInferenceEndpoint.token")))
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.slug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).GetSlug()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.isManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).GetIsManaged()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.batchJob.batchId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetBatchId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetProvider()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.fileId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetFileId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.completionWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetCompletionWindow()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.requestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetRequestId()).ToDataRes(types.String)
+	},
+	"digitalocean.gradientai.batchJob.resultAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetResultAvailable()).ToDataRes(types.Bool)
+	},
+	"digitalocean.gradientai.batchJob.requestCounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetRequestCounts()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.batchJob.cancelRequestedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetCancelRequestedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.batchJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.batchJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.gradientai.batchJob.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiBatchJob).GetExpiresAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1634,6 +2400,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.vectorDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).VectorDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).Gradientai, ok = plugin.RawToTValue[*mqlDigitaloceanGradientai](v.Value, v.Error)
 		return
 	},
 	"digitalocean.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3516,6 +4286,978 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDropletAutoscalePool).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"digitalocean.gradientai.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).CustomModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).IndexingJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).AnthropicApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).OpenaiApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).DedicatedInferenceEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientai).BatchJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agent.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.instruction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Instruction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.temperature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Temperature, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.topP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).TopP, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.maxTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).MaxTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.k": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).K, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.retrievalMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).RetrievalMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.provideCitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ProvideCitations, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.conversationLogsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ConversationLogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.ifCase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).IfCase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.routeUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).RouteUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.routeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).RouteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.versionHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).VersionHash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.vpcUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).VpcUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.vpcEgressIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).VpcEgressIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.deploymentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).DeploymentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.deploymentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).DeploymentStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.deploymentVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).DeploymentVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.deploymentUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).DeploymentUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.deploymentUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).DeploymentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.chatbot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Chatbot, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Model, ok = plugin.RawToTValue[*mqlDigitaloceanGradientaiModel](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.childAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ChildAgents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.parentAgents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ParentAgents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Project, ok = plugin.RawToTValue[*mqlDigitaloceanProject](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Vpc, ok = plugin.RawToTValue[*mqlDigitaloceanVpc](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.anthropicApiKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).AnthropicApiKey, ok = plugin.RawToTValue[*mqlDigitaloceanGradientaiAnthropicApiKey](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.openaiApiKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).OpenaiApiKey, ok = plugin.RawToTValue[*mqlDigitaloceanGradientaiOpenaiApiKey](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Guardrails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgent).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.agentUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).AgentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.defaultResponse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).DefaultResponse, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.isAttached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).IsAttached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.guardrail.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentGuardrail).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agent.function.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.faasName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).FaasName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.faasNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).FaasNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.guardrailUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).GuardrailUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.function.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentFunction).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agent.version.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.agentUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).AgentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.instruction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Instruction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.versionHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).VersionHash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.currentlyApplied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).CurrentlyApplied, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.canRollback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).CanRollback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.createdByEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).CreatedByEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.temperature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Temperature, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.topP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).TopP, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.maxTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).MaxTokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.k": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).K, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.provideCitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).ProvideCitations, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.retrievalMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).RetrievalMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.triggerAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).TriggerAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.version.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentVersion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.agentUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).AgentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.agent.apiKey.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAgentApiKey).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.model.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.isFoundational": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).IsFoundational, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.modelAvailability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).ModelAvailability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.inferenceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).InferenceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.inferenceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).InferenceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.uploadComplete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).UploadComplete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.contextWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).ContextWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.parameterCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).ParameterCount, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.usecases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Usecases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.modalities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Modalities, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.pricing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Pricing, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).Version, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.agreementName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).AgreementName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.agreementUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).AgreementUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.model.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiModel).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.customModel.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.totalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).TotalSizeBytes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.fileCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).FileCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.contextLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).ContextLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.costEstimatePerMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).CostEstimatePerMonth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.inputModalities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).InputModalities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.outputModalities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).OutputModalities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).Parameters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.teamId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).TeamId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.storageRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).StorageRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.activeDeployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).ActiveDeployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.embeddingModelUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).EmbeddingModelUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.databaseId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).DatabaseId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.lastIndexingJob": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).LastIndexingJob, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.addedToAgentAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).AddedToAgentAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.isDeleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).IsDeleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.embeddingModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).EmbeddingModel, ok = plugin.RawToTValue[*mqlDigitaloceanGradientaiModel](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Database, ok = plugin.RawToTValue[*mqlDigitaloceanDatabase](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).Project, ok = plugin.RawToTValue[*mqlDigitaloceanProject](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBase).DataSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.webCrawler": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).WebCrawler, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.spaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).Spaces, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.fileUpload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).FileUpload, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.lastIndexingJob": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).LastIndexingJob, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.knowledgeBase.dataSource.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiKnowledgeBaseDataSource).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.knowledgeBaseUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).KnowledgeBaseUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.phase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).Phase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).Tokens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.completedDatasources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).CompletedDatasources, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.totalDatasources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).TotalDatasources, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsIndexed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).TotalItemsIndexed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsFailed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).TotalItemsFailed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.totalItemsSkipped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).TotalItemsSkipped, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.dataSourceUuids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).DataSourceUuids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.finishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).FinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.indexingJob.knowledgeBase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiIndexingJob).KnowledgeBase, ok = plugin.RawToTValue[*mqlDigitaloceanGradientaiKnowledgeBase](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.anthropicApiKey.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiAnthropicApiKey).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.openaiApiKey.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiOpenaiApiKey).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.vpcUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).VpcUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.providerModelIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).ProviderModelIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.publicEndpointFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).PublicEndpointFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.privateEndpointFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).PrivateEndpointFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Vpc, ok = plugin.RawToTValue[*mqlDigitaloceanVpc](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Accelerators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.slug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).Slug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.isManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).IsManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.dedicatedInferenceEndpoint.token.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.gradientai.batchJob.batchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).BatchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.fileId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).FileId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.completionWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).CompletionWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.requestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).RequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.resultAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).ResultAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.requestCounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).RequestCounts, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.cancelRequestedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).CancelRequestedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.batchJob.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiBatchJob).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3549,6 +5291,7 @@ type mqlDigitalocean struct {
 	Firewalls             plugin.TValue[[]any]
 	Databases             plugin.TValue[[]any]
 	VectorDatabases       plugin.TValue[[]any]
+	Gradientai            plugin.TValue[*mqlDigitaloceanGradientai]
 	Domains               plugin.TValue[[]any]
 	Volumes               plugin.TValue[[]any]
 	Images                plugin.TValue[[]any]
@@ -3674,6 +5417,22 @@ func (c *mqlDigitalocean) GetVectorDatabases() *plugin.TValue[[]any] {
 		}
 
 		return c.vectorDatabases()
+	})
+}
+
+func (c *mqlDigitalocean) GetGradientai() *plugin.TValue[*mqlDigitaloceanGradientai] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientai](&c.Gradientai, func() (*mqlDigitaloceanGradientai, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "gradientai")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientai), nil
+			}
+		}
+
+		return c.gradientai()
 	})
 }
 
@@ -8278,4 +10037,2186 @@ func (c *mqlDigitaloceanDropletAutoscalePool) GetCreatedAt() *plugin.TValue[*tim
 
 func (c *mqlDigitaloceanDropletAutoscalePool) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientai for the digitalocean.gradientai resource
+type mqlDigitaloceanGradientai struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanGradientaiInternal
+	Agents                      plugin.TValue[[]any]
+	Models                      plugin.TValue[[]any]
+	CustomModels                plugin.TValue[[]any]
+	KnowledgeBases              plugin.TValue[[]any]
+	IndexingJobs                plugin.TValue[[]any]
+	AnthropicApiKeys            plugin.TValue[[]any]
+	OpenaiApiKeys               plugin.TValue[[]any]
+	DedicatedInferenceEndpoints plugin.TValue[[]any]
+	BatchJobs                   plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientai creates a new instance of this resource
+func createDigitaloceanGradientai(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientai{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientai) MqlName() string {
+	return "digitalocean.gradientai"
+}
+
+func (c *mqlDigitaloceanGradientai) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientai) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "agents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agents()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetCustomModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "customModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customModels()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "knowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeBases()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetIndexingJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IndexingJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "indexingJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.indexingJobs()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetAnthropicApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AnthropicApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "anthropicApiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.anthropicApiKeys()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetOpenaiApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpenaiApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "openaiApiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.openaiApiKeys()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetDedicatedInferenceEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DedicatedInferenceEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "dedicatedInferenceEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dedicatedInferenceEndpoints()
+	})
+}
+
+func (c *mqlDigitaloceanGradientai) GetBatchJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BatchJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai", c.__id, "batchJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.batchJobs()
+	})
+}
+
+// mqlDigitaloceanGradientaiAgent for the digitalocean.gradientai.agent resource
+type mqlDigitaloceanGradientaiAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanGradientaiAgentInternal
+	Uuid                    plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Instruction             plugin.TValue[string]
+	Temperature             plugin.TValue[float64]
+	TopP                    plugin.TValue[float64]
+	MaxTokens               plugin.TValue[int64]
+	K                       plugin.TValue[int64]
+	RetrievalMethod         plugin.TValue[string]
+	ProvideCitations        plugin.TValue[bool]
+	ConversationLogsEnabled plugin.TValue[bool]
+	IfCase                  plugin.TValue[string]
+	RouteUuid               plugin.TValue[string]
+	RouteName               plugin.TValue[string]
+	Url                     plugin.TValue[string]
+	UserId                  plugin.TValue[string]
+	VersionHash             plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	VpcUuid                 plugin.TValue[string]
+	VpcEgressIps            plugin.TValue[[]any]
+	Tags                    plugin.TValue[[]any]
+	DeploymentName          plugin.TValue[string]
+	DeploymentStatus        plugin.TValue[string]
+	DeploymentVisibility    plugin.TValue[string]
+	DeploymentUrl           plugin.TValue[string]
+	DeploymentUuid          plugin.TValue[string]
+	Chatbot                 plugin.TValue[any]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	Model                   plugin.TValue[*mqlDigitaloceanGradientaiModel]
+	KnowledgeBases          plugin.TValue[[]any]
+	ChildAgents             plugin.TValue[[]any]
+	ParentAgents            plugin.TValue[[]any]
+	Project                 plugin.TValue[*mqlDigitaloceanProject]
+	Vpc                     plugin.TValue[*mqlDigitaloceanVpc]
+	AnthropicApiKey         plugin.TValue[*mqlDigitaloceanGradientaiAnthropicApiKey]
+	OpenaiApiKey            plugin.TValue[*mqlDigitaloceanGradientaiOpenaiApiKey]
+	Guardrails              plugin.TValue[[]any]
+	Functions               plugin.TValue[[]any]
+	Versions                plugin.TValue[[]any]
+	ApiKeys                 plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientaiAgent creates a new instance of this resource
+func createDigitaloceanGradientaiAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.agent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) MqlName() string {
+	return "digitalocean.gradientai.agent"
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetInstruction() *plugin.TValue[string] {
+	return &c.Instruction
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetTemperature() *plugin.TValue[float64] {
+	return &c.Temperature
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetTopP() *plugin.TValue[float64] {
+	return &c.TopP
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetMaxTokens() *plugin.TValue[int64] {
+	return &c.MaxTokens
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetK() *plugin.TValue[int64] {
+	return &c.K
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetRetrievalMethod() *plugin.TValue[string] {
+	return &c.RetrievalMethod
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetProvideCitations() *plugin.TValue[bool] {
+	return &c.ProvideCitations
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetConversationLogsEnabled() *plugin.TValue[bool] {
+	return &c.ConversationLogsEnabled
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetIfCase() *plugin.TValue[string] {
+	return &c.IfCase
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetRouteUuid() *plugin.TValue[string] {
+	return &c.RouteUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetRouteName() *plugin.TValue[string] {
+	return &c.RouteName
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetVersionHash() *plugin.TValue[string] {
+	return &c.VersionHash
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetVpcUuid() *plugin.TValue[string] {
+	return &c.VpcUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetVpcEgressIps() *plugin.TValue[[]any] {
+	return &c.VpcEgressIps
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDeploymentName() *plugin.TValue[string] {
+	return &c.DeploymentName
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDeploymentStatus() *plugin.TValue[string] {
+	return &c.DeploymentStatus
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDeploymentVisibility() *plugin.TValue[string] {
+	return &c.DeploymentVisibility
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDeploymentUrl() *plugin.TValue[string] {
+	return &c.DeploymentUrl
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetDeploymentUuid() *plugin.TValue[string] {
+	return &c.DeploymentUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetChatbot() *plugin.TValue[any] {
+	return &c.Chatbot
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetModel() *plugin.TValue[*mqlDigitaloceanGradientaiModel] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientaiModel](&c.Model, func() (*mqlDigitaloceanGradientaiModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientaiModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "knowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeBases()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetChildAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ChildAgents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "childAgents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.childAgents()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetParentAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ParentAgents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "parentAgents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.parentAgents()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetProject() *plugin.TValue[*mqlDigitaloceanProject] {
+	return plugin.GetOrCompute[*mqlDigitaloceanProject](&c.Project, func() (*mqlDigitaloceanProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetVpc() *plugin.TValue[*mqlDigitaloceanVpc] {
+	return plugin.GetOrCompute[*mqlDigitaloceanVpc](&c.Vpc, func() (*mqlDigitaloceanVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetAnthropicApiKey() *plugin.TValue[*mqlDigitaloceanGradientaiAnthropicApiKey] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientaiAnthropicApiKey](&c.AnthropicApiKey, func() (*mqlDigitaloceanGradientaiAnthropicApiKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "anthropicApiKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientaiAnthropicApiKey), nil
+			}
+		}
+
+		return c.anthropicApiKey()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetOpenaiApiKey() *plugin.TValue[*mqlDigitaloceanGradientaiOpenaiApiKey] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientaiOpenaiApiKey](&c.OpenaiApiKey, func() (*mqlDigitaloceanGradientaiOpenaiApiKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "openaiApiKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientaiOpenaiApiKey), nil
+			}
+		}
+
+		return c.openaiApiKey()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetGuardrails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Guardrails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "guardrails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.guardrails()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.functions()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiAgent) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.agent", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
+	})
+}
+
+// mqlDigitaloceanGradientaiAgentGuardrail for the digitalocean.gradientai.agent.guardrail resource
+type mqlDigitaloceanGradientaiAgentGuardrail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiAgentGuardrailInternal it will be used here
+	Uuid            plugin.TValue[string]
+	AgentUuid       plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	DefaultResponse plugin.TValue[string]
+	Priority        plugin.TValue[int64]
+	IsAttached      plugin.TValue[bool]
+	IsDefault       plugin.TValue[bool]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiAgentGuardrail creates a new instance of this resource
+func createDigitaloceanGradientaiAgentGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAgentGuardrail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.agent.guardrail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) MqlName() string {
+	return "digitalocean.gradientai.agent.guardrail"
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetAgentUuid() *plugin.TValue[string] {
+	return &c.AgentUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetDefaultResponse() *plugin.TValue[string] {
+	return &c.DefaultResponse
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetIsAttached() *plugin.TValue[bool] {
+	return &c.IsAttached
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAgentGuardrail) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientaiAgentFunction for the digitalocean.gradientai.agent.function resource
+type mqlDigitaloceanGradientaiAgentFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiAgentFunctionInternal it will be used here
+	Uuid          plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	FaasName      plugin.TValue[string]
+	FaasNamespace plugin.TValue[string]
+	Url           plugin.TValue[string]
+	GuardrailUuid plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiAgentFunction creates a new instance of this resource
+func createDigitaloceanGradientaiAgentFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAgentFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.agent.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) MqlName() string {
+	return "digitalocean.gradientai.agent.function"
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetFaasName() *plugin.TValue[string] {
+	return &c.FaasName
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetFaasNamespace() *plugin.TValue[string] {
+	return &c.FaasNamespace
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetGuardrailUuid() *plugin.TValue[string] {
+	return &c.GuardrailUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAgentFunction) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientaiAgentVersion for the digitalocean.gradientai.agent.version resource
+type mqlDigitaloceanGradientaiAgentVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiAgentVersionInternal it will be used here
+	Id               plugin.TValue[string]
+	AgentUuid        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Instruction      plugin.TValue[string]
+	ModelName        plugin.TValue[string]
+	VersionHash      plugin.TValue[string]
+	CurrentlyApplied plugin.TValue[bool]
+	CanRollback      plugin.TValue[bool]
+	CreatedByEmail   plugin.TValue[string]
+	Temperature      plugin.TValue[float64]
+	TopP             plugin.TValue[float64]
+	MaxTokens        plugin.TValue[int64]
+	K                plugin.TValue[int64]
+	ProvideCitations plugin.TValue[bool]
+	RetrievalMethod  plugin.TValue[string]
+	TriggerAction    plugin.TValue[string]
+	Tags             plugin.TValue[[]any]
+	CreatedAt        plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiAgentVersion creates a new instance of this resource
+func createDigitaloceanGradientaiAgentVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAgentVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.agent.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) MqlName() string {
+	return "digitalocean.gradientai.agent.version"
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetAgentUuid() *plugin.TValue[string] {
+	return &c.AgentUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetInstruction() *plugin.TValue[string] {
+	return &c.Instruction
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetVersionHash() *plugin.TValue[string] {
+	return &c.VersionHash
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetCurrentlyApplied() *plugin.TValue[bool] {
+	return &c.CurrentlyApplied
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetCanRollback() *plugin.TValue[bool] {
+	return &c.CanRollback
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetCreatedByEmail() *plugin.TValue[string] {
+	return &c.CreatedByEmail
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetTemperature() *plugin.TValue[float64] {
+	return &c.Temperature
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetTopP() *plugin.TValue[float64] {
+	return &c.TopP
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetMaxTokens() *plugin.TValue[int64] {
+	return &c.MaxTokens
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetK() *plugin.TValue[int64] {
+	return &c.K
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetProvideCitations() *plugin.TValue[bool] {
+	return &c.ProvideCitations
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetRetrievalMethod() *plugin.TValue[string] {
+	return &c.RetrievalMethod
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetTriggerAction() *plugin.TValue[string] {
+	return &c.TriggerAction
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDigitaloceanGradientaiAgentVersion) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanGradientaiAgentApiKey for the digitalocean.gradientai.agent.apiKey resource
+type mqlDigitaloceanGradientaiAgentApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiAgentApiKeyInternal it will be used here
+	Uuid      plugin.TValue[string]
+	AgentUuid plugin.TValue[string]
+	Name      plugin.TValue[string]
+	CreatedBy plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	DeletedAt plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiAgentApiKey creates a new instance of this resource
+func createDigitaloceanGradientaiAgentApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAgentApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.agent.apiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) MqlName() string {
+	return "digitalocean.gradientai.agent.apiKey"
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetAgentUuid() *plugin.TValue[string] {
+	return &c.AgentUuid
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAgentApiKey) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+// mqlDigitaloceanGradientaiModel for the digitalocean.gradientai.model resource
+type mqlDigitaloceanGradientaiModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiModelInternal it will be used here
+	Uuid              plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Provider          plugin.TValue[string]
+	Type              plugin.TValue[string]
+	IsFoundational    plugin.TValue[bool]
+	ModelAvailability plugin.TValue[string]
+	InferenceName     plugin.TValue[string]
+	InferenceVersion  plugin.TValue[string]
+	UploadComplete    plugin.TValue[bool]
+	Url               plugin.TValue[string]
+	ContextWindow     plugin.TValue[string]
+	ParameterCount    plugin.TValue[float64]
+	Capabilities      plugin.TValue[[]any]
+	Usecases          plugin.TValue[[]any]
+	Modalities        plugin.TValue[any]
+	Pricing           plugin.TValue[any]
+	Version           plugin.TValue[any]
+	AgreementName     plugin.TValue[string]
+	AgreementUrl      plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiModel creates a new instance of this resource
+func createDigitaloceanGradientaiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiModel) MqlName() string {
+	return "digitalocean.gradientai.model"
+}
+
+func (c *mqlDigitaloceanGradientaiModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetIsFoundational() *plugin.TValue[bool] {
+	return &c.IsFoundational
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetModelAvailability() *plugin.TValue[string] {
+	return &c.ModelAvailability
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetInferenceName() *plugin.TValue[string] {
+	return &c.InferenceName
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetInferenceVersion() *plugin.TValue[string] {
+	return &c.InferenceVersion
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetUploadComplete() *plugin.TValue[bool] {
+	return &c.UploadComplete
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetContextWindow() *plugin.TValue[string] {
+	return &c.ContextWindow
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetParameterCount() *plugin.TValue[float64] {
+	return &c.ParameterCount
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetCapabilities() *plugin.TValue[[]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetUsecases() *plugin.TValue[[]any] {
+	return &c.Usecases
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetModalities() *plugin.TValue[any] {
+	return &c.Modalities
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetPricing() *plugin.TValue[any] {
+	return &c.Pricing
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetVersion() *plugin.TValue[any] {
+	return &c.Version
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetAgreementName() *plugin.TValue[string] {
+	return &c.AgreementName
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetAgreementUrl() *plugin.TValue[string] {
+	return &c.AgreementUrl
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiModel) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientaiCustomModel for the digitalocean.gradientai.customModel resource
+type mqlDigitaloceanGradientaiCustomModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiCustomModelInternal it will be used here
+	Uuid                 plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Architecture         plugin.TValue[string]
+	SourceType           plugin.TValue[string]
+	TotalSizeBytes       plugin.TValue[string]
+	FileCount            plugin.TValue[int64]
+	License              plugin.TValue[string]
+	ContextLength        plugin.TValue[int64]
+	CostEstimatePerMonth plugin.TValue[int64]
+	InputModalities      plugin.TValue[[]any]
+	OutputModalities     plugin.TValue[[]any]
+	Parameters           plugin.TValue[string]
+	TeamId               plugin.TValue[string]
+	StorageRegion        plugin.TValue[string]
+	ActiveDeployments    plugin.TValue[[]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiCustomModel creates a new instance of this resource
+func createDigitaloceanGradientaiCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiCustomModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.customModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) MqlName() string {
+	return "digitalocean.gradientai.customModel"
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetTotalSizeBytes() *plugin.TValue[string] {
+	return &c.TotalSizeBytes
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetFileCount() *plugin.TValue[int64] {
+	return &c.FileCount
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetLicense() *plugin.TValue[string] {
+	return &c.License
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetContextLength() *plugin.TValue[int64] {
+	return &c.ContextLength
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetCostEstimatePerMonth() *plugin.TValue[int64] {
+	return &c.CostEstimatePerMonth
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetInputModalities() *plugin.TValue[[]any] {
+	return &c.InputModalities
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetOutputModalities() *plugin.TValue[[]any] {
+	return &c.OutputModalities
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetParameters() *plugin.TValue[string] {
+	return &c.Parameters
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetTeamId() *plugin.TValue[string] {
+	return &c.TeamId
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetStorageRegion() *plugin.TValue[string] {
+	return &c.StorageRegion
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetActiveDeployments() *plugin.TValue[[]any] {
+	return &c.ActiveDeployments
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientaiKnowledgeBase for the digitalocean.gradientai.knowledgeBase resource
+type mqlDigitaloceanGradientaiKnowledgeBase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiKnowledgeBaseInternal it will be used here
+	Uuid               plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	IsPublic           plugin.TValue[bool]
+	EmbeddingModelUuid plugin.TValue[string]
+	DatabaseId         plugin.TValue[string]
+	ProjectId          plugin.TValue[string]
+	Tags               plugin.TValue[[]any]
+	LastIndexingJob    plugin.TValue[any]
+	AddedToAgentAt     plugin.TValue[*time.Time]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	IsDeleted          plugin.TValue[bool]
+	EmbeddingModel     plugin.TValue[*mqlDigitaloceanGradientaiModel]
+	Database           plugin.TValue[*mqlDigitaloceanDatabase]
+	Project            plugin.TValue[*mqlDigitaloceanProject]
+	DataSources        plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientaiKnowledgeBase creates a new instance of this resource
+func createDigitaloceanGradientaiKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiKnowledgeBase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.knowledgeBase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) MqlName() string {
+	return "digitalocean.gradientai.knowledgeBase"
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetIsPublic() *plugin.TValue[bool] {
+	return &c.IsPublic
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetEmbeddingModelUuid() *plugin.TValue[string] {
+	return &c.EmbeddingModelUuid
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetDatabaseId() *plugin.TValue[string] {
+	return &c.DatabaseId
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetLastIndexingJob() *plugin.TValue[any] {
+	return &c.LastIndexingJob
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetAddedToAgentAt() *plugin.TValue[*time.Time] {
+	return &c.AddedToAgentAt
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetIsDeleted() *plugin.TValue[bool] {
+	return &c.IsDeleted
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetEmbeddingModel() *plugin.TValue[*mqlDigitaloceanGradientaiModel] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientaiModel](&c.EmbeddingModel, func() (*mqlDigitaloceanGradientaiModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.knowledgeBase", c.__id, "embeddingModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientaiModel), nil
+			}
+		}
+
+		return c.embeddingModel()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetDatabase() *plugin.TValue[*mqlDigitaloceanDatabase] {
+	return plugin.GetOrCompute[*mqlDigitaloceanDatabase](&c.Database, func() (*mqlDigitaloceanDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.knowledgeBase", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetProject() *plugin.TValue[*mqlDigitaloceanProject] {
+	return plugin.GetOrCompute[*mqlDigitaloceanProject](&c.Project, func() (*mqlDigitaloceanProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.knowledgeBase", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBase) GetDataSources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataSources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.knowledgeBase", c.__id, "dataSources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataSources()
+	})
+}
+
+// mqlDigitaloceanGradientaiKnowledgeBaseDataSource for the digitalocean.gradientai.knowledgeBase.dataSource resource
+type mqlDigitaloceanGradientaiKnowledgeBaseDataSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiKnowledgeBaseDataSourceInternal it will be used here
+	Uuid            plugin.TValue[string]
+	Type            plugin.TValue[string]
+	WebCrawler      plugin.TValue[any]
+	Spaces          plugin.TValue[any]
+	FileUpload      plugin.TValue[any]
+	LastIndexingJob plugin.TValue[any]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiKnowledgeBaseDataSource creates a new instance of this resource
+func createDigitaloceanGradientaiKnowledgeBaseDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiKnowledgeBaseDataSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.knowledgeBase.dataSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) MqlName() string {
+	return "digitalocean.gradientai.knowledgeBase.dataSource"
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetWebCrawler() *plugin.TValue[any] {
+	return &c.WebCrawler
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetSpaces() *plugin.TValue[any] {
+	return &c.Spaces
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetFileUpload() *plugin.TValue[any] {
+	return &c.FileUpload
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetLastIndexingJob() *plugin.TValue[any] {
+	return &c.LastIndexingJob
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiKnowledgeBaseDataSource) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanGradientaiIndexingJob for the digitalocean.gradientai.indexingJob resource
+type mqlDigitaloceanGradientaiIndexingJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiIndexingJobInternal it will be used here
+	Uuid                 plugin.TValue[string]
+	KnowledgeBaseUuid    plugin.TValue[string]
+	Phase                plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Tokens               plugin.TValue[int64]
+	CompletedDatasources plugin.TValue[int64]
+	TotalDatasources     plugin.TValue[int64]
+	TotalItemsIndexed    plugin.TValue[string]
+	TotalItemsFailed     plugin.TValue[string]
+	TotalItemsSkipped    plugin.TValue[string]
+	DataSourceUuids      plugin.TValue[[]any]
+	StartedAt            plugin.TValue[*time.Time]
+	FinishedAt           plugin.TValue[*time.Time]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	KnowledgeBase        plugin.TValue[*mqlDigitaloceanGradientaiKnowledgeBase]
+}
+
+// createDigitaloceanGradientaiIndexingJob creates a new instance of this resource
+func createDigitaloceanGradientaiIndexingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiIndexingJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.indexingJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) MqlName() string {
+	return "digitalocean.gradientai.indexingJob"
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetKnowledgeBaseUuid() *plugin.TValue[string] {
+	return &c.KnowledgeBaseUuid
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetPhase() *plugin.TValue[string] {
+	return &c.Phase
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetTokens() *plugin.TValue[int64] {
+	return &c.Tokens
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetCompletedDatasources() *plugin.TValue[int64] {
+	return &c.CompletedDatasources
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetTotalDatasources() *plugin.TValue[int64] {
+	return &c.TotalDatasources
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetTotalItemsIndexed() *plugin.TValue[string] {
+	return &c.TotalItemsIndexed
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetTotalItemsFailed() *plugin.TValue[string] {
+	return &c.TotalItemsFailed
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetTotalItemsSkipped() *plugin.TValue[string] {
+	return &c.TotalItemsSkipped
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetDataSourceUuids() *plugin.TValue[[]any] {
+	return &c.DataSourceUuids
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.FinishedAt
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiIndexingJob) GetKnowledgeBase() *plugin.TValue[*mqlDigitaloceanGradientaiKnowledgeBase] {
+	return plugin.GetOrCompute[*mqlDigitaloceanGradientaiKnowledgeBase](&c.KnowledgeBase, func() (*mqlDigitaloceanGradientaiKnowledgeBase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.indexingJob", c.__id, "knowledgeBase")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanGradientaiKnowledgeBase), nil
+			}
+		}
+
+		return c.knowledgeBase()
+	})
+}
+
+// mqlDigitaloceanGradientaiAnthropicApiKey for the digitalocean.gradientai.anthropicApiKey resource
+type mqlDigitaloceanGradientaiAnthropicApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiAnthropicApiKeyInternal it will be used here
+	Uuid      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	CreatedBy plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	DeletedAt plugin.TValue[*time.Time]
+	Agents    plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientaiAnthropicApiKey creates a new instance of this resource
+func createDigitaloceanGradientaiAnthropicApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiAnthropicApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.anthropicApiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) MqlName() string {
+	return "digitalocean.gradientai.anthropicApiKey"
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlDigitaloceanGradientaiAnthropicApiKey) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.anthropicApiKey", c.__id, "agents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agents()
+	})
+}
+
+// mqlDigitaloceanGradientaiOpenaiApiKey for the digitalocean.gradientai.openaiApiKey resource
+type mqlDigitaloceanGradientaiOpenaiApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanGradientaiOpenaiApiKeyInternal
+	Uuid      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	CreatedBy plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	DeletedAt plugin.TValue[*time.Time]
+	Models    plugin.TValue[[]any]
+	Agents    plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientaiOpenaiApiKey creates a new instance of this resource
+func createDigitaloceanGradientaiOpenaiApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiOpenaiApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.openaiApiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) MqlName() string {
+	return "digitalocean.gradientai.openaiApiKey"
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.openaiApiKey", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiOpenaiApiKey) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.openaiApiKey", c.__id, "agents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agents()
+	})
+}
+
+// mqlDigitaloceanGradientaiDedicatedInferenceEndpoint for the digitalocean.gradientai.dedicatedInferenceEndpoint resource
+type mqlDigitaloceanGradientaiDedicatedInferenceEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiDedicatedInferenceEndpointInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	Status              plugin.TValue[string]
+	VpcUuid             plugin.TValue[string]
+	ProviderModelIds    plugin.TValue[[]any]
+	PublicEndpointFqdn  plugin.TValue[string]
+	PrivateEndpointFqdn plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Vpc                 plugin.TValue[*mqlDigitaloceanVpc]
+	Accelerators        plugin.TValue[[]any]
+	Tokens              plugin.TValue[[]any]
+}
+
+// createDigitaloceanGradientaiDedicatedInferenceEndpoint creates a new instance of this resource
+func createDigitaloceanGradientaiDedicatedInferenceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiDedicatedInferenceEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) MqlName() string {
+	return "digitalocean.gradientai.dedicatedInferenceEndpoint"
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetVpcUuid() *plugin.TValue[string] {
+	return &c.VpcUuid
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetProviderModelIds() *plugin.TValue[[]any] {
+	return &c.ProviderModelIds
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetPublicEndpointFqdn() *plugin.TValue[string] {
+	return &c.PublicEndpointFqdn
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetPrivateEndpointFqdn() *plugin.TValue[string] {
+	return &c.PrivateEndpointFqdn
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetVpc() *plugin.TValue[*mqlDigitaloceanVpc] {
+	return plugin.GetOrCompute[*mqlDigitaloceanVpc](&c.Vpc, func() (*mqlDigitaloceanVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetAccelerators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accelerators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint", c.__id, "accelerators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accelerators()
+	})
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint", c.__id, "tokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokens()
+	})
+}
+
+// mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator for the digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator resource
+type mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiDedicatedInferenceEndpointAcceleratorInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Slug      plugin.TValue[string]
+	Status    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator creates a new instance of this resource
+func createDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) MqlName() string {
+	return "digitalocean.gradientai.dedicatedInferenceEndpoint.accelerator"
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) GetSlug() *plugin.TValue[string] {
+	return &c.Slug
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointAccelerator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken for the digitalocean.gradientai.dedicatedInferenceEndpoint.token resource
+type mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiDedicatedInferenceEndpointTokenInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	IsManaged plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiDedicatedInferenceEndpointToken creates a new instance of this resource
+func createDigitaloceanGradientaiDedicatedInferenceEndpointToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.dedicatedInferenceEndpoint.token", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) MqlName() string {
+	return "digitalocean.gradientai.dedicatedInferenceEndpoint.token"
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) GetIsManaged() *plugin.TValue[bool] {
+	return &c.IsManaged
+}
+
+func (c *mqlDigitaloceanGradientaiDedicatedInferenceEndpointToken) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanGradientaiBatchJob for the digitalocean.gradientai.batchJob resource
+type mqlDigitaloceanGradientaiBatchJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanGradientaiBatchJobInternal it will be used here
+	BatchId           plugin.TValue[string]
+	Provider          plugin.TValue[string]
+	FileId            plugin.TValue[string]
+	CompletionWindow  plugin.TValue[string]
+	Status            plugin.TValue[string]
+	RequestId         plugin.TValue[string]
+	ResultAvailable   plugin.TValue[bool]
+	RequestCounts     plugin.TValue[any]
+	CancelRequestedAt plugin.TValue[*time.Time]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	ExpiresAt         plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanGradientaiBatchJob creates a new instance of this resource
+func createDigitaloceanGradientaiBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanGradientaiBatchJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.gradientai.batchJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) MqlName() string {
+	return "digitalocean.gradientai.batchJob"
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetBatchId() *plugin.TValue[string] {
+	return &c.BatchId
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetFileId() *plugin.TValue[string] {
+	return &c.FileId
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetCompletionWindow() *plugin.TValue[string] {
+	return &c.CompletionWindow
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetRequestId() *plugin.TValue[string] {
+	return &c.RequestId
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetResultAvailable() *plugin.TValue[bool] {
+	return &c.ResultAvailable
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetRequestCounts() *plugin.TValue[any] {
+	return &c.RequestCounts
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetCancelRequestedAt() *plugin.TValue[*time.Time] {
+	return &c.CancelRequestedAt
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanGradientaiBatchJob) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
