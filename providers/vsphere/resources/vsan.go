@@ -255,7 +255,13 @@ func scsiDiskName(disk vimtypes.HostScsiDisk) string {
 }
 
 // scsiDiskCapacityBytes converts the LBA block geometry into a byte count.
+// Some device types (virtual-flash, pass-through) can report an unset or
+// partial geometry; treat any non-positive block count or size as unknown
+// capacity (0) rather than letting a stray negative produce a bogus total.
 func scsiDiskCapacityBytes(disk vimtypes.HostScsiDisk) int64 {
+	if disk.Capacity.Block <= 0 || disk.Capacity.BlockSize <= 0 {
+		return 0
+	}
 	return disk.Capacity.Block * int64(disk.Capacity.BlockSize)
 }
 
