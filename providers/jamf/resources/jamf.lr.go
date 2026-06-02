@@ -59,7 +59,7 @@ func init() {
 			Create: createJamfUser,
 		},
 		"jamf.package": {
-			// to override args, implement: initJamfPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initJamfPackage,
 			Create: createJamfPackage,
 		},
 	}
@@ -393,6 +393,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"jamf.package.suppressRegistration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJamfPackage).GetSuppressRegistration()).ToDataRes(types.Bool)
+	},
+	"jamf.package.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSha256()).ToDataRes(types.String)
+	},
+	"jamf.package.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSize()).ToDataRes(types.String)
+	},
+	"jamf.package.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetFormat()).ToDataRes(types.String)
+	},
+	"jamf.package.info": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetInfo()).ToDataRes(types.String)
+	},
+	"jamf.package.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetNotes()).ToDataRes(types.String)
+	},
+	"jamf.package.osRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetOsRequirements()).ToDataRes(types.String)
+	},
+	"jamf.package.installLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetInstallLanguage()).ToDataRes(types.String)
+	},
+	"jamf.package.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"jamf.package.basePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetBasePath()).ToDataRes(types.String)
+	},
+	"jamf.package.osInstallerVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetOsInstallerVersion()).ToDataRes(types.String)
+	},
+	"jamf.package.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetManifest()).ToDataRes(types.String)
+	},
+	"jamf.package.manifestFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetManifestFileName()).ToDataRes(types.String)
+	},
+	"jamf.package.fillUserTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetFillUserTemplate()).ToDataRes(types.Bool)
+	},
+	"jamf.package.fillExistingUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetFillExistingUsers()).ToDataRes(types.Bool)
+	},
+	"jamf.package.indexed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetIndexed()).ToDataRes(types.Bool)
+	},
+	"jamf.package.swu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSwu()).ToDataRes(types.Bool)
+	},
+	"jamf.package.rebootRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetRebootRequired()).ToDataRes(types.Bool)
+	},
+	"jamf.package.selfHealNotify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSelfHealNotify()).ToDataRes(types.Bool)
+	},
+	"jamf.package.selfHealingAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSelfHealingAction()).ToDataRes(types.String)
+	},
+	"jamf.package.ignoreConflicts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetIgnoreConflicts()).ToDataRes(types.Bool)
+	},
+	"jamf.package.suppressFromDock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSuppressFromDock()).ToDataRes(types.Bool)
+	},
+	"jamf.package.suppressEula": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetSuppressEula()).ToDataRes(types.Bool)
+	},
+	"jamf.package.cloudTransferStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetCloudTransferStatus()).ToDataRes(types.String)
+	},
+	"jamf.package.parentPackageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetParentPackageId()).ToDataRes(types.String)
+	},
+	"jamf.package.parentPackage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJamfPackage).GetParentPackage()).ToDataRes(types.Resource("jamf.package"))
 	},
 }
 
@@ -784,6 +859,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"jamf.package.suppressRegistration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJamfPackage).SuppressRegistration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Info, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.osRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).OsRequirements, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.installLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).InstallLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.basePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).BasePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.osInstallerVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).OsInstallerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Manifest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.manifestFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).ManifestFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.fillUserTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).FillUserTemplate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.fillExistingUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).FillExistingUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.indexed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Indexed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.swu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).Swu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.rebootRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).RebootRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.selfHealNotify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).SelfHealNotify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.selfHealingAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).SelfHealingAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.ignoreConflicts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).IgnoreConflicts, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.suppressFromDock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).SuppressFromDock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.suppressEula": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).SuppressEula, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jamf.package.cloudTransferStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).CloudTransferStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.parentPackageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).ParentPackageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jamf.package.parentPackage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJamfPackage).ParentPackage, ok = plugin.RawToTValue[*mqlJamfPackage](v.Value, v.Error)
 		return
 	},
 }
@@ -1597,6 +1772,31 @@ type mqlJamfPackage struct {
 	Priority             plugin.TValue[int64]
 	SuppressUpdates      plugin.TValue[bool]
 	SuppressRegistration plugin.TValue[bool]
+	Sha256               plugin.TValue[string]
+	Size                 plugin.TValue[string]
+	Format               plugin.TValue[string]
+	Info                 plugin.TValue[string]
+	Notes                plugin.TValue[string]
+	OsRequirements       plugin.TValue[string]
+	InstallLanguage      plugin.TValue[string]
+	SerialNumber         plugin.TValue[string]
+	BasePath             plugin.TValue[string]
+	OsInstallerVersion   plugin.TValue[string]
+	Manifest             plugin.TValue[string]
+	ManifestFileName     plugin.TValue[string]
+	FillUserTemplate     plugin.TValue[bool]
+	FillExistingUsers    plugin.TValue[bool]
+	Indexed              plugin.TValue[bool]
+	Swu                  plugin.TValue[bool]
+	RebootRequired       plugin.TValue[bool]
+	SelfHealNotify       plugin.TValue[bool]
+	SelfHealingAction    plugin.TValue[string]
+	IgnoreConflicts      plugin.TValue[bool]
+	SuppressFromDock     plugin.TValue[bool]
+	SuppressEula         plugin.TValue[bool]
+	CloudTransferStatus  plugin.TValue[string]
+	ParentPackageId      plugin.TValue[string]
+	ParentPackage        plugin.TValue[*mqlJamfPackage]
 }
 
 // createJamfPackage creates a new instance of this resource
@@ -1666,4 +1866,116 @@ func (c *mqlJamfPackage) GetSuppressUpdates() *plugin.TValue[bool] {
 
 func (c *mqlJamfPackage) GetSuppressRegistration() *plugin.TValue[bool] {
 	return &c.SuppressRegistration
+}
+
+func (c *mqlJamfPackage) GetSha256() *plugin.TValue[string] {
+	return &c.Sha256
+}
+
+func (c *mqlJamfPackage) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlJamfPackage) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlJamfPackage) GetInfo() *plugin.TValue[string] {
+	return &c.Info
+}
+
+func (c *mqlJamfPackage) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlJamfPackage) GetOsRequirements() *plugin.TValue[string] {
+	return &c.OsRequirements
+}
+
+func (c *mqlJamfPackage) GetInstallLanguage() *plugin.TValue[string] {
+	return &c.InstallLanguage
+}
+
+func (c *mqlJamfPackage) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlJamfPackage) GetBasePath() *plugin.TValue[string] {
+	return &c.BasePath
+}
+
+func (c *mqlJamfPackage) GetOsInstallerVersion() *plugin.TValue[string] {
+	return &c.OsInstallerVersion
+}
+
+func (c *mqlJamfPackage) GetManifest() *plugin.TValue[string] {
+	return &c.Manifest
+}
+
+func (c *mqlJamfPackage) GetManifestFileName() *plugin.TValue[string] {
+	return &c.ManifestFileName
+}
+
+func (c *mqlJamfPackage) GetFillUserTemplate() *plugin.TValue[bool] {
+	return &c.FillUserTemplate
+}
+
+func (c *mqlJamfPackage) GetFillExistingUsers() *plugin.TValue[bool] {
+	return &c.FillExistingUsers
+}
+
+func (c *mqlJamfPackage) GetIndexed() *plugin.TValue[bool] {
+	return &c.Indexed
+}
+
+func (c *mqlJamfPackage) GetSwu() *plugin.TValue[bool] {
+	return &c.Swu
+}
+
+func (c *mqlJamfPackage) GetRebootRequired() *plugin.TValue[bool] {
+	return &c.RebootRequired
+}
+
+func (c *mqlJamfPackage) GetSelfHealNotify() *plugin.TValue[bool] {
+	return &c.SelfHealNotify
+}
+
+func (c *mqlJamfPackage) GetSelfHealingAction() *plugin.TValue[string] {
+	return &c.SelfHealingAction
+}
+
+func (c *mqlJamfPackage) GetIgnoreConflicts() *plugin.TValue[bool] {
+	return &c.IgnoreConflicts
+}
+
+func (c *mqlJamfPackage) GetSuppressFromDock() *plugin.TValue[bool] {
+	return &c.SuppressFromDock
+}
+
+func (c *mqlJamfPackage) GetSuppressEula() *plugin.TValue[bool] {
+	return &c.SuppressEula
+}
+
+func (c *mqlJamfPackage) GetCloudTransferStatus() *plugin.TValue[string] {
+	return &c.CloudTransferStatus
+}
+
+func (c *mqlJamfPackage) GetParentPackageId() *plugin.TValue[string] {
+	return &c.ParentPackageId
+}
+
+func (c *mqlJamfPackage) GetParentPackage() *plugin.TValue[*mqlJamfPackage] {
+	return plugin.GetOrCompute[*mqlJamfPackage](&c.ParentPackage, func() (*mqlJamfPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jamf.package", c.__id, "parentPackage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJamfPackage), nil
+			}
+		}
+
+		return c.parentPackage()
+	})
 }

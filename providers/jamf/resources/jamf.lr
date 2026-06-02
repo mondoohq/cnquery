@@ -324,4 +324,82 @@ private jamf.package @defaults("name fileName") {
 
   // Whether package registration prompts are suppressed
   suppressRegistration bool
+
+  // SHA-256 hash of the package contents
+  sha256 string
+
+  // Size of the package on disk, in bytes
+  size string
+
+  // Package file format
+  format string
+
+  // Administrator-facing information shown for the package
+  info string
+
+  // Administrator-facing notes attached to the package
+  notes string
+
+  // Operating system requirements that must be met to install the package
+  osRequirements string
+
+  // Language the package installs in
+  installLanguage string
+
+  // Serial number associated with the package
+  serialNumber string
+
+  // Base path where the package is stored on the distribution point
+  basePath string
+
+  // Version of the OS this installer package delivers
+  osInstallerVersion string
+
+  // Installation manifest contents
+  manifest string
+
+  // File name of the installation manifest
+  manifestFileName string
+
+  // Whether the package is installed into the user template
+  fillUserTemplate bool
+
+  // Whether the package is installed into existing user home directories
+  fillExistingUsers bool
+
+  // Whether the package is indexed
+  indexed bool
+
+  // Whether the package is a software update (SWU)
+  swu bool
+
+  // Whether installing the package requires a reboot
+  rebootRequired bool
+
+  // Whether self-heal notifications are shown for the package
+  selfHealNotify bool
+
+  // Action taken when self-healing the package
+  selfHealingAction string
+
+  // Whether conflicts are ignored during installation
+  ignoreConflicts bool
+
+  // Whether the installed app is suppressed from the Dock
+  suppressFromDock bool
+
+  // Whether the end-user license agreement prompt is suppressed
+  suppressEula bool
+
+  // Cloud transfer status of the package
+  cloudTransferStatus string
+
+  // ID of the parent package this package derives from
+  parentPackageId string
+
+  // Parent package this package derives from
+  //
+  // Resolves parentPackageId to the originating package. Null when the
+  // package has no parent.
+  parentPackage() jamf.package
 }
