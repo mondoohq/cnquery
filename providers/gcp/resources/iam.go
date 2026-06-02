@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -823,7 +822,12 @@ func (g *mqlGcpProjectIamServiceServiceAccount) iamPolicy() ([]any, error) {
 	defer adminSvc.Close()
 
 	resource := fmt.Sprintf("projects/%s/serviceAccounts/%s", projectId, email)
-	policy, err := adminSvc.GetIamPolicy(ctx, &iampbv1.GetIamPolicyRequest{Resource: resource})
+	// Request policy schema version 3 so conditional role bindings are returned
+	// (version 1 silently omits any binding that carries an IAM condition).
+	policy, err := adminSvc.GetIamPolicy(ctx, &iampbv1.GetIamPolicyRequest{
+		Resource: resource,
+		Options:  &iampbv1.GetPolicyOptions{RequestedPolicyVersion: 3},
+	})
 	if err != nil {
 		// tolerate access-denied: return no bindings rather than failing the whole query
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
@@ -831,20 +835,12 @@ func (g *mqlGcpProjectIamServiceServiceAccount) iamPolicy() ([]any, error) {
 		}
 		return nil, err
 	}
-	var res []any
-	for i, role := range policy.Roles() {
-		members := policy.Members(role)
-		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
-			"id":      llx.StringData(resource + "-" + strconv.Itoa(i)),
-			"role":    llx.StringData(string(role)),
-			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
+	if policy == nil || policy.InternalProto == nil {
+		return nil, nil
 	}
-	return res, nil
+	// Iterate the raw bindings (rather than policy.Roles()/Members()) so IAM
+	// conditions attached to each binding are preserved.
+	return iampbBindingsToMql(g.MqlRuntime, resource, policy.InternalProto.Bindings)
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccount) canBeImpersonated() (bool, error) {

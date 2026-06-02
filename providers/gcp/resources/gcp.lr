@@ -5276,9 +5276,12 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether any principal can impersonate this service account
   //
-  // True when the IAM policy grants an impersonation role
-  // (serviceAccountTokenCreator, serviceAccountUser, or
-  // workloadIdentityUser) to any member.
+  // True when the IAM policy grants one of the predefined impersonation roles
+  // (serviceAccountTokenCreator, serviceAccountUser, or workloadIdentityUser)
+  // to any member. Only these predefined roles are checked — custom roles that
+  // include equivalent permissions (e.g. iam.serviceAccounts.getAccessToken)
+  // are not detected — and the grant is flagged even when scoped by an IAM
+  // condition (inspect iamPolicy for the condition details).
   canBeImpersonated() bool
 }
 
