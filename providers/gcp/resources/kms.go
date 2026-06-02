@@ -583,6 +583,74 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]any, error) {
 	return res, nil
 }
 
+// newKmsCryptoKeyRef returns a typed gcp.project.kmsService.keyring.cryptokey
+// reference for the given Cloud KMS key resource name, or a null-set reference
+// when the name is empty. Centralizes the kmsKey() accessor pattern used across
+// the provider to resolve a customer-managed key from its resource name.
+func newKmsCryptoKeyRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey], keyName string) (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if keyName == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(keyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectKmsServiceKeyring) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProjectKmsServiceKeyring) iamPolicy() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	keyring := g.ResourcePath.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	kmsSvc, err := kms.NewKeyManagementClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer kmsSvc.Close()
+
+	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: keyring})
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":                   llx.StringData(keyring + "-" + strconv.Itoa(i)),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),
+			"conditionExpression":  llx.StringData(b.GetCondition().GetExpression()),
+			"conditionDescription": llx.StringData(b.GetCondition().GetDescription()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
 func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (plugin.Resource, error) {
 	var mqlAttestation plugin.Resource
 	if v.Attestation != nil {

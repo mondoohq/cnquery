@@ -9,12 +9,15 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProject) cloudTasks() (*mqlGcpProjectCloudTasksService, error) {
@@ -105,6 +108,35 @@ func (g *mqlGcpProjectCloudTasksServiceQueue) id() (string, error) {
 		return "", g.ProjectId.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/cloudTasksService.queue/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectCloudTasksServiceQueue) iamPolicy() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(cloudtasks.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: name})
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return iampbBindingsToMql(g.MqlRuntime, name, policy.Bindings)
 }
 
 func cloudTasksConvertRateLimits(rl *cloudtaskspb.RateLimits) (map[string]any, error) {

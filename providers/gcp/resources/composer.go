@@ -130,6 +130,9 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				if e.Config != nil && e.Config.EncryptionConfig != nil {
+					mqlEnv.(*mqlGcpProjectComposerServiceEnvironment).cacheKmsKeyName = e.Config.EncryptionConfig.KmsKeyName
+				}
 				res = append(res, mqlEnv)
 			}
 			return nil
@@ -148,9 +151,17 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectComposerServiceEnvironmentInternal struct {
+	cacheKmsKeyName string
+}
+
 func (g *mqlGcpProjectComposerServiceEnvironment) id() (string, error) {
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
 	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectComposerServiceEnvironment) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
 }

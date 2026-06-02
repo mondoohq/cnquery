@@ -282,6 +282,7 @@ const (
 	ResourceGcpProjectCloudSchedulerService                                            string = "gcp.project.cloudSchedulerService"
 	ResourceGcpProjectCloudSchedulerServiceJob                                         string = "gcp.project.cloudSchedulerService.job"
 	ResourceGcpProjectAppEngineService                                                 string = "gcp.project.appEngineService"
+	ResourceGcpProjectAppEngineServiceFirewallRule                                     string = "gcp.project.appEngineService.firewallRule"
 	ResourceGcpProjectAppEngineServiceApplication                                      string = "gcp.project.appEngineService.application"
 	ResourceGcpProjectAppEngineServiceService                                          string = "gcp.project.appEngineService.service"
 	ResourceGcpProjectAppEngineServiceVersion                                          string = "gcp.project.appEngineService.version"
@@ -1505,6 +1506,10 @@ func init() {
 		"gcp.project.appEngineService": {
 			// to override args, implement: initGcpProjectAppEngineService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectAppEngineService,
+		},
+		"gcp.project.appEngineService.firewallRule": {
+			// to override args, implement: initGcpProjectAppEngineServiceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAppEngineServiceFirewallRule,
 		},
 		"gcp.project.appEngineService.application": {
 			// to override args, implement: initGcpProjectAppEngineServiceApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6906,6 +6911,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.importJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetImportJobs()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.keyring.importJob")))
 	},
+	"gcp.project.kmsService.keyring.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyring).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.kmsService.keyring.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyring).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.kmsService.keyring.cryptokey.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetResourcePath()).ToDataRes(types.String)
 	},
@@ -7427,6 +7438,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.serviceAccount.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.iamService.serviceAccount.canBeImpersonated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetCanBeImpersonated()).ToDataRes(types.Bool)
 	},
 	"gcp.project.iamService.serviceAccount.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetName()).ToDataRes(types.String)
@@ -8109,6 +8126,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.cluster.virtualClusterConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetVirtualClusterConfig()).ToDataRes(types.Resource("gcp.project.dataprocService.cluster.virtualClusterConfig"))
 	},
+	"gcp.project.dataprocService.cluster.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceCluster).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.dataprocService.cluster.config.parentResourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetParentResourcePath()).ToDataRes(types.String)
 	},
@@ -8123,6 +8143,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.config.encryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetEncryption()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dataprocService.cluster.config.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.dataprocService.cluster.config.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetEndpoint()).ToDataRes(types.Dict)
@@ -11073,6 +11096,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.filestoreService.instance.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFilestoreServiceInstance).GetKmsKeyName()).ToDataRes(types.String)
 	},
+	"gcp.project.filestoreService.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFilestoreServiceInstance).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.filestoreService.instance.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFilestoreServiceInstance).GetSatisfiesPzi()).ToDataRes(types.Bool)
 	},
@@ -11136,6 +11162,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudTasksService.queue.appEngineRoutingOverride": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudTasksServiceQueue).GetAppEngineRoutingOverride()).ToDataRes(types.Dict)
 	},
+	"gcp.project.cloudTasksService.queue.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudTasksServiceQueue).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.cloudSchedulerService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudSchedulerService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -11189,6 +11218,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.appEngineService.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineService).GetServices()).ToDataRes(types.Array(types.Resource("gcp.project.appEngineService.service")))
+	},
+	"gcp.project.appEngineService.firewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineService).GetFirewallRules()).ToDataRes(types.Array(types.Resource("gcp.project.appEngineService.firewallRule")))
+	},
+	"gcp.project.appEngineService.firewallRule.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceFirewallRule).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.appEngineService.firewallRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceFirewallRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"gcp.project.appEngineService.firewallRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceFirewallRule).GetAction()).ToDataRes(types.String)
+	},
+	"gcp.project.appEngineService.firewallRule.sourceRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceFirewallRule).GetSourceRange()).ToDataRes(types.String)
+	},
+	"gcp.project.appEngineService.firewallRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceFirewallRule).GetDescription()).ToDataRes(types.String)
 	},
 	"gcp.project.appEngineService.application.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineServiceApplication).GetProjectId()).ToDataRes(types.String)
@@ -11279,6 +11326,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.appEngineService.version.handlers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineServiceVersion).GetHandlers()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.appEngineService.version.inboundServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAppEngineServiceVersion).GetInboundServices()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.apiGatewayService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiGatewayService).GetProjectId()).ToDataRes(types.String)
@@ -11553,6 +11603,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.composerService.environment.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.composerService.environment.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.composerService.environment.privateEnvironmentEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetPrivateEnvironmentEnabled()).ToDataRes(types.Bool)
 	},
@@ -11576,6 +11629,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.healthcareService.dataset.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectHealthcareServiceDataset).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.healthcareService.dataset.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectHealthcareServiceDataset).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.healthcareService.dataset.dicomStores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectHealthcareServiceDataset).GetDicomStores()).ToDataRes(types.Array(types.Resource("gcp.project.healthcareService.dicomStore")))
@@ -12600,6 +12656,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataflowService.job.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataflowServiceJob).GetEnvironment()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dataflowService.job.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataflowServiceJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.dataflowService.job.workerIpConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataflowServiceJob).GetWorkerIpConfiguration()).ToDataRes(types.String)
 	},
@@ -12641,6 +12700,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.artifactRegistryService.repository.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.artifactRegistryService.repository.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetCreateTime()).ToDataRes(types.Time)
@@ -12984,6 +13046,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.metadataStore.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.metadataStore.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.metadataStore.dataplexConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetDataplexConfig()).ToDataRes(types.Dict)
 	},
@@ -13035,6 +13100,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.model.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.model.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModel).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.model.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModel).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -13061,6 +13129,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.endpoint.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.endpoint.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.vertexaiService.endpoint.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetNetwork()).ToDataRes(types.String)
@@ -13107,6 +13178,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.pipelineJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.pipelineJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.pipelineJob.templateUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetTemplateUri()).ToDataRes(types.String)
 	},
@@ -13146,6 +13220,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.dataset.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceDataset).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.dataset.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDataset).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.dataset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceDataset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -13175,6 +13252,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.featureOnlineStore.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.featureOnlineStore.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.vertexaiService.featureOnlineStore.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -13212,6 +13292,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.tensorboard.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTensorboard).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.tensorboard.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTensorboard).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.tensorboard.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTensorboard).GetCreated()).ToDataRes(types.Time)
 	},
@@ -13235,6 +13318,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.customJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.customJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.vertexaiService.customJob.error": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetError()).ToDataRes(types.Dict)
@@ -13275,6 +13361,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.index.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndex).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.index.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceIndex).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.vertexaiService.index.indexUpdateMethod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndex).GetIndexUpdateMethod()).ToDataRes(types.String)
 	},
@@ -13313,6 +13402,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.indexEndpoint.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.vertexaiService.indexEndpoint.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetCreated()).ToDataRes(types.Time)
@@ -13664,6 +13756,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.eventarcService.channel.cryptoKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcServiceChannel).GetCryptoKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.eventarcService.channel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectEventarcServiceChannel).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.eventarcService.channel.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcServiceChannel).GetCreated()).ToDataRes(types.Time)
@@ -22206,6 +22301,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyring).ImportJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyring).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyring).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).__id, ok = v.Value.(string)
 		return
@@ -22984,6 +23087,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccount).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.canBeImpersonated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).CanBeImpersonated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23962,6 +24073,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceCluster).VirtualClusterConfig, ok = plugin.RawToTValue[*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.cluster.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceCluster).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).__id, ok = v.Value.(string)
 		return
@@ -23984,6 +24099,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.config.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.config.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28290,6 +28409,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectFilestoreServiceInstance).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.filestoreService.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFilestoreServiceInstance).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.filestoreService.instance.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectFilestoreServiceInstance).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -28390,6 +28513,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudTasksServiceQueue).AppEngineRoutingOverride, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudTasksService.queue.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudTasksServiceQueue).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudSchedulerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudSchedulerService).__id, ok = v.Value.(string)
 		return
@@ -28472,6 +28599,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.appEngineService.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAppEngineService).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineService).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.sourceRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).SourceRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.firewallRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceFirewallRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.appEngineService.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28604,6 +28759,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.appEngineService.version.handlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAppEngineServiceVersion).Handlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.appEngineService.version.inboundServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAppEngineServiceVersion).InboundServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiGatewayService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29018,6 +29177,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComposerServiceEnvironment).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.composerService.environment.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.composerService.environment.privateEnvironmentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComposerServiceEnvironment).PrivateEnvironmentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -29056,6 +29219,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.healthcareService.dataset.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectHealthcareServiceDataset).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.healthcareService.dataset.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectHealthcareServiceDataset).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.healthcareService.dataset.dicomStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30530,6 +30697,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataflowServiceJob).Environment, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataflowService.job.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataflowServiceJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataflowService.job.workerIpConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataflowServiceJob).WorkerIpConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -30592,6 +30763,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.artifactRegistryService.repository.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectArtifactRegistryServiceRepository).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.artifactRegistryService.repository.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31106,6 +31281,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.metadataStore.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceMetadataStore).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.metadataStore.dataplexConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).DataplexConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -31178,6 +31357,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceModel).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.model.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModel).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.model.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceModel).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -31216,6 +31399,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.endpoint.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.endpoint.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31282,6 +31469,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServicePipelineJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.pipelineJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.pipelineJob.templateUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServicePipelineJob).TemplateUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -31338,6 +31529,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceDataset).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.dataset.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDataset).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.dataset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceDataset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -31380,6 +31575,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.featureOnlineStore.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureOnlineStore.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.featureOnlineStore.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31434,6 +31633,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceTensorboard).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.tensorboard.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTensorboard).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.tensorboard.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceTensorboard).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -31468,6 +31671,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.customJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceCustomJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.customJob.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31526,6 +31733,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceIndex).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.index.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceIndex).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.index.indexUpdateMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceIndex).IndexUpdateMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -31580,6 +31791,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.indexEndpoint.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.indexEndpoint.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32116,6 +32331,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.eventarcService.channel.cryptoKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEventarcServiceChannel).CryptoKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.eventarcService.channel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectEventarcServiceChannel).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.eventarcService.channel.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50891,6 +51110,8 @@ type mqlGcpProjectKmsServiceKeyring struct {
 	Location     plugin.TValue[string]
 	Cryptokeys   plugin.TValue[[]any]
 	ImportJobs   plugin.TValue[[]any]
+	IamPolicy    plugin.TValue[[]any]
+	Public       plugin.TValue[bool]
 }
 
 // createGcpProjectKmsServiceKeyring creates a new instance of this resource
@@ -50979,6 +51200,28 @@ func (c *mqlGcpProjectKmsServiceKeyring) GetImportJobs() *plugin.TValue[[]any] {
 		}
 
 		return c.importJobs()
+	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyring) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService.keyring", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyring) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -52877,6 +53120,8 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	ActiveUserManagedKeys plugin.TValue[[]any]
 	LastAuthenticatedTime plugin.TValue[*time.Time]
 	IsDefault             plugin.TValue[bool]
+	IamPolicy             plugin.TValue[[]any]
+	CanBeImpersonated     plugin.TValue[bool]
 }
 
 // createGcpProjectIamServiceServiceAccount creates a new instance of this resource
@@ -52995,6 +53240,28 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetLastAuthenticatedTime() *plug
 func (c *mqlGcpProjectIamServiceServiceAccount) GetIsDefault() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsDefault, func() (bool, error) {
 		return c.isDefault()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.serviceAccount", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetCanBeImpersonated() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanBeImpersonated, func() (bool, error) {
+		return c.canBeImpersonated()
 	})
 }
 
@@ -54996,6 +55263,7 @@ type mqlGcpProjectDataprocServiceCluster struct {
 	Status               plugin.TValue[*mqlGcpProjectDataprocServiceClusterStatus]
 	StatusHistory        plugin.TValue[[]any]
 	VirtualClusterConfig plugin.TValue[*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig]
+	IamPolicy            plugin.TValue[[]any]
 }
 
 // createGcpProjectDataprocServiceCluster creates a new instance of this resource
@@ -55075,16 +55343,33 @@ func (c *mqlGcpProjectDataprocServiceCluster) GetVirtualClusterConfig() *plugin.
 	return &c.VirtualClusterConfig
 }
 
+func (c *mqlGcpProjectDataprocServiceCluster) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
 // mqlGcpProjectDataprocServiceClusterConfig for the gcp.project.dataprocService.cluster.config resource
 type mqlGcpProjectDataprocServiceClusterConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectDataprocServiceClusterConfigInternal it will be used here
+	mqlGcpProjectDataprocServiceClusterConfigInternal
 	ParentResourcePath    plugin.TValue[string]
 	Autoscaling           plugin.TValue[any]
 	ConfigBucket          plugin.TValue[string]
 	Metrics               plugin.TValue[any]
 	Encryption            plugin.TValue[any]
+	KmsKey                plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Endpoint              plugin.TValue[any]
 	GceCluster            plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceCluster]
 	GkeCluster            plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGkeCluster]
@@ -55154,6 +55439,22 @@ func (c *mqlGcpProjectDataprocServiceClusterConfig) GetMetrics() *plugin.TValue[
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetEncryption() *plugin.TValue[any] {
 	return &c.Encryption
+}
+
+func (c *mqlGcpProjectDataprocServiceClusterConfig) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetEndpoint() *plugin.TValue[any] {
@@ -64997,6 +65298,7 @@ type mqlGcpProjectFilestoreServiceInstance struct {
 	FileShares                plugin.TValue[[]any]
 	Networks                  plugin.TValue[[]any]
 	KmsKeyName                plugin.TValue[string]
+	KmsKey                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	SatisfiesPzi              plugin.TValue[bool]
 	SatisfiesPzs              plugin.TValue[bool]
 	DeletionProtectionEnabled plugin.TValue[bool]
@@ -65078,6 +65380,22 @@ func (c *mqlGcpProjectFilestoreServiceInstance) GetNetworks() *plugin.TValue[[]a
 
 func (c *mqlGcpProjectFilestoreServiceInstance) GetKmsKeyName() *plugin.TValue[string] {
 	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectFilestoreServiceInstance) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.filestoreService.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectFilestoreServiceInstance) GetSatisfiesPzi() *plugin.TValue[bool] {
@@ -65306,6 +65624,7 @@ type mqlGcpProjectCloudTasksServiceQueue struct {
 	RateLimits               plugin.TValue[any]
 	RetryConfig              plugin.TValue[*mqlGcpRetryConfig]
 	AppEngineRoutingOverride plugin.TValue[any]
+	IamPolicy                plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudTasksServiceQueue creates a new instance of this resource
@@ -65367,6 +65686,22 @@ func (c *mqlGcpProjectCloudTasksServiceQueue) GetRetryConfig() *plugin.TValue[*m
 
 func (c *mqlGcpProjectCloudTasksServiceQueue) GetAppEngineRoutingOverride() *plugin.TValue[any] {
 	return &c.AppEngineRoutingOverride
+}
+
+func (c *mqlGcpProjectCloudTasksServiceQueue) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudTasksService.queue", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
 }
 
 // mqlGcpProjectCloudSchedulerService for the gcp.project.cloudSchedulerService resource
@@ -65549,9 +65884,10 @@ type mqlGcpProjectAppEngineService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectAppEngineServiceInternal it will be used here
-	ProjectId   plugin.TValue[string]
-	Application plugin.TValue[*mqlGcpProjectAppEngineServiceApplication]
-	Services    plugin.TValue[[]any]
+	ProjectId     plugin.TValue[string]
+	Application   plugin.TValue[*mqlGcpProjectAppEngineServiceApplication]
+	Services      plugin.TValue[[]any]
+	FirewallRules plugin.TValue[[]any]
 }
 
 // createGcpProjectAppEngineService creates a new instance of this resource
@@ -65625,6 +65961,86 @@ func (c *mqlGcpProjectAppEngineService) GetServices() *plugin.TValue[[]any] {
 
 		return c.services()
 	})
+}
+
+func (c *mqlGcpProjectAppEngineService) GetFirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.appEngineService", c.__id, "firewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRules()
+	})
+}
+
+// mqlGcpProjectAppEngineServiceFirewallRule for the gcp.project.appEngineService.firewallRule resource
+type mqlGcpProjectAppEngineServiceFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAppEngineServiceFirewallRuleInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	Priority    plugin.TValue[int64]
+	Action      plugin.TValue[string]
+	SourceRange plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createGcpProjectAppEngineServiceFirewallRule creates a new instance of this resource
+func createGcpProjectAppEngineServiceFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAppEngineServiceFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.appEngineService.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) MqlName() string {
+	return "gcp.project.appEngineService.firewallRule"
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) GetSourceRange() *plugin.TValue[string] {
+	return &c.SourceRange
+}
+
+func (c *mqlGcpProjectAppEngineServiceFirewallRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlGcpProjectAppEngineServiceApplication for the gcp.project.appEngineService.application resource
@@ -65838,6 +66254,7 @@ type mqlGcpProjectAppEngineServiceVersion struct {
 	RuntimeApiVersion  plugin.TValue[string]
 	VpcAccessConnector plugin.TValue[any]
 	Handlers           plugin.TValue[[]any]
+	InboundServices    plugin.TValue[[]any]
 }
 
 // createGcpProjectAppEngineServiceVersion creates a new instance of this resource
@@ -65919,6 +66336,10 @@ func (c *mqlGcpProjectAppEngineServiceVersion) GetVpcAccessConnector() *plugin.T
 
 func (c *mqlGcpProjectAppEngineServiceVersion) GetHandlers() *plugin.TValue[[]any] {
 	return &c.Handlers
+}
+
+func (c *mqlGcpProjectAppEngineServiceVersion) GetInboundServices() *plugin.TValue[[]any] {
+	return &c.InboundServices
 }
 
 // mqlGcpProjectApiGatewayService for the gcp.project.apiGatewayService resource
@@ -66903,7 +67324,7 @@ func (c *mqlGcpProjectComposerService) GetEnvironments() *plugin.TValue[[]any] {
 type mqlGcpProjectComposerServiceEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectComposerServiceEnvironmentInternal it will be used here
+	mqlGcpProjectComposerServiceEnvironmentInternal
 	ProjectId                 plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	State                     plugin.TValue[string]
@@ -66913,6 +67334,7 @@ type mqlGcpProjectComposerServiceEnvironment struct {
 	Labels                    plugin.TValue[map[string]any]
 	ImageVersion              plugin.TValue[string]
 	Config                    plugin.TValue[any]
+	KmsKey                    plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	PrivateEnvironmentEnabled plugin.TValue[bool]
 	WebServerAllowedIpRanges  plugin.TValue[[]any]
 }
@@ -66988,6 +67410,22 @@ func (c *mqlGcpProjectComposerServiceEnvironment) GetImageVersion() *plugin.TVal
 
 func (c *mqlGcpProjectComposerServiceEnvironment) GetConfig() *plugin.TValue[any] {
 	return &c.Config
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.composerService.environment", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectComposerServiceEnvironment) GetPrivateEnvironmentEnabled() *plugin.TValue[bool] {
@@ -67068,11 +67506,12 @@ func (c *mqlGcpProjectHealthcareService) GetDatasets() *plugin.TValue[[]any] {
 type mqlGcpProjectHealthcareServiceDataset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectHealthcareServiceDatasetInternal it will be used here
+	mqlGcpProjectHealthcareServiceDatasetInternal
 	ProjectId      plugin.TValue[string]
 	Name           plugin.TValue[string]
 	TimeZone       plugin.TValue[string]
 	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	DicomStores    plugin.TValue[[]any]
 	FhirStores     plugin.TValue[[]any]
 	Hl7v2Stores    plugin.TValue[[]any]
@@ -67129,6 +67568,22 @@ func (c *mqlGcpProjectHealthcareServiceDataset) GetTimeZone() *plugin.TValue[str
 
 func (c *mqlGcpProjectHealthcareServiceDataset) GetEncryptionSpec() *plugin.TValue[any] {
 	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectHealthcareServiceDataset) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.healthcareService.dataset", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectHealthcareServiceDataset) GetDicomStores() *plugin.TValue[[]any] {
@@ -70272,7 +70727,7 @@ func (c *mqlGcpProjectDataflowService) GetJobs() *plugin.TValue[[]any] {
 type mqlGcpProjectDataflowServiceJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectDataflowServiceJobInternal it will be used here
+	mqlGcpProjectDataflowServiceJobInternal
 	ProjectId             plugin.TValue[string]
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
@@ -70282,6 +70737,7 @@ type mqlGcpProjectDataflowServiceJob struct {
 	Location              plugin.TValue[string]
 	Labels                plugin.TValue[map[string]any]
 	Environment           plugin.TValue[any]
+	KmsKey                plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	WorkerIpConfiguration plugin.TValue[string]
 	PipelineDescription   plugin.TValue[any]
 	CurrentStateTime      plugin.TValue[*time.Time]
@@ -70358,6 +70814,22 @@ func (c *mqlGcpProjectDataflowServiceJob) GetLabels() *plugin.TValue[map[string]
 
 func (c *mqlGcpProjectDataflowServiceJob) GetEnvironment() *plugin.TValue[any] {
 	return &c.Environment
+}
+
+func (c *mqlGcpProjectDataflowServiceJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataflowService.job", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectDataflowServiceJob) GetWorkerIpConfiguration() *plugin.TValue[string] {
@@ -70452,6 +70924,7 @@ type mqlGcpProjectArtifactRegistryServiceRepository struct {
 	Mode                        plugin.TValue[string]
 	Labels                      plugin.TValue[map[string]any]
 	KmsKeyName                  plugin.TValue[string]
+	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	CreateTime                  plugin.TValue[*time.Time]
 	UpdateTime                  plugin.TValue[*time.Time]
 	SizeBytes                   plugin.TValue[int64]
@@ -70537,6 +71010,22 @@ func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetLabels() *plugin.TVa
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetKmsKeyName() *plugin.TValue[string] {
 	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.artifactRegistryService.repository", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetCreateTime() *plugin.TValue[*time.Time] {
@@ -71845,11 +72334,12 @@ func (c *mqlGcpProjectVertexaiService) GetMetadataStores() *plugin.TValue[[]any]
 type mqlGcpProjectVertexaiServiceMetadataStore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceMetadataStoreInternal it will be used here
+	mqlGcpProjectVertexaiServiceMetadataStoreInternal
 	Name           plugin.TValue[string]
 	Description    plugin.TValue[string]
 	State          plugin.TValue[any]
 	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	DataplexConfig plugin.TValue[any]
 	Created        plugin.TValue[*time.Time]
 	Updated        plugin.TValue[*time.Time]
@@ -71908,6 +72398,22 @@ func (c *mqlGcpProjectVertexaiServiceMetadataStore) GetEncryptionSpec() *plugin.
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceMetadataStore) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.metadataStore", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceMetadataStore) GetDataplexConfig() *plugin.TValue[any] {
 	return &c.DataplexConfig
 }
@@ -71924,7 +72430,7 @@ func (c *mqlGcpProjectVertexaiServiceMetadataStore) GetUpdated() *plugin.TValue[
 type mqlGcpProjectVertexaiServiceModel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceModelInternal it will be used here
+	mqlGcpProjectVertexaiServiceModelInternal
 	Name                              plugin.TValue[string]
 	DisplayName                       plugin.TValue[string]
 	Description                       plugin.TValue[string]
@@ -71939,6 +72445,7 @@ type mqlGcpProjectVertexaiServiceModel struct {
 	TrainingPipeline                  plugin.TValue[string]
 	ArtifactUri                       plugin.TValue[string]
 	EncryptionSpec                    plugin.TValue[any]
+	KmsKey                            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Labels                            plugin.TValue[map[string]any]
 	Etag                              plugin.TValue[string]
 	CreatedAt                         plugin.TValue[*time.Time]
@@ -72038,6 +72545,22 @@ func (c *mqlGcpProjectVertexaiServiceModel) GetEncryptionSpec() *plugin.TValue[a
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceModel) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.model", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceModel) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
@@ -72058,12 +72581,13 @@ func (c *mqlGcpProjectVertexaiServiceModel) GetUpdatedAt() *plugin.TValue[*time.
 type mqlGcpProjectVertexaiServiceEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceEndpointInternal it will be used here
+	mqlGcpProjectVertexaiServiceEndpointInternal
 	Name                        plugin.TValue[string]
 	DisplayName                 plugin.TValue[string]
 	Description                 plugin.TValue[string]
 	DeployedModels              plugin.TValue[[]any]
 	EncryptionSpec              plugin.TValue[any]
+	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Network                     plugin.TValue[string]
 	EnablePrivateServiceConnect plugin.TValue[bool]
 	TrafficSplit                plugin.TValue[map[string]any]
@@ -72130,6 +72654,22 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetEncryptionSpec() *plugin.TValu
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.endpoint", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetNetwork() *plugin.TValue[string] {
 	return &c.Network
 }
@@ -72162,7 +72702,7 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetUpdatedAt() *plugin.TValue[*ti
 type mqlGcpProjectVertexaiServicePipelineJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServicePipelineJobInternal it will be used here
+	mqlGcpProjectVertexaiServicePipelineJobInternal
 	Name             plugin.TValue[string]
 	DisplayName      plugin.TValue[string]
 	State            plugin.TValue[string]
@@ -72171,6 +72711,7 @@ type mqlGcpProjectVertexaiServicePipelineJob struct {
 	ServiceAccount   plugin.TValue[string]
 	Network          plugin.TValue[string]
 	EncryptionSpec   plugin.TValue[any]
+	KmsKey           plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	TemplateUri      plugin.TValue[string]
 	TemplateMetadata plugin.TValue[any]
 	Labels           plugin.TValue[map[string]any]
@@ -72249,6 +72790,22 @@ func (c *mqlGcpProjectVertexaiServicePipelineJob) GetEncryptionSpec() *plugin.TV
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.pipelineJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetTemplateUri() *plugin.TValue[string] {
 	return &c.TemplateUri
 }
@@ -72281,13 +72838,14 @@ func (c *mqlGcpProjectVertexaiServicePipelineJob) GetEndTime() *plugin.TValue[*t
 type mqlGcpProjectVertexaiServiceDataset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceDatasetInternal it will be used here
+	mqlGcpProjectVertexaiServiceDatasetInternal
 	Name              plugin.TValue[string]
 	DisplayName       plugin.TValue[string]
 	Description       plugin.TValue[string]
 	MetadataSchemaUri plugin.TValue[string]
 	Metadata          plugin.TValue[any]
 	EncryptionSpec    plugin.TValue[any]
+	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Labels            plugin.TValue[map[string]any]
 	Etag              plugin.TValue[string]
 	CreatedAt         plugin.TValue[*time.Time]
@@ -72355,6 +72913,22 @@ func (c *mqlGcpProjectVertexaiServiceDataset) GetEncryptionSpec() *plugin.TValue
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceDataset) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.dataset", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceDataset) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
@@ -72375,13 +72949,14 @@ func (c *mqlGcpProjectVertexaiServiceDataset) GetUpdatedAt() *plugin.TValue[*tim
 type mqlGcpProjectVertexaiServiceFeatureOnlineStore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceFeatureOnlineStoreInternal it will be used here
+	mqlGcpProjectVertexaiServiceFeatureOnlineStoreInternal
 	Name                     plugin.TValue[string]
 	State                    plugin.TValue[string]
 	Bigtable                 plugin.TValue[any]
 	Optimized                plugin.TValue[any]
 	DedicatedServingEndpoint plugin.TValue[any]
 	EncryptionSpec           plugin.TValue[any]
+	KmsKey                   plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Labels                   plugin.TValue[map[string]any]
 	Etag                     plugin.TValue[string]
 	SatisfiesPzs             plugin.TValue[bool]
@@ -72451,6 +73026,22 @@ func (c *mqlGcpProjectVertexaiServiceFeatureOnlineStore) GetEncryptionSpec() *pl
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceFeatureOnlineStore) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.featureOnlineStore", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceFeatureOnlineStore) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
@@ -72479,13 +73070,14 @@ func (c *mqlGcpProjectVertexaiServiceFeatureOnlineStore) GetUpdatedAt() *plugin.
 type mqlGcpProjectVertexaiServiceTensorboard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceTensorboardInternal it will be used here
+	mqlGcpProjectVertexaiServiceTensorboardInternal
 	Name           plugin.TValue[string]
 	DisplayName    plugin.TValue[string]
 	Description    plugin.TValue[string]
 	IsDefault      plugin.TValue[bool]
 	Labels         plugin.TValue[map[string]any]
 	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Created        plugin.TValue[*time.Time]
 	Updated        plugin.TValue[*time.Time]
 }
@@ -72551,6 +73143,22 @@ func (c *mqlGcpProjectVertexaiServiceTensorboard) GetEncryptionSpec() *plugin.TV
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceTensorboard) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.tensorboard", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceTensorboard) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
@@ -72563,13 +73171,14 @@ func (c *mqlGcpProjectVertexaiServiceTensorboard) GetUpdated() *plugin.TValue[*t
 type mqlGcpProjectVertexaiServiceCustomJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceCustomJobInternal it will be used here
+	mqlGcpProjectVertexaiServiceCustomJobInternal
 	Name           plugin.TValue[string]
 	DisplayName    plugin.TValue[string]
 	State          plugin.TValue[string]
 	JobSpec        plugin.TValue[any]
 	Labels         plugin.TValue[map[string]any]
 	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Error          plugin.TValue[any]
 	Created        plugin.TValue[*time.Time]
 	Updated        plugin.TValue[*time.Time]
@@ -72638,6 +73247,22 @@ func (c *mqlGcpProjectVertexaiServiceCustomJob) GetEncryptionSpec() *plugin.TVal
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.customJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceCustomJob) GetError() *plugin.TValue[any] {
 	return &c.Error
 }
@@ -72662,7 +73287,7 @@ func (c *mqlGcpProjectVertexaiServiceCustomJob) GetEndTime() *plugin.TValue[*tim
 type mqlGcpProjectVertexaiServiceIndex struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceIndexInternal it will be used here
+	mqlGcpProjectVertexaiServiceIndexInternal
 	Name              plugin.TValue[string]
 	DisplayName       plugin.TValue[string]
 	Description       plugin.TValue[string]
@@ -72671,6 +73296,7 @@ type mqlGcpProjectVertexaiServiceIndex struct {
 	DeployedIndexes   plugin.TValue[[]any]
 	Labels            plugin.TValue[map[string]any]
 	EncryptionSpec    plugin.TValue[any]
+	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	IndexUpdateMethod plugin.TValue[string]
 	IndexStats        plugin.TValue[any]
 	Created           plugin.TValue[*time.Time]
@@ -72746,6 +73372,22 @@ func (c *mqlGcpProjectVertexaiServiceIndex) GetEncryptionSpec() *plugin.TValue[a
 	return &c.EncryptionSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceIndex) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.index", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceIndex) GetIndexUpdateMethod() *plugin.TValue[string] {
 	return &c.IndexUpdateMethod
 }
@@ -72766,7 +73408,7 @@ func (c *mqlGcpProjectVertexaiServiceIndex) GetUpdated() *plugin.TValue[*time.Ti
 type mqlGcpProjectVertexaiServiceIndexEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceIndexEndpointInternal it will be used here
+	mqlGcpProjectVertexaiServiceIndexEndpointInternal
 	Name                     plugin.TValue[string]
 	DisplayName              plugin.TValue[string]
 	Description              plugin.TValue[string]
@@ -72776,6 +73418,7 @@ type mqlGcpProjectVertexaiServiceIndexEndpoint struct {
 	PublicEndpointDomainName plugin.TValue[string]
 	Labels                   plugin.TValue[map[string]any]
 	EncryptionSpec           plugin.TValue[any]
+	KmsKey                   plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Created                  plugin.TValue[*time.Time]
 	Updated                  plugin.TValue[*time.Time]
 }
@@ -72851,6 +73494,22 @@ func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetLabels() *plugin.TValue[m
 
 func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetEncryptionSpec() *plugin.TValue[any] {
 	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.indexEndpoint", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetCreated() *plugin.TValue[*time.Time] {
@@ -74217,6 +74876,7 @@ type mqlGcpProjectEventarcServiceChannel struct {
 	PubsubTopic   plugin.TValue[string]
 	State         plugin.TValue[string]
 	CryptoKeyName plugin.TValue[string]
+	KmsKey        plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Created       plugin.TValue[*time.Time]
 	Updated       plugin.TValue[*time.Time]
 }
@@ -74280,6 +74940,22 @@ func (c *mqlGcpProjectEventarcServiceChannel) GetState() *plugin.TValue[string] 
 
 func (c *mqlGcpProjectEventarcServiceChannel) GetCryptoKeyName() *plugin.TValue[string] {
 	return &c.CryptoKeyName
+}
+
+func (c *mqlGcpProjectEventarcServiceChannel) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.eventarcService.channel", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectEventarcServiceChannel) GetCreated() *plugin.TValue[*time.Time] {

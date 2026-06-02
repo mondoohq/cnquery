@@ -132,6 +132,44 @@ func (g *mqlGcpProjectAppEngineService) services() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectAppEngineService) firewallRules() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	svc, err := newAppEngineService(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	var res []any
+	req := svc.Apps.Firewall.IngressRules.List(projectId)
+	if err := req.Pages(ctx, func(page *appengine.ListIngressRulesResponse) error {
+		for _, rule := range page.IngressRules {
+			mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.appEngineService.firewallRule", map[string]*llx.RawData{
+				"__id":        llx.StringData(fmt.Sprintf("gcp.project/%s/appEngineService.firewallRule/%d", projectId, rule.Priority)),
+				"projectId":   llx.StringData(projectId),
+				"priority":    llx.IntData(rule.Priority),
+				"action":      llx.StringData(rule.Action),
+				"sourceRange": llx.StringData(rule.SourceRange),
+				"description": llx.StringData(rule.Description),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlRule)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -177,6 +215,7 @@ func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 				"runtimeApiVersion":  llx.StringData(v.RuntimeApiVersion),
 				"vpcAccessConnector": llx.DictData(vpcConnector),
 				"handlers":           llx.ArrayData(handlers, types.Dict),
+				"inboundServices":    llx.ArrayData(convert.SliceAnyToInterface(v.InboundServices), types.String),
 			})
 			if err != nil {
 				return err

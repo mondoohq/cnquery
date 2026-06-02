@@ -201,6 +201,14 @@ func (g *mqlGcpProjectEventarcServiceChannel) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectEventarcServiceChannel) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.GetCryptoKeyName()
+	if keyName.Error != nil {
+		return nil, keyName.Error
+	}
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, keyName.Data)
+}
+
 func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
 	if !g.serviceEnabled {
 		return nil, nil

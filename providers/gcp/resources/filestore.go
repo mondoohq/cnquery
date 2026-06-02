@@ -168,6 +168,14 @@ func (g *mqlGcpProjectFilestoreServiceInstance) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/filestoreService.instance/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
+func (g *mqlGcpProjectFilestoreServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.GetKmsKeyName()
+	if keyName.Error != nil {
+		return nil, keyName.Error
+	}
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, keyName.Data)
+}
+
 func (g *mqlGcpProjectFilestoreServiceInstanceFileShare) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }

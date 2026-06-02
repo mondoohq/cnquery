@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.19.1",
-  "generated_at": "2026-06-01T23:01:28-07:00",
+  "generated_at": "2026-06-01T23:19:29-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -65,6 +65,7 @@
     "cloudsql.instances.list",
     "cloudsql.sslCerts.list",
     "cloudsql.users.list",
+    "cloudtasks.iamPolicy.get",
     "cloudtasks.queues.list",
     "composer.environments.list",
     "compute.addresses.list",
@@ -121,6 +122,7 @@
     "dataplex.lakes.list",
     "dataplex.zones.list",
     "dataproc.autoscalingPolicies.list",
+    "dataproc.clusters.getIamPolicy",
     "dataproc.clusters.list",
     "dataproc.jobs.list",
     "datastore.backupSchedules.list",
@@ -156,6 +158,7 @@
     "gkebackup.backupPlans.list",
     "gkebackup.restorePlans.list",
     "iam.denypolicies.list",
+    "iam.iamPolicy.get",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
@@ -625,6 +628,12 @@
       "source_file": "sql.go"
     },
     {
+      "permission": "cloudtasks.iamPolicy.get",
+      "service": "cloudtasks",
+      "action": "GetIamPolicy",
+      "source_file": "cloudtasks.go"
+    },
+    {
       "permission": "cloudtasks.queues.list",
       "service": "cloudtasks",
       "action": "ListQueues",
@@ -997,6 +1006,12 @@
       "source_file": "dataproc.go"
     },
     {
+      "permission": "dataproc.clusters.getIamPolicy",
+      "service": "dataproc",
+      "action": "Clusters.GetIamPolicy",
+      "source_file": "dataproc.go"
+    },
+    {
       "permission": "dataproc.clusters.list",
       "service": "dataproc",
       "action": "Clusters.List",
@@ -1204,6 +1219,12 @@
       "permission": "iam.denypolicies.list",
       "service": "iam",
       "action": "ListPolicies",
+      "source_file": "iam.go"
+    },
+    {
+      "permission": "iam.iamPolicy.get",
+      "service": "iam",
+      "action": "GetIamPolicy",
       "source_file": "iam.go"
     },
     {

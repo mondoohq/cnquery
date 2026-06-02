@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
+	iampbv1 "cloud.google.com/go/iam/apiv1/iampb"
 	iamv2 "cloud.google.com/go/iam/apiv2"
 	iamv2pb "cloud.google.com/go/iam/apiv2/iampb"
 	"google.golang.org/api/googleapi"
@@ -27,6 +29,8 @@ import (
 	"google.golang.org/api/option"
 	policyanalyzer "google.golang.org/api/policyanalyzer/v1"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProjectIamService) id() (string, error) {
@@ -794,4 +798,79 @@ func (g *mqlGcpProjectIamService) denyPolicies() ([]any, error) {
 		policies = append(policies, mqlPolicy)
 	}
 	return policies, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Email.Error != nil {
+		return nil, g.Email.Error
+	}
+	projectId := g.ProjectId.Data
+	email := g.Email.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(admin.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer adminSvc.Close()
+
+	resource := fmt.Sprintf("projects/%s/serviceAccounts/%s", projectId, email)
+	policy, err := adminSvc.GetIamPolicy(ctx, &iampbv1.GetIamPolicyRequest{Resource: resource})
+	if err != nil {
+		// tolerate access-denied: return no bindings rather than failing the whole query
+		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var res []any
+	for i, role := range policy.Roles() {
+		members := policy.Members(role)
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resource + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(string(role)),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) canBeImpersonated() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	for _, raw := range bindings.Data {
+		b, ok := raw.(*mqlGcpResourcemanagerBinding)
+		if !ok || b == nil {
+			continue
+		}
+		role := b.GetRole()
+		if role.Error != nil {
+			return false, role.Error
+		}
+		switch role.Data {
+		case "roles/iam.serviceAccountTokenCreator", "roles/iam.serviceAccountUser", "roles/iam.workloadIdentityUser":
+			members := b.GetMembers()
+			if members.Error != nil {
+				return false, members.Error
+			}
+			if len(members.Data) > 0 {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }

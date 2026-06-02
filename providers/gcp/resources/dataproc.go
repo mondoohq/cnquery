@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/compute/v1"
 	dataproc "google.golang.org/api/dataproc/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -217,8 +219,12 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 						if c.Config.EncryptionConfig != nil {
 							type mqlEncryptionConfig struct {
 								GcePdKmsKeyName string `json:"gcePdKmsKeyName"`
+								KmsKey          string `json:"kmsKey"`
 							}
-							mqlEncryptionCfg, err = convert.JsonToDict(mqlEncryptionConfig{GcePdKmsKeyName: c.Config.EncryptionConfig.GcePdKmsKeyName})
+							mqlEncryptionCfg, err = convert.JsonToDict(mqlEncryptionConfig{
+								GcePdKmsKeyName: c.Config.EncryptionConfig.GcePdKmsKeyName,
+								KmsKey:          c.Config.EncryptionConfig.KmsKey,
+							})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
@@ -491,6 +497,13 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
+						if mqlConfig != nil {
+							kmsKeyName := ""
+							if c.Config.EncryptionConfig != nil {
+								kmsKeyName = c.Config.EncryptionConfig.GcePdKmsKeyName
+							}
+							mqlConfig.(*mqlGcpProjectDataprocServiceClusterConfig).cacheKmsKeyName = kmsKeyName
+						}
 					}
 
 					var mqlMetrics map[string]any
@@ -684,6 +697,68 @@ func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
 	return fmt.Sprintf("%s/dataproc/%s", projectId, name), nil
 }
 
+func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if g.Location.Error != nil {
+		return nil, g.Location.Error
+	}
+	location := g.Location.Data
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(dataproc.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	dataprocSvc, err := dataproc.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resource := fmt.Sprintf("projects/%s/regions/%s/clusters/%s", projectId, location, name)
+	policy, err := dataprocSvc.Projects.Regions.Clusters.GetIamPolicy(resource, &dataproc.GetIamPolicyRequest{}).Do()
+	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 403 {
+			log.Warn().Str("cluster", resource).Msg("not authorized to retrieve dataproc cluster iam policy")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		conditionTitle := ""
+		conditionExpression := ""
+		conditionDescription := ""
+		if b.Condition != nil {
+			conditionTitle = b.Condition.Title
+			conditionExpression = b.Condition.Expression
+			conditionDescription = b.Condition.Description
+		}
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":                   llx.StringData(resource + "-" + strconv.Itoa(i)),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(conditionTitle),
+			"conditionExpression":  llx.StringData(conditionExpression),
+			"conditionDescription": llx.StringData(conditionDescription),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
 func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 3 {
 		return args, nil, nil
@@ -730,12 +805,20 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 	return nil, nil, fmt.Errorf("dataproc cluster %q not found", nameVal)
 }
 
+type mqlGcpProjectDataprocServiceClusterConfigInternal struct {
+	cacheKmsKeyName string
+}
+
 func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {
 	if g.ParentResourcePath.Error != nil {
 		return "", g.ParentResourcePath.Error
 	}
 	parentResource := g.ParentResourcePath.Data
 	return fmt.Sprintf("%s/config", parentResource), nil
+}
+
+func (a *mqlGcpProjectDataprocServiceClusterConfig) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterStatus) id() (string, error) {

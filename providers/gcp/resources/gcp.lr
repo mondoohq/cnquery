@@ -4693,6 +4693,10 @@ private gcp.project.kmsService.keyring @defaults("name") {
   cryptokeys() []gcp.project.kmsService.keyring.cryptokey
   // Import jobs in the current keyring (used to wrap key material for import into Cloud KMS)
   importJobs() []gcp.project.kmsService.keyring.importJob
+  // IAM policy bindings on the key ring; grants here cascade to every key in the ring
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the key ring's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) KMS crypto key
@@ -5268,6 +5272,14 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   lastAuthenticatedTime() time
   // Whether this is a Google-created default service account (default Compute or App Engine SA), which holds broad project-editor permissions by default
   isDefault() bool
+  // The service account's own resource IAM policy bindings (who is granted roles on the service account itself, e.g. token creator or user)
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether any principal can impersonate this service account
+  //
+  // True when the IAM policy grants an impersonation role
+  // (serviceAccountTokenCreator, serviceAccountUser, or
+  // workloadIdentityUser) to any member.
+  canBeImpersonated() bool
 }
 
 // Google Cloud (GCP) IAM service account key
@@ -5937,6 +5949,8 @@ private gcp.project.dataprocService.cluster @defaults("name") {
   statusHistory []gcp.project.dataprocService.cluster.status
   // Virtual cluster config used when creating a Dataproc cluster that does not directly control the underlying compute resources
   virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
+  // IAM policy bindings on the cluster (who can submit jobs to or manage the cluster)
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Dataproc cluster config
@@ -5951,6 +5965,8 @@ private gcp.project.dataprocService.cluster.config {
   metrics dict
   // Encryption configuration
   encryption dict
+  // Customer-managed Cloud KMS key used to encrypt cluster node disks (and, for newer clusters, job arguments) at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Port/endpoint configuration
   endpoint dict
   // Shared Compute Engine configuration
@@ -8837,7 +8853,11 @@ private gcp.project.filestoreService.instance @defaults("name state tier") {
   // Network configurations
   networks []gcp.project.filestoreService.instance.network
   // KMS key name used for data encryption
-  kmsKeyName string
+  //
+  // Deprecated in favor of kmsKey().
+  kmsKeyName @maturity("deprecated") string
+  // Customer-managed Cloud KMS key used to encrypt the instance's file shares at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Whether the instance satisfies zone separation (Pzi)
   satisfiesPzi bool
   // Whether the instance satisfies physical zone separation (Pzs)
@@ -8905,6 +8925,8 @@ private gcp.project.cloudTasksService.queue @defaults("name state") {
   retryConfig gcp.retryConfig
   // Overrides for task-level app_engine_routing (App Engine queues only)
   appEngineRoutingOverride dict
+  // IAM policy bindings on the queue (who can enqueue, lease, or manage tasks)
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Cloud Scheduler
@@ -8966,6 +8988,28 @@ private gcp.project.appEngineService {
   application() gcp.project.appEngineService.application
   // List of App Engine services
   services() []gcp.project.appEngineService.service
+  // App Engine firewall ingress rules (the application's IP allow/deny perimeter)
+  firewallRules() []gcp.project.appEngineService.firewallRule
+}
+
+// Google Cloud (GCP) App Engine firewall ingress rule
+//
+// Examine an App Engine firewall ingress rule — the application's only
+// IP-level perimeter control. Each rule applies an `action` (ALLOW or DENY)
+// to a `sourceRange` CIDR, evaluated in `priority` order. A rule whose
+// `sourceRange` is "*" matches every address, so an ALLOW-all rule exposes
+// the application to the entire internet.
+private gcp.project.appEngineService.firewallRule @defaults("priority action sourceRange") {
+  // Project ID
+  projectId string
+  // Evaluation priority (lower numbers evaluated first; 2147483647 is the implicit default rule)
+  priority int
+  // Action applied to matching traffic (ALLOW, DENY)
+  action string
+  // Source IP CIDR range the rule matches ("*" matches all addresses)
+  sourceRange string
+  // Optional human-readable description
+  description string
 }
 
 // Google Cloud (GCP) App Engine application
@@ -9054,6 +9098,8 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
   vpcAccessConnector dict
   // URL handlers, each with its HTTPS enforcement (securityLevel) and login requirement
   handlers []dict
+  // Inbound service channels the version accepts beyond HTTP (e.g. mail, XMPP, warmup) — additional ingress surface
+  inboundServices []string
 }
 
 // Google Cloud (GCP) API Gateway
@@ -9352,6 +9398,8 @@ private gcp.project.composerService.environment @defaults("name state imageVersi
   imageVersion string
   // Environment configuration (node config, software config, encryption config, web server access control)
   config dict
+  // Customer-managed Cloud KMS key used to encrypt the environment at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Whether the environment uses a Private IP Cloud Composer setup
   privateEnvironmentEnabled bool
   // IP ranges (CIDR) allowed to access the Airflow web server (empty means open to all)
@@ -9385,6 +9433,8 @@ private gcp.project.healthcareService.dataset @defaults("name timeZone") {
   timeZone string
   // Customer-managed encryption key configuration (includes kmsKeyName)
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // DICOM stores in this dataset
   dicomStores() []gcp.project.healthcareService.dicomStore
   // FHIR stores in this dataset
@@ -10365,6 +10415,8 @@ private gcp.project.dataflowService.job @defaults("name currentState") {
   labels map[string]string
   // The environment the job runs in
   environment dict
+  // Customer-managed Cloud KMS key protecting pipeline state and shuffle data at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // VM IP configuration of the job's worker pools (WORKER_IP_PUBLIC, WORKER_IP_PRIVATE, or WORKER_IP_UNSPECIFIED)
   workerIpConfiguration string
   // The SDK pipeline options
@@ -10412,7 +10464,11 @@ private gcp.project.artifactRegistryService.repository @defaults("name format lo
   // User-assigned labels
   labels map[string]string
   // Cloud KMS encryption key name (empty means Google-managed encryption)
-  kmsKeyName string
+  //
+  // Deprecated in favor of kmsKey().
+  kmsKeyName @maturity("deprecated") string
+  // Customer-managed Cloud KMS key used to encrypt the repository's artifacts at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
   createTime time
   // Last update time
@@ -10738,6 +10794,8 @@ private gcp.project.vertexaiService.metadataStore @defaults("name state") {
   state dict
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Dataplex integration config
   dataplexConfig dict
   // Creation time
@@ -10782,6 +10840,8 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   artifactUri string
   // Encryption spec (CMEK)
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // ETag used for concurrency control on resource updates
@@ -10810,6 +10870,8 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   deployedModels []dict
   // Encryption spec (CMEK)
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Network for private endpoints
   network string
   // Whether private service connect is enabled
@@ -10850,6 +10912,8 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   network string
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Template URI
   templateUri string
   // Template metadata
@@ -10885,6 +10949,8 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   metadata dict
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // ETag used for concurrency control on resource updates
@@ -10915,6 +10981,8 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   dedicatedServingEndpoint dict
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // ETag used for concurrency control on resource updates
@@ -10948,6 +11016,8 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
   created time
   // Last update time
@@ -10976,6 +11046,8 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Error details (if failed)
   error dict
   // Creation time
@@ -11012,6 +11084,8 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Index update method (BATCH_UPDATE, STREAM_UPDATE)
   indexUpdateMethod string
   // Index stats (vectors count, shards count)
@@ -11048,6 +11122,8 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
   created time
   // Last update time
@@ -11441,7 +11517,11 @@ private gcp.project.eventarcService.channel @defaults("name state") {
   // Channel state (PENDING, ACTIVE, INACTIVE)
   state string
   // Crypto key name for CMEK
-  cryptoKeyName string
+  //
+  // Deprecated in favor of kmsKey().
+  cryptoKeyName @maturity("deprecated") string
+  // Customer-managed Cloud KMS key used to encrypt events flowing through the channel at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
   created time
   // Last update time

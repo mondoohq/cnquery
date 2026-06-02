@@ -362,6 +362,13 @@ gcp.project.appEngineService.application.id 11.6.6
 gcp.project.appEngineService.application.locationId 11.6.6
 gcp.project.appEngineService.application.projectId 11.6.6
 gcp.project.appEngineService.application.servingStatus 11.6.6
+gcp.project.appEngineService.firewallRule 13.19.2
+gcp.project.appEngineService.firewallRule.action 13.19.2
+gcp.project.appEngineService.firewallRule.description 13.19.2
+gcp.project.appEngineService.firewallRule.priority 13.19.2
+gcp.project.appEngineService.firewallRule.projectId 13.19.2
+gcp.project.appEngineService.firewallRule.sourceRange 13.19.2
+gcp.project.appEngineService.firewallRules 13.19.2
 gcp.project.appEngineService.projectId 11.6.6
 gcp.project.appEngineService.service 11.6.6
 gcp.project.appEngineService.service.id 11.6.6
@@ -376,6 +383,7 @@ gcp.project.appEngineService.version.createTime 11.6.6
 gcp.project.appEngineService.version.env 11.6.6
 gcp.project.appEngineService.version.handlers 13.15.1
 gcp.project.appEngineService.version.id 11.6.6
+gcp.project.appEngineService.version.inboundServices 13.19.2
 gcp.project.appEngineService.version.name 11.6.6
 gcp.project.appEngineService.version.projectId 11.6.6
 gcp.project.appEngineService.version.runtime 11.6.6
@@ -416,6 +424,7 @@ gcp.project.artifactRegistryService.repository.formatConfig.id 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig.immutableTags 11.6.1
 gcp.project.artifactRegistryService.repository.formatConfig.mavenVersionPolicy 11.6.1
 gcp.project.artifactRegistryService.repository.iamPolicy 11.6.1
+gcp.project.artifactRegistryService.repository.kmsKey 13.19.2
 gcp.project.artifactRegistryService.repository.kmsKeyName 11.6.1
 gcp.project.artifactRegistryService.repository.labels 11.6.1
 gcp.project.artifactRegistryService.repository.location 11.6.1
@@ -1271,6 +1280,7 @@ gcp.project.cloudTasksService 11.6.6
 gcp.project.cloudTasksService.projectId 11.6.6
 gcp.project.cloudTasksService.queue 11.6.6
 gcp.project.cloudTasksService.queue.appEngineRoutingOverride 11.6.6
+gcp.project.cloudTasksService.queue.iamPolicy 13.19.2
 gcp.project.cloudTasksService.queue.name 11.6.6
 gcp.project.cloudTasksService.queue.projectId 11.6.6
 gcp.project.cloudTasksService.queue.rateLimits 11.6.6
@@ -1284,6 +1294,7 @@ gcp.project.composerService.environment 13.15.1
 gcp.project.composerService.environment.config 13.15.1
 gcp.project.composerService.environment.createTime 13.15.1
 gcp.project.composerService.environment.imageVersion 13.15.1
+gcp.project.composerService.environment.kmsKey 13.19.2
 gcp.project.composerService.environment.labels 13.15.1
 gcp.project.composerService.environment.name 13.15.1
 gcp.project.composerService.environment.privateEnvironmentEnabled 13.18.1
@@ -2320,6 +2331,7 @@ gcp.project.dataflowService.job.currentState 11.6.6
 gcp.project.dataflowService.job.currentStateTime 11.6.6
 gcp.project.dataflowService.job.environment 11.6.6
 gcp.project.dataflowService.job.id 11.6.6
+gcp.project.dataflowService.job.kmsKey 13.19.2
 gcp.project.dataflowService.job.labels 11.6.6
 gcp.project.dataflowService.job.location 11.6.6
 gcp.project.dataflowService.job.name 11.6.6
@@ -2451,6 +2463,7 @@ gcp.project.dataprocService.cluster.config.instance.managedGroupConfig 9.0.0
 gcp.project.dataprocService.cluster.config.instance.minCpuPlatform 9.0.0
 gcp.project.dataprocService.cluster.config.instance.numInstances 9.0.0
 gcp.project.dataprocService.cluster.config.instance.preemptibility 9.0.0
+gcp.project.dataprocService.cluster.config.kmsKey 13.19.2
 gcp.project.dataprocService.cluster.config.lifecycle 9.0.0
 gcp.project.dataprocService.cluster.config.lifecycle.autoDeleteTime 9.0.0
 gcp.project.dataprocService.cluster.config.lifecycle.autoDeleteTtl 9.0.0
@@ -2466,6 +2479,7 @@ gcp.project.dataprocService.cluster.config.security 9.0.0
 gcp.project.dataprocService.cluster.config.software 9.0.0
 gcp.project.dataprocService.cluster.config.tempBucket 9.0.0
 gcp.project.dataprocService.cluster.config.worker 9.0.0
+gcp.project.dataprocService.cluster.iamPolicy 13.19.2
 gcp.project.dataprocService.cluster.labels 9.0.0
 gcp.project.dataprocService.cluster.location 11.2.1
 gcp.project.dataprocService.cluster.metrics 9.0.0
@@ -2770,6 +2784,7 @@ gcp.project.eventarcService 13.6.1
 gcp.project.eventarcService.channel 13.6.1
 gcp.project.eventarcService.channel.created 13.6.1
 gcp.project.eventarcService.channel.cryptoKeyName 13.6.1
+gcp.project.eventarcService.channel.kmsKey 13.19.2
 gcp.project.eventarcService.channel.name 13.6.1
 gcp.project.eventarcService.channel.provider 13.6.1
 gcp.project.eventarcService.channel.pubsubTopic 13.6.1
@@ -2808,6 +2823,7 @@ gcp.project.filestoreService.instance.fileShare.capacityGb 11.6.6
 gcp.project.filestoreService.instance.fileShare.id 11.6.6
 gcp.project.filestoreService.instance.fileShare.name 11.6.6
 gcp.project.filestoreService.instance.fileShares 11.6.6
+gcp.project.filestoreService.instance.kmsKey 13.19.2
 gcp.project.filestoreService.instance.kmsKeyName 11.6.6
 gcp.project.filestoreService.instance.labels 11.6.6
 gcp.project.filestoreService.instance.name 11.6.6
@@ -3159,6 +3175,7 @@ gcp.project.healthcareService.dataset.dicomStores 13.15.1
 gcp.project.healthcareService.dataset.encryptionSpec 13.15.1
 gcp.project.healthcareService.dataset.fhirStores 13.15.1
 gcp.project.healthcareService.dataset.hl7v2Stores 13.15.1
+gcp.project.healthcareService.dataset.kmsKey 13.19.2
 gcp.project.healthcareService.dataset.name 13.15.1
 gcp.project.healthcareService.dataset.projectId 13.15.1
 gcp.project.healthcareService.dataset.timeZone 13.15.1
@@ -3211,11 +3228,13 @@ gcp.project.iamService.role.title 11.6.6
 gcp.project.iamService.roles 11.6.6
 gcp.project.iamService.serviceAccount 9.0.0
 gcp.project.iamService.serviceAccount.activeUserManagedKeys 13.12.2
+gcp.project.iamService.serviceAccount.canBeImpersonated 13.19.2
 gcp.project.iamService.serviceAccount.description 9.0.0
 gcp.project.iamService.serviceAccount.disabled 9.0.0
 gcp.project.iamService.serviceAccount.displayName 9.0.0
 gcp.project.iamService.serviceAccount.email 9.0.0
 gcp.project.iamService.serviceAccount.hasUserManagedKeys 13.12.2
+gcp.project.iamService.serviceAccount.iamPolicy 13.19.2
 gcp.project.iamService.serviceAccount.isDefault 13.18.1
 gcp.project.iamService.serviceAccount.key 9.0.0
 gcp.project.iamService.serviceAccount.key.ageInDays 13.18.1
@@ -3361,6 +3380,7 @@ gcp.project.kmsService.keyring.cryptokey.version.state 9.0.0
 gcp.project.kmsService.keyring.cryptokey.versionTemplate 9.0.0
 gcp.project.kmsService.keyring.cryptokey.versions 9.0.0
 gcp.project.kmsService.keyring.cryptokeys 9.0.0
+gcp.project.kmsService.keyring.iamPolicy 13.19.2
 gcp.project.kmsService.keyring.importJob 13.16.3
 gcp.project.kmsService.keyring.importJob.attestation 13.16.3
 gcp.project.kmsService.keyring.importJob.created 13.16.3
@@ -3379,6 +3399,7 @@ gcp.project.kmsService.keyring.importJobs 13.16.3
 gcp.project.kmsService.keyring.location 9.0.0
 gcp.project.kmsService.keyring.name 9.0.0
 gcp.project.kmsService.keyring.projectId 9.0.0
+gcp.project.kmsService.keyring.public 13.19.2
 gcp.project.kmsService.keyring.resourcePath 9.0.0
 gcp.project.kmsService.keyrings 9.0.0
 gcp.project.kmsService.locations 9.0.0
@@ -4466,6 +4487,7 @@ gcp.project.vertexaiService.customJob.encryptionSpec 13.6.1
 gcp.project.vertexaiService.customJob.endTime 13.6.1
 gcp.project.vertexaiService.customJob.error 13.6.1
 gcp.project.vertexaiService.customJob.jobSpec 13.6.1
+gcp.project.vertexaiService.customJob.kmsKey 13.19.2
 gcp.project.vertexaiService.customJob.labels 13.6.1
 gcp.project.vertexaiService.customJob.name 13.6.1
 gcp.project.vertexaiService.customJob.startTime 13.6.1
@@ -4478,6 +4500,7 @@ gcp.project.vertexaiService.dataset.description 13.1.2
 gcp.project.vertexaiService.dataset.displayName 13.1.2
 gcp.project.vertexaiService.dataset.encryptionSpec 13.1.2
 gcp.project.vertexaiService.dataset.etag 13.1.2
+gcp.project.vertexaiService.dataset.kmsKey 13.19.2
 gcp.project.vertexaiService.dataset.labels 13.1.2
 gcp.project.vertexaiService.dataset.metadata 13.1.2
 gcp.project.vertexaiService.dataset.metadataSchemaUri 13.1.2
@@ -4492,6 +4515,7 @@ gcp.project.vertexaiService.endpoint.displayName 13.1.2
 gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect 13.1.2
 gcp.project.vertexaiService.endpoint.encryptionSpec 13.1.2
 gcp.project.vertexaiService.endpoint.etag 13.1.2
+gcp.project.vertexaiService.endpoint.kmsKey 13.19.2
 gcp.project.vertexaiService.endpoint.labels 13.1.2
 gcp.project.vertexaiService.endpoint.name 13.1.2
 gcp.project.vertexaiService.endpoint.network 13.1.2
@@ -4504,6 +4528,7 @@ gcp.project.vertexaiService.featureOnlineStore.createdAt 13.1.2
 gcp.project.vertexaiService.featureOnlineStore.dedicatedServingEndpoint 13.1.2
 gcp.project.vertexaiService.featureOnlineStore.encryptionSpec 13.1.2
 gcp.project.vertexaiService.featureOnlineStore.etag 13.1.2
+gcp.project.vertexaiService.featureOnlineStore.kmsKey 13.19.2
 gcp.project.vertexaiService.featureOnlineStore.labels 13.1.2
 gcp.project.vertexaiService.featureOnlineStore.name 13.1.2
 gcp.project.vertexaiService.featureOnlineStore.optimized 13.1.2
@@ -4520,6 +4545,7 @@ gcp.project.vertexaiService.index.displayName 13.6.1
 gcp.project.vertexaiService.index.encryptionSpec 13.6.1
 gcp.project.vertexaiService.index.indexStats 13.6.1
 gcp.project.vertexaiService.index.indexUpdateMethod 13.6.1
+gcp.project.vertexaiService.index.kmsKey 13.19.2
 gcp.project.vertexaiService.index.labels 13.6.1
 gcp.project.vertexaiService.index.metadata 13.6.1
 gcp.project.vertexaiService.index.metadataSchemaUri 13.6.1
@@ -4531,6 +4557,7 @@ gcp.project.vertexaiService.indexEndpoint.deployedIndexes 13.6.1
 gcp.project.vertexaiService.indexEndpoint.description 13.6.1
 gcp.project.vertexaiService.indexEndpoint.displayName 13.6.1
 gcp.project.vertexaiService.indexEndpoint.encryptionSpec 13.6.1
+gcp.project.vertexaiService.indexEndpoint.kmsKey 13.19.2
 gcp.project.vertexaiService.indexEndpoint.labels 13.6.1
 gcp.project.vertexaiService.indexEndpoint.name 13.6.1
 gcp.project.vertexaiService.indexEndpoint.network 13.6.1
@@ -4544,6 +4571,7 @@ gcp.project.vertexaiService.metadataStore.created 13.15.1
 gcp.project.vertexaiService.metadataStore.dataplexConfig 13.15.1
 gcp.project.vertexaiService.metadataStore.description 13.15.1
 gcp.project.vertexaiService.metadataStore.encryptionSpec 13.15.1
+gcp.project.vertexaiService.metadataStore.kmsKey 13.19.2
 gcp.project.vertexaiService.metadataStore.name 13.15.1
 gcp.project.vertexaiService.metadataStore.state 13.15.1
 gcp.project.vertexaiService.metadataStore.updated 13.15.1
@@ -4556,6 +4584,7 @@ gcp.project.vertexaiService.model.description 13.1.2
 gcp.project.vertexaiService.model.displayName 13.1.2
 gcp.project.vertexaiService.model.encryptionSpec 13.1.2
 gcp.project.vertexaiService.model.etag 13.1.2
+gcp.project.vertexaiService.model.kmsKey 13.19.2
 gcp.project.vertexaiService.model.labels 13.1.2
 gcp.project.vertexaiService.model.modelSourceInfo 13.1.2
 gcp.project.vertexaiService.model.name 13.1.2
@@ -4573,6 +4602,7 @@ gcp.project.vertexaiService.pipelineJob.createdAt 13.1.2
 gcp.project.vertexaiService.pipelineJob.displayName 13.1.2
 gcp.project.vertexaiService.pipelineJob.encryptionSpec 13.1.2
 gcp.project.vertexaiService.pipelineJob.endTime 13.1.2
+gcp.project.vertexaiService.pipelineJob.kmsKey 13.19.2
 gcp.project.vertexaiService.pipelineJob.labels 13.1.2
 gcp.project.vertexaiService.pipelineJob.name 13.1.2
 gcp.project.vertexaiService.pipelineJob.network 13.1.2
@@ -4592,6 +4622,7 @@ gcp.project.vertexaiService.tensorboard.description 13.6.1
 gcp.project.vertexaiService.tensorboard.displayName 13.6.1
 gcp.project.vertexaiService.tensorboard.encryptionSpec 13.6.1
 gcp.project.vertexaiService.tensorboard.isDefault 13.6.1
+gcp.project.vertexaiService.tensorboard.kmsKey 13.19.2
 gcp.project.vertexaiService.tensorboard.labels 13.6.1
 gcp.project.vertexaiService.tensorboard.name 13.6.1
 gcp.project.vertexaiService.tensorboard.updated 13.6.1

@@ -88,6 +88,9 @@ func (g *mqlGcpProjectDataflowService) jobs() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			if job.Environment != nil {
+				mqlJob.(*mqlGcpProjectDataflowServiceJob).cacheKmsKeyName = job.Environment.ServiceKmsKeyName
+			}
 			res = append(res, mqlJob)
 		}
 		return nil
@@ -95,6 +98,14 @@ func (g *mqlGcpProjectDataflowService) jobs() ([]any, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+type mqlGcpProjectDataflowServiceJobInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectDataflowServiceJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
 }
 
 func (g *mqlGcpProjectDataflowServiceJob) id() (string, error) {

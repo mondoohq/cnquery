@@ -93,6 +93,9 @@ func (g *mqlGcpProjectHealthcareService) datasets() ([]any, error) {
 					if err != nil {
 						return err
 					}
+					if d.EncryptionSpec != nil {
+						mqlDataset.(*mqlGcpProjectHealthcareServiceDataset).cacheKmsKeyName = d.EncryptionSpec.KmsKeyName
+					}
 					res = append(res, mqlDataset)
 				}
 				return nil
@@ -115,11 +118,19 @@ func (g *mqlGcpProjectHealthcareService) datasets() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectHealthcareServiceDatasetInternal struct {
+	cacheKmsKeyName string
+}
+
 func (g *mqlGcpProjectHealthcareServiceDataset) id() (string, error) {
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
 	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectHealthcareServiceDataset) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
 }
 
 func (g *mqlGcpProjectHealthcareServiceDataset) dicomStores() ([]any, error) {

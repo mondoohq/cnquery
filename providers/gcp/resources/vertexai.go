@@ -278,6 +278,7 @@ func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlModel.(*mqlGcpProjectVertexaiServiceModel).cacheKmsKeyName = model.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlModel)
 		}
 		return items, false, nil
@@ -362,6 +363,7 @@ func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlEndpoint.(*mqlGcpProjectVertexaiServiceEndpoint).cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlEndpoint)
 		}
 		return items, false, nil
@@ -448,6 +450,7 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlJob.(*mqlGcpProjectVertexaiServicePipelineJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -523,6 +526,7 @@ func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlDs.(*mqlGcpProjectVertexaiServiceDataset).cacheKmsKeyName = ds.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlDs)
 		}
 		return items, false, nil
@@ -606,6 +610,7 @@ func (g *mqlGcpProjectVertexaiService) featureOnlineStores() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlStore.(*mqlGcpProjectVertexaiServiceFeatureOnlineStore).cacheKmsKeyName = store.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlStore)
 		}
 		return items, false, nil
@@ -681,6 +686,7 @@ func (g *mqlGcpProjectVertexaiService) tensorboards() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlTB.(*mqlGcpProjectVertexaiServiceTensorboard).cacheKmsKeyName = tb.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlTB)
 		}
 		return items, false, nil
@@ -795,6 +801,7 @@ func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.Cu
 	if err != nil {
 		return nil, err
 	}
+	res.(*mqlGcpProjectVertexaiServiceCustomJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 	return res.(*mqlGcpProjectVertexaiServiceCustomJob), nil
 }
 
@@ -933,6 +940,7 @@ func (g *mqlGcpProjectVertexaiService) indexes() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlIdx.(*mqlGcpProjectVertexaiServiceIndex).cacheKmsKeyName = idx.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlIdx)
 		}
 		return items, false, nil
@@ -1016,6 +1024,7 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlEP.(*mqlGcpProjectVertexaiServiceIndexEndpoint).cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlEP)
 		}
 		return items, false, nil
@@ -1094,8 +1103,93 @@ func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
+			mqlStore.(*mqlGcpProjectVertexaiServiceMetadataStore).cacheKmsKeyName = store.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlStore)
 		}
 		return items, false, nil
 	})
+}
+
+// ---------------------------------------------------------------
+// KMS key references
+// ---------------------------------------------------------------
+
+type mqlGcpProjectVertexaiServiceModelInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceModel) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceEndpointInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceEndpoint) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServicePipelineJobInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServicePipelineJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceDatasetInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceDataset) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceFeatureOnlineStoreInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceFeatureOnlineStore) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceTensorboardInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceTensorboard) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceCustomJobInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceCustomJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceIndexInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceIndex) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceIndexEndpointInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceIndexEndpoint) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceMetadataStoreInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceMetadataStore) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }

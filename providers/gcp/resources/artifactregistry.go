@@ -179,6 +179,14 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectArtifactRegistryServiceRepository) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.GetKmsKeyName()
+	if keyName.Error != nil {
+		return nil, keyName.Error
+	}
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, keyName.Data)
+}
+
 func initGcpProjectArtifactRegistryServiceRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 3 {
 		return args, nil, nil
