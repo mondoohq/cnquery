@@ -26,6 +26,8 @@ digitalocean {
   firewalls() []digitalocean.firewall
   // Managed databases
   databases() []digitalocean.database
+  // Managed vector databases (Weaviate)
+  vectorDatabases() []digitalocean.vectorDatabase
   // Domains
   domains() []digitalocean.domain
   // Block storage volumes
@@ -329,6 +331,67 @@ private digitalocean.database.pool @defaults("name mode") {
   size int
   // Connection mode (transaction, session, statement)
   mode string
+}
+
+// DigitalOcean managed vector database
+//
+// Examine a managed vector database cluster (Weaviate). Surfaces the
+// cluster `id`, `name`, `region`, `size` slug, lifecycle `status`, and
+// the owning account (`ownerUuid`). Advanced engine settings are
+// flattened from the cluster config: `weaviateVersion`,
+// `enableAutoSchema`, and `defaultQuantization`. `httpEndpoint` and
+// `grpcEndpoint` give the connection addresses. Iterate `backups()` to
+// audit retained snapshots. Select a cluster by id with
+// `digitalocean.vectorDatabase(id: "...")`.
+digitalocean.vectorDatabase @defaults("id name region status") {
+  // Vector database cluster ID
+  id string
+  // Cluster name
+  name string
+  // Region slug
+  region string
+  // UUID of the account that owns the cluster
+  ownerUuid string
+  // Status (e.g., creating, online)
+  status string
+  // Size slug
+  size string
+  // Tags
+  tags []string
+  // Time the cluster was created
+  createdAt time
+  // Time the cluster was last updated
+  updatedAt time
+  // Weaviate engine version
+  weaviateVersion string
+  // Whether automatic schema creation is enabled
+  enableAutoSchema bool
+  // Default vector quantization mode
+  defaultQuantization string
+  // HTTP connection endpoint
+  httpEndpoint string
+  // gRPC connection endpoint
+  grpcEndpoint string
+  // Retained backups for the cluster
+  backups() []digitalocean.vectorDatabase.backup
+}
+
+// DigitalOcean vector database backup
+//
+// Examine a single backup retained for the parent vector database
+// cluster. Use `status` and the `startedAt`/`completedAt` timestamps to
+// verify backups complete and are taken on the expected cadence.
+private digitalocean.vectorDatabase.backup @defaults("backupId status startedAt") {
+  // ID of the parent vector database cluster
+  vectorDatabaseId string
+  // Backup ID
+  backupId string
+  // Backup status
+  status string
+  // Time the backup started
+  startedAt time
+  // Time the backup completed
+  completedAt time
 }
 
 // DigitalOcean DNS domain

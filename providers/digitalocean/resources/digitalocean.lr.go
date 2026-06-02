@@ -25,6 +25,8 @@ const (
 	ResourceDigitaloceanDatabaseUser               string = "digitalocean.database.user"
 	ResourceDigitaloceanDatabaseReplica            string = "digitalocean.database.replica"
 	ResourceDigitaloceanDatabasePool               string = "digitalocean.database.pool"
+	ResourceDigitaloceanVectorDatabase             string = "digitalocean.vectorDatabase"
+	ResourceDigitaloceanVectorDatabaseBackup       string = "digitalocean.vectorDatabase.backup"
 	ResourceDigitaloceanDomain                     string = "digitalocean.domain"
 	ResourceDigitaloceanDomainRecord               string = "digitalocean.domain.record"
 	ResourceDigitaloceanVolume                     string = "digitalocean.volume"
@@ -94,6 +96,14 @@ func init() {
 		"digitalocean.database.pool": {
 			// to override args, implement: initDigitaloceanDatabasePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanDatabasePool,
+		},
+		"digitalocean.vectorDatabase": {
+			// to override args, implement: initDigitaloceanVectorDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanVectorDatabase,
+		},
+		"digitalocean.vectorDatabase.backup": {
+			// to override args, implement: initDigitaloceanVectorDatabaseBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanVectorDatabaseBackup,
 		},
 		"digitalocean.domain": {
 			// to override args, implement: initDigitaloceanDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -286,6 +296,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetDatabases()).ToDataRes(types.Array(types.Resource("digitalocean.database")))
+	},
+	"digitalocean.vectorDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetVectorDatabases()).ToDataRes(types.Array(types.Resource("digitalocean.vectorDatabase")))
 	},
 	"digitalocean.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetDomains()).ToDataRes(types.Array(types.Resource("digitalocean.domain")))
@@ -619,6 +632,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.database.pool.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabasePool).GetMode()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.ownerUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetOwnerUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetSize()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.vectorDatabase.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.vectorDatabase.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.vectorDatabase.weaviateVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetWeaviateVersion()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.enableAutoSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetEnableAutoSchema()).ToDataRes(types.Bool)
+	},
+	"digitalocean.vectorDatabase.defaultQuantization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetDefaultQuantization()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.grpcEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetGrpcEndpoint()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabase).GetBackups()).ToDataRes(types.Array(types.Resource("digitalocean.vectorDatabase.backup")))
+	},
+	"digitalocean.vectorDatabase.backup.vectorDatabaseId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabaseBackup).GetVectorDatabaseId()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.backup.backupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabaseBackup).GetBackupId()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabaseBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.vectorDatabase.backup.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabaseBackup).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.vectorDatabase.backup.completedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVectorDatabaseBackup).GetCompletedAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.domain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDomain).GetName()).ToDataRes(types.String)
@@ -1380,6 +1453,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitalocean).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.vectorDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).VectorDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1854,6 +1931,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.database.pool.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDatabasePool).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.vectorDatabase.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.ownerUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).OwnerUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.weaviateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).WeaviateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.enableAutoSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).EnableAutoSchema, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.defaultQuantization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).DefaultQuantization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.grpcEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).GrpcEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabase).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.vectorDatabaseId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).VectorDatabaseId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.backupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).BackupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vectorDatabase.backup.completedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVectorDatabaseBackup).CompletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"digitalocean.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2976,6 +3141,7 @@ type mqlDigitalocean struct {
 	Droplets             plugin.TValue[[]any]
 	Firewalls            plugin.TValue[[]any]
 	Databases            plugin.TValue[[]any]
+	VectorDatabases      plugin.TValue[[]any]
 	Domains              plugin.TValue[[]any]
 	Volumes              plugin.TValue[[]any]
 	Images               plugin.TValue[[]any]
@@ -3081,6 +3247,22 @@ func (c *mqlDigitalocean) GetDatabases() *plugin.TValue[[]any] {
 		}
 
 		return c.databases()
+	})
+}
+
+func (c *mqlDigitalocean) GetVectorDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VectorDatabases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "vectorDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vectorDatabases()
 	})
 }
 
@@ -4340,6 +4522,201 @@ func (c *mqlDigitaloceanDatabasePool) GetSize() *plugin.TValue[int64] {
 
 func (c *mqlDigitaloceanDatabasePool) GetMode() *plugin.TValue[string] {
 	return &c.Mode
+}
+
+// mqlDigitaloceanVectorDatabase for the digitalocean.vectorDatabase resource
+type mqlDigitaloceanVectorDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanVectorDatabaseInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	OwnerUuid           plugin.TValue[string]
+	Status              plugin.TValue[string]
+	Size                plugin.TValue[string]
+	Tags                plugin.TValue[[]any]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	WeaviateVersion     plugin.TValue[string]
+	EnableAutoSchema    plugin.TValue[bool]
+	DefaultQuantization plugin.TValue[string]
+	HttpEndpoint        plugin.TValue[string]
+	GrpcEndpoint        plugin.TValue[string]
+	Backups             plugin.TValue[[]any]
+}
+
+// createDigitaloceanVectorDatabase creates a new instance of this resource
+func createDigitaloceanVectorDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanVectorDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.vectorDatabase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanVectorDatabase) MqlName() string {
+	return "digitalocean.vectorDatabase"
+}
+
+func (c *mqlDigitaloceanVectorDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetOwnerUuid() *plugin.TValue[string] {
+	return &c.OwnerUuid
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetWeaviateVersion() *plugin.TValue[string] {
+	return &c.WeaviateVersion
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetEnableAutoSchema() *plugin.TValue[bool] {
+	return &c.EnableAutoSchema
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetDefaultQuantization() *plugin.TValue[string] {
+	return &c.DefaultQuantization
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetGrpcEndpoint() *plugin.TValue[string] {
+	return &c.GrpcEndpoint
+}
+
+func (c *mqlDigitaloceanVectorDatabase) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vectorDatabase", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlDigitaloceanVectorDatabaseBackup for the digitalocean.vectorDatabase.backup resource
+type mqlDigitaloceanVectorDatabaseBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanVectorDatabaseBackupInternal it will be used here
+	VectorDatabaseId plugin.TValue[string]
+	BackupId         plugin.TValue[string]
+	Status           plugin.TValue[string]
+	StartedAt        plugin.TValue[*time.Time]
+	CompletedAt      plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanVectorDatabaseBackup creates a new instance of this resource
+func createDigitaloceanVectorDatabaseBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanVectorDatabaseBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.vectorDatabase.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) MqlName() string {
+	return "digitalocean.vectorDatabase.backup"
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) GetVectorDatabaseId() *plugin.TValue[string] {
+	return &c.VectorDatabaseId
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) GetBackupId() *plugin.TValue[string] {
+	return &c.BackupId
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlDigitaloceanVectorDatabaseBackup) GetCompletedAt() *plugin.TValue[*time.Time] {
+	return &c.CompletedAt
 }
 
 // mqlDigitaloceanDomain for the digitalocean.domain resource
