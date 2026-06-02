@@ -44,6 +44,14 @@ digitalocean {
   vpcs() []digitalocean.vpc
   // VPC peerings
   vpcPeerings() []digitalocean.vpcPeering
+  // VPC NAT gateways
+  vpcNatGateways() []digitalocean.vpcNatGateway
+  // Managed NFS shares
+  nfsShares() []digitalocean.nfs
+  // Reserved IPv6 addresses
+  reservedIPv6s() []digitalocean.reservedIpV6
+  // Droplet autoscale pools
+  dropletAutoscalePools() []digitalocean.dropletAutoscalePool
   // Kubernetes clusters
   kubernetesClusters() []digitalocean.kubernetes.cluster
   // Projects
@@ -1169,4 +1177,147 @@ private digitalocean.function.trigger @defaults("name function enabled") {
   lastRunAt time
   // Time the trigger is next scheduled to fire
   nextRunAt time
+}
+
+// DigitalOcean VPC NAT gateway
+//
+// Examine a VPC NAT gateway — the managed appliance that provides
+// outbound internet connectivity for resources in one or more VPCs.
+// Surfaces the gateway `type` (e.g., PUBLIC), lifecycle `state`,
+// `region`, and `size`. `vpcs()` resolves the attached VPCs;
+// `ingressVpcs` lists each attachment's gateway IP and whether it is the
+// default route. `egressPublicGatewayIps` are the public addresses that
+// traffic egresses from — useful for allowlisting downstream. The
+// `udpTimeoutSeconds`, `icmpTimeoutSeconds`, and `tcpTimeoutSeconds`
+// fields expose the connection-tracking timeouts. Select a gateway by id
+// with `digitalocean.vpcNatGateway(id: "...")`.
+digitalocean.vpcNatGateway @defaults("id name region state") {
+  // NAT gateway ID
+  id string
+  // Name
+  name string
+  // Gateway type (e.g., PUBLIC)
+  type string
+  // Lifecycle state
+  state string
+  // Region slug
+  region string
+  // Gateway size
+  size int
+  // VPCs the gateway is attached to
+  vpcs() []digitalocean.vpc
+  // Per-VPC attachment detail
+  //
+  // Each entry has `vpcUuid`, `gatewayIp`, and `defaultGateway`.
+  ingressVpcs []dict
+  // Public IPv4 addresses that outbound traffic egresses from
+  egressPublicGatewayIps []string
+  // UDP connection-tracking timeout, in seconds
+  udpTimeoutSeconds int
+  // ICMP connection-tracking timeout, in seconds
+  icmpTimeoutSeconds int
+  // TCP connection-tracking timeout, in seconds
+  tcpTimeoutSeconds int
+  // ID of the project the gateway belongs to
+  projectId string
+  // Time the gateway was created
+  createdAt time
+  // Time the gateway was last updated
+  updatedAt time
+}
+
+// DigitalOcean managed NFS share
+//
+// Examine a managed Network File System share. Surfaces the share
+// `name`, allocated `sizeGib`, `region`, lifecycle `status` (CREATING,
+// ACTIVE, FAILED, DELETED), `performanceTier`, and the `host` and
+// `mountPath` clients use to mount it. `vpcs()` resolves the VPCs the
+// share is reachable from. Select a share by id with
+// `digitalocean.nfs(id: "...")`.
+digitalocean.nfs @defaults("id name region status") {
+  // NFS share ID
+  id string
+  // Name
+  name string
+  // Allocated size, in gibibytes
+  sizeGib int
+  // Region slug
+  region string
+  // Lifecycle status (CREATING, ACTIVE, FAILED, DELETED)
+  status string
+  // Performance tier
+  performanceTier string
+  // Mount host
+  host string
+  // Mount path
+  mountPath string
+  // UUIDs of the VPCs the share is reachable from
+  vpcIds []string
+  // VPCs the share is reachable from
+  vpcs() []digitalocean.vpc
+  // Time the share was created
+  createdAt string
+}
+
+// DigitalOcean reserved IPv6 address
+//
+// Examine a reserved IPv6 address — a static, account-owned IPv6 that
+// can be assigned to a droplet. Surfaces the `ip`, the `region` it is
+// reserved in, the `reservedAt` time, and the `dropletId` it is assigned
+// to (0 when unassigned). Select by address with
+// `digitalocean.reservedIpV6(ip: "...")`.
+digitalocean.reservedIpV6 @defaults("ip region") {
+  // IPv6 address
+  ip string
+  // Region slug
+  region string
+  // Time the address was reserved
+  reservedAt time
+  // Droplet ID the address is assigned to (0 if unassigned)
+  dropletId int
+}
+
+// DigitalOcean droplet autoscale pool
+//
+// Examine a droplet autoscale pool — a group that automatically scales
+// droplet count to meet CPU/memory targets. The scaling policy is
+// flattened from the pool config: `minInstances`, `maxInstances`,
+// `targetCpuUtilization`, `targetMemoryUtilization`, `cooldownMinutes`,
+// and `targetNumberInstances`. `currentCpuUtilization` and
+// `currentMemoryUtilization` report live load. `dropletTemplate`
+// captures the droplet spec new members are created from. Select a pool
+// by id with `digitalocean.dropletAutoscalePool(id: "...")`.
+digitalocean.dropletAutoscalePool @defaults("id name status") {
+  // Autoscale pool ID
+  id string
+  // Name
+  name string
+  // Lifecycle status
+  status string
+  // Minimum number of droplets
+  minInstances int
+  // Maximum number of droplets
+  maxInstances int
+  // Target average CPU utilization that triggers scaling, as a fraction
+  targetCpuUtilization float
+  // Target average memory utilization that triggers scaling, as a fraction
+  targetMemoryUtilization float
+  // Cooldown between scaling actions, in minutes
+  cooldownMinutes int
+  // Fixed target droplet count (when using static rather than dynamic scaling)
+  targetNumberInstances int
+  // Current average CPU utilization across the pool, as a fraction
+  currentCpuUtilization float
+  // Current average memory utilization across the pool, as a fraction
+  currentMemoryUtilization float
+  // Droplet template new members are created from
+  //
+  // Keys: `size`, `region`, `image`, `tags`, `sshKeys`, `vpcUuid`,
+  // `projectId`, `ipv6`, `withDropletAgent`, `publicNetworking`, and
+  // `userData`.
+  dropletTemplate dict
+  // Time the pool was created
+  createdAt time
+  // Time the pool was last updated
+  updatedAt time
 }

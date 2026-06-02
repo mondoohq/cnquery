@@ -55,6 +55,10 @@ const (
 	ResourceDigitaloceanSnapshot                   string = "digitalocean.snapshot"
 	ResourceDigitaloceanFunctionNamespace          string = "digitalocean.function.namespace"
 	ResourceDigitaloceanFunctionTrigger            string = "digitalocean.function.trigger"
+	ResourceDigitaloceanVpcNatGateway              string = "digitalocean.vpcNatGateway"
+	ResourceDigitaloceanNfs                        string = "digitalocean.nfs"
+	ResourceDigitaloceanReservedIpV6               string = "digitalocean.reservedIpV6"
+	ResourceDigitaloceanDropletAutoscalePool       string = "digitalocean.dropletAutoscalePool"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -217,6 +221,22 @@ func init() {
 			// to override args, implement: initDigitaloceanFunctionTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanFunctionTrigger,
 		},
+		"digitalocean.vpcNatGateway": {
+			// to override args, implement: initDigitaloceanVpcNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanVpcNatGateway,
+		},
+		"digitalocean.nfs": {
+			// to override args, implement: initDigitaloceanNfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanNfs,
+		},
+		"digitalocean.reservedIpV6": {
+			// to override args, implement: initDigitaloceanReservedIpV6(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanReservedIpV6,
+		},
+		"digitalocean.dropletAutoscalePool": {
+			// to override args, implement: initDigitaloceanDropletAutoscalePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanDropletAutoscalePool,
+		},
 	}
 }
 
@@ -323,6 +343,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.vpcPeerings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetVpcPeerings()).ToDataRes(types.Array(types.Resource("digitalocean.vpcPeering")))
+	},
+	"digitalocean.vpcNatGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetVpcNatGateways()).ToDataRes(types.Array(types.Resource("digitalocean.vpcNatGateway")))
+	},
+	"digitalocean.nfsShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetNfsShares()).ToDataRes(types.Array(types.Resource("digitalocean.nfs")))
+	},
+	"digitalocean.reservedIPv6s": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetReservedIPv6s()).ToDataRes(types.Array(types.Resource("digitalocean.reservedIpV6")))
+	},
+	"digitalocean.dropletAutoscalePools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetDropletAutoscalePools()).ToDataRes(types.Array(types.Resource("digitalocean.dropletAutoscalePool")))
 	},
 	"digitalocean.kubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
@@ -1425,6 +1457,138 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.function.trigger.nextRunAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFunctionTrigger).GetNextRunAt()).ToDataRes(types.Time)
 	},
+	"digitalocean.vpcNatGateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetState()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetSize()).ToDataRes(types.Int)
+	},
+	"digitalocean.vpcNatGateway.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetVpcs()).ToDataRes(types.Array(types.Resource("digitalocean.vpc")))
+	},
+	"digitalocean.vpcNatGateway.ingressVpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetIngressVpcs()).ToDataRes(types.Array(types.Dict))
+	},
+	"digitalocean.vpcNatGateway.egressPublicGatewayIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetEgressPublicGatewayIps()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.vpcNatGateway.udpTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetUdpTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"digitalocean.vpcNatGateway.icmpTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetIcmpTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"digitalocean.vpcNatGateway.tcpTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetTcpTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"digitalocean.vpcNatGateway.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetProjectId()).ToDataRes(types.String)
+	},
+	"digitalocean.vpcNatGateway.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.vpcNatGateway.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcNatGateway).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.nfs.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.sizeGib": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetSizeGib()).ToDataRes(types.Int)
+	},
+	"digitalocean.nfs.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.performanceTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetPerformanceTier()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetHost()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.mountPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetMountPath()).ToDataRes(types.String)
+	},
+	"digitalocean.nfs.vpcIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetVpcIds()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.nfs.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetVpcs()).ToDataRes(types.Array(types.Resource("digitalocean.vpc")))
+	},
+	"digitalocean.nfs.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNfs).GetCreatedAt()).ToDataRes(types.String)
+	},
+	"digitalocean.reservedIpV6.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanReservedIpV6).GetIp()).ToDataRes(types.String)
+	},
+	"digitalocean.reservedIpV6.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanReservedIpV6).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.reservedIpV6.reservedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanReservedIpV6).GetReservedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.reservedIpV6.dropletId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanReservedIpV6).GetDropletId()).ToDataRes(types.Int)
+	},
+	"digitalocean.dropletAutoscalePool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.dropletAutoscalePool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.dropletAutoscalePool.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.dropletAutoscalePool.minInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetMinInstances()).ToDataRes(types.Int)
+	},
+	"digitalocean.dropletAutoscalePool.maxInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetMaxInstances()).ToDataRes(types.Int)
+	},
+	"digitalocean.dropletAutoscalePool.targetCpuUtilization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetTargetCpuUtilization()).ToDataRes(types.Float)
+	},
+	"digitalocean.dropletAutoscalePool.targetMemoryUtilization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetTargetMemoryUtilization()).ToDataRes(types.Float)
+	},
+	"digitalocean.dropletAutoscalePool.cooldownMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetCooldownMinutes()).ToDataRes(types.Int)
+	},
+	"digitalocean.dropletAutoscalePool.targetNumberInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetTargetNumberInstances()).ToDataRes(types.Int)
+	},
+	"digitalocean.dropletAutoscalePool.currentCpuUtilization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetCurrentCpuUtilization()).ToDataRes(types.Float)
+	},
+	"digitalocean.dropletAutoscalePool.currentMemoryUtilization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetCurrentMemoryUtilization()).ToDataRes(types.Float)
+	},
+	"digitalocean.dropletAutoscalePool.dropletTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetDropletTemplate()).ToDataRes(types.Dict)
+	},
+	"digitalocean.dropletAutoscalePool.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.dropletAutoscalePool.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDropletAutoscalePool).GetUpdatedAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1487,6 +1651,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.vpcPeerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).VpcPeerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).VpcNatGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfsShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).NfsShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.reservedIPv6s": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).ReservedIPv6s, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).DropletAutoscalePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.kubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3109,6 +3289,198 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanFunctionTrigger).NextRunAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"digitalocean.vpcNatGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.vpcNatGateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.ingressVpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).IngressVpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.egressPublicGatewayIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).EgressPublicGatewayIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.udpTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).UdpTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.icmpTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).IcmpTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.tcpTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).TcpTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpcNatGateway.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcNatGateway).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.nfs.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.sizeGib": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).SizeGib, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.performanceTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).PerformanceTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.mountPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).MountPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.vpcIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).VpcIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.nfs.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNfs).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.reservedIpV6.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.reservedIpV6.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.reservedIpV6.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.reservedIpV6.reservedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).ReservedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.reservedIpV6.dropletId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanReservedIpV6).DropletId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.minInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).MinInstances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.maxInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).MaxInstances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.targetCpuUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).TargetCpuUtilization, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.targetMemoryUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).TargetMemoryUtilization, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.cooldownMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).CooldownMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.targetNumberInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).TargetNumberInstances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.currentCpuUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).CurrentCpuUtilization, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.currentMemoryUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).CurrentMemoryUtilization, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.dropletTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).DropletTemplate, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.dropletAutoscalePool.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDropletAutoscalePool).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3138,31 +3510,35 @@ type mqlDigitalocean struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDigitaloceanInternal
-	Droplets             plugin.TValue[[]any]
-	Firewalls            plugin.TValue[[]any]
-	Databases            plugin.TValue[[]any]
-	VectorDatabases      plugin.TValue[[]any]
-	Domains              plugin.TValue[[]any]
-	Volumes              plugin.TValue[[]any]
-	Images               plugin.TValue[[]any]
-	Snapshots            plugin.TValue[[]any]
-	FunctionNamespaces   plugin.TValue[[]any]
-	LoadBalancers        plugin.TValue[[]any]
-	Vpcs                 plugin.TValue[[]any]
-	VpcPeerings          plugin.TValue[[]any]
-	KubernetesClusters   plugin.TValue[[]any]
-	Projects             plugin.TValue[[]any]
-	SshKeys              plugin.TValue[[]any]
-	Certificates         plugin.TValue[[]any]
-	RegistryRepositories plugin.TValue[[]any]
-	ReservedIPs          plugin.TValue[[]any]
-	Apps                 plugin.TValue[[]any]
-	AlertPolicies        plugin.TValue[[]any]
-	UptimeChecks         plugin.TValue[[]any]
-	CdnEndpoints         plugin.TValue[[]any]
-	Tags                 plugin.TValue[[]any]
-	SpacesKeys           plugin.TValue[[]any]
-	SpacesBuckets        plugin.TValue[[]any]
+	Droplets              plugin.TValue[[]any]
+	Firewalls             plugin.TValue[[]any]
+	Databases             plugin.TValue[[]any]
+	VectorDatabases       plugin.TValue[[]any]
+	Domains               plugin.TValue[[]any]
+	Volumes               plugin.TValue[[]any]
+	Images                plugin.TValue[[]any]
+	Snapshots             plugin.TValue[[]any]
+	FunctionNamespaces    plugin.TValue[[]any]
+	LoadBalancers         plugin.TValue[[]any]
+	Vpcs                  plugin.TValue[[]any]
+	VpcPeerings           plugin.TValue[[]any]
+	VpcNatGateways        plugin.TValue[[]any]
+	NfsShares             plugin.TValue[[]any]
+	ReservedIPv6s         plugin.TValue[[]any]
+	DropletAutoscalePools plugin.TValue[[]any]
+	KubernetesClusters    plugin.TValue[[]any]
+	Projects              plugin.TValue[[]any]
+	SshKeys               plugin.TValue[[]any]
+	Certificates          plugin.TValue[[]any]
+	RegistryRepositories  plugin.TValue[[]any]
+	ReservedIPs           plugin.TValue[[]any]
+	Apps                  plugin.TValue[[]any]
+	AlertPolicies         plugin.TValue[[]any]
+	UptimeChecks          plugin.TValue[[]any]
+	CdnEndpoints          plugin.TValue[[]any]
+	Tags                  plugin.TValue[[]any]
+	SpacesKeys            plugin.TValue[[]any]
+	SpacesBuckets         plugin.TValue[[]any]
 }
 
 // createDigitalocean creates a new instance of this resource
@@ -3391,6 +3767,70 @@ func (c *mqlDigitalocean) GetVpcPeerings() *plugin.TValue[[]any] {
 		}
 
 		return c.vpcPeerings()
+	})
+}
+
+func (c *mqlDigitalocean) GetVpcNatGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcNatGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "vpcNatGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcNatGateways()
+	})
+}
+
+func (c *mqlDigitalocean) GetNfsShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NfsShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "nfsShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nfsShares()
+	})
+}
+
+func (c *mqlDigitalocean) GetReservedIPv6s() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReservedIPv6s, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "reservedIPv6s")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reservedIPv6s()
+	})
+}
+
+func (c *mqlDigitalocean) GetDropletAutoscalePools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DropletAutoscalePools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "dropletAutoscalePools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dropletAutoscalePools()
 	})
 }
 
@@ -7313,4 +7753,409 @@ func (c *mqlDigitaloceanFunctionTrigger) GetLastRunAt() *plugin.TValue[*time.Tim
 
 func (c *mqlDigitaloceanFunctionTrigger) GetNextRunAt() *plugin.TValue[*time.Time] {
 	return &c.NextRunAt
+}
+
+// mqlDigitaloceanVpcNatGateway for the digitalocean.vpcNatGateway resource
+type mqlDigitaloceanVpcNatGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanVpcNatGatewayInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	State                  plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	Size                   plugin.TValue[int64]
+	Vpcs                   plugin.TValue[[]any]
+	IngressVpcs            plugin.TValue[[]any]
+	EgressPublicGatewayIps plugin.TValue[[]any]
+	UdpTimeoutSeconds      plugin.TValue[int64]
+	IcmpTimeoutSeconds     plugin.TValue[int64]
+	TcpTimeoutSeconds      plugin.TValue[int64]
+	ProjectId              plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanVpcNatGateway creates a new instance of this resource
+func createDigitaloceanVpcNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanVpcNatGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.vpcNatGateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) MqlName() string {
+	return "digitalocean.vpcNatGateway"
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpcNatGateway", c.__id, "vpcs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcs()
+	})
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetIngressVpcs() *plugin.TValue[[]any] {
+	return &c.IngressVpcs
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetEgressPublicGatewayIps() *plugin.TValue[[]any] {
+	return &c.EgressPublicGatewayIps
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetUdpTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.UdpTimeoutSeconds
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetIcmpTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.IcmpTimeoutSeconds
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetTcpTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.TcpTimeoutSeconds
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanVpcNatGateway) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlDigitaloceanNfs for the digitalocean.nfs resource
+type mqlDigitaloceanNfs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanNfsInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	SizeGib         plugin.TValue[int64]
+	Region          plugin.TValue[string]
+	Status          plugin.TValue[string]
+	PerformanceTier plugin.TValue[string]
+	Host            plugin.TValue[string]
+	MountPath       plugin.TValue[string]
+	VpcIds          plugin.TValue[[]any]
+	Vpcs            plugin.TValue[[]any]
+	CreatedAt       plugin.TValue[string]
+}
+
+// createDigitaloceanNfs creates a new instance of this resource
+func createDigitaloceanNfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanNfs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.nfs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanNfs) MqlName() string {
+	return "digitalocean.nfs"
+}
+
+func (c *mqlDigitaloceanNfs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanNfs) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanNfs) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanNfs) GetSizeGib() *plugin.TValue[int64] {
+	return &c.SizeGib
+}
+
+func (c *mqlDigitaloceanNfs) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanNfs) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanNfs) GetPerformanceTier() *plugin.TValue[string] {
+	return &c.PerformanceTier
+}
+
+func (c *mqlDigitaloceanNfs) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlDigitaloceanNfs) GetMountPath() *plugin.TValue[string] {
+	return &c.MountPath
+}
+
+func (c *mqlDigitaloceanNfs) GetVpcIds() *plugin.TValue[[]any] {
+	return &c.VpcIds
+}
+
+func (c *mqlDigitaloceanNfs) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.nfs", c.__id, "vpcs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcs()
+	})
+}
+
+func (c *mqlDigitaloceanNfs) GetCreatedAt() *plugin.TValue[string] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanReservedIpV6 for the digitalocean.reservedIpV6 resource
+type mqlDigitaloceanReservedIpV6 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanReservedIpV6Internal it will be used here
+	Ip         plugin.TValue[string]
+	Region     plugin.TValue[string]
+	ReservedAt plugin.TValue[*time.Time]
+	DropletId  plugin.TValue[int64]
+}
+
+// createDigitaloceanReservedIpV6 creates a new instance of this resource
+func createDigitaloceanReservedIpV6(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanReservedIpV6{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.reservedIpV6", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanReservedIpV6) MqlName() string {
+	return "digitalocean.reservedIpV6"
+}
+
+func (c *mqlDigitaloceanReservedIpV6) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanReservedIpV6) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlDigitaloceanReservedIpV6) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanReservedIpV6) GetReservedAt() *plugin.TValue[*time.Time] {
+	return &c.ReservedAt
+}
+
+func (c *mqlDigitaloceanReservedIpV6) GetDropletId() *plugin.TValue[int64] {
+	return &c.DropletId
+}
+
+// mqlDigitaloceanDropletAutoscalePool for the digitalocean.dropletAutoscalePool resource
+type mqlDigitaloceanDropletAutoscalePool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanDropletAutoscalePoolInternal it will be used here
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	MinInstances             plugin.TValue[int64]
+	MaxInstances             plugin.TValue[int64]
+	TargetCpuUtilization     plugin.TValue[float64]
+	TargetMemoryUtilization  plugin.TValue[float64]
+	CooldownMinutes          plugin.TValue[int64]
+	TargetNumberInstances    plugin.TValue[int64]
+	CurrentCpuUtilization    plugin.TValue[float64]
+	CurrentMemoryUtilization plugin.TValue[float64]
+	DropletTemplate          plugin.TValue[any]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanDropletAutoscalePool creates a new instance of this resource
+func createDigitaloceanDropletAutoscalePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanDropletAutoscalePool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.dropletAutoscalePool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) MqlName() string {
+	return "digitalocean.dropletAutoscalePool"
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetMinInstances() *plugin.TValue[int64] {
+	return &c.MinInstances
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetMaxInstances() *plugin.TValue[int64] {
+	return &c.MaxInstances
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetTargetCpuUtilization() *plugin.TValue[float64] {
+	return &c.TargetCpuUtilization
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetTargetMemoryUtilization() *plugin.TValue[float64] {
+	return &c.TargetMemoryUtilization
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetCooldownMinutes() *plugin.TValue[int64] {
+	return &c.CooldownMinutes
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetTargetNumberInstances() *plugin.TValue[int64] {
+	return &c.TargetNumberInstances
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetCurrentCpuUtilization() *plugin.TValue[float64] {
+	return &c.CurrentCpuUtilization
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetCurrentMemoryUtilization() *plugin.TValue[float64] {
+	return &c.CurrentMemoryUtilization
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetDropletTemplate() *plugin.TValue[any] {
+	return &c.DropletTemplate
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanDropletAutoscalePool) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
