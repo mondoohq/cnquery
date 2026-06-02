@@ -780,19 +780,33 @@ func (p *Primitive) RawData() *RawData {
 
 func (b *blockExecutor) lookupValue(ref uint64) (*RawData, uint64, error) {
 	if b == nil {
-		panic("value not computed")
+		// Unreachable in practice: callers check parent != nil before
+		// recursing and panic with full context there. Kept as a last-resort
+		// guard so we never nil-deref silently if a new caller is added.
+		panic("value not computed (ref=" + strconv.FormatUint(ref, 10) + ", no block executor)")
 	}
 
 	res, ok := b.cache.Load(ref)
-	if !ok {
-		return b.parent.lookupValue(ref)
+	if ok {
+		return res.Result, 0, res.Result.Error
 	}
-	return res.Result, 0, res.Result.Error
+
+	if b.parent == nil {
+		// We walked the whole parent chain without finding the value. This is
+		// the "value not computed" case: a ref points to something that should
+		// have been computed before this point but wasn't. Panic here, while we
+		// still hold a valid executor, so the report can identify the ref.
+		panic("value not computed: " + b.refContext(ref))
+	}
+	return b.parent.lookupValue(ref)
 }
 
 func (b *blockExecutor) resolveRef(srcRef uint64, ref uint64) (*RawData, uint64, error) {
 	if !b.isInMyBlock(srcRef) {
 		// the value is provided by a parent
+		if b.parent == nil {
+			panic("value not computed: " + b.refContext(srcRef))
+		}
 		return b.parent.lookupValue(srcRef)
 	} else {
 		// check if the reference exists; if not connect it
@@ -802,6 +816,70 @@ func (b *blockExecutor) resolveRef(srcRef uint64, ref uint64) (*RawData, uint64,
 		}
 		return res.Result, 0, res.Result.Error
 	}
+}
+
+// refContext builds a human-readable description of a ref for panic and error
+// reporting. Reports like "value not computed" are otherwise opaque: this adds
+// the block/chunk coordinates, the code checksum, and a compact, source-like
+// reconstruction of the expression (e.g. "aws.ec2.instances.where.==") so the
+// failing query can be identified from a crash report alone.
+//
+// It is deliberately defensive: a corrupt or out-of-range ref must never turn a
+// useful panic into a second index/nil-deref panic, so all chunk lookups run
+// under a recover. It intentionally never renders primitive values, only chunk
+// IDs and types, to avoid leaking query literals into upstream crash reports.
+func (b *blockExecutor) refContext(ref uint64) (desc string) {
+	desc = fmt.Sprintf("ref=%d:%d", ref>>32, uint32(ref))
+
+	defer func() {
+		if r := recover(); r != nil {
+			desc += fmt.Sprintf(" (further context unavailable: %v)", r)
+		}
+	}()
+
+	if b.ctx != nil && b.ctx.code != nil {
+		if b.ctx.code.Id != "" {
+			desc += " codeID=" + b.ctx.code.Id
+		}
+		if cs := b.ctx.code.Checksums[ref]; cs != "" {
+			desc += " checksum=" + cs
+		}
+		desc += " expr=" + b.describeRef(ref, 8)
+	}
+	desc += " executor=" + b.id
+	return desc
+}
+
+// describeRef reconstructs a compact, source-like description of a ref by
+// walking its function binding chain (most-bound first, e.g.
+// "aws.ec2.instances.where.=="). Best-effort and bounded by maxDepth. Callers
+// must run this under a recover (see refContext) since chunk lookups can index
+// out of range for a malformed ref.
+func (b *blockExecutor) describeRef(ref uint64, maxDepth int) string {
+	if ref == 0 {
+		return ""
+	}
+	if maxDepth <= 0 {
+		return "…"
+	}
+
+	chunk := b.ctx.code.Chunk(ref)
+	if chunk == nil {
+		return "?"
+	}
+
+	name := chunk.Id
+	if name == "" {
+		// A primitive (or unnamed) chunk; never render its value.
+		name = "<" + chunk.Type().Label() + ">"
+	}
+
+	if chunk.Function != nil && chunk.Function.Binding != 0 {
+		if prefix := b.describeRef(chunk.Function.Binding, maxDepth-1); prefix != "" {
+			return prefix + "." + name
+		}
+	}
+	return name
 }
 
 // returns the resolved argument if it's a ref; otherwise just the argument

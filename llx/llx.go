@@ -313,10 +313,10 @@ func (b *blockExecutor) isInMyBlock(ref uint64) bool {
 func (b *blockExecutor) mustLookup(ref uint64) *RawData {
 	d, _, err := b.parent.lookupValue(ref)
 	if err != nil {
-		panic(err)
+		panic("datapoint lookup failed: " + b.refContext(ref) + ": " + err.Error())
 	}
 	if d == nil {
-		panic("did not lookup datapoint")
+		panic("did not lookup datapoint: " + b.refContext(ref))
 	}
 	return d
 }
@@ -575,7 +575,8 @@ func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb Re
 	b.ctx.addBlockExecutor(executor)
 
 	if len(args) < int(executor.block.Parameters) {
-		panic("not enough arguments")
+		panic("not enough arguments for block " + strconv.FormatUint(blockRef>>32, 10) +
+			": got " + strconv.Itoa(len(args)) + ", want " + strconv.Itoa(int(executor.block.Parameters)))
 	}
 
 	for i := int32(0); i < executor.block.Parameters; i++ {
@@ -760,7 +761,7 @@ func (b *blockExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref uint64)
 // connect references, calling `dst` if `src` is updated
 func (b *blockExecutor) connectRef(src uint64, dst uint64) (*RawData, uint64, error) {
 	if !b.isInMyBlock(src) || !b.isInMyBlock(dst) {
-		panic("cannot connect refs across block boundaries")
+		panic("cannot connect refs across block boundaries: src=(" + b.refContext(src) + ") dst=(" + b.refContext(dst) + ")")
 	}
 	// connect the ref. If it is already connected, someone else already made this
 	// call, so we don't have to follow up anymore
@@ -951,7 +952,7 @@ func (e *blockExecutor) triggerChain(ref uint64, data *RawData) {
 	nxt, ok := e.calls.Load(ref)
 	if ok {
 		if len(nxt) == 0 {
-			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
+			panic("internal state error: cannot trigger next call on chain because it points to a zero ref: " + e.refContext(ref))
 		}
 		for i := range nxt {
 			e.runChain(nxt[i])
@@ -992,7 +993,7 @@ func (e *blockExecutor) triggerChainError(ref uint64, err error) {
 			remaining = remaining[1:]
 		}
 		if len(nxt) == 0 {
-			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
+			panic("internal state error: cannot trigger next call on chain because it points to a zero ref: " + e.refContext(cur))
 		}
 		cur = nxt[0]
 		remaining = append(remaining, nxt[1:]...)

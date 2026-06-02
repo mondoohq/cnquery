@@ -465,12 +465,10 @@ func blockV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error
 	if len(f.Args) != 1 {
 		return nil, 0, errors.New("Called block with " + strconv.Itoa(len(f.Args)) + " arguments, expected 1")
 	}
-	panic("NOT YET BLOCK CALL")
-	// res, dref, err := c.resolveValue(f.Args[0], ref)
-	// if res != nil && res.Type[0] != types.Bool {
-	// 	return nil, 0, errors.New("called expect body with wrong type, it should be a boolean (type mismatch)")
-	// }
-	// return res, dref, err
+	// This handler is registered for "{}" but was never implemented. Return a
+	// contextual error instead of panicking so a query that reaches it fails
+	// gracefully and identifiably rather than crashing the executor.
+	return nil, 0, errors.New("block call is not implemented: " + e.refContext(ref))
 }
 
 func returnCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
