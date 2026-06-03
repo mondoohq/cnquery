@@ -309,6 +309,129 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) networkSecurityPerimeterConfigurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	rg, accountName, err := storageAccountResourceGroup(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := storage.NewNetworkSecurityPerimeterConfigurationsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	pager := client.NewListPager(rg, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			// NSP is not available on every account kind/region; treat an
+			// unsupported account as "no configurations" rather than failing.
+			if isFeatureNotSupportedForAccountError(err) {
+				a.NetworkSecurityPerimeterConfigurations.State = plugin.StateIsNull | plugin.StateIsSet
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, nsp := range page.Value {
+			if nsp == nil {
+				continue
+			}
+			args := map[string]*llx.RawData{
+				"id":                        llx.StringDataPtr(nsp.ID),
+				"name":                      llx.StringDataPtr(nsp.Name),
+				"type":                      llx.StringDataPtr(nsp.Type),
+				"provisioningState":         llx.StringData(""),
+				"perimeterId":               llx.StringData(""),
+				"perimeterLocation":         llx.StringData(""),
+				"perimeterGuid":             llx.StringData(""),
+				"profileName":               llx.StringData(""),
+				"accessRulesVersion":        llx.IntData(0),
+				"diagnosticSettingsVersion": llx.IntData(0),
+				"enabledLogCategories":      llx.ArrayData(nil, types.String),
+				"accessRules":               llx.ArrayData(nil, types.Dict),
+				"associationName":           llx.StringData(""),
+				"associationAccessMode":     llx.StringData(""),
+				"provisioningIssues":        llx.ArrayData(nil, types.Dict),
+			}
+
+			if props := nsp.Properties; props != nil {
+				if props.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+				if perimeter := props.NetworkSecurityPerimeter; perimeter != nil {
+					if perimeter.ID != nil {
+						args["perimeterId"] = llx.StringDataPtr(perimeter.ID)
+					}
+					if perimeter.Location != nil {
+						args["perimeterLocation"] = llx.StringDataPtr(perimeter.Location)
+					}
+					if perimeter.PerimeterGUID != nil {
+						args["perimeterGuid"] = llx.StringDataPtr(perimeter.PerimeterGUID)
+					}
+				}
+				if profile := props.Profile; profile != nil {
+					if profile.Name != nil {
+						args["profileName"] = llx.StringDataPtr(profile.Name)
+					}
+					if profile.AccessRulesVersion != nil {
+						args["accessRulesVersion"] = llx.IntData(int64(*profile.AccessRulesVersion))
+					}
+					if profile.DiagnosticSettingsVersion != nil {
+						args["diagnosticSettingsVersion"] = llx.IntData(int64(*profile.DiagnosticSettingsVersion))
+					}
+					args["enabledLogCategories"] = llx.ArrayData(convert.SliceStrPtrToInterface(profile.EnabledLogCategories), types.String)
+					var rules []any
+					for _, rule := range profile.AccessRules {
+						if rule == nil {
+							continue
+						}
+						if d, err := convert.JsonToDict(rule); err == nil {
+							rules = append(rules, flattenNspProperties(d))
+						}
+					}
+					args["accessRules"] = llx.ArrayData(rules, types.Dict)
+				}
+				if assoc := props.ResourceAssociation; assoc != nil {
+					if assoc.Name != nil {
+						args["associationName"] = llx.StringDataPtr(assoc.Name)
+					}
+					if assoc.AccessMode != nil {
+						args["associationAccessMode"] = llx.StringData(string(*assoc.AccessMode))
+					}
+				}
+				var issues []any
+				for _, iss := range props.ProvisioningIssues {
+					if iss == nil {
+						continue
+					}
+					if d, err := convert.JsonToDict(iss); err == nil {
+						issues = append(issues, flattenNspProperties(d))
+					}
+				}
+				args["provisioningIssues"] = llx.ArrayData(issues, types.Dict)
+			}
+
+			mqlNsp, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlNsp)
+		}
+	}
+	return res, nil
+}
+
 // objectReplicationRulesToDicts flattens object-replication rules into the
 // stable dict shape advertised in the .lr comment so query output is
 // deterministic across runs.

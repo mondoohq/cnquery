@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -639,6 +640,32 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspaceTable) id() (string, error) 
 	return a.Id.Data, nil
 }
 
+// flattenNspProperties lifts the nested "properties" object of a Network
+// Security Perimeter access rule or provisioning issue into the top-level dict,
+// so callers can query e.g. accessRules['direction'] instead of the
+// SDK-shaped accessRules['properties']['direction']. The Azure NSP wire format
+// is identical across resource providers, so the same flattening applies to
+// every resource that exposes NSP configurations.
+func flattenNspProperties(d any) any {
+	m, ok := d.(map[string]any)
+	if !ok {
+		return d
+	}
+	props, ok := m["properties"].(map[string]any)
+	if !ok {
+		return d
+	}
+	out := make(map[string]any, len(m)+len(props)-1)
+	for k, v := range m {
+		if k == "properties" {
+			continue
+		}
+		out[k] = v
+	}
+	maps.Copy(out, props)
+	return out
+}
+
 // networkSecurityPerimeterConfigurations fetches all NSP configurations for the workspace.
 func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterConfigurations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -730,7 +757,7 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterCo
 							continue
 						}
 						if d, err := convert.JsonToDict(rule); err == nil {
-							rules = append(rules, d)
+							rules = append(rules, flattenNspProperties(d))
 						}
 					}
 					args["accessRules"] = llx.ArrayData(rules, types.Dict)
@@ -749,7 +776,7 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterCo
 						continue
 					}
 					if d, err := convert.JsonToDict(iss); err == nil {
-						issues = append(issues, d)
+						issues = append(issues, flattenNspProperties(d))
 					}
 				}
 				args["provisioningIssues"] = llx.ArrayData(issues, types.Dict)

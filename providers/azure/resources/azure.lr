@@ -3360,6 +3360,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   privateEndpointConnections() []azure.subscription.storageService.account.privateEndpointConnection
   // Object replication policies configured on the storage account
   objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
+  // Network Security Perimeter configurations associated with the storage account
+  networkSecurityPerimeterConfigurations() []azure.subscription.storageService.account.networkSecurityPerimeterConfiguration
   // Blob inventory policy configured on the storage account, if any
   blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
   // Microsoft Defender for Storage configuration for this account
@@ -3763,6 +3765,61 @@ private azure.subscription.storageService.account.objectReplicationPolicy @defau
   rules []dict
   // Whether blob index tags are replicated alongside blob data; false when the policy omits tag replication
   tagsReplicationEnabled bool
+}
+
+// Network Security Perimeter configuration of an Azure Storage account
+//
+// Examine how a storage account is associated with an Azure Network Security
+// Perimeter, including the enforcement mode that decides whether perimeter
+// access rules are logged only or actually blocked. Select a configuration by
+// its `id`. The `accessMode` field reports "Learning", "Audit", or "Enforced" —
+// only "Enforced" blocks traffic that violates the perimeter rules.
+// `accessRules` lists the inbound and outbound rules in effect,
+// `enabledLogCategories` the categories shipped to diagnostics, and
+// `provisioningIssues` any errors that prevented the configuration from
+// propagating.
+private azure.subscription.storageService.account.networkSecurityPerimeterConfiguration @defaults("name associationAccessMode provisioningState") {
+  // NSP configuration resource ID
+  id string
+  // NSP configuration name
+  name string
+  // Resource type
+  type string
+  // Provisioning state of the NSP configuration ("Accepted", "Canceled", "Deleting", "Failed", or "Succeeded")
+  provisioningState string
+  // ARM resource ID of the network security perimeter
+  perimeterId string
+  // Location of the network security perimeter
+  perimeterLocation string
+  // Universal unique ID of the network security perimeter
+  perimeterGuid string
+  // Profile name on the perimeter
+  profileName string
+  // Current access rules version
+  accessRulesVersion int
+  // Current diagnostic settings version
+  diagnosticSettingsVersion int
+  // Log categories enabled on the profile
+  enabledLogCategories []string
+  // Access rules attached to the profile
+  //
+  // Each entry has keys: name; direction ("Inbound" or "Outbound");
+  // addressPrefixes (inbound CIDRs); subscriptions (inbound, each with an
+  // ARM subscription id); fullyQualifiedDomainNames (outbound FQDNs); and
+  // networkSecurityPerimeters (inbound, each with id, location, perimeterGuid).
+  accessRules []dict
+  // Resource association name
+  associationName string
+  // Resource association access mode
+  //
+  // One of "Learning", "Audit", or "Enforced". "Learning" and "Audit" only
+  // log access that violates the perimeter rules; "Enforced" blocks it.
+  associationAccessMode string
+  // Issues that prevented the configuration from propagating
+  //
+  // Each entry has keys: name; issueType ("ConfigurationPropagationFailure"
+  // or "Unknown"); severity ("Error" or "Warning"); and description.
+  provisioningIssues []dict
 }
 
 // Azure Storage blob inventory policy
@@ -8261,7 +8318,7 @@ private azure.subscription.monitorService.workspace.nspConfiguration @defaults("
   perimeterId string
   // Location of the network security perimeter
   perimeterLocation string
-  // Universal unique ID of the network security perimeter
+  // Globally unique identifier of the network security perimeter
   perimeterGuid string
   // Profile name on the perimeter
   profileName string
@@ -8271,13 +8328,24 @@ private azure.subscription.monitorService.workspace.nspConfiguration @defaults("
   diagnosticSettingsVersion int
   // Log categories enabled on the profile
   enabledLogCategories []string
-  // Access rules attached to the profile (inbound/outbound, address prefixes, FQDNs, subscriptions)
+  // Access rules attached to the profile
+  //
+  // Each entry has keys: name; direction ("Inbound" or "Outbound");
+  // addressPrefixes (inbound CIDRs); subscriptions (inbound, each with an
+  // ARM subscription id); fullyQualifiedDomainNames (outbound FQDNs); and
+  // networkSecurityPerimeters (inbound, each with id, location, perimeterGuid).
   accessRules []dict
   // Resource association name
   associationName string
-  // Resource association access mode ("Audit", "Enforced", or "Learning")
+  // Resource association access mode
+  //
+  // One of "Learning", "Audit", or "Enforced". "Learning" and "Audit" only
+  // log access that violates the perimeter rules; "Enforced" blocks it.
   associationAccessMode string
-  // Provisioning issues, if any
+  // Issues that prevented the configuration from propagating
+  //
+  // Each entry has keys: name; issueType ("ConfigurationPropagationFailure"
+  // or "Unknown"); severity ("Error" or "Warning"); and description.
   provisioningIssues []dict
 }
 

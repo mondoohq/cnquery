@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.14.0",
-  "generated_at": "2026-05-27T10:28:47-07:00",
+  "version": "13.15.0",
+  "generated_at": "2026-06-02T08:54:11-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -191,6 +191,7 @@
     "Microsoft.Sql/servers/securityAlertPolicies/read",
     "Microsoft.Sql/servers/virtualNetworkRules/read",
     "Microsoft.Sql/servers/vulnerabilityAssessments/read",
+    "Microsoft.Storage/networkSecurityPerimeterConfigurations/read",
     "Microsoft.Storage/storageAccounts/blobServices/containers/read",
     "Microsoft.Storage/storageAccounts/encryptionScopes/read",
     "Microsoft.Storage/storageAccounts/fileServices/shares/read",
@@ -1380,6 +1381,12 @@
       "service": "Microsoft.Sql",
       "action": "Get",
       "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Storage/networkSecurityPerimeterConfigurations/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage_extras.go"
     },
     {
       "permission": "Microsoft.Storage/storageAccounts/blobServices/containers/read",

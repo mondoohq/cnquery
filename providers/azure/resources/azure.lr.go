@@ -131,6 +131,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountFileShare                                      string = "azure.subscription.storageService.account.fileShare"
 	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                      string = "azure.subscription.storageService.account.privateEndpointConnection"
 	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                        string = "azure.subscription.storageService.account.objectReplicationPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration          string = "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
 	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                            string = "azure.subscription.storageService.account.blobInventoryPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                      string = "azure.subscription.storageService.account.defenderForStorageSetting"
 	ResourceAzureSubscriptionWebService                                                          string = "azure.subscription.webService"
@@ -848,6 +849,10 @@ func init() {
 		"azure.subscription.storageService.account.objectReplicationPolicy": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountObjectReplicationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountObjectReplicationPolicy,
+		},
+		"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration,
 		},
 		"azure.subscription.storageService.account.blobInventoryPolicy": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountBlobInventoryPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5666,6 +5671,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.objectReplicationPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetObjectReplicationPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.objectReplicationPolicy")))
 	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetNetworkSecurityPerimeterConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.networkSecurityPerimeterConfiguration")))
+	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobInventoryPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.blobInventoryPolicy"))
 	},
@@ -6109,6 +6117,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.objectReplicationPolicy.tagsReplicationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).GetTagsReplicationEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetPerimeterId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetPerimeterLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetPerimeterGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.profileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetProfileName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.accessRulesVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetAccessRulesVersion()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.diagnosticSettingsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetDiagnosticSettingsVersion()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.enabledLogCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetEnabledLogCategories()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetAccessRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.associationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetAssociationName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.associationAccessMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetAssociationAccessMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.provisioningIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).GetProvisioningIssues()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy).GetId()).ToDataRes(types.String)
@@ -19099,6 +19152,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).ObjectReplicationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).NetworkSecurityPerimeterConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobInventoryPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy](v.Value, v.Error)
 		return
@@ -19773,6 +19830,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.objectReplicationPolicy.tagsReplicationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).TagsReplicationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).PerimeterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).PerimeterLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.perimeterGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).PerimeterGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.profileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).ProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.accessRulesVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).AccessRulesVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.diagnosticSettingsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).DiagnosticSettingsVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.enabledLogCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).EnabledLogCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.associationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).AssociationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.associationAccessMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).AssociationAccessMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.networkSecurityPerimeterConfiguration.provisioningIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).ProvisioningIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42950,6 +43071,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	FileShares                                       plugin.TValue[[]any]
 	PrivateEndpointConnections                       plugin.TValue[[]any]
 	ObjectReplicationPolicies                        plugin.TValue[[]any]
+	NetworkSecurityPerimeterConfigurations           plugin.TValue[[]any]
 	BlobInventoryPolicy                              plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy]
 	DefenderForStorage                               plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting]
 }
@@ -43418,6 +43540,22 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetObjectReplicationPolicies
 		}
 
 		return c.objectReplicationPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetNetworkSecurityPerimeterConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityPerimeterConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "networkSecurityPerimeterConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityPerimeterConfigurations()
 	})
 }
 
@@ -45082,6 +45220,125 @@ func (c *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) GetRu
 
 func (c *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) GetTagsReplicationEnabled() *plugin.TValue[bool] {
 	return &c.TagsReplicationEnabled
+}
+
+// mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration for the azure.subscription.storageService.account.networkSecurityPerimeterConfiguration resource
+type mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfigurationInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	PerimeterId               plugin.TValue[string]
+	PerimeterLocation         plugin.TValue[string]
+	PerimeterGuid             plugin.TValue[string]
+	ProfileName               plugin.TValue[string]
+	AccessRulesVersion        plugin.TValue[int64]
+	DiagnosticSettingsVersion plugin.TValue[int64]
+	EnabledLogCategories      plugin.TValue[[]any]
+	AccessRules               plugin.TValue[[]any]
+	AssociationName           plugin.TValue[string]
+	AssociationAccessMode     plugin.TValue[string]
+	ProvisioningIssues        plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.networkSecurityPerimeterConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) MqlName() string {
+	return "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetPerimeterId() *plugin.TValue[string] {
+	return &c.PerimeterId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetPerimeterLocation() *plugin.TValue[string] {
+	return &c.PerimeterLocation
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetPerimeterGuid() *plugin.TValue[string] {
+	return &c.PerimeterGuid
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetProfileName() *plugin.TValue[string] {
+	return &c.ProfileName
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetAccessRulesVersion() *plugin.TValue[int64] {
+	return &c.AccessRulesVersion
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetDiagnosticSettingsVersion() *plugin.TValue[int64] {
+	return &c.DiagnosticSettingsVersion
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetEnabledLogCategories() *plugin.TValue[[]any] {
+	return &c.EnabledLogCategories
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetAccessRules() *plugin.TValue[[]any] {
+	return &c.AccessRules
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetAssociationName() *plugin.TValue[string] {
+	return &c.AssociationName
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetAssociationAccessMode() *plugin.TValue[string] {
+	return &c.AssociationAccessMode
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) GetProvisioningIssues() *plugin.TValue[[]any] {
+	return &c.ProvisioningIssues
 }
 
 // mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy for the azure.subscription.storageService.account.blobInventoryPolicy resource
