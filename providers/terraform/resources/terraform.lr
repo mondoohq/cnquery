@@ -21,13 +21,21 @@ terraform {
   modules() []terraform.module
   // Raw HCL blocks
   blocks() []terraform.block
-  // DEPRECATED: use providerDecls instead
+  // Provider blocks
+  //
+  // Deprecated in favor of providerDecls.
   providers() @maturity("deprecated") []terraform.block
-  // DEPRECATED: use dataSourceDecls instead
+  // Data source blocks
+  //
+  // Deprecated in favor of dataSourceDecls.
   datasources() @maturity("deprecated") []terraform.block
-  // DEPRECATED: use variableDecls instead
+  // Variable blocks
+  //
+  // Deprecated in favor of variableDecls.
   variables() @maturity("deprecated") []terraform.block
-  // DEPRECATED: use outputDecls instead
+  // Output blocks
+  //
+  // Deprecated in favor of outputDecls.
   outputs() @maturity("deprecated") []terraform.block
   // Variable declarations
   //
