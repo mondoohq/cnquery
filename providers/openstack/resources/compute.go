@@ -150,31 +150,11 @@ func (r *mqlOpenstackComputeServer) image() (*mqlOpenstackImage, error) {
 }
 
 func (r *mqlOpenstackComputeServer) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func (r *mqlOpenstackComputeServer) user() (*mqlOpenstackUser, error) {
-	if r.cacheUserID == "" {
-		r.User.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheUserID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackUser), nil
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 func (r *mqlOpenstackComputeServer) volumes() ([]any, error) {
@@ -574,17 +554,7 @@ func (o *mqlOpenstack) keypairs() ([]any, error) {
 }
 
 func (r *mqlOpenstackComputeKeypair) user() (*mqlOpenstackUser, error) {
-	if r.cacheUserID == "" {
-		r.User.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheUserID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackUser), nil
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 // ---- openstack.compute.serverGroup ----
@@ -661,31 +631,11 @@ func (o *mqlOpenstack) serverGroups() ([]any, error) {
 }
 
 func (r *mqlOpenstackComputeServerGroup) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func (r *mqlOpenstackComputeServerGroup) user() (*mqlOpenstackUser, error) {
-	if r.cacheUserID == "" {
-		r.User.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheUserID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackUser), nil
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 func (r *mqlOpenstackComputeServerGroup) memberServers() ([]any, error) {

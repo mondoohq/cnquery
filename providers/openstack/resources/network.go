@@ -144,17 +144,7 @@ func (r *mqlOpenstackNetwork) subnets() ([]any, error) {
 }
 
 func (r *mqlOpenstackNetwork) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 // parseSegmentationID coerces the provider:segmentation_id field into int64.
@@ -287,17 +277,7 @@ func (r *mqlOpenstackSubnet) subnetPool() (*mqlOpenstackSubnetPool, error) {
 }
 
 func (r *mqlOpenstackSubnet) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func allocationPoolsToDict(pools []subnets.AllocationPool) []any {
@@ -417,17 +397,7 @@ func (r *mqlOpenstackRouter) externalNetwork() (*mqlOpenstackNetwork, error) {
 }
 
 func (r *mqlOpenstackRouter) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func gatewayInfoToDict(g routers.GatewayInfo) map[string]any {
@@ -617,17 +587,7 @@ func fixedIPSubnetIDs(in []ports.IP) []string {
 }
 
 func (r *mqlOpenstackPort) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func (r *mqlOpenstackPort) subnets() ([]any, error) {
@@ -803,17 +763,7 @@ func (r *mqlOpenstackFloatingIp) router() (*mqlOpenstackRouter, error) {
 }
 
 func (r *mqlOpenstackFloatingIp) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 // ---- openstack.securityGroup ----
@@ -876,7 +826,17 @@ func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 	args["rules"] = llx.ArrayData(ruleResources, types.Resource("openstack.securityGroup.rule"))
-	return args, nil, nil
+	// Create the resource explicitly so we can prime cacheProjectID; the
+	// framework can't populate Internal fields from args, so returning
+	// (args, nil, nil) here would leave project() permanently null on the
+	// cross-project Get path.
+	res, err := CreateResource(runtime, "openstack.securityGroup", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlSG := res.(*mqlOpenstackSecurityGroup)
+	mqlSG.cacheProjectID = sg.ProjectID
+	return args, mqlSG, nil
 }
 
 func (o *mqlOpenstack) securityGroups() ([]any, error) {
@@ -941,17 +901,7 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 }
 
 func (r *mqlOpenstackSecurityGroup) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 // ---- openstack.securityGroup.rule ----
@@ -1024,17 +974,7 @@ func (r *mqlOpenstackSecurityGroupRule) remoteGroup() (*mqlOpenstackSecurityGrou
 }
 
 func (r *mqlOpenstackSecurityGroupRule) project() (*mqlOpenstackProject, error) {
-	if r.cacheProjectID == "" {
-		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheProjectID),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlOpenstackProject), nil
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 // lookupSecurityGroupIDByName resolves a security-group name to an ID using a
