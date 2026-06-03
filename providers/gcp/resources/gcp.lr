@@ -11272,10 +11272,9 @@ private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runti
 // end-user-credential setup, `networkSpec` holds the VPC attachment and
 // internet-access setting, `shieldedVmConfig` reports Shielded VM protections,
 // and `idleShutdownConfig` reports auto-shutdown. `isDefault` marks the project
-// default template and
-// encryption at rest is reported through `encryptionSpec` and the resolved
-// `kmsKey()`. Use these fields to audit the security baseline applied to all
-// runtimes created from the template.
+// default template, and encryption at rest is reported through `encryptionSpec`
+// and the resolved `kmsKey()`. Use these fields to audit the security baseline
+// applied to all runtimes created from the template.
 private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayName isDefault") {
   // Full resource name
   name string
