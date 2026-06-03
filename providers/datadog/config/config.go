@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "datadog",
 	ID:              "go.mondoo.com/mql/providers/datadog",
-	Version:         "13.0.6",
+	Version:         "13.0.7",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
