@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.20.1",
-  "generated_at": "2026-06-03T17:40:29-07:00",
+  "version": "13.21.0",
+  "generated_at": "2026-06-04T13:47:42-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -63,10 +63,8 @@
     "clouddeploy.deliveryPipelines.list",
     "clouddeploy.releases.list",
     "clouddeploy.targets.list",
+    "cloudfunctions.functions.getIamPolicy",
     "cloudfunctions.functions.list",
-    "cloudfunctions.iamPolicy.get",
-    "cloudidentity.groups.list",
-    "cloudidentity.memberships.list",
     "cloudkms.cryptoKeyVersions.list",
     "cloudkms.cryptoKeys.get",
     "cloudkms.cryptoKeys.getIamPolicy",
@@ -82,7 +80,7 @@
     "cloudsql.instances.list",
     "cloudsql.sslCerts.list",
     "cloudsql.users.list",
-    "cloudtasks.iamPolicy.get",
+    "cloudtasks.queues.getIamPolicy",
     "cloudtasks.queues.list",
     "composer.environments.list",
     "compute.addresses.list",
@@ -151,13 +149,12 @@
     "datastream.privateConnections.list",
     "datastream.routes.list",
     "datastream.streams.list",
-    "discoveryengine.dataStore.get",
+    "discoveryengine.dataStores.get",
     "discoveryengine.dataStores.list",
     "discoveryengine.engines.list",
     "dlp.columnDataProfiles.list",
     "dlp.connections.list",
     "dlp.deidentifyTemplates.list",
-    "dlp.discoveryConfigs.list",
     "dlp.fileStoreProfiles.list",
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
@@ -178,9 +175,9 @@
     "gkebackup.backupPlans.list",
     "gkebackup.restorePlans.list",
     "iam.denypolicies.list",
-    "iam.iamPolicy.get",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
+    "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.list",
     "iam.workloadIdentityPoolProviders.list",
     "iam.workloadIdentityPools.list",
@@ -624,6 +621,18 @@
       "source_file": "clouddeploy.go"
     },
     {
+      "permission": "cloudfunctions.functions.getIamPolicy",
+      "service": "cloudfunctions",
+      "action": "GetIamPolicy",
+      "source_file": "cloud_functions.go"
+    },
+    {
+      "permission": "cloudfunctions.functions.getIamPolicy",
+      "service": "cloudfunctions",
+      "action": "GetIamPolicy",
+      "source_file": "cloud_functions_v2.go"
+    },
+    {
       "permission": "cloudfunctions.functions.list",
       "service": "cloudfunctions",
       "action": "ListFunctions",
@@ -634,30 +643,6 @@
       "service": "cloudfunctions",
       "action": "ListFunctions",
       "source_file": "cloud_functions_v2.go"
-    },
-    {
-      "permission": "cloudfunctions.iamPolicy.get",
-      "service": "cloudfunctions",
-      "action": "GetIamPolicy",
-      "source_file": "cloud_functions.go"
-    },
-    {
-      "permission": "cloudfunctions.iamPolicy.get",
-      "service": "cloudfunctions",
-      "action": "GetIamPolicy",
-      "source_file": "cloud_functions_v2.go"
-    },
-    {
-      "permission": "cloudidentity.groups.list",
-      "service": "cloudidentity",
-      "action": "Groups.List",
-      "source_file": "cloudidentity.go"
-    },
-    {
-      "permission": "cloudidentity.memberships.list",
-      "service": "cloudidentity",
-      "action": "Memberships.List",
-      "source_file": "cloudidentity.go"
     },
     {
       "permission": "cloudkms.cryptoKeyVersions.list",
@@ -750,7 +735,7 @@
       "source_file": "sql.go"
     },
     {
-      "permission": "cloudtasks.iamPolicy.get",
+      "permission": "cloudtasks.queues.getIamPolicy",
       "service": "cloudtasks",
       "action": "GetIamPolicy",
       "source_file": "cloudtasks.go"
@@ -1200,7 +1185,7 @@
       "source_file": "datastream.go"
     },
     {
-      "permission": "discoveryengine.dataStore.get",
+      "permission": "discoveryengine.dataStores.get",
       "service": "discoveryengine",
       "action": "GetDataStore",
       "source_file": "discoveryengine.go"
@@ -1236,12 +1221,6 @@
       "source_file": "dlp.go"
     },
     {
-      "permission": "dlp.discoveryConfigs.list",
-      "service": "dlp",
-      "action": "ListDiscoveryConfigs",
-      "source_file": "dlp.go"
-    },
-    {
       "permission": "dlp.fileStoreProfiles.list",
       "service": "dlp",
       "action": "ListFileStoreDataProfiles",
@@ -1256,7 +1235,7 @@
     {
       "permission": "dlp.jobTriggers.list",
       "service": "dlp",
-      "action": "ListJobTriggers",
+      "action": "ListDiscoveryConfigs",
       "source_file": "dlp.go"
     },
     {
@@ -1362,12 +1341,6 @@
       "source_file": "iam.go"
     },
     {
-      "permission": "iam.iamPolicy.get",
-      "service": "iam",
-      "action": "GetIamPolicy",
-      "source_file": "iam.go"
-    },
-    {
       "permission": "iam.roles.list",
       "service": "iam",
       "action": "ListRolesIter",
@@ -1377,6 +1350,12 @@
       "permission": "iam.serviceAccountKeys.list",
       "service": "iam",
       "action": "ListServiceAccountKeys",
+      "source_file": "iam.go"
+    },
+    {
+      "permission": "iam.serviceAccounts.getIamPolicy",
+      "service": "iam",
+      "action": "GetIamPolicy",
       "source_file": "iam.go"
     },
     {

@@ -29,13 +29,14 @@ import (
 // providers-sdk/v1/util/permissions/permissions.go if the derived name is
 // wrong, regenerate the manifest, and only then add the validated name here.
 //
-// These entries are real permissions that list-testable-permissions does not
-// return for a project/organization resource (Cloud Identity is directory-
-// scoped; DLP discovery configs follow Google's documented naming), so they
-// were validated from documentation rather than the testable-permissions API:
-//   - cloudidentity.groups.list
-//   - cloudidentity.memberships.list
-//   - dlp.discoveryConfigs.list
+// Note: when verifying against list-testable-permissions, remember that the API
+// omits permissions whose customRolesSupportLevel is NOT_SUPPORTED, so absence
+// from the testable list is not by itself proof that a permission is unreal —
+// cross-check the IAM permissions reference and the method's REST docs. (For
+// example, the Cloud Identity Groups API is governed by directory/OAuth scopes
+// rather than Cloud IAM, so no cloudidentity.* permission exists; and
+// dlp.discoveryConfigs.list is not real — discoveryConfigs.list requires
+// dlp.jobTriggers.list per Google's REST reference.)
 var validatedGCPPermissions = []string{
 	"accessapproval.settings.get",
 	"aiplatform.batchPredictionJobs.list",
@@ -97,10 +98,8 @@ var validatedGCPPermissions = []string{
 	"clouddeploy.deliveryPipelines.list",
 	"clouddeploy.releases.list",
 	"clouddeploy.targets.list",
+	"cloudfunctions.functions.getIamPolicy",
 	"cloudfunctions.functions.list",
-	"cloudfunctions.iamPolicy.get",
-	"cloudidentity.groups.list",
-	"cloudidentity.memberships.list",
 	"cloudkms.cryptoKeyVersions.list",
 	"cloudkms.cryptoKeys.get",
 	"cloudkms.cryptoKeys.getIamPolicy",
@@ -116,7 +115,7 @@ var validatedGCPPermissions = []string{
 	"cloudsql.instances.list",
 	"cloudsql.sslCerts.list",
 	"cloudsql.users.list",
-	"cloudtasks.iamPolicy.get",
+	"cloudtasks.queues.getIamPolicy",
 	"cloudtasks.queues.list",
 	"composer.environments.list",
 	"compute.addresses.list",
@@ -185,13 +184,12 @@ var validatedGCPPermissions = []string{
 	"datastream.privateConnections.list",
 	"datastream.routes.list",
 	"datastream.streams.list",
-	"discoveryengine.dataStore.get",
+	"discoveryengine.dataStores.get",
 	"discoveryengine.dataStores.list",
 	"discoveryengine.engines.list",
 	"dlp.columnDataProfiles.list",
 	"dlp.connections.list",
 	"dlp.deidentifyTemplates.list",
-	"dlp.discoveryConfigs.list",
 	"dlp.fileStoreProfiles.list",
 	"dlp.inspectTemplates.list",
 	"dlp.jobTriggers.list",
@@ -212,9 +210,9 @@ var validatedGCPPermissions = []string{
 	"gkebackup.backupPlans.list",
 	"gkebackup.restorePlans.list",
 	"iam.denypolicies.list",
-	"iam.iamPolicy.get",
 	"iam.roles.list",
 	"iam.serviceAccountKeys.list",
+	"iam.serviceAccounts.getIamPolicy",
 	"iam.serviceAccounts.list",
 	"iam.workloadIdentityPoolProviders.list",
 	"iam.workloadIdentityPools.list",

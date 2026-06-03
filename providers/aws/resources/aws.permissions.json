@@ -1,10 +1,10 @@
 {
   "provider": "aws",
   "version": "13.31.1",
-  "generated_at": "2026-06-03T10:00:58-07:00",
+  "generated_at": "2026-06-03T11:56:05-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
-    "access-analyzer:ListFindingsV2",
+    "access-analyzer:ListFindings",
     "account:GetAlternateContact",
     "account:GetContactInformation",
     "account:ListRegions",
@@ -13,16 +13,7 @@
     "acm:GetCertificate",
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
-    "apigateway:GetApiKeys",
-    "apigateway:GetApis",
-    "apigateway:GetAuthorizers",
-    "apigateway:GetDomainNames",
-    "apigateway:GetRequestValidators",
-    "apigateway:GetRestApis",
-    "apigateway:GetRoutes",
-    "apigateway:GetStages",
-    "apigateway:GetUsagePlans",
-    "apigateway:GetVpcLinks",
+    "apigateway:GET",
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
@@ -94,7 +85,6 @@
     "bedrock-agentcore:ListMemories",
     "bedrock-agentcore:ListOauth2CredentialProviders",
     "bedrock-agentcore:ListWorkloadIdentities",
-    "bedrock:GetAdvancedPromptOptimizationJob",
     "bedrock:GetAgent",
     "bedrock:GetCustomModel",
     "bedrock:GetEvaluationJob",
@@ -104,7 +94,6 @@
     "bedrock:GetKnowledgeBase",
     "bedrock:GetModelImportJob",
     "bedrock:GetModelInvocationLoggingConfiguration",
-    "bedrock:ListAdvancedPromptOptimizationJobs",
     "bedrock:ListAgentActionGroups",
     "bedrock:ListAgentAliases",
     "bedrock:ListAgentKnowledgeBases",
@@ -122,9 +111,9 @@
     "bedrock:ListModelInvocationJobs",
     "bedrock:ListPrompts",
     "bedrock:ListProvisionedModelThroughputs",
-    "budgets:DescribeBudgets",
-    "budgets:DescribeNotificationsForBudget",
-    "budgets:DescribeSubscribersForNotification",
+    "budgets:ViewBudget",
+    "cassandra:Select",
+    "cassandra:TagResource",
     "ce:GetCostAndUsage",
     "ce:GetCostForecast",
     "cloudformation:DescribeStackSet",
@@ -217,14 +206,14 @@
     "detective:ListDatasourcePackages",
     "detective:ListGraphs",
     "detective:ListMembers",
-    "detective:ListOrganizationAdminAccounts",
+    "detective:ListOrganizationAdminAccount",
     "detective:ListTagsForResource",
     "dms:DescribeEndpoints",
     "dms:DescribeReplicationInstances",
     "dms:DescribeReplicationSubnetGroups",
     "dms:DescribeReplicationTasks",
-    "docdbelastic:ListClusterSnapshots",
-    "docdbelastic:ListClusters",
+    "docdb-elastic:ListClusterSnapshots",
+    "docdb-elastic:ListClusters",
     "drs:DescribeJobs",
     "drs:DescribeRecoveryInstances",
     "drs:DescribeReplicationConfigurationTemplates",
@@ -330,14 +319,6 @@
     "ecs:ListTagsForResource",
     "ecs:ListTaskDefinitions",
     "ecs:ListTasks",
-    "efs:DescribeAccessPoints",
-    "efs:DescribeBackupPolicy",
-    "efs:DescribeFileSystemPolicy",
-    "efs:DescribeFileSystems",
-    "efs:DescribeLifecycleConfiguration",
-    "efs:DescribeMountTargetSecurityGroups",
-    "efs:DescribeMountTargets",
-    "efs:DescribeReplicationConfigurations",
     "eks:DescribeAccessEntry",
     "eks:DescribeAddon",
     "eks:DescribeAddonVersions",
@@ -371,25 +352,33 @@
     "elasticbeanstalk:DescribeEnvironmentResources",
     "elasticbeanstalk:DescribeEnvironments",
     "elasticbeanstalk:ListTagsForResource",
+    "elasticfilesystem:DescribeAccessPoints",
+    "elasticfilesystem:DescribeBackupPolicy",
+    "elasticfilesystem:DescribeFileSystemPolicy",
+    "elasticfilesystem:DescribeFileSystems",
+    "elasticfilesystem:DescribeLifecycleConfiguration",
+    "elasticfilesystem:DescribeMountTargetSecurityGroups",
+    "elasticfilesystem:DescribeMountTargets",
+    "elasticfilesystem:DescribeReplicationConfigurations",
     "elasticloadbalancing:DescribeListeners",
     "elasticloadbalancing:DescribeLoadBalancerAttributes",
     "elasticloadbalancing:DescribeLoadBalancers",
     "elasticloadbalancing:DescribeTags",
     "elasticloadbalancing:DescribeTargetGroupAttributes",
     "elasticloadbalancing:DescribeTargetGroups",
-    "emr:DescribeCluster",
-    "emr:DescribeSecurityConfiguration",
-    "emr:DescribeStep",
-    "emr:DescribeStudio",
-    "emr:GetAutoTerminationPolicy",
-    "emr:GetBlockPublicAccessConfiguration",
-    "emr:ListBootstrapActions",
-    "emr:ListClusters",
-    "emr:ListInstanceGroups",
-    "emr:ListInstances",
-    "emr:ListSecurityConfigurations",
-    "emr:ListSteps",
-    "emr:ListStudios",
+    "elasticmapreduce:DescribeCluster",
+    "elasticmapreduce:DescribeSecurityConfiguration",
+    "elasticmapreduce:DescribeStep",
+    "elasticmapreduce:DescribeStudio",
+    "elasticmapreduce:GetAutoTerminationPolicy",
+    "elasticmapreduce:GetBlockPublicAccessConfiguration",
+    "elasticmapreduce:ListBootstrapActions",
+    "elasticmapreduce:ListClusters",
+    "elasticmapreduce:ListInstanceGroups",
+    "elasticmapreduce:ListInstances",
+    "elasticmapreduce:ListSecurityConfigurations",
+    "elasticmapreduce:ListSteps",
+    "elasticmapreduce:ListStudios",
     "es:DescribeDomains",
     "es:DescribeElasticsearchDomain",
     "es:DescribeElasticsearchDomains",
@@ -506,11 +495,6 @@
     "kafka:ListNodes",
     "kafka:ListReplicators",
     "kafka:ListScramSecrets",
-    "keyspaces:GetKeyspace",
-    "keyspaces:GetTable",
-    "keyspaces:ListKeyspaces",
-    "keyspaces:ListTables",
-    "keyspaces:ListTagsForResource",
     "kinesis:DescribeStreamSummary",
     "kinesis:ListStreamConsumers",
     "kinesis:ListStreams",
@@ -679,31 +663,31 @@
     "route53resolver:ListResolverQueryLogConfigs",
     "route53resolver:ListResolverRuleAssociations",
     "route53resolver:ListResolverRules",
+    "s3:GetAccelerateConfiguration",
     "s3:GetAccessPoint",
     "s3:GetAccessPointPolicy",
-    "s3:GetBucketAccelerateConfiguration",
+    "s3:GetAnalyticsConfiguration",
     "s3:GetBucketAcl",
     "s3:GetBucketCors",
-    "s3:GetBucketEncryption",
-    "s3:GetBucketLifecycleConfiguration",
     "s3:GetBucketLocation",
     "s3:GetBucketLogging",
-    "s3:GetBucketNotificationConfiguration",
+    "s3:GetBucketNotification",
+    "s3:GetBucketObjectLockConfiguration",
     "s3:GetBucketOwnershipControls",
     "s3:GetBucketPolicy",
-    "s3:GetBucketReplication",
+    "s3:GetBucketPublicAccessBlock",
     "s3:GetBucketRequestPayment",
     "s3:GetBucketTagging",
     "s3:GetBucketVersioning",
     "s3:GetBucketWebsite",
-    "s3:GetObjectLockConfiguration",
-    "s3:GetPublicAccessBlock",
+    "s3:GetEncryptionConfiguration",
+    "s3:GetIntelligentTieringConfiguration",
+    "s3:GetInventoryConfiguration",
+    "s3:GetLifecycleConfiguration",
+    "s3:GetMetricsConfiguration",
+    "s3:GetReplicationConfiguration",
     "s3:ListAccessPoints",
-    "s3:ListBucketAnalyticsConfigurations",
-    "s3:ListBucketIntelligentTieringConfigurations",
-    "s3:ListBucketInventoryConfigurations",
-    "s3:ListBucketMetricsConfigurations",
-    "s3:ListBuckets",
+    "s3:ListAllMyBuckets",
     "sagemaker:DescribeAction",
     "sagemaker:DescribeAlgorithm",
     "sagemaker:DescribeApp",
@@ -930,7 +914,7 @@
       "source_file": "aws_iam_accessanalyzer.go"
     },
     {
-      "permission": "access-analyzer:ListFindingsV2",
+      "permission": "access-analyzer:ListFindings",
       "service": "access-analyzer",
       "action": "ListFindingsV2",
       "source_file": "aws_iam_accessanalyzer.go"
@@ -984,76 +968,16 @@
       "source_file": "aws_acm.go"
     },
     {
-      "permission": "apigateway:GetApiKeys",
+      "permission": "apigateway:GET",
       "service": "apigateway",
       "action": "GetApiKeys",
       "source_file": "aws_apigateway.go"
     },
     {
-      "permission": "apigateway:GetApis",
+      "permission": "apigateway:GET",
       "service": "apigateway",
       "action": "GetApis",
       "source_file": "aws_apigatewayv2.go"
-    },
-    {
-      "permission": "apigateway:GetAuthorizers",
-      "service": "apigateway",
-      "action": "GetAuthorizers",
-      "source_file": "aws_apigateway.go"
-    },
-    {
-      "permission": "apigateway:GetAuthorizers",
-      "service": "apigateway",
-      "action": "GetAuthorizers",
-      "source_file": "aws_apigatewayv2.go"
-    },
-    {
-      "permission": "apigateway:GetDomainNames",
-      "service": "apigateway",
-      "action": "GetDomainNames",
-      "source_file": "aws_apigatewayv2.go"
-    },
-    {
-      "permission": "apigateway:GetRequestValidators",
-      "service": "apigateway",
-      "action": "GetRequestValidators",
-      "source_file": "aws_apigateway.go"
-    },
-    {
-      "permission": "apigateway:GetRestApis",
-      "service": "apigateway",
-      "action": "GetRestApis",
-      "source_file": "aws_apigateway.go"
-    },
-    {
-      "permission": "apigateway:GetRoutes",
-      "service": "apigateway",
-      "action": "GetRoutes",
-      "source_file": "aws_apigatewayv2.go"
-    },
-    {
-      "permission": "apigateway:GetStages",
-      "service": "apigateway",
-      "action": "GetStages",
-      "source_file": "aws_apigateway.go"
-    },
-    {
-      "permission": "apigateway:GetStages",
-      "service": "apigateway",
-      "action": "GetStages",
-      "source_file": "aws_apigatewayv2.go"
-    },
-    {
-      "permission": "apigateway:GetUsagePlans",
-      "service": "apigateway",
-      "action": "GetUsagePlans",
-      "source_file": "aws_apigateway.go"
-    },
-    {
-      "permission": "apigateway:GetVpcLinks",
-      "service": "apigateway",
-      "action": "GetVpcLinks",
-      "source_file": "aws_apigateway.go"
     },
     {
       "permission": "application-autoscaling:DescribeScalableTargets",
@@ -1482,12 +1406,6 @@
       "source_file": "aws_bedrock_agentcore.go"
     },
     {
-      "permission": "bedrock:GetAdvancedPromptOptimizationJob",
-      "service": "bedrock",
-      "action": "GetAdvancedPromptOptimizationJob",
-      "source_file": "aws_bedrock.go"
-    },
-    {
       "permission": "bedrock:GetAgent",
       "service": "bedrock",
       "action": "GetAgent",
@@ -1539,12 +1457,6 @@
       "permission": "bedrock:GetModelInvocationLoggingConfiguration",
       "service": "bedrock",
       "action": "GetModelInvocationLoggingConfiguration",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListAdvancedPromptOptimizationJobs",
-      "service": "bedrock",
-      "action": "ListAdvancedPromptOptimizationJobs",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1650,22 +1562,22 @@
       "source_file": "aws_bedrock.go"
     },
     {
-      "permission": "budgets:DescribeBudgets",
+      "permission": "budgets:ViewBudget",
       "service": "budgets",
       "action": "DescribeBudgets",
       "source_file": "aws_billing.go"
     },
     {
-      "permission": "budgets:DescribeNotificationsForBudget",
-      "service": "budgets",
-      "action": "DescribeNotificationsForBudget",
-      "source_file": "aws_billing.go"
+      "permission": "cassandra:Select",
+      "service": "cassandra",
+      "action": "GetKeyspace",
+      "source_file": "aws_keyspaces.go"
     },
     {
-      "permission": "budgets:DescribeSubscribersForNotification",
-      "service": "budgets",
-      "action": "DescribeSubscribersForNotification",
-      "source_file": "aws_billing.go"
+      "permission": "cassandra:TagResource",
+      "service": "cassandra",
+      "action": "ListTagsForResource",
+      "source_file": "aws_keyspaces.go"
     },
     {
       "permission": "ce:GetCostAndUsage",
@@ -2220,7 +2132,7 @@
       "source_file": "aws_detective.go"
     },
     {
-      "permission": "detective:ListOrganizationAdminAccounts",
+      "permission": "detective:ListOrganizationAdminAccount",
       "service": "detective",
       "action": "ListOrganizationAdminAccounts",
       "source_file": "aws_detective.go"
@@ -2256,14 +2168,14 @@
       "source_file": "aws_dms.go"
     },
     {
-      "permission": "docdbelastic:ListClusterSnapshots",
-      "service": "docdbelastic",
+      "permission": "docdb-elastic:ListClusterSnapshots",
+      "service": "docdb-elastic",
       "action": "ListClusterSnapshots",
       "source_file": "aws_documentdb.go"
     },
     {
-      "permission": "docdbelastic:ListClusters",
-      "service": "docdbelastic",
+      "permission": "docdb-elastic:ListClusters",
+      "service": "docdb-elastic",
       "action": "ListClusters",
       "source_file": "aws_documentdb.go"
     },
@@ -2940,54 +2852,6 @@
       "source_file": "aws_ecs.go"
     },
     {
-      "permission": "efs:DescribeAccessPoints",
-      "service": "efs",
-      "action": "DescribeAccessPoints",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeBackupPolicy",
-      "service": "efs",
-      "action": "DescribeBackupPolicy",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeFileSystemPolicy",
-      "service": "efs",
-      "action": "DescribeFileSystemPolicy",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeFileSystems",
-      "service": "efs",
-      "action": "DescribeFileSystems",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeLifecycleConfiguration",
-      "service": "efs",
-      "action": "DescribeLifecycleConfiguration",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeMountTargetSecurityGroups",
-      "service": "efs",
-      "action": "DescribeMountTargetSecurityGroups",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeMountTargets",
-      "service": "efs",
-      "action": "DescribeMountTargets",
-      "source_file": "aws_efs.go"
-    },
-    {
-      "permission": "efs:DescribeReplicationConfigurations",
-      "service": "efs",
-      "action": "DescribeReplicationConfigurations",
-      "source_file": "aws_efs.go"
-    },
-    {
       "permission": "eks:DescribeAccessEntry",
       "service": "eks",
       "action": "DescribeAccessEntry",
@@ -3186,6 +3050,54 @@
       "source_file": "aws_elasticbeanstalk.go"
     },
     {
+      "permission": "elasticfilesystem:DescribeAccessPoints",
+      "service": "elasticfilesystem",
+      "action": "DescribeAccessPoints",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeBackupPolicy",
+      "service": "elasticfilesystem",
+      "action": "DescribeBackupPolicy",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeFileSystemPolicy",
+      "service": "elasticfilesystem",
+      "action": "DescribeFileSystemPolicy",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeFileSystems",
+      "service": "elasticfilesystem",
+      "action": "DescribeFileSystems",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeLifecycleConfiguration",
+      "service": "elasticfilesystem",
+      "action": "DescribeLifecycleConfiguration",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeMountTargetSecurityGroups",
+      "service": "elasticfilesystem",
+      "action": "DescribeMountTargetSecurityGroups",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeMountTargets",
+      "service": "elasticfilesystem",
+      "action": "DescribeMountTargets",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "elasticfilesystem:DescribeReplicationConfigurations",
+      "service": "elasticfilesystem",
+      "action": "DescribeReplicationConfigurations",
+      "source_file": "aws_efs.go"
+    },
+    {
       "permission": "elasticloadbalancing:DescribeListeners",
       "service": "elasticloadbalancing",
       "action": "DescribeListeners",
@@ -3222,80 +3134,80 @@
       "source_file": "aws_elb.go"
     },
     {
-      "permission": "emr:DescribeCluster",
-      "service": "emr",
+      "permission": "elasticmapreduce:DescribeCluster",
+      "service": "elasticmapreduce",
       "action": "DescribeCluster",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:DescribeSecurityConfiguration",
-      "service": "emr",
+      "permission": "elasticmapreduce:DescribeSecurityConfiguration",
+      "service": "elasticmapreduce",
       "action": "DescribeSecurityConfiguration",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:DescribeStep",
-      "service": "emr",
+      "permission": "elasticmapreduce:DescribeStep",
+      "service": "elasticmapreduce",
       "action": "DescribeStep",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:DescribeStudio",
-      "service": "emr",
+      "permission": "elasticmapreduce:DescribeStudio",
+      "service": "elasticmapreduce",
       "action": "DescribeStudio",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:GetAutoTerminationPolicy",
-      "service": "emr",
+      "permission": "elasticmapreduce:GetAutoTerminationPolicy",
+      "service": "elasticmapreduce",
       "action": "GetAutoTerminationPolicy",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:GetBlockPublicAccessConfiguration",
-      "service": "emr",
+      "permission": "elasticmapreduce:GetBlockPublicAccessConfiguration",
+      "service": "elasticmapreduce",
       "action": "GetBlockPublicAccessConfiguration",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListBootstrapActions",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListBootstrapActions",
+      "service": "elasticmapreduce",
       "action": "ListBootstrapActions",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListClusters",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListClusters",
+      "service": "elasticmapreduce",
       "action": "ListClusters",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListInstanceGroups",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListInstanceGroups",
+      "service": "elasticmapreduce",
       "action": "ListInstanceGroups",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListInstances",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListInstances",
+      "service": "elasticmapreduce",
       "action": "ListInstances",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListSecurityConfigurations",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListSecurityConfigurations",
+      "service": "elasticmapreduce",
       "action": "ListSecurityConfigurations",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListSteps",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListSteps",
+      "service": "elasticmapreduce",
       "action": "ListSteps",
       "source_file": "aws_emr.go"
     },
     {
-      "permission": "emr:ListStudios",
-      "service": "emr",
+      "permission": "elasticmapreduce:ListStudios",
+      "service": "elasticmapreduce",
       "action": "ListStudios",
       "source_file": "aws_emr.go"
     },
@@ -4006,36 +3918,6 @@
       "service": "kafka",
       "action": "ListScramSecrets",
       "source_file": "aws_msk.go"
-    },
-    {
-      "permission": "keyspaces:GetKeyspace",
-      "service": "keyspaces",
-      "action": "GetKeyspace",
-      "source_file": "aws_keyspaces.go"
-    },
-    {
-      "permission": "keyspaces:GetTable",
-      "service": "keyspaces",
-      "action": "GetTable",
-      "source_file": "aws_keyspaces.go"
-    },
-    {
-      "permission": "keyspaces:ListKeyspaces",
-      "service": "keyspaces",
-      "action": "ListKeyspaces",
-      "source_file": "aws_keyspaces.go"
-    },
-    {
-      "permission": "keyspaces:ListTables",
-      "service": "keyspaces",
-      "action": "ListTables",
-      "source_file": "aws_keyspaces.go"
-    },
-    {
-      "permission": "keyspaces:ListTagsForResource",
-      "service": "keyspaces",
-      "action": "ListTagsForResource",
-      "source_file": "aws_keyspaces.go"
     },
     {
       "permission": "kinesis:DescribeStreamSummary",
@@ -5124,6 +5006,12 @@
       "source_file": "aws_route53_resolver.go"
     },
     {
+      "permission": "s3:GetAccelerateConfiguration",
+      "service": "s3",
+      "action": "GetBucketAccelerateConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:GetAccessPoint",
       "service": "s3",
       "action": "GetAccessPoint",
@@ -5136,9 +5024,9 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetBucketAccelerateConfiguration",
+      "permission": "s3:GetAnalyticsConfiguration",
       "service": "s3",
-      "action": "GetBucketAccelerateConfiguration",
+      "action": "ListBucketAnalyticsConfigurations",
       "source_file": "aws_s3.go"
     },
     {
@@ -5154,18 +5042,6 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetBucketEncryption",
-      "service": "s3",
-      "action": "GetBucketEncryption",
-      "source_file": "aws_s3.go"
-    },
-    {
-      "permission": "s3:GetBucketLifecycleConfiguration",
-      "service": "s3",
-      "action": "GetBucketLifecycleConfiguration",
-      "source_file": "aws_s3.go"
-    },
-    {
       "permission": "s3:GetBucketLocation",
       "service": "s3",
       "action": "GetBucketLocation",
@@ -5178,9 +5054,15 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetBucketNotificationConfiguration",
+      "permission": "s3:GetBucketNotification",
       "service": "s3",
       "action": "GetBucketNotificationConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketObjectLockConfiguration",
+      "service": "s3",
+      "action": "GetObjectLockConfiguration",
       "source_file": "aws_s3.go"
     },
     {
@@ -5196,9 +5078,9 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetBucketReplication",
+      "permission": "s3:GetBucketPublicAccessBlock",
       "service": "s3",
-      "action": "GetBucketReplication",
+      "action": "GetPublicAccessBlock",
       "source_file": "aws_s3.go"
     },
     {
@@ -5226,15 +5108,39 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetObjectLockConfiguration",
+      "permission": "s3:GetEncryptionConfiguration",
       "service": "s3",
-      "action": "GetObjectLockConfiguration",
+      "action": "GetBucketEncryption",
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:GetPublicAccessBlock",
+      "permission": "s3:GetIntelligentTieringConfiguration",
       "service": "s3",
-      "action": "GetPublicAccessBlock",
+      "action": "ListBucketIntelligentTieringConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetInventoryConfiguration",
+      "service": "s3",
+      "action": "ListBucketInventoryConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetLifecycleConfiguration",
+      "service": "s3",
+      "action": "GetBucketLifecycleConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetMetricsConfiguration",
+      "service": "s3",
+      "action": "ListBucketMetricsConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetReplicationConfiguration",
+      "service": "s3",
+      "action": "GetBucketReplication",
       "source_file": "aws_s3.go"
     },
     {
@@ -5244,31 +5150,7 @@
       "source_file": "aws_s3.go"
     },
     {
-      "permission": "s3:ListBucketAnalyticsConfigurations",
-      "service": "s3",
-      "action": "ListBucketAnalyticsConfigurations",
-      "source_file": "aws_s3.go"
-    },
-    {
-      "permission": "s3:ListBucketIntelligentTieringConfigurations",
-      "service": "s3",
-      "action": "ListBucketIntelligentTieringConfigurations",
-      "source_file": "aws_s3.go"
-    },
-    {
-      "permission": "s3:ListBucketInventoryConfigurations",
-      "service": "s3",
-      "action": "ListBucketInventoryConfigurations",
-      "source_file": "aws_s3.go"
-    },
-    {
-      "permission": "s3:ListBucketMetricsConfigurations",
-      "service": "s3",
-      "action": "ListBucketMetricsConfigurations",
-      "source_file": "aws_s3.go"
-    },
-    {
-      "permission": "s3:ListBuckets",
+      "permission": "s3:ListAllMyBuckets",
       "service": "s3",
       "action": "ListBuckets",
       "source_file": "aws_s3.go"
