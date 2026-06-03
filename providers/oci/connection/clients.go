@@ -6,6 +6,8 @@ package connection
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/apigateway"
 	"github.com/oracle/oci-go-sdk/v65/audit"
@@ -22,6 +24,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
+	"github.com/oracle/oci-go-sdk/v65/generativeai"
 	"github.com/oracle/oci-go-sdk/v65/generativeaiagent"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
@@ -424,5 +427,23 @@ func (c *OciConnection) DataScienceClient(region string) (*datascience.DataScien
 		return nil, err
 	}
 	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) GenerativeAiClient(region string) (*generativeai.GenerativeAiClient, error) {
+	client, err := generativeai.NewGenerativeAiClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	// Generative AI publishes a wildcard DNS record in regions where the
+	// control plane is not deployed, so calls there resolve but the connection
+	// times out. Cap the per-request time and disable the SDK's default retry
+	// policy (which would otherwise retry the timeout ~8 times with backoff) so
+	// unavailable regions fail fast and are skipped (see
+	// ociRegionServiceUnavailable).
+	client.HTTPClient = &http.Client{Timeout: 15 * time.Second}
+	noRetry := common.NoRetryPolicy()
+	client.SetCustomClientConfiguration(common.CustomClientConfiguration{RetryPolicy: &noRetry})
 	return &client, nil
 }
