@@ -339,66 +339,117 @@ func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
 				return nil, false, err
 			}
 
-			deployedModels := make([]any, 0, len(ep.DeployedModels))
-			deployments := make([]any, 0, len(ep.DeployedModels))
-			for _, dm := range ep.DeployedModels {
-				d, err := protoToDict(dm)
-				if err != nil {
-					return nil, false, err
-				}
-				deployedModels = append(deployedModels, d)
-
-				mqlDeployment, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.endpoint.deployment", map[string]*llx.RawData{
-					"__id":                    llx.StringData(fmt.Sprintf("%s/deployment/%s", ep.Name, dm.Id)),
-					"id":                      llx.StringData(dm.Id),
-					"displayName":             llx.StringData(dm.DisplayName),
-					"modelVersionId":          llx.StringData(dm.ModelVersionId),
-					"serviceAccountEmail":     llx.StringData(dm.ServiceAccount),
-					"disableContainerLogging": llx.BoolData(dm.DisableContainerLogging),
-					"enableAccessLogging":     llx.BoolData(dm.EnableAccessLogging),
-					"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(dm.CreateTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				mqlDeploymentRes := mqlDeployment.(*mqlGcpProjectVertexaiServiceEndpointDeployment)
-				mqlDeploymentRes.cacheModelName = dm.Model
-				mqlDeploymentRes.cacheProjectId = projectId
-				deployments = append(deployments, mqlDeployment)
-			}
-			encryptionSpec, err := protoToDict(ep.EncryptionSpec)
+			mqlEndpoint, err := newMqlVertexaiEndpoint(g.MqlRuntime, projectId, ep)
 			if err != nil {
 				return nil, false, err
 			}
-
-			trafficSplit := make(map[string]any, len(ep.TrafficSplit))
-			for k, v := range ep.TrafficSplit {
-				trafficSplit[k] = int64(v)
-			}
-
-			mqlEndpoint, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.endpoint", map[string]*llx.RawData{
-				"name":                        llx.StringData(ep.Name),
-				"displayName":                 llx.StringData(ep.DisplayName),
-				"description":                 llx.StringData(ep.Description),
-				"deployedModels":              llx.ArrayData(deployedModels, types.Dict),
-				"deployments":                 llx.ArrayData(deployments, types.Resource("gcp.project.vertexaiService.endpoint.deployment")),
-				"encryptionSpec":              llx.DictData(encryptionSpec),
-				"network":                     llx.StringData(ep.Network),
-				"enablePrivateServiceConnect": llx.BoolData(ep.EnablePrivateServiceConnect),
-				"trafficSplit":                llx.MapData(trafficSplit, types.Int),
-				"labels":                      llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
-				"etag":                        llx.StringData(ep.Etag),
-				"createdAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
-				"updatedAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
-			})
-			if err != nil {
-				return nil, false, err
-			}
-			mqlEndpoint.(*mqlGcpProjectVertexaiServiceEndpoint).cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
 			items = append(items, mqlEndpoint)
 		}
 		return items, false, nil
 	})
+}
+
+// newMqlVertexaiEndpoint maps a Vertex AI Endpoint proto into an MQL resource,
+// including its deployed-model sub-resources. It is shared by the endpoints()
+// lister and the typed endpoint() references.
+func newMqlVertexaiEndpoint(runtime *plugin.Runtime, projectId string, ep *aiplatformpb.Endpoint) (*mqlGcpProjectVertexaiServiceEndpoint, error) {
+	deployedModels := make([]any, 0, len(ep.DeployedModels))
+	deployments := make([]any, 0, len(ep.DeployedModels))
+	for _, dm := range ep.DeployedModels {
+		d, err := protoToDict(dm)
+		if err != nil {
+			return nil, err
+		}
+		deployedModels = append(deployedModels, d)
+
+		mqlDeployment, err := CreateResource(runtime, "gcp.project.vertexaiService.endpoint.deployment", map[string]*llx.RawData{
+			"__id":                    llx.StringData(fmt.Sprintf("%s/deployment/%s", ep.Name, dm.Id)),
+			"id":                      llx.StringData(dm.Id),
+			"displayName":             llx.StringData(dm.DisplayName),
+			"modelVersionId":          llx.StringData(dm.ModelVersionId),
+			"serviceAccountEmail":     llx.StringData(dm.ServiceAccount),
+			"disableContainerLogging": llx.BoolData(dm.DisableContainerLogging),
+			"enableAccessLogging":     llx.BoolData(dm.EnableAccessLogging),
+			"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(dm.CreateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlDeploymentRes := mqlDeployment.(*mqlGcpProjectVertexaiServiceEndpointDeployment)
+		mqlDeploymentRes.cacheModelName = dm.Model
+		mqlDeploymentRes.cacheProjectId = projectId
+		deployments = append(deployments, mqlDeployment)
+	}
+	encryptionSpec, err := protoToDict(ep.EncryptionSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	trafficSplit := make(map[string]any, len(ep.TrafficSplit))
+	for k, v := range ep.TrafficSplit {
+		trafficSplit[k] = int64(v)
+	}
+
+	mqlEndpoint, err := CreateResource(runtime, "gcp.project.vertexaiService.endpoint", map[string]*llx.RawData{
+		"name":                        llx.StringData(ep.Name),
+		"displayName":                 llx.StringData(ep.DisplayName),
+		"description":                 llx.StringData(ep.Description),
+		"deployedModels":              llx.ArrayData(deployedModels, types.Dict),
+		"deployments":                 llx.ArrayData(deployments, types.Resource("gcp.project.vertexaiService.endpoint.deployment")),
+		"encryptionSpec":              llx.DictData(encryptionSpec),
+		"network":                     llx.StringData(ep.Network),
+		"enablePrivateServiceConnect": llx.BoolData(ep.EnablePrivateServiceConnect),
+		"trafficSplit":                llx.MapData(trafficSplit, types.Int),
+		"labels":                      llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
+		"etag":                        llx.StringData(ep.Etag),
+		"createdAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
+		"updatedAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlEndpoint.(*mqlGcpProjectVertexaiServiceEndpoint)
+	res.cacheKmsKeyName = ep.GetEncryptionSpec().GetKmsKeyName()
+	return res, nil
+}
+
+// resolveVertexaiEndpointRef fetches the Vertex AI endpoint identified by
+// endpointName (a full resource name) and maps it into a fully-populated MQL
+// resource. Like resolveVertexaiModelRef, it resolves directly via GetEndpoint
+// because the gcp.project.vertexaiService.endpoint resource has no init
+// function, so a bare NewResource(..., {"name": ...}) would yield a husk.
+func resolveVertexaiEndpointRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectVertexaiServiceEndpoint], endpointName string) (*mqlGcpProjectVertexaiServiceEndpoint, error) {
+	region := vertexaiRegionFromName(endpointName)
+	if endpointName == "" || region == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := aiplatform.NewEndpointClient(ctx,
+		option.WithCredentials(creds),
+		option.WithEndpoint(vertexaiEndpoint(region)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	ep, err := client.GetEndpoint(ctx, &aiplatformpb.GetEndpointRequest{Name: endpointName})
+	if err != nil {
+		if isVertexAIRegionSkippable(err) {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newMqlVertexaiEndpoint(runtime, vertexaiProjectFromName(endpointName), ep)
 }
 
 func (g *mqlGcpProjectVertexaiServiceEndpoint) id() (string, error) {
@@ -422,14 +473,33 @@ func vertexaiRegionFromName(name string) string {
 	return ""
 }
 
-func (d *mqlGcpProjectVertexaiServiceEndpointDeployment) model() (*mqlGcpProjectVertexaiServiceModel, error) {
-	region := vertexaiRegionFromName(d.cacheModelName)
-	if d.cacheModelName == "" || region == "" {
-		d.Model.State = plugin.StateIsSet | plugin.StateIsNull
+// vertexaiProjectFromName extracts the project from a Vertex AI resource name
+// of the form projects/{project}/locations/{location}/....
+func vertexaiProjectFromName(name string) string {
+	parts := strings.Split(name, "/")
+	for i := 0; i+1 < len(parts); i++ {
+		if parts[i] == "projects" {
+			return parts[i+1]
+		}
+	}
+	return ""
+}
+
+// resolveVertexaiModelRef fetches the Vertex AI model identified by modelName
+// (a full resource name) and maps it into a fully-populated MQL resource. It is
+// shared by every accessor that exposes a typed model reference. We resolve the
+// model directly via GetModel rather than NewResource because the
+// gcp.project.vertexaiService.model resource has no init function — a bare
+// NewResource(..., {"name": ...}) would yield a husk with only the name set, so
+// any field traversal beyond name would fail.
+func resolveVertexaiModelRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectVertexaiServiceModel], modelName string) (*mqlGcpProjectVertexaiServiceModel, error) {
+	region := vertexaiRegionFromName(modelName)
+	if modelName == "" || region == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
-	conn := d.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn := runtime.Connection.(*connection.GcpConnection)
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
@@ -445,15 +515,19 @@ func (d *mqlGcpProjectVertexaiServiceEndpointDeployment) model() (*mqlGcpProject
 	}
 	defer client.Close()
 
-	m, err := client.GetModel(ctx, &aiplatformpb.GetModelRequest{Name: d.cacheModelName})
+	m, err := client.GetModel(ctx, &aiplatformpb.GetModelRequest{Name: modelName})
 	if err != nil {
 		if isVertexAIRegionSkippable(err) {
-			d.Model.State = plugin.StateIsSet | plugin.StateIsNull
+			field.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
 	}
-	return newMqlVertexaiModel(d.MqlRuntime, m)
+	return newMqlVertexaiModel(runtime, m)
+}
+
+func (d *mqlGcpProjectVertexaiServiceEndpointDeployment) model() (*mqlGcpProjectVertexaiServiceModel, error) {
+	return resolveVertexaiModelRef(d.MqlRuntime, &d.Model, d.cacheModelName)
 }
 
 func (d *mqlGcpProjectVertexaiServiceEndpointDeployment) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
@@ -2649,16 +2723,7 @@ func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) serviceAccount() (*mqlG
 }
 
 func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProjectVertexaiServiceModel, error) {
-	if a.cacheModelName == "" {
-		a.Model.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
-		map[string]*llx.RawData{"name": llx.StringData(a.cacheModelName)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.Model, a.cacheModelName)
 }
 
 type mqlGcpProjectVertexaiServiceTuningJobInternal struct {
@@ -2682,29 +2747,11 @@ type mqlGcpProjectVertexaiServiceTrainingPipelineInternal struct {
 }
 
 func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) model() (*mqlGcpProjectVertexaiServiceModel, error) {
-	if a.cacheModelName == "" {
-		a.Model.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
-		map[string]*llx.RawData{"name": llx.StringData(a.cacheModelName)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.Model, a.cacheModelName)
 }
 
 func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) parentModel() (*mqlGcpProjectVertexaiServiceModel, error) {
-	if a.cacheParentModel == "" {
-		a.ParentModel.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
-		map[string]*llx.RawData{"name": llx.StringData(a.cacheParentModel)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.ParentModel, a.cacheParentModel)
 }
 
 func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -2729,14 +2776,5 @@ func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) kmsKey() (*mq
 }
 
 func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) endpoint() (*mqlGcpProjectVertexaiServiceEndpoint, error) {
-	if a.cacheEndpointName == "" {
-		a.Endpoint.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.endpoint",
-		map[string]*llx.RawData{"name": llx.StringData(a.cacheEndpointName)})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectVertexaiServiceEndpoint), nil
+	return resolveVertexaiEndpointRef(a.MqlRuntime, &a.Endpoint, a.cacheEndpointName)
 }
