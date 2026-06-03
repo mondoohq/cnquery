@@ -55,6 +55,14 @@ type SharepointOnlineReport struct {
 type SpoSite struct {
 	DenyAddAndCustomizePages string `json:"DenyAddAndCustomizePages"`
 	Url                      string `json:"Url"`
+	Title                    string `json:"Title"`
+	Template                 string `json:"Template"`
+	SharingCapability        string `json:"SharingCapability"`
+	ConditionalAccessPolicy  string `json:"ConditionalAccessPolicy"`
+	LockState                string `json:"LockState"`
+	AllowSelfServiceUpgrade  bool   `json:"AllowSelfServiceUpgrade"`
+	Owner                    string `json:"Owner"`
+	Status                   string `json:"Status"`
 }
 
 func (m *mqlMs365SharepointonlineSite) id() (string, error) {
@@ -201,6 +209,14 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 			map[string]*llx.RawData{
 				"denyAddAndCustomizePages": llx.BoolData(s.DenyAddAndCustomizePages == "Enabled"),
 				"url":                      llx.StringData(s.Url),
+				"title":                    llx.StringData(s.Title),
+				"template":                 llx.StringData(s.Template),
+				"sharingCapability":        llx.StringData(s.SharingCapability),
+				"conditionalAccessPolicy":  llx.StringData(s.ConditionalAccessPolicy),
+				"lockState":                llx.StringData(s.LockState),
+				"allowSelfServiceUpgrade":  llx.BoolData(s.AllowSelfServiceUpgrade),
+				"owner":                    llx.StringData(s.Owner),
+				"status":                   llx.StringData(s.Status),
 			})
 		if err != nil {
 			sitesErr = err

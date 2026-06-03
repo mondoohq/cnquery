@@ -105,10 +105,20 @@ type CsTeamsMeetingPolicy struct {
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 	AllowSecurityEndUserReporting              bool   `json:"AllowSecurityEndUserReporting"`
 	AllowCloudRecordingForCalls                bool   `json:"AllowCloudRecordingForCalls"`
+	AllowCloudRecording                        bool   `json:"AllowCloudRecording"`
+	AllowRecordingStorageOutsideRegion         bool   `json:"AllowRecordingStorageOutsideRegion"`
+	AllowTranscription                         bool   `json:"AllowTranscription"`
+	AllowParticipantGiveRequestControl         bool   `json:"AllowParticipantGiveRequestControl"`
+	PreventTollBypass                          bool   `json:"PreventTollBypass"`
 }
 
 type CsTeamsMessagingPolicy struct {
-	AllowSecurityEndUserReporting bool `json:"AllowSecurityEndUserReporting"`
+	AllowSecurityEndUserReporting bool   `json:"AllowSecurityEndUserReporting"`
+	AllowUserChat                 bool   `json:"AllowUserChat"`
+	AllowUserDeleteMessage        bool   `json:"AllowUserDeleteMessage"`
+	AllowOwnerDeleteMessage       bool   `json:"AllowOwnerDeleteMessage"`
+	AllowUserDeleteChat           bool   `json:"AllowUserDeleteChat"`
+	ReadReceiptsEnabledType       string `json:"ReadReceiptsEnabledType"`
 }
 
 type mqlMs365TeamsInternal struct {
@@ -237,6 +247,11 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 				"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
 				"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
 				"allowCloudRecordingForCalls":                llx.BoolData(teamsPolicy.AllowCloudRecordingForCalls),
+				"allowCloudRecording":                        llx.BoolData(teamsPolicy.AllowCloudRecording),
+				"allowRecordingStorageOutsideRegion":         llx.BoolData(teamsPolicy.AllowRecordingStorageOutsideRegion),
+				"allowTranscription":                         llx.BoolData(teamsPolicy.AllowTranscription),
+				"allowParticipantGiveRequestControl":         llx.BoolData(teamsPolicy.AllowParticipantGiveRequestControl),
+				"preventTollBypass":                          llx.BoolData(teamsPolicy.PreventTollBypass),
 			})
 		if mqlTeamsPolicyErr != nil {
 			r.CsTeamsMeetingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsPolicyErr}
@@ -252,6 +267,11 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		mqlTeamsMessagePolicy, mqlTeamsMessagePolicyErr := CreateResource(r.MqlRuntime, "ms365.teams.teamsMessagingPolicyConfig",
 			map[string]*llx.RawData{
 				"allowSecurityEndUserReporting": llx.BoolData(teamsMessagePolicy.AllowSecurityEndUserReporting),
+				"allowUserChat":                 llx.BoolData(teamsMessagePolicy.AllowUserChat),
+				"allowUserDeleteMessage":        llx.BoolData(teamsMessagePolicy.AllowUserDeleteMessage),
+				"allowOwnerDeleteMessage":       llx.BoolData(teamsMessagePolicy.AllowOwnerDeleteMessage),
+				"allowUserDeleteChat":           llx.BoolData(teamsMessagePolicy.AllowUserDeleteChat),
+				"readReceiptsEnabledType":       llx.StringData(teamsMessagePolicy.ReadReceiptsEnabledType),
 			})
 		if mqlTeamsMessagePolicyErr != nil {
 			r.CsTeamsMessagingPolicy = plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]{State: plugin.StateIsSet, Error: mqlTeamsMessagePolicyErr}

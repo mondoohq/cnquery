@@ -2830,6 +2830,32 @@ private ms365.sharepointonline.site {
   url string
   // Whether custom script execution on a particular site allowed
   denyAddAndCustomizePages bool
+  // The site title
+  title string
+  // The site template identifier
+  template string
+  // External sharing capability for the site
+  //
+  // One of Disabled, ExistingExternalUserSharingOnly,
+  // ExternalUserSharingOnly, or ExternalUserAndGuestSharing, controlling
+  // whether and how content can be shared with users outside the organization.
+  sharingCapability string
+  // Access control for unmanaged devices
+  //
+  // One of AllowFullAccess, AllowLimitedAccess, BlockAccess, or
+  // AuthenticationContext, set when the site is governed by a conditional
+  // access policy that restricts access from unmanaged devices.
+  conditionalAccessPolicy string
+  // The site lock state
+  //
+  // One of Unlock, ReadOnly, or NoAccess.
+  lockState string
+  // Whether site collection administrators can upgrade the site
+  allowSelfServiceUpgrade bool
+  // The site owner
+  owner string
+  // The site status
+  status string
 }
 
 // Microsoft 365 Teams
@@ -2896,14 +2922,37 @@ private ms365.teams.teamsMeetingPolicyConfig {
   allowExternalParticipantGiveRequestControl bool
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
-  // Whether cloud recording is allowed
+  // Whether cloud recording is allowed for calls
   allowCloudRecordingForCalls bool
+  // Whether cloud recording is allowed for meetings
+  allowCloudRecording bool
+  // Whether meeting recordings can be stored outside the data residency region
+  allowRecordingStorageOutsideRegion bool
+  // Whether live transcription is allowed in meetings
+  allowTranscription bool
+  // Whether internal participants can give or request control of the meeting
+  allowParticipantGiveRequestControl bool
+  // Whether dial-in callers are forced to use the conferencing toll number
+  preventTollBypass bool
 }
 
-// Teams meeting policy configuration
+// Microsoft 365 Teams messaging policy configuration
 private ms365.teams.teamsMessagingPolicyConfig {
   // Whether users can report security concerns
   allowSecurityEndUserReporting bool
+  // Whether users can use chat
+  allowUserChat bool
+  // Whether users can delete their own sent messages
+  allowUserDeleteMessage bool
+  // Whether team owners can delete messages sent by others
+  allowOwnerDeleteMessage bool
+  // Whether users can delete chats they participate in
+  allowUserDeleteChat bool
+  // Read receipt control mode
+  //
+  // One of UserPreference, Everyone, or None, indicating whether read
+  // receipts are user-controlled, forced on, or forced off.
+  readReceiptsEnabledType string
 }
 
 // Mailbox Plan

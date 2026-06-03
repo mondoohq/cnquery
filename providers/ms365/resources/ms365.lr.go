@@ -3621,6 +3621,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.sharepointonline.site.denyAddAndCustomizePages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365SharepointonlineSite).GetDenyAddAndCustomizePages()).ToDataRes(types.Bool)
 	},
+	"ms365.sharepointonline.site.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetTitle()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.template": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetTemplate()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.sharingCapability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetSharingCapability()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.conditionalAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetConditionalAccessPolicy()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.lockState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetLockState()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.allowSelfServiceUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetAllowSelfServiceUpgrade()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.site.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetOwner()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetStatus()).ToDataRes(types.String)
+	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
 	},
@@ -3696,8 +3720,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.teamsMeetingPolicyConfig.allowCloudRecordingForCalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowCloudRecordingForCalls()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowCloudRecording": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowCloudRecording()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowRecordingStorageOutsideRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowRecordingStorageOutsideRegion()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowTranscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowTranscription()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowParticipantGiveRequestControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowParticipantGiveRequestControl()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.preventTollBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetPreventTollBypass()).ToDataRes(types.Bool)
+	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserChat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowUserChat()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserDeleteMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowUserDeleteMessage()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowOwnerDeleteMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowOwnerDeleteMessage()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserDeleteChat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetAllowUserDeleteChat()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.readReceiptsEnabledType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetReadReceiptsEnabledType()).ToDataRes(types.String)
 	},
 	"ms365.exchangeonline.mailboxPlan.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetName()).ToDataRes(types.String)
@@ -8055,6 +8109,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365SharepointonlineSite).DenyAddAndCustomizePages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"ms365.sharepointonline.site.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.template": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).Template, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.sharingCapability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).SharingCapability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.conditionalAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).ConditionalAccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.lockState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).LockState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.allowSelfServiceUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).AllowSelfServiceUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).__id, ok = v.Value.(string)
 		return
@@ -8167,12 +8253,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowCloudRecordingForCalls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowCloudRecording": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowCloudRecording, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowRecordingStorageOutsideRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowRecordingStorageOutsideRegion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowTranscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowTranscription, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowParticipantGiveRequestControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowParticipantGiveRequestControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.preventTollBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).PreventTollBypass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.teamsMessagingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).__id, ok = v.Value.(string)
 		return
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.allowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserChat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowUserChat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserDeleteMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowUserDeleteMessage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowOwnerDeleteMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowOwnerDeleteMessage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.allowUserDeleteChat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).AllowUserDeleteChat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMessagingPolicyConfig.readReceiptsEnabledType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).ReadReceiptsEnabledType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.mailboxPlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19624,6 +19750,14 @@ type mqlMs365SharepointonlineSite struct {
 	// optional: if you define mqlMs365SharepointonlineSiteInternal it will be used here
 	Url                      plugin.TValue[string]
 	DenyAddAndCustomizePages plugin.TValue[bool]
+	Title                    plugin.TValue[string]
+	Template                 plugin.TValue[string]
+	SharingCapability        plugin.TValue[string]
+	ConditionalAccessPolicy  plugin.TValue[string]
+	LockState                plugin.TValue[string]
+	AllowSelfServiceUpgrade  plugin.TValue[bool]
+	Owner                    plugin.TValue[string]
+	Status                   plugin.TValue[string]
 }
 
 // createMs365SharepointonlineSite creates a new instance of this resource
@@ -19669,6 +19803,38 @@ func (c *mqlMs365SharepointonlineSite) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlMs365SharepointonlineSite) GetDenyAddAndCustomizePages() *plugin.TValue[bool] {
 	return &c.DenyAddAndCustomizePages
+}
+
+func (c *mqlMs365SharepointonlineSite) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlMs365SharepointonlineSite) GetTemplate() *plugin.TValue[string] {
+	return &c.Template
+}
+
+func (c *mqlMs365SharepointonlineSite) GetSharingCapability() *plugin.TValue[string] {
+	return &c.SharingCapability
+}
+
+func (c *mqlMs365SharepointonlineSite) GetConditionalAccessPolicy() *plugin.TValue[string] {
+	return &c.ConditionalAccessPolicy
+}
+
+func (c *mqlMs365SharepointonlineSite) GetLockState() *plugin.TValue[string] {
+	return &c.LockState
+}
+
+func (c *mqlMs365SharepointonlineSite) GetAllowSelfServiceUpgrade() *plugin.TValue[bool] {
+	return &c.AllowSelfServiceUpgrade
+}
+
+func (c *mqlMs365SharepointonlineSite) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlMs365SharepointonlineSite) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlMs365Teams for the ms365.teams resource
@@ -19877,6 +20043,11 @@ type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
 	AllowExternalParticipantGiveRequestControl plugin.TValue[bool]
 	AllowSecurityEndUserReporting              plugin.TValue[bool]
 	AllowCloudRecordingForCalls                plugin.TValue[bool]
+	AllowCloudRecording                        plugin.TValue[bool]
+	AllowRecordingStorageOutsideRegion         plugin.TValue[bool]
+	AllowTranscription                         plugin.TValue[bool]
+	AllowParticipantGiveRequestControl         plugin.TValue[bool]
+	PreventTollBypass                          plugin.TValue[bool]
 }
 
 // createMs365TeamsTeamsMeetingPolicyConfig creates a new instance of this resource
@@ -19951,12 +20122,37 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowCloudRecordingForCalls()
 	return &c.AllowCloudRecordingForCalls
 }
 
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowCloudRecording() *plugin.TValue[bool] {
+	return &c.AllowCloudRecording
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowRecordingStorageOutsideRegion() *plugin.TValue[bool] {
+	return &c.AllowRecordingStorageOutsideRegion
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowTranscription() *plugin.TValue[bool] {
+	return &c.AllowTranscription
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowParticipantGiveRequestControl() *plugin.TValue[bool] {
+	return &c.AllowParticipantGiveRequestControl
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetPreventTollBypass() *plugin.TValue[bool] {
+	return &c.PreventTollBypass
+}
+
 // mqlMs365TeamsTeamsMessagingPolicyConfig for the ms365.teams.teamsMessagingPolicyConfig resource
 type mqlMs365TeamsTeamsMessagingPolicyConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMs365TeamsTeamsMessagingPolicyConfigInternal it will be used here
 	AllowSecurityEndUserReporting plugin.TValue[bool]
+	AllowUserChat                 plugin.TValue[bool]
+	AllowUserDeleteMessage        plugin.TValue[bool]
+	AllowOwnerDeleteMessage       plugin.TValue[bool]
+	AllowUserDeleteChat           plugin.TValue[bool]
+	ReadReceiptsEnabledType       plugin.TValue[string]
 }
 
 // createMs365TeamsTeamsMessagingPolicyConfig creates a new instance of this resource
@@ -19993,6 +20189,26 @@ func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) MqlID() string {
 
 func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
 	return &c.AllowSecurityEndUserReporting
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowUserChat() *plugin.TValue[bool] {
+	return &c.AllowUserChat
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowUserDeleteMessage() *plugin.TValue[bool] {
+	return &c.AllowUserDeleteMessage
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowOwnerDeleteMessage() *plugin.TValue[bool] {
+	return &c.AllowOwnerDeleteMessage
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowUserDeleteChat() *plugin.TValue[bool] {
+	return &c.AllowUserDeleteChat
+}
+
+func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetReadReceiptsEnabledType() *plugin.TValue[string] {
+	return &c.ReadReceiptsEnabledType
 }
 
 // mqlMs365ExchangeonlineMailboxPlan for the ms365.exchangeonline.mailboxPlan resource
