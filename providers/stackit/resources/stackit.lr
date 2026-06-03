@@ -69,8 +69,7 @@ stackit {
   serviceAccounts() []stackit.serviceAccount
   // TLS server certificates managed by STACKIT Certificates
   certificates() []stackit.certificate
-  // Application Load Balancers (ALB — separate product from the legacy
-  // `loadBalancers()`)
+  // Application Load Balancers separate from the legacy loadBalancers product
   albLoadBalancers() []stackit.alb.loadBalancer
   // Key Management Service namespace (key rings + keys)
   kms() stackit.kms
@@ -197,8 +196,7 @@ private stackit.volume @defaults("id name size status") {
   serverId string
   // Whether the volume is encrypted at rest
   encrypted bool
-  // KEK (Key-Encryption Key) UUID used to wrap the volume's data-encryption
-  // key (empty when the volume uses platform-managed encryption)
+  // KEK UUID used to wrap the volume data-encryption key; empty when using platform-managed encryption
   encryptionKeyId string
   // KEK version number; 0 when unset
   encryptionKeyVersion int
@@ -598,11 +596,9 @@ private stackit.objectStorage.bucket @defaults("name region urlPathStyle") {
   urlPathStyle string
   // Whether S3 Object Lock is enabled (WORM retention)
   objectLockEnabled bool
-  // Default-retention policy: number of days objects are protected from
-  // deletion by default. 0 when no default retention is configured.
+  // Default-retention days; 0 when no default retention is configured
   defaultRetentionDays() int
-  // Default-retention mode: COMPLIANCE (immutable) or GOVERNANCE (privileged
-  // users can override). Empty when no default retention is configured.
+  // Default-retention mode; COMPLIANCE or GOVERNANCE, empty when unconfigured
   defaultRetentionMode() string
 }
 
@@ -1007,8 +1003,7 @@ private stackit.observability.instance @defaults("id name status planName") {
   planId() string
   // Dashboard URL for the observability UI (empty if not provisioned)
   dashboardUrl() string
-  // Connection parameters returned by the API (Alertmanager/Prometheus/etc.
-  // endpoints, credentials hints)
+  // Connection parameters including Alertmanager, Prometheus endpoints, and credentials hints
   parameters() dict
   // Whether the instance can be updated
   isUpdatable() bool
