@@ -10803,6 +10803,16 @@ private gcp.project.vertexaiService {
   deploymentResourcePools() []gcp.project.vertexaiService.deploymentResourcePool
   // Context caches
   cachedContents() []gcp.project.vertexaiService.cachedContent
+  // Batch prediction jobs
+  batchPredictionJobs() []gcp.project.vertexaiService.batchPredictionJob
+  // Managed fine-tuning jobs
+  tuningJobs() []gcp.project.vertexaiService.tuningJob
+  // Training pipelines
+  trainingPipelines() []gcp.project.vertexaiService.trainingPipeline
+  // Hyperparameter tuning jobs
+  hyperparameterTuningJobs() []gcp.project.vertexaiService.hyperparameterTuningJob
+  // Model deployment monitoring jobs
+  modelDeploymentMonitoringJobs() []gcp.project.vertexaiService.modelDeploymentMonitoringJob
 }
 
 // Google Cloud (GCP) Vertex AI metadata store
@@ -11522,6 +11532,217 @@ private gcp.project.vertexaiService.cachedContent @defaults("displayName model")
   createdAt time
   // Last update time
   updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI batch prediction job
+//
+// Examine a Vertex AI batch prediction job — an offline scoring run that
+// reads instances, scores them with a model, and writes predictions out.
+// `inputConfig` and `outputConfig` describe where data is read from and
+// written to (Cloud Storage or BigQuery), making this the primary surface
+// for auditing batch data movement. `model()` and `modelVersionId` identify
+// the model used, `serviceAccount` is the identity the job runs as, `state`
+// reports lifecycle status, and `disableContainerLogging` indicates whether
+// prediction request/response logging is turned off. Encryption at rest is
+// reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Model used for predictions
+  model() gcp.project.vertexaiService.model
+  // Version ID of the model used for predictions
+  modelVersionId string
+  // Input configuration (instances source: Cloud Storage or BigQuery)
+  inputConfig dict
+  // Output configuration (predictions destination: Cloud Storage or BigQuery)
+  outputConfig dict
+  // Service account email the job runs as
+  serviceAccount string
+  // Current state (JOB_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED, EXPIRED, UPDATING, PARTIALLY_SUCCEEDED)
+  state string
+  // Whether explanations are generated alongside predictions
+  generateExplanation bool
+  // Whether container request/response logging is disabled
+  disableContainerLogging bool
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Start time
+  startedAt time
+  // End time
+  endedAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI tuning job
+//
+// Examine a Vertex AI tuning job — a managed fine-tuning run that adapts a
+// base foundation model into a tuned model. `baseModel` identifies the
+// foundation model being tuned, `tunedModelDisplayName` names the result,
+// `tunedModel` reports the produced model and its serving endpoint,
+// `tuningDataStats` summarizes the tuning dataset, `serviceAccount` is the
+// identity the job runs as, and `state` reports lifecycle status. Encryption
+// at rest is reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName state") {
+  // Full resource name
+  name string
+  // Display name of the tuned model produced by this job
+  tunedModelDisplayName string
+  // Human-readable description of the resource
+  description string
+  // Base foundation model being tuned
+  baseModel string
+  // Current state (JOB_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED, EXPIRED, UPDATING, PARTIALLY_SUCCEEDED)
+  state string
+  // Experiment associated with this tuning job
+  experiment string
+  // Produced tuned model and its serving endpoint
+  tunedModel dict
+  // Statistics about the tuning dataset
+  tuningDataStats dict
+  // Service account email the job runs as
+  serviceAccount string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Start time
+  startedAt time
+  // End time
+  endedAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI training pipeline
+//
+// Examine a Vertex AI training pipeline — a managed workflow that trains a
+// model and optionally uploads it to the Model Registry. `inputDataConfig`
+// describes the dataset and data split the pipeline trains on,
+// `trainingTaskDefinition` is the Cloud Storage URI of the task schema,
+// `model()` and `parentModel()` resolve the model produced and the parent
+// it versions, and `state` reports lifecycle status. Encryption at rest is
+// reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.trainingPipeline @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Cloud Storage URI of the training task definition schema
+  trainingTaskDefinition string
+  // Input data configuration (dataset and data split)
+  inputDataConfig dict
+  // Model produced and uploaded by this pipeline
+  model() gcp.project.vertexaiService.model
+  // Parent model this pipeline uploads a new version to
+  parentModel() gcp.project.vertexaiService.model
+  // Current state (PIPELINE_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED)
+  state string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Start time
+  startedAt time
+  // End time
+  endedAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI hyperparameter tuning job
+//
+// Examine a Vertex AI hyperparameter tuning job — a job that runs many
+// trials to search for the best hyperparameters. `studySpec` defines the
+// search space and objective, `trialJobSpec` is the per-trial training job
+// specification (including its worker pools, service account, and network),
+// the trial-count fields bound parallelism and failures, and `state`
+// reports lifecycle status. Encryption at rest is reported through
+// `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Current state (JOB_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED, EXPIRED, UPDATING, PARTIALLY_SUCCEEDED)
+  state string
+  // Maximum number of trials to run
+  maxTrialCount int
+  // Number of trials to run in parallel
+  parallelTrialCount int
+  // Maximum number of trials that may fail before the job fails
+  maxFailedTrialCount int
+  // Study spec (search space and optimization objective)
+  studySpec dict
+  // Per-trial training job specification
+  trialJobSpec dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Start time
+  startedAt time
+  // End time
+  endedAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI model deployment monitoring job
+//
+// Examine a Vertex AI model deployment monitoring job — a job that watches
+// a deployed endpoint for prediction drift and training/serving skew.
+// `endpoint()` resolves the monitored Vertex AI endpoint, `state` and
+// `scheduleState` report the job and analysis-schedule status,
+// `enableMonitoringPipelineLogs` indicates whether monitoring pipeline logs
+// are written, and `nextScheduleTime` is when the next analysis run is due.
+// Encryption at rest is reported through `encryptionSpec` and the resolved
+// `kmsKey()`.
+private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Monitored endpoint
+  endpoint() gcp.project.vertexaiService.endpoint
+  // Current state (JOB_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED, EXPIRED, UPDATING, PARTIALLY_SUCCEEDED)
+  state string
+  // Monitoring schedule state (OFFLINE, RUNNING, PENDING)
+  scheduleState string
+  // Whether monitoring pipeline logs are written to Cloud Logging
+  enableMonitoringPipelineLogs bool
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // Time the next monitoring analysis run is scheduled
+  nextScheduleTime time
 }
 
 // Google Cloud Security Command Center organization settings

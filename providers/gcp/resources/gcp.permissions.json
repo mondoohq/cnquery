@@ -4,6 +4,7 @@
   "generated_at": "2026-06-03T10:20:26-07:00",
   "permissions": [
     "accessapproval.settings.get",
+    "aiplatform.batchPredictionJobs.list",
     "aiplatform.cachedContents.list",
     "aiplatform.customJobs.get",
     "aiplatform.customJobs.list",
@@ -12,9 +13,11 @@
     "aiplatform.endpoints.list",
     "aiplatform.featureGroups.list",
     "aiplatform.featureOnlineStores.list",
+    "aiplatform.hyperparameterTuningJobs.list",
     "aiplatform.indexEndpoints.list",
     "aiplatform.indexes.list",
     "aiplatform.metadataStores.list",
+    "aiplatform.modelDeploymentMonitoringJobs.list",
     "aiplatform.models.list",
     "aiplatform.notebookExecutionJobs.list",
     "aiplatform.notebookRuntimeTemplates.list",
@@ -25,6 +28,8 @@
     "aiplatform.reasoningEngines.list",
     "aiplatform.schedules.list",
     "aiplatform.tensorboards.list",
+    "aiplatform.trainingPipelines.list",
+    "aiplatform.tuningJobs.list",
     "alloydb.backups.list",
     "alloydb.clusters.list",
     "alloydb.instances.list",
@@ -263,6 +268,12 @@
       "source_file": "access_approval.go"
     },
     {
+      "permission": "aiplatform.batchPredictionJobs.list",
+      "service": "aiplatform",
+      "action": "ListBatchPredictionJobs",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.cachedContents.list",
       "service": "aiplatform",
       "action": "ListCachedContents",
@@ -311,6 +322,12 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.hyperparameterTuningJobs.list",
+      "service": "aiplatform",
+      "action": "ListHyperparameterTuningJobs",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.indexEndpoints.list",
       "service": "aiplatform",
       "action": "ListIndexEndpoints",
@@ -326,6 +343,12 @@
       "permission": "aiplatform.metadataStores.list",
       "service": "aiplatform",
       "action": "ListMetadataStores",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.modelDeploymentMonitoringJobs.list",
+      "service": "aiplatform",
+      "action": "ListModelDeploymentMonitoringJobs",
       "source_file": "vertexai.go"
     },
     {
@@ -386,6 +409,18 @@
       "permission": "aiplatform.tensorboards.list",
       "service": "aiplatform",
       "action": "ListTensorboards",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.trainingPipelines.list",
+      "service": "aiplatform",
+      "action": "ListTrainingPipelines",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.tuningJobs.list",
+      "service": "aiplatform",
+      "action": "ListTuningJobs",
       "source_file": "vertexai.go"
     },
     {

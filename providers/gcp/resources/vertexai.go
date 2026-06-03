@@ -1925,6 +1925,408 @@ func (g *mqlGcpProjectVertexaiServiceCachedContent) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewJobClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListBatchPredictionJobs(ctx, &aiplatformpb.ListBatchPredictionJobsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			job, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			inputConfig, err := protoToDict(job.InputConfig)
+			if err != nil {
+				return nil, false, err
+			}
+			outputConfig, err := protoToDict(job.OutputConfig)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(job.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.batchPredictionJob", map[string]*llx.RawData{
+				"name":                    llx.StringData(job.Name),
+				"displayName":             llx.StringData(job.DisplayName),
+				"modelVersionId":          llx.StringData(job.ModelVersionId),
+				"inputConfig":             llx.DictData(inputConfig),
+				"outputConfig":            llx.DictData(outputConfig),
+				"serviceAccount":          llx.StringData(job.ServiceAccount),
+				"state":                   llx.StringData(job.State.String()),
+				"generateExplanation":     llx.BoolData(job.GenerateExplanation),
+				"disableContainerLogging": llx.BoolData(job.DisableContainerLogging),
+				"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"encryptionSpec":          llx.DictData(encryptionSpec),
+				"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+				"startedAt":               llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+				"endedAt":                 llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+				"updatedAt":               llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlBatchJob := mqlJob.(*mqlGcpProjectVertexaiServiceBatchPredictionJob)
+			mqlBatchJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlBatchJob.cacheModelName = job.Model
+			items = append(items, mqlJob)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceBatchPredictionJob) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewGenAiTuningClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListTuningJobs(ctx, &aiplatformpb.ListTuningJobsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			job, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			tunedModel, err := protoToDict(job.TunedModel)
+			if err != nil {
+				return nil, false, err
+			}
+			tuningDataStats, err := protoToDict(job.TuningDataStats)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(job.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.tuningJob", map[string]*llx.RawData{
+				"name":                  llx.StringData(job.Name),
+				"tunedModelDisplayName": llx.StringData(job.TunedModelDisplayName),
+				"description":           llx.StringData(job.Description),
+				"baseModel":             llx.StringData(job.GetBaseModel()),
+				"state":                 llx.StringData(job.State.String()),
+				"experiment":            llx.StringData(job.Experiment),
+				"tunedModel":            llx.DictData(tunedModel),
+				"tuningDataStats":       llx.DictData(tuningDataStats),
+				"serviceAccount":        llx.StringData(job.ServiceAccount),
+				"labels":                llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"encryptionSpec":        llx.DictData(encryptionSpec),
+				"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+				"startedAt":             llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+				"endedAt":               llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+				"updatedAt":             llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlJob.(*mqlGcpProjectVertexaiServiceTuningJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			items = append(items, mqlJob)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceTuningJob) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) trainingPipelines() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewPipelineClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListTrainingPipelines(ctx, &aiplatformpb.ListTrainingPipelinesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			pipeline, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			inputDataConfig, err := protoToDict(pipeline.InputDataConfig)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(pipeline.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlPipeline, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.trainingPipeline", map[string]*llx.RawData{
+				"name":                   llx.StringData(pipeline.Name),
+				"displayName":            llx.StringData(pipeline.DisplayName),
+				"trainingTaskDefinition": llx.StringData(pipeline.TrainingTaskDefinition),
+				"inputDataConfig":        llx.DictData(inputDataConfig),
+				"state":                  llx.StringData(pipeline.State.String()),
+				"labels":                 llx.MapData(convert.MapToInterfaceMap(pipeline.Labels), types.String),
+				"encryptionSpec":         llx.DictData(encryptionSpec),
+				"createdAt":              llx.TimeDataPtr(timestampAsTimePtr(pipeline.CreateTime)),
+				"startedAt":              llx.TimeDataPtr(timestampAsTimePtr(pipeline.StartTime)),
+				"endedAt":                llx.TimeDataPtr(timestampAsTimePtr(pipeline.EndTime)),
+				"updatedAt":              llx.TimeDataPtr(timestampAsTimePtr(pipeline.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			pipelineRes := mqlPipeline.(*mqlGcpProjectVertexaiServiceTrainingPipeline)
+			pipelineRes.cacheKmsKeyName = pipeline.GetEncryptionSpec().GetKmsKeyName()
+			pipelineRes.cacheParentModel = pipeline.ParentModel
+			if pipeline.ModelId != "" {
+				pipelineRes.cacheModelName = fmt.Sprintf("projects/%s/locations/%s/models/%s", projectId, region, pipeline.ModelId)
+			}
+			items = append(items, mqlPipeline)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceTrainingPipeline) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewJobClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListHyperparameterTuningJobs(ctx, &aiplatformpb.ListHyperparameterTuningJobsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			job, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			studySpec, err := protoToDict(job.StudySpec)
+			if err != nil {
+				return nil, false, err
+			}
+			trialJobSpec, err := protoToDict(job.TrialJobSpec)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(job.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.hyperparameterTuningJob", map[string]*llx.RawData{
+				"name":                llx.StringData(job.Name),
+				"displayName":         llx.StringData(job.DisplayName),
+				"state":               llx.StringData(job.State.String()),
+				"maxTrialCount":       llx.IntData(int64(job.MaxTrialCount)),
+				"parallelTrialCount":  llx.IntData(int64(job.ParallelTrialCount)),
+				"maxFailedTrialCount": llx.IntData(int64(job.MaxFailedTrialCount)),
+				"studySpec":           llx.DictData(studySpec),
+				"trialJobSpec":        llx.DictData(trialJobSpec),
+				"labels":              llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"encryptionSpec":      llx.DictData(encryptionSpec),
+				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+				"startedAt":           llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+				"endedAt":             llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlJob.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			items = append(items, mqlJob)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) modelDeploymentMonitoringJobs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewJobClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListModelDeploymentMonitoringJobs(ctx, &aiplatformpb.ListModelDeploymentMonitoringJobsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			job, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			encryptionSpec, err := protoToDict(job.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.modelDeploymentMonitoringJob", map[string]*llx.RawData{
+				"name":                         llx.StringData(job.Name),
+				"displayName":                  llx.StringData(job.DisplayName),
+				"state":                        llx.StringData(job.State.String()),
+				"scheduleState":                llx.StringData(job.ScheduleState.String()),
+				"enableMonitoringPipelineLogs": llx.BoolData(job.EnableMonitoringPipelineLogs),
+				"labels":                       llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"encryptionSpec":               llx.DictData(encryptionSpec),
+				"createdAt":                    llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+				"updatedAt":                    llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+				"nextScheduleTime":             llx.TimeDataPtr(timestampAsTimePtr(job.NextScheduleTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlMonJob := mqlJob.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob)
+			mqlMonJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlMonJob.cacheEndpointName = job.Endpoint
+			items = append(items, mqlJob)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
 // ---------------------------------------------------------------
 // KMS key references
 // ---------------------------------------------------------------
@@ -2099,4 +2501,100 @@ type mqlGcpProjectVertexaiServiceCachedContentInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceCachedContent) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceBatchPredictionJobInternal struct {
+	cacheKmsKeyName string
+	cacheModelName  string
+}
+
+func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProjectVertexaiServiceModel, error) {
+	if a.cacheModelName == "" {
+		a.Model.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheModelName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+}
+
+type mqlGcpProjectVertexaiServiceTuningJobInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceTrainingPipelineInternal struct {
+	cacheKmsKeyName  string
+	cacheModelName   string
+	cacheParentModel string
+}
+
+func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) model() (*mqlGcpProjectVertexaiServiceModel, error) {
+	if a.cacheModelName == "" {
+		a.Model.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheModelName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) parentModel() (*mqlGcpProjectVertexaiServiceModel, error) {
+	if a.cacheParentModel == "" {
+		a.ParentModel.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.model",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheParentModel)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceModel), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceHyperparameterTuningJobInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal struct {
+	cacheKmsKeyName   string
+	cacheEndpointName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) endpoint() (*mqlGcpProjectVertexaiServiceEndpoint, error) {
+	if a.cacheEndpointName == "" {
+		a.Endpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.endpoint",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheEndpointName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceEndpoint), nil
 }

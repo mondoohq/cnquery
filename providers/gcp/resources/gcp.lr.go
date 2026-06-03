@@ -362,6 +362,11 @@ const (
 	ResourceGcpProjectVertexaiServiceSchedule                                          string = "gcp.project.vertexaiService.schedule"
 	ResourceGcpProjectVertexaiServiceDeploymentResourcePool                            string = "gcp.project.vertexaiService.deploymentResourcePool"
 	ResourceGcpProjectVertexaiServiceCachedContent                                     string = "gcp.project.vertexaiService.cachedContent"
+	ResourceGcpProjectVertexaiServiceBatchPredictionJob                                string = "gcp.project.vertexaiService.batchPredictionJob"
+	ResourceGcpProjectVertexaiServiceTuningJob                                         string = "gcp.project.vertexaiService.tuningJob"
+	ResourceGcpProjectVertexaiServiceTrainingPipeline                                  string = "gcp.project.vertexaiService.trainingPipeline"
+	ResourceGcpProjectVertexaiServiceHyperparameterTuningJob                           string = "gcp.project.vertexaiService.hyperparameterTuningJob"
+	ResourceGcpProjectVertexaiServiceModelDeploymentMonitoringJob                      string = "gcp.project.vertexaiService.modelDeploymentMonitoringJob"
 	ResourceGcpSccOrganizationSettings                                                 string = "gcp.scc.organizationSettings"
 	ResourceGcpSccSource                                                               string = "gcp.scc.source"
 	ResourceGcpSccFinding                                                              string = "gcp.scc.finding"
@@ -1839,6 +1844,26 @@ func init() {
 		"gcp.project.vertexaiService.cachedContent": {
 			// to override args, implement: initGcpProjectVertexaiServiceCachedContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectVertexaiServiceCachedContent,
+		},
+		"gcp.project.vertexaiService.batchPredictionJob": {
+			// to override args, implement: initGcpProjectVertexaiServiceBatchPredictionJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceBatchPredictionJob,
+		},
+		"gcp.project.vertexaiService.tuningJob": {
+			// to override args, implement: initGcpProjectVertexaiServiceTuningJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceTuningJob,
+		},
+		"gcp.project.vertexaiService.trainingPipeline": {
+			// to override args, implement: initGcpProjectVertexaiServiceTrainingPipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceTrainingPipeline,
+		},
+		"gcp.project.vertexaiService.hyperparameterTuningJob": {
+			// to override args, implement: initGcpProjectVertexaiServiceHyperparameterTuningJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceHyperparameterTuningJob,
+		},
+		"gcp.project.vertexaiService.modelDeploymentMonitoringJob": {
+			// to override args, implement: initGcpProjectVertexaiServiceModelDeploymentMonitoringJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceModelDeploymentMonitoringJob,
 		},
 		"gcp.scc.organizationSettings": {
 			// to override args, implement: initGcpSccOrganizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13132,6 +13157,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.cachedContents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiService).GetCachedContents()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.cachedContent")))
 	},
+	"gcp.project.vertexaiService.batchPredictionJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetBatchPredictionJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.batchPredictionJob")))
+	},
+	"gcp.project.vertexaiService.tuningJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetTuningJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.tuningJob")))
+	},
+	"gcp.project.vertexaiService.trainingPipelines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetTrainingPipelines()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.trainingPipeline")))
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetHyperparameterTuningJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.hyperparameterTuningJob")))
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetModelDeploymentMonitoringJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.modelDeploymentMonitoringJob")))
+	},
 	"gcp.project.vertexaiService.metadataStore.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetName()).ToDataRes(types.String)
 	},
@@ -13884,6 +13924,228 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.cachedContent.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetModel()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.modelVersionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetModelVersionId()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.inputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetInputConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.outputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetOutputConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.generateExplanation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetGenerateExplanation()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.disableContainerLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetDisableContainerLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.endedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.tuningJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModelDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTunedModelDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.baseModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetBaseModel()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.experiment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetExperiment()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTunedModel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.tuningJob.tuningDataStats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTuningDataStats()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.tuningJob.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.tuningJob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.tuningJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.tuningJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.tuningJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.tuningJob.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.tuningJob.endedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.tuningJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.trainingTaskDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetTrainingTaskDefinition()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.inputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetInputDataConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetModel()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
+	},
+	"gcp.project.vertexaiService.trainingPipeline.parentModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetParentModel()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
+	},
+	"gcp.project.vertexaiService.trainingPipeline.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.trainingPipeline.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.trainingPipeline.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.endedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.trainingPipeline.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.maxTrialCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetMaxTrialCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.parallelTrialCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetParallelTrialCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.maxFailedTrialCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetMaxFailedTrialCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.studySpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetStudySpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.trialJobSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetTrialJobSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.endedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetEndpoint()).ToDataRes(types.Resource("gcp.project.vertexaiService.endpoint"))
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.scheduleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetScheduleState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.enableMonitoringPipelineLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetEnableMonitoringPipelineLogs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.nextScheduleTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetNextScheduleTime()).ToDataRes(types.Time)
 	},
 	"gcp.scc.organizationSettings.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccOrganizationSettings).GetName()).ToDataRes(types.String)
@@ -31841,6 +32103,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiService).CachedContents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.batchPredictionJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).BatchPredictionJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).TuningJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipelines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).TrainingPipelines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).HyperparameterTuningJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).ModelDeploymentMonitoringJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.metadataStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).__id, ok = v.Value.(string)
 		return
@@ -32923,6 +33205,322 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.cachedContent.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceCachedContent).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).Model, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.modelVersionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).ModelVersionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.inputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).InputConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.outputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).OutputConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.generateExplanation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GenerateExplanation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.disableContainerLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).DisableContainerLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.batchPredictionJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModelDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).TunedModelDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.baseModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).BaseModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.experiment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).Experiment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).TunedModel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.tuningDataStats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).TuningDataStats, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.trainingTaskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).TrainingTaskDefinition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.inputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).InputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).Model, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.parentModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).ParentModel, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.trainingPipeline.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.maxTrialCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).MaxTrialCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.parallelTrialCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).ParallelTrialCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.maxFailedTrialCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).MaxFailedTrialCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.studySpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).StudySpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.trialJobSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).TrialJobSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).Endpoint, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceEndpoint](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.scheduleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).ScheduleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.enableMonitoringPipelineLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).EnableMonitoringPipelineLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.nextScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).NextScheduleTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.organizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73349,27 +73947,32 @@ type mqlGcpProjectVertexaiService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceInternal
-	ProjectId                plugin.TValue[string]
-	Models                   plugin.TValue[[]any]
-	Endpoints                plugin.TValue[[]any]
-	PipelineJobs             plugin.TValue[[]any]
-	Datasets                 plugin.TValue[[]any]
-	FeatureOnlineStores      plugin.TValue[[]any]
-	Tensorboards             plugin.TValue[[]any]
-	CustomJobs               plugin.TValue[[]any]
-	Indexes                  plugin.TValue[[]any]
-	IndexEndpoints           plugin.TValue[[]any]
-	MetadataStores           plugin.TValue[[]any]
-	NotebookRuntimes         plugin.TValue[[]any]
-	NotebookRuntimeTemplates plugin.TValue[[]any]
-	NotebookExecutionJobs    plugin.TValue[[]any]
-	ReasoningEngines         plugin.TValue[[]any]
-	RagCorpora               plugin.TValue[[]any]
-	FeatureGroups            plugin.TValue[[]any]
-	PersistentResources      plugin.TValue[[]any]
-	Schedules                plugin.TValue[[]any]
-	DeploymentResourcePools  plugin.TValue[[]any]
-	CachedContents           plugin.TValue[[]any]
+	ProjectId                     plugin.TValue[string]
+	Models                        plugin.TValue[[]any]
+	Endpoints                     plugin.TValue[[]any]
+	PipelineJobs                  plugin.TValue[[]any]
+	Datasets                      plugin.TValue[[]any]
+	FeatureOnlineStores           plugin.TValue[[]any]
+	Tensorboards                  plugin.TValue[[]any]
+	CustomJobs                    plugin.TValue[[]any]
+	Indexes                       plugin.TValue[[]any]
+	IndexEndpoints                plugin.TValue[[]any]
+	MetadataStores                plugin.TValue[[]any]
+	NotebookRuntimes              plugin.TValue[[]any]
+	NotebookRuntimeTemplates      plugin.TValue[[]any]
+	NotebookExecutionJobs         plugin.TValue[[]any]
+	ReasoningEngines              plugin.TValue[[]any]
+	RagCorpora                    plugin.TValue[[]any]
+	FeatureGroups                 plugin.TValue[[]any]
+	PersistentResources           plugin.TValue[[]any]
+	Schedules                     plugin.TValue[[]any]
+	DeploymentResourcePools       plugin.TValue[[]any]
+	CachedContents                plugin.TValue[[]any]
+	BatchPredictionJobs           plugin.TValue[[]any]
+	TuningJobs                    plugin.TValue[[]any]
+	TrainingPipelines             plugin.TValue[[]any]
+	HyperparameterTuningJobs      plugin.TValue[[]any]
+	ModelDeploymentMonitoringJobs plugin.TValue[[]any]
 }
 
 // createGcpProjectVertexaiService creates a new instance of this resource
@@ -73730,6 +74333,86 @@ func (c *mqlGcpProjectVertexaiService) GetCachedContents() *plugin.TValue[[]any]
 		}
 
 		return c.cachedContents()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetBatchPredictionJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BatchPredictionJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "batchPredictionJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.batchPredictionJobs()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetTuningJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TuningJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "tuningJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tuningJobs()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetTrainingPipelines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrainingPipelines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "trainingPipelines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trainingPipelines()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetHyperparameterTuningJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HyperparameterTuningJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "hyperparameterTuningJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hyperparameterTuningJobs()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetModelDeploymentMonitoringJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelDeploymentMonitoringJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "modelDeploymentMonitoringJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelDeploymentMonitoringJobs()
 	})
 }
 
@@ -76118,6 +76801,704 @@ func (c *mqlGcpProjectVertexaiServiceCachedContent) GetCreatedAt() *plugin.TValu
 
 func (c *mqlGcpProjectVertexaiServiceCachedContent) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceBatchPredictionJob for the gcp.project.vertexaiService.batchPredictionJob resource
+type mqlGcpProjectVertexaiServiceBatchPredictionJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceBatchPredictionJobInternal
+	Name                    plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	Model                   plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	ModelVersionId          plugin.TValue[string]
+	InputConfig             plugin.TValue[any]
+	OutputConfig            plugin.TValue[any]
+	ServiceAccount          plugin.TValue[string]
+	State                   plugin.TValue[string]
+	GenerateExplanation     plugin.TValue[bool]
+	DisableContainerLogging plugin.TValue[bool]
+	Labels                  plugin.TValue[map[string]any]
+	EncryptionSpec          plugin.TValue[any]
+	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt               plugin.TValue[*time.Time]
+	StartedAt               plugin.TValue[*time.Time]
+	EndedAt                 plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceBatchPredictionJob creates a new instance of this resource
+func createGcpProjectVertexaiServiceBatchPredictionJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceBatchPredictionJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.batchPredictionJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) MqlName() string {
+	return "gcp.project.vertexaiService.batchPredictionJob"
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetModel() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.Model, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.batchPredictionJob", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetModelVersionId() *plugin.TValue[string] {
+	return &c.ModelVersionId
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetInputConfig() *plugin.TValue[any] {
+	return &c.InputConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetOutputConfig() *plugin.TValue[any] {
+	return &c.OutputConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetGenerateExplanation() *plugin.TValue[bool] {
+	return &c.GenerateExplanation
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetDisableContainerLogging() *plugin.TValue[bool] {
+	return &c.DisableContainerLogging
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.batchPredictionJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetEndedAt() *plugin.TValue[*time.Time] {
+	return &c.EndedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceTuningJob for the gcp.project.vertexaiService.tuningJob resource
+type mqlGcpProjectVertexaiServiceTuningJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceTuningJobInternal
+	Name                  plugin.TValue[string]
+	TunedModelDisplayName plugin.TValue[string]
+	Description           plugin.TValue[string]
+	BaseModel             plugin.TValue[string]
+	State                 plugin.TValue[string]
+	Experiment            plugin.TValue[string]
+	TunedModel            plugin.TValue[any]
+	TuningDataStats       plugin.TValue[any]
+	ServiceAccount        plugin.TValue[string]
+	Labels                plugin.TValue[map[string]any]
+	EncryptionSpec        plugin.TValue[any]
+	KmsKey                plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt             plugin.TValue[*time.Time]
+	StartedAt             plugin.TValue[*time.Time]
+	EndedAt               plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceTuningJob creates a new instance of this resource
+func createGcpProjectVertexaiServiceTuningJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceTuningJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.tuningJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) MqlName() string {
+	return "gcp.project.vertexaiService.tuningJob"
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTunedModelDisplayName() *plugin.TValue[string] {
+	return &c.TunedModelDisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetBaseModel() *plugin.TValue[string] {
+	return &c.BaseModel
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetExperiment() *plugin.TValue[string] {
+	return &c.Experiment
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTunedModel() *plugin.TValue[any] {
+	return &c.TunedModel
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTuningDataStats() *plugin.TValue[any] {
+	return &c.TuningDataStats
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.tuningJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetEndedAt() *plugin.TValue[*time.Time] {
+	return &c.EndedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceTrainingPipeline for the gcp.project.vertexaiService.trainingPipeline resource
+type mqlGcpProjectVertexaiServiceTrainingPipeline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceTrainingPipelineInternal
+	Name                   plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	TrainingTaskDefinition plugin.TValue[string]
+	InputDataConfig        plugin.TValue[any]
+	Model                  plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	ParentModel            plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	State                  plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	EncryptionSpec         plugin.TValue[any]
+	KmsKey                 plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt              plugin.TValue[*time.Time]
+	StartedAt              plugin.TValue[*time.Time]
+	EndedAt                plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceTrainingPipeline creates a new instance of this resource
+func createGcpProjectVertexaiServiceTrainingPipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceTrainingPipeline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.trainingPipeline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) MqlName() string {
+	return "gcp.project.vertexaiService.trainingPipeline"
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetTrainingTaskDefinition() *plugin.TValue[string] {
+	return &c.TrainingTaskDefinition
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetInputDataConfig() *plugin.TValue[any] {
+	return &c.InputDataConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetModel() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.Model, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.trainingPipeline", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetParentModel() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.ParentModel, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.trainingPipeline", c.__id, "parentModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.parentModel()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.trainingPipeline", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetEndedAt() *plugin.TValue[*time.Time] {
+	return &c.EndedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTrainingPipeline) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceHyperparameterTuningJob for the gcp.project.vertexaiService.hyperparameterTuningJob resource
+type mqlGcpProjectVertexaiServiceHyperparameterTuningJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceHyperparameterTuningJobInternal
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	State               plugin.TValue[string]
+	MaxTrialCount       plugin.TValue[int64]
+	ParallelTrialCount  plugin.TValue[int64]
+	MaxFailedTrialCount plugin.TValue[int64]
+	StudySpec           plugin.TValue[any]
+	TrialJobSpec        plugin.TValue[any]
+	Labels              plugin.TValue[map[string]any]
+	EncryptionSpec      plugin.TValue[any]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt           plugin.TValue[*time.Time]
+	StartedAt           plugin.TValue[*time.Time]
+	EndedAt             plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceHyperparameterTuningJob creates a new instance of this resource
+func createGcpProjectVertexaiServiceHyperparameterTuningJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceHyperparameterTuningJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.hyperparameterTuningJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) MqlName() string {
+	return "gcp.project.vertexaiService.hyperparameterTuningJob"
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetMaxTrialCount() *plugin.TValue[int64] {
+	return &c.MaxTrialCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetParallelTrialCount() *plugin.TValue[int64] {
+	return &c.ParallelTrialCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetMaxFailedTrialCount() *plugin.TValue[int64] {
+	return &c.MaxFailedTrialCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetStudySpec() *plugin.TValue[any] {
+	return &c.StudySpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetTrialJobSpec() *plugin.TValue[any] {
+	return &c.TrialJobSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.hyperparameterTuningJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetEndedAt() *plugin.TValue[*time.Time] {
+	return &c.EndedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob for the gcp.project.vertexaiService.modelDeploymentMonitoringJob resource
+type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal
+	Name                         plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Endpoint                     plugin.TValue[*mqlGcpProjectVertexaiServiceEndpoint]
+	State                        plugin.TValue[string]
+	ScheduleState                plugin.TValue[string]
+	EnableMonitoringPipelineLogs plugin.TValue[bool]
+	Labels                       plugin.TValue[map[string]any]
+	EncryptionSpec               plugin.TValue[any]
+	KmsKey                       plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+	NextScheduleTime             plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceModelDeploymentMonitoringJob creates a new instance of this resource
+func createGcpProjectVertexaiServiceModelDeploymentMonitoringJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.modelDeploymentMonitoringJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) MqlName() string {
+	return "gcp.project.vertexaiService.modelDeploymentMonitoringJob"
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetEndpoint() *plugin.TValue[*mqlGcpProjectVertexaiServiceEndpoint] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceEndpoint](&c.Endpoint, func() (*mqlGcpProjectVertexaiServiceEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.modelDeploymentMonitoringJob", c.__id, "endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceEndpoint), nil
+			}
+		}
+
+		return c.endpoint()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetScheduleState() *plugin.TValue[string] {
+	return &c.ScheduleState
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetEnableMonitoringPipelineLogs() *plugin.TValue[bool] {
+	return &c.EnableMonitoringPipelineLogs
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.modelDeploymentMonitoringJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetNextScheduleTime() *plugin.TValue[*time.Time] {
+	return &c.NextScheduleTime
 }
 
 // mqlGcpSccOrganizationSettings for the gcp.scc.organizationSettings resource

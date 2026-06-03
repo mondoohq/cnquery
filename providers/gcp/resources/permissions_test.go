@@ -38,6 +38,7 @@ import (
 //   - dlp.discoveryConfigs.list
 var validatedGCPPermissions = []string{
 	"accessapproval.settings.get",
+	"aiplatform.batchPredictionJobs.list",
 	"aiplatform.cachedContents.list",
 	"aiplatform.customJobs.get",
 	"aiplatform.customJobs.list",
@@ -46,9 +47,11 @@ var validatedGCPPermissions = []string{
 	"aiplatform.endpoints.list",
 	"aiplatform.featureGroups.list",
 	"aiplatform.featureOnlineStores.list",
+	"aiplatform.hyperparameterTuningJobs.list",
 	"aiplatform.indexEndpoints.list",
 	"aiplatform.indexes.list",
 	"aiplatform.metadataStores.list",
+	"aiplatform.modelDeploymentMonitoringJobs.list",
 	"aiplatform.models.list",
 	"aiplatform.notebookExecutionJobs.list",
 	"aiplatform.notebookRuntimeTemplates.list",
@@ -59,6 +62,8 @@ var validatedGCPPermissions = []string{
 	"aiplatform.reasoningEngines.list",
 	"aiplatform.schedules.list",
 	"aiplatform.tensorboards.list",
+	"aiplatform.trainingPipelines.list",
+	"aiplatform.tuningJobs.list",
 	"alloydb.backups.list",
 	"alloydb.clusters.list",
 	"alloydb.instances.list",
