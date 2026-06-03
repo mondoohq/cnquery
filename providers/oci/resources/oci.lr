@@ -4061,3 +4061,336 @@ private oci.ai.generativeAi.endpoint @defaults("name state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Oracle Cloud Infrastructure (OCI) Language AI
+//
+// Use the Language namespace to enumerate the tenancy's custom Language
+// AI estate across every subscribed region. Iterate `projects()` for the
+// workspaces that group Language models, `models()` for the custom
+// models trained for tasks such as text classification and named-entity
+// recognition, and `endpoints()` for the models served for inference.
+oci.ai.language {
+  // Language projects
+  projects() []oci.ai.language.project
+  // Custom Language models
+  models() []oci.ai.language.model
+  // Model-serving endpoints
+  endpoints() []oci.ai.language.endpoint
+}
+
+// Oracle Cloud Infrastructure (OCI) Language AI project
+//
+// Examine a single Language AI project — the workspace that groups
+// custom models and their serving endpoints. Select a project by its
+// OCID, for example
+// `oci.ai.language.project(id: "ocid1.ailanguageproject.oc1...")`.
+private oci.ai.language.project @defaults("name state") {
+  init(id? string)
+  // Project OCID
+  id string
+  // Project display name
+  name string
+  // Compartment OCID containing the project
+  compartmentID string
+  // Compartment containing the project
+  compartment() oci.compartment
+  // Description of the project
+  description string
+  // Lifecycle state (e.g., ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Language AI model
+//
+// Examine a single custom Language model. Select a model by its OCID,
+// for example `oci.ai.language.model(id: "ocid1.ailanguagemodel.oc1...")`.
+private oci.ai.language.model @defaults("name state") {
+  init(id? string)
+  // Model OCID
+  id string
+  // Model display name
+  name string
+  // Compartment OCID containing the model
+  compartmentID string
+  // Compartment containing the model
+  compartment() oci.compartment
+  // OCID of the project the model belongs to
+  projectID string
+  // Project the model belongs to
+  project() oci.ai.language.project
+  // Description of the model
+  description string
+  // Model version
+  version string
+  // Model configuration
+  //
+  // Includes the model type (such as the training task) and the language
+  // codes the model was trained on.
+  modelDetails dict
+  // Lifecycle state (e.g., ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Language AI endpoint
+//
+// Examine a single Language AI endpoint — a custom model served for
+// inference. Select an endpoint by its OCID, for example
+// `oci.ai.language.endpoint(id: "ocid1.ailanguageendpoint.oc1...")`.
+private oci.ai.language.endpoint @defaults("name state") {
+  init(id? string)
+  // Endpoint OCID
+  id string
+  // Endpoint display name
+  name string
+  // Compartment OCID containing the endpoint
+  compartmentID string
+  // Compartment containing the endpoint
+  compartment() oci.compartment
+  // OCID of the project the endpoint belongs to
+  projectID string
+  // Project the endpoint belongs to
+  project() oci.ai.language.project
+  // OCID of the model served by the endpoint
+  modelID string
+  // Model served by the endpoint
+  model() oci.ai.language.model
+  // Alias of the endpoint
+  alias string
+  // Description of the endpoint
+  description string
+  // Number of inference units provisioned for the endpoint
+  inferenceUnits int
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Vision AI
+//
+// Use the Vision namespace to enumerate the tenancy's custom Vision AI
+// estate across every subscribed region. Iterate `projects()` for the
+// workspaces that group Vision models and `models()` for the custom
+// models trained for image classification and object detection.
+oci.ai.vision {
+  // Vision projects
+  projects() []oci.ai.vision.project
+  // Custom Vision models
+  models() []oci.ai.vision.model
+}
+
+// Oracle Cloud Infrastructure (OCI) Vision AI project
+//
+// Examine a single Vision AI project — the workspace that groups custom
+// Vision models. Select a project by its OCID, for example
+// `oci.ai.vision.project(id: "ocid1.aivisionproject.oc1...")`.
+private oci.ai.vision.project @defaults("name state") {
+  init(id? string)
+  // Project OCID
+  id string
+  // Project display name
+  name string
+  // Compartment OCID containing the project
+  compartmentID string
+  // Compartment containing the project
+  compartment() oci.compartment
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Vision AI model
+//
+// Examine a single custom Vision model. Select a model by its OCID, for
+// example `oci.ai.vision.model(id: "ocid1.aivisionmodel.oc1...")`.
+private oci.ai.vision.model @defaults("name modelType state") {
+  init(id? string)
+  // Model OCID
+  id string
+  // Model display name
+  name string
+  // Compartment OCID containing the model
+  compartmentID string
+  // Compartment containing the model
+  compartment() oci.compartment
+  // OCID of the project the model belongs to
+  projectID string
+  // Project the model belongs to
+  project() oci.ai.vision.project
+  // Model type (e.g., IMAGE_CLASSIFICATION, OBJECT_DETECTION)
+  modelType string
+  // Model version
+  modelVersion string
+  // Description of the model
+  description string
+  // Model precision (accuracy) achieved during training
+  precision float
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Speech AI
+//
+// Use the Speech namespace to enumerate the tenancy's Speech AI
+// customizations across every subscribed region. Iterate
+// `customizations()` for the custom speech models that adapt
+// transcription to domain-specific vocabulary.
+oci.ai.speech {
+  // Speech customizations (custom models)
+  customizations() []oci.ai.speech.customization
+}
+
+// Oracle Cloud Infrastructure (OCI) Speech AI customization
+//
+// Examine a single Speech AI customization — a custom model that adapts
+// transcription to domain-specific terms. Select a customization by its
+// OCID, for example
+// `oci.ai.speech.customization(id: "ocid1.aispeechcustomization.oc1...")`.
+private oci.ai.speech.customization @defaults("name state") {
+  init(id? string)
+  // Customization OCID
+  id string
+  // Customization display name
+  name string
+  // Compartment OCID containing the customization
+  compartmentID string
+  // Compartment containing the customization
+  compartment() oci.compartment
+  // Alias of the customization
+  alias string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Document Understanding AI
+//
+// Use the Document Understanding namespace to enumerate the tenancy's
+// custom document AI estate across every subscribed region. Iterate
+// `projects()` for the workspaces that group document models and
+// `models()` for the custom models trained for tasks such as key-value
+// extraction and document classification.
+oci.ai.document {
+  // Document Understanding projects
+  projects() []oci.ai.document.project
+  // Custom Document Understanding models
+  models() []oci.ai.document.model
+}
+
+// Oracle Cloud Infrastructure (OCI) Document Understanding AI project
+//
+// Examine a single Document Understanding project — the workspace that
+// groups custom document models. Select a project by its OCID, for
+// example `oci.ai.document.project(id: "ocid1.aidocumentproject.oc1...")`.
+private oci.ai.document.project @defaults("name state") {
+  init(id? string)
+  // Project OCID
+  id string
+  // Project display name
+  name string
+  // Compartment OCID containing the project
+  compartmentID string
+  // Compartment containing the project
+  compartment() oci.compartment
+  // Description of the project
+  description string
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Document Understanding AI model
+//
+// Examine a single custom Document Understanding model. Select a model
+// by its OCID, for example
+// `oci.ai.document.model(id: "ocid1.aidocumentmodel.oc1...")`.
+private oci.ai.document.model @defaults("name modelType state") {
+  init(id? string)
+  // Model OCID
+  id string
+  // Model display name
+  name string
+  // Compartment OCID containing the model
+  compartmentID string
+  // Compartment containing the model
+  compartment() oci.compartment
+  // OCID of the project the model belongs to
+  projectID string
+  // Project the model belongs to
+  project() oci.ai.document.project
+  // Model type (e.g., KEY_VALUE_EXTRACTION, DOCUMENT_CLASSIFICATION)
+  modelType string
+  // Model version
+  modelVersion string
+  // Description of the model
+  description string
+  // Number of inference units provisioned for the model
+  inferenceUnits int
+  // Model precision (accuracy) achieved during training
+  precision float
+  // Whether the model is composed of multiple component models
+  isComposedModel bool
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}

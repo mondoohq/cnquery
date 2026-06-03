@@ -157,6 +157,18 @@ const (
 	ResourceOciAiGenerativeAiDedicatedAiCluster                      string = "oci.ai.generativeAi.dedicatedAiCluster"
 	ResourceOciAiGenerativeAiModel                                   string = "oci.ai.generativeAi.model"
 	ResourceOciAiGenerativeAiEndpoint                                string = "oci.ai.generativeAi.endpoint"
+	ResourceOciAiLanguage                                            string = "oci.ai.language"
+	ResourceOciAiLanguageProject                                     string = "oci.ai.language.project"
+	ResourceOciAiLanguageModel                                       string = "oci.ai.language.model"
+	ResourceOciAiLanguageEndpoint                                    string = "oci.ai.language.endpoint"
+	ResourceOciAiVision                                              string = "oci.ai.vision"
+	ResourceOciAiVisionProject                                       string = "oci.ai.vision.project"
+	ResourceOciAiVisionModel                                         string = "oci.ai.vision.model"
+	ResourceOciAiSpeech                                              string = "oci.ai.speech"
+	ResourceOciAiSpeechCustomization                                 string = "oci.ai.speech.customization"
+	ResourceOciAiDocument                                            string = "oci.ai.document"
+	ResourceOciAiDocumentProject                                     string = "oci.ai.document.project"
+	ResourceOciAiDocumentModel                                       string = "oci.ai.document.model"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -726,6 +738,54 @@ func init() {
 		"oci.ai.generativeAi.endpoint": {
 			Init:   initOciAiGenerativeAiEndpoint,
 			Create: createOciAiGenerativeAiEndpoint,
+		},
+		"oci.ai.language": {
+			// to override args, implement: initOciAiLanguage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiLanguage,
+		},
+		"oci.ai.language.project": {
+			Init:   initOciAiLanguageProject,
+			Create: createOciAiLanguageProject,
+		},
+		"oci.ai.language.model": {
+			Init:   initOciAiLanguageModel,
+			Create: createOciAiLanguageModel,
+		},
+		"oci.ai.language.endpoint": {
+			Init:   initOciAiLanguageEndpoint,
+			Create: createOciAiLanguageEndpoint,
+		},
+		"oci.ai.vision": {
+			// to override args, implement: initOciAiVision(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiVision,
+		},
+		"oci.ai.vision.project": {
+			Init:   initOciAiVisionProject,
+			Create: createOciAiVisionProject,
+		},
+		"oci.ai.vision.model": {
+			Init:   initOciAiVisionModel,
+			Create: createOciAiVisionModel,
+		},
+		"oci.ai.speech": {
+			// to override args, implement: initOciAiSpeech(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiSpeech,
+		},
+		"oci.ai.speech.customization": {
+			Init:   initOciAiSpeechCustomization,
+			Create: createOciAiSpeechCustomization,
+		},
+		"oci.ai.document": {
+			// to override args, implement: initOciAiDocument(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiDocument,
+		},
+		"oci.ai.document.project": {
+			Init:   initOciAiDocumentProject,
+			Create: createOciAiDocumentProject,
+		},
+		"oci.ai.document.model": {
+			Init:   initOciAiDocumentModel,
+			Create: createOciAiDocumentModel,
 		},
 	}
 }
@@ -5096,6 +5156,336 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.ai.generativeAi.endpoint.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAiGenerativeAiEndpoint).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.language.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguage).GetProjects()).ToDataRes(types.Array(types.Resource("oci.ai.language.project")))
+	},
+	"oci.ai.language.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguage).GetModels()).ToDataRes(types.Array(types.Resource("oci.ai.language.model")))
+	},
+	"oci.ai.language.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguage).GetEndpoints()).ToDataRes(types.Array(types.Resource("oci.ai.language.endpoint")))
+	},
+	"oci.ai.language.project.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.language.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.language.project.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.language.project.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.language.project.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageProject).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.language.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.language.model.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetProject()).ToDataRes(types.Resource("oci.ai.language.project"))
+	},
+	"oci.ai.language.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.modelDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetModelDetails()).ToDataRes(types.Dict)
+	},
+	"oci.ai.language.model.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.language.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.language.model.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.language.model.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.language.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.language.endpoint.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetProject()).ToDataRes(types.Resource("oci.ai.language.project"))
+	},
+	"oci.ai.language.endpoint.modelID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetModelID()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetModel()).ToDataRes(types.Resource("oci.ai.language.model"))
+	},
+	"oci.ai.language.endpoint.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetAlias()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.inferenceUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetInferenceUnits()).ToDataRes(types.Int)
+	},
+	"oci.ai.language.endpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.language.endpoint.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.language.endpoint.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.language.endpoint.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiLanguageEndpoint).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.vision.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVision).GetProjects()).ToDataRes(types.Array(types.Resource("oci.ai.vision.project")))
+	},
+	"oci.ai.vision.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVision).GetModels()).ToDataRes(types.Array(types.Resource("oci.ai.vision.model")))
+	},
+	"oci.ai.vision.project.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.project.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.project.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.project.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.vision.project.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.project.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.project.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.vision.project.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.vision.project.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionProject).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.vision.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.vision.model.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetProject()).ToDataRes(types.Resource("oci.ai.vision.project"))
+	},
+	"oci.ai.vision.model.modelType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetModelType()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.modelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetModelVersion()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.precision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetPrecision()).ToDataRes(types.Float)
+	},
+	"oci.ai.vision.model.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.vision.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.vision.model.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.vision.model.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiVisionModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.speech.customizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeech).GetCustomizations()).ToDataRes(types.Array(types.Resource("oci.ai.speech.customization")))
+	},
+	"oci.ai.speech.customization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.speech.customization.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetAlias()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.speech.customization.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.speech.customization.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.ai.speech.customization.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.speech.customization.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiSpeechCustomization).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.document.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocument).GetProjects()).ToDataRes(types.Array(types.Resource("oci.ai.document.project")))
+	},
+	"oci.ai.document.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocument).GetModels()).ToDataRes(types.Array(types.Resource("oci.ai.document.model")))
+	},
+	"oci.ai.document.project.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.document.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.document.project.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.document.project.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.document.project.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentProject).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.document.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.document.model.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetProject()).ToDataRes(types.Resource("oci.ai.document.project"))
+	},
+	"oci.ai.document.model.modelType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetModelType()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.modelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetModelVersion()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.inferenceUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetInferenceUnits()).ToDataRes(types.Int)
+	},
+	"oci.ai.document.model.precision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetPrecision()).ToDataRes(types.Float)
+	},
+	"oci.ai.document.model.isComposedModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetIsComposedModel()).ToDataRes(types.Bool)
+	},
+	"oci.ai.document.model.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.document.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.document.model.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.document.model.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDocumentModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 }
 
@@ -11403,6 +11793,494 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.ai.generativeAi.endpoint.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAiGenerativeAiEndpoint).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguage).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.language.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguage).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguage).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguage).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.language.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.project.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageProject).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.language.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Project, ok = plugin.RawToTValue[*mqlOciAiLanguageProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.modelDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).ModelDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.model.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.language.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Project, ok = plugin.RawToTValue[*mqlOciAiLanguageProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.modelID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).ModelID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Model, ok = plugin.RawToTValue[*mqlOciAiLanguageModel](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.inferenceUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).InferenceUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.language.endpoint.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiLanguageEndpoint).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVision).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.vision.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVision).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVision).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.vision.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.project.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionProject).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.vision.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Project, ok = plugin.RawToTValue[*mqlOciAiVisionProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.modelType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).ModelType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.modelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).ModelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.precision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Precision, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.vision.model.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiVisionModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeech).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.speech.customizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeech).Customizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.speech.customization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.speech.customization.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiSpeechCustomization).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocument).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.document.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocument).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocument).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.document.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.project.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentProject).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.document.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Project, ok = plugin.RawToTValue[*mqlOciAiDocumentProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.modelType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).ModelType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.modelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).ModelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.inferenceUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).InferenceUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.precision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Precision, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.isComposedModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).IsComposedModel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.document.model.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDocumentModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -27784,5 +28662,1335 @@ func (c *mqlOciAiGenerativeAiEndpoint) GetFreeformTags() *plugin.TValue[map[stri
 }
 
 func (c *mqlOciAiGenerativeAiEndpoint) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiLanguage for the oci.ai.language resource
+type mqlOciAiLanguage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiLanguageInternal it will be used here
+	Projects  plugin.TValue[[]any]
+	Models    plugin.TValue[[]any]
+	Endpoints plugin.TValue[[]any]
+}
+
+// createOciAiLanguage creates a new instance of this resource
+func createOciAiLanguage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiLanguage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.language", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiLanguage) MqlName() string {
+	return "oci.ai.language"
+}
+
+func (c *mqlOciAiLanguage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiLanguage) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlOciAiLanguage) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlOciAiLanguage) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
+	})
+}
+
+// mqlOciAiLanguageProject for the oci.ai.language.project resource
+type mqlOciAiLanguageProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiLanguageProjectInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	Description      plugin.TValue[string]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiLanguageProject creates a new instance of this resource
+func createOciAiLanguageProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiLanguageProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.language.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiLanguageProject) MqlName() string {
+	return "oci.ai.language.project"
+}
+
+func (c *mqlOciAiLanguageProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiLanguageProject) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiLanguageProject) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiLanguageProject) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiLanguageProject) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.project", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiLanguageProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiLanguageProject) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiLanguageProject) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiLanguageProject) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiLanguageProject) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiLanguageProject) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiLanguageModel for the oci.ai.language.model resource
+type mqlOciAiLanguageModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiLanguageModelInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	ProjectID        plugin.TValue[string]
+	Project          plugin.TValue[*mqlOciAiLanguageProject]
+	Description      plugin.TValue[string]
+	Version          plugin.TValue[string]
+	ModelDetails     plugin.TValue[any]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiLanguageModel creates a new instance of this resource
+func createOciAiLanguageModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiLanguageModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.language.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiLanguageModel) MqlName() string {
+	return "oci.ai.language.model"
+}
+
+func (c *mqlOciAiLanguageModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiLanguageModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiLanguageModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiLanguageModel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiLanguageModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.model", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiLanguageModel) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiLanguageModel) GetProject() *plugin.TValue[*mqlOciAiLanguageProject] {
+	return plugin.GetOrCompute[*mqlOciAiLanguageProject](&c.Project, func() (*mqlOciAiLanguageProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.model", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiLanguageProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiLanguageModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiLanguageModel) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciAiLanguageModel) GetModelDetails() *plugin.TValue[any] {
+	return &c.ModelDetails
+}
+
+func (c *mqlOciAiLanguageModel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiLanguageModel) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiLanguageModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiLanguageModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiLanguageModel) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiLanguageEndpoint for the oci.ai.language.endpoint resource
+type mqlOciAiLanguageEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiLanguageEndpointInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	ProjectID        plugin.TValue[string]
+	Project          plugin.TValue[*mqlOciAiLanguageProject]
+	ModelID          plugin.TValue[string]
+	Model            plugin.TValue[*mqlOciAiLanguageModel]
+	Alias            plugin.TValue[string]
+	Description      plugin.TValue[string]
+	InferenceUnits   plugin.TValue[int64]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiLanguageEndpoint creates a new instance of this resource
+func createOciAiLanguageEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiLanguageEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.language.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiLanguageEndpoint) MqlName() string {
+	return "oci.ai.language.endpoint"
+}
+
+func (c *mqlOciAiLanguageEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.endpoint", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetProject() *plugin.TValue[*mqlOciAiLanguageProject] {
+	return plugin.GetOrCompute[*mqlOciAiLanguageProject](&c.Project, func() (*mqlOciAiLanguageProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.endpoint", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiLanguageProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetModelID() *plugin.TValue[string] {
+	return &c.ModelID
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetModel() *plugin.TValue[*mqlOciAiLanguageModel] {
+	return plugin.GetOrCompute[*mqlOciAiLanguageModel](&c.Model, func() (*mqlOciAiLanguageModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.language.endpoint", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiLanguageModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetInferenceUnits() *plugin.TValue[int64] {
+	return &c.InferenceUnits
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiLanguageEndpoint) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiVision for the oci.ai.vision resource
+type mqlOciAiVision struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiVisionInternal it will be used here
+	Projects plugin.TValue[[]any]
+	Models   plugin.TValue[[]any]
+}
+
+// createOciAiVision creates a new instance of this resource
+func createOciAiVision(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiVision{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.vision", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiVision) MqlName() string {
+	return "oci.ai.vision"
+}
+
+func (c *mqlOciAiVision) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiVision) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.vision", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlOciAiVision) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.vision", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlOciAiVisionProject for the oci.ai.vision.project resource
+type mqlOciAiVisionProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiVisionProjectInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiVisionProject creates a new instance of this resource
+func createOciAiVisionProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiVisionProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.vision.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiVisionProject) MqlName() string {
+	return "oci.ai.vision.project"
+}
+
+func (c *mqlOciAiVisionProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiVisionProject) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiVisionProject) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiVisionProject) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiVisionProject) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.vision.project", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiVisionProject) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiVisionProject) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiVisionProject) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiVisionProject) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiVisionProject) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiVisionModel for the oci.ai.vision.model resource
+type mqlOciAiVisionModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiVisionModelInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	ProjectID        plugin.TValue[string]
+	Project          plugin.TValue[*mqlOciAiVisionProject]
+	ModelType        plugin.TValue[string]
+	ModelVersion     plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Precision        plugin.TValue[float64]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiVisionModel creates a new instance of this resource
+func createOciAiVisionModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiVisionModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.vision.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiVisionModel) MqlName() string {
+	return "oci.ai.vision.model"
+}
+
+func (c *mqlOciAiVisionModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiVisionModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiVisionModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiVisionModel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiVisionModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.vision.model", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiVisionModel) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiVisionModel) GetProject() *plugin.TValue[*mqlOciAiVisionProject] {
+	return plugin.GetOrCompute[*mqlOciAiVisionProject](&c.Project, func() (*mqlOciAiVisionProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.vision.model", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiVisionProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiVisionModel) GetModelType() *plugin.TValue[string] {
+	return &c.ModelType
+}
+
+func (c *mqlOciAiVisionModel) GetModelVersion() *plugin.TValue[string] {
+	return &c.ModelVersion
+}
+
+func (c *mqlOciAiVisionModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiVisionModel) GetPrecision() *plugin.TValue[float64] {
+	return &c.Precision
+}
+
+func (c *mqlOciAiVisionModel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiVisionModel) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiVisionModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiVisionModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiVisionModel) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiSpeech for the oci.ai.speech resource
+type mqlOciAiSpeech struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiSpeechInternal it will be used here
+	Customizations plugin.TValue[[]any]
+}
+
+// createOciAiSpeech creates a new instance of this resource
+func createOciAiSpeech(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiSpeech{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.speech", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiSpeech) MqlName() string {
+	return "oci.ai.speech"
+}
+
+func (c *mqlOciAiSpeech) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiSpeech) GetCustomizations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Customizations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.speech", c.__id, "customizations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customizations()
+	})
+}
+
+// mqlOciAiSpeechCustomization for the oci.ai.speech.customization resource
+type mqlOciAiSpeechCustomization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiSpeechCustomizationInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	Alias            plugin.TValue[string]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	TimeUpdated      plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiSpeechCustomization creates a new instance of this resource
+func createOciAiSpeechCustomization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiSpeechCustomization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.speech.customization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiSpeechCustomization) MqlName() string {
+	return "oci.ai.speech.customization"
+}
+
+func (c *mqlOciAiSpeechCustomization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiSpeechCustomization) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiSpeechCustomization) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiSpeechCustomization) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiSpeechCustomization) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.speech.customization", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiSpeechCustomization) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlOciAiSpeechCustomization) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiSpeechCustomization) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiSpeechCustomization) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiSpeechCustomization) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAiSpeechCustomization) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiSpeechCustomization) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDocument for the oci.ai.document resource
+type mqlOciAiDocument struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiDocumentInternal it will be used here
+	Projects plugin.TValue[[]any]
+	Models   plugin.TValue[[]any]
+}
+
+// createOciAiDocument creates a new instance of this resource
+func createOciAiDocument(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDocument{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.document", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDocument) MqlName() string {
+	return "oci.ai.document"
+}
+
+func (c *mqlOciAiDocument) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDocument) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.document", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlOciAiDocument) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.document", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlOciAiDocumentProject for the oci.ai.document.project resource
+type mqlOciAiDocumentProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiDocumentProjectInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	Description      plugin.TValue[string]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiDocumentProject creates a new instance of this resource
+func createOciAiDocumentProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDocumentProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.document.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDocumentProject) MqlName() string {
+	return "oci.ai.document.project"
+}
+
+func (c *mqlOciAiDocumentProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDocumentProject) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDocumentProject) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDocumentProject) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDocumentProject) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.document.project", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDocumentProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiDocumentProject) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDocumentProject) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiDocumentProject) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDocumentProject) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDocumentProject) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDocumentModel for the oci.ai.document.model resource
+type mqlOciAiDocumentModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDocumentModelInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	ProjectID        plugin.TValue[string]
+	Project          plugin.TValue[*mqlOciAiDocumentProject]
+	ModelType        plugin.TValue[string]
+	ModelVersion     plugin.TValue[string]
+	Description      plugin.TValue[string]
+	InferenceUnits   plugin.TValue[int64]
+	Precision        plugin.TValue[float64]
+	IsComposedModel  plugin.TValue[bool]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiDocumentModel creates a new instance of this resource
+func createOciAiDocumentModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDocumentModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.document.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDocumentModel) MqlName() string {
+	return "oci.ai.document.model"
+}
+
+func (c *mqlOciAiDocumentModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDocumentModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDocumentModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDocumentModel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDocumentModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.document.model", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDocumentModel) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDocumentModel) GetProject() *plugin.TValue[*mqlOciAiDocumentProject] {
+	return plugin.GetOrCompute[*mqlOciAiDocumentProject](&c.Project, func() (*mqlOciAiDocumentProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.document.model", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDocumentProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDocumentModel) GetModelType() *plugin.TValue[string] {
+	return &c.ModelType
+}
+
+func (c *mqlOciAiDocumentModel) GetModelVersion() *plugin.TValue[string] {
+	return &c.ModelVersion
+}
+
+func (c *mqlOciAiDocumentModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiDocumentModel) GetInferenceUnits() *plugin.TValue[int64] {
+	return &c.InferenceUnits
+}
+
+func (c *mqlOciAiDocumentModel) GetPrecision() *plugin.TValue[float64] {
+	return &c.Precision
+}
+
+func (c *mqlOciAiDocumentModel) GetIsComposedModel() *plugin.TValue[bool] {
+	return &c.IsComposedModel
+}
+
+func (c *mqlOciAiDocumentModel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDocumentModel) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiDocumentModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDocumentModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDocumentModel) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
 }
