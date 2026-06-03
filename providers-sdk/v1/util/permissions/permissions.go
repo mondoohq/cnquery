@@ -565,6 +565,7 @@ func awsConnectionMethodToService(method string) string {
 		"costexplorer":             "costexplorer",
 		"bedrock":                  "bedrock",
 		"bedrockagent":             "bedrockagent",
+		"qbusiness":                "qbusiness",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

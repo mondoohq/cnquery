@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.30.0",
-  "generated_at": "2026-06-01T17:18:27-07:00",
+  "version": "13.31.1",
+  "generated_at": "2026-06-03T09:27:06-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -591,6 +591,15 @@
     "organizations:ListTagsForResource",
     "pipes:DescribePipe",
     "pipes:ListPipes",
+    "qbusiness:GetApplication",
+    "qbusiness:GetDataSource",
+    "qbusiness:GetRetriever",
+    "qbusiness:ListApplications",
+    "qbusiness:ListDataSources",
+    "qbusiness:ListIndices",
+    "qbusiness:ListPlugins",
+    "qbusiness:ListRetrievers",
+    "qbusiness:ListWebExperiences",
     "ram:GetResourceShares",
     "ram:ListPrincipals",
     "ram:ListResources",
@@ -4495,6 +4504,60 @@
       "service": "pipes",
       "action": "ListPipes",
       "source_file": "aws_eventbridge_pipes.go"
+    },
+    {
+      "permission": "qbusiness:GetApplication",
+      "service": "qbusiness",
+      "action": "GetApplication",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:GetDataSource",
+      "service": "qbusiness",
+      "action": "GetDataSource",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:GetRetriever",
+      "service": "qbusiness",
+      "action": "GetRetriever",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListApplications",
+      "service": "qbusiness",
+      "action": "ListApplications",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListDataSources",
+      "service": "qbusiness",
+      "action": "ListDataSources",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListIndices",
+      "service": "qbusiness",
+      "action": "ListIndices",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListPlugins",
+      "service": "qbusiness",
+      "action": "ListPlugins",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListRetrievers",
+      "service": "qbusiness",
+      "action": "ListRetrievers",
+      "source_file": "aws_qbusiness.go"
+    },
+    {
+      "permission": "qbusiness:ListWebExperiences",
+      "service": "qbusiness",
+      "action": "ListWebExperiences",
+      "source_file": "aws_qbusiness.go"
     },
     {
       "permission": "ram:GetResourceShares",

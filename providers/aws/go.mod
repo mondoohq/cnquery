@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.3
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.41.10
+	github.com/aws/aws-sdk-go-v2 v1.41.11
 	github.com/aws/aws-sdk-go-v2/config v1.32.21
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.20
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.26
@@ -88,6 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.70.3
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.7
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.24.3
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.118.5
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.63.0
@@ -161,9 +162,9 @@ require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.11 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.26 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.26 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.12 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.27 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.27 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.32.25 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.10 // indirect

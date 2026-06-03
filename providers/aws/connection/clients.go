@@ -85,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -2469,6 +2470,23 @@ func (t *AwsConnection) BedrockAgent(region string) *bedrockagent.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := bedrockagent.NewFromConfig(cfg)
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) QBusiness(region string) *qbusiness.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_qbusiness_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached qbusiness client")
+		return c.Data.(*qbusiness.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := qbusiness.NewFromConfig(cfg)
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

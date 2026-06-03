@@ -23865,6 +23865,206 @@ private aws.bedrock.batchInferenceJob @defaults("jobName modelId status") {
   timeoutDurationInHours int
 }
 
+// Amazon Q Business
+//
+// Use the Q Business namespace to enumerate the generative-AI assistant
+// applications in the account. Iterate `applications()` for every Q
+// Business application across enabled regions; from each application
+// reach its indices, data sources, retrievers, plugins, and web
+// experiences to audit what corporate content is ingested and which
+// external systems the assistant can reach.
+aws.qBusiness {
+  // Q Business applications in the account
+  applications() []aws.qBusiness.application
+}
+
+// Amazon Q Business application
+//
+// A Q Business application is a generative-AI assistant configured with
+// an identity provider, an IAM service role, and an optional
+// customer-managed encryption key. Examine the identity type and service
+// role that govern access, then iterate `indices()`, `dataSources()`,
+// `retrievers()`, `plugins()`, and `webExperiences()` to audit what the
+// assistant ingests and which external systems it can reach. The `id`
+// field selects an application.
+private aws.qBusiness.application @defaults("name status identityType") {
+  // Unique identifier of the application
+  id string
+  // ARN of the application
+  arn() string
+  // Display name of the application
+  name string
+  // Region where the application exists
+  region string
+  // Current status of the application
+  status string
+  // Identity provider type controlling end-user access
+  //
+  // One of AWS_IAM_IDP_SAML, AWS_IAM_IDP_OIDC, AWS_IAM_IDC, AWS_QUICKSIGHT_IDP, or ANONYMOUS.
+  identityType string
+  // Time the application was created
+  createdAt time
+  // Time the application was last updated
+  updatedAt time
+  // Description of the application
+  description() string
+  // IAM service role the application assumes
+  iamRole() aws.iam.role
+  // ARN of the IAM service role associated with the application
+  roleArn() string
+  // Customer-managed KMS key used to encrypt application data
+  kmsKey() aws.kms.key
+  // Indices that store the application's ingested content
+  indices() []aws.qBusiness.index
+  // Data sources that feed content into the application's indices
+  dataSources() []aws.qBusiness.dataSource
+  // Retrievers that fetch content for the application at query time
+  retrievers() []aws.qBusiness.retriever
+  // Plugins that let the application act against external systems
+  plugins() []aws.qBusiness.plugin
+  // Web experiences that serve the application to end users
+  webExperiences() []aws.qBusiness.webExperience
+}
+
+// Amazon Q Business index
+//
+// An index stores the content ingested from an application's data sources
+// so the assistant can retrieve it. Examine the index status to see
+// whether it is active and ready to serve queries. The `id` field selects
+// an index.
+private aws.qBusiness.index @defaults("name status") {
+  // Unique identifier of the index
+  id string
+  // Identifier of the application that owns the index
+  applicationId string
+  // Display name of the index
+  name string
+  // Region where the index exists
+  region string
+  // Current status of the index
+  status string
+  // Time the index was created
+  createdAt time
+  // Time the index was last updated
+  updatedAt time
+}
+
+// Amazon Q Business data source
+//
+// A data source connects an application's index to an external content
+// repository (Amazon S3, SharePoint, Confluence, and others) and ingests
+// its documents. Examine the source type, the IAM role used to read the
+// source, and the sync schedule to audit what content is being ingested
+// and how. The `id` field selects a data source.
+private aws.qBusiness.dataSource @defaults("name type status") {
+  // Unique identifier of the data source
+  id string
+  // Identifier of the application that owns the data source
+  applicationId string
+  // Identifier of the index the data source feeds
+  indexId string
+  // Display name of the data source
+  name string
+  // Type of the data source repository (for example S3, SHAREPOINT, or CONFLUENCE)
+  type string
+  // Region where the data source exists
+  region string
+  // Current status of the data source
+  status string
+  // Time the data source was created
+  createdAt time
+  // Time the data source was last updated
+  updatedAt time
+  // IAM role the data source assumes to read the external repository
+  iamRole() aws.iam.role
+  // ARN of the IAM role associated with the data source
+  roleArn() string
+  // Sync schedule for the data source as a cron expression (empty when on-demand)
+  syncSchedule() string
+}
+
+// Amazon Q Business retriever
+//
+// A retriever fetches relevant content for an application at query time,
+// backed either by a native Q Business index or an Amazon Kendra index.
+// Examine the retriever type and the IAM role it assumes. The `id` field
+// selects a retriever.
+private aws.qBusiness.retriever @defaults("name type status") {
+  // Unique identifier of the retriever
+  id string
+  // Identifier of the application that owns the retriever
+  applicationId string
+  // Display name of the retriever
+  name string
+  // Region where the retriever exists
+  region string
+  // Type of the retriever
+  //
+  // One of NATIVE_INDEX or KENDRA_INDEX.
+  type string
+  // Current status of the retriever
+  status string
+  // IAM role the retriever assumes
+  iamRole() aws.iam.role
+  // ARN of the IAM role associated with the retriever
+  roleArn() string
+}
+
+// Amazon Q Business plugin
+//
+// A plugin lets the assistant take actions against an external system
+// (ServiceNow, Salesforce, Jira, a custom endpoint, and others). Examine
+// the plugin type and the server URL it targets to audit the external
+// reach the assistant has been granted. The `id` field selects a plugin.
+private aws.qBusiness.plugin @defaults("name type state") {
+  // Unique identifier of the plugin
+  id string
+  // Identifier of the application that owns the plugin
+  applicationId string
+  // Display name of the plugin
+  name string
+  // Region where the plugin exists
+  region string
+  // Type of the plugin
+  //
+  // For example SERVICE_NOW, SALESFORCE, JIRA, ZENDESK, QUICKSIGHT, or CUSTOM.
+  type string
+  // URL of the external server the plugin targets
+  serverUrl string
+  // Activation state of the plugin
+  //
+  // One of ENABLED or DISABLED.
+  state string
+  // Build status of the plugin
+  buildStatus string
+  // Time the plugin was created
+  createdAt time
+  // Time the plugin was last updated
+  updatedAt time
+}
+
+// Amazon Q Business web experience
+//
+// A web experience is the end-user-facing chat interface for an
+// application. Examine the default endpoint that serves the experience
+// and its current status. The `id` field selects a web experience.
+private aws.qBusiness.webExperience @defaults("id status") {
+  // Unique identifier of the web experience
+  id string
+  // Identifier of the application that owns the web experience
+  applicationId string
+  // Region where the web experience exists
+  region string
+  // Default endpoint URL serving the web experience
+  defaultEndpoint string
+  // Current status of the web experience
+  status string
+  // Time the web experience was created
+  createdAt time
+  // Time the web experience was last updated
+  updatedAt time
+}
+
 // AWS Step Functions
 //
 // Use the Step Functions namespace to enumerate state machines in the

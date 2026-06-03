@@ -872,6 +872,13 @@ const (
 	ResourceAwsBedrockEvaluationJob                                             string = "aws.bedrock.evaluationJob"
 	ResourceAwsBedrockModelImportJob                                            string = "aws.bedrock.modelImportJob"
 	ResourceAwsBedrockBatchInferenceJob                                         string = "aws.bedrock.batchInferenceJob"
+	ResourceAwsQBusiness                                                        string = "aws.qBusiness"
+	ResourceAwsQBusinessApplication                                             string = "aws.qBusiness.application"
+	ResourceAwsQBusinessIndex                                                   string = "aws.qBusiness.index"
+	ResourceAwsQBusinessDataSource                                              string = "aws.qBusiness.dataSource"
+	ResourceAwsQBusinessRetriever                                               string = "aws.qBusiness.retriever"
+	ResourceAwsQBusinessPlugin                                                  string = "aws.qBusiness.plugin"
+	ResourceAwsQBusinessWebExperience                                           string = "aws.qBusiness.webExperience"
 	ResourceAwsStepfunctions                                                    string = "aws.stepfunctions"
 	ResourceAwsStepfunctionsStateMachine                                        string = "aws.stepfunctions.stateMachine"
 	ResourceAwsStepfunctionsStateMachineLoggingConfiguration                    string = "aws.stepfunctions.stateMachine.loggingConfiguration"
@@ -4311,6 +4318,34 @@ func init() {
 		"aws.bedrock.batchInferenceJob": {
 			// to override args, implement: initAwsBedrockBatchInferenceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockBatchInferenceJob,
+		},
+		"aws.qBusiness": {
+			// to override args, implement: initAwsQBusiness(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusiness,
+		},
+		"aws.qBusiness.application": {
+			// to override args, implement: initAwsQBusinessApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessApplication,
+		},
+		"aws.qBusiness.index": {
+			// to override args, implement: initAwsQBusinessIndex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessIndex,
+		},
+		"aws.qBusiness.dataSource": {
+			// to override args, implement: initAwsQBusinessDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessDataSource,
+		},
+		"aws.qBusiness.retriever": {
+			// to override args, implement: initAwsQBusinessRetriever(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessRetriever,
+		},
+		"aws.qBusiness.plugin": {
+			// to override args, implement: initAwsQBusinessPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessPlugin,
+		},
+		"aws.qBusiness.webExperience": {
+			// to override args, implement: initAwsQBusinessWebExperience(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsQBusinessWebExperience,
 		},
 		"aws.stepfunctions": {
 			// to override args, implement: initAwsStepfunctions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -31089,6 +31124,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.batchInferenceJob.timeoutDurationInHours": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockBatchInferenceJob).GetTimeoutDurationInHours()).ToDataRes(types.Int)
+	},
+	"aws.qBusiness.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusiness).GetApplications()).ToDataRes(types.Array(types.Resource("aws.qBusiness.application")))
+	},
+	"aws.qBusiness.application.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetArn()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetName()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetIdentityType()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.application.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.application.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.qBusiness.application.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.application.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.qBusiness.application.indices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetIndices()).ToDataRes(types.Array(types.Resource("aws.qBusiness.index")))
+	},
+	"aws.qBusiness.application.dataSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetDataSources()).ToDataRes(types.Array(types.Resource("aws.qBusiness.dataSource")))
+	},
+	"aws.qBusiness.application.retrievers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetRetrievers()).ToDataRes(types.Array(types.Resource("aws.qBusiness.retriever")))
+	},
+	"aws.qBusiness.application.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetPlugins()).ToDataRes(types.Array(types.Resource("aws.qBusiness.plugin")))
+	},
+	"aws.qBusiness.application.webExperiences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessApplication).GetWebExperiences()).ToDataRes(types.Array(types.Resource("aws.qBusiness.webExperience")))
+	},
+	"aws.qBusiness.index.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.index.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.index.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetName()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.index.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.index.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.index.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.index.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessIndex).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.dataSource.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.indexId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetIndexId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetName()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetType()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.dataSource.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.dataSource.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.qBusiness.dataSource.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.dataSource.syncSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessDataSource).GetSyncSchedule()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetName()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetType()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.retriever.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.qBusiness.retriever.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessRetriever).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetName()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetType()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.serverUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetServerUrl()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetState()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.buildStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetBuildStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.plugin.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.plugin.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessPlugin).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.webExperience.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.webExperience.applicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetApplicationId()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.webExperience.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.webExperience.defaultEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetDefaultEndpoint()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.webExperience.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.qBusiness.webExperience.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.qBusiness.webExperience.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsQBusinessWebExperience).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.stepfunctions.stateMachines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsStepfunctions).GetStateMachines()).ToDataRes(types.Array(types.Resource("aws.stepfunctions.stateMachine")))
@@ -70269,6 +70490,282 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.batchInferenceJob.timeoutDurationInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockBatchInferenceJob).TimeoutDurationInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusiness).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusiness).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.application.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.indices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Indices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.dataSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).DataSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.retrievers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Retrievers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.application.webExperiences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessApplication).WebExperiences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.index.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.index.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessIndex).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.dataSource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.indexId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).IndexId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.dataSource.syncSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessDataSource).SyncSchedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.retriever.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.retriever.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessRetriever).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.plugin.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.serverUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).ServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.buildStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).BuildStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.plugin.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessPlugin).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.qBusiness.webExperience.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.applicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).ApplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.defaultEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).DefaultEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.qBusiness.webExperience.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsQBusinessWebExperience).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.stepfunctions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -170806,6 +171303,756 @@ func (c *mqlAwsBedrockBatchInferenceJob) GetMessage() *plugin.TValue[string] {
 
 func (c *mqlAwsBedrockBatchInferenceJob) GetTimeoutDurationInHours() *plugin.TValue[int64] {
 	return &c.TimeoutDurationInHours
+}
+
+// mqlAwsQBusiness for the aws.qBusiness resource
+type mqlAwsQBusiness struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsQBusinessInternal it will be used here
+	Applications plugin.TValue[[]any]
+}
+
+// createAwsQBusiness creates a new instance of this resource
+func createAwsQBusiness(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusiness{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusiness) MqlName() string {
+	return "aws.qBusiness"
+}
+
+func (c *mqlAwsQBusiness) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusiness) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+// mqlAwsQBusinessApplication for the aws.qBusiness.application resource
+type mqlAwsQBusinessApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsQBusinessApplicationInternal
+	Id             plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Status         plugin.TValue[string]
+	IdentityType   plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+	Description    plugin.TValue[string]
+	IamRole        plugin.TValue[*mqlAwsIamRole]
+	RoleArn        plugin.TValue[string]
+	KmsKey         plugin.TValue[*mqlAwsKmsKey]
+	Indices        plugin.TValue[[]any]
+	DataSources    plugin.TValue[[]any]
+	Retrievers     plugin.TValue[[]any]
+	Plugins        plugin.TValue[[]any]
+	WebExperiences plugin.TValue[[]any]
+}
+
+// createAwsQBusinessApplication creates a new instance of this resource
+func createAwsQBusinessApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessApplication) MqlName() string {
+	return "aws.qBusiness.application"
+}
+
+func (c *mqlAwsQBusinessApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessApplication) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessApplication) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsQBusinessApplication) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessApplication) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsQBusinessApplication) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAwsQBusinessApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsQBusinessApplication) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsQBusinessApplication) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetIndices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Indices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "indices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.indices()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetDataSources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataSources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "dataSources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataSources()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetRetrievers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Retrievers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "retrievers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.retrievers()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
+func (c *mqlAwsQBusinessApplication) GetWebExperiences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WebExperiences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.application", c.__id, "webExperiences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webExperiences()
+	})
+}
+
+// mqlAwsQBusinessIndex for the aws.qBusiness.index resource
+type mqlAwsQBusinessIndex struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsQBusinessIndexInternal it will be used here
+	Id            plugin.TValue[string]
+	ApplicationId plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+}
+
+// createAwsQBusinessIndex creates a new instance of this resource
+func createAwsQBusinessIndex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessIndex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.index", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessIndex) MqlName() string {
+	return "aws.qBusiness.index"
+}
+
+func (c *mqlAwsQBusinessIndex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessIndex) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessIndex) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsQBusinessIndex) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsQBusinessIndex) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessIndex) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsQBusinessIndex) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsQBusinessIndex) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsQBusinessDataSource for the aws.qBusiness.dataSource resource
+type mqlAwsQBusinessDataSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsQBusinessDataSourceInternal
+	Id            plugin.TValue[string]
+	ApplicationId plugin.TValue[string]
+	IndexId       plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	IamRole       plugin.TValue[*mqlAwsIamRole]
+	RoleArn       plugin.TValue[string]
+	SyncSchedule  plugin.TValue[string]
+}
+
+// createAwsQBusinessDataSource creates a new instance of this resource
+func createAwsQBusinessDataSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessDataSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.dataSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessDataSource) MqlName() string {
+	return "aws.qBusiness.dataSource"
+}
+
+func (c *mqlAwsQBusinessDataSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessDataSource) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessDataSource) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsQBusinessDataSource) GetIndexId() *plugin.TValue[string] {
+	return &c.IndexId
+}
+
+func (c *mqlAwsQBusinessDataSource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsQBusinessDataSource) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsQBusinessDataSource) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessDataSource) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsQBusinessDataSource) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsQBusinessDataSource) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsQBusinessDataSource) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.dataSource", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsQBusinessDataSource) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+func (c *mqlAwsQBusinessDataSource) GetSyncSchedule() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SyncSchedule, func() (string, error) {
+		return c.syncSchedule()
+	})
+}
+
+// mqlAwsQBusinessRetriever for the aws.qBusiness.retriever resource
+type mqlAwsQBusinessRetriever struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsQBusinessRetrieverInternal
+	Id            plugin.TValue[string]
+	ApplicationId plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	IamRole       plugin.TValue[*mqlAwsIamRole]
+	RoleArn       plugin.TValue[string]
+}
+
+// createAwsQBusinessRetriever creates a new instance of this resource
+func createAwsQBusinessRetriever(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessRetriever{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.retriever", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessRetriever) MqlName() string {
+	return "aws.qBusiness.retriever"
+}
+
+func (c *mqlAwsQBusinessRetriever) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessRetriever) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessRetriever) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsQBusinessRetriever) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsQBusinessRetriever) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessRetriever) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsQBusinessRetriever) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsQBusinessRetriever) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.qBusiness.retriever", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsQBusinessRetriever) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+// mqlAwsQBusinessPlugin for the aws.qBusiness.plugin resource
+type mqlAwsQBusinessPlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsQBusinessPluginInternal it will be used here
+	Id            plugin.TValue[string]
+	ApplicationId plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Type          plugin.TValue[string]
+	ServerUrl     plugin.TValue[string]
+	State         plugin.TValue[string]
+	BuildStatus   plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+}
+
+// createAwsQBusinessPlugin creates a new instance of this resource
+func createAwsQBusinessPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessPlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessPlugin) MqlName() string {
+	return "aws.qBusiness.plugin"
+}
+
+func (c *mqlAwsQBusinessPlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessPlugin) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessPlugin) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsQBusinessPlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsQBusinessPlugin) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessPlugin) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsQBusinessPlugin) GetServerUrl() *plugin.TValue[string] {
+	return &c.ServerUrl
+}
+
+func (c *mqlAwsQBusinessPlugin) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsQBusinessPlugin) GetBuildStatus() *plugin.TValue[string] {
+	return &c.BuildStatus
+}
+
+func (c *mqlAwsQBusinessPlugin) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsQBusinessPlugin) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsQBusinessWebExperience for the aws.qBusiness.webExperience resource
+type mqlAwsQBusinessWebExperience struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsQBusinessWebExperienceInternal it will be used here
+	Id              plugin.TValue[string]
+	ApplicationId   plugin.TValue[string]
+	Region          plugin.TValue[string]
+	DefaultEndpoint plugin.TValue[string]
+	Status          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+}
+
+// createAwsQBusinessWebExperience creates a new instance of this resource
+func createAwsQBusinessWebExperience(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsQBusinessWebExperience{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.qBusiness.webExperience", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsQBusinessWebExperience) MqlName() string {
+	return "aws.qBusiness.webExperience"
+}
+
+func (c *mqlAwsQBusinessWebExperience) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetApplicationId() *plugin.TValue[string] {
+	return &c.ApplicationId
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetDefaultEndpoint() *plugin.TValue[string] {
+	return &c.DefaultEndpoint
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsQBusinessWebExperience) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsStepfunctions for the aws.stepfunctions resource
