@@ -377,6 +377,7 @@ const (
 	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                           string = "azure.subscription.appConfigurationService.configurationStore"
 	ResourceAzureSubscriptionCognitiveServicesService                                            string = "azure.subscription.cognitiveServicesService"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                     string = "azure.subscription.cognitiveServicesService.account"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                           string = "azure.subscription.cognitiveServicesService.account.deployment"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                            string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter               string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
@@ -1833,6 +1834,10 @@ func init() {
 		"azure.subscription.cognitiveServicesService.account": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCognitiveServicesServiceAccount,
+		},
+		"azure.subscription.cognitiveServicesService.account.deployment": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountDeployment,
 		},
 		"azure.subscription.cognitiveServicesService.account.raiPolicy": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13644,6 +13649,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiTopic")))
+	},
+	"azure.subscription.cognitiveServicesService.account.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetDeployments()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.deployment")))
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.skuCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetSkuCapacity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.currentCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetCurrentCapacity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModelFormat()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModelName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModelVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelPublisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModelPublisher()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetModelSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.versionUpgradeOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetVersionUpgradeOption()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.dynamicThrottlingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetDynamicThrottlingEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetCapabilities()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetRaiPolicyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetRaiPolicy()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy"))
 	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetId()).ToDataRes(types.String)
@@ -30850,6 +30909,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiTopics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.skuCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).SkuCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.currentCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).CurrentCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ModelFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ModelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelPublisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ModelPublisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.modelSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).ModelSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.versionUpgradeOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).VersionUpgradeOption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.dynamicThrottlingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).DynamicThrottlingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).Capabilities, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).RaiPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).RaiPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -71748,6 +71883,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	DefenderForAIEnabled          plugin.TValue[bool]
 	RaiPolicies                   plugin.TValue[[]any]
 	RaiTopics                     plugin.TValue[[]any]
+	Deployments                   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCognitiveServicesServiceAccount creates a new instance of this resource
@@ -71894,6 +72030,163 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiTopics() *pl
 		}
 
 		return c.raiTopics()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deployments()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment for the azure.subscription.cognitiveServicesService.account.deployment resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountDeploymentInternal
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	ProvisioningState        plugin.TValue[string]
+	SkuName                  plugin.TValue[string]
+	SkuCapacity              plugin.TValue[int64]
+	CurrentCapacity          plugin.TValue[int64]
+	ModelFormat              plugin.TValue[string]
+	ModelName                plugin.TValue[string]
+	ModelVersion             plugin.TValue[string]
+	ModelPublisher           plugin.TValue[string]
+	ModelSource              plugin.TValue[string]
+	VersionUpgradeOption     plugin.TValue[string]
+	DynamicThrottlingEnabled plugin.TValue[bool]
+	Capabilities             plugin.TValue[map[string]any]
+	RaiPolicyName            plugin.TValue[string]
+	RaiPolicy                plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountDeployment creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.deployment"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetSkuCapacity() *plugin.TValue[int64] {
+	return &c.SkuCapacity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetCurrentCapacity() *plugin.TValue[int64] {
+	return &c.CurrentCapacity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModelFormat() *plugin.TValue[string] {
+	return &c.ModelFormat
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModelVersion() *plugin.TValue[string] {
+	return &c.ModelVersion
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModelPublisher() *plugin.TValue[string] {
+	return &c.ModelPublisher
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetModelSource() *plugin.TValue[string] {
+	return &c.ModelSource
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetVersionUpgradeOption() *plugin.TValue[string] {
+	return &c.VersionUpgradeOption
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetDynamicThrottlingEnabled() *plugin.TValue[bool] {
+	return &c.DynamicThrottlingEnabled
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetCapabilities() *plugin.TValue[map[string]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetRaiPolicyName() *plugin.TValue[string] {
+	return &c.RaiPolicyName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetRaiPolicy() *plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy](&c.RaiPolicy, func() (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.deployment", c.__id, "raiPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy), nil
+			}
+		}
+
+		return c.raiPolicy()
 	})
 }
 

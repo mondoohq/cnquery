@@ -518,6 +518,184 @@ func initAzureSubscriptionCognitiveServicesServiceAccountRaiTopic(runtime *plugi
 	return nil, mqlTopic, nil
 }
 
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) deployments() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName := parsed.Path["accounts"]
+
+	ctx := context.Background()
+	client, err := armcognitiveservices.NewDeploymentsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, accountName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services deployments due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, dep := range page.Value {
+			if dep == nil {
+				continue
+			}
+			mqlDep, err := cognitiveServicesDeploymentToMql(a.MqlRuntime, dep)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDep)
+		}
+	}
+	return res, nil
+}
+
+func cognitiveServicesDeploymentToMql(runtime *plugin.Runtime, dep *armcognitiveservices.Deployment) (*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment, error) {
+	var skuName string
+	var skuCapacity int64
+	if dep.SKU != nil {
+		if dep.SKU.Name != nil {
+			skuName = *dep.SKU.Name
+		}
+		if dep.SKU.Capacity != nil {
+			skuCapacity = int64(*dep.SKU.Capacity)
+		}
+	}
+
+	var provisioningState, versionUpgradeOption, raiPolicyName string
+	var modelFormat, modelName, modelVersion, modelPublisher, modelSource string
+	var currentCapacity int64
+	var dynamicThrottlingEnabled bool
+	capabilities := map[string]any{}
+
+	if p := dep.Properties; p != nil {
+		if p.ProvisioningState != nil {
+			provisioningState = string(*p.ProvisioningState)
+		}
+		if p.VersionUpgradeOption != nil {
+			versionUpgradeOption = string(*p.VersionUpgradeOption)
+		}
+		if p.RaiPolicyName != nil {
+			raiPolicyName = *p.RaiPolicyName
+		}
+		if p.CurrentCapacity != nil {
+			currentCapacity = int64(*p.CurrentCapacity)
+		}
+		if p.DynamicThrottlingEnabled != nil {
+			dynamicThrottlingEnabled = *p.DynamicThrottlingEnabled
+		}
+		for k, v := range p.Capabilities {
+			if v != nil {
+				capabilities[k] = *v
+			}
+		}
+		if m := p.Model; m != nil {
+			if m.Format != nil {
+				modelFormat = *m.Format
+			}
+			if m.Name != nil {
+				modelName = *m.Name
+			}
+			if m.Version != nil {
+				modelVersion = *m.Version
+			}
+			if m.Publisher != nil {
+				modelPublisher = *m.Publisher
+			}
+			if m.Source != nil {
+				modelSource = *m.Source
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.deployment", map[string]*llx.RawData{
+		"id":                       llx.StringDataPtr(dep.ID),
+		"name":                     llx.StringDataPtr(dep.Name),
+		"tags":                     llx.MapData(convert.PtrMapStrToInterface(dep.Tags), types.String),
+		"provisioningState":        llx.StringData(provisioningState),
+		"skuName":                  llx.StringData(skuName),
+		"skuCapacity":              llx.IntData(skuCapacity),
+		"currentCapacity":          llx.IntData(currentCapacity),
+		"modelFormat":              llx.StringData(modelFormat),
+		"modelName":                llx.StringData(modelName),
+		"modelVersion":             llx.StringData(modelVersion),
+		"modelPublisher":           llx.StringData(modelPublisher),
+		"modelSource":              llx.StringData(modelSource),
+		"versionUpgradeOption":     llx.StringData(versionUpgradeOption),
+		"dynamicThrottlingEnabled": llx.BoolData(dynamicThrottlingEnabled),
+		"capabilities":             llx.MapData(capabilities, types.String),
+		"raiPolicyName":            llx.StringData(raiPolicyName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlDep := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment)
+	if raiPolicyName != "" {
+		if parsed, err := ParseResourceID(convert.ToValue(dep.ID)); err == nil {
+			mqlDep.cacheAccountId = fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.CognitiveServices/accounts/%s",
+				parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["accounts"])
+		}
+	}
+	return mqlDep, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountDeploymentInternal struct {
+	cacheAccountId string
+}
+
+// raiPolicy resolves the deployment's content-filter policy by matching raiPolicyName
+// against the account's own policies. Deployments that use a system-managed default
+// (e.g. "Microsoft.DefaultV2") have no account-scoped policy resource, so this returns
+// null in that case while raiPolicyName still carries the name.
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) raiPolicy() (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy, error) {
+	policyName := a.RaiPolicyName.Data
+	if policyName == "" || a.cacheAccountId == "" {
+		a.RaiPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	mqlAccount, err := NewResource(a.MqlRuntime, "azure.subscription.cognitiveServicesService.account",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheAccountId)})
+	if err != nil {
+		return nil, err
+	}
+	account := mqlAccount.(*mqlAzureSubscriptionCognitiveServicesServiceAccount)
+	policies := account.GetRaiPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+	for _, p := range policies.Data {
+		policy, ok := p.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy)
+		if !ok {
+			continue
+		}
+		if policy.Name.Data == policyName {
+			return policy, nil
+		}
+	}
+
+	a.RaiPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic, error) {
 	var topicName, topicId, description, status, failedReason, sampleBlobUrl string
 	var createdAt, lastModifiedAt *time.Time

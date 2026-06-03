@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.15.0",
-  "generated_at": "2026-06-02T08:54:11-07:00",
+  "version": "13.15.1",
+  "generated_at": "2026-06-03T09:27:06-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -32,6 +32,7 @@
     "Microsoft.Cdn/profiles/read",
     "Microsoft.Cognitiveservices/accounts/read",
     "Microsoft.Cognitiveservices/defenderForAISettings/read",
+    "Microsoft.Cognitiveservices/deployments/read",
     "Microsoft.Cognitiveservices/raiPolicies/read",
     "Microsoft.Cognitiveservices/raiTopics/read",
     "Microsoft.Compute/dedicatedHostGroups/read",
@@ -382,6 +383,12 @@
     },
     {
       "permission": "Microsoft.Cognitiveservices/defenderForAISettings/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/deployments/read",
       "service": "Microsoft.Cognitiveservices",
       "action": "NewListPager",
       "source_file": "cognitiveservices.go"

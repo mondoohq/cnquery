@@ -10403,6 +10403,64 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   raiPolicies() []azure.subscription.cognitiveServicesService.account.raiPolicy
   // Responsible AI custom topics registered on the account
   raiTopics() []azure.subscription.cognitiveServicesService.account.raiTopic
+  // Model deployments hosted on the account
+  deployments() []azure.subscription.cognitiveServicesService.account.deployment
+}
+
+// Model deployment on an Azure AI Services account
+//
+// Examine a single model deployment — the concrete model an application
+// calls through the account, identified by `name` (for example
+// `azure.subscription.cognitiveServices.accounts.where(kind == "OpenAI")[0].deployments.where(name == "gpt-4o")`).
+// Use `modelName` and `modelVersion` to confirm which model and version
+// is served (and `modelFormat`/`modelPublisher` for non-OpenAI models),
+// `versionUpgradeOption` to audit whether the deployment is pinned to a
+// version that may be retiring or set to auto-upgrade, `skuName` for the
+// deployment type (for example "Standard", "GlobalStandard", or
+// "ProvisionedManaged") and `skuCapacity`/`currentCapacity` for the
+// provisioned throughput, `raiPolicyName` (resolved by `raiPolicy`) for
+// the content-filter policy applied to the model, `dynamicThrottlingEnabled`
+// for automatic throughput throttling, and `capabilities` for the
+// model's advertised features.
+azure.subscription.cognitiveServicesService.account.deployment @defaults("name modelName modelVersion skuName versionUpgradeOption") {
+  // Deployment resource ID
+  id string
+  // Deployment name, used by clients as the model identifier in API calls
+  name string
+  // Deployment tags
+  tags map[string]string
+  // Provisioning state of the deployment (e.g., "Succeeded", "Creating", "Failed")
+  provisioningState string
+  // Deployment type controlling how capacity is allocated and billed
+  //
+  // Common values include "Standard", "GlobalStandard", "DataZoneStandard", "ProvisionedManaged", and "GlobalProvisionedManaged".
+  skuName string
+  // Provisioned capacity for the deployment (throughput units for Standard SKUs, PTUs for provisioned SKUs)
+  skuCapacity int
+  // Currently active capacity, which may differ from skuCapacity shortly after a capacity change
+  currentCapacity int
+  // Model family format (e.g., "OpenAI")
+  modelFormat string
+  // Model name being served (e.g., "gpt-4o", "text-embedding-3-large", "dall-e-3")
+  modelName string
+  // Model version being served (e.g., "2024-11-20"); empty when the account uses the model's default version
+  modelVersion string
+  // Model publisher; empty for first-party Azure OpenAI models
+  modelPublisher string
+  // ARM resource ID of the source model for fine-tuned or custom deployments; empty for catalog models
+  modelSource string
+  // Version upgrade behavior
+  //
+  // One of "NoAutoUpgrade" (pinned to modelVersion), "OnceCurrentVersionExpired" (upgrades only when the version retires), or "OnceNewDefaultVersionAvailable" (auto-upgrades to each new default).
+  versionUpgradeOption string
+  // Whether dynamic throttling is enabled, letting the service smooth bursts above the provisioned rate
+  dynamicThrottlingEnabled bool
+  // Advertised model capabilities, keyed by capability name (e.g., "chatCompletion", "jsonObjectResponse")
+  capabilities map[string]string
+  // Name of the Responsible AI content-filter policy applied to the deployment; empty when none is attached
+  raiPolicyName string
+  // Responsible AI content-filter policy applied to the deployment (null when none is attached)
+  raiPolicy() azure.subscription.cognitiveServicesService.account.raiPolicy
 }
 
 // Responsible AI content-filter policy on a Cognitive Services account
