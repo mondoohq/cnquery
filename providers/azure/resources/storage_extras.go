@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -340,6 +341,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) networkSecurityPerimeterConf
 			if isFeatureNotSupportedForAccountError(err) {
 				a.NetworkSecurityPerimeterConfigurations.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, nil
+			}
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list network security perimeter configurations due to access denied")
+				return res, nil
 			}
 			return nil, err
 		}

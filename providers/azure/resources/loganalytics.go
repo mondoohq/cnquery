@@ -5,10 +5,13 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
+	"net/http"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2"
 	"github.com/rs/zerolog/log"
@@ -694,6 +697,11 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterCo
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list network security perimeter configurations due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, nsp := range page.Value {
