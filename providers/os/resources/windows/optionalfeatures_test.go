@@ -26,9 +26,7 @@ func TestWindowsOptionalFeatures(t *testing.T) {
 	assert.Equal(t, "Adds or Removes Windows PowerShell 2.0 Engine", items[9].Description)
 }
 
-// A single-feature lookup (e.g. Get-WindowsOptionalFeature -FeatureName "X")
-// makes ConvertTo-Json emit a bare object rather than an array. The parser
-// must accept that shape too.
+// a single-feature lookup makes ConvertTo-Json emit a bare object, not an array
 func TestWindowsOptionalFeatures_SingleObject(t *testing.T) {
 	input := `{
     "FeatureName": "TelnetClient",

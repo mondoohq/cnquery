@@ -258,17 +258,13 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return args, nil, nil
 	}
 
-	// Look up only the requested feature instead of enumerating every optional
-	// feature in the image (`-FeatureName *`), which is significantly more
-	// expensive.
 	encodedCmd := powershell.Encode(windows.OptionalFeatureQuery(name))
 	executedCmd, err := conn.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// A non-zero exit status for a single-feature lookup means the feature name
-	// is unknown; preserve the historic "could not find feature" behavior.
+	// a non-zero exit means the feature name is unknown
 	if executedCmd.ExitStatus != 0 {
 		return nil, nil, errors.New("could not find feature " + name)
 	}
@@ -278,6 +274,9 @@ func initWindowsOptionalFeature(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, err
 	}
 
+	// DISM treats `*`/`?` in -FeatureName as wildcards, so a wildcard-ish name
+	// can return more than one feature (or none matching exactly); require an
+	// exact name match to keep the historic "could not find feature" behavior.
 	for i := range features {
 		feature := features[i]
 		if feature.Name != name {
