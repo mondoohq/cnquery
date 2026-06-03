@@ -136,8 +136,8 @@ func (o *mqlOciAiAgents) getAgents(conn *connection.OciConnection, regions []any
 					"lifecycleDetails": llx.StringDataPtr(a.LifecycleDetails),
 					"created":          sdkTimeData(a.TimeCreated),
 					"timeUpdated":      sdkTimeData(a.TimeUpdated),
-					"freeformTags":     llx.MapData(ociFreeformTags(a.FreeformTags), types.String),
-					"definedTags":      llx.MapData(ociDefinedTags(a.DefinedTags), types.Any),
+					"freeformTags":     llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":      llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -271,13 +271,13 @@ func (o *mqlOciAiAgents) getAgentEndpoints(conn *connection.OciConnection, regio
 					"traceEnabled":                llx.BoolDataPtr(e.ShouldEnableTrace),
 					"citationEnabled":             llx.BoolDataPtr(e.ShouldEnableCitation),
 					"multiLanguageEnabled":        llx.BoolDataPtr(e.ShouldEnableMultiLanguage),
-					"metadata":                    llx.MapData(ociStringMap(e.Metadata), types.String),
+					"metadata":                    llx.MapData(strMapToAny(e.Metadata), types.String),
 					"state":                       llx.StringData(string(e.LifecycleState)),
 					"lifecycleDetails":            llx.StringDataPtr(e.LifecycleDetails),
 					"created":                     sdkTimeData(e.TimeCreated),
 					"timeUpdated":                 sdkTimeData(e.TimeUpdated),
-					"freeformTags":                llx.MapData(ociFreeformTags(e.FreeformTags), types.String),
-					"definedTags":                 llx.MapData(ociDefinedTags(e.DefinedTags), types.Any),
+					"freeformTags":                llx.MapData(strMapToAny(e.FreeformTags), types.String),
+					"definedTags":                 llx.MapData(definedTagsToAny(e.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -402,8 +402,8 @@ func (o *mqlOciAiAgents) getKnowledgeBases(conn *connection.OciConnection, regio
 					"lifecycleDetails": llx.StringDataPtr(kb.LifecycleDetails),
 					"created":          sdkTimeData(kb.TimeCreated),
 					"timeUpdated":      sdkTimeData(kb.TimeUpdated),
-					"freeformTags":     llx.MapData(ociFreeformTags(kb.FreeformTags), types.String),
-					"definedTags":      llx.MapData(ociDefinedTags(kb.DefinedTags), types.Any),
+					"freeformTags":     llx.MapData(strMapToAny(kb.FreeformTags), types.String),
+					"definedTags":      llx.MapData(definedTagsToAny(kb.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -519,8 +519,8 @@ func (o *mqlOciAiAgents) getDataSources(conn *connection.OciConnection, regions 
 					"lifecycleDetails": llx.StringDataPtr(ds.LifecycleDetails),
 					"created":          sdkTimeData(ds.TimeCreated),
 					"timeUpdated":      sdkTimeData(ds.TimeUpdated),
-					"freeformTags":     llx.MapData(ociFreeformTags(ds.FreeformTags), types.String),
-					"definedTags":      llx.MapData(ociDefinedTags(ds.DefinedTags), types.Any),
+					"freeformTags":     llx.MapData(strMapToAny(ds.FreeformTags), types.String),
+					"definedTags":      llx.MapData(definedTagsToAny(ds.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -659,12 +659,12 @@ func (o *mqlOciAiAgents) getTools(conn *connection.OciConnection, regions []any)
 					"description":   llx.StringDataPtr(t.Description),
 					"toolType":      llx.StringData(ociToolConfigType(toolConfig)),
 					"toolConfig":    llx.DictData(toolConfig),
-					"metadata":      llx.MapData(ociStringMap(t.Metadata), types.String),
+					"metadata":      llx.MapData(strMapToAny(t.Metadata), types.String),
 					"state":         llx.StringData(string(t.LifecycleState)),
 					"created":       sdkTimeData(t.TimeCreated),
 					"timeUpdated":   sdkTimeData(t.TimeUpdated),
-					"freeformTags":  llx.MapData(ociFreeformTags(t.FreeformTags), types.String),
-					"definedTags":   llx.MapData(ociDefinedTags(t.DefinedTags), types.Any),
+					"freeformTags":  llx.MapData(strMapToAny(t.FreeformTags), types.String),
+					"definedTags":   llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -748,24 +748,4 @@ func ociToolConfigType(toolConfig any) string {
 	}
 	t, _ := m["toolConfigType"].(string)
 	return t
-}
-
-func ociStringMap(in map[string]string) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		out[k] = v
-	}
-	return out
-}
-
-func ociFreeformTags(in map[string]string) map[string]any {
-	return ociStringMap(in)
-}
-
-func ociDefinedTags(in map[string]map[string]interface{}) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		out[k] = v
-	}
-	return out
 }
