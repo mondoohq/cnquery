@@ -273,6 +273,7 @@ func listGoFiles(dir string) []string {
 // where they differ from the Go package name.
 var awsServiceNameOverrides = map[string]string{
 	"bedrockagent":             "bedrock",
+	"bedrockagentcorecontrol":  "bedrock-agentcore",
 	"cloudhsmv2":               "cloudhsm",
 	"cloudwatchlogs":           "logs",
 	"configservice":            "config",
@@ -566,6 +567,7 @@ func awsConnectionMethodToService(method string) string {
 		"bedrock":                  "bedrock",
 		"bedrockagent":             "bedrockagent",
 		"qbusiness":                "qbusiness",
+		"bedrockagentcorecontrol":  "bedrockagentcorecontrol",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

@@ -23479,6 +23479,316 @@ aws.bedrock {
   importedModels() []aws.bedrock.importedModel
   // Managed prompts in the account
   prompts() []aws.bedrock.prompt
+  // AgentCore namespace for agentic-AI infrastructure (gateways, runtimes, memory, tools, and identity)
+  agentCore() aws.bedrock.agentCore
+}
+
+// Amazon Bedrock AgentCore
+//
+// Use the AgentCore namespace to enumerate the agentic-AI infrastructure
+// in the account: gateways that expose tools to agents over the Model
+// Context Protocol (MCP), hosted agent runtimes, short- and long-term
+// memory stores, the browser and code-interpreter sandboxes agents use
+// as built-in tools, and the Identity credential providers and workload
+// identities that govern how agents authenticate to external services.
+// Iterate `gateways()` for MCP servers, `runtimes()` for deployed agents,
+// and `memories()`, `browsers()`, `codeInterpreters()`,
+// `oauth2CredentialProviders()`, `apiKeyCredentialProviders()`, and
+// `workloadIdentities()` for the supporting infrastructure.
+private aws.bedrock.agentCore {
+  // MCP gateways in the account
+  gateways() []aws.bedrock.agentCore.gateway
+  // Hosted agent runtimes in the account
+  runtimes() []aws.bedrock.agentCore.runtime
+  // Memory stores in the account
+  memories() []aws.bedrock.agentCore.memory
+  // Browser tool sandboxes in the account
+  browsers() []aws.bedrock.agentCore.browser
+  // Code-interpreter tool sandboxes in the account
+  codeInterpreters() []aws.bedrock.agentCore.codeInterpreter
+  // OAuth2 credential providers configured in AgentCore Identity
+  oauth2CredentialProviders() []aws.bedrock.agentCore.oauth2CredentialProvider
+  // API-key credential providers configured in AgentCore Identity
+  apiKeyCredentialProviders() []aws.bedrock.agentCore.apiKeyCredentialProvider
+  // Workload identities configured in AgentCore Identity
+  workloadIdentities() []aws.bedrock.agentCore.workloadIdentity
+}
+
+// Amazon Bedrock AgentCore gateway
+//
+// A gateway exposes a set of tools to agents over the Model Context
+// Protocol (MCP). Examine the endpoint URL agents connect to, the
+// protocol type, the inbound authorizer that controls which callers may
+// invoke the gateway, the IAM role the gateway assumes, and the
+// customer-managed encryption key. Iterate `targets()` for the individual
+// tool targets (Lambda functions, OpenAPI or Smithy APIs) federated
+// through the gateway.
+private aws.bedrock.agentCore.gateway @defaults("name status protocolType") {
+  // ARN of the gateway
+  arn() string
+  // Name of the gateway
+  name string
+  // Region where the gateway exists
+  region string
+  // Current status of the gateway
+  status string
+  // Description of the gateway
+  description string
+  // Protocol exposed by the gateway (e.g., MCP)
+  protocolType string
+  // Inbound authorizer type controlling access
+  //
+  // One of CUSTOM_JWT, AWS_IAM, NONE, or AUTHENTICATE_ONLY.
+  authorizerType string
+  // Time the gateway was created
+  createdAt time
+  // Time the gateway was last updated
+  updatedAt time
+  // Endpoint URL agents use to invoke the gateway over its protocol
+  gatewayUrl() string
+  // IAM role the gateway assumes to invoke its targets
+  iamRole() aws.iam.role
+  // ARN of the IAM role associated with the gateway
+  roleArn() string
+  // Customer-managed KMS key used to encrypt the gateway
+  kmsKey() aws.kms.key
+  // Workload identity that anchors the gateway's AgentCore Identity credentials
+  workloadIdentity() aws.bedrock.agentCore.workloadIdentity
+  // ARN of the workload identity associated with the gateway
+  workloadIdentityArn() string
+  // Tool targets federated through the gateway
+  targets() []aws.bedrock.agentCore.gatewayTarget
+}
+
+// Amazon Bedrock AgentCore gateway target
+//
+// A gateway target is a single tool source federated through an MCP
+// gateway — a Lambda function, an OpenAPI or Smithy API, or another
+// backend. Examine the target's backing configuration and the credential
+// provider configurations that determine how the gateway authenticates
+// outbound to the target. The `name` field selects a target within its
+// gateway.
+private aws.bedrock.agentCore.gatewayTarget @defaults("name status") {
+  // Unique identifier of the target
+  targetId string
+  // Identifier of the gateway that owns this target
+  gatewayId string
+  // Name of the target
+  name string
+  // Region where the target exists
+  region string
+  // Current status of the target
+  status string
+  // Description of the target
+  description string
+  // Time the target was created
+  createdAt time
+  // Time the target was last updated
+  updatedAt time
+  // Backing configuration for the target
+  //
+  // Carries the target type (Lambda, OpenAPI schema, Smithy model, or
+  // other backend) and the backend-specific configuration block.
+  targetConfiguration() dict
+  // Credential provider configurations governing outbound authentication to the target
+  credentialProviderConfigurations() []dict
+}
+
+// Amazon Bedrock AgentCore runtime
+//
+// An agent runtime is a deployed agent hosted by AgentCore. Examine the
+// IAM role the runtime assumes, the network mode (public or VPC), the
+// inbound authorizer controlling who may invoke the agent, and the
+// environment variables configured for the agent. Iterate `endpoints()`
+// for the addressable endpoints that serve agent invocations.
+private aws.bedrock.agentCore.runtime @defaults("name version status") {
+  // Unique identifier of the agent runtime
+  id string
+  // ARN of the agent runtime
+  arn string
+  // Name of the agent runtime
+  name string
+  // Region where the agent runtime exists
+  region string
+  // Version of the agent runtime
+  version string
+  // Current status of the agent runtime
+  status string
+  // Description of the agent runtime
+  description string
+  // Time the agent runtime was last updated
+  updatedAt time
+  // IAM role the agent runtime assumes
+  iamRole() aws.iam.role
+  // ARN of the IAM role associated with the agent runtime
+  roleArn() string
+  // Network mode for the agent runtime
+  //
+  // One of PUBLIC or VPC.
+  networkMode() string
+  // Inbound authorizer type controlling access to the runtime
+  //
+  // One of CUSTOM_JWT, AWS_IAM, NONE, or AUTHENTICATE_ONLY.
+  authorizerType() string
+  // Environment variables set in the runtime environment
+  environmentVariables() map[string]string
+  // Endpoints exposed by the agent runtime
+  endpoints() []aws.bedrock.agentCore.runtimeEndpoint
+}
+
+// Amazon Bedrock AgentCore runtime endpoint
+//
+// An addressable endpoint that serves invocations for an agent runtime.
+// Examine the live and target versions to see which agent code an
+// endpoint currently serves and which it is rolling out to. The `name`
+// field selects an endpoint within its runtime.
+private aws.bedrock.agentCore.runtimeEndpoint @defaults("name status liveVersion") {
+  // Unique identifier of the endpoint
+  id string
+  // ARN of the endpoint
+  arn string
+  // ARN of the agent runtime that owns this endpoint
+  agentRuntimeArn string
+  // Name of the endpoint
+  name string
+  // Region where the endpoint exists
+  region string
+  // Current status of the endpoint
+  status string
+  // Description of the endpoint
+  description string
+  // Runtime version currently serving requests
+  liveVersion string
+  // Runtime version the endpoint is being updated to
+  targetVersion string
+  // Time the endpoint was created
+  createdAt time
+  // Time the endpoint was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore memory
+//
+// A memory store retains conversational context and long-term knowledge
+// for agents. Examine the store identifier and its current lifecycle
+// status. The `id` field selects a memory store.
+private aws.bedrock.agentCore.memory @defaults("id status") {
+  // Unique identifier of the memory store
+  id string
+  // ARN of the memory store
+  arn string
+  // Region where the memory store exists
+  region string
+  // Current status of the memory store
+  status string
+  // Time the memory store was created
+  createdAt time
+  // Time the memory store was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore browser
+//
+// A browser is a managed sandbox that agents use as a built-in tool to
+// browse the web. Examine the sandbox identifier and its current
+// lifecycle status. The `name` field selects a browser.
+private aws.bedrock.agentCore.browser @defaults("name status") {
+  // Unique identifier of the browser
+  id string
+  // ARN of the browser
+  arn string
+  // Name of the browser
+  name string
+  // Region where the browser exists
+  region string
+  // Current status of the browser
+  status string
+  // Description of the browser
+  description string
+  // Time the browser was created
+  createdAt time
+  // Time the browser was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore code interpreter
+//
+// A code interpreter is a managed sandbox that agents use as a built-in
+// tool to execute code. Examine the sandbox identifier and its current
+// lifecycle status. The `name` field selects a code interpreter.
+private aws.bedrock.agentCore.codeInterpreter @defaults("name status") {
+  // Unique identifier of the code interpreter
+  id string
+  // ARN of the code interpreter
+  arn string
+  // Name of the code interpreter
+  name string
+  // Region where the code interpreter exists
+  region string
+  // Current status of the code interpreter
+  status string
+  // Description of the code interpreter
+  description string
+  // Time the code interpreter was created
+  createdAt time
+  // Time the code interpreter was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore OAuth2 credential provider
+//
+// An OAuth2 credential provider stores the configuration AgentCore
+// Identity uses to obtain OAuth2 tokens when agents authenticate
+// outbound to an external service. Examine the provider vendor and the
+// creation and update timestamps. The `name` field selects a provider.
+private aws.bedrock.agentCore.oauth2CredentialProvider @defaults("name vendor") {
+  // ARN of the credential provider
+  arn string
+  // Name of the credential provider
+  name string
+  // Region where the credential provider exists
+  region string
+  // OAuth2 vendor for the credential provider
+  //
+  // For example GoogleOauth2, GithubOauth2, SlackOauth2, SalesforceOauth2, MicrosoftOauth2, or CustomOauth2.
+  vendor string
+  // Time the credential provider was created
+  createdAt time
+  // Time the credential provider was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore API-key credential provider
+//
+// An API-key credential provider stores the configuration AgentCore
+// Identity uses to supply an API key when agents authenticate outbound to
+// an external service. Examine the creation and update timestamps. The
+// `name` field selects a provider.
+private aws.bedrock.agentCore.apiKeyCredentialProvider @defaults("name") {
+  // ARN of the credential provider
+  arn string
+  // Name of the credential provider
+  name string
+  // Region where the credential provider exists
+  region string
+  // Time the credential provider was created
+  createdAt time
+  // Time the credential provider was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock AgentCore workload identity
+//
+// A workload identity represents an agent or workload to AgentCore
+// Identity, anchoring the credentials and access it is granted. Examine
+// the identity name and ARN. The `name` field selects a workload identity.
+private aws.bedrock.agentCore.workloadIdentity @defaults("name") {
+  // ARN of the workload identity
+  arn string
+  // Name of the workload identity
+  name string
+  // Region where the workload identity exists
+  region string
 }
 
 // Amazon Bedrock advanced prompt optimization job

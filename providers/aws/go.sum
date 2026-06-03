@@ -197,6 +197,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.63.1 h1:vsyFZwshJFX/hQDmwhUp7wJj
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.63.1/go.mod h1:tpYZ1U+DVIMVVbG5sGP7lTcbOdXgv9Suu8HVBmxHXRQ=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.3 h1:UC9NP/sA/qLq8yoQX9yZ8AZeY6aHdCqpRRJ01Xh3P2U=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.3/go.mod h1:wYRn74aRlZTd9uRsyb0/XGf0FIfVuyOl72dfGOW6STg=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.2 h1:jryZyT2rm7xAuBDln0qt3r2wJZZygTIgKQh230Hzr2M=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.2/go.mod h1:3Q4ah3P3HKjYPDZgOZrI33j1qRFySenhlta6zpUnXT0=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.44.1 h1:bE52yiXvJeJ3TwIf6N7g87JG30zaFG2/4t3FEDVg6qU=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.44.1/go.mod h1:Lzw4tF0Xqa9K4hEMN+tWhfd43X9jJa2FqLVjGPeubDg=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.14 h1:6bl5Mvl/QLMZsqR4H93+GZPRFxa7hAxy8AmzHZM58u4=

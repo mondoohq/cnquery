@@ -26,6 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.65.3
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.54.3
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.14
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.64.3

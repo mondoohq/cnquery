@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
@@ -2487,6 +2488,23 @@ func (t *AwsConnection) QBusiness(region string) *qbusiness.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := qbusiness.NewFromConfig(cfg)
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) BedrockAgentCoreControl(region string) *bedrockagentcorecontrol.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_bedrockagentcorecontrol_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached bedrockagentcorecontrol client")
+		return c.Data.(*bedrockagentcorecontrol.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := bedrockagentcorecontrol.NewFromConfig(cfg)
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

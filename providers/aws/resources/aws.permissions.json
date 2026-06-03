@@ -81,6 +81,19 @@
     "batch:DescribeSchedulingPolicies",
     "batch:ListJobs",
     "batch:ListSchedulingPolicies",
+    "bedrock-agentcore:GetAgentRuntime",
+    "bedrock-agentcore:GetGateway",
+    "bedrock-agentcore:GetGatewayTarget",
+    "bedrock-agentcore:ListAgentRuntimeEndpoints",
+    "bedrock-agentcore:ListAgentRuntimes",
+    "bedrock-agentcore:ListApiKeyCredentialProviders",
+    "bedrock-agentcore:ListBrowsers",
+    "bedrock-agentcore:ListCodeInterpreters",
+    "bedrock-agentcore:ListGatewayTargets",
+    "bedrock-agentcore:ListGateways",
+    "bedrock-agentcore:ListMemories",
+    "bedrock-agentcore:ListOauth2CredentialProviders",
+    "bedrock-agentcore:ListWorkloadIdentities",
     "bedrock:GetAdvancedPromptOptimizationJob",
     "bedrock:GetAgent",
     "bedrock:GetCustomModel",
@@ -1389,6 +1402,84 @@
       "service": "batch",
       "action": "ListSchedulingPolicies",
       "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "bedrock-agentcore:GetAgentRuntime",
+      "service": "bedrock-agentcore",
+      "action": "GetAgentRuntime",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:GetGateway",
+      "service": "bedrock-agentcore",
+      "action": "GetGateway",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:GetGatewayTarget",
+      "service": "bedrock-agentcore",
+      "action": "GetGatewayTarget",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListAgentRuntimeEndpoints",
+      "service": "bedrock-agentcore",
+      "action": "ListAgentRuntimeEndpoints",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListAgentRuntimes",
+      "service": "bedrock-agentcore",
+      "action": "ListAgentRuntimes",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListApiKeyCredentialProviders",
+      "service": "bedrock-agentcore",
+      "action": "ListApiKeyCredentialProviders",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListBrowsers",
+      "service": "bedrock-agentcore",
+      "action": "ListBrowsers",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListCodeInterpreters",
+      "service": "bedrock-agentcore",
+      "action": "ListCodeInterpreters",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListGatewayTargets",
+      "service": "bedrock-agentcore",
+      "action": "ListGatewayTargets",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListGateways",
+      "service": "bedrock-agentcore",
+      "action": "ListGateways",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListMemories",
+      "service": "bedrock-agentcore",
+      "action": "ListMemories",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListOauth2CredentialProviders",
+      "service": "bedrock-agentcore",
+      "action": "ListOauth2CredentialProviders",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:ListWorkloadIdentities",
+      "service": "bedrock-agentcore",
+      "action": "ListWorkloadIdentities",
+      "source_file": "aws_bedrock_agentcore.go"
     },
     {
       "permission": "bedrock:GetAdvancedPromptOptimizationJob",
