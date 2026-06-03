@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
+	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
@@ -122,6 +123,40 @@ func newMqlDiscoveryEngineDataStore(runtime *plugin.Runtime, ds *discoveryengine
 	return mqlDs, nil
 }
 
+func (g *mqlGcpProjectDiscoveryEngineService) listDataStoresInLocation(ctx context.Context, creds *googleoauth.Credentials, projectId, location string) ([]any, error) {
+	client, err := discoveryengine.NewDataStoreClient(ctx,
+		option.WithCredentials(creds),
+		option.WithEndpoint(discoveryEngineEndpoint(location)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var items []any
+	it := client.ListDataStores(ctx, &discoveryenginepb.ListDataStoresRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/%s/collections/%s", projectId, location, defaultDiscoveryEngineCollection),
+	})
+	for {
+		ds, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isDiscoveryEngineSkippable(err) {
+				break
+			}
+			return nil, err
+		}
+		mqlDs, err := newMqlDiscoveryEngineDataStore(g.MqlRuntime, ds)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, mqlDs)
+	}
+	return items, nil
+}
+
 func (g *mqlGcpProjectDiscoveryEngineService) dataStores() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -137,37 +172,11 @@ func (g *mqlGcpProjectDiscoveryEngineService) dataStores() ([]any, error) {
 	ctx := context.Background()
 	var items []any
 	for _, location := range discoveryEngineLocations {
-		client, err := discoveryengine.NewDataStoreClient(ctx,
-			option.WithCredentials(creds),
-			option.WithEndpoint(discoveryEngineEndpoint(location)),
-		)
+		locationItems, err := g.listDataStoresInLocation(ctx, creds, projectId, location)
 		if err != nil {
 			return nil, err
 		}
-
-		it := client.ListDataStores(ctx, &discoveryenginepb.ListDataStoresRequest{
-			Parent: fmt.Sprintf("projects/%s/locations/%s/collections/%s", projectId, location, defaultDiscoveryEngineCollection),
-		})
-		for {
-			ds, err := it.Next()
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				if isDiscoveryEngineSkippable(err) {
-					break
-				}
-				client.Close()
-				return nil, err
-			}
-			mqlDs, err := newMqlDiscoveryEngineDataStore(g.MqlRuntime, ds)
-			if err != nil {
-				client.Close()
-				return nil, err
-			}
-			items = append(items, mqlDs)
-		}
-		client.Close()
+		items = append(items, locationItems...)
 	}
 	return items, nil
 }
@@ -182,6 +191,50 @@ type mqlGcpProjectDiscoveryEngineServiceDataStoreInternal struct {
 
 func (a *mqlGcpProjectDiscoveryEngineServiceDataStore) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (g *mqlGcpProjectDiscoveryEngineService) listEnginesInLocation(ctx context.Context, creds *googleoauth.Credentials, projectId, location string) ([]any, error) {
+	client, err := discoveryengine.NewEngineClient(ctx,
+		option.WithCredentials(creds),
+		option.WithEndpoint(discoveryEngineEndpoint(location)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var items []any
+	it := client.ListEngines(ctx, &discoveryenginepb.ListEnginesRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/%s/collections/%s", projectId, location, defaultDiscoveryEngineCollection),
+	})
+	for {
+		engine, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isDiscoveryEngineSkippable(err) {
+				break
+			}
+			return nil, err
+		}
+
+		mqlEngine, err := CreateResource(g.MqlRuntime, "gcp.project.discoveryEngineService.engine", map[string]*llx.RawData{
+			"name":             llx.StringData(engine.Name),
+			"displayName":      llx.StringData(engine.DisplayName),
+			"solutionType":     llx.StringData(engine.SolutionType.String()),
+			"industryVertical": llx.StringData(engine.IndustryVertical.String()),
+			"disableAnalytics": llx.BoolData(engine.DisableAnalytics),
+			"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(engine.CreateTime)),
+			"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(engine.UpdateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlEngine.(*mqlGcpProjectDiscoveryEngineServiceEngine).cacheDataStoreIds = engine.DataStoreIds
+		items = append(items, mqlEngine)
+	}
+	return items, nil
 }
 
 func (g *mqlGcpProjectDiscoveryEngineService) engines() ([]any, error) {
@@ -199,47 +252,11 @@ func (g *mqlGcpProjectDiscoveryEngineService) engines() ([]any, error) {
 	ctx := context.Background()
 	var items []any
 	for _, location := range discoveryEngineLocations {
-		client, err := discoveryengine.NewEngineClient(ctx,
-			option.WithCredentials(creds),
-			option.WithEndpoint(discoveryEngineEndpoint(location)),
-		)
+		locationItems, err := g.listEnginesInLocation(ctx, creds, projectId, location)
 		if err != nil {
 			return nil, err
 		}
-
-		it := client.ListEngines(ctx, &discoveryenginepb.ListEnginesRequest{
-			Parent: fmt.Sprintf("projects/%s/locations/%s/collections/%s", projectId, location, defaultDiscoveryEngineCollection),
-		})
-		for {
-			engine, err := it.Next()
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				if isDiscoveryEngineSkippable(err) {
-					break
-				}
-				client.Close()
-				return nil, err
-			}
-
-			mqlEngine, err := CreateResource(g.MqlRuntime, "gcp.project.discoveryEngineService.engine", map[string]*llx.RawData{
-				"name":             llx.StringData(engine.Name),
-				"displayName":      llx.StringData(engine.DisplayName),
-				"solutionType":     llx.StringData(engine.SolutionType.String()),
-				"industryVertical": llx.StringData(engine.IndustryVertical.String()),
-				"disableAnalytics": llx.BoolData(engine.DisableAnalytics),
-				"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(engine.CreateTime)),
-				"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(engine.UpdateTime)),
-			})
-			if err != nil {
-				client.Close()
-				return nil, err
-			}
-			mqlEngine.(*mqlGcpProjectDiscoveryEngineServiceEngine).cacheDataStoreIds = engine.DataStoreIds
-			items = append(items, mqlEngine)
-		}
-		client.Close()
+		items = append(items, locationItems...)
 	}
 	return items, nil
 }
