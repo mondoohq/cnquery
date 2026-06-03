@@ -276,10 +276,6 @@ private openstack.compute.server @defaults("id name status") {
   accessIPv4 string
   // Public IPv6 address (Nova `accessIPv6`)
   accessIPv6 string
-  // Owning project ID
-  projectId string
-  // Owning user ID
-  userId string
   // SSH keypair name used at boot
   keyName string
   // Availability zone
@@ -310,6 +306,10 @@ private openstack.compute.server @defaults("id name status") {
   securityGroups() []openstack.securityGroup
   // Cinder volumes attached to this server
   volumes() []openstack.blockstorage.volume
+  // Project that owns this server
+  project() openstack.project
+  // User that created this server
+  user() openstack.user
 }
 
 // OpenStack Nova flavor (VM size)
@@ -349,8 +349,8 @@ private openstack.compute.keypair @defaults("name type fingerprint") {
   fingerprint string
   // Public key material
   publicKey string
-  // Owning user ID
-  userId string
+  // User that owns this keypair
+  user() openstack.user
 }
 
 // OpenStack Nova server group (affinity / anti-affinity)
@@ -366,12 +366,12 @@ private openstack.compute.serverGroup @defaults("id name policies") {
   members []string
   // User-defined metadata
   metadata map[string]string
-  // Owning project ID
-  projectId string
-  // Owning user ID
-  userId string
   // Servers in this group
   memberServers() []openstack.compute.server
+  // Project that owns this server group
+  project() openstack.project
+  // User that created this server group
+  user() openstack.user
 }
 
 // OpenStack Neutron network
@@ -391,8 +391,6 @@ private openstack.network @defaults("id name status") {
   external bool
   // MTU
   mtu int
-  // Owning project ID
-  projectId string
   // Description
   description string
   // Tags
@@ -409,6 +407,8 @@ private openstack.network @defaults("id name status") {
   updatedAt time
   // Subnets attached to this network
   subnets() []openstack.subnet
+  // Project that owns this network
+  project() openstack.project
 }
 
 // OpenStack Neutron subnet
@@ -438,8 +438,6 @@ private openstack.subnet @defaults("id name cidr") {
   allocationPools []dict
   // Host routes ([{destination, nexthop}])
   hostRoutes []dict
-  // Owning project ID
-  projectId string
   // Network this subnet belongs to
   network() openstack.network
   // Subnet pool this subnet's CIDR was allocated from; null when the CIDR was assigned manually
@@ -452,6 +450,8 @@ private openstack.subnet @defaults("id name cidr") {
   createdAt time
   // Last update timestamp
   updatedAt time
+  // Project that owns this subnet
+  project() openstack.project
 }
 
 // OpenStack Neutron router
@@ -467,8 +467,6 @@ private openstack.router @defaults("id name status") {
   adminStateUp bool
   // Whether the router is distributed (DVR)
   distributed bool
-  // Owning project ID
-  projectId string
   // Description
   description string
   // Tags
@@ -483,6 +481,8 @@ private openstack.router @defaults("id name status") {
   updatedAt time
   // External network the router uses for its gateway; null when no external gateway is set
   externalNetwork() openstack.network
+  // Project that owns this router
+  project() openstack.project
 }
 
 // OpenStack Neutron port
@@ -498,8 +498,6 @@ private openstack.port @defaults("id name status macAddress") {
   adminStateUp bool
   // MAC address
   macAddress string
-  // Device ID the port is attached to (server UUID, router UUID, etc.)
-  deviceId string
   // Device owner (compute:nova, network:router_interface, ...)
   deviceOwner string
   // Fixed IPs ([{subnet_id, ip_address}])
@@ -508,8 +506,6 @@ private openstack.port @defaults("id name status macAddress") {
   portSecurityEnabled bool
   // Whether port uplink status propagation is enabled
   propagateUplinkStatus bool
-  // Owning project ID
-  projectId string
   // Description
   description string
   // Tags
@@ -522,6 +518,14 @@ private openstack.port @defaults("id name status macAddress") {
   network() openstack.network
   // Security groups attached to the port
   securityGroups() []openstack.securityGroup
+  // Subnets this port has fixed IPs on
+  subnets() []openstack.subnet
+  // Project that owns this port
+  project() openstack.project
+  // Server this port is attached to; null when the port is not bound to a compute instance
+  server() openstack.compute.server
+  // Router this port is attached to; null when the port is not a router interface or gateway
+  router() openstack.router
 }
 
 // OpenStack Neutron floating IP
@@ -535,8 +539,6 @@ private openstack.floatingIp @defaults("id floatingIpAddress status") {
   floatingIpAddress string
   // The fixed (private) IP address it maps to (empty when unattached)
   fixedIpAddress string
-  // Owning project ID
-  projectId string
   // Description
   description string
   // Tags
@@ -551,6 +553,8 @@ private openstack.floatingIp @defaults("id floatingIpAddress status") {
   port() openstack.port
   // Router handling NAT for this floating IP; null when unattached
   router() openstack.router
+  // Project that owns this floating IP
+  project() openstack.project
 }
 
 // OpenStack Neutron security group
@@ -564,14 +568,14 @@ private openstack.securityGroup @defaults("id name") {
   description string
   // Whether the security group is stateful (tracks connection state); stateless groups require explicit return-traffic rules
   stateful bool
-  // Owning project ID
-  projectId string
   // Tags
   tags []string
   // Creation timestamp
   createdAt time
   // Last update timestamp
   updatedAt time
+  // Project that owns this security group
+  project() openstack.project
   // Embedded rules
   rules []openstack.securityGroup.rule
 }
@@ -592,8 +596,6 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   portRangeMax int
   // Remote IP prefix (CIDR; empty when matched by remote group instead)
   remoteIpPrefix string
-  // Owning project ID
-  projectId string
   // Description
   description string
   // Creation timestamp
@@ -604,6 +606,8 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   securityGroup() openstack.securityGroup
   // Remote security group the rule matches; null when matched by IP prefix instead
   remoteGroup() openstack.securityGroup
+  // Project that owns this security group rule
+  project() openstack.project
 }
 
 // OpenStack Cinder block-storage volume
@@ -2120,14 +2124,10 @@ private openstack.containerinfra.cluster @defaults("id name status nodeCount mas
   masterLbEnabled bool
   // etcd discovery URL used during cluster bootstrap
   discoveryUrl string
-  // Heat stack ID backing the cluster
-  stackId string
   // Labels (key/value tuning and feature flags) applied to the cluster
   labels map[string]string
   // Project that owns the cluster
   projectId string
-  // User that created the cluster
-  userId string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2146,6 +2146,10 @@ private openstack.containerinfra.cluster @defaults("id name status nodeCount mas
   fixedSubnet() openstack.subnet
   // Project that owns the cluster
   project() openstack.project
+  // User that created the cluster
+  user() openstack.user
+  // Heat stack backing the cluster; null when the API did not report a stack
+  stack() openstack.orchestration.stack
 }
 
 // OpenStack Magnum cluster template
@@ -2206,10 +2210,6 @@ private openstack.containerinfra.clusterTemplate @defaults("id name coe tlsDisab
   noProxy string
   // Labels (key/value tuning and feature flags) applied to clusters
   labels map[string]string
-  // Project that owns the template
-  projectId string
-  // User that created the template
-  userId string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2224,6 +2224,10 @@ private openstack.containerinfra.clusterTemplate @defaults("id name coe tlsDisab
   masterFlavor() openstack.compute.flavor
   // SSH key pair injected into cluster nodes
   keypair() openstack.compute.keypair
+  // Project that owns the template
+  project() openstack.project
+  // User that created the template
+  user() openstack.user
 }
 
 // OpenStack Trove database instance
@@ -2295,10 +2299,6 @@ private openstack.baremetal.node @defaults("id name provisionState powerState ma
   conductorGroup string
   // Conductor currently responsible for the node
   conductor string
-  // Project that owns the node
-  owner string
-  // Project the node is leased to; empty when not leased
-  lessee string
   // Whether the node is protected from undeploy/deletion
   protected bool
   // Reason the node is protected; empty when not protected
@@ -2325,6 +2325,10 @@ private openstack.baremetal.node @defaults("id name provisionState powerState ma
   instance() openstack.compute.server
   // Network ports attached to the node
   ports() []openstack.baremetal.port
+  // Project that owns the node; null when the node has no owner
+  owner() openstack.project
+  // Project the node is leased to; null when not leased
+  lessee() openstack.project
 }
 
 // OpenStack Ironic bare-metal port

@@ -31,6 +31,8 @@ type mqlOpenstackComputeServerInternal struct {
 	cacheKeyName          string
 	cacheSecurityGroupSGs []string
 	cacheVolumeIDs        []string
+	cacheProjectID        string
+	cacheUserID           string
 }
 
 func (r *mqlOpenstackComputeServer) id() (string, error) {
@@ -107,8 +109,6 @@ func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*
 		"hostId":           llx.StringData(s.HostID),
 		"accessIPv4":       llx.StringData(s.AccessIPv4),
 		"accessIPv6":       llx.StringData(s.AccessIPv6),
-		"projectId":        llx.StringData(s.TenantID),
-		"userId":           llx.StringData(s.UserID),
 		"keyName":          llx.StringData(s.KeyName),
 		"availabilityZone": llx.StringData(s.AvailabilityZone),
 		"diskConfig":       llx.StringData(string(s.DiskConfig)),
@@ -130,6 +130,8 @@ func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*
 	mqlServer.cacheKeyName = s.KeyName
 	mqlServer.cacheSecurityGroupSGs = sgNames
 	mqlServer.cacheVolumeIDs = volumeIDs
+	mqlServer.cacheProjectID = s.TenantID
+	mqlServer.cacheUserID = s.UserID
 	return mqlServer, nil
 }
 
@@ -145,6 +147,34 @@ func (r *mqlOpenstackComputeServer) image() (*mqlOpenstackImage, error) {
 		return nil, err
 	}
 	return res.(*mqlOpenstackImage), nil
+}
+
+func (r *mqlOpenstackComputeServer) project() (*mqlOpenstackProject, error) {
+	if r.cacheProjectID == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheProjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
+}
+
+func (r *mqlOpenstackComputeServer) user() (*mqlOpenstackUser, error) {
+	if r.cacheUserID == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackUser), nil
 }
 
 func (r *mqlOpenstackComputeServer) volumes() ([]any, error) {
@@ -475,6 +505,10 @@ func (r *mqlOpenstackComputeFlavor) extraSpecs() (map[string]any, error) {
 
 // ---- openstack.compute.keypair ----
 
+type mqlOpenstackComputeKeypairInternal struct {
+	cacheUserID string
+}
+
 func (r *mqlOpenstackComputeKeypair) id() (string, error) {
 	return "openstack.compute.keypair/" + r.Name.Data, nil
 }
@@ -528,17 +562,37 @@ func (o *mqlOpenstack) keypairs() ([]any, error) {
 			"type":        llx.StringData(k.Type),
 			"fingerprint": llx.StringData(k.Fingerprint),
 			"publicKey":   llx.StringData(k.PublicKey),
-			"userId":      llx.StringData(k.UserID),
 		})
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlKeypair := res.(*mqlOpenstackComputeKeypair)
+		mqlKeypair.cacheUserID = k.UserID
+		out = append(out, mqlKeypair)
 	}
 	return out, nil
 }
 
+func (r *mqlOpenstackComputeKeypair) user() (*mqlOpenstackUser, error) {
+	if r.cacheUserID == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackUser), nil
+}
+
 // ---- openstack.compute.serverGroup ----
+
+type mqlOpenstackComputeServerGroupInternal struct {
+	cacheProjectID string
+	cacheUserID    string
+}
 
 func (r *mqlOpenstackComputeServerGroup) id() (string, error) {
 	return "openstack.compute.serverGroup/" + r.Id.Data, nil
@@ -588,21 +642,50 @@ func (o *mqlOpenstack) serverGroups() ([]any, error) {
 	out := make([]any, 0, len(items))
 	for _, g := range items {
 		res, err := CreateResource(o.MqlRuntime, "openstack.compute.serverGroup", map[string]*llx.RawData{
-			"__id":      llx.StringData("openstack.compute.serverGroup/" + g.ID),
-			"id":        llx.StringData(g.ID),
-			"name":      llx.StringData(g.Name),
-			"policies":  stringSliceData(g.Policies),
-			"members":   stringSliceData(g.Members),
-			"metadata":  stringMapData(serverGroupMetadata(g.Metadata)),
-			"projectId": llx.StringData(g.ProjectID),
-			"userId":    llx.StringData(g.UserID),
+			"__id":     llx.StringData("openstack.compute.serverGroup/" + g.ID),
+			"id":       llx.StringData(g.ID),
+			"name":     llx.StringData(g.Name),
+			"policies": stringSliceData(g.Policies),
+			"members":  stringSliceData(g.Members),
+			"metadata": stringMapData(serverGroupMetadata(g.Metadata)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlServerGroup := res.(*mqlOpenstackComputeServerGroup)
+		mqlServerGroup.cacheProjectID = g.ProjectID
+		mqlServerGroup.cacheUserID = g.UserID
+		out = append(out, mqlServerGroup)
 	}
 	return out, nil
+}
+
+func (r *mqlOpenstackComputeServerGroup) project() (*mqlOpenstackProject, error) {
+	if r.cacheProjectID == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheProjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
+}
+
+func (r *mqlOpenstackComputeServerGroup) user() (*mqlOpenstackUser, error) {
+	if r.cacheUserID == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackUser), nil
 }
 
 func (r *mqlOpenstackComputeServerGroup) memberServers() ([]any, error) {

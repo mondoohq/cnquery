@@ -19,6 +19,8 @@ type mqlOpenstackContainerinfraClusterInternal struct {
 	cacheMasterFlavorID    string
 	cacheFixedNetwork      string
 	cacheFixedSubnet       string
+	cacheUserID            string
+	cacheStackID           string
 }
 
 func (r *mqlOpenstackContainerinfraCluster) id() (string, error) {
@@ -89,10 +91,8 @@ func (o *mqlOpenstack) clusters() ([]any, error) {
 			"floatingIpEnabled": llx.BoolData(cl.FloatingIPEnabled),
 			"masterLbEnabled":   llx.BoolData(cl.MasterLBEnabled),
 			"discoveryUrl":      llx.StringData(cl.DiscoveryURL),
-			"stackId":           llx.StringData(cl.StackID),
 			"labels":            stringMapData(cl.Labels),
 			"projectId":         llx.StringData(cl.ProjectID),
-			"userId":            llx.StringData(cl.UserID),
 			"createdAt":         llx.TimeDataPtr(timePtr(cl.CreatedAt)),
 			"updatedAt":         llx.TimeDataPtr(timePtr(cl.UpdatedAt)),
 		})
@@ -106,6 +106,8 @@ func (o *mqlOpenstack) clusters() ([]any, error) {
 		mqlCluster.cacheMasterFlavorID = cl.MasterFlavorID
 		mqlCluster.cacheFixedNetwork = cl.FixedNetwork
 		mqlCluster.cacheFixedSubnet = cl.FixedSubnet
+		mqlCluster.cacheUserID = cl.UserID
+		mqlCluster.cacheStackID = cl.StackID
 		out = append(out, mqlCluster)
 	}
 	return out, nil
@@ -139,6 +141,24 @@ func (r *mqlOpenstackContainerinfraCluster) masterFlavor() (*mqlOpenstackCompute
 
 func (r *mqlOpenstackContainerinfraCluster) project() (*mqlOpenstackProject, error) {
 	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+}
+
+func (r *mqlOpenstackContainerinfraCluster) user() (*mqlOpenstackUser, error) {
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
+}
+
+func (r *mqlOpenstackContainerinfraCluster) stack() (*mqlOpenstackOrchestrationStack, error) {
+	if r.cacheStackID == "" {
+		r.Stack.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.orchestration.stack", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheStackID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackOrchestrationStack), nil
 }
 
 // fixedNetwork / fixedSubnet resolve the cluster's fixed network/subnet to
@@ -181,6 +201,8 @@ type mqlOpenstackContainerinfraClusterTemplateInternal struct {
 	cacheFlavorID          string
 	cacheMasterFlavorID    string
 	cacheKeyPairID         string
+	cacheProjectID         string
+	cacheUserID            string
 }
 
 func (r *mqlOpenstackContainerinfraClusterTemplate) id() (string, error) {
@@ -258,8 +280,6 @@ func (o *mqlOpenstack) clusterTemplates() ([]any, error) {
 			"httpsProxy":          llx.StringData(t.HTTPSProxy),
 			"noProxy":             llx.StringData(t.NoProxy),
 			"labels":              stringMapData(t.Labels),
-			"projectId":           llx.StringData(t.ProjectID),
-			"userId":              llx.StringData(t.UserID),
 			"createdAt":           llx.TimeDataPtr(timePtr(t.CreatedAt)),
 			"updatedAt":           llx.TimeDataPtr(timePtr(t.UpdatedAt)),
 		})
@@ -272,6 +292,8 @@ func (o *mqlOpenstack) clusterTemplates() ([]any, error) {
 		mqlTemplate.cacheFlavorID = t.FlavorID
 		mqlTemplate.cacheMasterFlavorID = t.MasterFlavorID
 		mqlTemplate.cacheKeyPairID = t.KeyPairID
+		mqlTemplate.cacheProjectID = t.ProjectID
+		mqlTemplate.cacheUserID = t.UserID
 		out = append(out, mqlTemplate)
 	}
 	return out, nil
@@ -315,6 +337,14 @@ func (r *mqlOpenstackContainerinfraClusterTemplate) masterFlavor() (*mqlOpenstac
 
 func (r *mqlOpenstackContainerinfraClusterTemplate) keypair() (*mqlOpenstackComputeKeypair, error) {
 	return resolveKeypair(r.MqlRuntime, r.cacheKeyPairID, &r.Keypair)
+}
+
+func (r *mqlOpenstackContainerinfraClusterTemplate) project() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
+}
+
+func (r *mqlOpenstackContainerinfraClusterTemplate) user() (*mqlOpenstackUser, error) {
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 // resolveFlavor and resolveKeypair resolve compute references by ID/name into

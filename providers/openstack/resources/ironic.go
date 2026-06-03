@@ -30,6 +30,11 @@ func translateBaremetalError(err error) error {
 
 // ---- openstack.baremetal.node ----
 
+type mqlOpenstackBaremetalNodeInternal struct {
+	cacheOwner  string
+	cacheLessee string
+}
+
 func (r *mqlOpenstackBaremetalNode) id() (string, error) {
 	return "openstack.baremetal.node/" + r.Id.Data, nil
 }
@@ -97,8 +102,6 @@ func (o *mqlOpenstack) baremetalNodes() ([]any, error) {
 			"resourceClass":        llx.StringData(n.ResourceClass),
 			"conductorGroup":       llx.StringData(n.ConductorGroup),
 			"conductor":            llx.StringData(n.Conductor),
-			"owner":                llx.StringData(n.Owner),
-			"lessee":               llx.StringData(n.Lessee),
 			"protected":            llx.BoolData(n.Protected),
 			"protectedReason":      llx.StringData(n.ProtectedReason),
 			"description":          llx.StringData(n.Description),
@@ -114,9 +117,20 @@ func (o *mqlOpenstack) baremetalNodes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlNode := res.(*mqlOpenstackBaremetalNode)
+		mqlNode.cacheOwner = n.Owner
+		mqlNode.cacheLessee = n.Lessee
+		out = append(out, mqlNode)
 	}
 	return out, nil
+}
+
+func (r *mqlOpenstackBaremetalNode) owner() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.cacheOwner, &r.Owner)
+}
+
+func (r *mqlOpenstackBaremetalNode) lessee() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.cacheLessee, &r.Lessee)
 }
 
 func (r *mqlOpenstackBaremetalNode) instance() (*mqlOpenstackComputeServer, error) {
