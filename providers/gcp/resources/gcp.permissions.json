@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.19.1",
-  "generated_at": "2026-06-01T23:19:29-07:00",
+  "version": "13.20.1",
+  "generated_at": "2026-06-03T08:28:23-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -13,6 +13,9 @@
     "aiplatform.indexes.list",
     "aiplatform.metadataStores.list",
     "aiplatform.models.list",
+    "aiplatform.notebookExecutionJobs.list",
+    "aiplatform.notebookRuntimeTemplates.list",
+    "aiplatform.notebookRuntimes.list",
     "aiplatform.pipelineJobs.list",
     "aiplatform.tensorboards.list",
     "alloydb.backups.list",
@@ -301,6 +304,24 @@
       "permission": "aiplatform.models.list",
       "service": "aiplatform",
       "action": "ListModels",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookExecutionJobs.list",
+      "service": "aiplatform",
+      "action": "ListNotebookExecutionJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookRuntimeTemplates.list",
+      "service": "aiplatform",
+      "action": "ListNotebookRuntimeTemplates",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.notebookRuntimes.list",
+      "service": "aiplatform",
+      "action": "ListNotebookRuntimes",
       "source_file": "vertexai.go"
     },
     {

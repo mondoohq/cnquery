@@ -352,6 +352,9 @@ const (
 	ResourceGcpProjectVertexaiServiceCustomJob                                         string = "gcp.project.vertexaiService.customJob"
 	ResourceGcpProjectVertexaiServiceIndex                                             string = "gcp.project.vertexaiService.index"
 	ResourceGcpProjectVertexaiServiceIndexEndpoint                                     string = "gcp.project.vertexaiService.indexEndpoint"
+	ResourceGcpProjectVertexaiServiceNotebookRuntime                                   string = "gcp.project.vertexaiService.notebookRuntime"
+	ResourceGcpProjectVertexaiServiceNotebookRuntimeTemplate                           string = "gcp.project.vertexaiService.notebookRuntimeTemplate"
+	ResourceGcpProjectVertexaiServiceNotebookExecutionJob                              string = "gcp.project.vertexaiService.notebookExecutionJob"
 	ResourceGcpSccOrganizationSettings                                                 string = "gcp.scc.organizationSettings"
 	ResourceGcpSccSource                                                               string = "gcp.scc.source"
 	ResourceGcpSccFinding                                                              string = "gcp.scc.finding"
@@ -1786,6 +1789,18 @@ func init() {
 		"gcp.project.vertexaiService.indexEndpoint": {
 			// to override args, implement: initGcpProjectVertexaiServiceIndexEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectVertexaiServiceIndexEndpoint,
+		},
+		"gcp.project.vertexaiService.notebookRuntime": {
+			// to override args, implement: initGcpProjectVertexaiServiceNotebookRuntime(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceNotebookRuntime,
+		},
+		"gcp.project.vertexaiService.notebookRuntimeTemplate": {
+			// to override args, implement: initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceNotebookRuntimeTemplate,
+		},
+		"gcp.project.vertexaiService.notebookExecutionJob": {
+			// to override args, implement: initGcpProjectVertexaiServiceNotebookExecutionJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceNotebookExecutionJob,
 		},
 		"gcp.scc.organizationSettings": {
 			// to override args, implement: initGcpSccOrganizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13034,6 +13049,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.metadataStores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiService).GetMetadataStores()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.metadataStore")))
 	},
+	"gcp.project.vertexaiService.notebookRuntimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetNotebookRuntimes()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.notebookRuntime")))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetNotebookRuntimeTemplates()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.notebookRuntimeTemplate")))
+	},
+	"gcp.project.vertexaiService.notebookExecutionJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetNotebookExecutionJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.notebookExecutionJob")))
+	},
 	"gcp.project.vertexaiService.metadataStore.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetName()).ToDataRes(types.String)
 	},
@@ -13411,6 +13435,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.runtimeUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetRuntimeUser()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.proxyUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetProxyUri()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.healthState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetHealthState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.runtimeState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetRuntimeState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.notebookRuntimeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetNotebookRuntimeType()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.isUpgradable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetIsUpgradable()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.networkTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetNetworkTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.vertexaiService.notebookRuntime.machineSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetMachineSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.networkSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetNetworkSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.idleShutdownConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetIdleShutdownConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.eucConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEucConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.shieldedVmConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetShieldedVmConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.softwareConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetSoftwareConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.notebookRuntime.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.notebookRuntime.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookRuntime.expirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetExpirationTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNotebookRuntimeType()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNetworkTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.machineSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetMachineSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNetworkSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.idleShutdownConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetIdleShutdownConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.eucConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEucConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetShieldedVmConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetSoftwareConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.jobState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetJobState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.kernelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetKernelName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.scheduleResourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetScheduleResourceName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.executionTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetExecutionTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"gcp.scc.organizationSettings.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccOrganizationSettings).GetName()).ToDataRes(types.String)
@@ -31261,6 +31447,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiService).MetadataStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookRuntimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).NotebookRuntimes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).NotebookRuntimeTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).NotebookExecutionJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.metadataStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).__id, ok = v.Value.(string)
 		return
@@ -31803,6 +32001,234 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.runtimeUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).RuntimeUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.proxyUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ProxyUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.healthState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).HealthState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.runtimeState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).RuntimeState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.notebookRuntimeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).NotebookRuntimeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.isUpgradable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).IsUpgradable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.networkTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).NetworkTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.machineSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).MachineSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.networkSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).NetworkSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.idleShutdownConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).IdleShutdownConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.eucConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EucConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.shieldedVmConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ShieldedVmConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.softwareConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).SoftwareConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntime.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NotebookRuntimeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NetworkTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.machineSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).MachineSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.networkSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).NetworkSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.idleShutdownConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).IdleShutdownConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.eucConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EucConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).ShieldedVmConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).SoftwareConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookRuntimeTemplate.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.jobState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).JobState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.kernelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).KernelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.scheduleResourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ScheduleResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.executionTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ExecutionTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.organizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72116,17 +72542,20 @@ type mqlGcpProjectVertexaiService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceInternal
-	ProjectId           plugin.TValue[string]
-	Models              plugin.TValue[[]any]
-	Endpoints           plugin.TValue[[]any]
-	PipelineJobs        plugin.TValue[[]any]
-	Datasets            plugin.TValue[[]any]
-	FeatureOnlineStores plugin.TValue[[]any]
-	Tensorboards        plugin.TValue[[]any]
-	CustomJobs          plugin.TValue[[]any]
-	Indexes             plugin.TValue[[]any]
-	IndexEndpoints      plugin.TValue[[]any]
-	MetadataStores      plugin.TValue[[]any]
+	ProjectId                plugin.TValue[string]
+	Models                   plugin.TValue[[]any]
+	Endpoints                plugin.TValue[[]any]
+	PipelineJobs             plugin.TValue[[]any]
+	Datasets                 plugin.TValue[[]any]
+	FeatureOnlineStores      plugin.TValue[[]any]
+	Tensorboards             plugin.TValue[[]any]
+	CustomJobs               plugin.TValue[[]any]
+	Indexes                  plugin.TValue[[]any]
+	IndexEndpoints           plugin.TValue[[]any]
+	MetadataStores           plugin.TValue[[]any]
+	NotebookRuntimes         plugin.TValue[[]any]
+	NotebookRuntimeTemplates plugin.TValue[[]any]
+	NotebookExecutionJobs    plugin.TValue[[]any]
 }
 
 // createGcpProjectVertexaiService creates a new instance of this resource
@@ -72327,6 +72756,54 @@ func (c *mqlGcpProjectVertexaiService) GetMetadataStores() *plugin.TValue[[]any]
 		}
 
 		return c.metadataStores()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetNotebookRuntimes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotebookRuntimes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "notebookRuntimes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notebookRuntimes()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetNotebookRuntimeTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotebookRuntimeTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "notebookRuntimeTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notebookRuntimeTemplates()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetNotebookExecutionJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotebookExecutionJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "notebookExecutionJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notebookExecutionJobs()
 	})
 }
 
@@ -73518,6 +73995,444 @@ func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetCreated() *plugin.TValue[
 
 func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectVertexaiServiceNotebookRuntime for the gcp.project.vertexaiService.notebookRuntime resource
+type mqlGcpProjectVertexaiServiceNotebookRuntime struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceNotebookRuntimeInternal
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	RuntimeUser         plugin.TValue[string]
+	ServiceAccount      plugin.TValue[string]
+	ProxyUri            plugin.TValue[string]
+	HealthState         plugin.TValue[string]
+	RuntimeState        plugin.TValue[string]
+	NotebookRuntimeType plugin.TValue[string]
+	IsUpgradable        plugin.TValue[bool]
+	Version             plugin.TValue[string]
+	NetworkTags         plugin.TValue[[]any]
+	MachineSpec         plugin.TValue[any]
+	NetworkSpec         plugin.TValue[any]
+	IdleShutdownConfig  plugin.TValue[any]
+	EucConfig           plugin.TValue[any]
+	ShieldedVmConfig    plugin.TValue[any]
+	SoftwareConfig      plugin.TValue[any]
+	Labels              plugin.TValue[map[string]any]
+	EncryptionSpec      plugin.TValue[any]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	ExpirationTime      plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceNotebookRuntime creates a new instance of this resource
+func createGcpProjectVertexaiServiceNotebookRuntime(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceNotebookRuntime{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.notebookRuntime", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) MqlName() string {
+	return "gcp.project.vertexaiService.notebookRuntime"
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetRuntimeUser() *plugin.TValue[string] {
+	return &c.RuntimeUser
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetProxyUri() *plugin.TValue[string] {
+	return &c.ProxyUri
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetHealthState() *plugin.TValue[string] {
+	return &c.HealthState
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetRuntimeState() *plugin.TValue[string] {
+	return &c.RuntimeState
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetNotebookRuntimeType() *plugin.TValue[string] {
+	return &c.NotebookRuntimeType
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetIsUpgradable() *plugin.TValue[bool] {
+	return &c.IsUpgradable
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetNetworkTags() *plugin.TValue[[]any] {
+	return &c.NetworkTags
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetMachineSpec() *plugin.TValue[any] {
+	return &c.MachineSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetNetworkSpec() *plugin.TValue[any] {
+	return &c.NetworkSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetIdleShutdownConfig() *plugin.TValue[any] {
+	return &c.IdleShutdownConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEucConfig() *plugin.TValue[any] {
+	return &c.EucConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetShieldedVmConfig() *plugin.TValue[any] {
+	return &c.ShieldedVmConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetSoftwareConfig() *plugin.TValue[any] {
+	return &c.SoftwareConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntime", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTime
+}
+
+// mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate for the gcp.project.vertexaiService.notebookRuntimeTemplate resource
+type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceNotebookRuntimeTemplateInternal
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	IsDefault           plugin.TValue[bool]
+	ServiceAccount      plugin.TValue[string]
+	NotebookRuntimeType plugin.TValue[string]
+	NetworkTags         plugin.TValue[[]any]
+	MachineSpec         plugin.TValue[any]
+	NetworkSpec         plugin.TValue[any]
+	IdleShutdownConfig  plugin.TValue[any]
+	EucConfig           plugin.TValue[any]
+	ShieldedVmConfig    plugin.TValue[any]
+	SoftwareConfig      plugin.TValue[any]
+	Etag                plugin.TValue[string]
+	Labels              plugin.TValue[map[string]any]
+	EncryptionSpec      plugin.TValue[any]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceNotebookRuntimeTemplate creates a new instance of this resource
+func createGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) MqlName() string {
+	return "gcp.project.vertexaiService.notebookRuntimeTemplate"
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNotebookRuntimeType() *plugin.TValue[string] {
+	return &c.NotebookRuntimeType
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNetworkTags() *plugin.TValue[[]any] {
+	return &c.NetworkTags
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetMachineSpec() *plugin.TValue[any] {
+	return &c.MachineSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNetworkSpec() *plugin.TValue[any] {
+	return &c.NetworkSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetIdleShutdownConfig() *plugin.TValue[any] {
+	return &c.IdleShutdownConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEucConfig() *plugin.TValue[any] {
+	return &c.EucConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetShieldedVmConfig() *plugin.TValue[any] {
+	return &c.ShieldedVmConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetSoftwareConfig() *plugin.TValue[any] {
+	return &c.SoftwareConfig
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntimeTemplate", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceNotebookExecutionJob for the gcp.project.vertexaiService.notebookExecutionJob resource
+type mqlGcpProjectVertexaiServiceNotebookExecutionJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal
+	Name                    plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	JobState                plugin.TValue[string]
+	KernelName              plugin.TValue[string]
+	ScheduleResourceName    plugin.TValue[string]
+	ExecutionTimeoutSeconds plugin.TValue[int64]
+	Labels                  plugin.TValue[map[string]any]
+	EncryptionSpec          plugin.TValue[any]
+	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceNotebookExecutionJob creates a new instance of this resource
+func createGcpProjectVertexaiServiceNotebookExecutionJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceNotebookExecutionJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.notebookExecutionJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) MqlName() string {
+	return "gcp.project.vertexaiService.notebookExecutionJob"
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetJobState() *plugin.TValue[string] {
+	return &c.JobState
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetKernelName() *plugin.TValue[string] {
+	return &c.KernelName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetScheduleResourceName() *plugin.TValue[string] {
+	return &c.ScheduleResourceName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetExecutionTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.ExecutionTimeoutSeconds
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookExecutionJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlGcpSccOrganizationSettings for the gcp.scc.organizationSettings resource

@@ -10780,6 +10780,12 @@ private gcp.project.vertexaiService {
   indexEndpoints() []gcp.project.vertexaiService.indexEndpoint
   // Metadata stores
   metadataStores() []gcp.project.vertexaiService.metadataStore
+  // Colab Enterprise notebook runtimes
+  notebookRuntimes() []gcp.project.vertexaiService.notebookRuntime
+  // Colab Enterprise notebook runtime templates
+  notebookRuntimeTemplates() []gcp.project.vertexaiService.notebookRuntimeTemplate
+  // Colab Enterprise notebook execution jobs
+  notebookExecutionJobs() []gcp.project.vertexaiService.notebookExecutionJob
 }
 
 // Google Cloud (GCP) Vertex AI metadata store
@@ -11131,6 +11137,154 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   created time
   // Last update time
   updated time
+}
+
+// Google Cloud (GCP) Colab Enterprise notebook runtime
+//
+// Examine a Colab Enterprise notebook runtime — a running managed Jupyter
+// environment. `serviceAccount` and `runtimeUser` report the identities
+// involved, `eucConfig` reports the end-user-credential setup, `networkSpec`
+// holds the VPC attachment and internet-access setting, `shieldedVmConfig`
+// reports Shielded VM protections, `idleShutdownConfig` reports
+// auto-shutdown, and `proxyUri` is the access endpoint. `healthState` and
+// `runtimeState` report status, `notebookRuntimeType` distinguishes
+// user-defined from one-click runtimes, and encryption at rest is reported
+// through `encryptionSpec` and the resolved `kmsKey()`. Use these fields to
+// audit notebook identity, network exposure, and hardening posture.
+private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runtimeState healthState") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Human-readable description of the resource
+  description string
+  // User email the runtime is created for
+  runtimeUser string
+  // Service account email the runtime runs as
+  serviceAccount string
+  // Proxy endpoint used to access the Jupyter notebook
+  proxyUri string
+  // Health state (HEALTHY, UNHEALTHY)
+  healthState string
+  // Runtime state (RUNNING, BEING_STARTED, BEING_STOPPED, STOPPED, BEING_UPGRADED, ERROR, INVALID)
+  runtimeState string
+  // Runtime type (USER_DEFINED, ONE_CLICK)
+  notebookRuntimeType string
+  // Whether the runtime can be upgraded
+  isUpgradable bool
+  // Runtime version
+  version string
+  // Network tags applied to the runtime VM
+  networkTags []string
+  // Machine spec (machine type, accelerators)
+  machineSpec dict
+  // Network spec (VPC network, subnetwork, internet access)
+  networkSpec dict
+  // Idle shutdown configuration
+  idleShutdownConfig dict
+  // End-user credential configuration
+  eucConfig dict
+  // Shielded VM configuration
+  shieldedVmConfig dict
+  // Software configuration (post-startup scripts, environment)
+  softwareConfig dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // Time the runtime expires
+  expirationTime time
+}
+
+// Google Cloud (GCP) Colab Enterprise notebook runtime template
+//
+// Examine a Colab Enterprise notebook runtime template — the reusable blueprint
+// that new notebook runtimes are created from. `serviceAccount` is the identity
+// runtimes will run as, `eucConfig` reports the end-user-credential setup,
+// `networkSpec` holds the VPC attachment and internet-access setting,
+// `shieldedVmConfig` reports Shielded VM protections, and `idleShutdownConfig`
+// reports auto-shutdown. `isDefault` marks the project default template and
+// encryption at rest is reported through `encryptionSpec` and the resolved
+// `kmsKey()`. Use these fields to audit the security baseline applied to all
+// runtimes created from the template.
+private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayName isDefault") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Human-readable description of the resource
+  description string
+  // Whether this is the project default template
+  isDefault bool
+  // Service account email runtimes created from this template run as
+  serviceAccount string
+  // Runtime type (USER_DEFINED, ONE_CLICK)
+  notebookRuntimeType string
+  // Network tags applied to runtime VMs
+  networkTags []string
+  // Machine spec (machine type, accelerators)
+  machineSpec dict
+  // Network spec (VPC network, subnetwork, internet access)
+  networkSpec dict
+  // Idle shutdown configuration
+  idleShutdownConfig dict
+  // End-user credential configuration
+  eucConfig dict
+  // Shielded VM configuration
+  shieldedVmConfig dict
+  // Software configuration (post-startup scripts, environment)
+  softwareConfig dict
+  // ETag used for concurrency control on resource updates
+  etag string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Colab Enterprise notebook execution job
+//
+// Examine a Colab Enterprise notebook execution job — a scheduled or
+// one-off headless run of a notebook. `jobState` reports lifecycle status,
+// `kernelName` is the kernel the notebook runs under, `scheduleResourceName`
+// links to the schedule that triggered it (when scheduled), and
+// `executionTimeoutSeconds` is the configured run timeout. Encryption at
+// rest is reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName jobState") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Job state (JOB_STATE_QUEUED, PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED, EXPIRED, UPDATING, PARTIALLY_SUCCEEDED)
+  jobState string
+  // Kernel the notebook runs under
+  kernelName string
+  // Resource name of the schedule that triggered this job, if scheduled
+  scheduleResourceName string
+  // Configured execution timeout, in seconds
+  executionTimeoutSeconds int
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
 }
 
 // Google Cloud Security Command Center organization settings
