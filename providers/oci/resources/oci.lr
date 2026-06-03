@@ -3329,3 +3329,255 @@ private oci.vulnerabilityScanning.vulnerability @defaults("name severity vulnera
   // `compartmentId`.
   impactedContainerImages() []dict
 }
+
+// Oracle Cloud Infrastructure (OCI) AI services
+//
+// Use the OCI AI namespace as the entry point for Oracle's managed AI
+// and machine-learning services. Reach `oci.ai.agents` for the
+// Generative AI Agents service — the agents, agent endpoints, knowledge
+// bases, data sources, and tools that make up retrieval-augmented
+// generation (RAG) and agentic applications in the tenancy.
+oci.ai {
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI Agents
+//
+// Use the Generative AI Agents namespace to enumerate the tenancy's
+// agentic AI estate across every subscribed region. Iterate `agents()`
+// for the configured agents, `agentEndpoints()` for the endpoints that
+// clients connect to (with their content-moderation and guardrail
+// settings), `knowledgeBases()` and `dataSources()` for the enterprise
+// data wired into retrieval-augmented generation, and `tools()` for the
+// tools attached to agents — including the HTTP-endpoint and
+// function-calling tools that let an agent reach external APIs.
+oci.ai.agents {
+  // Generative AI agents
+  agents() []oci.ai.agents.agent
+  // Agent endpoints
+  agentEndpoints() []oci.ai.agents.endpoint
+  // Knowledge bases
+  knowledgeBases() []oci.ai.agents.knowledgeBase
+  // Knowledge base data sources
+  dataSources() []oci.ai.agents.dataSource
+  // Tools attached to agents
+  tools() []oci.ai.agents.tool
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI agent
+//
+// Examine a single Generative AI agent — the large-language-model
+// application that answers questions over enterprise data. Select an
+// agent by its OCID, for example
+// `oci.ai.agents.agent(id: "ocid1.genaiagent.oc1...")`. The agent
+// exposes its welcome message, the language-model routing configuration,
+// and the compartment it lives in. Connect to an agent through one of
+// its `oci.ai.agents.endpoint` resources.
+private oci.ai.agents.agent @defaults("name state") {
+  init(id? string)
+  // Agent OCID
+  id string
+  // Agent display name
+  name string
+  // Compartment OCID containing the agent
+  compartmentID string
+  // Compartment containing the agent
+  compartment() oci.compartment
+  // Description of the agent's purpose
+  description string
+  // Greeting shown to users at the start of a conversation
+  welcomeMessage string
+  // Language-model routing and selection configuration
+  llmConfig dict
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI agent endpoint
+//
+// Examine a single Generative AI agent endpoint — the network-reachable
+// entry point clients use to chat with an agent. Select an endpoint by
+// its OCID, for example
+// `oci.ai.agents.endpoint(id: "ocid1.genaiagentendpoint.oc1...")`. The
+// endpoint reports whether content moderation runs on input and output,
+// the guardrail configuration that screens for content, prompt
+// injection, and personally identifiable information, session behavior,
+// and whether tracing and citations are returned in chat results — the
+// controls that govern how safely the agent can be used.
+private oci.ai.agents.endpoint @defaults("name state") {
+  init(id? string)
+  // Endpoint OCID
+  id string
+  // Endpoint display name
+  name string
+  // Compartment OCID containing the endpoint
+  compartmentID string
+  // Compartment containing the endpoint
+  compartment() oci.compartment
+  // OCID of the agent this endpoint serves
+  agentID string
+  // Agent this endpoint serves
+  agent() oci.ai.agents.agent
+  // Description of the endpoint
+  description string
+  // Whether content moderation runs on user input
+  contentModerationOnInput bool
+  // Whether content moderation runs on model output
+  contentModerationOnOutput bool
+  // Guardrail configuration screening content, prompt injection, and PII
+  //
+  // Has `contentModerationConfig`, `promptInjectionConfig`, and
+  // `personallyIdentifiableInformationConfig`, each reporting whether
+  // the guardrail is enabled and the action it takes.
+  guardrailConfig dict
+  // Idle timeout in seconds before a chat session expires
+  sessionIdleTimeoutInSeconds int
+  // Whether session-based chat is enabled
+  sessionEnabled bool
+  // Whether traces are returned in chat results
+  traceEnabled bool
+  // Whether citations are returned in chat results
+  citationEnabled bool
+  // Whether multi-language chat is enabled
+  multiLanguageEnabled bool
+  // Additional endpoint configuration key-value pairs
+  metadata map[string]string
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI agent knowledge base
+//
+// Examine a single knowledge base — the indexed corpus an agent
+// retrieves from to answer questions. Select a knowledge base by its
+// OCID, for example
+// `oci.ai.agents.knowledgeBase(id: "ocid1.genaiagentknowledgebase.oc1...")`.
+// Iterate the tenancy's `dataSources` to see which content feeds each
+// knowledge base.
+private oci.ai.agents.knowledgeBase @defaults("name state") {
+  init(id? string)
+  // Knowledge base OCID
+  id string
+  // Knowledge base display name
+  name string
+  // Compartment OCID containing the knowledge base
+  compartmentID string
+  // Compartment containing the knowledge base
+  compartment() oci.compartment
+  // Description of the knowledge base
+  description string
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI agent data source
+//
+// Examine a single data source — the content ingested into a knowledge
+// base for retrieval. Select a data source by its OCID, for example
+// `oci.ai.agents.dataSource(id: "ocid1.genaiagentdatasource.oc1...")`.
+// The data source links back to its parent `knowledgeBase`.
+private oci.ai.agents.dataSource @defaults("name state") {
+  init(id? string)
+  // Data source OCID
+  id string
+  // Data source display name
+  name string
+  // Compartment OCID containing the data source
+  compartmentID string
+  // Compartment containing the data source
+  compartment() oci.compartment
+  // OCID of the knowledge base this data source feeds
+  knowledgeBaseID string
+  // Knowledge base this data source feeds
+  knowledgeBase() oci.ai.agents.knowledgeBase
+  // Description of the data source
+  description string
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI agent tool
+//
+// Examine a single tool attached to an agent — the capability an agent
+// can invoke while answering, such as retrieving from a knowledge base,
+// querying a database, calling a function, or reaching an external HTTP
+// endpoint. Select a tool by its OCID, for example
+// `oci.ai.agents.tool(id: "ocid1.genaiagenttool.oc1...")`. The
+// `toolType` field identifies the kind of tool — use it to find tools
+// that can reach outside the tenancy, for example
+// `oci.ai.agents.tools.where(toolType == "HTTP_ENDPOINT_TOOL_CONFIG")`.
+private oci.ai.agents.tool @defaults("name toolType state") {
+  init(id? string)
+  // Tool OCID
+  id string
+  // Tool display name
+  name string
+  // Compartment OCID containing the tool
+  compartmentID string
+  // Compartment containing the tool
+  compartment() oci.compartment
+  // OCID of the agent this tool is attached to
+  agentID string
+  // Agent this tool is attached to
+  agent() oci.ai.agents.agent
+  // Description of the tool
+  description string
+  // Tool type
+  //
+  // One of RAG_TOOL_CONFIG, SQL_TOOL_CONFIG, FUNCTION_CALLING_TOOL_CONFIG,
+  // HTTP_ENDPOINT_TOOL_CONFIG, or AGENT_TOOL_CONFIG.
+  toolType string
+  // Full tool configuration, with shape determined by `toolType`
+  toolConfig dict
+  // Additional tool configuration key-value pairs
+  metadata map[string]string
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}

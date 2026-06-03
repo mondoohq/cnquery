@@ -21,6 +21,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
+	"github.com/oracle/oci-go-sdk/v65/generativeaiagent"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/oracle/oci-go-sdk/v65/keymanagement"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
@@ -400,6 +401,15 @@ func (c *OciConnection) RedisClusterClient(region string) (*redis.RedisClusterCl
 
 func (c *OciConnection) VulnerabilityScanningClient(region string) (*vulnerabilityscanning.VulnerabilityScanningClient, error) {
 	client, err := vulnerabilityscanning.NewVulnerabilityScanningClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) GenerativeAiAgentClient(region string) (*generativeaiagent.GenerativeAiAgentClient, error) {
+	client, err := generativeaiagent.NewGenerativeAiAgentClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
