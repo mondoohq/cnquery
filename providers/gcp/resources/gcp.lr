@@ -27,6 +27,7 @@ alias gcp.artifactregistry = gcp.project.artifactRegistryService
 alias gcp.backupdr = gcp.project.backupdrService
 alias gcp.vertexai = gcp.project.vertexaiService
 alias gcp.modelarmor = gcp.project.modelArmorService
+alias gcp.discoveryengine = gcp.project.discoveryEngineService
 alias gcp.memcache = gcp.project.memcacheService
 alias gcp.datastream = gcp.project.datastreamService
 alias gcp.memorystore = gcp.project.memorystoreService
@@ -793,6 +794,8 @@ gcp.project @defaults("name number") {
   vertexai() gcp.project.vertexaiService
   // GCP Model Armor resources
   modelArmor() gcp.project.modelArmorService
+  // GCP Discovery Engine (AI Applications / Agentspace) resources
+  discoveryEngine() gcp.project.discoveryEngineService
   // Security Command Center findings for this project (active findings only)
   sccFindings() []gcp.scc.finding
   // GCP Eventarc resources
@@ -11633,6 +11636,82 @@ private gcp.project.modelArmorService.floorSetting @defaults("name") {
   created time
   // Last update time
   updated time
+}
+
+// Google Cloud (GCP) Discovery Engine
+//
+// Use this resource as the entry point for Discovery Engine — the API
+// behind AI Applications, Agentspace, and Gemini Enterprise. It hosts the
+// `dataStores` that index content for grounding and the `engines` (search,
+// chat, and agent apps) built on top of them. Resources are scanned in the
+// global, us, and eu multi-region locations.
+private gcp.project.discoveryEngineService {
+  // Project ID
+  projectId string
+  // Data stores that index content for search and grounding
+  dataStores() []gcp.project.discoveryEngineService.dataStore
+  // Engines (search, chat, and agent applications)
+  engines() []gcp.project.discoveryEngineService.engine
+}
+
+// Google Cloud (GCP) Discovery Engine data store
+//
+// Examine a Discovery Engine data store — the indexed content that grounds
+// search and generative answers. `industryVertical` and `solutionTypes`
+// report what the store is built for, `contentConfig` reports the kind of
+// content indexed, `aclEnabled` indicates document-level access control, and
+// encryption at rest is reported through `kmsKeyName` and the resolved
+// `kmsKey()`. Use these fields to audit which knowledge sources exist and
+// their access-control and encryption posture.
+private gcp.project.discoveryEngineService.dataStore @defaults("displayName industryVertical") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Industry vertical (GENERIC, MEDIA, HEALTHCARE_FHIR)
+  industryVertical string
+  // Solution types the data store is used for (SEARCH, CHAT, GENERATIVE_CHAT, RECOMMENDATION)
+  solutionTypes []string
+  // Content configuration (NO_CONTENT, CONTENT_REQUIRED, PUBLIC_WEBSITE, GOOGLE_WORKSPACE)
+  contentConfig string
+  // Default schema ID
+  defaultSchemaId string
+  // Whether document-level access control is enabled
+  aclEnabled bool
+  // Cloud KMS key name protecting the data store
+  kmsKeyName string
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+}
+
+// Google Cloud (GCP) Discovery Engine engine
+//
+// Examine a Discovery Engine engine — a deployed search, chat, or agent
+// application (the unit branded as an app in AI Applications, Agentspace,
+// and Gemini Enterprise). `solutionType` reports what kind of app it is,
+// `industryVertical` its domain, `dataStores()` resolves the data stores it
+// grounds on, and `disableAnalytics` reports whether analytics collection is
+// turned off. Use these fields to audit which AI apps are deployed and what
+// data they draw on.
+private gcp.project.discoveryEngineService.engine @defaults("displayName solutionType") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Solution type (SEARCH, CHAT, GENERATIVE_CHAT, RECOMMENDATION)
+  solutionType string
+  // Industry vertical (GENERIC, MEDIA, HEALTHCARE_FHIR)
+  industryVertical string
+  // Data stores the engine grounds on
+  dataStores() []gcp.project.discoveryEngineService.dataStore
+  // Whether analytics collection is disabled
+  disableAnalytics bool
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
 }
 
 // ============================================================

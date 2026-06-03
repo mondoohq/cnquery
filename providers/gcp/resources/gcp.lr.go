@@ -369,6 +369,9 @@ const (
 	ResourceGcpProjectModelArmorService                                                string = "gcp.project.modelArmorService"
 	ResourceGcpProjectModelArmorServiceTemplate                                        string = "gcp.project.modelArmorService.template"
 	ResourceGcpProjectModelArmorServiceFloorSetting                                    string = "gcp.project.modelArmorService.floorSetting"
+	ResourceGcpProjectDiscoveryEngineService                                           string = "gcp.project.discoveryEngineService"
+	ResourceGcpProjectDiscoveryEngineServiceDataStore                                  string = "gcp.project.discoveryEngineService.dataStore"
+	ResourceGcpProjectDiscoveryEngineServiceEngine                                     string = "gcp.project.discoveryEngineService.engine"
 	ResourceGcpProjectEventarcService                                                  string = "gcp.project.eventarcService"
 	ResourceGcpProjectEventarcServiceTrigger                                           string = "gcp.project.eventarcService.trigger"
 	ResourceGcpProjectEventarcServiceTriggerEventFilter                                string = "gcp.project.eventarcService.trigger.eventFilter"
@@ -1859,6 +1862,18 @@ func init() {
 			// to override args, implement: initGcpProjectModelArmorServiceFloorSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectModelArmorServiceFloorSetting,
 		},
+		"gcp.project.discoveryEngineService": {
+			Init:   initGcpProjectDiscoveryEngineService,
+			Create: createGcpProjectDiscoveryEngineService,
+		},
+		"gcp.project.discoveryEngineService.dataStore": {
+			// to override args, implement: initGcpProjectDiscoveryEngineServiceDataStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDiscoveryEngineServiceDataStore,
+		},
+		"gcp.project.discoveryEngineService.engine": {
+			// to override args, implement: initGcpProjectDiscoveryEngineServiceEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDiscoveryEngineServiceEngine,
+		},
 		"gcp.project.eventarcService": {
 			Init:   initGcpProjectEventarcService,
 			Create: createGcpProjectEventarcService,
@@ -3051,6 +3066,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.modelArmor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetModelArmor()).ToDataRes(types.Resource("gcp.project.modelArmorService"))
+	},
+	"gcp.project.discoveryEngine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetDiscoveryEngine()).ToDataRes(types.Resource("gcp.project.discoveryEngineService"))
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetSccFindings()).ToDataRes(types.Array(types.Resource("gcp.scc.finding")))
@@ -13915,6 +13933,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.modelArmorService.floorSetting.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetUpdated()).ToDataRes(types.Time)
 	},
+	"gcp.project.discoveryEngineService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineService).GetDataStores()).ToDataRes(types.Array(types.Resource("gcp.project.discoveryEngineService.dataStore")))
+	},
+	"gcp.project.discoveryEngineService.engines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineService).GetEngines()).ToDataRes(types.Array(types.Resource("gcp.project.discoveryEngineService.engine")))
+	},
+	"gcp.project.discoveryEngineService.dataStore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.industryVertical": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetIndustryVertical()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.solutionTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetSolutionTypes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.discoveryEngineService.dataStore.contentConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetContentConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.defaultSchemaId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetDefaultSchemaId()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.aclEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetAclEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.discoveryEngineService.dataStore.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.dataStore.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.discoveryEngineService.dataStore.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.discoveryEngineService.engine.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.engine.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.engine.solutionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetSolutionType()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.engine.industryVertical": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetIndustryVertical()).ToDataRes(types.String)
+	},
+	"gcp.project.discoveryEngineService.engine.dataStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetDataStores()).ToDataRes(types.Array(types.Resource("gcp.project.discoveryEngineService.dataStore")))
+	},
+	"gcp.project.discoveryEngineService.engine.disableAnalytics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetDisableAnalytics()).ToDataRes(types.Bool)
+	},
+	"gcp.project.discoveryEngineService.engine.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.discoveryEngineService.engine.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDiscoveryEngineServiceEngine).GetUpdatedAt()).ToDataRes(types.Time)
+	},
 	"gcp.project.eventarcService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEventarcService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -16940,6 +17021,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.modelArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).ModelArmor, ok = plugin.RawToTValue[*mqlGcpProjectModelArmorService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).DiscoveryEngine, ok = plugin.RawToTValue[*mqlGcpProjectDiscoveryEngineService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32750,6 +32835,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectModelArmorServiceFloorSetting).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.discoveryEngineService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.discoveryEngineService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineService).DataStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineService).Engines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.industryVertical": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).IndustryVertical, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.solutionTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).SolutionTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.contentConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).ContentConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.defaultSchemaId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).DefaultSchemaId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.aclEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).AclEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.dataStore.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceDataStore).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.solutionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).SolutionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.industryVertical": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).IndustryVertical, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.dataStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).DataStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.disableAnalytics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).DisableAnalytics, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.discoveryEngineService.engine.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDiscoveryEngineServiceEngine).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.eventarcService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEventarcService).__id, ok = v.Value.(string)
 		return
@@ -38009,6 +38190,7 @@ type mqlGcpProject struct {
 	Backupdr                 plugin.TValue[*mqlGcpProjectBackupdrService]
 	Vertexai                 plugin.TValue[*mqlGcpProjectVertexaiService]
 	ModelArmor               plugin.TValue[*mqlGcpProjectModelArmorService]
+	DiscoveryEngine          plugin.TValue[*mqlGcpProjectDiscoveryEngineService]
 	SccFindings              plugin.TValue[[]any]
 	Eventarc                 plugin.TValue[*mqlGcpProjectEventarcService]
 	Dlp                      plugin.TValue[*mqlGcpProjectDlpService]
@@ -38839,6 +39021,22 @@ func (c *mqlGcpProject) GetModelArmor() *plugin.TValue[*mqlGcpProjectModelArmorS
 		}
 
 		return c.modelArmor()
+	})
+}
+
+func (c *mqlGcpProject) GetDiscoveryEngine() *plugin.TValue[*mqlGcpProjectDiscoveryEngineService] {
+	return plugin.GetOrCompute[*mqlGcpProjectDiscoveryEngineService](&c.DiscoveryEngine, func() (*mqlGcpProjectDiscoveryEngineService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "discoveryEngine")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDiscoveryEngineService), nil
+			}
+		}
+
+		return c.discoveryEngine()
 	})
 }
 
@@ -75784,6 +75982,291 @@ func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetCreated() *plugin.TValue
 
 func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectDiscoveryEngineService for the gcp.project.discoveryEngineService resource
+type mqlGcpProjectDiscoveryEngineService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDiscoveryEngineServiceInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	DataStores plugin.TValue[[]any]
+	Engines    plugin.TValue[[]any]
+}
+
+// createGcpProjectDiscoveryEngineService creates a new instance of this resource
+func createGcpProjectDiscoveryEngineService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDiscoveryEngineService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.discoveryEngineService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDiscoveryEngineService) MqlName() string {
+	return "gcp.project.discoveryEngineService"
+}
+
+func (c *mqlGcpProjectDiscoveryEngineService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDiscoveryEngineService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDiscoveryEngineService) GetDataStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataStores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.discoveryEngineService", c.__id, "dataStores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataStores()
+	})
+}
+
+func (c *mqlGcpProjectDiscoveryEngineService) GetEngines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Engines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.discoveryEngineService", c.__id, "engines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.engines()
+	})
+}
+
+// mqlGcpProjectDiscoveryEngineServiceDataStore for the gcp.project.discoveryEngineService.dataStore resource
+type mqlGcpProjectDiscoveryEngineServiceDataStore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDiscoveryEngineServiceDataStoreInternal
+	Name             plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	IndustryVertical plugin.TValue[string]
+	SolutionTypes    plugin.TValue[[]any]
+	ContentConfig    plugin.TValue[string]
+	DefaultSchemaId  plugin.TValue[string]
+	AclEnabled       plugin.TValue[bool]
+	KmsKeyName       plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDiscoveryEngineServiceDataStore creates a new instance of this resource
+func createGcpProjectDiscoveryEngineServiceDataStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDiscoveryEngineServiceDataStore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.discoveryEngineService.dataStore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) MqlName() string {
+	return "gcp.project.discoveryEngineService.dataStore"
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetIndustryVertical() *plugin.TValue[string] {
+	return &c.IndustryVertical
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetSolutionTypes() *plugin.TValue[[]any] {
+	return &c.SolutionTypes
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetContentConfig() *plugin.TValue[string] {
+	return &c.ContentConfig
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetDefaultSchemaId() *plugin.TValue[string] {
+	return &c.DefaultSchemaId
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetAclEnabled() *plugin.TValue[bool] {
+	return &c.AclEnabled
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetKmsKeyName() *plugin.TValue[string] {
+	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.discoveryEngineService.dataStore", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceDataStore) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlGcpProjectDiscoveryEngineServiceEngine for the gcp.project.discoveryEngineService.engine resource
+type mqlGcpProjectDiscoveryEngineServiceEngine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDiscoveryEngineServiceEngineInternal
+	Name             plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	SolutionType     plugin.TValue[string]
+	IndustryVertical plugin.TValue[string]
+	DataStores       plugin.TValue[[]any]
+	DisableAnalytics plugin.TValue[bool]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDiscoveryEngineServiceEngine creates a new instance of this resource
+func createGcpProjectDiscoveryEngineServiceEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDiscoveryEngineServiceEngine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.discoveryEngineService.engine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) MqlName() string {
+	return "gcp.project.discoveryEngineService.engine"
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetSolutionType() *plugin.TValue[string] {
+	return &c.SolutionType
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetIndustryVertical() *plugin.TValue[string] {
+	return &c.IndustryVertical
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetDataStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataStores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.discoveryEngineService.engine", c.__id, "dataStores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataStores()
+	})
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetDisableAnalytics() *plugin.TValue[bool] {
+	return &c.DisableAnalytics
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectDiscoveryEngineServiceEngine) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlGcpProjectEventarcService for the gcp.project.eventarcService resource

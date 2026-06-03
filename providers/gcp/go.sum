@@ -83,6 +83,8 @@ cloud.google.com/go/datastream v1.20.0 h1:/Xv8hdolIN5SpMgxiiuDc8AncfEuXU9TWRhvQk
 cloud.google.com/go/datastream v1.20.0/go.mod h1:uoWTtfP20W8MXuV2DPcl5zqnVsxQ9QEmmBHX858oYTQ=
 cloud.google.com/go/deploy v1.32.0 h1:vA9yH8EEXOsq1caJpvkJl9wJYA9VU8xuU45V7iC9XHk=
 cloud.google.com/go/deploy v1.32.0/go.mod h1:lUG7maG/NkoTXmQ8G1mtcVymnbizfDJh6ER7vljVa/U=
+cloud.google.com/go/discoveryengine v1.29.0 h1:W6rebqKwy/mHoMwJCgoW3nGCcXy/RmPLijrKHLfW7SU=
+cloud.google.com/go/discoveryengine v1.29.0/go.mod h1:NopDUNMo4elujicT4OuJXySgBbkpbCx7B5LHfLkZLdQ=
 cloud.google.com/go/dlp v1.34.0 h1:SI7KSLOtAfhEAw3af8NxpKHGHbJ9BkoM7805TMaU6m4=
 cloud.google.com/go/dlp v1.34.0/go.mod h1:+haQd/n0QTv5BK7wZnCk2qctd5sfKL50jjh9E6N0d/Q=
 cloud.google.com/go/eventarc v1.23.0 h1:/EUAdoBWSlqQRbpQYTV2Msmg4esw3Mum3tEU7zkhLi4=

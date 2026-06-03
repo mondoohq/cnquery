@@ -138,6 +138,9 @@
     "datastream.privateConnections.list",
     "datastream.routes.list",
     "datastream.streams.list",
+    "discoveryengine.dataStore.get",
+    "discoveryengine.dataStores.list",
+    "discoveryengine.engines.list",
     "dlp.columnDataProfiles.list",
     "dlp.connections.list",
     "dlp.deidentifyTemplates.list",
@@ -1104,6 +1107,24 @@
       "service": "datastream",
       "action": "ListStreams",
       "source_file": "datastream.go"
+    },
+    {
+      "permission": "discoveryengine.dataStore.get",
+      "service": "discoveryengine",
+      "action": "GetDataStore",
+      "source_file": "discoveryengine.go"
+    },
+    {
+      "permission": "discoveryengine.dataStores.list",
+      "service": "discoveryengine",
+      "action": "ListDataStores",
+      "source_file": "discoveryengine.go"
+    },
+    {
+      "permission": "discoveryengine.engines.list",
+      "service": "discoveryengine",
+      "action": "ListEngines",
+      "source_file": "discoveryengine.go"
     },
     {
       "permission": "dlp.columnDataProfiles.list",

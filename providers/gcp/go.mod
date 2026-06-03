@@ -22,6 +22,7 @@ require (
 	cloud.google.com/go/containeranalysis v0.19.0
 	cloud.google.com/go/datastream v1.20.0
 	cloud.google.com/go/deploy v1.32.0
+	cloud.google.com/go/discoveryengine v1.29.0
 	cloud.google.com/go/dlp v1.34.0
 	cloud.google.com/go/eventarc v1.23.0
 	cloud.google.com/go/filestore v1.15.0
