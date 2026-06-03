@@ -94,6 +94,11 @@
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.Logic/workflows/read",
+    "Microsoft.MachineLearningServices/compute/read",
+    "Microsoft.MachineLearningServices/modelContainers/read",
+    "Microsoft.MachineLearningServices/onlineDeployments/read",
+    "Microsoft.MachineLearningServices/onlineEndpoints/read",
+    "Microsoft.MachineLearningServices/serverlessEndpoints/read",
     "Microsoft.MachineLearningServices/workspaces/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Mongocluster/mongoClusters/read",
@@ -764,6 +769,36 @@
       "service": "Microsoft.Logic",
       "action": "NewListBySubscriptionPager",
       "source_file": "logic.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/compute/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/modelContainers/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/onlineDeployments/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/onlineEndpoints/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning.go"
+    },
+    {
+      "permission": "Microsoft.MachineLearningServices/serverlessEndpoints/read",
+      "service": "Microsoft.MachineLearningServices",
+      "action": "NewListPager",
+      "source_file": "machinelearning.go"
     },
     {
       "permission": "Microsoft.MachineLearningServices/workspaces/read",

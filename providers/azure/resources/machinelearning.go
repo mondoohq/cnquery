@@ -6,7 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -221,4 +224,527 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) containerRegistry(
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionContainerRegistryServiceRegistry), nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceModel) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func intMapToMql(m map[string]*int32) map[string]any {
+	res := map[string]any{}
+	for k, v := range m {
+		if v != nil {
+			res[k] = int64(*v)
+		}
+	}
+	return res
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName := parsed.Path["workspaces"]
+
+	ctx := context.Background()
+	client, err := ml.NewOnlineEndpointsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, workspaceName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list machine learning online endpoints due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ep := range page.Value {
+			if ep == nil {
+				continue
+			}
+			identity, err := convert.JsonToDict(ep.Identity)
+			if err != nil {
+				return nil, err
+			}
+			var authMode, publicNetworkAccess, scoringUri, swaggerUri, computeId, description, provisioningState string
+			traffic := map[string]any{}
+			mirrorTraffic := map[string]any{}
+			if p := ep.Properties; p != nil {
+				if p.AuthMode != nil {
+					authMode = string(*p.AuthMode)
+				}
+				if p.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*p.PublicNetworkAccess)
+				}
+				if p.ScoringURI != nil {
+					scoringUri = *p.ScoringURI
+				}
+				if p.SwaggerURI != nil {
+					swaggerUri = *p.SwaggerURI
+				}
+				if p.Compute != nil {
+					computeId = *p.Compute
+				}
+				if p.Description != nil {
+					description = *p.Description
+				}
+				if p.ProvisioningState != nil {
+					provisioningState = string(*p.ProvisioningState)
+				}
+				traffic = intMapToMql(p.Traffic)
+				mirrorTraffic = intMapToMql(p.MirrorTraffic)
+			}
+			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.onlineEndpoint", map[string]*llx.RawData{
+				"id":                  llx.StringDataPtr(ep.ID),
+				"name":                llx.StringDataPtr(ep.Name),
+				"location":            llx.StringDataPtr(ep.Location),
+				"tags":                llx.MapData(convert.PtrMapStrToInterface(ep.Tags), types.String),
+				"kind":                llx.StringDataPtr(ep.Kind),
+				"identity":            llx.DictData(identity),
+				"description":         llx.StringData(description),
+				"authMode":            llx.StringData(authMode),
+				"publicNetworkAccess": llx.StringData(publicNetworkAccess),
+				"scoringUri":          llx.StringData(scoringUri),
+				"swaggerUri":          llx.StringData(swaggerUri),
+				"traffic":             llx.MapData(traffic, types.Int),
+				"mirrorTraffic":       llx.MapData(mirrorTraffic, types.Int),
+				"provisioningState":   llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlEp := mqlRes.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint)
+			mqlEp.cacheComputeId = computeId
+			res = append(res, mqlEp)
+		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointInternal struct {
+	cacheComputeId string
+}
+
+// compute resolves the endpoint's serving compute by matching the cached ARM resource ID
+// against the workspace's compute targets. Managed online endpoints have no explicit compute
+// (Azure provisions it), so this returns null in that case.
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) compute() (*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute, error) {
+	if a.cacheComputeId == "" {
+		a.Compute.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.MachineLearningServices/workspaces/%s",
+		parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["workspaces"])
+
+	mqlWs, err := NewResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace",
+		map[string]*llx.RawData{"id": llx.StringData(workspaceId)})
+	if err != nil {
+		return nil, err
+	}
+	ws := mqlWs.(*mqlAzureSubscriptionMachineLearningServiceWorkspace)
+	computes := ws.GetComputes()
+	if computes.Error != nil {
+		return nil, computes.Error
+	}
+	for _, c := range computes.Data {
+		compute, ok := c.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute)
+		if !ok {
+			continue
+		}
+		if strings.EqualFold(compute.Id.Data, a.cacheComputeId) {
+			return compute, nil
+		}
+	}
+
+	a.Compute.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) deployments() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName := parsed.Path["workspaces"]
+	endpointName := parsed.Path["onlineendpoints"]
+
+	ctx := context.Background()
+	client, err := ml.NewOnlineDeploymentsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, workspaceName, endpointName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list machine learning online deployments due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, dep := range page.Value {
+			if dep == nil {
+				continue
+			}
+			var skuName string
+			var skuCapacity int64
+			if dep.SKU != nil {
+				if dep.SKU.Name != nil {
+					skuName = *dep.SKU.Name
+				}
+				if dep.SKU.Capacity != nil {
+					skuCapacity = int64(*dep.SKU.Capacity)
+				}
+			}
+			var endpointComputeType, model, environmentId, instanceType, egressPublicNetworkAccess, description, provisioningState string
+			var appInsightsEnabled bool
+			if dep.Properties != nil {
+				if p := dep.Properties.GetOnlineDeploymentProperties(); p != nil {
+					if p.EndpointComputeType != nil {
+						endpointComputeType = string(*p.EndpointComputeType)
+					}
+					if p.Model != nil {
+						model = *p.Model
+					}
+					if p.EnvironmentID != nil {
+						environmentId = *p.EnvironmentID
+					}
+					if p.InstanceType != nil {
+						instanceType = *p.InstanceType
+					}
+					if p.EgressPublicNetworkAccess != nil {
+						egressPublicNetworkAccess = string(*p.EgressPublicNetworkAccess)
+					}
+					if p.Description != nil {
+						description = *p.Description
+					}
+					if p.AppInsightsEnabled != nil {
+						appInsightsEnabled = *p.AppInsightsEnabled
+					}
+					if p.ProvisioningState != nil {
+						provisioningState = string(*p.ProvisioningState)
+					}
+				}
+			}
+			mqlDep, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment", map[string]*llx.RawData{
+				"id":                        llx.StringDataPtr(dep.ID),
+				"name":                      llx.StringDataPtr(dep.Name),
+				"location":                  llx.StringDataPtr(dep.Location),
+				"tags":                      llx.MapData(convert.PtrMapStrToInterface(dep.Tags), types.String),
+				"description":               llx.StringData(description),
+				"endpointComputeType":       llx.StringData(endpointComputeType),
+				"model":                     llx.StringData(model),
+				"environmentId":             llx.StringData(environmentId),
+				"instanceType":              llx.StringData(instanceType),
+				"skuName":                   llx.StringData(skuName),
+				"skuCapacity":               llx.IntData(skuCapacity),
+				"appInsightsEnabled":        llx.BoolData(appInsightsEnabled),
+				"egressPublicNetworkAccess": llx.StringData(egressPublicNetworkAccess),
+				"provisioningState":         llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDep)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoints() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName := parsed.Path["workspaces"]
+
+	ctx := context.Background()
+	client, err := ml.NewServerlessEndpointsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, workspaceName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list machine learning serverless endpoints due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ep := range page.Value {
+			if ep == nil {
+				continue
+			}
+			identity, err := convert.JsonToDict(ep.Identity)
+			if err != nil {
+				return nil, err
+			}
+			var authMode, endpointState, modelId, inferenceUri, marketplaceSubscriptionId, contentSafetyStatus, provisioningState string
+			if p := ep.Properties; p != nil {
+				if p.AuthMode != nil {
+					authMode = string(*p.AuthMode)
+				}
+				if p.EndpointState != nil {
+					endpointState = string(*p.EndpointState)
+				}
+				if p.ModelSettings != nil && p.ModelSettings.ModelID != nil {
+					modelId = *p.ModelSettings.ModelID
+				}
+				if p.InferenceEndpoint != nil && p.InferenceEndpoint.URI != nil {
+					inferenceUri = *p.InferenceEndpoint.URI
+				}
+				if p.MarketplaceSubscriptionID != nil {
+					marketplaceSubscriptionId = *p.MarketplaceSubscriptionID
+				}
+				if p.ContentSafety != nil && p.ContentSafety.ContentSafetyStatus != nil {
+					contentSafetyStatus = string(*p.ContentSafety.ContentSafetyStatus)
+				}
+				if p.ProvisioningState != nil {
+					provisioningState = string(*p.ProvisioningState)
+				}
+			}
+			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.serverlessEndpoint", map[string]*llx.RawData{
+				"id":                        llx.StringDataPtr(ep.ID),
+				"name":                      llx.StringDataPtr(ep.Name),
+				"location":                  llx.StringDataPtr(ep.Location),
+				"tags":                      llx.MapData(convert.PtrMapStrToInterface(ep.Tags), types.String),
+				"identity":                  llx.DictData(identity),
+				"authMode":                  llx.StringData(authMode),
+				"endpointState":             llx.StringData(endpointState),
+				"modelId":                   llx.StringData(modelId),
+				"inferenceUri":              llx.StringData(inferenceUri),
+				"marketplaceSubscriptionId": llx.StringData(marketplaceSubscriptionId),
+				"contentSafetyStatus":       llx.StringData(contentSafetyStatus),
+				"provisioningState":         llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlEp)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName := parsed.Path["workspaces"]
+
+	ctx := context.Background()
+	client, err := ml.NewComputeClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, workspaceName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list machine learning computes due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
+			identity, err := convert.JsonToDict(c.Identity)
+			if err != nil {
+				return nil, err
+			}
+			var computeType, description, resourceId, computeLocation, provisioningState string
+			var disableLocalAuth, isAttachedCompute bool
+			var createdOn, modifiedOn *time.Time
+			if c.Properties != nil {
+				if p := c.Properties.GetCompute(); p != nil {
+					if p.ComputeType != nil {
+						computeType = string(*p.ComputeType)
+					}
+					if p.Description != nil {
+						description = *p.Description
+					}
+					if p.DisableLocalAuth != nil {
+						disableLocalAuth = *p.DisableLocalAuth
+					}
+					if p.IsAttachedCompute != nil {
+						isAttachedCompute = *p.IsAttachedCompute
+					}
+					if p.ResourceID != nil {
+						resourceId = *p.ResourceID
+					}
+					if p.ComputeLocation != nil {
+						computeLocation = *p.ComputeLocation
+					}
+					if p.ProvisioningState != nil {
+						provisioningState = string(*p.ProvisioningState)
+					}
+					createdOn = p.CreatedOn
+					modifiedOn = p.ModifiedOn
+				}
+			}
+			mqlCompute, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.compute", map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(c.ID),
+				"name":              llx.StringDataPtr(c.Name),
+				"location":          llx.StringDataPtr(c.Location),
+				"tags":              llx.MapData(convert.PtrMapStrToInterface(c.Tags), types.String),
+				"identity":          llx.DictData(identity),
+				"computeType":       llx.StringData(computeType),
+				"description":       llx.StringData(description),
+				"disableLocalAuth":  llx.BoolData(disableLocalAuth),
+				"isAttachedCompute": llx.BoolData(isAttachedCompute),
+				"resourceId":        llx.StringData(resourceId),
+				"computeLocation":   llx.StringData(computeLocation),
+				"provisioningState": llx.StringData(provisioningState),
+				"createdOn":         llx.TimeDataPtr(createdOn),
+				"modifiedOn":        llx.TimeDataPtr(modifiedOn),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCompute)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) models() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName := parsed.Path["workspaces"]
+
+	ctx := context.Background()
+	client, err := ml.NewModelContainersClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, workspaceName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list machine learning models due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, m := range page.Value {
+			if m == nil {
+				continue
+			}
+			var description, latestVersion, nextVersion, provisioningState string
+			var isArchived bool
+			tags := map[string]any{}
+			if p := m.Properties; p != nil {
+				if p.Description != nil {
+					description = *p.Description
+				}
+				if p.LatestVersion != nil {
+					latestVersion = *p.LatestVersion
+				}
+				if p.NextVersion != nil {
+					nextVersion = *p.NextVersion
+				}
+				if p.IsArchived != nil {
+					isArchived = *p.IsArchived
+				}
+				if p.ProvisioningState != nil {
+					provisioningState = string(*p.ProvisioningState)
+				}
+				tags = convert.PtrMapStrToInterface(p.Tags)
+			}
+			mqlModel, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.model", map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(m.ID),
+				"name":              llx.StringDataPtr(m.Name),
+				"description":       llx.StringData(description),
+				"latestVersion":     llx.StringData(latestVersion),
+				"nextVersion":       llx.StringData(nextVersion),
+				"isArchived":        llx.BoolData(isArchived),
+				"tags":              llx.MapData(tags, types.String),
+				"provisioningState": llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlModel)
+		}
+	}
+	return res, nil
 }

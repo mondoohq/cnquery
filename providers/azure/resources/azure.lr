@@ -10267,6 +10267,204 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   containerRegistryId string
   // Container Registry linked to the workspace, holding its environment images
   containerRegistry() azure.subscription.containerRegistryService.registry
+  // Real-time inference (online) endpoints serving models from the workspace
+  onlineEndpoints() []azure.subscription.machineLearningService.workspace.onlineEndpoint
+  // Serverless (Models-as-a-Service) endpoints in the workspace
+  serverlessEndpoints() []azure.subscription.machineLearningService.workspace.serverlessEndpoint
+  // Compute targets attached to or managed by the workspace
+  computes() []azure.subscription.machineLearningService.workspace.compute
+  // Models registered in the workspace
+  models() []azure.subscription.machineLearningService.workspace.model
+}
+
+// Real-time inference endpoint in an Azure Machine Learning workspace
+//
+// Examine a single online endpoint — the HTTPS endpoint that serves one
+// or more model deployments for real-time scoring, selected by `name`.
+// Use `authMode` to see how callers authenticate ("Key" or "AMLToken"),
+// `scoringUri` for the inference URL, `publicNetworkAccess` for whether
+// the endpoint is reachable from the public internet, `traffic` for how
+// live traffic is split across deployments, and `deployments` for the
+// model deployments behind the endpoint.
+azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("name authMode provisioningState publicNetworkAccess") {
+  // Online endpoint resource ID
+  id string
+  // Endpoint name, used as the selection key
+  name string
+  // Endpoint location
+  location string
+  // Endpoint tags
+  tags map[string]string
+  // Resource kind metadata used by tooling
+  kind string
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Description of the endpoint
+  description string
+  // Authentication mode: "Key" (non-expiring keys) or "AMLToken" (expiring Azure Machine Learning tokens)
+  authMode string
+  // Whether the endpoint allows public access when Private Link is enabled ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Scoring (inference) URL of the endpoint
+  scoringUri string
+  // Swagger (OpenAPI) URL of the endpoint
+  swaggerUri string
+  // Live-traffic split percentage per deployment name (values sum to 100)
+  traffic map[string]int
+  // Mirror-traffic percentage per deployment name, sent without returning scores (values sum to at most 50)
+  mirrorTraffic map[string]int
+  // Compute serving the endpoint (null for managed compute, where Azure provisions the infrastructure)
+  compute() azure.subscription.machineLearningService.workspace.compute
+  // Provisioning state of the endpoint
+  provisioningState string
+  // Model deployments behind the endpoint
+  deployments() []azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment
+}
+
+// Model deployment behind an online endpoint
+//
+// Examine a single online deployment — the model, environment, and
+// compute that serve a share of an online endpoint's traffic, selected
+// by `name`. Use `model` for the registered model being served,
+// `instanceType` and `skuCapacity` for the compute size and instance
+// count, `endpointComputeType` for the hosting type ("Managed",
+// "Kubernetes", or "AzureMLCompute"), `environmentId` for the inference
+// environment, and `egressPublicNetworkAccess` for whether the container
+// has unrestricted outbound network access.
+azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment @defaults("name model instanceType provisioningState") {
+  // Online deployment resource ID
+  id string
+  // Deployment name, used as the selection key
+  name string
+  // Deployment location
+  location string
+  // Deployment tags
+  tags map[string]string
+  // Description of the deployment
+  description string
+  // Hosting compute type: "Managed", "Kubernetes", or "AzureMLCompute"
+  endpointComputeType string
+  // URI or asset ID of the registered model being served
+  model string
+  // ARM resource ID or asset ID of the inference environment
+  environmentId string
+  // Compute instance type (VM size) backing the deployment
+  instanceType string
+  // SKU name for autoscaling (e.g., "Default")
+  skuName string
+  // Number of provisioned instances
+  skuCapacity int
+  // Whether Application Insights logging is enabled for the deployment
+  appInsightsEnabled bool
+  // Whether the container has unrestricted outbound (egress) public network access ("Enabled" or "Disabled")
+  egressPublicNetworkAccess string
+  // Provisioning state of the deployment
+  provisioningState string
+}
+
+// Serverless (Models-as-a-Service) endpoint in an Azure Machine Learning workspace
+//
+// Examine a single serverless endpoint — a pay-as-you-go model API
+// consumed without provisioning compute, selected by `name`. Use
+// `modelId` for the model being served, `inferenceUri` for the inference
+// URL, `authMode` and `endpointState` for the authentication mode and
+// lifecycle state, `marketplaceSubscriptionId` for the backing
+// Marketplace subscription, and `contentSafetyStatus` for whether
+// content safety filtering is enabled.
+azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults("name modelId endpointState provisioningState") {
+  // Serverless endpoint resource ID
+  id string
+  // Endpoint name, used as the selection key
+  name string
+  // Endpoint location
+  location string
+  // Endpoint tags
+  tags map[string]string
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Authentication mode for the endpoint (e.g., "Key")
+  authMode string
+  // Lifecycle state of the endpoint (e.g., "Creating", "Online", "Deleting", "Failed")
+  endpointState string
+  // Unique model identifier served by the endpoint
+  modelId string
+  // Inference URL to target when calling the endpoint
+  inferenceUri string
+  // ARM resource ID of the Marketplace subscription backing the endpoint
+  marketplaceSubscriptionId string
+  // Content-safety filtering status ("Enabled" or "Disabled")
+  contentSafetyStatus string
+  // Provisioning state of the endpoint
+  provisioningState string
+}
+
+// Compute target in an Azure Machine Learning workspace
+//
+// Examine a single compute target — the cluster, instance, or attached
+// resource that runs jobs and model deployments, selected by `name`. Use
+// `computeType` for the kind of compute ("AmlCompute", "ComputeInstance",
+// "Kubernetes", "AKS", and others), `disableLocalAuth` for whether SSH /
+// local authentication is turned off in favor of Microsoft Entra ID,
+// `isAttachedCompute` for whether the resource was brought from outside
+// the workspace, and `resourceId` for the underlying ARM compute it maps
+// to.
+azure.subscription.machineLearningService.workspace.compute @defaults("name computeType provisioningState disableLocalAuth") {
+  // Compute resource ID
+  id string
+  // Compute name, used as the selection key
+  name string
+  // Compute location
+  location string
+  // Compute tags
+  tags map[string]string
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Kind of compute
+  //
+  // Examples include "AmlCompute", "ComputeInstance", "Kubernetes", "AKS", "VirtualMachine", "DataFactory", "Databricks", "HDInsight", and "SynapseSpark".
+  computeType string
+  // Description of the compute
+  description string
+  // Whether local (SSH) authentication is disabled, leaving Microsoft Entra ID as the only method
+  disableLocalAuth bool
+  // Whether the compute was provisioned outside the workspace and attached, rather than created by the workspace
+  isAttachedCompute bool
+  // ARM resource ID of the underlying compute resource
+  resourceId string
+  // Location of the underlying compute resource
+  computeLocation string
+  // Provisioning state of the compute (e.g., "Succeeded", "Provisioning", "Failed")
+  provisioningState string
+  // When the compute was created
+  createdOn time
+  // When the compute was last modified
+  modifiedOn time
+}
+
+// Registered model in an Azure Machine Learning workspace
+//
+// Examine a single registered model container — the named entry that
+// groups all versions of a model, selected by `name`. Use `latestVersion`
+// for the most recent registered version, `nextVersion` for the version
+// the next registration will receive, `isArchived` for whether the model
+// is archived, and `description`/`tags` for the model's metadata.
+azure.subscription.machineLearningService.workspace.model @defaults("name latestVersion provisioningState") {
+  // Model container resource ID
+  id string
+  // Model name, used as the selection key
+  name string
+  // Model description
+  description string
+  // Latest registered version of the model
+  latestVersion string
+  // Version the next registration will receive
+  nextVersion string
+  // Whether the model is archived
+  isArchived bool
+  // Model tags
+  tags map[string]string
+  // Provisioning state of the model container
+  provisioningState string
 }
 
 // App Configuration
