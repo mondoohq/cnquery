@@ -145,6 +145,14 @@ const (
 	ResourceOciAiAgentsKnowledgeBase                                 string = "oci.ai.agents.knowledgeBase"
 	ResourceOciAiAgentsDataSource                                    string = "oci.ai.agents.dataSource"
 	ResourceOciAiAgentsTool                                          string = "oci.ai.agents.tool"
+	ResourceOciAiDataScience                                         string = "oci.ai.dataScience"
+	ResourceOciAiDataScienceProject                                  string = "oci.ai.dataScience.project"
+	ResourceOciAiDataScienceNotebookSession                          string = "oci.ai.dataScience.notebookSession"
+	ResourceOciAiDataScienceModel                                    string = "oci.ai.dataScience.model"
+	ResourceOciAiDataScienceModelVersionSet                          string = "oci.ai.dataScience.modelVersionSet"
+	ResourceOciAiDataScienceModelDeployment                          string = "oci.ai.dataScience.modelDeployment"
+	ResourceOciAiDataScienceJob                                      string = "oci.ai.dataScience.job"
+	ResourceOciAiDataSciencePipeline                                 string = "oci.ai.dataScience.pipeline"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -666,6 +674,38 @@ func init() {
 		"oci.ai.agents.tool": {
 			Init:   initOciAiAgentsTool,
 			Create: createOciAiAgentsTool,
+		},
+		"oci.ai.dataScience": {
+			// to override args, implement: initOciAiDataScience(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiDataScience,
+		},
+		"oci.ai.dataScience.project": {
+			Init:   initOciAiDataScienceProject,
+			Create: createOciAiDataScienceProject,
+		},
+		"oci.ai.dataScience.notebookSession": {
+			Init:   initOciAiDataScienceNotebookSession,
+			Create: createOciAiDataScienceNotebookSession,
+		},
+		"oci.ai.dataScience.model": {
+			Init:   initOciAiDataScienceModel,
+			Create: createOciAiDataScienceModel,
+		},
+		"oci.ai.dataScience.modelVersionSet": {
+			Init:   initOciAiDataScienceModelVersionSet,
+			Create: createOciAiDataScienceModelVersionSet,
+		},
+		"oci.ai.dataScience.modelDeployment": {
+			Init:   initOciAiDataScienceModelDeployment,
+			Create: createOciAiDataScienceModelDeployment,
+		},
+		"oci.ai.dataScience.job": {
+			Init:   initOciAiDataScienceJob,
+			Create: createOciAiDataScienceJob,
+		},
+		"oci.ai.dataScience.pipeline": {
+			Init:   initOciAiDataSciencePipeline,
+			Create: createOciAiDataSciencePipeline,
 		},
 	}
 }
@@ -4550,6 +4590,318 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.ai.agents.tool.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAiAgentsTool).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetProjects()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.project")))
+	},
+	"oci.ai.dataScience.notebookSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetNotebookSessions()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.notebookSession")))
+	},
+	"oci.ai.dataScience.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetModels()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.model")))
+	},
+	"oci.ai.dataScience.modelVersionSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetModelVersionSets()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.modelVersionSet")))
+	},
+	"oci.ai.dataScience.modelDeployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetModelDeployments()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.modelDeployment")))
+	},
+	"oci.ai.dataScience.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetJobs()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.job")))
+	},
+	"oci.ai.dataScience.pipelines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScience).GetPipelines()).ToDataRes(types.Array(types.Resource("oci.ai.dataScience.pipeline")))
+	},
+	"oci.ai.dataScience.project.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.project.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.project.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.project.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceProject).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.notebookSession.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.notebookSession.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.notebookSession.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.shape": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetShape()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.subnetID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetSubnetID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetSubnet()).ToDataRes(types.Resource("oci.network.subnet"))
+	},
+	"oci.ai.dataScience.notebookSession.blockStorageSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetBlockStorageSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.ai.dataScience.notebookSession.privateEndpointID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetPrivateEndpointID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.notebookSessionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetNotebookSessionUrl()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.notebookSession.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.notebookSession.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.notebookSession.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceNotebookSession).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.model.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.model.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.modelVersionSetID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetModelVersionSetID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.modelVersionSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetModelVersionSet()).ToDataRes(types.Resource("oci.ai.dataScience.modelVersionSet"))
+	},
+	"oci.ai.dataScience.model.modelVersionSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetModelVersionSetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.versionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetVersionId()).ToDataRes(types.Int)
+	},
+	"oci.ai.dataScience.model.versionLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetVersionLabel()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetCategory()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.isModelByReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetIsModelByReference()).ToDataRes(types.Bool)
+	},
+	"oci.ai.dataScience.model.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.model.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.model.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.modelVersionSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.modelVersionSet.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.modelVersionSet.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetCategory()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelVersionSet.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.modelVersionSet.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.modelVersionSet.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.modelVersionSet.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelVersionSet).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.modelDeployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.modelDeployment.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.modelDeployment.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.modelDeploymentUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetModelDeploymentUrl()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetConfiguration()).ToDataRes(types.Dict)
+	},
+	"oci.ai.dataScience.modelDeployment.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetLoggingConfiguration()).ToDataRes(types.Dict)
+	},
+	"oci.ai.dataScience.modelDeployment.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.modelDeployment.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.modelDeployment.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.modelDeployment.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceModelDeployment).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.job.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.job.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.job.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.job.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.job.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.job.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataScienceJob).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.dataScience.pipeline.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.dataScience.pipeline.projectID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetProjectID()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetProject()).ToDataRes(types.Resource("oci.ai.dataScience.project"))
+	},
+	"oci.ai.dataScience.pipeline.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.dataScience.pipeline.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.pipeline.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.ai.dataScience.pipeline.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.dataScience.pipeline.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiDataSciencePipeline).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 }
 
@@ -10161,6 +10513,454 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.ai.agents.tool.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAiAgentsTool).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).NotebookSessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).ModelVersionSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).ModelDeployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipelines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScience).Pipelines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.project.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceProject).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.shape": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Shape, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.subnetID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).SubnetID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Subnet, ok = plugin.RawToTValue[*mqlOciNetworkSubnet](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.blockStorageSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).BlockStorageSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.privateEndpointID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).PrivateEndpointID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.notebookSessionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).NotebookSessionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.notebookSession.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceNotebookSession).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.modelVersionSetID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).ModelVersionSetID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.modelVersionSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).ModelVersionSet, ok = plugin.RawToTValue[*mqlOciAiDataScienceModelVersionSet](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.modelVersionSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).ModelVersionSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.versionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).VersionId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.versionLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).VersionLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.isModelByReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).IsModelByReference, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.model.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelVersionSet.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelVersionSet).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.modelDeploymentUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).ModelDeploymentUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).LoggingConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.modelDeployment.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceModelDeployment).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.job.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataScienceJob).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.dataScience.pipeline.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.projectID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).ProjectID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).Project, ok = plugin.RawToTValue[*mqlOciAiDataScienceProject](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.dataScience.pipeline.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiDataSciencePipeline).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -24832,5 +25632,1141 @@ func (c *mqlOciAiAgentsTool) GetFreeformTags() *plugin.TValue[map[string]any] {
 }
 
 func (c *mqlOciAiAgentsTool) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScience for the oci.ai.dataScience resource
+type mqlOciAiDataScience struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiDataScienceInternal it will be used here
+	Projects         plugin.TValue[[]any]
+	NotebookSessions plugin.TValue[[]any]
+	Models           plugin.TValue[[]any]
+	ModelVersionSets plugin.TValue[[]any]
+	ModelDeployments plugin.TValue[[]any]
+	Jobs             plugin.TValue[[]any]
+	Pipelines        plugin.TValue[[]any]
+}
+
+// createOciAiDataScience creates a new instance of this resource
+func createOciAiDataScience(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScience{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScience) MqlName() string {
+	return "oci.ai.dataScience"
+}
+
+func (c *mqlOciAiDataScience) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScience) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetNotebookSessions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NotebookSessions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "notebookSessions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notebookSessions()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetModelVersionSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelVersionSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "modelVersionSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelVersionSets()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetModelDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelDeployments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "modelDeployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelDeployments()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+func (c *mqlOciAiDataScience) GetPipelines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pipelines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience", c.__id, "pipelines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pipelines()
+	})
+}
+
+// mqlOciAiDataScienceProject for the oci.ai.dataScience.project resource
+type mqlOciAiDataScienceProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiDataScienceProjectInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	Compartment   plugin.TValue[*mqlOciCompartment]
+	Description   plugin.TValue[string]
+	CreatedBy     plugin.TValue[string]
+	State         plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	FreeformTags  plugin.TValue[map[string]any]
+	DefinedTags   plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceProject creates a new instance of this resource
+func createOciAiDataScienceProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceProject) MqlName() string {
+	return "oci.ai.dataScience.project"
+}
+
+func (c *mqlOciAiDataScienceProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceProject) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceProject) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceProject) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceProject) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.project", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiDataScienceProject) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceProject) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceProject) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceProject) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceProject) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScienceNotebookSession for the oci.ai.dataScience.notebookSession resource
+type mqlOciAiDataScienceNotebookSession struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataScienceNotebookSessionInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	CompartmentID         plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	ProjectID             plugin.TValue[string]
+	Project               plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy             plugin.TValue[string]
+	Shape                 plugin.TValue[string]
+	SubnetID              plugin.TValue[string]
+	Subnet                plugin.TValue[*mqlOciNetworkSubnet]
+	BlockStorageSizeInGBs plugin.TValue[int64]
+	PrivateEndpointID     plugin.TValue[string]
+	NotebookSessionUrl    plugin.TValue[string]
+	State                 plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceNotebookSession creates a new instance of this resource
+func createOciAiDataScienceNotebookSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceNotebookSession{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.notebookSession", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) MqlName() string {
+	return "oci.ai.dataScience.notebookSession"
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.notebookSession", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.notebookSession", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetShape() *plugin.TValue[string] {
+	return &c.Shape
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetSubnetID() *plugin.TValue[string] {
+	return &c.SubnetID
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetSubnet() *plugin.TValue[*mqlOciNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlOciNetworkSubnet](&c.Subnet, func() (*mqlOciNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.notebookSession", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetBlockStorageSizeInGBs() *plugin.TValue[int64] {
+	return &c.BlockStorageSizeInGBs
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetPrivateEndpointID() *plugin.TValue[string] {
+	return &c.PrivateEndpointID
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetNotebookSessionUrl() *plugin.TValue[string] {
+	return &c.NotebookSessionUrl
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceNotebookSession) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScienceModel for the oci.ai.dataScience.model resource
+type mqlOciAiDataScienceModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataScienceModelInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	CompartmentID       plugin.TValue[string]
+	Compartment         plugin.TValue[*mqlOciCompartment]
+	ProjectID           plugin.TValue[string]
+	Project             plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy           plugin.TValue[string]
+	ModelVersionSetID   plugin.TValue[string]
+	ModelVersionSet     plugin.TValue[*mqlOciAiDataScienceModelVersionSet]
+	ModelVersionSetName plugin.TValue[string]
+	VersionId           plugin.TValue[int64]
+	VersionLabel        plugin.TValue[string]
+	Category            plugin.TValue[string]
+	IsModelByReference  plugin.TValue[bool]
+	State               plugin.TValue[string]
+	LifecycleDetails    plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	FreeformTags        plugin.TValue[map[string]any]
+	DefinedTags         plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceModel creates a new instance of this resource
+func createOciAiDataScienceModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceModel) MqlName() string {
+	return "oci.ai.dataScience.model"
+}
+
+func (c *mqlOciAiDataScienceModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceModel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.model", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceModel) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataScienceModel) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.model", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataScienceModel) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceModel) GetModelVersionSetID() *plugin.TValue[string] {
+	return &c.ModelVersionSetID
+}
+
+func (c *mqlOciAiDataScienceModel) GetModelVersionSet() *plugin.TValue[*mqlOciAiDataScienceModelVersionSet] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceModelVersionSet](&c.ModelVersionSet, func() (*mqlOciAiDataScienceModelVersionSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.model", c.__id, "modelVersionSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceModelVersionSet), nil
+			}
+		}
+
+		return c.modelVersionSet()
+	})
+}
+
+func (c *mqlOciAiDataScienceModel) GetModelVersionSetName() *plugin.TValue[string] {
+	return &c.ModelVersionSetName
+}
+
+func (c *mqlOciAiDataScienceModel) GetVersionId() *plugin.TValue[int64] {
+	return &c.VersionId
+}
+
+func (c *mqlOciAiDataScienceModel) GetVersionLabel() *plugin.TValue[string] {
+	return &c.VersionLabel
+}
+
+func (c *mqlOciAiDataScienceModel) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlOciAiDataScienceModel) GetIsModelByReference() *plugin.TValue[bool] {
+	return &c.IsModelByReference
+}
+
+func (c *mqlOciAiDataScienceModel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceModel) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiDataScienceModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceModel) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScienceModelVersionSet for the oci.ai.dataScience.modelVersionSet resource
+type mqlOciAiDataScienceModelVersionSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataScienceModelVersionSetInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	Compartment   plugin.TValue[*mqlOciCompartment]
+	ProjectID     plugin.TValue[string]
+	Project       plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy     plugin.TValue[string]
+	Category      plugin.TValue[string]
+	State         plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	TimeUpdated   plugin.TValue[*time.Time]
+	FreeformTags  plugin.TValue[map[string]any]
+	DefinedTags   plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceModelVersionSet creates a new instance of this resource
+func createOciAiDataScienceModelVersionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceModelVersionSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.modelVersionSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) MqlName() string {
+	return "oci.ai.dataScience.modelVersionSet"
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.modelVersionSet", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.modelVersionSet", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceModelVersionSet) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScienceModelDeployment for the oci.ai.dataScience.modelDeployment resource
+type mqlOciAiDataScienceModelDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataScienceModelDeploymentInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	CompartmentID        plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
+	ProjectID            plugin.TValue[string]
+	Project              plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy            plugin.TValue[string]
+	Description          plugin.TValue[string]
+	ModelDeploymentUrl   plugin.TValue[string]
+	Configuration        plugin.TValue[any]
+	LoggingConfiguration plugin.TValue[any]
+	State                plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceModelDeployment creates a new instance of this resource
+func createOciAiDataScienceModelDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceModelDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.modelDeployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) MqlName() string {
+	return "oci.ai.dataScience.modelDeployment"
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.modelDeployment", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.modelDeployment", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetModelDeploymentUrl() *plugin.TValue[string] {
+	return &c.ModelDeploymentUrl
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetConfiguration() *plugin.TValue[any] {
+	return &c.Configuration
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetLoggingConfiguration() *plugin.TValue[any] {
+	return &c.LoggingConfiguration
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceModelDeployment) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataScienceJob for the oci.ai.dataScience.job resource
+type mqlOciAiDataScienceJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataScienceJobInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	Compartment   plugin.TValue[*mqlOciCompartment]
+	ProjectID     plugin.TValue[string]
+	Project       plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy     plugin.TValue[string]
+	State         plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	FreeformTags  plugin.TValue[map[string]any]
+	DefinedTags   plugin.TValue[map[string]any]
+}
+
+// createOciAiDataScienceJob creates a new instance of this resource
+func createOciAiDataScienceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataScienceJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataScienceJob) MqlName() string {
+	return "oci.ai.dataScience.job"
+}
+
+func (c *mqlOciAiDataScienceJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataScienceJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataScienceJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataScienceJob) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataScienceJob) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.job", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataScienceJob) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataScienceJob) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.job", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataScienceJob) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataScienceJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataScienceJob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataScienceJob) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataScienceJob) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiDataSciencePipeline for the oci.ai.dataScience.pipeline resource
+type mqlOciAiDataSciencePipeline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiDataSciencePipelineInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
+	Compartment   plugin.TValue[*mqlOciCompartment]
+	ProjectID     plugin.TValue[string]
+	Project       plugin.TValue[*mqlOciAiDataScienceProject]
+	CreatedBy     plugin.TValue[string]
+	State         plugin.TValue[string]
+	Created       plugin.TValue[*time.Time]
+	TimeUpdated   plugin.TValue[*time.Time]
+	FreeformTags  plugin.TValue[map[string]any]
+	DefinedTags   plugin.TValue[map[string]any]
+}
+
+// createOciAiDataSciencePipeline creates a new instance of this resource
+func createOciAiDataSciencePipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiDataSciencePipeline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.dataScience.pipeline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiDataSciencePipeline) MqlName() string {
+	return "oci.ai.dataScience.pipeline"
+}
+
+func (c *mqlOciAiDataSciencePipeline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.pipeline", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetProjectID() *plugin.TValue[string] {
+	return &c.ProjectID
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetProject() *plugin.TValue[*mqlOciAiDataScienceProject] {
+	return plugin.GetOrCompute[*mqlOciAiDataScienceProject](&c.Project, func() (*mqlOciAiDataScienceProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.dataScience.pipeline", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiDataScienceProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiDataSciencePipeline) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
 }

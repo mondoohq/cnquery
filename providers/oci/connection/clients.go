@@ -18,6 +18,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/oracle/oci-go-sdk/v65/datasafe"
+	"github.com/oracle/oci-go-sdk/v65/datascience"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
@@ -410,6 +411,15 @@ func (c *OciConnection) VulnerabilityScanningClient(region string) (*vulnerabili
 
 func (c *OciConnection) GenerativeAiAgentClient(region string) (*generativeaiagent.GenerativeAiAgentClient, error) {
 	client, err := generativeaiagent.NewGenerativeAiAgentClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) DataScienceClient(region string) (*datascience.DataScienceClient, error) {
+	client, err := datascience.NewDataScienceClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

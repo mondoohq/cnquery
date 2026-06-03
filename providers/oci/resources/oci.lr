@@ -3581,3 +3581,307 @@ private oci.ai.agents.tool @defaults("name toolType state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Oracle Cloud Infrastructure (OCI) Data Science
+//
+// Use the Data Science namespace to enumerate the tenancy's machine
+// learning estate across every subscribed region. Iterate `projects()`
+// for the workspaces that organize ML work, `notebookSessions()` for
+// the managed JupyterLab environments (with their compute shape, network
+// placement, and private-endpoint configuration), `models()` and
+// `modelVersionSets()` for the model catalog, `modelDeployments()` for
+// the models served as HTTP endpoints (with their endpoint URL and
+// logging configuration), and `jobs()` and `pipelines()` for the
+// batch and orchestration workloads.
+oci.ai.dataScience {
+  // Data Science projects
+  projects() []oci.ai.dataScience.project
+  // Notebook sessions
+  notebookSessions() []oci.ai.dataScience.notebookSession
+  // Models in the model catalog
+  models() []oci.ai.dataScience.model
+  // Model version sets
+  modelVersionSets() []oci.ai.dataScience.modelVersionSet
+  // Model deployments
+  modelDeployments() []oci.ai.dataScience.modelDeployment
+  // Jobs
+  jobs() []oci.ai.dataScience.job
+  // Pipelines
+  pipelines() []oci.ai.dataScience.pipeline
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science project
+//
+// Examine a single Data Science project — the workspace that groups
+// notebook sessions, models, jobs, and pipelines for a team or
+// initiative. Select a project by its OCID, for example
+// `oci.ai.dataScience.project(id: "ocid1.datascienceproject.oc1...")`.
+private oci.ai.dataScience.project @defaults("name state") {
+  init(id? string)
+  // Project OCID
+  id string
+  // Project display name
+  name string
+  // Compartment OCID containing the project
+  compartmentID string
+  // Compartment containing the project
+  compartment() oci.compartment
+  // Description of the project
+  description string
+  // OCID of the principal that created the project
+  createdBy string
+  // Lifecycle state (e.g., ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science notebook session
+//
+// Examine a single notebook session — the managed JupyterLab environment
+// where data scientists develop and train models. Select a session by
+// its OCID, for example
+// `oci.ai.dataScience.notebookSession(id: "ocid1.datasciencenotebooksession.oc1...")`.
+// The session reports its compute shape, the subnet it runs in, the
+// optional private endpoint that isolates it from the public internet,
+// and its access URL — the controls that determine the session's network
+// exposure.
+private oci.ai.dataScience.notebookSession @defaults("name state") {
+  init(id? string)
+  // Notebook session OCID
+  id string
+  // Notebook session display name
+  name string
+  // Compartment OCID containing the session
+  compartmentID string
+  // Compartment containing the session
+  compartment() oci.compartment
+  // OCID of the project the session belongs to
+  projectID string
+  // Project the session belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the session
+  createdBy string
+  // Compute shape backing the session
+  shape string
+  // OCID of the subnet the session runs in
+  subnetID string
+  // Subnet the session runs in
+  subnet() oci.network.subnet
+  // Block storage attached to the session, in gigabytes
+  blockStorageSizeInGBs int
+  // OCID of the Data Science private endpoint isolating the session, when set
+  privateEndpointID string
+  // URL used to access the session
+  notebookSessionUrl string
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED, INACTIVE, UPDATING)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science model
+//
+// Examine a single model in the model catalog — a saved, versioned
+// machine learning artifact. Select a model by its OCID, for example
+// `oci.ai.dataScience.model(id: "ocid1.datasciencemodel.oc1...")`. The
+// model reports its version within its model version set, its category,
+// and whether its artifact is stored by reference in Object Storage
+// rather than in the catalog.
+private oci.ai.dataScience.model @defaults("name state") {
+  init(id? string)
+  // Model OCID
+  id string
+  // Model display name
+  name string
+  // Compartment OCID containing the model
+  compartmentID string
+  // Compartment containing the model
+  compartment() oci.compartment
+  // OCID of the project the model belongs to
+  projectID string
+  // Project the model belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the model
+  createdBy string
+  // OCID of the model version set the model belongs to
+  modelVersionSetID string
+  // Model version set the model belongs to
+  modelVersionSet() oci.ai.dataScience.modelVersionSet
+  // Name of the model version set the model belongs to
+  modelVersionSetName string
+  // Version number of the model within its version set
+  versionId int
+  // Version label of the model within its version set
+  versionLabel string
+  // Model category (USER or SERVICE)
+  category string
+  // Whether the model artifact is stored by reference in Object Storage
+  isModelByReference bool
+  // Lifecycle state (e.g., ACTIVE, DELETED, FAILED, INACTIVE)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science model version set
+//
+// Examine a single model version set — the container that groups
+// successive versions of a model. Select a version set by its OCID, for
+// example
+// `oci.ai.dataScience.modelVersionSet(id: "ocid1.datasciencemodelversionset.oc1...")`.
+private oci.ai.dataScience.modelVersionSet @defaults("name state") {
+  init(id? string)
+  // Model version set OCID
+  id string
+  // Model version set name
+  name string
+  // Compartment OCID containing the version set
+  compartmentID string
+  // Compartment containing the version set
+  compartment() oci.compartment
+  // OCID of the project the version set belongs to
+  projectID string
+  // Project the version set belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the version set
+  createdBy string
+  // Version set category (USER or SERVICE)
+  category string
+  // Lifecycle state (e.g., ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science model deployment
+//
+// Examine a single model deployment — a model from the catalog served
+// as an HTTP inference endpoint. Select a deployment by its OCID, for
+// example
+// `oci.ai.dataScience.modelDeployment(id: "ocid1.datasciencemodeldeployment.oc1...")`.
+// The deployment reports its endpoint URL, its instance and model
+// configuration, and the access and predict logging attached to it.
+private oci.ai.dataScience.modelDeployment @defaults("name state") {
+  init(id? string)
+  // Model deployment OCID
+  id string
+  // Model deployment display name
+  name string
+  // Compartment OCID containing the deployment
+  compartmentID string
+  // Compartment containing the deployment
+  compartment() oci.compartment
+  // OCID of the project the deployment belongs to
+  projectID string
+  // Project the deployment belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the deployment
+  createdBy string
+  // Description of the deployment
+  description string
+  // URL of the inference endpoint
+  modelDeploymentUrl string
+  // Instance and model configuration of the deployment
+  //
+  // Includes the deployment type and, for a single-model deployment, the
+  // model OCID, instance shape, instance count, and bandwidth.
+  configuration dict
+  // Access and predict logging attached to the deployment
+  //
+  // Has `access` and `predict`, each with the OCID of the log and log
+  // group when logging is enabled.
+  loggingConfiguration dict
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED, INACTIVE, UPDATING, NEEDS_ATTENTION)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science job
+//
+// Examine a single job — a repeatable, self-contained machine learning
+// task such as training or batch processing. Select a job by its OCID,
+// for example `oci.ai.dataScience.job(id: "ocid1.datasciencejob.oc1...")`.
+private oci.ai.dataScience.job @defaults("name state") {
+  init(id? string)
+  // Job OCID
+  id string
+  // Job display name
+  name string
+  // Compartment OCID containing the job
+  compartmentID string
+  // Compartment containing the job
+  compartment() oci.compartment
+  // OCID of the project the job belongs to
+  projectID string
+  // Project the job belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the job
+  createdBy string
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Data Science pipeline
+//
+// Examine a single pipeline — an end-to-end machine learning workflow
+// that orchestrates multiple steps. Select a pipeline by its OCID, for
+// example `oci.ai.dataScience.pipeline(id: "ocid1.datasciencepipeline.oc1...")`.
+private oci.ai.dataScience.pipeline @defaults("name state") {
+  init(id? string)
+  // Pipeline OCID
+  id string
+  // Pipeline display name
+  name string
+  // Compartment OCID containing the pipeline
+  compartmentID string
+  // Compartment containing the pipeline
+  compartment() oci.compartment
+  // OCID of the project the pipeline belongs to
+  projectID string
+  // Project the pipeline belongs to
+  project() oci.ai.dataScience.project
+  // OCID of the principal that created the pipeline
+  createdBy string
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
