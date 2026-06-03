@@ -58,6 +58,19 @@ func ociListRegionalAI(runtime *plugin.Runtime, fetch func(region string) ([]any
 	return res, nil
 }
 
+// ociListRegionalAIClient adds typed per-region client creation to
+// ociListRegionalAI: it builds the client with factory and hands it to fetch,
+// so each call site only supplies the list-and-map logic.
+func ociListRegionalAIClient[C any](runtime *plugin.Runtime, factory func(region string) (C, error), fetch func(svc C) ([]any, error)) ([]any, error) {
+	return ociListRegionalAI(runtime, func(region string) ([]any, error) {
+		svc, err := factory(region)
+		if err != nil {
+			return nil, err
+		}
+		return fetch(svc)
+	})
+}
+
 // findOciAIResourceByID powers the init functions for the single-purpose AI
 // resources: it lists the requested collection and returns the entry whose id
 // matches the "id" argument, so a resource can be selected directly by OCID.
@@ -94,11 +107,7 @@ func (o *mqlOciAiLanguage) id() (string, error) { return "oci.ai.language", nil 
 
 func (o *mqlOciAiLanguage) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AILanguageClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
 		var items []ailanguage.ProjectSummary
 		var page *string
 		for {
@@ -139,11 +148,7 @@ func (o *mqlOciAiLanguage) projects() ([]any, error) {
 
 func (o *mqlOciAiLanguage) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AILanguageClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
 		var items []ailanguage.ModelSummary
 		var page *string
 		for {
@@ -192,11 +197,7 @@ func (o *mqlOciAiLanguage) models() ([]any, error) {
 
 func (o *mqlOciAiLanguage) endpoints() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AILanguageClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AILanguageClient, func(svc *ailanguage.AIServiceLanguageClient) ([]any, error) {
 		var items []ailanguage.EndpointSummary
 		var page *string
 		for {
@@ -324,11 +325,7 @@ func (o *mqlOciAiVision) id() (string, error) { return "oci.ai.vision", nil }
 
 func (o *mqlOciAiVision) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AIVisionClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AIVisionClient, func(svc *aivision.AIServiceVisionClient) ([]any, error) {
 		var items []aivision.ProjectSummary
 		var page *string
 		for {
@@ -368,11 +365,7 @@ func (o *mqlOciAiVision) projects() ([]any, error) {
 
 func (o *mqlOciAiVision) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AIVisionClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AIVisionClient, func(svc *aivision.AIServiceVisionClient) ([]any, error) {
 		var items []aivision.ModelSummary
 		var page *string
 		for {
@@ -463,11 +456,7 @@ func (o *mqlOciAiSpeech) id() (string, error) { return "oci.ai.speech", nil }
 
 func (o *mqlOciAiSpeech) customizations() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AISpeechClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AISpeechClient, func(svc *aispeech.AIServiceSpeechClient) ([]any, error) {
 		var items []aispeech.CustomizationSummary
 		var page *string
 		for {
@@ -526,11 +515,7 @@ func (o *mqlOciAiDocument) id() (string, error) { return "oci.ai.document", nil 
 
 func (o *mqlOciAiDocument) projects() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AIDocumentClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AIDocumentClient, func(svc *aidocument.AIServiceDocumentClient) ([]any, error) {
 		var items []aidocument.ProjectSummary
 		var page *string
 		for {
@@ -571,11 +556,7 @@ func (o *mqlOciAiDocument) projects() ([]any, error) {
 
 func (o *mqlOciAiDocument) models() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
-	return ociListRegionalAI(o.MqlRuntime, func(region string) ([]any, error) {
-		svc, err := conn.AIDocumentClient(region)
-		if err != nil {
-			return nil, err
-		}
+	return ociListRegionalAIClient(o.MqlRuntime, conn.AIDocumentClient, func(svc *aidocument.AIServiceDocumentClient) ([]any, error) {
 		var items []aidocument.ModelSummary
 		var page *string
 		for {
