@@ -2010,6 +2010,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetTtl()).ToDataRes(types.Int)
 	},
+	"microsoft.domaindnsrecord.text": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetText()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.canonicalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetCanonicalName()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.mailExchange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetMailExchange()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.preference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetPreference()).ToDataRes(types.Int)
+	},
+	"microsoft.domaindnsrecord.nameTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetNameTarget()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetService()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetProtocol()).ToDataRes(types.String)
+	},
+	"microsoft.domaindnsrecord.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetPort()).ToDataRes(types.Int)
+	},
+	"microsoft.domaindnsrecord.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetPriority()).ToDataRes(types.Int)
+	},
+	"microsoft.domaindnsrecord.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDomaindnsrecord).GetWeight()).ToDataRes(types.Int)
+	},
 	"microsoft.domaindnsrecord.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomaindnsrecord).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -5623,6 +5653,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.domaindnsrecord.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomaindnsrecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.text": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Text, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.canonicalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).CanonicalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.mailExchange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).MailExchange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.preference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Preference, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.nameTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).NameTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.domaindnsrecord.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDomaindnsrecord).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.domaindnsrecord.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13427,6 +13497,16 @@ type mqlMicrosoftDomaindnsrecord struct {
 	RecordType       plugin.TValue[string]
 	SupportedService plugin.TValue[string]
 	Ttl              plugin.TValue[int64]
+	Text             plugin.TValue[string]
+	CanonicalName    plugin.TValue[string]
+	MailExchange     plugin.TValue[string]
+	Preference       plugin.TValue[int64]
+	NameTarget       plugin.TValue[string]
+	Service          plugin.TValue[string]
+	Protocol         plugin.TValue[string]
+	Port             plugin.TValue[int64]
+	Priority         plugin.TValue[int64]
+	Weight           plugin.TValue[int64]
 	Properties       plugin.TValue[any]
 }
 
@@ -13489,6 +13569,46 @@ func (c *mqlMicrosoftDomaindnsrecord) GetSupportedService() *plugin.TValue[strin
 
 func (c *mqlMicrosoftDomaindnsrecord) GetTtl() *plugin.TValue[int64] {
 	return &c.Ttl
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetText() *plugin.TValue[string] {
+	return &c.Text
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetCanonicalName() *plugin.TValue[string] {
+	return &c.CanonicalName
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetMailExchange() *plugin.TValue[string] {
+	return &c.MailExchange
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetPreference() *plugin.TValue[int64] {
+	return &c.Preference
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetNameTarget() *plugin.TValue[string] {
+	return &c.NameTarget
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlMicrosoftDomaindnsrecord) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
 }
 
 func (c *mqlMicrosoftDomaindnsrecord) GetProperties() *plugin.TValue[any] {

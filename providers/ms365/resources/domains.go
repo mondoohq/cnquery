@@ -87,16 +87,27 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]any, error) {
 	res := []any{}
 	for _, record := range records {
 		properties := getDomainsDnsRecordProperties(record)
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.domaindnsrecord",
-			map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(record.GetId()),
-				"isOptional":       llx.BoolDataPtr(record.GetIsOptional()),
-				"label":            llx.StringDataPtr(record.GetLabel()),
-				"recordType":       llx.StringDataPtr(record.GetRecordType()),
-				"supportedService": llx.StringDataPtr(record.GetSupportedService()),
-				"ttl":              llx.IntDataDefault(record.GetTtl(), 0),
-				"properties":       llx.DictData(properties),
-			})
+		args := map[string]*llx.RawData{
+			"id":               llx.StringDataPtr(record.GetId()),
+			"isOptional":       llx.BoolDataPtr(record.GetIsOptional()),
+			"label":            llx.StringDataPtr(record.GetLabel()),
+			"recordType":       llx.StringDataPtr(record.GetRecordType()),
+			"supportedService": llx.StringDataPtr(record.GetSupportedService()),
+			"ttl":              llx.IntDataDefault(record.GetTtl(), 0),
+			"text":             llx.StringData(""),
+			"canonicalName":    llx.StringData(""),
+			"mailExchange":     llx.StringData(""),
+			"preference":       llx.IntData(0),
+			"nameTarget":       llx.StringData(""),
+			"service":          llx.StringData(""),
+			"protocol":         llx.StringData(""),
+			"port":             llx.IntData(0),
+			"priority":         llx.IntData(0),
+			"weight":           llx.IntData(0),
+			"properties":       llx.DictData(properties),
+		}
+		setDomainsDnsRecordTypedFields(record, args)
+		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.domaindnsrecord", args)
 		if err != nil {
 			return nil, err
 		}
@@ -104,6 +115,47 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// setDomainsDnsRecordTypedFields populates the per-record-type value fields
+// (text, canonicalName, mailExchange, etc.) from the concrete record subtype.
+func setDomainsDnsRecordTypedFields(record models.DomainDnsRecordable, args map[string]*llx.RawData) {
+	switch r := record.(type) {
+	case *models.DomainDnsTxtRecord:
+		if r.GetText() != nil {
+			args["text"] = llx.StringDataPtr(r.GetText())
+		}
+	case *models.DomainDnsCnameRecord:
+		if r.GetCanonicalName() != nil {
+			args["canonicalName"] = llx.StringDataPtr(r.GetCanonicalName())
+		}
+	case *models.DomainDnsMxRecord:
+		if r.GetMailExchange() != nil {
+			args["mailExchange"] = llx.StringDataPtr(r.GetMailExchange())
+		}
+		if r.GetPreference() != nil {
+			args["preference"] = llx.IntDataDefault(r.GetPreference(), 0)
+		}
+	case *models.DomainDnsSrvRecord:
+		if r.GetNameTarget() != nil {
+			args["nameTarget"] = llx.StringDataPtr(r.GetNameTarget())
+		}
+		if r.GetService() != nil {
+			args["service"] = llx.StringDataPtr(r.GetService())
+		}
+		if r.GetProtocol() != nil {
+			args["protocol"] = llx.StringDataPtr(r.GetProtocol())
+		}
+		if r.GetPort() != nil {
+			args["port"] = llx.IntDataDefault(r.GetPort(), 0)
+		}
+		if r.GetPriority() != nil {
+			args["priority"] = llx.IntDataDefault(r.GetPriority(), 0)
+		}
+		if r.GetWeight() != nil {
+			args["weight"] = llx.IntDataDefault(r.GetWeight(), 0)
+		}
+	}
 }
 
 func getDomainsDnsRecordProperties(record models.DomainDnsRecordable) map[string]interface{} {

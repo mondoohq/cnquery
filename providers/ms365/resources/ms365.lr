@@ -1253,9 +1253,60 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
+  // Text value of a TXT record
+  //
+  // The record content for a TXT record — for example an SPF policy string
+  // like `v=spf1 include:spf.protection.outlook.com -all`. Empty for record
+  // types other than TXT.
+  text string
+  // Canonical name of a CNAME record
+  //
+  // The target domain name that a CNAME record points to. Empty for record
+  // types other than CNAME.
+  canonicalName string
+  // Mail server of an MX record
+  //
+  // The fully qualified domain name of the mail exchange server for an MX
+  // record. Empty for record types other than MX.
+  mailExchange string
+  // Preference of an MX record
+  //
+  // The priority value of the mail exchange server; lower values are
+  // preferred. Zero for record types other than MX.
+  preference int
+  // Target host of an SRV record
+  //
+  // The fully qualified domain name of the target host for an SRV record.
+  // Empty for record types other than SRV.
+  nameTarget string
+  // Service of an SRV record
+  //
+  // The symbolic name of the service for an SRV record — for example
+  // `_sip`. Empty for record types other than SRV.
+  service string
+  // Protocol of an SRV record
+  //
+  // The transport protocol for an SRV record — for example `_tcp` or
+  // `_udp`. Empty for record types other than SRV.
+  protocol string
+  // Port of an SRV record
+  //
+  // The TCP or UDP port on which the service is found for an SRV record.
+  // Zero for record types other than SRV.
+  port int
+  // Priority of an SRV record
+  //
+  // The priority of the target host for an SRV record; lower values are
+  // preferred. Zero for record types other than SRV.
+  priority int
+  // Weight of an SRV record
+  //
+  // The relative weight for records with the same priority for an SRV
+  // record. Zero for record types other than SRV.
+  weight int
   // Raw domain record properties
   //
-  // Deprecated in favor of the typed fields on this resource (`recordType`, `supportedService`, `ttl`, `label`).
+  // Deprecated in favor of the typed fields on this resource (`recordType`, `supportedService`, `ttl`, `label`, `text`, `canonicalName`, `mailExchange`, `preference`, `nameTarget`, `service`, `protocol`, `port`, `priority`, `weight`).
   properties @maturity("deprecated") dict
 }
 
