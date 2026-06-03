@@ -10786,6 +10786,8 @@ private gcp.project.vertexaiService {
   notebookRuntimeTemplates() []gcp.project.vertexaiService.notebookRuntimeTemplate
   // Colab Enterprise notebook execution jobs
   notebookExecutionJobs() []gcp.project.vertexaiService.notebookExecutionJob
+  // Deployed Agent Engine agents (reasoning engines)
+  reasoningEngines() []gcp.project.vertexaiService.reasoningEngine
 }
 
 // Google Cloud (GCP) Vertex AI metadata store
@@ -11281,6 +11283,47 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   encryptionSpec dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI Agent Engine agent
+//
+// Examine a Vertex AI Agent Engine agent — a managed, deployed AI agent
+// (the API resource is named a reasoning engine). `serviceAccount()`
+// resolves the identity that runs the agent's tool calls and API access,
+// `agentFramework` reports the agent framework it was built with (for
+// example `google-adk` or `langchain`), and `spec` holds the full
+// deployment specification including the Python package, dependency URIs,
+// deployment scaling, and any environment variables. Encryption at rest is
+// reported through `encryptionSpec` and the resolved `kmsKey()`. Use these
+// fields to audit which agents are deployed, the identity they run as, and
+// their encryption posture.
+private gcp.project.vertexaiService.reasoningEngine @defaults("displayName agentFramework") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Human-readable description of the resource
+  description string
+  // Service account email the agent runs as
+  serviceAccountEmail string
+  // Service account the agent runs as
+  serviceAccount() gcp.project.iamService.serviceAccount
+  // Agent framework the agent was built with (e.g., google-adk, langchain)
+  agentFramework string
+  // Full deployment specification (package spec, deployment spec, class methods)
+  spec dict
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // ETag used for concurrency control on resource updates
+  etag string
   // Creation time
   createdAt time
   // Last update time

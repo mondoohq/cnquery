@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.20.1",
-  "generated_at": "2026-06-03T08:28:23-07:00",
+  "generated_at": "2026-06-03T09:48:59-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.get",
@@ -17,6 +17,7 @@
     "aiplatform.notebookRuntimeTemplates.list",
     "aiplatform.notebookRuntimes.list",
     "aiplatform.pipelineJobs.list",
+    "aiplatform.reasoningEngines.list",
     "aiplatform.tensorboards.list",
     "alloydb.backups.list",
     "alloydb.clusters.list",
@@ -328,6 +329,12 @@
       "permission": "aiplatform.pipelineJobs.list",
       "service": "aiplatform",
       "action": "ListPipelineJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.reasoningEngines.list",
+      "service": "aiplatform",
+      "action": "ListReasoningEngines",
       "source_file": "vertexai.go"
     },
     {

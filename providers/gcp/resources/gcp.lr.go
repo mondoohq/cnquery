@@ -355,6 +355,7 @@ const (
 	ResourceGcpProjectVertexaiServiceNotebookRuntime                                   string = "gcp.project.vertexaiService.notebookRuntime"
 	ResourceGcpProjectVertexaiServiceNotebookRuntimeTemplate                           string = "gcp.project.vertexaiService.notebookRuntimeTemplate"
 	ResourceGcpProjectVertexaiServiceNotebookExecutionJob                              string = "gcp.project.vertexaiService.notebookExecutionJob"
+	ResourceGcpProjectVertexaiServiceReasoningEngine                                   string = "gcp.project.vertexaiService.reasoningEngine"
 	ResourceGcpSccOrganizationSettings                                                 string = "gcp.scc.organizationSettings"
 	ResourceGcpSccSource                                                               string = "gcp.scc.source"
 	ResourceGcpSccFinding                                                              string = "gcp.scc.finding"
@@ -1801,6 +1802,10 @@ func init() {
 		"gcp.project.vertexaiService.notebookExecutionJob": {
 			// to override args, implement: initGcpProjectVertexaiServiceNotebookExecutionJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectVertexaiServiceNotebookExecutionJob,
+		},
+		"gcp.project.vertexaiService.reasoningEngine": {
+			// to override args, implement: initGcpProjectVertexaiServiceReasoningEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceReasoningEngine,
 		},
 		"gcp.scc.organizationSettings": {
 			// to override args, implement: initGcpSccOrganizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13058,6 +13063,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.notebookExecutionJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiService).GetNotebookExecutionJobs()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.notebookExecutionJob")))
 	},
+	"gcp.project.vertexaiService.reasoningEngines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetReasoningEngines()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.reasoningEngine")))
+	},
 	"gcp.project.vertexaiService.metadataStore.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetName()).ToDataRes(types.String)
 	},
@@ -13597,6 +13605,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.vertexaiService.reasoningEngine.agentFramework": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetAgentFramework()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.reasoningEngine.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.reasoningEngine.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.reasoningEngine.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"gcp.scc.organizationSettings.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccOrganizationSettings).GetName()).ToDataRes(types.String)
@@ -31459,6 +31506,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiService).NotebookExecutionJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.reasoningEngines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).ReasoningEngines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.metadataStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).__id, ok = v.Value.(string)
 		return
@@ -32229,6 +32280,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.agentFramework": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).AgentFramework, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.reasoningEngine.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.organizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72556,6 +72663,7 @@ type mqlGcpProjectVertexaiService struct {
 	NotebookRuntimes         plugin.TValue[[]any]
 	NotebookRuntimeTemplates plugin.TValue[[]any]
 	NotebookExecutionJobs    plugin.TValue[[]any]
+	ReasoningEngines         plugin.TValue[[]any]
 }
 
 // createGcpProjectVertexaiService creates a new instance of this resource
@@ -72804,6 +72912,22 @@ func (c *mqlGcpProjectVertexaiService) GetNotebookExecutionJobs() *plugin.TValue
 		}
 
 		return c.notebookExecutionJobs()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetReasoningEngines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReasoningEngines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "reasoningEngines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reasoningEngines()
 	})
 }
 
@@ -74432,6 +74556,139 @@ func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetCreatedAt() *plugi
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceReasoningEngine for the gcp.project.vertexaiService.reasoningEngine resource
+type mqlGcpProjectVertexaiServiceReasoningEngine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceReasoningEngineInternal
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	AgentFramework      plugin.TValue[string]
+	Spec                plugin.TValue[any]
+	EncryptionSpec      plugin.TValue[any]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Labels              plugin.TValue[map[string]any]
+	Etag                plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceReasoningEngine creates a new instance of this resource
+func createGcpProjectVertexaiServiceReasoningEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceReasoningEngine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.reasoningEngine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) MqlName() string {
+	return "gcp.project.vertexaiService.reasoningEngine"
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.reasoningEngine", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetAgentFramework() *plugin.TValue[string] {
+	return &c.AgentFramework
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetSpec() *plugin.TValue[any] {
+	return &c.Spec
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.reasoningEngine", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 

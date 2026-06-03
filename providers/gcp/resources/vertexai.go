@@ -1394,6 +1394,103 @@ func (g *mqlGcpProjectVertexaiServiceNotebookExecutionJob) id() (string, error) 
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectVertexaiService) reasoningEngines() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewReasoningEngineClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListReasoningEngines(ctx, &aiplatformpb.ListReasoningEnginesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			engine, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			spec, err := protoToDict(engine.Spec)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(engine.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlEngine, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.reasoningEngine", map[string]*llx.RawData{
+				"name":                llx.StringData(engine.Name),
+				"displayName":         llx.StringData(engine.DisplayName),
+				"description":         llx.StringData(engine.Description),
+				"serviceAccountEmail": llx.StringData(engine.GetSpec().GetServiceAccount()),
+				"agentFramework":      llx.StringData(engine.GetSpec().GetAgentFramework()),
+				"spec":                llx.DictData(spec),
+				"encryptionSpec":      llx.DictData(encryptionSpec),
+				"labels":              llx.MapData(convert.MapToInterfaceMap(engine.Labels), types.String),
+				"etag":                llx.StringData(engine.Etag),
+				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(engine.CreateTime)),
+				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(engine.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlEngineRes := mqlEngine.(*mqlGcpProjectVertexaiServiceReasoningEngine)
+			mqlEngineRes.cacheKmsKeyName = engine.GetEncryptionSpec().GetKmsKeyName()
+			mqlEngineRes.cacheProjectId = projectId
+			items = append(items, mqlEngine)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceReasoningEngine) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (a *mqlGcpProjectVertexaiServiceReasoningEngine) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if a.ServiceAccountEmail.Error != nil {
+		return nil, a.ServiceAccountEmail.Error
+	}
+	email := a.ServiceAccountEmail.Data
+	if email == "" || a.cacheProjectId == "" {
+		a.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(a.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(a.cacheProjectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 // ---------------------------------------------------------------
 // KMS key references
 // ---------------------------------------------------------------
@@ -1499,5 +1596,14 @@ type mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal struct {
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceReasoningEngineInternal struct {
+	cacheKmsKeyName string
+	cacheProjectId  string
+}
+
+func (a *mqlGcpProjectVertexaiServiceReasoningEngine) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
