@@ -10903,7 +10903,13 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   // Human-readable description of the resource
   description string
   // Deployed models
-  deployedModels []dict
+  //
+  // Deprecated in favor of deployments, which exposes each model deployment
+  // as a queryable gcp.project.vertexaiService.endpoint.deployment with a
+  // model() reference.
+  deployedModels @maturity("deprecated") []dict
+  // Models deployed to this endpoint
+  deployments []gcp.project.vertexaiService.endpoint.deployment
   // Encryption spec (CMEK)
   encryptionSpec dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
@@ -10922,6 +10928,36 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   createdAt time
   // Last update time
   updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI model deployment
+//
+// Examine a single model deployment on a Vertex AI endpoint. `model()`
+// resolves to the deployed Vertex AI model, `serviceAccount()` resolves the
+// identity the deployment runs as, and `disableContainerLogging` /
+// `enableAccessLogging` report the prediction-logging posture. The `id`
+// selects the deployment within its endpoint. Use these fields to audit
+// which models serve traffic and the identity and logging configuration of
+// each deployment.
+private gcp.project.vertexaiService.endpoint.deployment @defaults("id displayName") {
+  // ID of the deployment within the endpoint
+  id string
+  // Display name
+  displayName string
+  // Version ID of the deployed model
+  modelVersionId string
+  // Deployed Vertex AI model
+  model() gcp.project.vertexaiService.model
+  // Service account email the deployment runs as
+  serviceAccountEmail string
+  // Service account the deployment runs as
+  serviceAccount() gcp.project.iamService.serviceAccount
+  // Whether container request/response logging is disabled
+  disableContainerLogging bool
+  // Whether access logging is enabled
+  enableAccessLogging bool
+  // Time the model was deployed
+  createdAt time
 }
 
 // Google Cloud (GCP) Vertex AI pipeline job

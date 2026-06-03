@@ -1075,6 +1075,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// JobClient.GetCustomJob → singular "customJob" by default; the real
 		// IAM permission is the plural form.
 		"GetCustomJob": "aiplatform.customJobs.get",
+		// ModelClient.GetModel → singular "model" by default; the real IAM
+		// permission is the plural form (matching aiplatform.models.list).
+		"GetModel": "aiplatform.models.get",
 	},
 	"pubsub": {
 		// SchemaClient.GetSchema → singular "schema" by default; real IAM

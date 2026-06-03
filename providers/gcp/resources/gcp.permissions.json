@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.20.1",
-  "generated_at": "2026-06-03T10:20:26-07:00",
+  "generated_at": "2026-06-03T11:35:17-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -18,6 +18,7 @@
     "aiplatform.indexes.list",
     "aiplatform.metadataStores.list",
     "aiplatform.modelDeploymentMonitoringJobs.list",
+    "aiplatform.models.get",
     "aiplatform.models.list",
     "aiplatform.notebookExecutionJobs.list",
     "aiplatform.notebookRuntimeTemplates.list",
@@ -349,6 +350,12 @@
       "permission": "aiplatform.modelDeploymentMonitoringJobs.list",
       "service": "aiplatform",
       "action": "ListModelDeploymentMonitoringJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.models.get",
+      "service": "aiplatform",
+      "action": "GetModel",
       "source_file": "vertexai.go"
     },
     {

@@ -345,6 +345,7 @@ const (
 	ResourceGcpProjectVertexaiServiceMetadataStore                                     string = "gcp.project.vertexaiService.metadataStore"
 	ResourceGcpProjectVertexaiServiceModel                                             string = "gcp.project.vertexaiService.model"
 	ResourceGcpProjectVertexaiServiceEndpoint                                          string = "gcp.project.vertexaiService.endpoint"
+	ResourceGcpProjectVertexaiServiceEndpointDeployment                                string = "gcp.project.vertexaiService.endpoint.deployment"
 	ResourceGcpProjectVertexaiServicePipelineJob                                       string = "gcp.project.vertexaiService.pipelineJob"
 	ResourceGcpProjectVertexaiServiceDataset                                           string = "gcp.project.vertexaiService.dataset"
 	ResourceGcpProjectVertexaiServiceFeatureOnlineStore                                string = "gcp.project.vertexaiService.featureOnlineStore"
@@ -1776,6 +1777,10 @@ func init() {
 		"gcp.project.vertexaiService.endpoint": {
 			// to override args, implement: initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectVertexaiServiceEndpoint,
+		},
+		"gcp.project.vertexaiService.endpoint.deployment": {
+			// to override args, implement: initGcpProjectVertexaiServiceEndpointDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceEndpointDeployment,
 		},
 		"gcp.project.vertexaiService.pipelineJob": {
 			// to override args, implement: initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13265,6 +13270,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.endpoint.deployedModels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetDeployedModels()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.vertexaiService.endpoint.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetDeployments()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.endpoint.deployment")))
+	},
 	"gcp.project.vertexaiService.endpoint.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetEncryptionSpec()).ToDataRes(types.Dict)
 	},
@@ -13291,6 +13299,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.endpoint.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.modelVersionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetModelVersionId()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetModel()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.disableContainerLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetDisableContainerLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.enableAccessLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetEnableAccessLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"gcp.project.vertexaiService.pipelineJob.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetName()).ToDataRes(types.String)
@@ -32259,6 +32294,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).DeployedModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.endpoint.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.endpoint.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -32293,6 +32332,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.endpoint.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.modelVersionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).ModelVersionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).Model, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.disableContainerLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).DisableContainerLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.enableAccessLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).EnableAccessLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.endpoint.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpointDeployment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.pipelineJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74672,6 +74751,7 @@ type mqlGcpProjectVertexaiServiceEndpoint struct {
 	DisplayName                 plugin.TValue[string]
 	Description                 plugin.TValue[string]
 	DeployedModels              plugin.TValue[[]any]
+	Deployments                 plugin.TValue[[]any]
 	EncryptionSpec              plugin.TValue[any]
 	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Network                     plugin.TValue[string]
@@ -74736,6 +74816,10 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetDeployedModels() *plugin.TValu
 	return &c.DeployedModels
 }
 
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetDeployments() *plugin.TValue[[]any] {
+	return &c.Deployments
+}
+
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetEncryptionSpec() *plugin.TValue[any] {
 	return &c.EncryptionSpec
 }
@@ -74782,6 +74866,114 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetCreatedAt() *plugin.TValue[*ti
 
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceEndpointDeployment for the gcp.project.vertexaiService.endpoint.deployment resource
+type mqlGcpProjectVertexaiServiceEndpointDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceEndpointDeploymentInternal
+	Id                      plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	ModelVersionId          plugin.TValue[string]
+	Model                   plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
+	ServiceAccountEmail     plugin.TValue[string]
+	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	DisableContainerLogging plugin.TValue[bool]
+	EnableAccessLogging     plugin.TValue[bool]
+	CreatedAt               plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceEndpointDeployment creates a new instance of this resource
+func createGcpProjectVertexaiServiceEndpointDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceEndpointDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.endpoint.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) MqlName() string {
+	return "gcp.project.vertexaiService.endpoint.deployment"
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetModelVersionId() *plugin.TValue[string] {
+	return &c.ModelVersionId
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetModel() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.Model, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.endpoint.deployment", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.endpoint.deployment", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetDisableContainerLogging() *plugin.TValue[bool] {
+	return &c.DisableContainerLogging
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetEnableAccessLogging() *plugin.TValue[bool] {
+	return &c.EnableAccessLogging
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpointDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlGcpProjectVertexaiServicePipelineJob for the gcp.project.vertexaiService.pipelineJob resource

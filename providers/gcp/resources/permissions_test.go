@@ -52,6 +52,7 @@ var validatedGCPPermissions = []string{
 	"aiplatform.indexes.list",
 	"aiplatform.metadataStores.list",
 	"aiplatform.modelDeploymentMonitoringJobs.list",
+	"aiplatform.models.get",
 	"aiplatform.models.list",
 	"aiplatform.notebookExecutionJobs.list",
 	"aiplatform.notebookRuntimeTemplates.list",

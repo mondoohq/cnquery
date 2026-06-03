@@ -4574,6 +4574,17 @@ gcp.project.vertexaiService.deploymentResourcePools 13.20.2
 gcp.project.vertexaiService.endpoint 13.1.2
 gcp.project.vertexaiService.endpoint.createdAt 13.1.2
 gcp.project.vertexaiService.endpoint.deployedModels 13.1.2
+gcp.project.vertexaiService.endpoint.deployment 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.createdAt 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.disableContainerLogging 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.displayName 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.enableAccessLogging 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.id 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.model 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.modelVersionId 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.serviceAccount 13.20.2
+gcp.project.vertexaiService.endpoint.deployment.serviceAccountEmail 13.20.2
+gcp.project.vertexaiService.endpoint.deployments 13.20.2
 gcp.project.vertexaiService.endpoint.description 13.1.2
 gcp.project.vertexaiService.endpoint.displayName 13.1.2
 gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect 13.1.2
