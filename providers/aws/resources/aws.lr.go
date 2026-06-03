@@ -867,6 +867,7 @@ const (
 	ResourceAwsBedrockModelInvocationLoggingConfiguration                       string = "aws.bedrock.modelInvocationLoggingConfiguration"
 	ResourceAwsBedrockProvisionedModelThroughput                                string = "aws.bedrock.provisionedModelThroughput"
 	ResourceAwsBedrockAgent                                                     string = "aws.bedrock.agent"
+	ResourceAwsBedrockAgentAlias                                                string = "aws.bedrock.agent.alias"
 	ResourceAwsBedrockKnowledgeBase                                             string = "aws.bedrock.knowledgeBase"
 	ResourceAwsBedrockFlow                                                      string = "aws.bedrock.flow"
 	ResourceAwsBedrockEvaluationJob                                             string = "aws.bedrock.evaluationJob"
@@ -879,6 +880,9 @@ const (
 	ResourceAwsQBusinessRetriever                                               string = "aws.qBusiness.retriever"
 	ResourceAwsQBusinessPlugin                                                  string = "aws.qBusiness.plugin"
 	ResourceAwsQBusinessWebExperience                                           string = "aws.qBusiness.webExperience"
+	ResourceAwsBedrockInferenceProfile                                          string = "aws.bedrock.inferenceProfile"
+	ResourceAwsBedrockImportedModel                                             string = "aws.bedrock.importedModel"
+	ResourceAwsBedrockPrompt                                                    string = "aws.bedrock.prompt"
 	ResourceAwsStepfunctions                                                    string = "aws.stepfunctions"
 	ResourceAwsStepfunctionsStateMachine                                        string = "aws.stepfunctions.stateMachine"
 	ResourceAwsStepfunctionsStateMachineLoggingConfiguration                    string = "aws.stepfunctions.stateMachine.loggingConfiguration"
@@ -4299,6 +4303,10 @@ func init() {
 			// to override args, implement: initAwsBedrockAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgent,
 		},
+		"aws.bedrock.agent.alias": {
+			// to override args, implement: initAwsBedrockAgentAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentAlias,
+		},
 		"aws.bedrock.knowledgeBase": {
 			// to override args, implement: initAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockKnowledgeBase,
@@ -4346,6 +4354,18 @@ func init() {
 		"aws.qBusiness.webExperience": {
 			// to override args, implement: initAwsQBusinessWebExperience(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsQBusinessWebExperience,
+		},
+		"aws.bedrock.inferenceProfile": {
+			// to override args, implement: initAwsBedrockInferenceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockInferenceProfile,
+		},
+		"aws.bedrock.importedModel": {
+			// to override args, implement: initAwsBedrockImportedModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockImportedModel,
+		},
+		"aws.bedrock.prompt": {
+			// to override args, implement: initAwsBedrockPrompt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockPrompt,
 		},
 		"aws.stepfunctions": {
 			// to override args, implement: initAwsStepfunctions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -30714,6 +30734,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.batchInferenceJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetBatchInferenceJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.batchInferenceJob")))
 	},
+	"aws.bedrock.inferenceProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetInferenceProfiles()).ToDataRes(types.Array(types.Resource("aws.bedrock.inferenceProfile")))
+	},
+	"aws.bedrock.importedModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetImportedModels()).ToDataRes(types.Array(types.Resource("aws.bedrock.importedModel")))
+	},
+	"aws.bedrock.prompts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetPrompts()).ToDataRes(types.Array(types.Resource("aws.bedrock.prompt")))
+	},
 	"aws.bedrock.advancedPromptOptimizationJob.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetArn()).ToDataRes(types.String)
 	},
@@ -30935,6 +30964,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgent).GetKnowledgeBases()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.agent.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetAliases()).ToDataRes(types.Array(types.Resource("aws.bedrock.agent.alias")))
+	},
+	"aws.bedrock.agent.alias.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.agentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetAgentId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.invocationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetInvocationState()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.alias.routingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetRoutingConfiguration()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.agent.alias.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.alias.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentAlias).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.knowledgeBase.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockKnowledgeBase).GetId()).ToDataRes(types.String)
@@ -31310,6 +31372,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.qBusiness.webExperience.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsQBusinessWebExperience).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.inferenceProfile.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.inferenceProfile.modelArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetModelArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.inferenceProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.inferenceProfile.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.importedModel.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.importedModel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.importedModel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.importedModel.modelArchitecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetModelArchitecture()).ToDataRes(types.String)
+	},
+	"aws.bedrock.importedModel.instructSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetInstructSupported()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.importedModel.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.importedModel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockImportedModel).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.prompt.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.prompt.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.prompt.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockPrompt).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.stepfunctions.stateMachines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsStepfunctions).GetStateMachines()).ToDataRes(types.Array(types.Resource("aws.stepfunctions.stateMachine")))
@@ -69896,6 +70033,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrock).BatchInferenceJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.inferenceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).InferenceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ImportedModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).Prompts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.advancedPromptOptimizationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).__id, ok = v.Value.(string)
 		return
@@ -70218,6 +70367,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgent).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agent.alias.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.agentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).AgentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.invocationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).InvocationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.routingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).RoutingConfiguration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.alias.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentAlias).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.knowledgeBase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70766,6 +70963,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.qBusiness.webExperience.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsQBusinessWebExperience).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.inferenceProfile.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.modelArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).ModelArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.importedModel.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.modelArchitecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).ModelArchitecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.instructSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).InstructSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.importedModel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockImportedModel).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.prompt.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.prompt.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockPrompt).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.stepfunctions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -169609,6 +169918,9 @@ type mqlAwsBedrock struct {
 	EvaluationJobs                       plugin.TValue[[]any]
 	ModelImportJobs                      plugin.TValue[[]any]
 	BatchInferenceJobs                   plugin.TValue[[]any]
+	InferenceProfiles                    plugin.TValue[[]any]
+	ImportedModels                       plugin.TValue[[]any]
+	Prompts                              plugin.TValue[[]any]
 }
 
 // createAwsBedrock creates a new instance of this resource
@@ -169837,6 +170149,54 @@ func (c *mqlAwsBedrock) GetBatchInferenceJobs() *plugin.TValue[[]any] {
 		}
 
 		return c.batchInferenceJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetInferenceProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InferenceProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "inferenceProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inferenceProfiles()
+	})
+}
+
+func (c *mqlAwsBedrock) GetImportedModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImportedModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "importedModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.importedModels()
+	})
+}
+
+func (c *mqlAwsBedrock) GetPrompts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Prompts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "prompts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.prompts()
 	})
 }
 
@@ -170497,6 +170857,7 @@ type mqlAwsBedrockAgent struct {
 	UpdatedAt             plugin.TValue[*time.Time]
 	ActionGroups          plugin.TValue[[]any]
 	KnowledgeBases        plugin.TValue[[]any]
+	Aliases               plugin.TValue[[]any]
 }
 
 // createAwsBedrockAgent creates a new instance of this resource
@@ -170642,6 +171003,116 @@ func (c *mqlAwsBedrockAgent) GetKnowledgeBases() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
 		return c.knowledgeBases()
 	})
+}
+
+func (c *mqlAwsBedrockAgent) GetAliases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "aliases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aliases()
+	})
+}
+
+// mqlAwsBedrockAgentAlias for the aws.bedrock.agent.alias resource
+type mqlAwsBedrockAgentAlias struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockAgentAliasInternal it will be used here
+	Id                   plugin.TValue[string]
+	AgentId              plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Description          plugin.TValue[string]
+	InvocationState      plugin.TValue[string]
+	RoutingConfiguration plugin.TValue[[]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockAgentAlias creates a new instance of this resource
+func createAwsBedrockAgentAlias(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentAlias{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agent.alias", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentAlias) MqlName() string {
+	return "aws.bedrock.agent.alias"
+}
+
+func (c *mqlAwsBedrockAgentAlias) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetAgentId() *plugin.TValue[string] {
+	return &c.AgentId
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetInvocationState() *plugin.TValue[string] {
+	return &c.InvocationState
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetRoutingConfiguration() *plugin.TValue[[]any] {
+	return &c.RoutingConfiguration
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockAgentAlias) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsBedrockKnowledgeBase for the aws.bedrock.knowledgeBase resource
@@ -172052,6 +172523,275 @@ func (c *mqlAwsQBusinessWebExperience) GetCreatedAt() *plugin.TValue[*time.Time]
 }
 
 func (c *mqlAwsQBusinessWebExperience) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockInferenceProfile for the aws.bedrock.inferenceProfile resource
+type mqlAwsBedrockInferenceProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockInferenceProfileInternal it will be used here
+	Arn         plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Description plugin.TValue[string]
+	ModelArns   plugin.TValue[[]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockInferenceProfile creates a new instance of this resource
+func createAwsBedrockInferenceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockInferenceProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.inferenceProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockInferenceProfile) MqlName() string {
+	return "aws.bedrock.inferenceProfile"
+}
+
+func (c *mqlAwsBedrockInferenceProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetModelArns() *plugin.TValue[[]any] {
+	return &c.ModelArns
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockImportedModel for the aws.bedrock.importedModel resource
+type mqlAwsBedrockImportedModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockImportedModelInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	ModelArchitecture plugin.TValue[string]
+	InstructSupported plugin.TValue[bool]
+	CreatedAt         plugin.TValue[*time.Time]
+	KmsKey            plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsBedrockImportedModel creates a new instance of this resource
+func createAwsBedrockImportedModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockImportedModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.importedModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockImportedModel) MqlName() string {
+	return "aws.bedrock.importedModel"
+}
+
+func (c *mqlAwsBedrockImportedModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockImportedModel) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockImportedModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockImportedModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockImportedModel) GetModelArchitecture() *plugin.TValue[string] {
+	return &c.ModelArchitecture
+}
+
+func (c *mqlAwsBedrockImportedModel) GetInstructSupported() *plugin.TValue[bool] {
+	return &c.InstructSupported
+}
+
+func (c *mqlAwsBedrockImportedModel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockImportedModel) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.importedModel", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsBedrockPrompt for the aws.bedrock.prompt resource
+type mqlAwsBedrockPrompt struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockPromptInternal it will be used here
+	Arn         plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Description plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockPrompt creates a new instance of this resource
+func createAwsBedrockPrompt(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockPrompt{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.prompt", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockPrompt) MqlName() string {
+	return "aws.bedrock.prompt"
+}
+
+func (c *mqlAwsBedrockPrompt) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockPrompt) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockPrompt) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockPrompt) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockPrompt) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockPrompt) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsBedrockPrompt) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsBedrockPrompt) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockPrompt) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 

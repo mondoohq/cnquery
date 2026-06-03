@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.31.1",
-  "generated_at": "2026-06-03T09:27:06-07:00",
+  "generated_at": "2026-06-03T10:00:58-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -87,11 +87,13 @@
     "bedrock:GetEvaluationJob",
     "bedrock:GetFlow",
     "bedrock:GetGuardrail",
+    "bedrock:GetImportedModel",
     "bedrock:GetKnowledgeBase",
     "bedrock:GetModelImportJob",
     "bedrock:GetModelInvocationLoggingConfiguration",
     "bedrock:ListAdvancedPromptOptimizationJobs",
     "bedrock:ListAgentActionGroups",
+    "bedrock:ListAgentAliases",
     "bedrock:ListAgentKnowledgeBases",
     "bedrock:ListAgents",
     "bedrock:ListCustomModels",
@@ -100,9 +102,12 @@
     "bedrock:ListFlows",
     "bedrock:ListFoundationModels",
     "bedrock:ListGuardrails",
+    "bedrock:ListImportedModels",
+    "bedrock:ListInferenceProfiles",
     "bedrock:ListKnowledgeBases",
     "bedrock:ListModelImportJobs",
     "bedrock:ListModelInvocationJobs",
+    "bedrock:ListPrompts",
     "bedrock:ListProvisionedModelThroughputs",
     "budgets:DescribeBudgets",
     "budgets:DescribeNotificationsForBudget",
@@ -1422,6 +1427,12 @@
       "source_file": "aws_bedrock.go"
     },
     {
+      "permission": "bedrock:GetImportedModel",
+      "service": "bedrock",
+      "action": "GetImportedModel",
+      "source_file": "aws_bedrock_enrichment.go"
+    },
+    {
       "permission": "bedrock:GetKnowledgeBase",
       "service": "bedrock",
       "action": "GetKnowledgeBase",
@@ -1450,6 +1461,12 @@
       "service": "bedrock",
       "action": "ListAgentActionGroups",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListAgentAliases",
+      "service": "bedrock",
+      "action": "ListAgentAliases",
+      "source_file": "aws_bedrock_enrichment.go"
     },
     {
       "permission": "bedrock:ListAgentKnowledgeBases",
@@ -1500,6 +1517,18 @@
       "source_file": "aws_bedrock.go"
     },
     {
+      "permission": "bedrock:ListImportedModels",
+      "service": "bedrock",
+      "action": "ListImportedModels",
+      "source_file": "aws_bedrock_enrichment.go"
+    },
+    {
+      "permission": "bedrock:ListInferenceProfiles",
+      "service": "bedrock",
+      "action": "ListInferenceProfiles",
+      "source_file": "aws_bedrock_enrichment.go"
+    },
+    {
       "permission": "bedrock:ListKnowledgeBases",
       "service": "bedrock",
       "action": "ListKnowledgeBases",
@@ -1516,6 +1545,12 @@
       "service": "bedrock",
       "action": "ListModelInvocationJobs",
       "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListPrompts",
+      "service": "bedrock",
+      "action": "ListPrompts",
+      "source_file": "aws_bedrock_enrichment.go"
     },
     {
       "permission": "bedrock:ListProvisionedModelThroughputs",

@@ -23473,6 +23473,12 @@ aws.bedrock {
   modelImportJobs() []aws.bedrock.modelImportJob
   // Batch inference (model-invocation) jobs in the account
   batchInferenceJobs() []aws.bedrock.batchInferenceJob
+  // Cross-region inference profiles in the account
+  inferenceProfiles() []aws.bedrock.inferenceProfile
+  // Custom models imported into the account
+  importedModels() []aws.bedrock.importedModel
+  // Managed prompts in the account
+  prompts() []aws.bedrock.prompt
 }
 
 // Amazon Bedrock advanced prompt optimization job
@@ -23668,6 +23674,39 @@ private aws.bedrock.agent @defaults("name status foundationModel") {
   actionGroups() []dict
   // Knowledge bases associated with the agent's DRAFT version
   knowledgeBases() []dict
+  // Aliases pointing at prepared versions of the agent
+  aliases() []aws.bedrock.agent.alias
+}
+
+// Amazon Bedrock Agent alias
+//
+// An agent alias points at one or more prepared versions of a Bedrock
+// Agent and is the stable target that applications invoke. Examine the
+// alias status and its routing configuration to see which agent versions
+// receive traffic. The `name` field selects an alias within its agent.
+private aws.bedrock.agent.alias @defaults("name status") {
+  // Unique identifier of the alias
+  id string
+  // Identifier of the agent that owns the alias
+  agentId string
+  // Name of the alias
+  name string
+  // Region where the alias exists
+  region string
+  // Status of the alias
+  //
+  // One of CREATING, PREPARED, FAILED, UPDATING, DELETING, or DISSOCIATED.
+  status string
+  // Description of the alias
+  description string
+  // Invocation state of the alias (whether it accepts invocations)
+  invocationState string
+  // Routing configuration mapping the alias to agent versions
+  routingConfiguration []dict
+  // Time the alias was created
+  createdAt time
+  // Time the alias was last updated
+  updatedAt time
 }
 
 // Amazon Bedrock knowledge base
@@ -24062,6 +24101,85 @@ private aws.qBusiness.webExperience @defaults("id status") {
   // Time the web experience was created
   createdAt time
   // Time the web experience was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock inference profile
+//
+// An inference profile routes model-invocation requests across one or
+// more regions for a foundation model, enabling cross-region inference
+// and serving as a governance and cost-tracking boundary. Examine the
+// profile type and the model ARNs it routes to. The `id` field selects an
+// inference profile.
+private aws.bedrock.inferenceProfile @defaults("name status type") {
+  // ARN of the inference profile
+  arn string
+  // Identifier of the inference profile
+  id string
+  // Name of the inference profile
+  name string
+  // Region where the inference profile exists
+  region string
+  // Status of the inference profile
+  status string
+  // Type of the inference profile
+  //
+  // One of SYSTEM_DEFINED or APPLICATION.
+  type string
+  // Description of the inference profile
+  description string
+  // ARNs of the foundation models the profile routes requests to
+  modelArns []string
+  // Time the inference profile was created
+  createdAt time
+  // Time the inference profile was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock imported model
+//
+// A custom model imported into Bedrock from external weights. Examine the
+// model architecture, whether it supports instruction following, and the
+// customer-managed key used to encrypt it. The `arn` field selects an
+// imported model.
+private aws.bedrock.importedModel @defaults("name modelArchitecture") {
+  // ARN of the imported model
+  arn string
+  // Name of the imported model
+  name string
+  // Region where the imported model exists
+  region string
+  // Architecture of the imported model
+  modelArchitecture string
+  // Whether the model supports instruction following
+  instructSupported bool
+  // Time the model was imported
+  createdAt time
+  // Customer-managed KMS key used to encrypt the model
+  kmsKey() aws.kms.key
+}
+
+// Amazon Bedrock prompt
+//
+// A managed prompt stored in Bedrock prompt management, versioned and
+// reusable across agents and flows. Examine the prompt version and
+// description. The `id` field selects a prompt.
+private aws.bedrock.prompt @defaults("name version") {
+  // ARN of the prompt
+  arn string
+  // Identifier of the prompt
+  id string
+  // Name of the prompt
+  name string
+  // Region where the prompt exists
+  region string
+  // Version of the prompt
+  version string
+  // Description of the prompt
+  description string
+  // Time the prompt was created
+  createdAt time
+  // Time the prompt was last updated
   updatedAt time
 }
 
