@@ -57,6 +57,11 @@ func initOpenstackCredential(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
+type mqlOpenstackCredentialInternal struct {
+	cacheUserID    string
+	cacheProjectID string
+}
+
 func (o *mqlOpenstack) credentials() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.IdentityClient()
@@ -80,26 +85,27 @@ func (o *mqlOpenstack) credentials() ([]any, error) {
 		// The credential blob holds secret material (e.g. the ec2 secret key)
 		// and is deliberately not exposed.
 		res, err := CreateResource(o.MqlRuntime, "openstack.credential", map[string]*llx.RawData{
-			"__id":      llx.StringData("openstack.credential/" + cred.ID),
-			"id":        llx.StringData(cred.ID),
-			"type":      llx.StringData(cred.Type),
-			"userId":    llx.StringData(cred.UserID),
-			"projectId": llx.StringData(cred.ProjectID),
+			"__id": llx.StringData("openstack.credential/" + cred.ID),
+			"id":   llx.StringData(cred.ID),
+			"type": llx.StringData(cred.Type),
 		})
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlCred := res.(*mqlOpenstackCredential)
+		mqlCred.cacheUserID = cred.UserID
+		mqlCred.cacheProjectID = cred.ProjectID
+		out = append(out, mqlCred)
 	}
 	return out, nil
 }
 
 func (r *mqlOpenstackCredential) user() (*mqlOpenstackUser, error) {
-	return resolveUser(r.MqlRuntime, r.UserId.Data, &r.User)
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 func (r *mqlOpenstackCredential) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 // ---- openstack.ec2Credential ----
@@ -118,6 +124,12 @@ func initOpenstackEc2Credential(runtime *plugin.Runtime, args map[string]*llx.Ra
 	// so a direct openstack.ec2Credential("access") reference stays addressable.
 	initSyntheticID("openstack.ec2Credential", "access", args)
 	return args, nil, nil
+}
+
+type mqlOpenstackEc2CredentialInternal struct {
+	cacheUserID    string
+	cacheProjectID string
+	cacheTrustID   string
 }
 
 func (r *mqlOpenstackUser) ec2Credentials() ([]any, error) {
@@ -142,35 +154,36 @@ func (r *mqlOpenstackUser) ec2Credentials() ([]any, error) {
 	for _, cred := range items {
 		// The secret key (cred.Secret) is deliberately not exposed.
 		res, err := CreateResource(r.MqlRuntime, "openstack.ec2Credential", map[string]*llx.RawData{
-			"__id":      llx.StringData("openstack.ec2Credential/" + cred.Access),
-			"access":    llx.StringData(cred.Access),
-			"userId":    llx.StringData(cred.UserID),
-			"projectId": llx.StringData(cred.TenantID),
-			"trustId":   llx.StringData(cred.TrustID),
+			"__id":   llx.StringData("openstack.ec2Credential/" + cred.Access),
+			"access": llx.StringData(cred.Access),
 		})
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlCred := res.(*mqlOpenstackEc2Credential)
+		mqlCred.cacheUserID = cred.UserID
+		mqlCred.cacheProjectID = cred.TenantID
+		mqlCred.cacheTrustID = cred.TrustID
+		out = append(out, mqlCred)
 	}
 	return out, nil
 }
 
 func (r *mqlOpenstackEc2Credential) user() (*mqlOpenstackUser, error) {
-	return resolveUser(r.MqlRuntime, r.UserId.Data, &r.User)
+	return resolveUser(r.MqlRuntime, r.cacheUserID, &r.User)
 }
 
 func (r *mqlOpenstackEc2Credential) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }
 
 func (r *mqlOpenstackEc2Credential) trust() (*mqlOpenstackTrust, error) {
-	if r.TrustId.Data == "" {
+	if r.cacheTrustID == "" {
 		r.Trust.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(r.MqlRuntime, "openstack.trust", map[string]*llx.RawData{
-		"id": llx.StringData(r.TrustId.Data),
+		"id": llx.StringData(r.cacheTrustID),
 	})
 	if err != nil {
 		return nil, err
@@ -207,6 +220,13 @@ func initOpenstackTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return args, nil, nil
 }
 
+type mqlOpenstackTrustInternal struct {
+	cacheTrusteeUserID      string
+	cacheTrustorUserID      string
+	cacheProjectID          string
+	cacheRedelegatedTrustID string
+}
+
 func (o *mqlOpenstack) trusts() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.IdentityClient()
@@ -232,36 +252,51 @@ func (o *mqlOpenstack) trusts() ([]any, error) {
 			roleNames = append(roleNames, role.Name)
 		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.trust", map[string]*llx.RawData{
-			"__id":               llx.StringData("openstack.trust/" + t.ID),
-			"id":                 llx.StringData(t.ID),
-			"impersonation":      llx.BoolData(t.Impersonation),
-			"trusteeUserId":      llx.StringData(t.TrusteeUserID),
-			"trustorUserId":      llx.StringData(t.TrustorUserID),
-			"projectId":          llx.StringData(t.ProjectID),
-			"roleNames":          stringSliceData(roleNames),
-			"allowRedelegation":  llx.BoolData(t.AllowRedelegation),
-			"remainingUses":      llx.IntData(int64(t.RemainingUses)),
-			"redelegatedTrustId": llx.StringData(t.RedelegatedTrustID),
-			"expiresAt":          llx.TimeDataPtr(timePtr(t.ExpiresAt)),
+			"__id":              llx.StringData("openstack.trust/" + t.ID),
+			"id":                llx.StringData(t.ID),
+			"impersonation":     llx.BoolData(t.Impersonation),
+			"roleNames":         stringSliceData(roleNames),
+			"allowRedelegation": llx.BoolData(t.AllowRedelegation),
+			"remainingUses":     llx.IntData(int64(t.RemainingUses)),
+			"expiresAt":         llx.TimeDataPtr(timePtr(t.ExpiresAt)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, res)
+		mqlTrust := res.(*mqlOpenstackTrust)
+		mqlTrust.cacheTrusteeUserID = t.TrusteeUserID
+		mqlTrust.cacheTrustorUserID = t.TrustorUserID
+		mqlTrust.cacheProjectID = t.ProjectID
+		mqlTrust.cacheRedelegatedTrustID = t.RedelegatedTrustID
+		out = append(out, mqlTrust)
 	}
 	return out, nil
 }
 
 func (r *mqlOpenstackTrust) trustee() (*mqlOpenstackUser, error) {
-	return resolveUser(r.MqlRuntime, r.TrusteeUserId.Data, &r.Trustee)
+	return resolveUser(r.MqlRuntime, r.cacheTrusteeUserID, &r.Trustee)
 }
 
 func (r *mqlOpenstackTrust) trustor() (*mqlOpenstackUser, error) {
-	return resolveUser(r.MqlRuntime, r.TrustorUserId.Data, &r.Trustor)
+	return resolveUser(r.MqlRuntime, r.cacheTrustorUserID, &r.Trustor)
 }
 
 func (r *mqlOpenstackTrust) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
+}
+
+func (r *mqlOpenstackTrust) redelegated() (*mqlOpenstackTrust, error) {
+	if r.cacheRedelegatedTrustID == "" {
+		r.Redelegated.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.trust", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheRedelegatedTrustID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackTrust), nil
 }
 
 // ---- openstack.identity.service ----
@@ -332,7 +367,8 @@ func (o *mqlOpenstack) identityServices() ([]any, error) {
 // ---- openstack.identity.endpoint ----
 
 type mqlOpenstackIdentityEndpointInternal struct {
-	cacheRegion string
+	cacheRegion    string
+	cacheServiceID string
 }
 
 func (r *mqlOpenstackIdentityEndpoint) id() (string, error) {
@@ -387,7 +423,6 @@ func (o *mqlOpenstack) identityEndpoints() ([]any, error) {
 			"id":          llx.StringData(e.ID),
 			"interface":   llx.StringData(string(e.Availability)),
 			"name":        llx.StringData(e.Name),
-			"serviceId":   llx.StringData(e.ServiceID),
 			"url":         llx.StringData(e.URL),
 			"enabled":     llx.BoolData(e.Enabled),
 			"description": llx.StringData(e.Description),
@@ -395,7 +430,9 @@ func (o *mqlOpenstack) identityEndpoints() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlOpenstackIdentityEndpoint).cacheRegion = e.Region
+		mqlEndpoint := res.(*mqlOpenstackIdentityEndpoint)
+		mqlEndpoint.cacheRegion = e.Region
+		mqlEndpoint.cacheServiceID = e.ServiceID
 		out = append(out, res)
 	}
 	return out, nil
@@ -416,12 +453,12 @@ func (r *mqlOpenstackIdentityEndpoint) region() (*mqlOpenstackIdentityRegion, er
 }
 
 func (r *mqlOpenstackIdentityEndpoint) service() (*mqlOpenstackIdentityService, error) {
-	if r.ServiceId.Data == "" {
+	if r.cacheServiceID == "" {
 		r.Service.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(r.MqlRuntime, "openstack.identity.service", map[string]*llx.RawData{
-		"id": llx.StringData(r.ServiceId.Data),
+		"id": llx.StringData(r.cacheServiceID),
 	})
 	if err != nil {
 		return nil, err

@@ -2463,12 +2463,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.applicationCredential.unrestricted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackApplicationCredential).GetUnrestricted()).ToDataRes(types.Bool)
 	},
-	"openstack.applicationCredential.userId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackApplicationCredential).GetUserId()).ToDataRes(types.String)
-	},
-	"openstack.applicationCredential.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackApplicationCredential).GetProjectId()).ToDataRes(types.String)
-	},
 	"openstack.applicationCredential.roleNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackApplicationCredential).GetRoleNames()).ToDataRes(types.Array(types.String))
 	},
@@ -2490,12 +2484,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.credential.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackCredential).GetType()).ToDataRes(types.String)
 	},
-	"openstack.credential.userId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackCredential).GetUserId()).ToDataRes(types.String)
-	},
-	"openstack.credential.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackCredential).GetProjectId()).ToDataRes(types.String)
-	},
 	"openstack.credential.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackCredential).GetUser()).ToDataRes(types.Resource("openstack.user"))
 	},
@@ -2504,15 +2492,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.ec2Credential.access": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackEc2Credential).GetAccess()).ToDataRes(types.String)
-	},
-	"openstack.ec2Credential.userId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackEc2Credential).GetUserId()).ToDataRes(types.String)
-	},
-	"openstack.ec2Credential.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackEc2Credential).GetProjectId()).ToDataRes(types.String)
-	},
-	"openstack.ec2Credential.trustId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackEc2Credential).GetTrustId()).ToDataRes(types.String)
 	},
 	"openstack.ec2Credential.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackEc2Credential).GetUser()).ToDataRes(types.Resource("openstack.user"))
@@ -2529,15 +2508,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.trust.impersonation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackTrust).GetImpersonation()).ToDataRes(types.Bool)
 	},
-	"openstack.trust.trusteeUserId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackTrust).GetTrusteeUserId()).ToDataRes(types.String)
-	},
-	"openstack.trust.trustorUserId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackTrust).GetTrustorUserId()).ToDataRes(types.String)
-	},
-	"openstack.trust.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackTrust).GetProjectId()).ToDataRes(types.String)
-	},
 	"openstack.trust.roleNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackTrust).GetRoleNames()).ToDataRes(types.Array(types.String))
 	},
@@ -2546,9 +2516,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.trust.remainingUses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackTrust).GetRemainingUses()).ToDataRes(types.Int)
-	},
-	"openstack.trust.redelegatedTrustId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackTrust).GetRedelegatedTrustId()).ToDataRes(types.String)
 	},
 	"openstack.trust.expiresAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackTrust).GetExpiresAt()).ToDataRes(types.Time)
@@ -2561,6 +2528,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.trust.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackTrust).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.trust.redelegated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackTrust).GetRedelegated()).ToDataRes(types.Resource("openstack.trust"))
 	},
 	"openstack.identity.service.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityService).GetId()).ToDataRes(types.String)
@@ -2585,9 +2555,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.identity.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityEndpoint).GetName()).ToDataRes(types.String)
-	},
-	"openstack.identity.endpoint.serviceId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackIdentityEndpoint).GetServiceId()).ToDataRes(types.String)
 	},
 	"openstack.identity.endpoint.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackIdentityEndpoint).GetUrl()).ToDataRes(types.String)
@@ -6230,14 +6197,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackApplicationCredential).Unrestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"openstack.applicationCredential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackApplicationCredential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.applicationCredential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackApplicationCredential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"openstack.applicationCredential.roleNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackApplicationCredential).RoleNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6270,14 +6229,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackCredential).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"openstack.credential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackCredential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.credential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackCredential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"openstack.credential.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackCredential).User, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
 		return
@@ -6292,18 +6243,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.ec2Credential.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackEc2Credential).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.ec2Credential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackEc2Credential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.ec2Credential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackEc2Credential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.ec2Credential.trustId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackEc2Credential).TrustId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.ec2Credential.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6330,18 +6269,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackTrust).Impersonation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"openstack.trust.trusteeUserId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackTrust).TrusteeUserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.trust.trustorUserId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackTrust).TrustorUserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.trust.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackTrust).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"openstack.trust.roleNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackTrust).RoleNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6352,10 +6279,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.trust.remainingUses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackTrust).RemainingUses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"openstack.trust.redelegatedTrustId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackTrust).RedelegatedTrustId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.trust.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6372,6 +6295,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.trust.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackTrust).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.trust.redelegated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackTrust).Redelegated, ok = plugin.RawToTValue[*mqlOpenstackTrust](v.Value, v.Error)
 		return
 	},
 	"openstack.identity.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6412,10 +6339,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.identity.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackIdentityEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"openstack.identity.endpoint.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackIdentityEndpoint).ServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.identity.endpoint.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15144,8 +15067,6 @@ type mqlOpenstackApplicationCredential struct {
 	Name         plugin.TValue[string]
 	Description  plugin.TValue[string]
 	Unrestricted plugin.TValue[bool]
-	UserId       plugin.TValue[string]
-	ProjectId    plugin.TValue[string]
 	RoleNames    plugin.TValue[[]any]
 	AccessRules  plugin.TValue[[]any]
 	ExpiresAt    plugin.TValue[*time.Time]
@@ -15206,14 +15127,6 @@ func (c *mqlOpenstackApplicationCredential) GetUnrestricted() *plugin.TValue[boo
 	return &c.Unrestricted
 }
 
-func (c *mqlOpenstackApplicationCredential) GetUserId() *plugin.TValue[string] {
-	return &c.UserId
-}
-
-func (c *mqlOpenstackApplicationCredential) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
 func (c *mqlOpenstackApplicationCredential) GetRoleNames() *plugin.TValue[[]any] {
 	return &c.RoleNames
 }
@@ -15262,13 +15175,11 @@ func (c *mqlOpenstackApplicationCredential) GetProject() *plugin.TValue[*mqlOpen
 type mqlOpenstackCredential struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenstackCredentialInternal it will be used here
-	Id        plugin.TValue[string]
-	Type      plugin.TValue[string]
-	UserId    plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	User      plugin.TValue[*mqlOpenstackUser]
-	Project   plugin.TValue[*mqlOpenstackProject]
+	mqlOpenstackCredentialInternal
+	Id      plugin.TValue[string]
+	Type    plugin.TValue[string]
+	User    plugin.TValue[*mqlOpenstackUser]
+	Project plugin.TValue[*mqlOpenstackProject]
 }
 
 // createOpenstackCredential creates a new instance of this resource
@@ -15316,14 +15227,6 @@ func (c *mqlOpenstackCredential) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlOpenstackCredential) GetUserId() *plugin.TValue[string] {
-	return &c.UserId
-}
-
-func (c *mqlOpenstackCredential) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
 func (c *mqlOpenstackCredential) GetUser() *plugin.TValue[*mqlOpenstackUser] {
 	return plugin.GetOrCompute[*mqlOpenstackUser](&c.User, func() (*mqlOpenstackUser, error) {
 		if c.MqlRuntime.HasRecording {
@@ -15360,14 +15263,11 @@ func (c *mqlOpenstackCredential) GetProject() *plugin.TValue[*mqlOpenstackProjec
 type mqlOpenstackEc2Credential struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenstackEc2CredentialInternal it will be used here
-	Access    plugin.TValue[string]
-	UserId    plugin.TValue[string]
-	ProjectId plugin.TValue[string]
-	TrustId   plugin.TValue[string]
-	User      plugin.TValue[*mqlOpenstackUser]
-	Project   plugin.TValue[*mqlOpenstackProject]
-	Trust     plugin.TValue[*mqlOpenstackTrust]
+	mqlOpenstackEc2CredentialInternal
+	Access  plugin.TValue[string]
+	User    plugin.TValue[*mqlOpenstackUser]
+	Project plugin.TValue[*mqlOpenstackProject]
+	Trust   plugin.TValue[*mqlOpenstackTrust]
 }
 
 // createOpenstackEc2Credential creates a new instance of this resource
@@ -15409,18 +15309,6 @@ func (c *mqlOpenstackEc2Credential) MqlID() string {
 
 func (c *mqlOpenstackEc2Credential) GetAccess() *plugin.TValue[string] {
 	return &c.Access
-}
-
-func (c *mqlOpenstackEc2Credential) GetUserId() *plugin.TValue[string] {
-	return &c.UserId
-}
-
-func (c *mqlOpenstackEc2Credential) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
-func (c *mqlOpenstackEc2Credential) GetTrustId() *plugin.TValue[string] {
-	return &c.TrustId
 }
 
 func (c *mqlOpenstackEc2Credential) GetUser() *plugin.TValue[*mqlOpenstackUser] {
@@ -15475,20 +15363,17 @@ func (c *mqlOpenstackEc2Credential) GetTrust() *plugin.TValue[*mqlOpenstackTrust
 type mqlOpenstackTrust struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOpenstackTrustInternal it will be used here
-	Id                 plugin.TValue[string]
-	Impersonation      plugin.TValue[bool]
-	TrusteeUserId      plugin.TValue[string]
-	TrustorUserId      plugin.TValue[string]
-	ProjectId          plugin.TValue[string]
-	RoleNames          plugin.TValue[[]any]
-	AllowRedelegation  plugin.TValue[bool]
-	RemainingUses      plugin.TValue[int64]
-	RedelegatedTrustId plugin.TValue[string]
-	ExpiresAt          plugin.TValue[*time.Time]
-	Trustee            plugin.TValue[*mqlOpenstackUser]
-	Trustor            plugin.TValue[*mqlOpenstackUser]
-	Project            plugin.TValue[*mqlOpenstackProject]
+	mqlOpenstackTrustInternal
+	Id                plugin.TValue[string]
+	Impersonation     plugin.TValue[bool]
+	RoleNames         plugin.TValue[[]any]
+	AllowRedelegation plugin.TValue[bool]
+	RemainingUses     plugin.TValue[int64]
+	ExpiresAt         plugin.TValue[*time.Time]
+	Trustee           plugin.TValue[*mqlOpenstackUser]
+	Trustor           plugin.TValue[*mqlOpenstackUser]
+	Project           plugin.TValue[*mqlOpenstackProject]
+	Redelegated       plugin.TValue[*mqlOpenstackTrust]
 }
 
 // createOpenstackTrust creates a new instance of this resource
@@ -15536,18 +15421,6 @@ func (c *mqlOpenstackTrust) GetImpersonation() *plugin.TValue[bool] {
 	return &c.Impersonation
 }
 
-func (c *mqlOpenstackTrust) GetTrusteeUserId() *plugin.TValue[string] {
-	return &c.TrusteeUserId
-}
-
-func (c *mqlOpenstackTrust) GetTrustorUserId() *plugin.TValue[string] {
-	return &c.TrustorUserId
-}
-
-func (c *mqlOpenstackTrust) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
 func (c *mqlOpenstackTrust) GetRoleNames() *plugin.TValue[[]any] {
 	return &c.RoleNames
 }
@@ -15558,10 +15431,6 @@ func (c *mqlOpenstackTrust) GetAllowRedelegation() *plugin.TValue[bool] {
 
 func (c *mqlOpenstackTrust) GetRemainingUses() *plugin.TValue[int64] {
 	return &c.RemainingUses
-}
-
-func (c *mqlOpenstackTrust) GetRedelegatedTrustId() *plugin.TValue[string] {
-	return &c.RedelegatedTrustId
 }
 
 func (c *mqlOpenstackTrust) GetExpiresAt() *plugin.TValue[*time.Time] {
@@ -15613,6 +15482,22 @@ func (c *mqlOpenstackTrust) GetProject() *plugin.TValue[*mqlOpenstackProject] {
 		}
 
 		return c.project()
+	})
+}
+
+func (c *mqlOpenstackTrust) GetRedelegated() *plugin.TValue[*mqlOpenstackTrust] {
+	return plugin.GetOrCompute[*mqlOpenstackTrust](&c.Redelegated, func() (*mqlOpenstackTrust, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.trust", c.__id, "redelegated")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackTrust), nil
+			}
+		}
+
+		return c.redelegated()
 	})
 }
 
@@ -15693,7 +15578,6 @@ type mqlOpenstackIdentityEndpoint struct {
 	Id          plugin.TValue[string]
 	Interface   plugin.TValue[string]
 	Name        plugin.TValue[string]
-	ServiceId   plugin.TValue[string]
 	Url         plugin.TValue[string]
 	Enabled     plugin.TValue[bool]
 	Description plugin.TValue[string]
@@ -15748,10 +15632,6 @@ func (c *mqlOpenstackIdentityEndpoint) GetInterface() *plugin.TValue[string] {
 
 func (c *mqlOpenstackIdentityEndpoint) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOpenstackIdentityEndpoint) GetServiceId() *plugin.TValue[string] {
-	return &c.ServiceId
 }
 
 func (c *mqlOpenstackIdentityEndpoint) GetUrl() *plugin.TValue[string] {

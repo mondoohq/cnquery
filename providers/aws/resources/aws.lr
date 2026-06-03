@@ -24440,6 +24440,8 @@ private aws.bedrock.inferenceProfile @defaults("name status type") {
   description string
   // ARNs of the foundation models the profile routes requests to
   modelArns []string
+  // Foundation models the profile routes requests to
+  models() []aws.bedrock.foundationModel
   // Time the inference profile was created
   createdAt time
   // Time the inference profile was last updated

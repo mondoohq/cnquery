@@ -1264,6 +1264,7 @@ aws.bedrock.inferenceProfile.createdAt 13.31.2
 aws.bedrock.inferenceProfile.description 13.31.2
 aws.bedrock.inferenceProfile.id 13.31.2
 aws.bedrock.inferenceProfile.modelArns 13.31.2
+aws.bedrock.inferenceProfile.models 13.31.2
 aws.bedrock.inferenceProfile.name 13.31.2
 aws.bedrock.inferenceProfile.region 13.31.2
 aws.bedrock.inferenceProfile.status 13.31.2

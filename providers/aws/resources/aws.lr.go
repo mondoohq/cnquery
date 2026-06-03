@@ -31740,6 +31740,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.inferenceProfile.modelArns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockInferenceProfile).GetModelArns()).ToDataRes(types.Array(types.String))
 	},
+	"aws.bedrock.inferenceProfile.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockInferenceProfile).GetModels()).ToDataRes(types.Array(types.Resource("aws.bedrock.foundationModel")))
+	},
 	"aws.bedrock.inferenceProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockInferenceProfile).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -71770,6 +71773,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.inferenceProfile.modelArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockInferenceProfile).ModelArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.inferenceProfile.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockInferenceProfile).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.inferenceProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -174474,6 +174481,7 @@ type mqlAwsBedrockInferenceProfile struct {
 	Type        plugin.TValue[string]
 	Description plugin.TValue[string]
 	ModelArns   plugin.TValue[[]any]
+	Models      plugin.TValue[[]any]
 	CreatedAt   plugin.TValue[*time.Time]
 	UpdatedAt   plugin.TValue[*time.Time]
 }
@@ -174545,6 +174553,22 @@ func (c *mqlAwsBedrockInferenceProfile) GetDescription() *plugin.TValue[string] 
 
 func (c *mqlAwsBedrockInferenceProfile) GetModelArns() *plugin.TValue[[]any] {
 	return &c.ModelArns
+}
+
+func (c *mqlAwsBedrockInferenceProfile) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.inferenceProfile", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
 }
 
 func (c *mqlAwsBedrockInferenceProfile) GetCreatedAt() *plugin.TValue[*time.Time] {

@@ -689,8 +689,6 @@ func (r *mqlOpenstackUser) applicationCredentials() ([]any, error) {
 			"name":         llx.StringData(ac.Name),
 			"description":  llx.StringData(ac.Description),
 			"unrestricted": llx.BoolData(ac.Unrestricted),
-			"userId":       llx.StringData(r.Id.Data),
-			"projectId":    llx.StringData(ac.ProjectID),
 			"roleNames":    stringSliceData(roleNames),
 			"accessRules":  dictSliceData(rules),
 			"expiresAt":    llx.TimeDataPtr(timePtr(ac.ExpiresAt)),

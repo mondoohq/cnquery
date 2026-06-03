@@ -88,6 +88,26 @@ func (a *mqlAwsBedrockInferenceProfile) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsBedrockInferenceProfile) models() ([]any, error) {
+	if a.ModelArns.Error != nil {
+		return nil, a.ModelArns.Error
+	}
+	res := make([]any, 0, len(a.ModelArns.Data))
+	for _, raw := range a.ModelArns.Data {
+		arn, ok := raw.(string)
+		if !ok || arn == "" {
+			continue
+		}
+		model, err := NewResource(a.MqlRuntime, "aws.bedrock.foundationModel",
+			map[string]*llx.RawData{"modelArn": llx.StringData(arn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, model)
+	}
+	return res, nil
+}
+
 // --- Imported models ---
 
 func (a *mqlAwsBedrock) importedModels() ([]any, error) {

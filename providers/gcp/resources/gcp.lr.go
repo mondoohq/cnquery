@@ -13598,7 +13598,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetRuntimeUser()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.notebookRuntime.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetServiceAccount()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.vertexaiService.notebookRuntime.proxyUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).GetProxyUri()).ToDataRes(types.String)
@@ -13668,9 +13668,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetIsDefault()).ToDataRes(types.Bool)
-	},
-	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetServiceAccount()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).GetNotebookRuntimeType()).ToDataRes(types.String)
@@ -13979,7 +13976,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetOutputConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.vertexaiService.batchPredictionJob.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetServiceAccount()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.vertexaiService.batchPredictionJob.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetState()).ToDataRes(types.String)
@@ -14036,7 +14033,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTuningDataStats()).ToDataRes(types.Dict)
 	},
 	"gcp.project.vertexaiService.tuningJob.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetServiceAccount()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.vertexaiService.tuningJob.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -32767,7 +32764,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntime.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectVertexaiServiceNotebookRuntime).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntime.proxyUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32864,10 +32861,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33315,7 +33308,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.vertexaiService.batchPredictionJob.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.batchPredictionJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33395,7 +33388,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.vertexaiService.tuningJob.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceTuningJob).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.tuningJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75807,7 +75800,7 @@ type mqlGcpProjectVertexaiServiceNotebookRuntime struct {
 	DisplayName         plugin.TValue[string]
 	Description         plugin.TValue[string]
 	RuntimeUser         plugin.TValue[string]
-	ServiceAccount      plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	ProxyUri            plugin.TValue[string]
 	HealthState         plugin.TValue[string]
 	RuntimeState        plugin.TValue[string]
@@ -75882,8 +75875,20 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetRuntimeUser() *plugin.T
 	return &c.RuntimeUser
 }
 
-func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetServiceAccount() *plugin.TValue[string] {
-	return &c.ServiceAccount
+func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookRuntime", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntime) GetProxyUri() *plugin.TValue[string] {
@@ -75983,7 +75988,6 @@ type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate struct {
 	DisplayName         plugin.TValue[string]
 	Description         plugin.TValue[string]
 	IsDefault           plugin.TValue[bool]
-	ServiceAccount      plugin.TValue[string]
 	NotebookRuntimeType plugin.TValue[string]
 	NetworkTags         plugin.TValue[[]any]
 	MachineSpec         plugin.TValue[any]
@@ -76051,10 +76055,6 @@ func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetDescription() *
 
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
-}
-
-func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetServiceAccount() *plugin.TValue[string] {
-	return &c.ServiceAccount
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) GetNotebookRuntimeType() *plugin.TValue[string] {
@@ -77006,7 +77006,7 @@ type mqlGcpProjectVertexaiServiceBatchPredictionJob struct {
 	ModelVersionId          plugin.TValue[string]
 	InputConfig             plugin.TValue[any]
 	OutputConfig            plugin.TValue[any]
-	ServiceAccount          plugin.TValue[string]
+	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	State                   plugin.TValue[string]
 	GenerateExplanation     plugin.TValue[bool]
 	DisableContainerLogging plugin.TValue[bool]
@@ -77092,8 +77092,20 @@ func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetOutputConfig() *plug
 	return &c.OutputConfig
 }
 
-func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetServiceAccount() *plugin.TValue[string] {
-	return &c.ServiceAccount
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.batchPredictionJob", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetState() *plugin.TValue[string] {
@@ -77161,7 +77173,7 @@ type mqlGcpProjectVertexaiServiceTuningJob struct {
 	Experiment            plugin.TValue[string]
 	TunedModel            plugin.TValue[any]
 	TuningDataStats       plugin.TValue[any]
-	ServiceAccount        plugin.TValue[string]
+	ServiceAccount        plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	Labels                plugin.TValue[map[string]any]
 	EncryptionSpec        plugin.TValue[any]
 	KmsKey                plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
@@ -77240,8 +77252,20 @@ func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTuningDataStats() *plugin.TVa
 	return &c.TuningDataStats
 }
 
-func (c *mqlGcpProjectVertexaiServiceTuningJob) GetServiceAccount() *plugin.TValue[string] {
-	return &c.ServiceAccount
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.tuningJob", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceTuningJob) GetLabels() *plugin.TValue[map[string]any] {

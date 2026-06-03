@@ -1285,7 +1285,6 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 				"displayName":         llx.StringData(rt.DisplayName),
 				"description":         llx.StringData(rt.Description),
 				"runtimeUser":         llx.StringData(rt.RuntimeUser),
-				"serviceAccount":      llx.StringData(rt.ServiceAccount),
 				"proxyUri":            llx.StringData(rt.ProxyUri),
 				"healthState":         llx.StringData(rt.HealthState.String()),
 				"runtimeState":        llx.StringData(rt.RuntimeState.String()),
@@ -1308,7 +1307,10 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
-			mqlRt.(*mqlGcpProjectVertexaiServiceNotebookRuntime).cacheKmsKeyName = rt.GetEncryptionSpec().GetKmsKeyName()
+			mqlRtTyped := mqlRt.(*mqlGcpProjectVertexaiServiceNotebookRuntime)
+			mqlRtTyped.cacheKmsKeyName = rt.GetEncryptionSpec().GetKmsKeyName()
+			mqlRtTyped.cacheServiceAccountEmail = rt.ServiceAccount
+			mqlRtTyped.cacheProjectId = projectId
 			items = append(items, mqlRt)
 		}
 		return items, false, nil
@@ -1392,7 +1394,6 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error)
 				"displayName":         llx.StringData(tmpl.DisplayName),
 				"description":         llx.StringData(tmpl.Description),
 				"isDefault":           llx.BoolData(tmpl.IsDefault),
-				"serviceAccount":      llx.StringData(tmpl.ServiceAccount),
 				"notebookRuntimeType": llx.StringData(tmpl.NotebookRuntimeType.String()),
 				"networkTags":         llx.ArrayData(convert.SliceAnyToInterface(tmpl.NetworkTags), types.String),
 				"machineSpec":         llx.DictData(machineSpec),
@@ -2085,7 +2086,6 @@ func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
 				"modelVersionId":          llx.StringData(job.ModelVersionId),
 				"inputConfig":             llx.DictData(inputConfig),
 				"outputConfig":            llx.DictData(outputConfig),
-				"serviceAccount":          llx.StringData(job.ServiceAccount),
 				"state":                   llx.StringData(job.State.String()),
 				"generateExplanation":     llx.BoolData(job.GenerateExplanation),
 				"disableContainerLogging": llx.BoolData(job.DisableContainerLogging),
@@ -2102,6 +2102,8 @@ func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
 			mqlBatchJob := mqlJob.(*mqlGcpProjectVertexaiServiceBatchPredictionJob)
 			mqlBatchJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			mqlBatchJob.cacheModelName = job.Model
+			mqlBatchJob.cacheServiceAccountEmail = job.ServiceAccount
+			mqlBatchJob.cacheProjectId = projectId
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2173,7 +2175,6 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 				"experiment":            llx.StringData(job.Experiment),
 				"tunedModel":            llx.DictData(tunedModel),
 				"tuningDataStats":       llx.DictData(tuningDataStats),
-				"serviceAccount":        llx.StringData(job.ServiceAccount),
 				"labels":                llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
 				"encryptionSpec":        llx.DictData(encryptionSpec),
 				"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
@@ -2184,7 +2185,10 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
-			mqlJob.(*mqlGcpProjectVertexaiServiceTuningJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlTuningJob := mqlJob.(*mqlGcpProjectVertexaiServiceTuningJob)
+			mqlTuningJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlTuningJob.cacheServiceAccountEmail = job.ServiceAccount
+			mqlTuningJob.cacheProjectId = projectId
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2513,12 +2517,36 @@ func (a *mqlGcpProjectVertexaiServiceMetadataStore) kmsKey() (*mqlGcpProjectKmsS
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
 
+// vertexaiServiceAccountRef resolves a cached service-account email (scoped to
+// the given project) to a typed gcp.project.iamService.serviceAccount, marking
+// the field null when either value is missing.
+func vertexaiServiceAccountRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount], projectId, email string) (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if email == "" || projectId == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 type mqlGcpProjectVertexaiServiceNotebookRuntimeInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheServiceAccountEmail string
+	cacheProjectId           string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookRuntime) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
 }
 
 type mqlGcpProjectVertexaiServiceNotebookRuntimeTemplateInternal struct {
@@ -2606,12 +2634,18 @@ func (a *mqlGcpProjectVertexaiServiceCachedContent) kmsKey() (*mqlGcpProjectKmsS
 }
 
 type mqlGcpProjectVertexaiServiceBatchPredictionJobInternal struct {
-	cacheKmsKeyName string
-	cacheModelName  string
+	cacheKmsKeyName          string
+	cacheModelName           string
+	cacheServiceAccountEmail string
+	cacheProjectId           string
 }
 
 func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
 }
 
 func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProjectVertexaiServiceModel, error) {
@@ -2628,11 +2662,17 @@ func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProject
 }
 
 type mqlGcpProjectVertexaiServiceTuningJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheServiceAccountEmail string
+	cacheProjectId           string
 }
 
 func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
 }
 
 type mqlGcpProjectVertexaiServiceTrainingPipelineInternal struct {

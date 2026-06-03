@@ -4766,7 +4766,6 @@ gcp.project.vertexaiService.notebookRuntimeTemplate.name 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.networkSpec 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.networkTags 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.notebookRuntimeType 13.20.2
-gcp.project.vertexaiService.notebookRuntimeTemplate.serviceAccount 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.shieldedVmConfig 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.softwareConfig 13.20.2
 gcp.project.vertexaiService.notebookRuntimeTemplate.updatedAt 13.20.2
