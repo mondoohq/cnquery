@@ -1,13 +1,16 @@
 {
   "provider": "gcp",
   "version": "13.20.1",
-  "generated_at": "2026-06-03T09:48:59-07:00",
+  "generated_at": "2026-06-03T10:20:26-07:00",
   "permissions": [
     "accessapproval.settings.get",
+    "aiplatform.cachedContents.list",
     "aiplatform.customJobs.get",
     "aiplatform.customJobs.list",
     "aiplatform.datasets.list",
+    "aiplatform.deploymentResourcePools.list",
     "aiplatform.endpoints.list",
+    "aiplatform.featureGroups.list",
     "aiplatform.featureOnlineStores.list",
     "aiplatform.indexEndpoints.list",
     "aiplatform.indexes.list",
@@ -16,8 +19,11 @@
     "aiplatform.notebookExecutionJobs.list",
     "aiplatform.notebookRuntimeTemplates.list",
     "aiplatform.notebookRuntimes.list",
+    "aiplatform.persistentResources.list",
     "aiplatform.pipelineJobs.list",
+    "aiplatform.ragCorpora.list",
     "aiplatform.reasoningEngines.list",
+    "aiplatform.schedules.list",
     "aiplatform.tensorboards.list",
     "alloydb.backups.list",
     "alloydb.clusters.list",
@@ -257,6 +263,12 @@
       "source_file": "access_approval.go"
     },
     {
+      "permission": "aiplatform.cachedContents.list",
+      "service": "aiplatform",
+      "action": "ListCachedContents",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.customJobs.get",
       "service": "aiplatform",
       "action": "GetCustomJob",
@@ -275,9 +287,21 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.deploymentResourcePools.list",
+      "service": "aiplatform",
+      "action": "ListDeploymentResourcePools",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.endpoints.list",
       "service": "aiplatform",
       "action": "ListEndpoints",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.featureGroups.list",
+      "service": "aiplatform",
+      "action": "ListFeatureGroups",
       "source_file": "vertexai.go"
     },
     {
@@ -329,15 +353,33 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.persistentResources.list",
+      "service": "aiplatform",
+      "action": "ListPersistentResources",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.pipelineJobs.list",
       "service": "aiplatform",
       "action": "ListPipelineJobs",
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.ragCorpora.list",
+      "service": "aiplatform",
+      "action": "ListRagCorpora",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.reasoningEngines.list",
       "service": "aiplatform",
       "action": "ListReasoningEngines",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.schedules.list",
+      "service": "aiplatform",
+      "action": "ListSchedules",
       "source_file": "vertexai.go"
     },
     {

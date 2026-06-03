@@ -10791,6 +10791,18 @@ private gcp.project.vertexaiService {
   notebookExecutionJobs() []gcp.project.vertexaiService.notebookExecutionJob
   // Deployed Agent Engine agents (reasoning engines)
   reasoningEngines() []gcp.project.vertexaiService.reasoningEngine
+  // RAG Engine corpora
+  ragCorpora() []gcp.project.vertexaiService.ragCorpus
+  // Feature groups
+  featureGroups() []gcp.project.vertexaiService.featureGroup
+  // Persistent resources (managed Ray clusters)
+  persistentResources() []gcp.project.vertexaiService.persistentResource
+  // Schedules
+  schedules() []gcp.project.vertexaiService.schedule
+  // Deployment resource pools
+  deploymentResourcePools() []gcp.project.vertexaiService.deploymentResourcePool
+  // Context caches
+  cachedContents() []gcp.project.vertexaiService.cachedContent
 }
 
 // Google Cloud (GCP) Vertex AI metadata store
@@ -11327,6 +11339,185 @@ private gcp.project.vertexaiService.reasoningEngine @defaults("displayName agent
   labels map[string]string
   // ETag used for concurrency control on resource updates
   etag string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI RAG Engine corpus
+//
+// Examine a Vertex AI RAG Engine corpus — the managed collection of
+// documents that grounds retrieval-augmented generation. `corpusStatus`
+// reports indexing state and any errors, and encryption at rest is reported
+// through `encryptionSpec` and the resolved `kmsKey()`. Use these fields to
+// audit which knowledge corpora exist and their encryption posture.
+private gcp.project.vertexaiService.ragCorpus @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Human-readable description of the resource
+  description string
+  // Corpus status (indexing state and errors)
+  corpusStatus dict
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI feature group
+//
+// Examine a Vertex AI feature group — a logical grouping of features backed
+// by a BigQuery source for the Feature Store. `bigQuery` reports the backing
+// BigQuery table or view and the entity-ID columns. Use these fields to
+// audit which feature data is registered and where it is sourced from.
+private gcp.project.vertexaiService.featureGroup @defaults("name") {
+  // Full resource name
+  name string
+  // Human-readable description of the resource
+  description string
+  // BigQuery source backing the feature group
+  bigQuery dict
+  // ETag used for concurrency control on resource updates
+  etag string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI persistent resource
+//
+// Examine a Vertex AI persistent resource — a long-lived managed cluster
+// (for example a Ray cluster) reused across training and tuning jobs.
+// `resourcePools` describes the machine pools and their autoscaling,
+// `network()` resolves the VPC network attachment, `reservedIpRanges` lists
+// the reserved IP ranges, `state` reports lifecycle status, and encryption at
+// rest is reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.persistentResource @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Current state (PROVISIONING, RUNNING, STOPPING, ERROR, REBOOTING, UPDATING)
+  state string
+  // VPC network the resource is attached to
+  network() gcp.project.computeService.network
+  // Reserved IP ranges for the resource
+  reservedIpRanges []string
+  // Machine pools backing the resource
+  resourcePools []dict
+  // Resource runtime spec (Ray and service-account configuration)
+  resourceRuntimeSpec dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+  // Start time
+  startedAt time
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Vertex AI schedule
+//
+// Examine a Vertex AI schedule — a recurring trigger that creates pipeline
+// jobs or notebook execution jobs on a cron cadence. `cron` is the schedule
+// expression, `state` reports whether it is active or paused, the run-count
+// and concurrency fields bound how often and how many runs may overlap, and
+// `nextRunTime` is when the next run is due. Use these fields to audit
+// recurring ML automation.
+private gcp.project.vertexaiService.schedule @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Current state (ACTIVE, PAUSED, COMPLETED)
+  state string
+  // Cron expression defining the schedule cadence
+  cron string
+  // Maximum number of runs over the schedule's lifetime
+  maxRunCount int
+  // Number of runs started so far
+  startedRunCount int
+  // Maximum number of concurrent runs allowed
+  maxConcurrentRunCount int
+  // Whether runs are queued when the concurrency limit is reached
+  allowQueueing bool
+  // Whether missed runs are caught up
+  catchUp bool
+  // Start time
+  startedAt time
+  // End time
+  endedAt time
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // Time the next run is scheduled
+  nextRunTime time
+}
+
+// Google Cloud (GCP) Vertex AI deployment resource pool
+//
+// Examine a Vertex AI deployment resource pool — shared serving
+// infrastructure that multiple deployed models run on. `dedicatedResources`
+// describes the machine type and autoscaling, `serviceAccount` is the
+// identity the pool runs as, `disableContainerLogging` indicates whether
+// prediction request/response logging is turned off, and encryption at rest
+// is reported through `encryptionSpec` and the resolved `kmsKey()`.
+private gcp.project.vertexaiService.deploymentResourcePool @defaults("name") {
+  // Full resource name
+  name string
+  // Service account email the pool runs as
+  serviceAccount string
+  // Whether container request/response logging is disabled
+  disableContainerLogging bool
+  // Dedicated resources (machine spec and autoscaling)
+  dedicatedResources dict
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createdAt time
+}
+
+// Google Cloud (GCP) Vertex AI cached content
+//
+// Examine a Vertex AI context cache — precomputed model context (system
+// instructions, contents, tools) stored to reduce repeated prompt cost.
+// `model` is the model the cache is bound to, `usageMetadata` reports the
+// cached token counts, `expireTime` is when the cache expires, and
+// encryption at rest is reported through `encryptionSpec` and the resolved
+// `kmsKey()`.
+private gcp.project.vertexaiService.cachedContent @defaults("displayName model") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Model the cached content is bound to
+  model string
+  // Usage metadata (cached token counts)
+  usageMetadata dict
+  // Time the cache expires
+  expireTime time
+  // Encryption spec (CMEK)
+  encryptionSpec dict
+  // Customer-managed Cloud KMS key used to encrypt this resource at rest
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
   createdAt time
   // Last update time

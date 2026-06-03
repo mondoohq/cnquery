@@ -356,6 +356,12 @@ const (
 	ResourceGcpProjectVertexaiServiceNotebookRuntimeTemplate                           string = "gcp.project.vertexaiService.notebookRuntimeTemplate"
 	ResourceGcpProjectVertexaiServiceNotebookExecutionJob                              string = "gcp.project.vertexaiService.notebookExecutionJob"
 	ResourceGcpProjectVertexaiServiceReasoningEngine                                   string = "gcp.project.vertexaiService.reasoningEngine"
+	ResourceGcpProjectVertexaiServiceRagCorpus                                         string = "gcp.project.vertexaiService.ragCorpus"
+	ResourceGcpProjectVertexaiServiceFeatureGroup                                      string = "gcp.project.vertexaiService.featureGroup"
+	ResourceGcpProjectVertexaiServicePersistentResource                                string = "gcp.project.vertexaiService.persistentResource"
+	ResourceGcpProjectVertexaiServiceSchedule                                          string = "gcp.project.vertexaiService.schedule"
+	ResourceGcpProjectVertexaiServiceDeploymentResourcePool                            string = "gcp.project.vertexaiService.deploymentResourcePool"
+	ResourceGcpProjectVertexaiServiceCachedContent                                     string = "gcp.project.vertexaiService.cachedContent"
 	ResourceGcpSccOrganizationSettings                                                 string = "gcp.scc.organizationSettings"
 	ResourceGcpSccSource                                                               string = "gcp.scc.source"
 	ResourceGcpSccFinding                                                              string = "gcp.scc.finding"
@@ -1809,6 +1815,30 @@ func init() {
 		"gcp.project.vertexaiService.reasoningEngine": {
 			// to override args, implement: initGcpProjectVertexaiServiceReasoningEngine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectVertexaiServiceReasoningEngine,
+		},
+		"gcp.project.vertexaiService.ragCorpus": {
+			// to override args, implement: initGcpProjectVertexaiServiceRagCorpus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceRagCorpus,
+		},
+		"gcp.project.vertexaiService.featureGroup": {
+			// to override args, implement: initGcpProjectVertexaiServiceFeatureGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceFeatureGroup,
+		},
+		"gcp.project.vertexaiService.persistentResource": {
+			// to override args, implement: initGcpProjectVertexaiServicePersistentResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServicePersistentResource,
+		},
+		"gcp.project.vertexaiService.schedule": {
+			// to override args, implement: initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceSchedule,
+		},
+		"gcp.project.vertexaiService.deploymentResourcePool": {
+			// to override args, implement: initGcpProjectVertexaiServiceDeploymentResourcePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceDeploymentResourcePool,
+		},
+		"gcp.project.vertexaiService.cachedContent": {
+			// to override args, implement: initGcpProjectVertexaiServiceCachedContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectVertexaiServiceCachedContent,
 		},
 		"gcp.scc.organizationSettings": {
 			// to override args, implement: initGcpSccOrganizationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13084,6 +13114,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.reasoningEngines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiService).GetReasoningEngines()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.reasoningEngine")))
 	},
+	"gcp.project.vertexaiService.ragCorpora": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetRagCorpora()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.ragCorpus")))
+	},
+	"gcp.project.vertexaiService.featureGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetFeatureGroups()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.featureGroup")))
+	},
+	"gcp.project.vertexaiService.persistentResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetPersistentResources()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.persistentResource")))
+	},
+	"gcp.project.vertexaiService.schedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetSchedules()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.schedule")))
+	},
+	"gcp.project.vertexaiService.deploymentResourcePools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetDeploymentResourcePools()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.deploymentResourcePool")))
+	},
+	"gcp.project.vertexaiService.cachedContents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiService).GetCachedContents()).ToDataRes(types.Array(types.Resource("gcp.project.vertexaiService.cachedContent")))
+	},
 	"gcp.project.vertexaiService.metadataStore.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceMetadataStore).GetName()).ToDataRes(types.String)
 	},
@@ -13662,6 +13710,180 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.reasoningEngine.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.ragCorpus.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.ragCorpus.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.ragCorpus.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.ragCorpus.corpusStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetCorpusStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.ragCorpus.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.ragCorpus.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.ragCorpus.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.ragCorpus.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceRagCorpus).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.featureGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.featureGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.featureGroup.bigQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetBigQuery()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.featureGroup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.featureGroup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.featureGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.featureGroup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceFeatureGroup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.persistentResource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.persistentResource.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.persistentResource.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.persistentResource.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.vertexaiService.persistentResource.reservedIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetReservedIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.vertexaiService.persistentResource.resourcePools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetResourcePools()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.vertexaiService.persistentResource.resourceRuntimeSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetResourceRuntimeSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.persistentResource.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.vertexaiService.persistentResource.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.persistentResource.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.persistentResource.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.persistentResource.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.persistentResource.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePersistentResource).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.schedule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.schedule.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.schedule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.schedule.cron": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetCron()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.schedule.maxRunCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetMaxRunCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.schedule.startedRunCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetStartedRunCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.schedule.maxConcurrentRunCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetMaxConcurrentRunCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.vertexaiService.schedule.allowQueueing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetAllowQueueing()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.schedule.catchUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetCatchUp()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.schedule.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.schedule.endedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.schedule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.schedule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.schedule.nextRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceSchedule).GetNextRunTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.disableContainerLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetDisableContainerLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.dedicatedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetDedicatedResources()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.cachedContent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.cachedContent.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.cachedContent.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetModel()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.cachedContent.usageMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetUsageMetadata()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.cachedContent.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.cachedContent.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetEncryptionSpec()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.cachedContent.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.vertexaiService.cachedContent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.cachedContent.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCachedContent).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"gcp.scc.organizationSettings.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccOrganizationSettings).GetName()).ToDataRes(types.String)
@@ -31595,6 +31817,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiService).ReasoningEngines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.ragCorpora": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).RagCorpora, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).FeatureGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).PersistentResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).Schedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).DeploymentResourcePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiService).CachedContents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.metadataStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceMetadataStore).__id, ok = v.Value.(string)
 		return
@@ -32421,6 +32667,262 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.reasoningEngine.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceReasoningEngine).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.corpusStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).CorpusStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.ragCorpus.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceRagCorpus).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.bigQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).BigQuery, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.featureGroup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceFeatureGroup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.reservedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).ReservedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.resourcePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).ResourcePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.resourceRuntimeSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).ResourceRuntimeSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.persistentResource.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePersistentResource).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.cron": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).Cron, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.maxRunCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).MaxRunCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.startedRunCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).StartedRunCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.maxConcurrentRunCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).MaxConcurrentRunCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.allowQueueing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).AllowQueueing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.catchUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).CatchUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.schedule.nextRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceSchedule).NextRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.disableContainerLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).DisableContainerLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.dedicatedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).DedicatedResources, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.deploymentResourcePool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.usageMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).UsageMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).EncryptionSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.cachedContent.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCachedContent).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.organizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72862,6 +73364,12 @@ type mqlGcpProjectVertexaiService struct {
 	NotebookRuntimeTemplates plugin.TValue[[]any]
 	NotebookExecutionJobs    plugin.TValue[[]any]
 	ReasoningEngines         plugin.TValue[[]any]
+	RagCorpora               plugin.TValue[[]any]
+	FeatureGroups            plugin.TValue[[]any]
+	PersistentResources      plugin.TValue[[]any]
+	Schedules                plugin.TValue[[]any]
+	DeploymentResourcePools  plugin.TValue[[]any]
+	CachedContents           plugin.TValue[[]any]
 }
 
 // createGcpProjectVertexaiService creates a new instance of this resource
@@ -73126,6 +73634,102 @@ func (c *mqlGcpProjectVertexaiService) GetReasoningEngines() *plugin.TValue[[]an
 		}
 
 		return c.reasoningEngines()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetRagCorpora() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RagCorpora, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "ragCorpora")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ragCorpora()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetFeatureGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FeatureGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "featureGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.featureGroups()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetPersistentResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PersistentResources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "persistentResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.persistentResources()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "schedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schedules()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetDeploymentResourcePools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeploymentResourcePools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "deploymentResourcePools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deploymentResourcePools()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiService) GetCachedContents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CachedContents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService", c.__id, "cachedContents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cachedContents()
 	})
 }
 
@@ -74887,6 +75491,620 @@ func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetCreatedAt() *plugin.TVa
 }
 
 func (c *mqlGcpProjectVertexaiServiceReasoningEngine) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceRagCorpus for the gcp.project.vertexaiService.ragCorpus resource
+type mqlGcpProjectVertexaiServiceRagCorpus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceRagCorpusInternal
+	Name           plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	CorpusStatus   plugin.TValue[any]
+	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceRagCorpus creates a new instance of this resource
+func createGcpProjectVertexaiServiceRagCorpus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceRagCorpus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.ragCorpus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) MqlName() string {
+	return "gcp.project.vertexaiService.ragCorpus"
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetCorpusStatus() *plugin.TValue[any] {
+	return &c.CorpusStatus
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.ragCorpus", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceRagCorpus) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceFeatureGroup for the gcp.project.vertexaiService.featureGroup resource
+type mqlGcpProjectVertexaiServiceFeatureGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectVertexaiServiceFeatureGroupInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	BigQuery    plugin.TValue[any]
+	Etag        plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceFeatureGroup creates a new instance of this resource
+func createGcpProjectVertexaiServiceFeatureGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceFeatureGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.featureGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) MqlName() string {
+	return "gcp.project.vertexaiService.featureGroup"
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetBigQuery() *plugin.TValue[any] {
+	return &c.BigQuery
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceFeatureGroup) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServicePersistentResource for the gcp.project.vertexaiService.persistentResource resource
+type mqlGcpProjectVertexaiServicePersistentResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServicePersistentResourceInternal
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	State               plugin.TValue[string]
+	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	ReservedIpRanges    plugin.TValue[[]any]
+	ResourcePools       plugin.TValue[[]any]
+	ResourceRuntimeSpec plugin.TValue[any]
+	Labels              plugin.TValue[map[string]any]
+	EncryptionSpec      plugin.TValue[any]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt           plugin.TValue[*time.Time]
+	StartedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServicePersistentResource creates a new instance of this resource
+func createGcpProjectVertexaiServicePersistentResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServicePersistentResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.persistentResource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) MqlName() string {
+	return "gcp.project.vertexaiService.persistentResource"
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.persistentResource", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetReservedIpRanges() *plugin.TValue[[]any] {
+	return &c.ReservedIpRanges
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetResourcePools() *plugin.TValue[[]any] {
+	return &c.ResourcePools
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetResourceRuntimeSpec() *plugin.TValue[any] {
+	return &c.ResourceRuntimeSpec
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.persistentResource", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServicePersistentResource) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlGcpProjectVertexaiServiceSchedule for the gcp.project.vertexaiService.schedule resource
+type mqlGcpProjectVertexaiServiceSchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectVertexaiServiceScheduleInternal it will be used here
+	Name                  plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	State                 plugin.TValue[string]
+	Cron                  plugin.TValue[string]
+	MaxRunCount           plugin.TValue[int64]
+	StartedRunCount       plugin.TValue[int64]
+	MaxConcurrentRunCount plugin.TValue[int64]
+	AllowQueueing         plugin.TValue[bool]
+	CatchUp               plugin.TValue[bool]
+	StartedAt             plugin.TValue[*time.Time]
+	EndedAt               plugin.TValue[*time.Time]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	NextRunTime           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceSchedule creates a new instance of this resource
+func createGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceSchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.schedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) MqlName() string {
+	return "gcp.project.vertexaiService.schedule"
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetCron() *plugin.TValue[string] {
+	return &c.Cron
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetMaxRunCount() *plugin.TValue[int64] {
+	return &c.MaxRunCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetStartedRunCount() *plugin.TValue[int64] {
+	return &c.StartedRunCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetMaxConcurrentRunCount() *plugin.TValue[int64] {
+	return &c.MaxConcurrentRunCount
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetAllowQueueing() *plugin.TValue[bool] {
+	return &c.AllowQueueing
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetCatchUp() *plugin.TValue[bool] {
+	return &c.CatchUp
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetEndedAt() *plugin.TValue[*time.Time] {
+	return &c.EndedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceSchedule) GetNextRunTime() *plugin.TValue[*time.Time] {
+	return &c.NextRunTime
+}
+
+// mqlGcpProjectVertexaiServiceDeploymentResourcePool for the gcp.project.vertexaiService.deploymentResourcePool resource
+type mqlGcpProjectVertexaiServiceDeploymentResourcePool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceDeploymentResourcePoolInternal
+	Name                    plugin.TValue[string]
+	ServiceAccount          plugin.TValue[string]
+	DisableContainerLogging plugin.TValue[bool]
+	DedicatedResources      plugin.TValue[any]
+	EncryptionSpec          plugin.TValue[any]
+	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt               plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceDeploymentResourcePool creates a new instance of this resource
+func createGcpProjectVertexaiServiceDeploymentResourcePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceDeploymentResourcePool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.deploymentResourcePool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) MqlName() string {
+	return "gcp.project.vertexaiService.deploymentResourcePool"
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetDisableContainerLogging() *plugin.TValue[bool] {
+	return &c.DisableContainerLogging
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetDedicatedResources() *plugin.TValue[any] {
+	return &c.DedicatedResources
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.deploymentResourcePool", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlGcpProjectVertexaiServiceCachedContent for the gcp.project.vertexaiService.cachedContent resource
+type mqlGcpProjectVertexaiServiceCachedContent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectVertexaiServiceCachedContentInternal
+	Name           plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Model          plugin.TValue[string]
+	UsageMetadata  plugin.TValue[any]
+	ExpireTime     plugin.TValue[*time.Time]
+	EncryptionSpec plugin.TValue[any]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+}
+
+// createGcpProjectVertexaiServiceCachedContent creates a new instance of this resource
+func createGcpProjectVertexaiServiceCachedContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectVertexaiServiceCachedContent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.vertexaiService.cachedContent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) MqlName() string {
+	return "gcp.project.vertexaiService.cachedContent"
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetUsageMetadata() *plugin.TValue[any] {
+	return &c.UsageMetadata
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetEncryptionSpec() *plugin.TValue[any] {
+	return &c.EncryptionSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.cachedContent", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceCachedContent) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 

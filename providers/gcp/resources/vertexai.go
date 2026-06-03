@@ -1491,6 +1491,438 @@ func (a *mqlGcpProjectVertexaiServiceReasoningEngine) serviceAccount() (*mqlGcpP
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
+func (g *mqlGcpProjectVertexaiService) ragCorpora() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewVertexRagDataClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListRagCorpora(ctx, &aiplatformpb.ListRagCorporaRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			corpus, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			corpusStatus, err := protoToDict(corpus.CorpusStatus)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(corpus.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlCorpus, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.ragCorpus", map[string]*llx.RawData{
+				"name":           llx.StringData(corpus.Name),
+				"displayName":    llx.StringData(corpus.DisplayName),
+				"description":    llx.StringData(corpus.Description),
+				"corpusStatus":   llx.DictData(corpusStatus),
+				"encryptionSpec": llx.DictData(encryptionSpec),
+				"createdAt":      llx.TimeDataPtr(timestampAsTimePtr(corpus.CreateTime)),
+				"updatedAt":      llx.TimeDataPtr(timestampAsTimePtr(corpus.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlCorpus.(*mqlGcpProjectVertexaiServiceRagCorpus).cacheKmsKeyName = corpus.GetEncryptionSpec().GetKmsKeyName()
+			items = append(items, mqlCorpus)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceRagCorpus) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) featureGroups() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewFeatureRegistryClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListFeatureGroups(ctx, &aiplatformpb.ListFeatureGroupsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			fg, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			bigQuery, err := protoToDict(fg.GetBigQuery())
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlFg, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.featureGroup", map[string]*llx.RawData{
+				"name":        llx.StringData(fg.Name),
+				"description": llx.StringData(fg.Description),
+				"bigQuery":    llx.DictData(bigQuery),
+				"etag":        llx.StringData(fg.Etag),
+				"labels":      llx.MapData(convert.MapToInterfaceMap(fg.Labels), types.String),
+				"createdAt":   llx.TimeDataPtr(timestampAsTimePtr(fg.CreateTime)),
+				"updatedAt":   llx.TimeDataPtr(timestampAsTimePtr(fg.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlFg)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceFeatureGroup) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) persistentResources() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewPersistentResourceClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListPersistentResources(ctx, &aiplatformpb.ListPersistentResourcesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			pr, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			resourcePools := make([]any, 0, len(pr.ResourcePools))
+			for _, rp := range pr.ResourcePools {
+				d, err := protoToDict(rp)
+				if err != nil {
+					return nil, false, err
+				}
+				resourcePools = append(resourcePools, d)
+			}
+			resourceRuntimeSpec, err := protoToDict(pr.ResourceRuntimeSpec)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(pr.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlPr, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.persistentResource", map[string]*llx.RawData{
+				"name":                llx.StringData(pr.Name),
+				"displayName":         llx.StringData(pr.DisplayName),
+				"state":               llx.StringData(pr.State.String()),
+				"reservedIpRanges":    llx.ArrayData(convert.SliceAnyToInterface(pr.ReservedIpRanges), types.String),
+				"resourcePools":       llx.ArrayData(resourcePools, types.Dict),
+				"resourceRuntimeSpec": llx.DictData(resourceRuntimeSpec),
+				"labels":              llx.MapData(convert.MapToInterfaceMap(pr.Labels), types.String),
+				"encryptionSpec":      llx.DictData(encryptionSpec),
+				"createdAt":           llx.TimeDataPtr(timestampAsTimePtr(pr.CreateTime)),
+				"startedAt":           llx.TimeDataPtr(timestampAsTimePtr(pr.StartTime)),
+				"updatedAt":           llx.TimeDataPtr(timestampAsTimePtr(pr.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			prMql := mqlPr.(*mqlGcpProjectVertexaiServicePersistentResource)
+			prMql.cacheKmsKeyName = pr.GetEncryptionSpec().GetKmsKeyName()
+			prMql.cacheNetworkUrl = pr.Network
+			items = append(items, mqlPr)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServicePersistentResource) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewScheduleClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListSchedules(ctx, &aiplatformpb.ListSchedulesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			sched, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			mqlSched, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
+				"name":                  llx.StringData(sched.Name),
+				"displayName":           llx.StringData(sched.DisplayName),
+				"state":                 llx.StringData(sched.State.String()),
+				"cron":                  llx.StringData(sched.GetCron()),
+				"maxRunCount":           llx.IntData(sched.MaxRunCount),
+				"startedRunCount":       llx.IntData(sched.StartedRunCount),
+				"maxConcurrentRunCount": llx.IntData(sched.MaxConcurrentRunCount),
+				"allowQueueing":         llx.BoolData(sched.AllowQueueing),
+				"catchUp":               llx.BoolData(sched.CatchUp),
+				"startedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.StartTime)),
+				"endedAt":               llx.TimeDataPtr(timestampAsTimePtr(sched.EndTime)),
+				"createdAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.CreateTime)),
+				"updatedAt":             llx.TimeDataPtr(timestampAsTimePtr(sched.UpdateTime)),
+				"nextRunTime":           llx.TimeDataPtr(timestampAsTimePtr(sched.NextRunTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlSched)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceSchedule) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewDeploymentResourcePoolClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListDeploymentResourcePools(ctx, &aiplatformpb.ListDeploymentResourcePoolsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			pool, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			dedicatedResources, err := protoToDict(pool.DedicatedResources)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(pool.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlPool, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.deploymentResourcePool", map[string]*llx.RawData{
+				"name":                    llx.StringData(pool.Name),
+				"serviceAccount":          llx.StringData(pool.ServiceAccount),
+				"disableContainerLogging": llx.BoolData(pool.DisableContainerLogging),
+				"dedicatedResources":      llx.DictData(dedicatedResources),
+				"encryptionSpec":          llx.DictData(encryptionSpec),
+				"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(pool.CreateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlPool.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).cacheKmsKeyName = pool.GetEncryptionSpec().GetKmsKeyName()
+			items = append(items, mqlPool)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceDeploymentResourcePool) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) cachedContents() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewGenAiCacheClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListCachedContents(ctx, &aiplatformpb.ListCachedContentsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			cc, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			usageMetadata, err := protoToDict(cc.UsageMetadata)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(cc.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlCc, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.cachedContent", map[string]*llx.RawData{
+				"name":           llx.StringData(cc.Name),
+				"displayName":    llx.StringData(cc.DisplayName),
+				"model":          llx.StringData(cc.Model),
+				"usageMetadata":  llx.DictData(usageMetadata),
+				"expireTime":     llx.TimeDataPtr(timestampAsTimePtr(cc.GetExpireTime())),
+				"encryptionSpec": llx.DictData(encryptionSpec),
+				"createdAt":      llx.TimeDataPtr(timestampAsTimePtr(cc.CreateTime)),
+				"updatedAt":      llx.TimeDataPtr(timestampAsTimePtr(cc.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			mqlCc.(*mqlGcpProjectVertexaiServiceCachedContent).cacheKmsKeyName = cc.GetEncryptionSpec().GetKmsKeyName()
+			items = append(items, mqlCc)
+		}
+		return items, false, nil
+	})
+}
+
+func (g *mqlGcpProjectVertexaiServiceCachedContent) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
 // ---------------------------------------------------------------
 // KMS key references
 // ---------------------------------------------------------------
@@ -1605,5 +2037,46 @@ type mqlGcpProjectVertexaiServiceReasoningEngineInternal struct {
 }
 
 func (a *mqlGcpProjectVertexaiServiceReasoningEngine) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceRagCorpusInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceRagCorpus) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServicePersistentResourceInternal struct {
+	cacheKmsKeyName string
+	cacheNetworkUrl string
+}
+
+func (a *mqlGcpProjectVertexaiServicePersistentResource) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServicePersistentResource) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if a.cacheNetworkUrl == "" {
+		a.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return getNetworkByUrl(a.cacheNetworkUrl, a.MqlRuntime)
+}
+
+type mqlGcpProjectVertexaiServiceDeploymentResourcePoolInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceDeploymentResourcePool) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+type mqlGcpProjectVertexaiServiceCachedContentInternal struct {
+	cacheKmsKeyName string
+}
+
+func (a *mqlGcpProjectVertexaiServiceCachedContent) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
