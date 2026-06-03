@@ -204,29 +204,33 @@ jobs:
       - name: "Resolve published version"
         id: published
         if: ${{ ! inputs.skip_publish && steps.build-providers.outcome == 'success' }}
-        # Take the version straight from the dist filename (name_version_os_arch)
-        # so the Slack message matches exactly what was uploaded.
-        run: echo "version=$(ls dist | cut -f1,2 -d_ | uniq | head -1 | cut -f2 -d_)" >> $GITHUB_OUTPUT
+        # Version comes from the dist filename (name_version_os_arch); uniq
+        # collapses to one value since the job builds a single provider. Guard
+        # against an empty result so we never post a versionless message.
+        run: |
+          VER=$(ls dist | cut -f1,2 -d_ | uniq | head -1 | cut -f2 -d_)
+          if [ -z "$VER" ]; then echo "::error::Could not resolve published version"; exit 1; fi
+          echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: "Notify Slack on provider release"
         uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
-        # Only on a real publish that built successfully. Posts to the same
-        # #release-coordination channel (C07QZDJFF89) as server, via the Slack
-        # API + bot-token secret — no webhook URL, safe for this public repo.
+        # Only on a real publish that built successfully.
         if: ${{ ! inputs.skip_publish && steps.build-providers.outcome == 'success' }}
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
+          # toJSON(format(...)) JSON-encodes the interpolated values so a stray
+          # quote/backslash can never break the payload.
           payload: |
             {
               "channel": "C07QZDJFF89",
-              "text": "🎉 Provider released: ${{ matrix.provider }} v${{ steps.published.outputs.version }}",
+              "text": ${{ toJSON(format('🎉 Provider released: {0} v{1}', matrix.provider, steps.published.outputs.version)) }},
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":tada: *Provider released:* `${{ matrix.provider }}` v${{ steps.published.outputs.version }}  <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View GitHub Action Run>"
+                    "text": ${{ toJSON(format(':tada: *Provider released:* `{0}` v{1}  <{2}/{3}/actions/runs/{4}|View GitHub Action Run>', matrix.provider, steps.published.outputs.version, github.server_url, github.repository, github.run_id)) }}
                   }
                 }
               ]
