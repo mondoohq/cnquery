@@ -3885,3 +3885,179 @@ private oci.ai.dataScience.pipeline @defaults("name state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Oracle Cloud Infrastructure (OCI) Generative AI
+//
+// Use the Generative AI namespace to enumerate the tenancy's foundation
+// model estate across every subscribed region. Iterate
+// `dedicatedAiClusters()` for the dedicated GPU capacity that hosts or
+// fine-tunes models, `models()` for the pretrained and custom
+// (fine-tuned) models available in the compartment, and `endpoints()`
+// for the model-serving endpoints — each reporting its content
+// moderation, prompt-injection, and PII-detection guardrails.
+oci.ai.generativeAi {
+  // Dedicated AI clusters
+  dedicatedAiClusters() []oci.ai.generativeAi.dedicatedAiCluster
+  // Pretrained and custom models
+  models() []oci.ai.generativeAi.model
+  // Model-serving endpoints
+  endpoints() []oci.ai.generativeAi.endpoint
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI dedicated AI cluster
+//
+// Examine a single dedicated AI cluster — the reserved GPU capacity used
+// to host or fine-tune Generative AI models. Select a cluster by its
+// OCID, for example
+// `oci.ai.generativeAi.dedicatedAiCluster(id: "ocid1.generativeaidedicatedaicluster.oc1...")`.
+// The cluster reports its purpose (hosting or fine-tuning), the number
+// and shape of its GPU units, and its committed capacity.
+private oci.ai.generativeAi.dedicatedAiCluster @defaults("name type state") {
+  init(id? string)
+  // Cluster OCID
+  id string
+  // Cluster display name
+  name string
+  // Compartment OCID containing the cluster
+  compartmentID string
+  // Compartment containing the cluster
+  compartment() oci.compartment
+  // Cluster purpose (HOSTING or FINE_TUNING)
+  type string
+  // Number of GPU units allocated to the cluster
+  unitCount int
+  // Shape of the GPU units (e.g., LARGE_GENERIC, LLAMA2_70, A100_80G_X8)
+  unitShape string
+  // Committed capacity of the cluster
+  //
+  // Shape varies by cluster type; for a hosting cluster it includes the
+  // total and used endpoint capacity.
+  capacity dict
+  // Description of the cluster
+  description string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI model
+//
+// Examine a single Generative AI model — a pretrained foundation model
+// or a custom model fine-tuned from one. Select a model by its OCID, for
+// example `oci.ai.generativeAi.model(id: "ocid1.generativeaimodel.oc1...")`.
+// The model reports its vendor and version, its capabilities (such as
+// chat, text generation, or embeddings), and — for a custom model — the
+// base model it was fine-tuned from and the fine-tuning details.
+private oci.ai.generativeAi.model @defaults("name type state") {
+  init(id? string)
+  // Model OCID
+  id string
+  // Model display name
+  name string
+  // Compartment OCID containing the model
+  compartmentID string
+  // Compartment containing the model
+  compartment() oci.compartment
+  // Model type (BASE or CUSTOM)
+  type string
+  // Model capabilities
+  //
+  // Values include TEXT_GENERATION, TEXT_SUMMARIZATION, TEXT_EMBEDDINGS,
+  // FINE_TUNE, CHAT, TEXT_RERANK, and the various image, audio, and video
+  // modalities.
+  capabilities []string
+  // Vendor of the base model (e.g., cohere, meta)
+  vendor string
+  // Model version
+  version string
+  // OCID of the base model a custom model was fine-tuned from, when set
+  baseModelID string
+  // Base model a custom model was fine-tuned from, when set
+  baseModel() oci.ai.generativeAi.model
+  // Fine-tuning configuration for a custom model
+  //
+  // Includes the training dataset and the training-method hyperparameters.
+  fineTuneDetails dict
+  // Whether the model is offered with long-term support
+  isLongTermSupported bool
+  // Lifecycle state (e.g., ACTIVE, CREATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Time the model is scheduled to be deprecated, when set
+  timeDeprecated time
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Generative AI endpoint
+//
+// Examine a single Generative AI endpoint — a custom model served for
+// inference on a dedicated AI cluster. Select an endpoint by its OCID,
+// for example
+// `oci.ai.generativeAi.endpoint(id: "ocid1.generativeaiendpoint.oc1...")`.
+// The endpoint reports the model it serves, the cluster it runs on, the
+// optional private endpoint that isolates it, and whether content
+// moderation, prompt-injection detection, and PII detection guardrails
+// are enabled — use these to find endpoints serving models without
+// safety controls.
+private oci.ai.generativeAi.endpoint @defaults("name state") {
+  init(id? string)
+  // Endpoint OCID
+  id string
+  // Endpoint display name
+  name string
+  // Compartment OCID containing the endpoint
+  compartmentID string
+  // Compartment containing the endpoint
+  compartment() oci.compartment
+  // OCID of the model served by the endpoint
+  modelID string
+  // Model served by the endpoint
+  model() oci.ai.generativeAi.model
+  // OCID of the dedicated AI cluster hosting the endpoint
+  dedicatedAiClusterID string
+  // Dedicated AI cluster hosting the endpoint
+  dedicatedAiCluster() oci.ai.generativeAi.dedicatedAiCluster
+  // OCID of the Generative AI private endpoint isolating this endpoint, when set
+  generativeAiPrivateEndpointID string
+  // Description of the endpoint
+  description string
+  // Whether content moderation is enabled
+  contentModerationEnabled bool
+  // Content moderation mode (INFORM or BLOCK), when moderation is enabled
+  contentModerationMode string
+  // Whether prompt-injection detection is enabled
+  promptInjectionEnabled bool
+  // Prompt-injection detection mode (INFORM or BLOCK), when enabled
+  promptInjectionMode string
+  // Whether PII detection is enabled
+  piiDetectionEnabled bool
+  // PII detection mode (INFORM or BLOCK), when enabled
+  piiDetectionMode string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Detail message describing the current lifecycle state
+  lifecycleDetails string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}

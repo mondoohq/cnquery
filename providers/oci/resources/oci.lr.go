@@ -153,6 +153,10 @@ const (
 	ResourceOciAiDataScienceModelDeployment                          string = "oci.ai.dataScience.modelDeployment"
 	ResourceOciAiDataScienceJob                                      string = "oci.ai.dataScience.job"
 	ResourceOciAiDataSciencePipeline                                 string = "oci.ai.dataScience.pipeline"
+	ResourceOciAiGenerativeAi                                        string = "oci.ai.generativeAi"
+	ResourceOciAiGenerativeAiDedicatedAiCluster                      string = "oci.ai.generativeAi.dedicatedAiCluster"
+	ResourceOciAiGenerativeAiModel                                   string = "oci.ai.generativeAi.model"
+	ResourceOciAiGenerativeAiEndpoint                                string = "oci.ai.generativeAi.endpoint"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -706,6 +710,22 @@ func init() {
 		"oci.ai.dataScience.pipeline": {
 			Init:   initOciAiDataSciencePipeline,
 			Create: createOciAiDataSciencePipeline,
+		},
+		"oci.ai.generativeAi": {
+			// to override args, implement: initOciAiGenerativeAi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciAiGenerativeAi,
+		},
+		"oci.ai.generativeAi.dedicatedAiCluster": {
+			Init:   initOciAiGenerativeAiDedicatedAiCluster,
+			Create: createOciAiGenerativeAiDedicatedAiCluster,
+		},
+		"oci.ai.generativeAi.model": {
+			Init:   initOciAiGenerativeAiModel,
+			Create: createOciAiGenerativeAiModel,
+		},
+		"oci.ai.generativeAi.endpoint": {
+			Init:   initOciAiGenerativeAiEndpoint,
+			Create: createOciAiGenerativeAiEndpoint,
 		},
 	}
 }
@@ -4902,6 +4922,180 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.ai.dataScience.pipeline.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciAiDataSciencePipeline).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.generativeAi.dedicatedAiClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAi).GetDedicatedAiClusters()).ToDataRes(types.Array(types.Resource("oci.ai.generativeAi.dedicatedAiCluster")))
+	},
+	"oci.ai.generativeAi.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAi).GetModels()).ToDataRes(types.Array(types.Resource("oci.ai.generativeAi.model")))
+	},
+	"oci.ai.generativeAi.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAi).GetEndpoints()).ToDataRes(types.Array(types.Resource("oci.ai.generativeAi.endpoint")))
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetType()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.unitCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetUnitCount()).ToDataRes(types.Int)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.unitShape": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetUnitShape()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCapacity()).ToDataRes(types.Dict)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiDedicatedAiCluster).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.generativeAi.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.generativeAi.model.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetType()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"oci.ai.generativeAi.model.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetVendor()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetVersion()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.baseModelID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetBaseModelID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.baseModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetBaseModel()).ToDataRes(types.Resource("oci.ai.generativeAi.model"))
+	},
+	"oci.ai.generativeAi.model.fineTuneDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetFineTuneDetails()).ToDataRes(types.Dict)
+	},
+	"oci.ai.generativeAi.model.isLongTermSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetIsLongTermSupported()).ToDataRes(types.Bool)
+	},
+	"oci.ai.generativeAi.model.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.model.timeDeprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetTimeDeprecated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.model.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.model.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.generativeAi.model.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.ai.generativeAi.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.ai.generativeAi.endpoint.modelID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetModelID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetModel()).ToDataRes(types.Resource("oci.ai.generativeAi.model"))
+	},
+	"oci.ai.generativeAi.endpoint.dedicatedAiClusterID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetDedicatedAiClusterID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.dedicatedAiCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetDedicatedAiCluster()).ToDataRes(types.Resource("oci.ai.generativeAi.dedicatedAiCluster"))
+	},
+	"oci.ai.generativeAi.endpoint.generativeAiPrivateEndpointID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetGenerativeAiPrivateEndpointID()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.contentModerationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetContentModerationEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.ai.generativeAi.endpoint.contentModerationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetContentModerationMode()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.promptInjectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetPromptInjectionEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.ai.generativeAi.endpoint.promptInjectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetPromptInjectionMode()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.piiDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetPiiDetectionEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.ai.generativeAi.endpoint.piiDetectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetPiiDetectionMode()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.ai.generativeAi.endpoint.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.endpoint.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.ai.generativeAi.endpoint.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.ai.generativeAi.endpoint.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciAiGenerativeAiEndpoint).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 }
 
@@ -10961,6 +11155,254 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.ai.dataScience.pipeline.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciAiDataSciencePipeline).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAi).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAi).DedicatedAiClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAi).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAi).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.unitCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).UnitCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.unitShape": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).UnitShape, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Capacity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.dedicatedAiCluster.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiDedicatedAiCluster).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.generativeAi.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.baseModelID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).BaseModelID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.baseModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).BaseModel, ok = plugin.RawToTValue[*mqlOciAiGenerativeAiModel](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.fineTuneDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).FineTuneDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.isLongTermSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).IsLongTermSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.timeDeprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).TimeDeprecated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.model.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.modelID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).ModelID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Model, ok = plugin.RawToTValue[*mqlOciAiGenerativeAiModel](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.dedicatedAiClusterID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).DedicatedAiClusterID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.dedicatedAiCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).DedicatedAiCluster, ok = plugin.RawToTValue[*mqlOciAiGenerativeAiDedicatedAiCluster](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.generativeAiPrivateEndpointID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).GenerativeAiPrivateEndpointID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.contentModerationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).ContentModerationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.contentModerationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).ContentModerationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.promptInjectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).PromptInjectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.promptInjectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).PromptInjectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.piiDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).PiiDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.piiDetectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).PiiDetectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.ai.generativeAi.endpoint.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciAiGenerativeAiEndpoint).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -26768,5 +27210,579 @@ func (c *mqlOciAiDataSciencePipeline) GetFreeformTags() *plugin.TValue[map[strin
 }
 
 func (c *mqlOciAiDataSciencePipeline) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiGenerativeAi for the oci.ai.generativeAi resource
+type mqlOciAiGenerativeAi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiGenerativeAiInternal it will be used here
+	DedicatedAiClusters plugin.TValue[[]any]
+	Models              plugin.TValue[[]any]
+	Endpoints           plugin.TValue[[]any]
+}
+
+// createOciAiGenerativeAi creates a new instance of this resource
+func createOciAiGenerativeAi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiGenerativeAi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.generativeAi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiGenerativeAi) MqlName() string {
+	return "oci.ai.generativeAi"
+}
+
+func (c *mqlOciAiGenerativeAi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiGenerativeAi) GetDedicatedAiClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DedicatedAiClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi", c.__id, "dedicatedAiClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dedicatedAiClusters()
+	})
+}
+
+func (c *mqlOciAiGenerativeAi) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlOciAiGenerativeAi) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
+	})
+}
+
+// mqlOciAiGenerativeAiDedicatedAiCluster for the oci.ai.generativeAi.dedicatedAiCluster resource
+type mqlOciAiGenerativeAiDedicatedAiCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciAiGenerativeAiDedicatedAiClusterInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	Type             plugin.TValue[string]
+	UnitCount        plugin.TValue[int64]
+	UnitShape        plugin.TValue[string]
+	Capacity         plugin.TValue[any]
+	Description      plugin.TValue[string]
+	State            plugin.TValue[string]
+	LifecycleDetails plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	TimeUpdated      plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciAiGenerativeAiDedicatedAiCluster creates a new instance of this resource
+func createOciAiGenerativeAiDedicatedAiCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiGenerativeAiDedicatedAiCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.generativeAi.dedicatedAiCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) MqlName() string {
+	return "oci.ai.generativeAi.dedicatedAiCluster"
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.dedicatedAiCluster", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetUnitCount() *plugin.TValue[int64] {
+	return &c.UnitCount
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetUnitShape() *plugin.TValue[string] {
+	return &c.UnitShape
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCapacity() *plugin.TValue[any] {
+	return &c.Capacity
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiGenerativeAiDedicatedAiCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiGenerativeAiModel for the oci.ai.generativeAi.model resource
+type mqlOciAiGenerativeAiModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiGenerativeAiModelInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	CompartmentID       plugin.TValue[string]
+	Compartment         plugin.TValue[*mqlOciCompartment]
+	Type                plugin.TValue[string]
+	Capabilities        plugin.TValue[[]any]
+	Vendor              plugin.TValue[string]
+	Version             plugin.TValue[string]
+	BaseModelID         plugin.TValue[string]
+	BaseModel           plugin.TValue[*mqlOciAiGenerativeAiModel]
+	FineTuneDetails     plugin.TValue[any]
+	IsLongTermSupported plugin.TValue[bool]
+	State               plugin.TValue[string]
+	LifecycleDetails    plugin.TValue[string]
+	TimeDeprecated      plugin.TValue[*time.Time]
+	Created             plugin.TValue[*time.Time]
+	FreeformTags        plugin.TValue[map[string]any]
+	DefinedTags         plugin.TValue[map[string]any]
+}
+
+// createOciAiGenerativeAiModel creates a new instance of this resource
+func createOciAiGenerativeAiModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiGenerativeAiModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.generativeAi.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiGenerativeAiModel) MqlName() string {
+	return "oci.ai.generativeAi.model"
+}
+
+func (c *mqlOciAiGenerativeAiModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.model", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetCapabilities() *plugin.TValue[[]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetBaseModelID() *plugin.TValue[string] {
+	return &c.BaseModelID
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetBaseModel() *plugin.TValue[*mqlOciAiGenerativeAiModel] {
+	return plugin.GetOrCompute[*mqlOciAiGenerativeAiModel](&c.BaseModel, func() (*mqlOciAiGenerativeAiModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.model", c.__id, "baseModel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiGenerativeAiModel), nil
+			}
+		}
+
+		return c.baseModel()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetFineTuneDetails() *plugin.TValue[any] {
+	return &c.FineTuneDetails
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetIsLongTermSupported() *plugin.TValue[bool] {
+	return &c.IsLongTermSupported
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetTimeDeprecated() *plugin.TValue[*time.Time] {
+	return &c.TimeDeprecated
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiGenerativeAiModel) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciAiGenerativeAiEndpoint for the oci.ai.generativeAi.endpoint resource
+type mqlOciAiGenerativeAiEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciAiGenerativeAiEndpointInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	CompartmentID                 plugin.TValue[string]
+	Compartment                   plugin.TValue[*mqlOciCompartment]
+	ModelID                       plugin.TValue[string]
+	Model                         plugin.TValue[*mqlOciAiGenerativeAiModel]
+	DedicatedAiClusterID          plugin.TValue[string]
+	DedicatedAiCluster            plugin.TValue[*mqlOciAiGenerativeAiDedicatedAiCluster]
+	GenerativeAiPrivateEndpointID plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	ContentModerationEnabled      plugin.TValue[bool]
+	ContentModerationMode         plugin.TValue[string]
+	PromptInjectionEnabled        plugin.TValue[bool]
+	PromptInjectionMode           plugin.TValue[string]
+	PiiDetectionEnabled           plugin.TValue[bool]
+	PiiDetectionMode              plugin.TValue[string]
+	State                         plugin.TValue[string]
+	LifecycleDetails              plugin.TValue[string]
+	Created                       plugin.TValue[*time.Time]
+	TimeUpdated                   plugin.TValue[*time.Time]
+	FreeformTags                  plugin.TValue[map[string]any]
+	DefinedTags                   plugin.TValue[map[string]any]
+}
+
+// createOciAiGenerativeAiEndpoint creates a new instance of this resource
+func createOciAiGenerativeAiEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciAiGenerativeAiEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.ai.generativeAi.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) MqlName() string {
+	return "oci.ai.generativeAi.endpoint"
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.endpoint", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetModelID() *plugin.TValue[string] {
+	return &c.ModelID
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetModel() *plugin.TValue[*mqlOciAiGenerativeAiModel] {
+	return plugin.GetOrCompute[*mqlOciAiGenerativeAiModel](&c.Model, func() (*mqlOciAiGenerativeAiModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.endpoint", c.__id, "model")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiGenerativeAiModel), nil
+			}
+		}
+
+		return c.model()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetDedicatedAiClusterID() *plugin.TValue[string] {
+	return &c.DedicatedAiClusterID
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetDedicatedAiCluster() *plugin.TValue[*mqlOciAiGenerativeAiDedicatedAiCluster] {
+	return plugin.GetOrCompute[*mqlOciAiGenerativeAiDedicatedAiCluster](&c.DedicatedAiCluster, func() (*mqlOciAiGenerativeAiDedicatedAiCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.ai.generativeAi.endpoint", c.__id, "dedicatedAiCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciAiGenerativeAiDedicatedAiCluster), nil
+			}
+		}
+
+		return c.dedicatedAiCluster()
+	})
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetGenerativeAiPrivateEndpointID() *plugin.TValue[string] {
+	return &c.GenerativeAiPrivateEndpointID
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetContentModerationEnabled() *plugin.TValue[bool] {
+	return &c.ContentModerationEnabled
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetContentModerationMode() *plugin.TValue[string] {
+	return &c.ContentModerationMode
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetPromptInjectionEnabled() *plugin.TValue[bool] {
+	return &c.PromptInjectionEnabled
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetPromptInjectionMode() *plugin.TValue[string] {
+	return &c.PromptInjectionMode
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetPiiDetectionEnabled() *plugin.TValue[bool] {
+	return &c.PiiDetectionEnabled
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetPiiDetectionMode() *plugin.TValue[string] {
+	return &c.PiiDetectionMode
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciAiGenerativeAiEndpoint) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
 }
