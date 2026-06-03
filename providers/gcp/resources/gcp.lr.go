@@ -13841,7 +13841,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetName()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.deploymentResourcePool.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetServiceAccount()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.vertexaiService.deploymentResourcePool.disableContainerLogging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).GetDisableContainerLogging()).ToDataRes(types.Bool)
@@ -32862,7 +32862,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.vertexaiService.deploymentResourcePool.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.deploymentResourcePool.disableContainerLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75922,7 +75922,7 @@ type mqlGcpProjectVertexaiServiceDeploymentResourcePool struct {
 	__id       string
 	mqlGcpProjectVertexaiServiceDeploymentResourcePoolInternal
 	Name                    plugin.TValue[string]
-	ServiceAccount          plugin.TValue[string]
+	ServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	DisableContainerLogging plugin.TValue[bool]
 	DedicatedResources      plugin.TValue[any]
 	EncryptionSpec          plugin.TValue[any]
@@ -75971,8 +75971,20 @@ func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetName() *plugin.T
 	return &c.Name
 }
 
-func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetServiceAccount() *plugin.TValue[string] {
-	return &c.ServiceAccount
+func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.deploymentResourcePool", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceDeploymentResourcePool) GetDisableContainerLogging() *plugin.TValue[bool] {

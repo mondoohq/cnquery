@@ -11481,8 +11481,8 @@ private gcp.project.vertexaiService.schedule @defaults("displayName state") {
 private gcp.project.vertexaiService.deploymentResourcePool @defaults("name") {
   // Full resource name
   name string
-  // Service account email the pool runs as
-  serviceAccount string
+  // Service account the pool runs as
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Whether container request/response logging is disabled
   disableContainerLogging bool
   // Dedicated resources (machine spec and autoscaling)

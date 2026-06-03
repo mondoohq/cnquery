@@ -1831,7 +1831,6 @@ func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) 
 
 			mqlPool, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.deploymentResourcePool", map[string]*llx.RawData{
 				"name":                    llx.StringData(pool.Name),
-				"serviceAccount":          llx.StringData(pool.ServiceAccount),
 				"disableContainerLogging": llx.BoolData(pool.DisableContainerLogging),
 				"dedicatedResources":      llx.DictData(dedicatedResources),
 				"encryptionSpec":          llx.DictData(encryptionSpec),
@@ -1840,7 +1839,10 @@ func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) 
 			if err != nil {
 				return nil, false, err
 			}
-			mqlPool.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool).cacheKmsKeyName = pool.GetEncryptionSpec().GetKmsKeyName()
+			mqlPoolRes := mqlPool.(*mqlGcpProjectVertexaiServiceDeploymentResourcePool)
+			mqlPoolRes.cacheKmsKeyName = pool.GetEncryptionSpec().GetKmsKeyName()
+			mqlPoolRes.cacheProjectId = projectId
+			mqlPoolRes.cacheServiceAccountEmail = pool.ServiceAccount
 			items = append(items, mqlPool)
 		}
 		return items, false, nil
@@ -2066,11 +2068,29 @@ func (a *mqlGcpProjectVertexaiServicePersistentResource) network() (*mqlGcpProje
 }
 
 type mqlGcpProjectVertexaiServiceDeploymentResourcePoolInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheProjectId           string
+	cacheServiceAccountEmail string
 }
 
 func (a *mqlGcpProjectVertexaiServiceDeploymentResourcePool) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceDeploymentResourcePool) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if a.cacheServiceAccountEmail == "" || a.cacheProjectId == "" {
+		a.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(a.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(a.cacheProjectId),
+		"email":     llx.StringData(a.cacheServiceAccountEmail),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
 type mqlGcpProjectVertexaiServiceCachedContentInternal struct {
