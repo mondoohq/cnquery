@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	qbusinesstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -96,6 +97,42 @@ type mqlAwsQBusinessApplicationInternal struct {
 	fetchLock   sync.Mutex
 	fetched     bool
 	detail      *qbusiness.GetApplicationOutput
+
+	indicesLock    sync.Mutex
+	indicesFetched bool
+	indices_       []qbusinesstypes.Index
+}
+
+// listIndices lists the application's indices once and caches the summaries,
+// so indices() and dataSources() share a single ListIndices round-trip.
+func (a *mqlAwsQBusinessApplication) listIndices() ([]qbusinesstypes.Index, error) {
+	if a.indicesFetched {
+		return a.indices_, nil
+	}
+	a.indicesLock.Lock()
+	defer a.indicesLock.Unlock()
+	if a.indicesFetched {
+		return a.indices_, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.QBusiness(a.cacheRegion)
+	ctx := context.Background()
+	appId := a.Id.Data
+	indices := []qbusinesstypes.Index{}
+	paginator := qbusiness.NewListIndicesPaginator(svc, &qbusiness.ListIndicesInput{ApplicationId: &appId})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				break
+			}
+			return nil, err
+		}
+		indices = append(indices, page.Indices...)
+	}
+	a.indices_ = indices
+	a.indicesFetched = true
+	return indices, nil
 }
 
 func (a *mqlAwsQBusinessApplication) id() (string, error) {
@@ -194,38 +231,29 @@ func (a *mqlAwsQBusinessApplication) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsQBusinessApplication) indices() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.QBusiness(a.cacheRegion)
-	ctx := context.Background()
+	indices, err := a.listIndices()
+	if err != nil {
+		return nil, err
+	}
 	appId := a.Id.Data
 	region := a.Region.Data
 	res := []any{}
-	paginator := qbusiness.NewListIndicesPaginator(svc, &qbusiness.ListIndicesInput{ApplicationId: &appId})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	for _, idx := range indices {
+		indexId := convert.ToValue(idx.IndexId)
+		mqlIdx, err := CreateResource(a.MqlRuntime, "aws.qBusiness.index", map[string]*llx.RawData{
+			"__id":          llx.StringData(region + "/" + appId + "/index/" + indexId),
+			"id":            llx.StringDataPtr(idx.IndexId),
+			"applicationId": llx.StringData(appId),
+			"name":          llx.StringDataPtr(idx.DisplayName),
+			"region":        llx.StringData(region),
+			"status":        llx.StringData(string(idx.Status)),
+			"createdAt":     llx.TimeDataPtr(idx.CreatedAt),
+			"updatedAt":     llx.TimeDataPtr(idx.UpdatedAt),
+		})
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return res, nil
-			}
 			return nil, err
 		}
-		for _, idx := range page.Indices {
-			indexId := convert.ToValue(idx.IndexId)
-			mqlIdx, err := CreateResource(a.MqlRuntime, "aws.qBusiness.index", map[string]*llx.RawData{
-				"__id":          llx.StringData(region + "/" + appId + "/index/" + indexId),
-				"id":            llx.StringDataPtr(idx.IndexId),
-				"applicationId": llx.StringData(appId),
-				"name":          llx.StringDataPtr(idx.DisplayName),
-				"region":        llx.StringData(region),
-				"status":        llx.StringData(string(idx.Status)),
-				"createdAt":     llx.TimeDataPtr(idx.CreatedAt),
-				"updatedAt":     llx.TimeDataPtr(idx.UpdatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlIdx)
-		}
+		res = append(res, mqlIdx)
 	}
 	return res, nil
 }
@@ -238,50 +266,44 @@ func (a *mqlAwsQBusinessApplication) dataSources() ([]any, error) {
 	region := a.Region.Data
 	res := []any{}
 
-	indexPaginator := qbusiness.NewListIndicesPaginator(svc, &qbusiness.ListIndicesInput{ApplicationId: &appId})
-	for indexPaginator.HasMorePages() {
-		indexPage, err := indexPaginator.NextPage(ctx)
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return res, nil
+	indices, err := a.listIndices()
+	if err != nil {
+		return nil, err
+	}
+	for _, idx := range indices {
+		indexId := convert.ToValue(idx.IndexId)
+		dsPaginator := qbusiness.NewListDataSourcesPaginator(svc, &qbusiness.ListDataSourcesInput{
+			ApplicationId: &appId,
+			IndexId:       idx.IndexId,
+		})
+		for dsPaginator.HasMorePages() {
+			dsPage, err := dsPaginator.NextPage(ctx)
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					return res, nil
+				}
+				return nil, err
 			}
-			return nil, err
-		}
-		for _, idx := range indexPage.Indices {
-			indexId := convert.ToValue(idx.IndexId)
-			dsPaginator := qbusiness.NewListDataSourcesPaginator(svc, &qbusiness.ListDataSourcesInput{
-				ApplicationId: &appId,
-				IndexId:       idx.IndexId,
-			})
-			for dsPaginator.HasMorePages() {
-				dsPage, err := dsPaginator.NextPage(ctx)
+			for _, ds := range dsPage.DataSources {
+				dataSourceId := convert.ToValue(ds.DataSourceId)
+				mqlDs, err := CreateResource(a.MqlRuntime, "aws.qBusiness.dataSource", map[string]*llx.RawData{
+					"__id":          llx.StringData(region + "/" + appId + "/" + indexId + "/datasource/" + dataSourceId),
+					"id":            llx.StringDataPtr(ds.DataSourceId),
+					"applicationId": llx.StringData(appId),
+					"indexId":       llx.StringData(indexId),
+					"name":          llx.StringDataPtr(ds.DisplayName),
+					"type":          llx.StringDataPtr(ds.Type),
+					"region":        llx.StringData(region),
+					"status":        llx.StringData(string(ds.Status)),
+					"createdAt":     llx.TimeDataPtr(ds.CreatedAt),
+					"updatedAt":     llx.TimeDataPtr(ds.UpdatedAt),
+				})
 				if err != nil {
-					if Is400AccessDeniedError(err) {
-						return res, nil
-					}
 					return nil, err
 				}
-				for _, ds := range dsPage.DataSources {
-					dataSourceId := convert.ToValue(ds.DataSourceId)
-					mqlDs, err := CreateResource(a.MqlRuntime, "aws.qBusiness.dataSource", map[string]*llx.RawData{
-						"__id":          llx.StringData(region + "/" + appId + "/" + indexId + "/datasource/" + dataSourceId),
-						"id":            llx.StringDataPtr(ds.DataSourceId),
-						"applicationId": llx.StringData(appId),
-						"indexId":       llx.StringData(indexId),
-						"name":          llx.StringDataPtr(ds.DisplayName),
-						"type":          llx.StringDataPtr(ds.Type),
-						"region":        llx.StringData(region),
-						"status":        llx.StringData(string(ds.Status)),
-						"createdAt":     llx.TimeDataPtr(ds.CreatedAt),
-						"updatedAt":     llx.TimeDataPtr(ds.UpdatedAt),
-					})
-					if err != nil {
-						return nil, err
-					}
-					mqlDsRes := mqlDs.(*mqlAwsQBusinessDataSource)
-					mqlDsRes.cacheRegion = region
-					res = append(res, mqlDsRes)
-				}
+				mqlDsRes := mqlDs.(*mqlAwsQBusinessDataSource)
+				mqlDsRes.cacheRegion = region
+				res = append(res, mqlDsRes)
 			}
 		}
 	}
