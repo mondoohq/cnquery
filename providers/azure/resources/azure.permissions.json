@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.15.1",
-  "generated_at": "2026-06-03T09:27:06-07:00",
+  "generated_at": "2026-06-03T09:48:59-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -30,9 +30,12 @@
     "Microsoft.Cdn/profiles/origingroups/origins/read",
     "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
+    "Microsoft.Cognitiveservices/accountConnections/read",
     "Microsoft.Cognitiveservices/accounts/read",
     "Microsoft.Cognitiveservices/defenderForAISettings/read",
     "Microsoft.Cognitiveservices/deployments/read",
+    "Microsoft.Cognitiveservices/projectConnections/read",
+    "Microsoft.Cognitiveservices/projects/read",
     "Microsoft.Cognitiveservices/raiPolicies/read",
     "Microsoft.Cognitiveservices/raiTopics/read",
     "Microsoft.Compute/dedicatedHostGroups/read",
@@ -376,6 +379,12 @@
       "source_file": "frontdoor.go"
     },
     {
+      "permission": "Microsoft.Cognitiveservices/accountConnections/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
       "permission": "Microsoft.Cognitiveservices/accounts/read",
       "service": "Microsoft.Cognitiveservices",
       "action": "NewListPager",
@@ -389,6 +398,18 @@
     },
     {
       "permission": "Microsoft.Cognitiveservices/deployments/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/projectConnections/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/projects/read",
       "service": "Microsoft.Cognitiveservices",
       "action": "NewListPager",
       "source_file": "cognitiveservices.go"

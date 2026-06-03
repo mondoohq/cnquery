@@ -740,3 +740,269 @@ func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*
 	}
 	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic), nil
 }
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) projects() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName := parsed.Path["accounts"]
+
+	ctx := context.Background()
+	client, err := armcognitiveservices.NewProjectsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, accountName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services projects due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, proj := range page.Value {
+			if proj == nil {
+				continue
+			}
+			mqlProj, err := cognitiveServicesProjectToMql(a.MqlRuntime, proj)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlProj)
+		}
+	}
+	return res, nil
+}
+
+func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitiveservices.Project) (*mqlAzureSubscriptionCognitiveServicesServiceAccountProject, error) {
+	identity, err := convert.JsonToDict(proj.Identity)
+	if err != nil {
+		return nil, err
+	}
+
+	var displayName, description, provisioningState string
+	var isDefault bool
+	endpoints := map[string]any{}
+	if p := proj.Properties; p != nil {
+		if p.DisplayName != nil {
+			displayName = *p.DisplayName
+		}
+		if p.Description != nil {
+			description = *p.Description
+		}
+		if p.ProvisioningState != nil {
+			provisioningState = string(*p.ProvisioningState)
+		}
+		if p.IsDefault != nil {
+			isDefault = *p.IsDefault
+		}
+		for k, v := range p.Endpoints {
+			if v != nil {
+				endpoints[k] = *v
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.cognitiveServicesService.account.project", map[string]*llx.RawData{
+		"id":                llx.StringDataPtr(proj.ID),
+		"name":              llx.StringDataPtr(proj.Name),
+		"location":          llx.StringDataPtr(proj.Location),
+		"tags":              llx.MapData(convert.PtrMapStrToInterface(proj.Tags), types.String),
+		"identity":          llx.DictData(identity),
+		"displayName":       llx.StringData(displayName),
+		"description":       llx.StringData(description),
+		"isDefault":         llx.BoolData(isDefault),
+		"provisioningState": llx.StringData(provisioningState),
+		"endpoints":         llx.MapData(endpoints, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject), nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) connections() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName := parsed.Path["accounts"]
+
+	ctx := context.Background()
+	client, err := armcognitiveservices.NewAccountConnectionsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, accountName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services account connections due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
+			mqlConn, err := cognitiveServicesConnectionToMql(a.MqlRuntime, "azure.subscription.cognitiveServicesService.account.connection", c)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConn)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) connections() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName := parsed.Path["accounts"]
+	projectName := parsed.Path["projects"]
+
+	ctx := context.Background()
+	client, err := armcognitiveservices.NewProjectConnectionsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(parsed.ResourceGroup, accountName, projectName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list cognitive services project connections due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, c := range page.Value {
+			if c == nil {
+				continue
+			}
+			mqlConn, err := cognitiveServicesConnectionToMql(a.MqlRuntime, "azure.subscription.cognitiveServicesService.account.project.connection", c)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConn)
+		}
+	}
+	return res, nil
+}
+
+// cognitiveServicesConnectionToMql maps an account- or project-scoped connection to the
+// given MQL resource type. Both scopes share the same ConnectionPropertiesV2 shape.
+func cognitiveServicesConnectionToMql(runtime *plugin.Runtime, resourceType string, c *armcognitiveservices.ConnectionPropertiesV2BasicResource) (plugin.Resource, error) {
+	var category, authType, target, group, errMsg string
+	var isSharedToAll, useWorkspaceManagedIdentity bool
+	var peRequirement, peStatus string
+	var expiryTime *time.Time
+	metadata := map[string]any{}
+
+	if c.Properties != nil {
+		if p := c.Properties.GetConnectionPropertiesV2(); p != nil {
+			if p.Category != nil {
+				category = string(*p.Category)
+			}
+			if p.AuthType != nil {
+				authType = string(*p.AuthType)
+			}
+			if p.Target != nil {
+				target = *p.Target
+			}
+			if p.Group != nil {
+				group = string(*p.Group)
+			}
+			if p.Error != nil {
+				errMsg = *p.Error
+			}
+			if p.IsSharedToAll != nil {
+				isSharedToAll = *p.IsSharedToAll
+			}
+			if p.UseWorkspaceManagedIdentity != nil {
+				useWorkspaceManagedIdentity = *p.UseWorkspaceManagedIdentity
+			}
+			if p.PeRequirement != nil {
+				peRequirement = string(*p.PeRequirement)
+			}
+			if p.PeStatus != nil {
+				peStatus = string(*p.PeStatus)
+			}
+			expiryTime = p.ExpiryTime
+			for k, v := range p.Metadata {
+				if v != nil {
+					metadata[k] = *v
+				}
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, resourceType, map[string]*llx.RawData{
+		"id":                          llx.StringDataPtr(c.ID),
+		"name":                        llx.StringDataPtr(c.Name),
+		"category":                    llx.StringData(category),
+		"authType":                    llx.StringData(authType),
+		"target":                      llx.StringData(target),
+		"group":                       llx.StringData(group),
+		"isSharedToAll":               llx.BoolData(isSharedToAll),
+		"useWorkspaceManagedIdentity": llx.BoolData(useWorkspaceManagedIdentity),
+		"peRequirement":               llx.StringData(peRequirement),
+		"peStatus":                    llx.StringData(peStatus),
+		"metadata":                    llx.MapData(metadata, types.String),
+		"error":                       llx.StringData(errMsg),
+		"expiryTime":                  llx.TimeDataPtr(expiryTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

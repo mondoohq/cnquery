@@ -378,6 +378,9 @@ const (
 	ResourceAzureSubscriptionCognitiveServicesService                                            string = "azure.subscription.cognitiveServicesService"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                     string = "azure.subscription.cognitiveServicesService.account"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                           string = "azure.subscription.cognitiveServicesService.account.deployment"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                              string = "azure.subscription.cognitiveServicesService.account.project"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                    string = "azure.subscription.cognitiveServicesService.account.project.connection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountConnection                           string = "azure.subscription.cognitiveServicesService.account.connection"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                            string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter               string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
@@ -1838,6 +1841,18 @@ func init() {
 		"azure.subscription.cognitiveServicesService.account.deployment": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCognitiveServicesServiceAccountDeployment,
+		},
+		"azure.subscription.cognitiveServicesService.account.project": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountProject,
+		},
+		"azure.subscription.cognitiveServicesService.account.project.connection": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountProjectConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountProjectConnection,
+		},
+		"azure.subscription.cognitiveServicesService.account.connection": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountConnection,
 		},
 		"azure.subscription.cognitiveServicesService.account.raiPolicy": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13653,6 +13668,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.deployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetDeployments()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.deployment")))
 	},
+	"azure.subscription.cognitiveServicesService.account.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetProjects()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.project")))
+	},
+	"azure.subscription.cognitiveServicesService.account.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.connection")))
+	},
 	"azure.subscription.cognitiveServicesService.account.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -13703,6 +13724,117 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).GetRaiPolicy()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy"))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetEndpoints()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.project.connection")))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetAuthType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.isSharedToAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetIsSharedToAll()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.useWorkspaceManagedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetUseWorkspaceManagedIdentity()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.peRequirement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetPeRequirement()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.peStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetPeStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetError()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.expiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).GetExpiryTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetAuthType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetTarget()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.isSharedToAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetIsSharedToAll()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.useWorkspaceManagedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetUseWorkspaceManagedIdentity()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.peRequirement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetPeRequirement()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.peStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetPeStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetError()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.expiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).GetExpiryTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetId()).ToDataRes(types.String)
@@ -30915,6 +31047,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cognitiveServicesService.account.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.account.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).__id, ok = v.Value.(string)
 		return
@@ -30985,6 +31125,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.deployment.raiPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment).RaiPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Endpoints, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.isSharedToAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).IsSharedToAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.useWorkspaceManagedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).UseWorkspaceManagedIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.peRequirement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).PeRequirement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.peStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).PeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.project.connection.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.isSharedToAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).IsSharedToAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.useWorkspaceManagedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).UseWorkspaceManagedIdentity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.peRequirement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).PeRequirement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.peStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).PeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.connection.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountConnection).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -71884,6 +72184,8 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	RaiPolicies                   plugin.TValue[[]any]
 	RaiTopics                     plugin.TValue[[]any]
 	Deployments                   plugin.TValue[[]any]
+	Projects                      plugin.TValue[[]any]
+	Connections                   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCognitiveServicesServiceAccount creates a new instance of this resource
@@ -72049,6 +72351,38 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetDeployments() *
 	})
 }
 
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
 // mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment for the azure.subscription.cognitiveServicesService.account.deployment resource
 type mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment struct {
 	MqlRuntime *plugin.Runtime
@@ -72188,6 +72522,335 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) GetRaiPo
 
 		return c.raiPolicy()
 	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountProject for the azure.subscription.cognitiveServicesService.account.project resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountProjectInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Identity          plugin.TValue[any]
+	DisplayName       plugin.TValue[string]
+	Description       plugin.TValue[string]
+	IsDefault         plugin.TValue[bool]
+	ProvisioningState plugin.TValue[string]
+	Endpoints         plugin.TValue[map[string]any]
+	Connections       plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountProject creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.project"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetEndpoints() *plugin.TValue[map[string]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.project", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection for the azure.subscription.cognitiveServicesService.account.project.connection resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnectionInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Category                    plugin.TValue[string]
+	AuthType                    plugin.TValue[string]
+	Target                      plugin.TValue[string]
+	Group                       plugin.TValue[string]
+	IsSharedToAll               plugin.TValue[bool]
+	UseWorkspaceManagedIdentity plugin.TValue[bool]
+	PeRequirement               plugin.TValue[string]
+	PeStatus                    plugin.TValue[string]
+	Metadata                    plugin.TValue[map[string]any]
+	Error                       plugin.TValue[string]
+	ExpiryTime                  plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountProjectConnection creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountProjectConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.project.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.project.connection"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetIsSharedToAll() *plugin.TValue[bool] {
+	return &c.IsSharedToAll
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetUseWorkspaceManagedIdentity() *plugin.TValue[bool] {
+	return &c.UseWorkspaceManagedIdentity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetPeRequirement() *plugin.TValue[string] {
+	return &c.PeRequirement
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetPeStatus() *plugin.TValue[string] {
+	return &c.PeStatus
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) GetExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.ExpiryTime
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountConnection for the azure.subscription.cognitiveServicesService.account.connection resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountConnectionInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Category                    plugin.TValue[string]
+	AuthType                    plugin.TValue[string]
+	Target                      plugin.TValue[string]
+	Group                       plugin.TValue[string]
+	IsSharedToAll               plugin.TValue[bool]
+	UseWorkspaceManagedIdentity plugin.TValue[bool]
+	PeRequirement               plugin.TValue[string]
+	PeStatus                    plugin.TValue[string]
+	Metadata                    plugin.TValue[map[string]any]
+	Error                       plugin.TValue[string]
+	ExpiryTime                  plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountConnection creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.connection"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetIsSharedToAll() *plugin.TValue[bool] {
+	return &c.IsSharedToAll
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetUseWorkspaceManagedIdentity() *plugin.TValue[bool] {
+	return &c.UseWorkspaceManagedIdentity
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetPeRequirement() *plugin.TValue[string] {
+	return &c.PeRequirement
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetPeStatus() *plugin.TValue[string] {
+	return &c.PeStatus
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) GetExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.ExpiryTime
 }
 
 // mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy for the azure.subscription.cognitiveServicesService.account.raiPolicy resource

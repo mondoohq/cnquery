@@ -10405,6 +10405,10 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   raiTopics() []azure.subscription.cognitiveServicesService.account.raiTopic
   // Model deployments hosted on the account
   deployments() []azure.subscription.cognitiveServicesService.account.deployment
+  // Azure AI Foundry projects hosted on the account
+  projects() []azure.subscription.cognitiveServicesService.account.project
+  // Account-scoped connections to external resources, model providers, data sources, and tool servers
+  connections() []azure.subscription.cognitiveServicesService.account.connection
 }
 
 // Model deployment on an Azure AI Services account
@@ -10461,6 +10465,132 @@ azure.subscription.cognitiveServicesService.account.deployment @defaults("name m
   raiPolicyName string
   // Responsible AI content-filter policy applied to the deployment (null when none is attached)
   raiPolicy() azure.subscription.cognitiveServicesService.account.raiPolicy
+}
+
+// Azure AI Foundry project
+//
+// Examine a single Azure AI Foundry project — a workspace under an AI
+// Services account that scopes agents, deployments, and connections for
+// a team or application, selected by `name`. Use `isDefault` to identify
+// the account's default project, `displayName` and `description` for the
+// human-facing labels, `endpoints` for the project's data-plane URLs,
+// and `connections` for the project-scoped links to model providers,
+// data sources, and tool (MCP) servers an agent can reach.
+azure.subscription.cognitiveServicesService.account.project @defaults("name displayName isDefault provisioningState") {
+  // Project resource ID
+  id string
+  // Project name, used as the selection key
+  name string
+  // Project location
+  location string
+  // Project tags
+  tags map[string]string
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Human-facing display name of the project
+  displayName string
+  // Project description
+  description string
+  // Whether this is the account's default project
+  isDefault bool
+  // Provisioning state of the project (e.g., "Succeeded", "Creating", "Failed")
+  provisioningState string
+  // Data-plane endpoint URLs for the project, keyed by endpoint name
+  endpoints map[string]string
+  // Project-scoped connections to external resources, model providers, data sources, and tool servers
+  connections() []azure.subscription.cognitiveServicesService.account.project.connection
+}
+
+// Connection on an Azure AI Foundry project
+//
+// Examine a single project-scoped connection — the link an agent or
+// application uses to reach an external resource, identified by `name`.
+// Use `category` to see what the connection points to (for example
+// "AzureOpenAI", "CognitiveSearch", "Serverless", "ManagedOnlineEndpoint",
+// or "CustomKeys" — the category used for Model Context Protocol tool
+// servers), `target` for the endpoint URL, `authType` for how the
+// connection authenticates, `isSharedToAll` for whether every member can
+// use it, `useWorkspaceManagedIdentity` for managed-identity access,
+// `peRequirement`/`peStatus` for private-endpoint posture, and `metadata`
+// for connection-specific settings (an MCP connection records its server
+// label and URL here).
+private azure.subscription.cognitiveServicesService.account.project.connection @defaults("name category authType target") {
+  // Connection resource ID
+  id string
+  // Connection name, used as the selection key
+  name string
+  // What the connection points to
+  //
+  // Examples include "AzureOpenAI", "OpenAI", "Serverless", "ManagedOnlineEndpoint", "CognitiveSearch", "CognitiveService", "ApiKey", and "CustomKeys" (the category used for Model Context Protocol tool servers).
+  category string
+  // Authentication type
+  //
+  // One of "AAD", "ApiKey", "AccessKey", "AccountKey", "CustomKeys", "ManagedIdentity", "None", "OAuth2", "PAT", "SAS", "ServicePrincipal", or "UsernamePassword".
+  authType string
+  // Endpoint URL the connection targets
+  target string
+  // Connection grouping by category ("Azure", "AzureAI", "Database", "File", "GenericProtocol", "NoSQL", or "ServicesAndApps")
+  group string
+  // Whether the connection is shared with every member of the project
+  isSharedToAll bool
+  // Whether the connection authenticates using the workspace managed identity
+  useWorkspaceManagedIdentity bool
+  // Private-endpoint requirement ("Required", "NotRequired", or "NotApplicable")
+  peRequirement string
+  // Private-endpoint status ("Active", "Inactive", or "NotApplicable")
+  peStatus string
+  // Connection-specific metadata; for MCP connections this carries the server label and URL
+  metadata map[string]string
+  // Error message when the connection is in a failed state; empty when healthy
+  error string
+  // When the connection's credentials expire (null when they do not expire)
+  expiryTime time
+}
+
+// Connection on an Azure AI Services account
+//
+// Examine a single account-scoped connection — the link, shared across
+// the account's projects, used to reach an external resource, identified
+// by `name`. Use `category` to see what the connection points to (for
+// example "AzureOpenAI", "CognitiveSearch", "Serverless",
+// "ManagedOnlineEndpoint", or "CustomKeys" — the category used for Model
+// Context Protocol tool servers), `target` for the endpoint URL,
+// `authType` for how the connection authenticates, `isSharedToAll` for
+// whether every member can use it, `useWorkspaceManagedIdentity` for
+// managed-identity access, `peRequirement`/`peStatus` for private-endpoint
+// posture, and `metadata` for connection-specific settings (an MCP
+// connection records its server label and URL here).
+private azure.subscription.cognitiveServicesService.account.connection @defaults("name category authType target") {
+  // Connection resource ID
+  id string
+  // Connection name, used as the selection key
+  name string
+  // What the connection points to
+  //
+  // Examples include "AzureOpenAI", "OpenAI", "Serverless", "ManagedOnlineEndpoint", "CognitiveSearch", "CognitiveService", "ApiKey", and "CustomKeys" (the category used for Model Context Protocol tool servers).
+  category string
+  // Authentication type
+  //
+  // One of "AAD", "ApiKey", "AccessKey", "AccountKey", "CustomKeys", "ManagedIdentity", "None", "OAuth2", "PAT", "SAS", "ServicePrincipal", or "UsernamePassword".
+  authType string
+  // Endpoint URL the connection targets
+  target string
+  // Connection grouping by category ("Azure", "AzureAI", "Database", "File", "GenericProtocol", "NoSQL", or "ServicesAndApps")
+  group string
+  // Whether the connection is shared with every member of the account
+  isSharedToAll bool
+  // Whether the connection authenticates using the workspace managed identity
+  useWorkspaceManagedIdentity bool
+  // Private-endpoint requirement ("Required", "NotRequired", or "NotApplicable")
+  peRequirement string
+  // Private-endpoint status ("Active", "Inactive", or "NotApplicable")
+  peStatus string
+  // Connection-specific metadata; for MCP connections this carries the server label and URL
+  metadata map[string]string
+  // Error message when the connection is in a failed state; empty when healthy
+  error string
+  // When the connection's credentials expire (null when they do not expire)
+  expiryTime time
 }
 
 // Responsible AI content-filter policy on a Cognitive Services account
