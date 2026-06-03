@@ -283,7 +283,9 @@ private iru.libraryItem @defaults("name kind active") {
   // Library item name
   name string
 
-  // Library item kind — values include `app-store-app`, `custom-app`, `custom-profile`, `profile`, `script`, `mdm-restrictions`, `filevault`, `gatekeeper`, and other policy types
+  // Library item kind
+  //
+  // Values include `app-store-app`, `custom-app`, `custom-profile`, `profile`, `script`, `mdm-restrictions`, `filevault`, `gatekeeper`, and other policy types.
   kind string
 
   // Whether the item is currently active in the tenant
