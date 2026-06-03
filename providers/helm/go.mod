@@ -5,10 +5,10 @@ go 1.26.3
 replace go.mondoo.com/mql/v13 => ../..
 
 require (
+	github.com/ProtonMail/go-crypto v1.4.1
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.22.1
-	golang.org/x/crypto v0.53.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.21.1
 )
@@ -21,7 +21,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.25 // indirect
@@ -135,6 +134,7 @@ require (
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect

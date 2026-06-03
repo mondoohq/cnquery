@@ -6,12 +6,13 @@ package resources
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/ProtonMail/go-crypto/openpgp/clearsign"
+	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"golang.org/x/crypto/openpgp/clearsign"
-	"golang.org/x/crypto/openpgp/packet"
 	"gopkg.in/yaml.v3"
 )
 
@@ -107,9 +108,16 @@ func provenanceDigest(plaintext []byte) string {
 		if !ok {
 			continue
 		}
+		// Prefer the .tgz entry; fall back to the lexicographically smallest
+		// key so the result is deterministic regardless of map iteration order.
+		names := make([]string, 0, len(files))
+		for name := range files {
+			names = append(names, name)
+		}
+		sort.Strings(names)
 		var first string
-		for name, sum := range files {
-			s, _ := sum.(string)
+		for _, name := range names {
+			s, _ := files[name].(string)
 			if strings.HasSuffix(name, ".tgz") {
 				return s
 			}

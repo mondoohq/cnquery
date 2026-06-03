@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/clearsign"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/openpgp"
-	"golang.org/x/crypto/openpgp/clearsign"
 )
 
 // signProvenance builds a Helm-style .prov: a PGP clear-signed message whose
