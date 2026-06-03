@@ -71,6 +71,7 @@ const (
 	ResourceOpenstackIdentityRegion                  string = "openstack.identity.region"
 	ResourceOpenstackComputeAggregate                string = "openstack.compute.aggregate"
 	ResourceOpenstackComputeLimits                   string = "openstack.compute.limits"
+	ResourceOpenstackPlacementResourceProvider       string = "openstack.placement.resourceProvider"
 	ResourceOpenstackBlockstorageQuotaSet            string = "openstack.blockstorage.quotaSet"
 	ResourceOpenstackNetworkQuotaSet                 string = "openstack.network.quotaSet"
 	ResourceOpenstackKeymanagerAcl                   string = "openstack.keymanager.acl"
@@ -310,6 +311,10 @@ func init() {
 			// to override args, implement: initOpenstackComputeLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenstackComputeLimits,
 		},
+		"openstack.placement.resourceProvider": {
+			Init:   initOpenstackPlacementResourceProvider,
+			Create: createOpenstackPlacementResourceProvider,
+		},
 		"openstack.blockstorage.quotaSet": {
 			// to override args, implement: initOpenstackBlockstorageQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenstackBlockstorageQuotaSet,
@@ -495,6 +500,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.computeLimits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetComputeLimits()).ToDataRes(types.Resource("openstack.compute.limits"))
+	},
+	"openstack.resourceProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetResourceProviders()).ToDataRes(types.Array(types.Resource("openstack.placement.resourceProvider")))
 	},
 	"openstack.blockStorageQuotaSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetBlockStorageQuotaSet()).ToDataRes(types.Resource("openstack.blockstorage.quotaSet"))
@@ -2695,6 +2703,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.compute.limits.maxPersonalitySize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeLimits).GetMaxPersonalitySize()).ToDataRes(types.Int)
 	},
+	"openstack.placement.resourceProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetId()).ToDataRes(types.String)
+	},
+	"openstack.placement.resourceProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetName()).ToDataRes(types.String)
+	},
+	"openstack.placement.resourceProvider.generation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetGeneration()).ToDataRes(types.Int)
+	},
+	"openstack.placement.resourceProvider.traits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetTraits()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.placement.resourceProvider.inventories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetInventories()).ToDataRes(types.Array(types.Dict))
+	},
+	"openstack.placement.resourceProvider.aggregates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetAggregates()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.placement.resourceProvider.parent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetParent()).ToDataRes(types.Resource("openstack.placement.resourceProvider"))
+	},
+	"openstack.placement.resourceProvider.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPlacementResourceProvider).GetRoot()).ToDataRes(types.Resource("openstack.placement.resourceProvider"))
+	},
 	"openstack.blockstorage.quotaSet.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetProjectId()).ToDataRes(types.String)
 	},
@@ -3396,6 +3428,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.computeLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).ComputeLimits, ok = plugin.RawToTValue[*mqlOpenstackComputeLimits](v.Value, v.Error)
+		return
+	},
+	"openstack.resourceProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).ResourceProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.blockStorageQuotaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6546,6 +6582,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackComputeLimits).MaxPersonalitySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"openstack.placement.resourceProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.placement.resourceProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.generation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Generation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.traits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Traits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.inventories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Inventories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.aggregates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Aggregates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Parent, ok = plugin.RawToTValue[*mqlOpenstackPlacementResourceProvider](v.Value, v.Error)
+		return
+	},
+	"openstack.placement.resourceProvider.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPlacementResourceProvider).Root, ok = plugin.RawToTValue[*mqlOpenstackPlacementResourceProvider](v.Value, v.Error)
+		return
+	},
 	"openstack.blockstorage.quotaSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackBlockstorageQuotaSet).__id, ok = v.Value.(string)
 		return
@@ -7452,6 +7524,7 @@ type mqlOpenstack struct {
 	ComputeServices         plugin.TValue[[]any]
 	Aggregates              plugin.TValue[[]any]
 	ComputeLimits           plugin.TValue[*mqlOpenstackComputeLimits]
+	ResourceProviders       plugin.TValue[[]any]
 	BlockStorageQuotaSet    plugin.TValue[*mqlOpenstackBlockstorageQuotaSet]
 	NetworkQuotaSet         plugin.TValue[*mqlOpenstackNetworkQuotaSet]
 	Networks                plugin.TValue[[]any]
@@ -7838,6 +7911,22 @@ func (c *mqlOpenstack) GetComputeLimits() *plugin.TValue[*mqlOpenstackComputeLim
 		}
 
 		return c.computeLimits()
+	})
+}
+
+func (c *mqlOpenstack) GetResourceProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "resourceProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceProviders()
 	})
 }
 
@@ -16016,6 +16105,120 @@ func (c *mqlOpenstackComputeLimits) GetMaxPersonality() *plugin.TValue[int64] {
 
 func (c *mqlOpenstackComputeLimits) GetMaxPersonalitySize() *plugin.TValue[int64] {
 	return &c.MaxPersonalitySize
+}
+
+// mqlOpenstackPlacementResourceProvider for the openstack.placement.resourceProvider resource
+type mqlOpenstackPlacementResourceProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackPlacementResourceProviderInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Generation  plugin.TValue[int64]
+	Traits      plugin.TValue[[]any]
+	Inventories plugin.TValue[[]any]
+	Aggregates  plugin.TValue[[]any]
+	Parent      plugin.TValue[*mqlOpenstackPlacementResourceProvider]
+	Root        plugin.TValue[*mqlOpenstackPlacementResourceProvider]
+}
+
+// createOpenstackPlacementResourceProvider creates a new instance of this resource
+func createOpenstackPlacementResourceProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackPlacementResourceProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.placement.resourceProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) MqlName() string {
+	return "openstack.placement.resourceProvider"
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetGeneration() *plugin.TValue[int64] {
+	return &c.Generation
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetTraits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Traits, func() ([]any, error) {
+		return c.traits()
+	})
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetInventories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Inventories, func() ([]any, error) {
+		return c.inventories()
+	})
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetAggregates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aggregates, func() ([]any, error) {
+		return c.aggregates()
+	})
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetParent() *plugin.TValue[*mqlOpenstackPlacementResourceProvider] {
+	return plugin.GetOrCompute[*mqlOpenstackPlacementResourceProvider](&c.Parent, func() (*mqlOpenstackPlacementResourceProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.placement.resourceProvider", c.__id, "parent")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackPlacementResourceProvider), nil
+			}
+		}
+
+		return c.parent()
+	})
+}
+
+func (c *mqlOpenstackPlacementResourceProvider) GetRoot() *plugin.TValue[*mqlOpenstackPlacementResourceProvider] {
+	return plugin.GetOrCompute[*mqlOpenstackPlacementResourceProvider](&c.Root, func() (*mqlOpenstackPlacementResourceProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.placement.resourceProvider", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackPlacementResourceProvider), nil
+			}
+		}
+
+		return c.root()
+	})
 }
 
 // mqlOpenstackBlockstorageQuotaSet for the openstack.blockstorage.quotaSet resource

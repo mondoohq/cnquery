@@ -12,7 +12,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // Keystone credentials and the service catalog (`credentials`, `trusts`,
 // `identityServices`, `identityEndpoints`, `regions`),
 // Nova compute assets (`servers`, `flavors`, `keypairs`, `serverGroups`,
-// `hypervisors`, `computeServices`, `aggregates`, `computeLimits`), Neutron
+// `hypervisors`, `computeServices`, `aggregates`, `computeLimits`), Placement
+// resource inventory (`resourceProviders`), Neutron
 // networking (`networks`, `subnets`, `routers`, `ports`, `floatingIps`,
 // `securityGroups`, `subnetPools`, `qosPolicies`, `trunks`), FWaaS v2
 // (`firewallGroups`, `firewallPolicies`, `firewallRules`), Cinder block storage
@@ -71,6 +72,8 @@ openstack {
   aggregates() []openstack.compute.aggregate
   // Per-project Nova resource limits and current usage
   computeLimits() openstack.compute.limits
+  // Placement resource providers (compute nodes, storage pools, and accelerator/GPU devices) with their inventory and traits
+  resourceProviders() []openstack.placement.resourceProvider
   // Per-project Cinder quota
   blockStorageQuotaSet() openstack.blockstorage.quotaSet
   // Per-project Neutron quota
@@ -1864,6 +1867,39 @@ private openstack.compute.limits @defaults("maxTotalInstances totalInstancesUsed
   maxPersonality int
   // Maximum personality file content size in bytes (legacy)
   maxPersonalitySize int
+}
+
+// OpenStack Placement resource provider
+//
+// Examine a Placement resource provider — a source of consumable inventory
+// such as a compute node, a shared storage pool, or an accelerator device
+// (GPU/FPGA). Select a provider by its `id` (UUID). Query `inventories` and
+// `traits` to audit accelerator capacity — for example the `VGPU` / `PGPU`
+// resource classes and `HW_GPU_*` traits — and how much of each class is
+// already allocated. Walk `parent` and `root` to traverse nested provider
+// trees, such as a compute node with child GPU providers.
+private openstack.placement.resourceProvider @defaults("id name generation") {
+  init(id? string)
+  // Resource provider ID (UUID)
+  id string
+  // Resource provider name (often the compute host name, or a device name for child providers)
+  name string
+  // Consistency-view generation marker (increments as the provider's inventory/allocations change)
+  generation int
+  // Capability traits advertised by this provider
+  //
+  // Standardized (`HW_GPU_*`, `HW_CPU_*`, `STORAGE_DISK_SSD`, ...) and operator-defined (`CUSTOM_*`) qualitative markers used by the scheduler to place workloads.
+  traits() []string
+  // Inventory lines, one per resource class
+  //
+  // Each entry has `resource_class` (for example `VCPU`, `MEMORY_MB`, `DISK_GB`, `VGPU`, `PGPU`, or a `CUSTOM_*` device class) plus `total`, `reserved`, `allocation_ratio`, `min_unit`, `max_unit`, `step_size`, and `used` (the amount of that class currently allocated against this provider).
+  inventories() []dict
+  // Placement aggregate UUIDs this provider belongs to
+  aggregates() []string
+  // Immediate parent provider in a nested tree; null for a top-level provider
+  parent() openstack.placement.resourceProvider
+  // Top-most provider in this provider's tree (itself for a top-level provider)
+  root() openstack.placement.resourceProvider
 }
 
 // OpenStack Cinder block-storage quota for the scoped project (configured maximums; usage values are not exposed by the default API path).

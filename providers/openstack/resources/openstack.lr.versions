@@ -773,6 +773,15 @@ openstack.orchestration.stack.statusReason 13.1.4
 openstack.orchestration.stack.tags 13.1.4
 openstack.orchestration.stack.timeoutMinutes 13.1.4
 openstack.orchestration.stack.updatedAt 13.1.4
+openstack.placement.resourceProvider 13.2.2
+openstack.placement.resourceProvider.aggregates 13.2.2
+openstack.placement.resourceProvider.generation 13.2.2
+openstack.placement.resourceProvider.id 13.2.2
+openstack.placement.resourceProvider.inventories 13.2.2
+openstack.placement.resourceProvider.name 13.2.2
+openstack.placement.resourceProvider.parent 13.2.2
+openstack.placement.resourceProvider.root 13.2.2
+openstack.placement.resourceProvider.traits 13.2.2
 openstack.pools 13.0.1
 openstack.port 13.0.1
 openstack.port.adminStateUp 13.0.1
@@ -820,6 +829,7 @@ openstack.qosPolicy.tags 13.0.1
 openstack.qosPolicy.updatedAt 13.0.1
 openstack.region 13.0.1
 openstack.regions 13.1.4
+openstack.resourceProviders 13.2.2
 openstack.role 13.0.1
 openstack.role.description 13.0.1
 openstack.role.domain 13.0.1

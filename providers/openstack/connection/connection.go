@@ -51,6 +51,7 @@ type OpenstackConnection struct {
 	database         *gophercloud.ServiceClient
 	bareMetal        *gophercloud.ServiceClient
 	orchestration    *gophercloud.ServiceClient
+	placement        *gophercloud.ServiceClient
 
 	// Name->ID caches for Nova-reported references that Neutron/Compute
 	// expose only by ID. A non-nil map is the "ready" signal so we don't
@@ -370,5 +371,25 @@ func (c *OpenstackConnection) OrchestrationClient() (*gophercloud.ServiceClient,
 		return nil, fmt.Errorf("failed to initialize Heat client: %w", err)
 	}
 	c.orchestration = client
+	return client, nil
+}
+
+// placementMicroversion pins the Placement API microversion. 1.14 exposes the
+// nested-provider fields (`parent_provider_uuid`, `root_provider_uuid`) used to
+// walk provider trees; it has been available since OpenStack Rocky (2018).
+const placementMicroversion = "1.14"
+
+func (c *OpenstackConnection) PlacementClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.placement != nil {
+		return c.placement, nil
+	}
+	client, err := openstack.NewPlacementV1(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Placement client: %w", err)
+	}
+	client.Microversion = placementMicroversion
+	c.placement = client
 	return client, nil
 }
