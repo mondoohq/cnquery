@@ -95,6 +95,26 @@ Fix by either collapsing to one line or inserting a blank `//`. For enum lists, 
 budgetType string
 ```
 
+### Step 1.5: Typed-reference gate (do this BEFORE you generate code)
+
+**The single most expensive mistake to fix later is shipping a raw ID/URL string where a typed accessor belonged.** Once a `projectId string` field is released, replacing it with `project() openstack.project` is a *breaking change* requiring a version bump and consumer migration — whereas getting it right the first time costs one extra accessor method. So before running codegen, **scan every new field and ask: does this value identify or point at another resource?**
+
+If yes, it MUST be a typed accessor, not a raw string:
+
+| You wrote (stop) | Ship this instead |
+|---|---|
+| `projectId string` | `project() <provider>.project` |
+| `userId string` | `user() <provider>.user` |
+| `vpcId string` | `vpc() aws.vpc` |
+| `subnetIds []string` | `subnets() []…subnet` |
+| `roleArn string` | `iamRole() aws.iam.role` |
+| `networkUrl string` (GCP self-link) | `network() …network` |
+| `stackId string` | `stack() …stack` |
+
+Keep the value as a **raw string only when** it is the resource's own `id`, or a genuinely opaque/scalar value that doesn't name a modeled resource (an MD5 hash, an `hostId` opaque digest, a discriminator like `deviceOwner`, a free-form `name`). When in doubt, prefer the typed accessor — store the raw ID/ARN/URL in a `cache*` field on the `Internal` struct and resolve it with `NewResource` (or a shared `resolve*` helper). The detailed naming rules and the `cache*`/`Internal` pattern live in [§6 Resource Field Naming & Constraints](#resource-field-naming--constraints).
+
+This is a manual gate, not a build-time one — there is no linter that catches it for you, so it is on you to run this scan on every new field before `mqlr generate`.
+
 ### Step 2: Code Generation
 **Crucial:** You must generate Go interfaces after modifying `.lr` files.
 ```bash
@@ -521,7 +541,7 @@ for {
 - Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
 - Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
 - Use JavaScript number types for numeric fields, not strings
-- **Always use typed resource references over raw ID/ARN strings.** This is critical for good MQL UX:
+- **Always use typed resource references over raw ID/ARN strings.** This is critical for good MQL UX, and it is the [Step 1.5 typed-reference gate](#step-15-typed-reference-gate-do-this-before-you-generate-code) you should already have run before codegen — getting it wrong here is a breaking change to undo later:
   - `vpcId string` → `vpc() aws.vpc`
   - `vpcSubnetIds []string` → `subnets() []aws.vpc.subnet`
   - `vpcSecurityGroupIds []string` → `securityGroups() []aws.ec2.securitygroup`
