@@ -31,6 +31,9 @@ var userSelectFields = []string{
 	"lastPasswordChangeDateTime", "onPremisesSyncEnabled", "onPremisesLastSyncDateTime",
 	"onPremisesDomainName", "onPremisesSamAccountName", "preferredLanguage",
 	"usageLocation", "externalUserState", "passwordPolicies",
+	// also fetched in bulk so job()/contact() resolve from the list response
+	// instead of an N+1 per-user Get
+	"businessPhones", "faxNumber", "mailNickname",
 }
 
 func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
@@ -273,6 +276,11 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 		}
 	}
 
+	// Build job/contact from the already-fetched user so the computed
+	// job()/contact() accessors resolve from the bulk list response instead of
+	// firing an N+1 per-user Get.
+	jobDict, contactDict := buildUserJobContact(u)
+
 	graphUser, err := CreateResource(runtime, "microsoft.user",
 		map[string]*llx.RawData{
 			"__id":                       llx.StringDataPtr(u.GetId()),
@@ -302,6 +310,8 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"assignedLicenses":           llx.ArrayData(mqlAssignedLicensesList, types.ResourceLike),
 			"employeeType":               llx.StringDataPtr(u.GetEmployeeType()),
 			"employeeHireDate":           llx.TimeDataPtr(u.GetEmployeeHireDate()),
+			"job":                        llx.DictData(jobDict),
+			"contact":                    llx.DictData(contactDict),
 			"lastPasswordChangeDateTime": llx.TimeDataPtr(u.GetLastPasswordChangeDateTime()),
 			"onPremisesSyncEnabled":      llx.BoolDataPtr(u.GetOnPremisesSyncEnabled()),
 			"onPremisesLastSyncDateTime": llx.TimeDataPtr(u.GetOnPremisesLastSyncDateTime()),
@@ -342,6 +352,35 @@ func (a *mqlMicrosoftUser) mfaEnabled() (bool, error) {
 	return a.MfaEnabled.Data, nil
 }
 
+// buildUserJobContact builds the job and contact dicts from an already-fetched
+// user. Used during bulk list construction so job()/contact() resolve from the
+// list response, and by the populateJobContactData fallback for the by-id path.
+func buildUserJobContact(u models.Userable) (any, any) {
+	jobDesc, _ := convert.JsonToDict(userJob{
+		JobTitle:    u.GetJobTitle(),
+		CompanyName: u.GetCompanyName(),
+		Department:  u.GetDepartment(),
+		EmployeeId:  u.GetEmployeeId(),
+		// EmployeeType:     u.GetEmployeeType(),
+		// EmployeeHireDate: u.GetEmployeeHireDate(),
+		OfficeLocation: u.GetOfficeLocation(),
+	})
+	contactDesc, _ := convert.JsonToDict(userContact{
+		StreetAddress:  u.GetStreetAddress(),
+		City:           u.GetCity(),
+		State:          u.GetState(),
+		PostalCode:     u.GetPostalCode(),
+		Country:        u.GetCountry(),
+		BusinessPhones: u.GetBusinessPhones(),
+		MobilePhone:    u.GetMobilePhone(),
+		Email:          u.GetMail(),
+		OtherMails:     u.GetOtherMails(),
+		FaxNumber:      u.GetFaxNumber(),
+		MailNickname:   u.GetMailNickname(),
+	})
+	return jobDesc, contactDesc
+}
+
 func (a *mqlMicrosoftUser) populateJobContactData() error {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -360,31 +399,9 @@ func (a *mqlMicrosoftUser) populateJobContactData() error {
 		return transformError(err)
 	}
 
-	jobDesc, _ := convert.JsonToDict(userJob{
-		JobTitle:    userData.GetJobTitle(),
-		CompanyName: userData.GetCompanyName(),
-		Department:  userData.GetDepartment(),
-		EmployeeId:  userData.GetEmployeeId(),
-		// EmployeeType:     userData.GetEmployeeType(),
-		// EmployeeHireDate: userData.GetEmployeeHireDate(),
-		OfficeLocation: userData.GetOfficeLocation(),
-	})
+	jobDesc, contactDesc := buildUserJobContact(userData)
 	a.Job = plugin.TValue[any]{Data: jobDesc, State: plugin.StateIsSet}
-
-	userContact, _ := convert.JsonToDict(userContact{
-		StreetAddress:  userData.GetStreetAddress(),
-		City:           userData.GetCity(),
-		State:          userData.GetState(),
-		PostalCode:     userData.GetPostalCode(),
-		Country:        userData.GetCountry(),
-		BusinessPhones: userData.GetBusinessPhones(),
-		MobilePhone:    userData.GetMobilePhone(),
-		Email:          userData.GetMail(),
-		OtherMails:     userData.GetOtherMails(),
-		FaxNumber:      userData.GetFaxNumber(),
-		MailNickname:   userData.GetMailNickname(),
-	})
-	a.Contact = plugin.TValue[any]{Data: userContact, State: plugin.StateIsSet}
+	a.Contact = plugin.TValue[any]{Data: contactDesc, State: plugin.StateIsSet}
 
 	return nil
 }
