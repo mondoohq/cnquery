@@ -149,6 +149,7 @@ const (
 	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
 	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
+	ResourceMs365ExchangeonlineDlpCompliancePolicy                                                       string = "ms365.exchangeonline.dlpCompliancePolicy"
 	ResourceMs365ExchangeonlineTeamsProtectionPolicy                                                     string = "ms365.exchangeonline.teamsProtectionPolicy"
 	ResourceMs365ExchangeonlineReportSubmissionPolicy                                                    string = "ms365.exchangeonline.reportSubmissionPolicy"
 	ResourceMs365ExchangeonlineJournalRule                                                               string = "ms365.exchangeonline.journalRule"
@@ -719,6 +720,10 @@ func init() {
 		"ms365.exchangeonline.securityAndCompliance": {
 			// to override args, implement: initMs365ExchangeonlineSecurityAndCompliance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineSecurityAndCompliance,
+		},
+		"ms365.exchangeonline.dlpCompliancePolicy": {
+			// to override args, implement: initMs365ExchangeonlineDlpCompliancePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineDlpCompliancePolicy,
 		},
 		"ms365.exchangeonline.teamsProtectionPolicy": {
 			// to override args, implement: initMs365ExchangeonlineTeamsProtectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4174,6 +4179,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineSecurityAndCompliance).GetDlpCompliancePolicies()).ToDataRes(types.Array(types.Dict))
+	},
+	"ms365.exchangeonline.securityAndCompliance.dlpPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSecurityAndCompliance).GetDlpPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.dlpCompliancePolicy")))
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetName()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetGuid()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetMode()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.workload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetWorkload()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetPriority()).ToDataRes(types.Int)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetComment()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.isValid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetIsValid()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.distributionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetDistributionStatus()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetWhenChanged()).ToDataRes(types.Time)
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
@@ -9917,6 +9961,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineSecurityAndCompliance).DlpCompliancePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.securityAndCompliance.dlpPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSecurityAndCompliance).DlpPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Guid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.workload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Workload, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.isValid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).IsValid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.distributionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).DistributionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23889,6 +23989,7 @@ type mqlMs365ExchangeonlineSecurityAndCompliance struct {
 	__id       string
 	mqlMs365ExchangeonlineSecurityAndComplianceInternal
 	DlpCompliancePolicies plugin.TValue[[]any]
+	DlpPolicies           plugin.TValue[[]any]
 }
 
 // createMs365ExchangeonlineSecurityAndCompliance creates a new instance of this resource
@@ -23927,6 +24028,121 @@ func (c *mqlMs365ExchangeonlineSecurityAndCompliance) GetDlpCompliancePolicies()
 	return plugin.GetOrCompute[[]any](&c.DlpCompliancePolicies, func() ([]any, error) {
 		return c.dlpCompliancePolicies()
 	})
+}
+
+func (c *mqlMs365ExchangeonlineSecurityAndCompliance) GetDlpPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DlpPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline.securityAndCompliance", c.__id, "dlpPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dlpPolicies()
+	})
+}
+
+// mqlMs365ExchangeonlineDlpCompliancePolicy for the ms365.exchangeonline.dlpCompliancePolicy resource
+type mqlMs365ExchangeonlineDlpCompliancePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365ExchangeonlineDlpCompliancePolicyInternal it will be used here
+	Name               plugin.TValue[string]
+	Guid               plugin.TValue[string]
+	Mode               plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Workload           plugin.TValue[string]
+	Priority           plugin.TValue[int64]
+	Comment            plugin.TValue[string]
+	CreatedBy          plugin.TValue[string]
+	IsValid            plugin.TValue[bool]
+	DistributionStatus plugin.TValue[string]
+	WhenCreated        plugin.TValue[*time.Time]
+	WhenChanged        plugin.TValue[*time.Time]
+}
+
+// createMs365ExchangeonlineDlpCompliancePolicy creates a new instance of this resource
+func createMs365ExchangeonlineDlpCompliancePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineDlpCompliancePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.dlpCompliancePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) MqlName() string {
+	return "ms365.exchangeonline.dlpCompliancePolicy"
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetGuid() *plugin.TValue[string] {
+	return &c.Guid
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetWorkload() *plugin.TValue[string] {
+	return &c.Workload
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetIsValid() *plugin.TValue[bool] {
+	return &c.IsValid
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetDistributionStatus() *plugin.TValue[string] {
+	return &c.DistributionStatus
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
 }
 
 // mqlMs365ExchangeonlineTeamsProtectionPolicy for the ms365.exchangeonline.teamsProtectionPolicy resource

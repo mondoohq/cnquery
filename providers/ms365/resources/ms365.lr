@@ -3295,8 +3295,49 @@ private ms365.exchangeonlineMailboxAuditBypassAssociation @defaults("name auditB
 
 // Microsoft 365 Exchange Online Security and Compliance
 private ms365.exchangeonline.securityAndCompliance {
-  // List of Data Loss Prevention (DLP) compliance policies
-  dlpCompliancePolicies() []dict
+  // Data Loss Prevention (DLP) compliance policies as raw dictionaries
+  //
+  // Deprecated in favor of dlpPolicies, which models the same policies as
+  // typed resources.
+  dlpCompliancePolicies() @maturity("deprecated") []dict
+  // Data Loss Prevention (DLP) compliance policies
+  dlpPolicies() []ms365.exchangeonline.dlpCompliancePolicy
+}
+
+// Microsoft 365 Data Loss Prevention compliance policy
+//
+// Examine a Data Loss Prevention (DLP) compliance policy, selected by its
+// `name`. `mode` reports the enforcement level (Enable, TestWithNotifications,
+// TestWithoutNotifications, or Disable) and `enabled` whether it is on. The
+// `workload` lists which services it covers — Exchange, SharePoint,
+// OneDriveForBusiness, Teams, or EndpointDevices — and `priority` orders policy
+// evaluation. `distributionStatus` reports whether the policy has rolled out to
+// the workloads, and `whenCreated` / `whenChanged` frame its history.
+private ms365.exchangeonline.dlpCompliancePolicy @defaults("name mode enabled workload") {
+  // Policy name
+  name string
+  // Policy GUID
+  guid string
+  // Enforcement mode (Enable, TestWithNotifications, TestWithoutNotifications, Disable, PendingDeletion)
+  mode string
+  // Whether the policy is enabled
+  enabled bool
+  // Workloads the policy applies to (for example Exchange, SharePoint, OneDriveForBusiness, Teams, EndpointDevices)
+  workload string
+  // Policy priority; lower numbers are evaluated first
+  priority int
+  // Administrator comment
+  comment string
+  // Account that created the policy
+  createdBy string
+  // Whether the policy is valid
+  isValid bool
+  // Distribution status of the policy across its workloads
+  distributionStatus string
+  // Date and time the policy was created
+  whenCreated time
+  // Date and time the policy was last changed
+  whenChanged time
 }
 
 // Teams Protection Policy configuration

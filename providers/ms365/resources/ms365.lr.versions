@@ -1171,6 +1171,19 @@ ms365.exchangeonline.dkimSigningConfig.enabled 13.3.1
 ms365.exchangeonline.dkimSigningConfig.identity 13.3.1
 ms365.exchangeonline.dkimSigningConfig.status 13.3.1
 ms365.exchangeonline.dkimSigningConfigs 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.comment 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.createdBy 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.distributionStatus 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.enabled 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.guid 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.isValid 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.mode 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.name 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.priority 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.whenChanged 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.whenCreated 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.workload 13.3.1
 ms365.exchangeonline.exoMailbox 9.2.14
 ms365.exchangeonline.exoMailbox.externalDirectoryObjectId 9.2.14
 ms365.exchangeonline.exoMailbox.identity 9.2.14
@@ -1324,6 +1337,7 @@ ms365.exchangeonline.safeLinksPolicy.scanUrls 13.3.1
 ms365.exchangeonline.safeLinksPolicy.trackClicks 13.3.1
 ms365.exchangeonline.securityAndCompliance 11.1.41
 ms365.exchangeonline.securityAndCompliance.dlpCompliancePolicies 11.1.41
+ms365.exchangeonline.securityAndCompliance.dlpPolicies 13.3.1
 ms365.exchangeonline.sharedMailboxes 9.0.0
 ms365.exchangeonline.sharingPolicies 13.3.1
 ms365.exchangeonline.sharingPolicy 9.0.0
