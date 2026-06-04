@@ -2437,6 +2437,128 @@ microsoft.devicemanagement {
   managedAppConfigurations() []microsoft.devicemanagement.managedAppConfiguration
   // App configuration policies for managed devices (MDM)
   mobileAppConfigurations() []microsoft.devicemanagement.mobileAppConfiguration
+  // Windows Update for Business update rings
+  windowsUpdateRings() []microsoft.devicemanagement.windowsUpdateRing
+  // Windows feature update deployment profiles
+  windowsFeatureUpdateProfiles() []microsoft.devicemanagement.windowsFeatureUpdateProfile
+  // Windows quality update deployment profiles
+  windowsQualityUpdateProfiles() []microsoft.devicemanagement.windowsQualityUpdateProfile
+}
+
+// Microsoft Intune Windows Update for Business ring
+//
+// Examine a Windows Update for Business update ring, selected by its `id`. The
+// ring governs how quickly devices receive updates: `automaticUpdateMode` and
+// `businessReadyUpdatesOnly` set the servicing branch, the
+// `featureUpdatesDeferralPeriodInDays` and `qualityUpdatesDeferralPeriodInDays`
+// defer updates, `featureUpdatesPaused` / `qualityUpdatesPaused` halt them, and
+// the deadline settings (`deadlineForFeatureUpdatesInDays`,
+// `deadlineForQualityUpdatesInDays`, `deadlineGracePeriodInDays`,
+// `postponeRebootUntilAfterDeadline`) force installation. `driversExcluded`
+// reports whether driver updates are withheld and `userPauseAccess` whether
+// users may pause updates.
+private microsoft.devicemanagement.windowsUpdateRing @defaults("displayName automaticUpdateMode") {
+  // Ring ID
+  id string
+  // Ring display name
+  displayName string
+  // Ring description
+  description string
+  // How updates are installed
+  //
+  // One of userNotification, autoInstallAtMaintenanceTime,
+  // autoInstallAndRebootAtMaintenanceTime, autoInstallAndRebootAtScheduledTime,
+  // autoInstallAndRebootWithoutEndUserControl, or windowsDefault.
+  automaticUpdateMode string
+  // Which updates devices receive
+  //
+  // One of userDefined, all, businessReadyOnly, windowsInsiderBuildFast,
+  // windowsInsiderBuildSlow, or windowsInsiderBuildRelease.
+  businessReadyUpdatesOnly string
+  // Days feature updates are deferred
+  featureUpdatesDeferralPeriodInDays int
+  // Days quality updates are deferred
+  qualityUpdatesDeferralPeriodInDays int
+  // Whether feature updates are paused
+  featureUpdatesPaused bool
+  // Whether quality updates are paused
+  qualityUpdatesPaused bool
+  // Days after a feature update is available before installation is enforced
+  deadlineForFeatureUpdatesInDays int
+  // Days after a quality update is available before installation is enforced
+  deadlineForQualityUpdatesInDays int
+  // Grace period in days before a deadline reboot is enforced
+  deadlineGracePeriodInDays int
+  // Whether reboots are postponed until after the deadline
+  postponeRebootUntilAfterDeadline bool
+  // Whether driver updates are excluded from the ring
+  driversExcluded bool
+  // Whether prerelease (Windows Insider) features are delivered
+  prereleaseFeatures string
+  // Whether users may pause updates (enabled, disabled, notConfigured)
+  userPauseAccess string
+  // Date and time the ring was created
+  createdDateTime time
+  // Date and time the ring was last modified
+  lastModifiedDateTime time
+}
+
+// Microsoft Intune Windows feature update profile
+//
+// Examine a Windows feature update deployment profile, selected by its `id`.
+// `featureUpdateVersion` is the Windows version the profile pins devices to,
+// `deployableContentDisplayName` names the deployable build, and
+// `endOfSupportDate` reports when that version stops receiving servicing.
+private microsoft.devicemanagement.windowsFeatureUpdateProfile @defaults("displayName featureUpdateVersion") {
+  // Profile ID
+  id string
+  // Profile display name
+  displayName string
+  // Profile description
+  description string
+  // Windows feature update version the profile deploys
+  featureUpdateVersion string
+  // Display name of the deployable content
+  deployableContentDisplayName string
+  // Whether the feature update is offered as an optional install
+  installFeatureUpdatesOptional bool
+  // Date the deployed version reaches end of support
+  endOfSupportDate time
+  // Role scope tag IDs assigned to the profile
+  roleScopeTagIds []string
+  // Date and time the profile was created
+  createdDateTime time
+  // Date and time the profile was last modified
+  lastModifiedDateTime time
+}
+
+// Microsoft Intune Windows quality update profile
+//
+// Examine a Windows quality update deployment profile, selected by its `id`.
+// These profiles drive expedited quality (security) update rollout;
+// `expeditedQualityUpdateRelease` identifies the release to expedite and
+// `expeditedDaysUntilForcedReboot` how long users may defer the reboot.
+private microsoft.devicemanagement.windowsQualityUpdateProfile @defaults("displayName") {
+  // Profile ID
+  id string
+  // Profile display name
+  displayName string
+  // Profile description
+  description string
+  // Display name of the deployable content
+  deployableContentDisplayName string
+  // Display name of the release date
+  releaseDateDisplayName string
+  // Quality update release to expedite
+  expeditedQualityUpdateRelease string
+  // Days before a reboot is forced after an expedited update
+  expeditedDaysUntilForcedReboot int
+  // Role scope tag IDs assigned to the profile
+  roleScopeTagIds []string
+  // Date and time the profile was created
+  createdDateTime time
+  // Date and time the profile was last modified
+  lastModifiedDateTime time
 }
 
 // Microsoft Intune managed app configuration policy

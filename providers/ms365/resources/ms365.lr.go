@@ -127,6 +127,9 @@ const (
 	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
 	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
 	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementWindowsUpdateRing                                                   string = "microsoft.devicemanagement.windowsUpdateRing"
+	ResourceMicrosoftDevicemanagementWindowsFeatureUpdateProfile                                         string = "microsoft.devicemanagement.windowsFeatureUpdateProfile"
+	ResourceMicrosoftDevicemanagementWindowsQualityUpdateProfile                                         string = "microsoft.devicemanagement.windowsQualityUpdateProfile"
 	ResourceMicrosoftDevicemanagementManagedAppConfiguration                                             string = "microsoft.devicemanagement.managedAppConfiguration"
 	ResourceMicrosoftDevicemanagementMobileAppConfiguration                                              string = "microsoft.devicemanagement.mobileAppConfiguration"
 	ResourceMicrosoftDevicemanagementConfigurationPolicy                                                 string = "microsoft.devicemanagement.configurationPolicy"
@@ -635,6 +638,18 @@ func init() {
 		"microsoft.devicemanagement": {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
+		},
+		"microsoft.devicemanagement.windowsUpdateRing": {
+			// to override args, implement: initMicrosoftDevicemanagementWindowsUpdateRing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementWindowsUpdateRing,
+		},
+		"microsoft.devicemanagement.windowsFeatureUpdateProfile": {
+			// to override args, implement: initMicrosoftDevicemanagementWindowsFeatureUpdateProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementWindowsFeatureUpdateProfile,
+		},
+		"microsoft.devicemanagement.windowsQualityUpdateProfile": {
+			// to override args, implement: initMicrosoftDevicemanagementWindowsQualityUpdateProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementWindowsQualityUpdateProfile,
 		},
 		"microsoft.devicemanagement.managedAppConfiguration": {
 			// to override args, implement: initMicrosoftDevicemanagementManagedAppConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3354,6 +3369,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.mobileAppConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetMobileAppConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.mobileAppConfiguration")))
+	},
+	"microsoft.devicemanagement.windowsUpdateRings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetWindowsUpdateRings()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.windowsUpdateRing")))
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetWindowsFeatureUpdateProfiles()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.windowsFeatureUpdateProfile")))
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetWindowsQualityUpdateProfiles()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.windowsQualityUpdateProfile")))
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.automaticUpdateMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetAutomaticUpdateMode()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.businessReadyUpdatesOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetBusinessReadyUpdatesOnly()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.featureUpdatesDeferralPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetFeatureUpdatesDeferralPeriodInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.qualityUpdatesDeferralPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetQualityUpdatesDeferralPeriodInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.featureUpdatesPaused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetFeatureUpdatesPaused()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.qualityUpdatesPaused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetQualityUpdatesPaused()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineForFeatureUpdatesInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDeadlineForFeatureUpdatesInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineForQualityUpdatesInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDeadlineForQualityUpdatesInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineGracePeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDeadlineGracePeriodInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.postponeRebootUntilAfterDeadline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetPostponeRebootUntilAfterDeadline()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.driversExcluded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetDriversExcluded()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.prereleaseFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetPrereleaseFeatures()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.userPauseAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetUserPauseAccess()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.featureUpdateVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetFeatureUpdateVersion()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.deployableContentDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetDeployableContentDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.installFeatureUpdatesOptional": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetInstallFeatureUpdatesOptional()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.endOfSupportDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetEndOfSupportDate()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.roleScopeTagIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetRoleScopeTagIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.deployableContentDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetDeployableContentDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.releaseDateDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetReleaseDateDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.expeditedQualityUpdateRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetExpeditedQualityUpdateRelease()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.expeditedDaysUntilForcedReboot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetExpeditedDaysUntilForcedReboot()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.roleScopeTagIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetRoleScopeTagIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).GetLastModifiedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.devicemanagement.managedAppConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManagedAppConfiguration).GetId()).ToDataRes(types.String)
@@ -8873,6 +9011,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.mobileAppConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).MobileAppConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).WindowsUpdateRings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).WindowsFeatureUpdateProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).WindowsQualityUpdateProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.automaticUpdateMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).AutomaticUpdateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.businessReadyUpdatesOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).BusinessReadyUpdatesOnly, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.featureUpdatesDeferralPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).FeatureUpdatesDeferralPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.qualityUpdatesDeferralPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).QualityUpdatesDeferralPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.featureUpdatesPaused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).FeatureUpdatesPaused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.qualityUpdatesPaused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).QualityUpdatesPaused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineForFeatureUpdatesInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).DeadlineForFeatureUpdatesInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineForQualityUpdatesInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).DeadlineForQualityUpdatesInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.deadlineGracePeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).DeadlineGracePeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.postponeRebootUntilAfterDeadline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).PostponeRebootUntilAfterDeadline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.driversExcluded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).DriversExcluded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.prereleaseFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).PrereleaseFeatures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.userPauseAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).UserPauseAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsUpdateRing.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.featureUpdateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).FeatureUpdateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.deployableContentDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).DeployableContentDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.installFeatureUpdatesOptional": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).InstallFeatureUpdatesOptional, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.endOfSupportDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).EndOfSupportDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.roleScopeTagIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).RoleScopeTagIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsFeatureUpdateProfile.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.deployableContentDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).DeployableContentDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.releaseDateDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).ReleaseDateDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.expeditedQualityUpdateRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).ExpeditedQualityUpdateRelease, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.expeditedDaysUntilForcedReboot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).ExpeditedDaysUntilForcedReboot, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.roleScopeTagIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).RoleScopeTagIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsQualityUpdateProfile.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.managedAppConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21233,6 +21547,9 @@ type mqlMicrosoftDevicemanagement struct {
 	ConfigurationPolicies              plugin.TValue[[]any]
 	ManagedAppConfigurations           plugin.TValue[[]any]
 	MobileAppConfigurations            plugin.TValue[[]any]
+	WindowsUpdateRings                 plugin.TValue[[]any]
+	WindowsFeatureUpdateProfiles       plugin.TValue[[]any]
+	WindowsQualityUpdateProfiles       plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -21553,6 +21870,361 @@ func (c *mqlMicrosoftDevicemanagement) GetMobileAppConfigurations() *plugin.TVal
 
 		return c.mobileAppConfigurations()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetWindowsUpdateRings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WindowsUpdateRings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "windowsUpdateRings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.windowsUpdateRings()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetWindowsFeatureUpdateProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WindowsFeatureUpdateProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "windowsFeatureUpdateProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.windowsFeatureUpdateProfiles()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetWindowsQualityUpdateProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WindowsQualityUpdateProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "windowsQualityUpdateProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.windowsQualityUpdateProfiles()
+	})
+}
+
+// mqlMicrosoftDevicemanagementWindowsUpdateRing for the microsoft.devicemanagement.windowsUpdateRing resource
+type mqlMicrosoftDevicemanagementWindowsUpdateRing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementWindowsUpdateRingInternal it will be used here
+	Id                                 plugin.TValue[string]
+	DisplayName                        plugin.TValue[string]
+	Description                        plugin.TValue[string]
+	AutomaticUpdateMode                plugin.TValue[string]
+	BusinessReadyUpdatesOnly           plugin.TValue[string]
+	FeatureUpdatesDeferralPeriodInDays plugin.TValue[int64]
+	QualityUpdatesDeferralPeriodInDays plugin.TValue[int64]
+	FeatureUpdatesPaused               plugin.TValue[bool]
+	QualityUpdatesPaused               plugin.TValue[bool]
+	DeadlineForFeatureUpdatesInDays    plugin.TValue[int64]
+	DeadlineForQualityUpdatesInDays    plugin.TValue[int64]
+	DeadlineGracePeriodInDays          plugin.TValue[int64]
+	PostponeRebootUntilAfterDeadline   plugin.TValue[bool]
+	DriversExcluded                    plugin.TValue[bool]
+	PrereleaseFeatures                 plugin.TValue[string]
+	UserPauseAccess                    plugin.TValue[string]
+	CreatedDateTime                    plugin.TValue[*time.Time]
+	LastModifiedDateTime               plugin.TValue[*time.Time]
+}
+
+// createMicrosoftDevicemanagementWindowsUpdateRing creates a new instance of this resource
+func createMicrosoftDevicemanagementWindowsUpdateRing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementWindowsUpdateRing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.windowsUpdateRing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) MqlName() string {
+	return "microsoft.devicemanagement.windowsUpdateRing"
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetAutomaticUpdateMode() *plugin.TValue[string] {
+	return &c.AutomaticUpdateMode
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetBusinessReadyUpdatesOnly() *plugin.TValue[string] {
+	return &c.BusinessReadyUpdatesOnly
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetFeatureUpdatesDeferralPeriodInDays() *plugin.TValue[int64] {
+	return &c.FeatureUpdatesDeferralPeriodInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetQualityUpdatesDeferralPeriodInDays() *plugin.TValue[int64] {
+	return &c.QualityUpdatesDeferralPeriodInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetFeatureUpdatesPaused() *plugin.TValue[bool] {
+	return &c.FeatureUpdatesPaused
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetQualityUpdatesPaused() *plugin.TValue[bool] {
+	return &c.QualityUpdatesPaused
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDeadlineForFeatureUpdatesInDays() *plugin.TValue[int64] {
+	return &c.DeadlineForFeatureUpdatesInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDeadlineForQualityUpdatesInDays() *plugin.TValue[int64] {
+	return &c.DeadlineForQualityUpdatesInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDeadlineGracePeriodInDays() *plugin.TValue[int64] {
+	return &c.DeadlineGracePeriodInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetPostponeRebootUntilAfterDeadline() *plugin.TValue[bool] {
+	return &c.PostponeRebootUntilAfterDeadline
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetDriversExcluded() *plugin.TValue[bool] {
+	return &c.DriversExcluded
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetPrereleaseFeatures() *plugin.TValue[string] {
+	return &c.PrereleaseFeatures
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetUserPauseAccess() *plugin.TValue[string] {
+	return &c.UserPauseAccess
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsUpdateRing) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+// mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile for the microsoft.devicemanagement.windowsFeatureUpdateProfile resource
+type mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfileInternal it will be used here
+	Id                            plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	FeatureUpdateVersion          plugin.TValue[string]
+	DeployableContentDisplayName  plugin.TValue[string]
+	InstallFeatureUpdatesOptional plugin.TValue[bool]
+	EndOfSupportDate              plugin.TValue[*time.Time]
+	RoleScopeTagIds               plugin.TValue[[]any]
+	CreatedDateTime               plugin.TValue[*time.Time]
+	LastModifiedDateTime          plugin.TValue[*time.Time]
+}
+
+// createMicrosoftDevicemanagementWindowsFeatureUpdateProfile creates a new instance of this resource
+func createMicrosoftDevicemanagementWindowsFeatureUpdateProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.windowsFeatureUpdateProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) MqlName() string {
+	return "microsoft.devicemanagement.windowsFeatureUpdateProfile"
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetFeatureUpdateVersion() *plugin.TValue[string] {
+	return &c.FeatureUpdateVersion
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetDeployableContentDisplayName() *plugin.TValue[string] {
+	return &c.DeployableContentDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetInstallFeatureUpdatesOptional() *plugin.TValue[bool] {
+	return &c.InstallFeatureUpdatesOptional
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetEndOfSupportDate() *plugin.TValue[*time.Time] {
+	return &c.EndOfSupportDate
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetRoleScopeTagIds() *plugin.TValue[[]any] {
+	return &c.RoleScopeTagIds
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsFeatureUpdateProfile) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+// mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile for the microsoft.devicemanagement.windowsQualityUpdateProfile resource
+type mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementWindowsQualityUpdateProfileInternal it will be used here
+	Id                             plugin.TValue[string]
+	DisplayName                    plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	DeployableContentDisplayName   plugin.TValue[string]
+	ReleaseDateDisplayName         plugin.TValue[string]
+	ExpeditedQualityUpdateRelease  plugin.TValue[string]
+	ExpeditedDaysUntilForcedReboot plugin.TValue[int64]
+	RoleScopeTagIds                plugin.TValue[[]any]
+	CreatedDateTime                plugin.TValue[*time.Time]
+	LastModifiedDateTime           plugin.TValue[*time.Time]
+}
+
+// createMicrosoftDevicemanagementWindowsQualityUpdateProfile creates a new instance of this resource
+func createMicrosoftDevicemanagementWindowsQualityUpdateProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.windowsQualityUpdateProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) MqlName() string {
+	return "microsoft.devicemanagement.windowsQualityUpdateProfile"
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetDeployableContentDisplayName() *plugin.TValue[string] {
+	return &c.DeployableContentDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetReleaseDateDisplayName() *plugin.TValue[string] {
+	return &c.ReleaseDateDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetExpeditedQualityUpdateRelease() *plugin.TValue[string] {
+	return &c.ExpeditedQualityUpdateRelease
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetExpeditedDaysUntilForcedReboot() *plugin.TValue[int64] {
+	return &c.ExpeditedDaysUntilForcedReboot
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetRoleScopeTagIds() *plugin.TValue[[]any] {
+	return &c.RoleScopeTagIds
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsQualityUpdateProfile) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
 }
 
 // mqlMicrosoftDevicemanagementManagedAppConfiguration for the microsoft.devicemanagement.managedAppConfiguration resource
