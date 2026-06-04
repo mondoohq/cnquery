@@ -21,6 +21,7 @@ type Role struct {
 	Defaults        map[string]any
 	Vars            map[string]any
 	Meta            *RoleMeta
+	ArgumentSpecs   map[string]any // entrypoint argument specs from meta/argument_specs.yml
 	Templates       []string
 	Files           []string
 	DependencyNames []string // role names from meta/main.yml, resolved to typed refs at the resource layer
@@ -94,10 +95,37 @@ func loadRole(name, path string) (*Role, error) {
 		role.DependencyNames = meta.Dependencies
 	}
 
+	if specs := readArgumentSpecs(path); specs != nil {
+		role.ArgumentSpecs = specs
+	}
+
 	role.Templates = listDirFiles(filepath.Join(path, "templates"))
 	role.Files = listDirFiles(filepath.Join(path, "files"))
 
 	return role, nil
+}
+
+// readArgumentSpecs parses a role's meta/argument_specs.yml and returns the
+// per-entrypoint specs (the value of the top-level `argument_specs` key).
+func readArgumentSpecs(rolePath string) map[string]any {
+	p := firstExisting(
+		filepath.Join(rolePath, "meta", "argument_specs.yml"),
+		filepath.Join(rolePath, "meta", "argument_specs.yaml"),
+	)
+	if p == "" {
+		return nil
+	}
+	data, err := os.ReadFile(p)
+	if err != nil {
+		return nil
+	}
+	var doc struct {
+		ArgumentSpecs map[string]any `yaml:"argument_specs"`
+	}
+	if yaml.Unmarshal(data, &doc) != nil {
+		return nil
+	}
+	return doc.ArgumentSpecs
 }
 
 // readMainFile reads <rolePath>/<subdir>/main.yml (or .yaml), returning nil when

@@ -53,14 +53,31 @@ cnquery shell ansible ./my-ansible-project
 // Roles defined in the project, with the roles they depend on
 ansible.project.roles { name dependencies { name } }
 
-// External roles and collections pulled in from Galaxy
+// External roles and collections pulled in from Galaxy, and what is vendored
 ansible.project.requirements { roles collections }
+ansible.project.collections { name version }
+
+// Custom modules and plugins shipped in the project (supply chain)
+ansible.project.plugins { name type }
 
 // Security-relevant ansible.cfg settings
 ansible.project.config { hostKeyChecking become }
 
-// Vault-encrypted files detected in the project
-ansible.project.vault.files
+// Vault-encrypted files and inline encrypted variables
+ansible.project.vault { files { cipher } variables { key file } }
+
+// Test/quality signals
+ansible.project { lintConfig moleculeScenarios }
+```
+
+Tasks expose the module they invoke directly, so audits can select by module
+without knowing the exact key in `action`:
+
+```javascript
+// Flag any task that shells out
+ansible.project.playbooks.all(
+  plays.all(tasks.all(module != /command|shell/))
+)
 ```
 
 The single-playbook queries above continue to work unchanged when the provider

@@ -1,0 +1,4 @@
+namespace: example
+name: webstack
+version: 1.0.0
+readme: README.md

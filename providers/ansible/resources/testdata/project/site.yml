@@ -2,8 +2,21 @@
 - name: Configure web servers
   hosts: webservers
   become: true
+  collections:
+    - community.general
+  environment:
+    HTTP_PROXY: http://proxy.example.com:8080
+  vars_files:
+    - vars/secrets.yml
+  vars_prompt:
+    - name: admin_password
+      prompt: Enter admin password
+      private: true
   roles:
-    - nginx
+    - role: nginx
+      when: ansible_os_family == "Debian"
+      tags: [web]
+      http_port: 8080
   pre_tasks:
     - name: Load setup tasks
       import_tasks: tasks/setup.yml

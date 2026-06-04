@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Configure nginx
+    options:
+      nginx_port:
+        type: int
+        default: 80
+        description: Port nginx listens on
+      nginx_worker_processes:
+        type: str
+        required: false

@@ -126,11 +126,19 @@ func loadInventory(root string) (*Inventory, error) {
 		found = true
 	}
 
-	if applyVarsDir(filepath.Join(root, "group_vars"), b.groupVars) {
-		found = true
+	// group_vars/ and host_vars/ live at the project root and, per Ansible's
+	// rules, beside each inventory source. Collect both sets of base dirs.
+	varBases := map[string]bool{root: true}
+	for _, src := range inventorySources(root) {
+		varBases[filepath.Dir(src)] = true
 	}
-	if applyVarsDir(filepath.Join(root, "host_vars"), b.hostVars) {
-		found = true
+	for base := range varBases {
+		if applyVarsDir(filepath.Join(base, "group_vars"), b.groupVars) {
+			found = true
+		}
+		if applyVarsDir(filepath.Join(base, "host_vars"), b.hostVars) {
+			found = true
+		}
 	}
 
 	if !found {

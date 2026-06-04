@@ -237,7 +237,7 @@ func TestSerialIsExposed(t *testing.T) {
 	plays, err := a.plays()
 	require.NoError(t, err)
 	require.Len(t, plays, 1)
-	assert.Equal(t, 3, plays[0].(*mqlAnsiblePlay).Serial.Data)
+	assert.Equal(t, int64(3), plays[0].(*mqlAnsiblePlay).Serial.Data)
 }
 
 // Task-level security attributes (become family, no_log, ignore_errors,

@@ -15,23 +15,28 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAnsible                   string = "ansible"
-	ResourceAnsiblePlay               string = "ansible.play"
-	ResourceAnsibleTask               string = "ansible.task"
-	ResourceAnsibleHandler            string = "ansible.handler"
-	ResourceAnsibleProject            string = "ansible.project"
-	ResourceAnsiblePlaybook           string = "ansible.playbook"
-	ResourceAnsibleRole               string = "ansible.role"
-	ResourceAnsibleRoleMeta           string = "ansible.role.meta"
-	ResourceAnsibleInventory          string = "ansible.inventory"
-	ResourceAnsibleInventoryGroup     string = "ansible.inventory.group"
-	ResourceAnsibleInventoryHost      string = "ansible.inventory.host"
-	ResourceAnsibleGalaxyRequirements string = "ansible.galaxy.requirements"
-	ResourceAnsibleGalaxyRole         string = "ansible.galaxy.role"
-	ResourceAnsibleGalaxyCollection   string = "ansible.galaxy.collection"
-	ResourceAnsibleConfig             string = "ansible.config"
-	ResourceAnsibleVault              string = "ansible.vault"
-	ResourceAnsibleVaultFile          string = "ansible.vault.file"
+	ResourceAnsible                    string = "ansible"
+	ResourceAnsiblePlay                string = "ansible.play"
+	ResourceAnsibleTask                string = "ansible.task"
+	ResourceAnsibleHandler             string = "ansible.handler"
+	ResourceAnsibleProject             string = "ansible.project"
+	ResourceAnsiblePlaybook            string = "ansible.playbook"
+	ResourceAnsibleRole                string = "ansible.role"
+	ResourceAnsibleRoleMeta            string = "ansible.role.meta"
+	ResourceAnsibleInventory           string = "ansible.inventory"
+	ResourceAnsibleInventoryGroup      string = "ansible.inventory.group"
+	ResourceAnsibleInventoryHost       string = "ansible.inventory.host"
+	ResourceAnsibleGalaxyRequirements  string = "ansible.galaxy.requirements"
+	ResourceAnsibleGalaxyRole          string = "ansible.galaxy.role"
+	ResourceAnsibleGalaxyCollection    string = "ansible.galaxy.collection"
+	ResourceAnsibleConfig              string = "ansible.config"
+	ResourceAnsibleVault               string = "ansible.vault"
+	ResourceAnsibleVaultFile           string = "ansible.vault.file"
+	ResourceAnsibleVaultVariable       string = "ansible.vault.variable"
+	ResourceAnsiblePlayRoleApplication string = "ansible.play.roleApplication"
+	ResourceAnsibleCollection          string = "ansible.collection"
+	ResourceAnsiblePlugin              string = "ansible.plugin"
+	ResourceAnsibleGalaxyManifest      string = "ansible.galaxy.manifest"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -105,6 +110,26 @@ func init() {
 		"ansible.vault.file": {
 			// to override args, implement: initAnsibleVaultFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAnsibleVaultFile,
+		},
+		"ansible.vault.variable": {
+			// to override args, implement: initAnsibleVaultVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAnsibleVaultVariable,
+		},
+		"ansible.play.roleApplication": {
+			// to override args, implement: initAnsiblePlayRoleApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAnsiblePlayRoleApplication,
+		},
+		"ansible.collection": {
+			// to override args, implement: initAnsibleCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAnsibleCollection,
+		},
+		"ansible.plugin": {
+			// to override args, implement: initAnsiblePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAnsiblePlugin,
+		},
+		"ansible.galaxy.manifest": {
+			// to override args, implement: initAnsibleGalaxyManifest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAnsibleGalaxyManifest,
 		},
 	}
 }
@@ -228,8 +253,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.play.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetRoles()).ToDataRes(types.Array(types.String))
 	},
-	"ansible.play.roleRefs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAnsiblePlay).GetRoleRefs()).ToDataRes(types.Array(types.Resource("ansible.role")))
+	"ansible.play.roleApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetRoleApplications()).ToDataRes(types.Array(types.Resource("ansible.play.roleApplication")))
+	},
+	"ansible.play.varsFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetVarsFiles()).ToDataRes(types.Array(types.String))
+	},
+	"ansible.play.varsPrompt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetVarsPrompt()).ToDataRes(types.Array(types.Dict))
+	},
+	"ansible.play.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetEnvironment()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"ansible.play.collections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlay).GetCollections()).ToDataRes(types.Array(types.String))
 	},
 	"ansible.play.preTasks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlay).GetPreTasks()).ToDataRes(types.Array(types.Resource("ansible.task")))
@@ -248,6 +285,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.task.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetAction()).ToDataRes(types.Dict)
+	},
+	"ansible.task.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetModule()).ToDataRes(types.String)
+	},
+	"ansible.task.moduleArgs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleTask).GetModuleArgs()).ToDataRes(types.Dict)
 	},
 	"ansible.task.vars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleTask).GetVars()).ToDataRes(types.Map(types.String, types.Dict))
@@ -351,11 +394,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.project.requirements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleProject).GetRequirements()).ToDataRes(types.Resource("ansible.galaxy.requirements"))
 	},
+	"ansible.project.collections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleProject).GetCollections()).ToDataRes(types.Array(types.Resource("ansible.collection")))
+	},
+	"ansible.project.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleProject).GetPlugins()).ToDataRes(types.Array(types.Resource("ansible.plugin")))
+	},
+	"ansible.project.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleProject).GetManifest()).ToDataRes(types.Resource("ansible.galaxy.manifest"))
+	},
 	"ansible.project.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleProject).GetConfig()).ToDataRes(types.Resource("ansible.config"))
 	},
 	"ansible.project.vault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleProject).GetVault()).ToDataRes(types.Resource("ansible.vault"))
+	},
+	"ansible.project.lintConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleProject).GetLintConfig()).ToDataRes(types.String)
+	},
+	"ansible.project.moleculeScenarios": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleProject).GetMoleculeScenarios()).ToDataRes(types.Array(types.String))
 	},
 	"ansible.playbook.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsiblePlaybook).GetPath()).ToDataRes(types.String)
@@ -383,6 +441,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.role.meta": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleRole).GetMeta()).ToDataRes(types.Resource("ansible.role.meta"))
+	},
+	"ansible.role.argumentSpecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleRole).GetArgumentSpecs()).ToDataRes(types.Dict)
 	},
 	"ansible.role.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleRole).GetDependencies()).ToDataRes(types.Array(types.Resource("ansible.role")))
@@ -480,6 +541,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ansible.vault.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleVault).GetFiles()).ToDataRes(types.Array(types.Resource("ansible.vault.file")))
 	},
+	"ansible.vault.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleVault).GetVariables()).ToDataRes(types.Array(types.Resource("ansible.vault.variable")))
+	},
 	"ansible.vault.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleVaultFile).GetPath()).ToDataRes(types.String)
 	},
@@ -488,6 +552,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ansible.vault.file.cipher": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAnsibleVaultFile).GetCipher()).ToDataRes(types.String)
+	},
+	"ansible.vault.file.vaultId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleVaultFile).GetVaultId()).ToDataRes(types.String)
+	},
+	"ansible.vault.variable.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleVaultVariable).GetKey()).ToDataRes(types.String)
+	},
+	"ansible.vault.variable.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleVaultVariable).GetFile()).ToDataRes(types.String)
+	},
+	"ansible.play.roleApplication.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlayRoleApplication).GetName()).ToDataRes(types.String)
+	},
+	"ansible.play.roleApplication.when": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlayRoleApplication).GetWhen()).ToDataRes(types.String)
+	},
+	"ansible.play.roleApplication.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlayRoleApplication).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"ansible.play.roleApplication.vars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlayRoleApplication).GetVars()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"ansible.play.roleApplication.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlayRoleApplication).GetRole()).ToDataRes(types.Resource("ansible.role"))
+	},
+	"ansible.collection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleCollection).GetName()).ToDataRes(types.String)
+	},
+	"ansible.collection.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleCollection).GetNamespace()).ToDataRes(types.String)
+	},
+	"ansible.collection.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleCollection).GetVersion()).ToDataRes(types.String)
+	},
+	"ansible.collection.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleCollection).GetPath()).ToDataRes(types.String)
+	},
+	"ansible.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlugin).GetName()).ToDataRes(types.String)
+	},
+	"ansible.plugin.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlugin).GetType()).ToDataRes(types.String)
+	},
+	"ansible.plugin.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsiblePlugin).GetPath()).ToDataRes(types.String)
+	},
+	"ansible.galaxy.manifest.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleGalaxyManifest).GetPath()).ToDataRes(types.String)
+	},
+	"ansible.galaxy.manifest.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleGalaxyManifest).GetNamespace()).ToDataRes(types.String)
+	},
+	"ansible.galaxy.manifest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleGalaxyManifest).GetName()).ToDataRes(types.String)
+	},
+	"ansible.galaxy.manifest.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAnsibleGalaxyManifest).GetVersion()).ToDataRes(types.String)
 	},
 }
 
@@ -577,8 +698,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAnsiblePlay).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ansible.play.roleRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAnsiblePlay).RoleRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ansible.play.roleApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).RoleApplications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.varsFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).VarsFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.varsPrompt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).VarsPrompt, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.collections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlay).Collections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ansible.play.preTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -607,6 +744,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.task.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleTask).Action, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"ansible.task.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.task.moduleArgs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleTask).ModuleArgs, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ansible.task.vars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -753,12 +898,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAnsibleProject).Requirements, ok = plugin.RawToTValue[*mqlAnsibleGalaxyRequirements](v.Value, v.Error)
 		return
 	},
+	"ansible.project.collections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleProject).Collections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.project.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleProject).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.project.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleProject).Manifest, ok = plugin.RawToTValue[*mqlAnsibleGalaxyManifest](v.Value, v.Error)
+		return
+	},
 	"ansible.project.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleProject).Config, ok = plugin.RawToTValue[*mqlAnsibleConfig](v.Value, v.Error)
 		return
 	},
 	"ansible.project.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleProject).Vault, ok = plugin.RawToTValue[*mqlAnsibleVault](v.Value, v.Error)
+		return
+	},
+	"ansible.project.lintConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleProject).LintConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.project.moleculeScenarios": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleProject).MoleculeScenarios, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ansible.playbook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -803,6 +968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.role.meta": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleRole).Meta, ok = plugin.RawToTValue[*mqlAnsibleRoleMeta](v.Value, v.Error)
+		return
+	},
+	"ansible.role.argumentSpecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleRole).ArgumentSpecs, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ansible.role.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -969,6 +1138,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAnsibleVault).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ansible.vault.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleVault).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ansible.vault.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleVaultFile).__id, ok = v.Value.(string)
 		return
@@ -983,6 +1156,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ansible.vault.file.cipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAnsibleVaultFile).Cipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.vault.file.vaultId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleVaultFile).VaultId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.vault.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleVaultVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"ansible.vault.variable.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleVaultVariable).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.vault.variable.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleVaultVariable).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.play.roleApplication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"ansible.play.roleApplication.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.play.roleApplication.when": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).When, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.play.roleApplication.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.roleApplication.vars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).Vars, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"ansible.play.roleApplication.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlayRoleApplication).Role, ok = plugin.RawToTValue[*mqlAnsibleRole](v.Value, v.Error)
+		return
+	},
+	"ansible.collection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"ansible.collection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleCollection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.collection.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleCollection).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.collection.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleCollection).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.collection.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleCollection).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"ansible.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.plugin.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlugin).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.plugin.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsiblePlugin).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.galaxy.manifest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleGalaxyManifest).__id, ok = v.Value.(string)
+		return
+	},
+	"ansible.galaxy.manifest.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleGalaxyManifest).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.galaxy.manifest.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleGalaxyManifest).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.galaxy.manifest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleGalaxyManifest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ansible.galaxy.manifest.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAnsibleGalaxyManifest).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -1091,7 +1360,11 @@ type mqlAnsiblePlay struct {
 	Vars              plugin.TValue[map[string]any]
 	Tags              plugin.TValue[[]any]
 	Roles             plugin.TValue[[]any]
-	RoleRefs          plugin.TValue[[]any]
+	RoleApplications  plugin.TValue[[]any]
+	VarsFiles         plugin.TValue[[]any]
+	VarsPrompt        plugin.TValue[[]any]
+	Environment       plugin.TValue[map[string]any]
+	Collections       plugin.TValue[[]any]
 	PreTasks          plugin.TValue[[]any]
 	Tasks             plugin.TValue[[]any]
 	PostTasks         plugin.TValue[[]any]
@@ -1194,10 +1467,10 @@ func (c *mqlAnsiblePlay) GetRoles() *plugin.TValue[[]any] {
 	return &c.Roles
 }
 
-func (c *mqlAnsiblePlay) GetRoleRefs() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.RoleRefs, func() ([]any, error) {
+func (c *mqlAnsiblePlay) GetRoleApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleApplications, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.play", c.__id, "roleRefs")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.play", c.__id, "roleApplications")
 			if err != nil {
 				return nil, err
 			}
@@ -1206,8 +1479,24 @@ func (c *mqlAnsiblePlay) GetRoleRefs() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.roleRefs()
+		return c.roleApplications()
 	})
+}
+
+func (c *mqlAnsiblePlay) GetVarsFiles() *plugin.TValue[[]any] {
+	return &c.VarsFiles
+}
+
+func (c *mqlAnsiblePlay) GetVarsPrompt() *plugin.TValue[[]any] {
+	return &c.VarsPrompt
+}
+
+func (c *mqlAnsiblePlay) GetEnvironment() *plugin.TValue[map[string]any] {
+	return &c.Environment
+}
+
+func (c *mqlAnsiblePlay) GetCollections() *plugin.TValue[[]any] {
+	return &c.Collections
 }
 
 func (c *mqlAnsiblePlay) GetPreTasks() *plugin.TValue[[]any] {
@@ -1281,6 +1570,8 @@ type mqlAnsibleTask struct {
 	mqlAnsibleTaskInternal
 	Name             plugin.TValue[string]
 	Action           plugin.TValue[any]
+	Module           plugin.TValue[string]
+	ModuleArgs       plugin.TValue[any]
 	Vars             plugin.TValue[map[string]any]
 	Tags             plugin.TValue[[]any]
 	Register         plugin.TValue[string]
@@ -1348,6 +1639,18 @@ func (c *mqlAnsibleTask) GetName() *plugin.TValue[string] {
 
 func (c *mqlAnsibleTask) GetAction() *plugin.TValue[any] {
 	return &c.Action
+}
+
+func (c *mqlAnsibleTask) GetModule() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Module, func() (string, error) {
+		return c.module()
+	})
+}
+
+func (c *mqlAnsibleTask) GetModuleArgs() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ModuleArgs, func() (any, error) {
+		return c.moduleArgs()
+	})
 }
 
 func (c *mqlAnsibleTask) GetVars() *plugin.TValue[map[string]any] {
@@ -1572,13 +1875,18 @@ type mqlAnsibleProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAnsibleProjectInternal it will be used here
-	Path         plugin.TValue[string]
-	Playbooks    plugin.TValue[[]any]
-	Roles        plugin.TValue[[]any]
-	Inventory    plugin.TValue[*mqlAnsibleInventory]
-	Requirements plugin.TValue[*mqlAnsibleGalaxyRequirements]
-	Config       plugin.TValue[*mqlAnsibleConfig]
-	Vault        plugin.TValue[*mqlAnsibleVault]
+	Path              plugin.TValue[string]
+	Playbooks         plugin.TValue[[]any]
+	Roles             plugin.TValue[[]any]
+	Inventory         plugin.TValue[*mqlAnsibleInventory]
+	Requirements      plugin.TValue[*mqlAnsibleGalaxyRequirements]
+	Collections       plugin.TValue[[]any]
+	Plugins           plugin.TValue[[]any]
+	Manifest          plugin.TValue[*mqlAnsibleGalaxyManifest]
+	Config            plugin.TValue[*mqlAnsibleConfig]
+	Vault             plugin.TValue[*mqlAnsibleVault]
+	LintConfig        plugin.TValue[string]
+	MoleculeScenarios plugin.TValue[[]any]
 }
 
 // createAnsibleProject creates a new instance of this resource
@@ -1681,6 +1989,54 @@ func (c *mqlAnsibleProject) GetRequirements() *plugin.TValue[*mqlAnsibleGalaxyRe
 	})
 }
 
+func (c *mqlAnsibleProject) GetCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Collections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.project", c.__id, "collections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.collections()
+	})
+}
+
+func (c *mqlAnsibleProject) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.project", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
+func (c *mqlAnsibleProject) GetManifest() *plugin.TValue[*mqlAnsibleGalaxyManifest] {
+	return plugin.GetOrCompute[*mqlAnsibleGalaxyManifest](&c.Manifest, func() (*mqlAnsibleGalaxyManifest, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.project", c.__id, "manifest")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAnsibleGalaxyManifest), nil
+			}
+		}
+
+		return c.manifest()
+	})
+}
+
 func (c *mqlAnsibleProject) GetConfig() *plugin.TValue[*mqlAnsibleConfig] {
 	return plugin.GetOrCompute[*mqlAnsibleConfig](&c.Config, func() (*mqlAnsibleConfig, error) {
 		if c.MqlRuntime.HasRecording {
@@ -1710,6 +2066,18 @@ func (c *mqlAnsibleProject) GetVault() *plugin.TValue[*mqlAnsibleVault] {
 		}
 
 		return c.vault()
+	})
+}
+
+func (c *mqlAnsibleProject) GetLintConfig() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LintConfig, func() (string, error) {
+		return c.lintConfig()
+	})
+}
+
+func (c *mqlAnsibleProject) GetMoleculeScenarios() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MoleculeScenarios, func() ([]any, error) {
+		return c.moleculeScenarios()
 	})
 }
 
@@ -1779,16 +2147,17 @@ type mqlAnsibleRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAnsibleRoleInternal
-	Name         plugin.TValue[string]
-	Path         plugin.TValue[string]
-	Tasks        plugin.TValue[[]any]
-	Handlers     plugin.TValue[[]any]
-	Defaults     plugin.TValue[map[string]any]
-	Vars         plugin.TValue[map[string]any]
-	Meta         plugin.TValue[*mqlAnsibleRoleMeta]
-	Dependencies plugin.TValue[[]any]
-	Templates    plugin.TValue[[]any]
-	Files        plugin.TValue[[]any]
+	Name          plugin.TValue[string]
+	Path          plugin.TValue[string]
+	Tasks         plugin.TValue[[]any]
+	Handlers      plugin.TValue[[]any]
+	Defaults      plugin.TValue[map[string]any]
+	Vars          plugin.TValue[map[string]any]
+	Meta          plugin.TValue[*mqlAnsibleRoleMeta]
+	ArgumentSpecs plugin.TValue[any]
+	Dependencies  plugin.TValue[[]any]
+	Templates     plugin.TValue[[]any]
+	Files         plugin.TValue[[]any]
 }
 
 // createAnsibleRole creates a new instance of this resource
@@ -1885,6 +2254,10 @@ func (c *mqlAnsibleRole) GetMeta() *plugin.TValue[*mqlAnsibleRoleMeta] {
 
 		return c.meta()
 	})
+}
+
+func (c *mqlAnsibleRole) GetArgumentSpecs() *plugin.TValue[any] {
+	return &c.ArgumentSpecs
 }
 
 func (c *mqlAnsibleRole) GetDependencies() *plugin.TValue[[]any] {
@@ -2416,7 +2789,8 @@ type mqlAnsibleVault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAnsibleVaultInternal it will be used here
-	Files plugin.TValue[[]any]
+	Files     plugin.TValue[[]any]
+	Variables plugin.TValue[[]any]
 }
 
 // createAnsibleVault creates a new instance of this resource
@@ -2467,14 +2841,31 @@ func (c *mqlAnsibleVault) GetFiles() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAnsibleVault) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.vault", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
+	})
+}
+
 // mqlAnsibleVaultFile for the ansible.vault.file resource
 type mqlAnsibleVaultFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAnsibleVaultFileInternal it will be used here
-	Path   plugin.TValue[string]
-	Format plugin.TValue[string]
-	Cipher plugin.TValue[string]
+	Path    plugin.TValue[string]
+	Format  plugin.TValue[string]
+	Cipher  plugin.TValue[string]
+	VaultId plugin.TValue[string]
 }
 
 // createAnsibleVaultFile creates a new instance of this resource
@@ -2519,4 +2910,305 @@ func (c *mqlAnsibleVaultFile) GetFormat() *plugin.TValue[string] {
 
 func (c *mqlAnsibleVaultFile) GetCipher() *plugin.TValue[string] {
 	return &c.Cipher
+}
+
+func (c *mqlAnsibleVaultFile) GetVaultId() *plugin.TValue[string] {
+	return &c.VaultId
+}
+
+// mqlAnsibleVaultVariable for the ansible.vault.variable resource
+type mqlAnsibleVaultVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAnsibleVaultVariableInternal it will be used here
+	Key  plugin.TValue[string]
+	File plugin.TValue[string]
+}
+
+// createAnsibleVaultVariable creates a new instance of this resource
+func createAnsibleVaultVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnsibleVaultVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ansible.vault.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnsibleVaultVariable) MqlName() string {
+	return "ansible.vault.variable"
+}
+
+func (c *mqlAnsibleVaultVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnsibleVaultVariable) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAnsibleVaultVariable) GetFile() *plugin.TValue[string] {
+	return &c.File
+}
+
+// mqlAnsiblePlayRoleApplication for the ansible.play.roleApplication resource
+type mqlAnsiblePlayRoleApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAnsiblePlayRoleApplicationInternal
+	Name plugin.TValue[string]
+	When plugin.TValue[string]
+	Tags plugin.TValue[[]any]
+	Vars plugin.TValue[map[string]any]
+	Role plugin.TValue[*mqlAnsibleRole]
+}
+
+// createAnsiblePlayRoleApplication creates a new instance of this resource
+func createAnsiblePlayRoleApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnsiblePlayRoleApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ansible.play.roleApplication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnsiblePlayRoleApplication) MqlName() string {
+	return "ansible.play.roleApplication"
+}
+
+func (c *mqlAnsiblePlayRoleApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnsiblePlayRoleApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAnsiblePlayRoleApplication) GetWhen() *plugin.TValue[string] {
+	return &c.When
+}
+
+func (c *mqlAnsiblePlayRoleApplication) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlAnsiblePlayRoleApplication) GetVars() *plugin.TValue[map[string]any] {
+	return &c.Vars
+}
+
+func (c *mqlAnsiblePlayRoleApplication) GetRole() *plugin.TValue[*mqlAnsibleRole] {
+	return plugin.GetOrCompute[*mqlAnsibleRole](&c.Role, func() (*mqlAnsibleRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ansible.play.roleApplication", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAnsibleRole), nil
+			}
+		}
+
+		return c.role()
+	})
+}
+
+// mqlAnsibleCollection for the ansible.collection resource
+type mqlAnsibleCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAnsibleCollectionInternal it will be used here
+	Name      plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Version   plugin.TValue[string]
+	Path      plugin.TValue[string]
+}
+
+// createAnsibleCollection creates a new instance of this resource
+func createAnsibleCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnsibleCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ansible.collection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnsibleCollection) MqlName() string {
+	return "ansible.collection"
+}
+
+func (c *mqlAnsibleCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnsibleCollection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAnsibleCollection) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlAnsibleCollection) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAnsibleCollection) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+// mqlAnsiblePlugin for the ansible.plugin resource
+type mqlAnsiblePlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAnsiblePluginInternal it will be used here
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+	Path plugin.TValue[string]
+}
+
+// createAnsiblePlugin creates a new instance of this resource
+func createAnsiblePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnsiblePlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ansible.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnsiblePlugin) MqlName() string {
+	return "ansible.plugin"
+}
+
+func (c *mqlAnsiblePlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnsiblePlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAnsiblePlugin) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAnsiblePlugin) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+// mqlAnsibleGalaxyManifest for the ansible.galaxy.manifest resource
+type mqlAnsibleGalaxyManifest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAnsibleGalaxyManifestInternal it will be used here
+	Path      plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Version   plugin.TValue[string]
+}
+
+// createAnsibleGalaxyManifest creates a new instance of this resource
+func createAnsibleGalaxyManifest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAnsibleGalaxyManifest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ansible.galaxy.manifest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAnsibleGalaxyManifest) MqlName() string {
+	return "ansible.galaxy.manifest"
+}
+
+func (c *mqlAnsibleGalaxyManifest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAnsibleGalaxyManifest) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAnsibleGalaxyManifest) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlAnsibleGalaxyManifest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAnsibleGalaxyManifest) GetVersion() *plugin.TValue[string] {
+	return &c.Version
 }

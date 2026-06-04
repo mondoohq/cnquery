@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -43,21 +44,25 @@ func newMqlAnsiblePlay(runtime *plugin.Runtime, id, baseDir string, p *play.Play
 	res, err := CreateResource(runtime, "ansible.play", map[string]*llx.RawData{
 		"__id":              llx.StringData(id),
 		"name":              llx.StringData(p.Name),
-		"hosts":             llx.DictData(p.Hosts),
+		"hosts":             dictData(p.Hosts),
 		"remoteUser":        llx.StringData(p.RemoteUser),
 		"become":            llx.BoolData(p.Become),
 		"becomeUser":        llx.StringData(p.BecomeUser),
 		"becomeMethod":      llx.StringData(p.BecomeMethod),
 		"becomeFlags":       llx.StringData(p.BecomeFlags),
-		"serial":            llx.DictData(p.Serial),
+		"serial":            dictData(p.Serial),
 		"strategy":          llx.StringData(p.Strategy),
 		"maxFailPercentage": llx.IntData(p.MaxFailPercentage),
 		"ignoreUnreachable": llx.BoolData(p.IgnoreUnreachable),
 		"anyErrorsFatal":    llx.BoolData(p.AnyErrorsFatal),
 		"gatherFacts":       llx.StringData(p.GatherFacts),
-		"vars":              llx.MapData(p.Vars, types.Dict),
+		"vars":              dictMapData(p.Vars),
 		"tags":              llx.ArrayData(convert.SliceAnyToInterface(p.Tags), types.String),
-		"roles":             llx.ArrayData(convert.SliceAnyToInterface(p.Roles), types.String),
+		"roles":             llx.ArrayData(convert.SliceAnyToInterface(p.RoleNames()), types.String),
+		"varsFiles":         llx.ArrayData(convert.SliceAnyToInterface(p.VarsFiles), types.String),
+		"varsPrompt":        llx.ArrayData(dictSlice(p.VarsPrompt), types.Dict),
+		"environment":       dictMapData(p.Environment),
+		"collections":       llx.ArrayData(convert.SliceAnyToInterface(p.Collections), types.String),
 	})
 	if err != nil {
 		return nil, err
@@ -73,21 +78,64 @@ type mqlAnsiblePlayInternal struct {
 	baseDir string
 }
 
-// roleRefs resolves the play's role names to the matching roles defined in the
-// project. Standalone playbook files (no project) resolve to an empty list.
-func (r *mqlAnsiblePlay) roleRefs() ([]any, error) {
+// roleApplications exposes how the play applies each role — the application
+// directives (when, tags, vars) and the resolved role. Standalone playbook
+// files resolve the role to null.
+func (r *mqlAnsiblePlay) roleApplications() ([]any, error) {
+	apps := r.play.RoleApplications()
+	out := make([]any, 0, len(apps))
+	for i, app := range apps {
+		id := r.MqlID() + "/roleApplication[" + strconv.Itoa(i) + "]"
+		res, err := CreateResource(r.MqlRuntime, "ansible.play.roleApplication", map[string]*llx.RawData{
+			"__id": llx.StringData(id),
+			"name": llx.StringData(app.Name),
+			"when": llx.StringData(app.When),
+			"tags": llx.ArrayData(convert.SliceAnyToInterface(app.Tags), types.String),
+			"vars": dictMapData(app.Vars),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlApp := res.(*mqlAnsiblePlayRoleApplication)
+		mqlApp.roleName = app.Name
+		out = append(out, mqlApp)
+	}
+	return out, nil
+}
+
+type mqlAnsiblePlayRoleApplicationInternal struct {
+	roleName string
+}
+
+func (r *mqlAnsiblePlayRoleApplication) role() (*mqlAnsibleRole, error) {
 	proj := ansibleProject(r.MqlRuntime)
 	if proj == nil {
-		return []any{}, nil
+		r.Role.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return newMqlAnsibleRoleRefs(r.MqlRuntime, proj, r.play.Roles)
+	role := proj.RoleByName(r.roleName)
+	if role == nil {
+		r.Role.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlAnsibleRole(r.MqlRuntime, role)
+}
+
+// dictSlice converts a slice of maps to a []any of normalized dicts for
+// llx.ArrayData.
+func dictSlice(items []map[string]any) []any {
+	out := make([]any, len(items))
+	for i, m := range items {
+		out[i] = normalizeDict(m)
+	}
+	return out
 }
 
 func newMqlAnsibleHandler(runtime *plugin.Runtime, id string, handler *play.Handler) (*mqlAnsibleHandler, error) {
 	res, err := CreateResource(runtime, "ansible.handler", map[string]*llx.RawData{
 		"__id":   llx.StringData(id),
 		"name":   llx.StringData(handler.Name),
-		"action": llx.DictData(toAny(handler.Action)),
+		"action": dictData(handler.Action),
 	})
 	if err != nil {
 		return nil, err
@@ -116,8 +164,8 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id, baseDir string, task *play.T
 	res, err := CreateResource(runtime, "ansible.task", map[string]*llx.RawData{
 		"__id":            llx.StringData(id),
 		"name":            llx.StringData(task.Name),
-		"action":          llx.DictData(toAny(task.Action)),
-		"vars":            llx.MapData(task.Vars, types.Dict),
+		"action":          dictData(task.Action),
+		"vars":            dictMapData(task.Vars),
 		"tags":            llx.ArrayData(convert.SliceAnyToInterface(task.Tags), types.String),
 		"register":        llx.StringData(task.Register),
 		"become":          llx.BoolData(task.Become),
@@ -125,16 +173,16 @@ func newMqlAnsibleTask(runtime *plugin.Runtime, id, baseDir string, task *play.T
 		"becomeMethod":    llx.StringData(task.BecomeMethod),
 		"becomeFlags":     llx.StringData(task.BecomeFlags),
 		"delegateTo":      llx.StringData(task.DelegateTo),
-		"environment":     llx.MapData(task.Environment, types.Dict),
-		"noLog":           llx.DictData(task.NoLog),
-		"ignoreErrors":    llx.DictData(task.IgnoreErrors),
-		"runOnce":         llx.DictData(task.RunOnce),
+		"environment":     dictMapData(task.Environment),
+		"noLog":           dictData(task.NoLog),
+		"ignoreErrors":    dictData(task.IgnoreErrors),
+		"runOnce":         dictData(task.RunOnce),
 		"when":            llx.StringData(task.When),
 		"failedWhen":      llx.StringData(task.FailedWhen),
 		"changedWhen":     llx.StringData(task.ChangedWhen),
 		"notify":          llx.ArrayData(convert.SliceAnyToInterface(task.Notify), types.String),
-		"loop":            llx.DictData(task.Loop),
-		"loopControl":     llx.DictData(toAny(task.LoopControl)),
+		"loop":            dictData(task.Loop),
+		"loopControl":     dictData(task.LoopControl),
 		"importPlaybook":  llx.StringData(task.ImportPlaybook),
 		"includePlaybook": llx.StringData(task.IncludePlaybook),
 		"importTasks":     llx.StringData(task.ImportTasks),
@@ -165,6 +213,14 @@ func newMqlAnsibleTasks(runtime *plugin.Runtime, parentID, group, baseDir string
 type mqlAnsibleTaskInternal struct {
 	task    *play.Task
 	baseDir string
+}
+
+func (r *mqlAnsibleTask) module() (string, error) {
+	return r.task.Module(), nil
+}
+
+func (r *mqlAnsibleTask) moduleArgs() (any, error) {
+	return normalizeDict(r.task.ModuleArgs()), nil
 }
 
 func (r *mqlAnsiblePlay) preTasks() ([]any, error) {
@@ -256,12 +312,69 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
-// toAny converts a typed map to an untyped `any` for llx.DictData. Passing the
-// typed map directly would box the map type into the interface, which the dict
-// runtime cannot iterate the same way as map[string]any.
-func toAny(m map[string]any) any {
+// dictData wraps a YAML-decoded value as a dict RawData after normalizing it.
+func dictData(v any) *llx.RawData {
+	return llx.DictData(normalizeDict(v))
+}
+
+// dictMapData wraps a YAML-decoded map as a map[string]dict RawData, normalizing
+// each value.
+func dictMapData(m map[string]any) *llx.RawData {
 	if m == nil {
-		return nil
+		return llx.MapData(map[string]any(nil), types.Dict)
 	}
-	return m
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		out[k] = normalizeDict(v)
+	}
+	return llx.MapData(out, types.Dict)
+}
+
+// normalizeDict converts a YAML-decoded value into the subset of types the llx
+// dict representation accepts. yaml.v3 decodes integers as Go `int`, which the
+// dict-to-primitive conversion rejects, so numeric types are widened to int64 /
+// float64 and containers are normalized recursively.
+func normalizeDict(v any) any {
+	switch x := v.(type) {
+	case int:
+		return int64(x)
+	case int8:
+		return int64(x)
+	case int16:
+		return int64(x)
+	case int32:
+		return int64(x)
+	case uint:
+		return int64(x)
+	case uint8:
+		return int64(x)
+	case uint16:
+		return int64(x)
+	case uint32:
+		return int64(x)
+	case uint64:
+		return int64(x)
+	case float32:
+		return float64(x)
+	case []any:
+		out := make([]any, len(x))
+		for i := range x {
+			out[i] = normalizeDict(x[i])
+		}
+		return out
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for k, val := range x {
+			out[k] = normalizeDict(val)
+		}
+		return out
+	case map[any]any:
+		out := make(map[string]any, len(x))
+		for k, val := range x {
+			out[fmt.Sprint(k)] = normalizeDict(val)
+		}
+		return out
+	default:
+		return v
+	}
 }

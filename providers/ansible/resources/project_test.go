@@ -70,7 +70,7 @@ func TestProjectRolesAndDependencies(t *testing.T) {
 	require.Len(t, handlers, 1)
 	assert.Equal(t, "restart nginx", handlers[0].(*mqlAnsibleHandler).Name.Data)
 
-	assert.Equal(t, 80, nginx.Defaults.Data["nginx_port"])
+	assert.Equal(t, int64(80), nginx.Defaults.Data["nginx_port"])
 	assert.Equal(t, "nginx", nginx.Vars.Data["nginx_package_name"])
 	assert.Contains(t, nginx.Templates.Data, "nginx.conf.j2")
 	assert.Contains(t, nginx.Files.Data, "index.html")
@@ -89,7 +89,7 @@ func TestProjectRolesAndDependencies(t *testing.T) {
 	assert.Equal(t, "common", deps[0].(*mqlAnsibleRole).Name.Data)
 }
 
-func TestProjectPlayRoleRefs(t *testing.T) {
+func TestProjectPlayRoleApplications(t *testing.T) {
 	rt := newProjectRuntime(t)
 	proj := &mqlAnsibleProject{MqlRuntime: rt}
 
@@ -98,10 +98,164 @@ func TestProjectPlayRoleRefs(t *testing.T) {
 	plays, err := playbooks[0].(*mqlAnsiblePlaybook).plays()
 	require.NoError(t, err)
 
-	refs, err := plays[0].(*mqlAnsiblePlay).roleRefs()
+	apps, err := plays[0].(*mqlAnsiblePlay).roleApplications()
 	require.NoError(t, err)
-	require.Len(t, refs, 1)
-	assert.Equal(t, "nginx", refs[0].(*mqlAnsibleRole).Name.Data)
+	require.Len(t, apps, 1)
+
+	app := apps[0].(*mqlAnsiblePlayRoleApplication)
+	assert.Equal(t, "nginx", app.Name.Data)
+	assert.Equal(t, `ansible_os_family == "Debian"`, app.When.Data)
+	assert.Equal(t, []any{"web"}, app.Tags.Data)
+	assert.Equal(t, int64(8080), app.Vars.Data["http_port"])
+
+	role, err := app.role()
+	require.NoError(t, err)
+	require.NotNil(t, role)
+	assert.Equal(t, "nginx", role.Name.Data)
+}
+
+func TestProjectPlayLevelVars(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	playbooks, err := proj.playbooks()
+	require.NoError(t, err)
+	plays, err := playbooks[0].(*mqlAnsiblePlaybook).plays()
+	require.NoError(t, err)
+	p := plays[0].(*mqlAnsiblePlay)
+
+	assert.Equal(t, []any{"vars/secrets.yml"}, p.VarsFiles.Data)
+	assert.Equal(t, []any{"community.general"}, p.Collections.Data)
+	assert.Equal(t, "http://proxy.example.com:8080", p.Environment.Data["HTTP_PROXY"])
+	require.Len(t, p.VarsPrompt.Data, 1)
+	prompt := p.VarsPrompt.Data[0].(map[string]any)
+	assert.Equal(t, "admin_password", prompt["name"])
+}
+
+func TestProjectTaskModule(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	playbooks, err := proj.playbooks()
+	require.NoError(t, err)
+	plays, err := playbooks[0].(*mqlAnsiblePlaybook).plays()
+	require.NoError(t, err)
+
+	tasks, err := plays[0].(*mqlAnsiblePlay).tasks()
+	require.NoError(t, err)
+	require.Len(t, tasks, 1)
+
+	task := tasks[0].(*mqlAnsibleTask)
+	module, err := task.module()
+	require.NoError(t, err)
+	assert.Equal(t, "ansible.builtin.service", module)
+
+	args, err := task.moduleArgs()
+	require.NoError(t, err)
+	argMap, ok := args.(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "nginx", argMap["name"])
+	assert.Equal(t, "started", argMap["state"])
+}
+
+func TestProjectRoleArgumentSpecs(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	roles, err := proj.roles()
+	require.NoError(t, err)
+	nginx := findRole(t, roles, "nginx")
+
+	specs, ok := nginx.ArgumentSpecs.Data.(map[string]any)
+	require.True(t, ok)
+	main, ok := specs["main"].(map[string]any)
+	require.True(t, ok, "argument_specs should have a main entrypoint")
+	assert.Equal(t, "Configure nginx", main["short_description"])
+}
+
+func TestProjectPlugins(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	plugins, err := proj.plugins()
+	require.NoError(t, err)
+	require.Len(t, plugins, 2)
+
+	byType := map[string]string{}
+	for _, p := range plugins {
+		pl := p.(*mqlAnsiblePlugin)
+		byType[pl.Type.Data] = pl.Name.Data
+	}
+	assert.Equal(t, "acme_widget", byType["module"])
+	assert.Equal(t, "acme_filters", byType["filter"])
+}
+
+func TestProjectVendoredCollections(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	collections, err := proj.collections()
+	require.NoError(t, err)
+	require.Len(t, collections, 1)
+
+	c := collections[0].(*mqlAnsibleCollection)
+	assert.Equal(t, "acme.util", c.Name.Data)
+	assert.Equal(t, "acme", c.Namespace.Data)
+	assert.Equal(t, "2.3.1", c.Version.Data)
+}
+
+func TestProjectManifest(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	manifest, err := proj.manifest()
+	require.NoError(t, err)
+	require.NotNil(t, manifest)
+	assert.Equal(t, "example", manifest.Namespace.Data)
+	assert.Equal(t, "webstack", manifest.Name.Data)
+	assert.Equal(t, "1.0.0", manifest.Version.Data)
+}
+
+func TestProjectInlineVaultVars(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	vault, err := proj.vault()
+	require.NoError(t, err)
+
+	vars, err := vault.variables()
+	require.NoError(t, err)
+	require.Len(t, vars, 1)
+
+	vv := vars[0].(*mqlAnsibleVaultVariable)
+	assert.Equal(t, "db_password", vv.Key.Data)
+	assert.Contains(t, vv.File.Data, "webservers.yml")
+}
+
+func TestProjectVaultId(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	vault, err := proj.vault()
+	require.NoError(t, err)
+	files, err := vault.files()
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	// The fully-encrypted fixture has no vault-id label.
+	assert.Equal(t, "", files[0].(*mqlAnsibleVaultFile).VaultId.Data)
+}
+
+func TestProjectTooling(t *testing.T) {
+	rt := newProjectRuntime(t)
+	proj := &mqlAnsibleProject{MqlRuntime: rt}
+
+	lint, err := proj.lintConfig()
+	require.NoError(t, err)
+	assert.Contains(t, lint, ".ansible-lint")
+
+	scenarios, err := proj.moleculeScenarios()
+	require.NoError(t, err)
+	assert.Equal(t, []any{"default"}, scenarios)
 }
 
 func TestProjectImportedTasks(t *testing.T) {
@@ -148,7 +302,7 @@ func TestProjectInventory(t *testing.T) {
 	require.NoError(t, err)
 	web1 := findHost(t, hosts, "web1.example.com")
 	assert.Equal(t, "10.0.0.1", web1.Vars.Data["ansible_host"])
-	assert.Equal(t, 1, web1.Vars.Data["server_id"])
+	assert.Equal(t, int64(1), web1.Vars.Data["server_id"])
 	assert.Contains(t, web1.Groups.Data, "webservers")
 }
 

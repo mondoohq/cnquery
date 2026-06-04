@@ -9,6 +9,7 @@ package project
 import (
 	"os"
 	"path/filepath"
+	"sort"
 
 	"go.mondoo.com/mql/v13/providers/ansible/play"
 	"gopkg.in/yaml.v3"
@@ -16,13 +17,19 @@ import (
 
 // Project is the static model of an Ansible project directory.
 type Project struct {
-	Root         string
-	Playbooks    []*PlaybookFile
-	Roles        []*Role
-	Inventory    *Inventory
-	Requirements *Requirements
-	Config       *Config
-	VaultFiles   []*VaultFile
+	Root              string
+	Playbooks         []*PlaybookFile
+	Roles             []*Role
+	Inventory         *Inventory
+	Requirements      *Requirements
+	Config            *Config
+	VaultFiles        []*VaultFile
+	VaultVars         []*VaultVariable
+	Plugins           []*Plugin
+	Collections       []*VendoredCollection
+	Manifest          *Manifest
+	LintConfig        string
+	MoleculeScenarios []string
 }
 
 // PlaybookFile pairs a playbook file path with its parsed plays.
@@ -76,7 +83,46 @@ func Load(root string) (*Project, error) {
 	}
 	p.VaultFiles = vault
 
+	vaultVars, err := detectInlineVaultVars(abs)
+	if err != nil {
+		return nil, err
+	}
+	p.VaultVars = vaultVars
+
+	plugins, err := loadPlugins(abs)
+	if err != nil {
+		return nil, err
+	}
+	p.Plugins = plugins
+
+	collections, err := loadVendoredCollections(abs)
+	if err != nil {
+		return nil, err
+	}
+	p.Collections = collections
+
+	p.Manifest = loadManifest(abs)
+	p.LintConfig = firstExisting(filepath.Join(abs, ".ansible-lint"), filepath.Join(abs, ".config", "ansible-lint.yml"))
+	p.MoleculeScenarios = loadMoleculeScenarios(abs)
+
 	return p, nil
+}
+
+// loadMoleculeScenarios returns the names of the scenarios under molecule/ —
+// each subdirectory is a scenario — as a signal of test maturity.
+func loadMoleculeScenarios(root string) []string {
+	entries, err := os.ReadDir(filepath.Join(root, "molecule"))
+	if err != nil {
+		return nil
+	}
+	var scenarios []string
+	for _, e := range entries {
+		if e.IsDir() {
+			scenarios = append(scenarios, e.Name())
+		}
+	}
+	sort.Strings(scenarios)
+	return scenarios
 }
 
 // RoleByName returns the role with the given name, or nil. Role references in

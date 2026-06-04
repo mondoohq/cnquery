@@ -47,7 +47,28 @@ func TestPlaybookDecoding(t *testing.T) {
 
 		play := playbook[0]
 		assert.Equal(t, "webservers", play.Hosts)
-		assert.Equal(t, []string{"common", "webservers"}, play.Roles)
+		assert.Equal(t, []string{"common", "webservers"}, play.RoleNames())
+	})
+
+	t.Run("load playbook with parameterized roles", func(t *testing.T) {
+		playbook, err := DecodePlaybook([]byte(`---
+- hosts: web
+  roles:
+    - common
+    - role: nginx
+      when: ansible_os_family == "Debian"
+      tags: [web, frontend]
+      http_port: 8080
+`))
+		require.NoError(t, err)
+
+		apps := playbook[0].RoleApplications()
+		require.Len(t, apps, 2)
+		assert.Equal(t, "common", apps[0].Name)
+		assert.Equal(t, "nginx", apps[1].Name)
+		assert.Equal(t, `ansible_os_family == "Debian"`, apps[1].When)
+		assert.Equal(t, []string{"web", "frontend"}, apps[1].Tags)
+		assert.Equal(t, 8080, apps[1].Vars["http_port"])
 	})
 
 	t.Run("load playbook with vars", func(t *testing.T) {

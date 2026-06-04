@@ -4,6 +4,10 @@
 package play
 
 import (
+	"maps"
+	"sort"
+	"strings"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -68,9 +72,28 @@ type Play struct {
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html
 	Tags []string `yaml:"tags,omitempty"`
 
-	// Roles are a list of roles to be applied to the play
+	// Roles are a list of roles to be applied to the play. An entry is either a
+	// bare role name or a mapping with a `role` key plus application directives
+	// (when, tags, vars), so it is decoded as any and normalized by
+	// RoleApplications.
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
-	Roles []string `yaml:"roles,omitempty"`
+	Roles []any `yaml:"roles,omitempty"`
+
+	// VarsFiles lists files of variables loaded into the play
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-files
+	VarsFiles []string `yaml:"vars_files,omitempty"`
+
+	// VarsPrompt defines variables prompted for interactively at runtime
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html
+	VarsPrompt []map[string]any `yaml:"vars_prompt,omitempty"`
+
+	// Environment sets environment variables for all tasks in the play
+	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html
+	Environment map[string]any `yaml:"environment,omitempty"`
+
+	// Collections lists the collection search order for unqualified module names
+	// see https://docs.ansible.com/ansible/latest/collections_guide/collections_using_playbooks.html
+	Collections []string `yaml:"collections,omitempty"`
 
 	// PreTasks run before roles
 	// see https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles
@@ -254,4 +277,160 @@ func DecodeHandlerList(data []byte) ([]*Handler, error) {
 		return nil, err
 	}
 	return handlers, nil
+}
+
+// RoleApplication is a single role applied by a play, including the directives
+// (when, tags, vars) supplied at the application site.
+type RoleApplication struct {
+	Name string
+	When string
+	Tags []string
+	Vars map[string]any
+}
+
+// roleApplicationDirectives are the keys of a role mapping that are application
+// directives rather than role parameters. Everything else becomes a role var.
+var roleApplicationDirectives = map[string]bool{
+	"role": true, "name": true, "when": true, "tags": true, "vars": true,
+	"become": true, "become_user": true, "become_method": true, "become_flags": true,
+	"delegate_to": true,
+}
+
+// RoleApplications normalizes the play's roles into role applications. A bare
+// string is the role name; a mapping carries the name (under `role` or `name`)
+// plus its directives and parameters.
+func (p *Play) RoleApplications() []RoleApplication {
+	apps := make([]RoleApplication, 0, len(p.Roles))
+	for _, entry := range p.Roles {
+		switch v := entry.(type) {
+		case string:
+			apps = append(apps, RoleApplication{Name: v})
+		case map[string]any:
+			app := RoleApplication{
+				Name: roleEntryName(v),
+				When: stringifyCondition(v["when"]),
+				Tags: anyToStringSlice(v["tags"]),
+				Vars: roleEntryVars(v),
+			}
+			apps = append(apps, app)
+		}
+	}
+	return apps
+}
+
+// RoleNames returns just the role names a play applies, preserving order.
+func (p *Play) RoleNames() []string {
+	apps := p.RoleApplications()
+	names := make([]string, 0, len(apps))
+	for _, a := range apps {
+		names = append(names, a.Name)
+	}
+	return names
+}
+
+func roleEntryName(m map[string]any) string {
+	if r, ok := m["role"].(string); ok {
+		return r
+	}
+	if n, ok := m["name"].(string); ok {
+		return n
+	}
+	return ""
+}
+
+func roleEntryVars(m map[string]any) map[string]any {
+	vars := map[string]any{}
+	if explicit, ok := m["vars"].(map[string]any); ok {
+		maps.Copy(vars, explicit)
+	}
+	for k, v := range m {
+		if !roleApplicationDirectives[k] {
+			vars[k] = v
+		}
+	}
+	if len(vars) == 0 {
+		return nil
+	}
+	return vars
+}
+
+// Module returns the module a task invokes — the action key as written in the
+// source (for example `ansible.builtin.copy` or `command`), or "" when the task
+// is a pure control-flow construct (block, include, etc.).
+func (t *Task) Module() string {
+	if act, ok := t.Action["action"].(string); ok {
+		if fields := strings.Fields(act); len(fields) > 0 {
+			return fields[0]
+		}
+	}
+	keys := make([]string, 0, len(t.Action))
+	for k := range t.Action {
+		if !taskInlineDirectives[k] {
+			keys = append(keys, k)
+		}
+	}
+	if len(keys) == 0 {
+		return ""
+	}
+	sort.Strings(keys) // deterministic when more than one non-directive key
+	return keys[0]
+}
+
+// ModuleArgs returns the arguments passed to the task's module: the mapping
+// under the module key, or the free-form argument string for the `action:`
+// shorthand. Returns nil when there is no module.
+func (t *Task) ModuleArgs() any {
+	if act, ok := t.Action["action"].(string); ok {
+		if fields := strings.Fields(act); len(fields) > 1 {
+			return strings.Join(fields[1:], " ")
+		}
+		return nil
+	}
+	name := t.Module()
+	if name == "" {
+		return nil
+	}
+	return t.Action[name]
+}
+
+// taskInlineDirectives are inline action-map keys that are task directives
+// rather than the module itself. Most directives are explicit struct fields;
+// these are the ones Ansible accepts inline that are not.
+var taskInlineDirectives = map[string]bool{
+	"action": true, "args": true, "local_action": true,
+	"with_items": true, "until": true, "retries": true, "delay": true,
+	"check_mode": true, "diff": true, "throttle": true, "timeout": true,
+	"poll": true, "async": true,
+}
+
+func stringifyCondition(v any) string {
+	switch c := v.(type) {
+	case string:
+		return c
+	case []any:
+		parts := make([]string, 0, len(c))
+		for _, item := range c {
+			if s, ok := item.(string); ok {
+				parts = append(parts, s)
+			}
+		}
+		return strings.Join(parts, " and ")
+	}
+	return ""
+}
+
+func anyToStringSlice(v any) []string {
+	switch t := v.(type) {
+	case string:
+		return []string{t}
+	case []any:
+		out := make([]string, 0, len(t))
+		for _, item := range t {
+			if s, ok := item.(string); ok {
+				out = append(out, s)
+			}
+		}
+		return out
+	}
+	return nil
 }

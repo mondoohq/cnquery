@@ -101,6 +101,84 @@ func (r *mqlAnsibleProject) requirements() (*mqlAnsibleGalaxyRequirements, error
 	return res.(*mqlAnsibleGalaxyRequirements), nil
 }
 
+func (r *mqlAnsibleProject) collections() ([]any, error) {
+	proj := ansibleProject(r.MqlRuntime)
+	if proj == nil {
+		return []any{}, nil
+	}
+	out := make([]any, 0, len(proj.Collections))
+	for _, c := range proj.Collections {
+		res, err := CreateResource(r.MqlRuntime, "ansible.collection", map[string]*llx.RawData{
+			"__id":      llx.StringData(c.Path),
+			"name":      llx.StringData(c.Name),
+			"namespace": llx.StringData(c.Namespace),
+			"version":   llx.StringData(c.Version),
+			"path":      llx.StringData(c.Path),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlAnsibleProject) plugins() ([]any, error) {
+	proj := ansibleProject(r.MqlRuntime)
+	if proj == nil {
+		return []any{}, nil
+	}
+	out := make([]any, 0, len(proj.Plugins))
+	for _, p := range proj.Plugins {
+		res, err := CreateResource(r.MqlRuntime, "ansible.plugin", map[string]*llx.RawData{
+			"__id": llx.StringData(p.Path),
+			"name": llx.StringData(p.Name),
+			"type": llx.StringData(p.Type),
+			"path": llx.StringData(p.Path),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlAnsibleProject) manifest() (*mqlAnsibleGalaxyManifest, error) {
+	proj := ansibleProject(r.MqlRuntime)
+	if proj == nil || proj.Manifest == nil {
+		r.Manifest.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	m := proj.Manifest
+	res, err := CreateResource(r.MqlRuntime, "ansible.galaxy.manifest", map[string]*llx.RawData{
+		"__id":      llx.StringData(m.Path),
+		"path":      llx.StringData(m.Path),
+		"namespace": llx.StringData(m.Namespace),
+		"name":      llx.StringData(m.Name),
+		"version":   llx.StringData(m.Version),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAnsibleGalaxyManifest), nil
+}
+
+func (r *mqlAnsibleProject) lintConfig() (string, error) {
+	if proj := ansibleProject(r.MqlRuntime); proj != nil {
+		return proj.LintConfig, nil
+	}
+	return "", nil
+}
+
+func (r *mqlAnsibleProject) moleculeScenarios() ([]any, error) {
+	proj := ansibleProject(r.MqlRuntime)
+	if proj == nil {
+		return []any{}, nil
+	}
+	return convert.SliceAnyToInterface(proj.MoleculeScenarios), nil
+}
+
 func (r *mqlAnsibleProject) config() (*mqlAnsibleConfig, error) {
 	proj := ansibleProject(r.MqlRuntime)
 	if proj == nil || proj.Config == nil {
@@ -110,12 +188,12 @@ func (r *mqlAnsibleProject) config() (*mqlAnsibleConfig, error) {
 	cfg := proj.Config
 	sections := make(map[string]any, len(cfg.Sections))
 	for name, kv := range cfg.Sections {
-		sections[name] = toAny(kv)
+		sections[name] = kv
 	}
 	res, err := CreateResource(r.MqlRuntime, "ansible.config", map[string]*llx.RawData{
 		"__id":            llx.StringData(cfg.Path),
 		"path":            llx.StringData(cfg.Path),
-		"sections":        llx.MapData(sections, types.Dict),
+		"sections":        dictMapData(sections),
 		"hostKeyChecking": llx.BoolData(cfg.HostKeyChecking),
 		"become":          llx.BoolData(cfg.Become),
 		"becomeUser":      llx.StringData(cfg.BecomeUser),
@@ -174,13 +252,14 @@ type mqlAnsibleRoleInternal struct {
 
 func newMqlAnsibleRole(runtime *plugin.Runtime, role *project.Role) (*mqlAnsibleRole, error) {
 	res, err := CreateResource(runtime, "ansible.role", map[string]*llx.RawData{
-		"__id":      llx.StringData(role.Path),
-		"name":      llx.StringData(role.Name),
-		"path":      llx.StringData(role.Path),
-		"defaults":  llx.MapData(role.Defaults, types.Dict),
-		"vars":      llx.MapData(role.Vars, types.Dict),
-		"templates": llx.ArrayData(convert.SliceAnyToInterface(role.Templates), types.String),
-		"files":     llx.ArrayData(convert.SliceAnyToInterface(role.Files), types.String),
+		"__id":          llx.StringData(role.Path),
+		"name":          llx.StringData(role.Name),
+		"path":          llx.StringData(role.Path),
+		"defaults":      dictMapData(role.Defaults),
+		"vars":          dictMapData(role.Vars),
+		"argumentSpecs": dictData(role.ArgumentSpecs),
+		"templates":     llx.ArrayData(convert.SliceAnyToInterface(role.Templates), types.String),
+		"files":         llx.ArrayData(convert.SliceAnyToInterface(role.Files), types.String),
 	})
 	if err != nil {
 		return nil, err
@@ -207,7 +286,7 @@ func (r *mqlAnsibleRole) meta() (*mqlAnsibleRoleMeta, error) {
 	res, err := CreateResource(r.MqlRuntime, "ansible.role.meta", map[string]*llx.RawData{
 		"__id":              llx.StringData(r.MqlID() + "/meta"),
 		"minAnsibleVersion": llx.StringData(meta.MinAnsibleVersion),
-		"galaxyInfo":        llx.DictData(toAny(meta.GalaxyInfo)),
+		"galaxyInfo":        dictData(meta.GalaxyInfo),
 		"dependencies":      llx.ArrayData(convert.SliceAnyToInterface(meta.Dependencies), types.String),
 	})
 	if err != nil {
@@ -257,7 +336,7 @@ func (r *mqlAnsibleInventory) groups() ([]any, error) {
 			"name":     llx.StringData(g.Name),
 			"hosts":    llx.ArrayData(convert.SliceAnyToInterface(g.Hosts), types.String),
 			"children": llx.ArrayData(convert.SliceAnyToInterface(g.Children), types.String),
-			"vars":     llx.MapData(g.Vars, types.Dict),
+			"vars":     dictMapData(g.Vars),
 		})
 		if err != nil {
 			return nil, err
@@ -278,7 +357,7 @@ func (r *mqlAnsibleInventory) hosts() ([]any, error) {
 			"__id":   llx.StringData(proj.Root + "/host/" + h.Name),
 			"name":   llx.StringData(h.Name),
 			"groups": llx.ArrayData(convert.SliceAnyToInterface(h.Groups), types.String),
-			"vars":   llx.MapData(h.Vars, types.Dict),
+			"vars":   dictMapData(h.Vars),
 		})
 		if err != nil {
 			return nil, err
@@ -344,10 +423,31 @@ func (r *mqlAnsibleVault) files() ([]any, error) {
 	out := make([]any, 0, len(proj.VaultFiles))
 	for _, vf := range proj.VaultFiles {
 		res, err := CreateResource(r.MqlRuntime, "ansible.vault.file", map[string]*llx.RawData{
-			"__id":   llx.StringData(vf.Path),
-			"path":   llx.StringData(vf.Path),
-			"format": llx.StringData(vf.Format),
-			"cipher": llx.StringData(vf.Cipher),
+			"__id":    llx.StringData(vf.Path),
+			"path":    llx.StringData(vf.Path),
+			"format":  llx.StringData(vf.Format),
+			"cipher":  llx.StringData(vf.Cipher),
+			"vaultId": llx.StringData(vf.VaultID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlAnsibleVault) variables() ([]any, error) {
+	proj := ansibleProject(r.MqlRuntime)
+	if proj == nil {
+		return []any{}, nil
+	}
+	out := make([]any, 0, len(proj.VaultVars))
+	for _, vv := range proj.VaultVars {
+		res, err := CreateResource(r.MqlRuntime, "ansible.vault.variable", map[string]*llx.RawData{
+			"__id": llx.StringData(vv.Path + "#" + vv.Key),
+			"key":  llx.StringData(vv.Key),
+			"file": llx.StringData(vv.Path),
 		})
 		if err != nil {
 			return nil, err
