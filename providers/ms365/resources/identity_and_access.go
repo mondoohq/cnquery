@@ -352,6 +352,22 @@ func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.
 	return resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance), nil
 }
 
+// roleDefinition resolves the role definition this eligibility grants.
+func (a *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) roleDefinition() (*mqlMicrosoftRolemanagementRoledefinition, error) {
+	id := a.RoleDefinitionId.Data
+	if id == "" {
+		a.RoleDefinition.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "microsoft.rolemanagement.roledefinition", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftRolemanagementRoledefinition), nil
+}
+
 // Implementation for the new identityAndSignIn resource
 func (a *mqlMicrosoftIdentityAndAccess) identityAndSignIn() (*mqlMicrosoftIdentityAndAccessIdentityAndSignIn, error) {
 	resource, err := CreateResource(a.MqlRuntime, "microsoft.identityAndAccess.identityAndSignIn", map[string]*llx.RawData{

@@ -113,7 +113,9 @@ microsoft.conditionalAccess.policy.conditions.authenticationFlows.transferMethod
 microsoft.conditionalAccess.policy.conditions.clientAppTypes 11.1.38
 microsoft.conditionalAccess.policy.conditions.clientApplications 11.1.38
 microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipals 11.1.38
+microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipalsRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipals 11.1.38
+microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipalsRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.id 11.1.38
 microsoft.conditionalAccess.policy.conditions.insiderRiskLevels 11.1.38
 microsoft.conditionalAccess.policy.conditions.locations 11.1.38
@@ -127,11 +129,17 @@ microsoft.conditionalAccess.policy.conditions.signInRiskLevels 11.1.38
 microsoft.conditionalAccess.policy.conditions.userRiskLevels 11.1.38
 microsoft.conditionalAccess.policy.conditions.users 11.1.38
 microsoft.conditionalAccess.policy.conditions.users.excludeGroups 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.excludeGroupsRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.users.excludeRoles 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.excludeRolesRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.users.excludeUsers 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.excludeUsersRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.users.includeGroups 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.includeGroupsRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.users.includeRoles 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.includeRolesRefs 13.3.1
 microsoft.conditionalAccess.policy.conditions.users.includeUsers 11.1.38
+microsoft.conditionalAccess.policy.conditions.users.includeUsersRefs 13.3.1
 microsoft.conditionalAccess.policy.createdDateTime 11.1.38
 microsoft.conditionalAccess.policy.displayName 11.1.38
 microsoft.conditionalAccess.policy.grantControls 11.1.38
@@ -338,6 +346,7 @@ microsoft.devicemanagement.manageddevice.serialNumber 11.1.40
 microsoft.devicemanagement.manageddevice.subscriberCarrier 11.1.102
 microsoft.devicemanagement.manageddevice.totalStorageSpaceInBytes 11.1.102
 microsoft.devicemanagement.manageddevice.udid 11.1.40
+microsoft.devicemanagement.manageddevice.user 13.3.1
 microsoft.devicemanagement.manageddevice.userDisplayName 11.1.40
 microsoft.devicemanagement.manageddevice.userId 11.1.40
 microsoft.devicemanagement.manageddevice.userPrincipalName 11.1.40
@@ -361,6 +370,7 @@ microsoft.devicemanagement.policyAssignment 13.0.12
 microsoft.devicemanagement.policyAssignment.excluded 13.0.12
 microsoft.devicemanagement.policyAssignment.filterId 13.0.12
 microsoft.devicemanagement.policyAssignment.filterType 13.0.12
+microsoft.devicemanagement.policyAssignment.group 13.3.1
 microsoft.devicemanagement.policyAssignment.groupId 13.0.12
 microsoft.devicemanagement.policyAssignment.id 13.0.12
 microsoft.devicemanagement.policyAssignment.targetType 13.0.12
@@ -573,6 +583,7 @@ microsoft.identityAndAccess.roleEligibilityScheduleInstance.endDateTime 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.id 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.memberType 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.principalId 11.1.41
+microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinition 13.3.1
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinitionId 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.startDateTime 11.1.41
@@ -628,6 +639,7 @@ microsoft.rolemanagement.roleassignment 9.0.0
 microsoft.rolemanagement.roleassignment.id 9.0.0
 microsoft.rolemanagement.roleassignment.principal 9.0.0
 microsoft.rolemanagement.roleassignment.principalId 9.0.0
+microsoft.rolemanagement.roleassignment.roleDefinition 13.3.1
 microsoft.rolemanagement.roleassignment.roleDefinitionId 9.0.0
 microsoft.rolemanagement.roledefinition 9.0.0
 microsoft.rolemanagement.roledefinition.assignments 9.0.0

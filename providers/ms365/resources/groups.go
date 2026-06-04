@@ -143,32 +143,7 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 	}
 	res := []any{}
 	for _, grp := range grps {
-		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
-			map[string]*llx.RawData{
-				"id":                            llx.StringDataPtr(grp.GetId()),
-				"displayName":                   llx.StringDataPtr(grp.GetDisplayName()),
-				"mail":                          llx.StringDataPtr(grp.GetMail()),
-				"mailEnabled":                   llx.BoolDataPtr(grp.GetMailEnabled()),
-				"mailNickname":                  llx.StringDataPtr(grp.GetMailNickname()),
-				"securityEnabled":               llx.BoolDataPtr(grp.GetSecurityEnabled()),
-				"visibility":                    llx.StringDataPtr(grp.GetVisibility()),
-				"groupTypes":                    llx.ArrayData(llx.TArr2Raw(grp.GetGroupTypes()), types.String),
-				"membershipRule":                llx.StringDataPtr(grp.GetMembershipRule()),
-				"membershipRuleProcessingState": llx.StringDataPtr(grp.GetMembershipRuleProcessingState()),
-				"createdDateTime":               llx.TimeDataPtr(grp.GetCreatedDateTime()),
-				"description":                   llx.StringDataPtr(grp.GetDescription()),
-				"expirationDateTime":            llx.TimeDataPtr(grp.GetExpirationDateTime()),
-				"isAssignableToRole":            llx.BoolDataPtr(grp.GetIsAssignableToRole()),
-				"renewedDateTime":               llx.TimeDataPtr(grp.GetRenewedDateTime()),
-				"onPremisesSyncEnabled":         llx.BoolDataPtr(grp.GetOnPremisesSyncEnabled()),
-				"onPremisesLastSyncDateTime":    llx.TimeDataPtr(grp.GetOnPremisesLastSyncDateTime()),
-				"classification":                llx.StringDataPtr(grp.GetClassification()),
-				"deletedDateTime":               llx.TimeDataPtr(grp.GetDeletedDateTime()),
-				"proxyAddresses":                llx.ArrayData(llx.TArr2Raw(grp.GetProxyAddresses()), types.String),
-				"theme":                         llx.StringDataPtr(grp.GetTheme()),
-				"preferredLanguage":             llx.StringDataPtr(grp.GetPreferredLanguage()),
-				"preferredDataLocation":         llx.StringDataPtr(grp.GetPreferredDataLocation()),
-			})
+		graphGrp, err := newMqlMicrosoftGroup(a.MqlRuntime, grp)
 		if err != nil {
 			return nil, err
 		}
@@ -176,6 +151,72 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// newMqlMicrosoftGroup builds a microsoft.group resource from a Graph group.
+func newMqlMicrosoftGroup(runtime *plugin.Runtime, grp models.Groupable) (*mqlMicrosoftGroup, error) {
+	graphGrp, err := CreateResource(runtime, "microsoft.group",
+		map[string]*llx.RawData{
+			"id":                            llx.StringDataPtr(grp.GetId()),
+			"displayName":                   llx.StringDataPtr(grp.GetDisplayName()),
+			"mail":                          llx.StringDataPtr(grp.GetMail()),
+			"mailEnabled":                   llx.BoolDataPtr(grp.GetMailEnabled()),
+			"mailNickname":                  llx.StringDataPtr(grp.GetMailNickname()),
+			"securityEnabled":               llx.BoolDataPtr(grp.GetSecurityEnabled()),
+			"visibility":                    llx.StringDataPtr(grp.GetVisibility()),
+			"groupTypes":                    llx.ArrayData(llx.TArr2Raw(grp.GetGroupTypes()), types.String),
+			"membershipRule":                llx.StringDataPtr(grp.GetMembershipRule()),
+			"membershipRuleProcessingState": llx.StringDataPtr(grp.GetMembershipRuleProcessingState()),
+			"createdDateTime":               llx.TimeDataPtr(grp.GetCreatedDateTime()),
+			"description":                   llx.StringDataPtr(grp.GetDescription()),
+			"expirationDateTime":            llx.TimeDataPtr(grp.GetExpirationDateTime()),
+			"isAssignableToRole":            llx.BoolDataPtr(grp.GetIsAssignableToRole()),
+			"renewedDateTime":               llx.TimeDataPtr(grp.GetRenewedDateTime()),
+			"onPremisesSyncEnabled":         llx.BoolDataPtr(grp.GetOnPremisesSyncEnabled()),
+			"onPremisesLastSyncDateTime":    llx.TimeDataPtr(grp.GetOnPremisesLastSyncDateTime()),
+			"classification":                llx.StringDataPtr(grp.GetClassification()),
+			"deletedDateTime":               llx.TimeDataPtr(grp.GetDeletedDateTime()),
+			"proxyAddresses":                llx.ArrayData(llx.TArr2Raw(grp.GetProxyAddresses()), types.String),
+			"theme":                         llx.StringDataPtr(grp.GetTheme()),
+			"preferredLanguage":             llx.StringDataPtr(grp.GetPreferredLanguage()),
+			"preferredDataLocation":         llx.StringDataPtr(grp.GetPreferredDataLocation()),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return graphGrp.(*mqlMicrosoftGroup), nil
+}
+
+// initMicrosoftGroup resolves a single group by its object ID, enabling
+// microsoft.group(id: "...") lookups and typed group references.
+func initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// only resolve when handed a bare id; a fully populated group passes
+	// through untouched
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+	rawId, ok := args["id"]
+	if !ok {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	grp, err := graphClient.Groups().ByGroupId(rawId.Value.(string)).Get(ctx, nil)
+	if err != nil {
+		return nil, nil, transformError(err)
+	}
+
+	mqlGroup, err := newMqlMicrosoftGroup(runtime, grp)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlGroup, nil
 }
 
 func (a *mqlMicrosoftGroup) owners() ([]any, error) {

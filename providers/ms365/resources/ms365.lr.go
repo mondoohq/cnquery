@@ -411,7 +411,7 @@ func init() {
 			Create: createMicrosoftUserAuthenticationMethodsUserRegistrationDetails,
 		},
 		"microsoft.group": {
-			// to override args, implement: initMicrosoftGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftGroup,
 			Create: createMicrosoftGroup,
 		},
 		"microsoft.group.owner": {
@@ -579,7 +579,7 @@ func init() {
 			Create: createMicrosoftRolemanagement,
 		},
 		"microsoft.rolemanagement.roledefinition": {
-			// to override args, implement: initMicrosoftRolemanagementRoledefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftRolemanagementRoledefinition,
 			Create: createMicrosoftRolemanagementRoledefinition,
 		},
 		"microsoft.rolemanagement.roleassignment": {
@@ -1147,6 +1147,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleDefinitionId()).ToDataRes(types.String)
 	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetRoleDefinition()).ToDataRes(types.Resource("microsoft.rolemanagement.roledefinition"))
+	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.directoryScopeId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).GetDirectoryScopeId()).ToDataRes(types.String)
 	},
@@ -1474,6 +1477,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).GetIncludeServicePrincipals()).ToDataRes(types.Array(types.String))
 	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipalsRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).GetExcludeServicePrincipalsRefs()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipalsRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).GetIncludeServicePrincipalsRefs()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
+	},
 	"microsoft.conditionalAccess.policy.conditions.platforms.excludePlatforms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).GetExcludePlatforms()).ToDataRes(types.Array(types.String))
 	},
@@ -1506,6 +1515,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.conditionalAccess.policy.conditions.users.excludeRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeRoles()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeUsersRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeUsersRefs()).ToDataRes(types.Array(types.Resource("microsoft.user")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeUsersRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeUsersRefs()).ToDataRes(types.Array(types.Resource("microsoft.user")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeGroupsRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeGroupsRefs()).ToDataRes(types.Array(types.Resource("microsoft.group")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeGroupsRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeGroupsRefs()).ToDataRes(types.Array(types.Resource("microsoft.group")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeRolesRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetIncludeRolesRefs()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeRolesRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).GetExcludeRolesRefs()).ToDataRes(types.Array(types.Resource("microsoft.rolemanagement.roledefinition")))
 	},
 	"microsoft.conditionalAccess.policy.conditions.locations.includeLocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicyConditionsLocations).GetIncludeLocations()).ToDataRes(types.Array(types.String))
@@ -2968,6 +2995,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.rolemanagement.roleassignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetRoleDefinitionId()).ToDataRes(types.String)
 	},
+	"microsoft.rolemanagement.roleassignment.roleDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetRoleDefinition()).ToDataRes(types.Resource("microsoft.rolemanagement.roledefinition"))
+	},
 	"microsoft.rolemanagement.roleassignment.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftRolemanagementRoleassignment).GetPrincipalId()).ToDataRes(types.String)
 	},
@@ -3042,6 +3072,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.manageddevice.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUserId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetUser()).ToDataRes(types.Resource("microsoft.user"))
 	},
 	"microsoft.devicemanagement.manageddevice.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetName()).ToDataRes(types.String)
@@ -3246,6 +3279,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.policyAssignment.groupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetGroupId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.policyAssignment.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetGroup()).ToDataRes(types.Resource("microsoft.group"))
 	},
 	"microsoft.devicemanagement.policyAssignment.excluded": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetExcluded()).ToDataRes(types.Bool)
@@ -4846,6 +4882,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).RoleDefinition, ok = plugin.RawToTValue[*mqlMicrosoftRolemanagementRoledefinition](v.Value, v.Error)
+		return
+	},
 	"microsoft.identityAndAccess.roleEligibilityScheduleInstance.directoryScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance).DirectoryScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5382,6 +5422,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).IncludeServicePrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.excludeServicePrincipalsRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).ExcludeServicePrincipalsRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.clientApplications.includeServicePrincipalsRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsClientApplications).IncludeServicePrincipalsRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.policy.conditions.platforms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsPlatforms).__id, ok = v.Value.(string)
 		return
@@ -5436,6 +5484,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.conditionalAccess.policy.conditions.users.excludeRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeUsersRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeUsersRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeUsersRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeUsersRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeGroupsRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeGroupsRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeGroupsRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeGroupsRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.includeRolesRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).IncludeRolesRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.conditions.users.excludeRolesRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers).ExcludeRolesRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.policy.conditions.locations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7610,6 +7682,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftRolemanagementRoleassignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.rolemanagement.roleassignment.roleDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftRolemanagementRoleassignment).RoleDefinition, ok = plugin.RawToTValue[*mqlMicrosoftRolemanagementRoledefinition](v.Value, v.Error)
+		return
+	},
 	"microsoft.rolemanagement.roleassignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftRolemanagementRoleassignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7720,6 +7796,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.manageddevice.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementManageddevice).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.manageddevice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8004,6 +8084,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.policyAssignment.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).Group, ok = plugin.RawToTValue[*mqlMicrosoftGroup](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.policyAssignment.excluded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11230,6 +11314,7 @@ type mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance struct {
 	Id                        plugin.TValue[string]
 	PrincipalId               plugin.TValue[string]
 	RoleDefinitionId          plugin.TValue[string]
+	RoleDefinition            plugin.TValue[*mqlMicrosoftRolemanagementRoledefinition]
 	DirectoryScopeId          plugin.TValue[string]
 	AppScopeId                plugin.TValue[string]
 	StartDateTime             plugin.TValue[*time.Time]
@@ -11280,6 +11365,22 @@ func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetPrinci
 
 func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleDefinitionId() *plugin.TValue[string] {
 	return &c.RoleDefinitionId
+}
+
+func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetRoleDefinition() *plugin.TValue[*mqlMicrosoftRolemanagementRoledefinition] {
+	return plugin.GetOrCompute[*mqlMicrosoftRolemanagementRoledefinition](&c.RoleDefinition, func() (*mqlMicrosoftRolemanagementRoledefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.identityAndAccess.roleEligibilityScheduleInstance", c.__id, "roleDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftRolemanagementRoledefinition), nil
+			}
+		}
+
+		return c.roleDefinition()
+	})
 }
 
 func (c *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) GetDirectoryScopeId() *plugin.TValue[string] {
@@ -12870,8 +12971,10 @@ type mqlMicrosoftConditionalAccessPolicyConditionsClientApplications struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsClientApplicationsInternal it will be used here
-	ExcludeServicePrincipals plugin.TValue[[]any]
-	IncludeServicePrincipals plugin.TValue[[]any]
+	ExcludeServicePrincipals     plugin.TValue[[]any]
+	IncludeServicePrincipals     plugin.TValue[[]any]
+	ExcludeServicePrincipalsRefs plugin.TValue[[]any]
+	IncludeServicePrincipalsRefs plugin.TValue[[]any]
 }
 
 // createMicrosoftConditionalAccessPolicyConditionsClientApplications creates a new instance of this resource
@@ -12912,6 +13015,38 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetExc
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetIncludeServicePrincipals() *plugin.TValue[[]any] {
 	return &c.IncludeServicePrincipals
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetExcludeServicePrincipalsRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludeServicePrincipalsRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.clientApplications", c.__id, "excludeServicePrincipalsRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.excludeServicePrincipalsRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) GetIncludeServicePrincipalsRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IncludeServicePrincipalsRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.clientApplications", c.__id, "includeServicePrincipalsRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.includeServicePrincipalsRefs()
+	})
 }
 
 // mqlMicrosoftConditionalAccessPolicyConditionsPlatforms for the microsoft.conditionalAccess.policy.conditions.platforms resource
@@ -13022,12 +13157,18 @@ type mqlMicrosoftConditionalAccessPolicyConditionsUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessPolicyConditionsUsersInternal it will be used here
-	IncludeUsers  plugin.TValue[[]any]
-	ExcludeUsers  plugin.TValue[[]any]
-	IncludeGroups plugin.TValue[[]any]
-	ExcludeGroups plugin.TValue[[]any]
-	IncludeRoles  plugin.TValue[[]any]
-	ExcludeRoles  plugin.TValue[[]any]
+	IncludeUsers      plugin.TValue[[]any]
+	ExcludeUsers      plugin.TValue[[]any]
+	IncludeGroups     plugin.TValue[[]any]
+	ExcludeGroups     plugin.TValue[[]any]
+	IncludeRoles      plugin.TValue[[]any]
+	ExcludeRoles      plugin.TValue[[]any]
+	IncludeUsersRefs  plugin.TValue[[]any]
+	ExcludeUsersRefs  plugin.TValue[[]any]
+	IncludeGroupsRefs plugin.TValue[[]any]
+	ExcludeGroupsRefs plugin.TValue[[]any]
+	IncludeRolesRefs  plugin.TValue[[]any]
+	ExcludeRolesRefs  plugin.TValue[[]any]
 }
 
 // createMicrosoftConditionalAccessPolicyConditionsUsers creates a new instance of this resource
@@ -13084,6 +13225,102 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeRoles() *
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeRoles() *plugin.TValue[[]any] {
 	return &c.ExcludeRoles
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeUsersRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IncludeUsersRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "includeUsersRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.includeUsersRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeUsersRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludeUsersRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "excludeUsersRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.excludeUsersRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeGroupsRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IncludeGroupsRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "includeGroupsRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.includeGroupsRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeGroupsRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludeGroupsRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "excludeGroupsRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.excludeGroupsRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetIncludeRolesRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IncludeRolesRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "includeRolesRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.includeRolesRefs()
+	})
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) GetExcludeRolesRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExcludeRolesRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess.policy.conditions.users", c.__id, "excludeRolesRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.excludeRolesRefs()
+	})
 }
 
 // mqlMicrosoftConditionalAccessPolicyConditionsLocations for the microsoft.conditionalAccess.policy.conditions.locations resource
@@ -18364,6 +18601,7 @@ type mqlMicrosoftRolemanagementRoleassignment struct {
 	// optional: if you define mqlMicrosoftRolemanagementRoleassignmentInternal it will be used here
 	Id               plugin.TValue[string]
 	RoleDefinitionId plugin.TValue[string]
+	RoleDefinition   plugin.TValue[*mqlMicrosoftRolemanagementRoledefinition]
 	PrincipalId      plugin.TValue[string]
 	Principal        plugin.TValue[any]
 }
@@ -18411,6 +18649,22 @@ func (c *mqlMicrosoftRolemanagementRoleassignment) GetId() *plugin.TValue[string
 
 func (c *mqlMicrosoftRolemanagementRoleassignment) GetRoleDefinitionId() *plugin.TValue[string] {
 	return &c.RoleDefinitionId
+}
+
+func (c *mqlMicrosoftRolemanagementRoleassignment) GetRoleDefinition() *plugin.TValue[*mqlMicrosoftRolemanagementRoledefinition] {
+	return plugin.GetOrCompute[*mqlMicrosoftRolemanagementRoledefinition](&c.RoleDefinition, func() (*mqlMicrosoftRolemanagementRoledefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.rolemanagement.roleassignment", c.__id, "roleDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftRolemanagementRoledefinition), nil
+			}
+		}
+
+		return c.roleDefinition()
+	})
 }
 
 func (c *mqlMicrosoftRolemanagementRoleassignment) GetPrincipalId() *plugin.TValue[string] {
@@ -18743,6 +18997,7 @@ type mqlMicrosoftDevicemanagementManageddevice struct {
 	// optional: if you define mqlMicrosoftDevicemanagementManageddeviceInternal it will be used here
 	Id                                      plugin.TValue[string]
 	UserId                                  plugin.TValue[string]
+	User                                    plugin.TValue[*mqlMicrosoftUser]
 	Name                                    plugin.TValue[string]
 	OperatingSystem                         plugin.TValue[string]
 	JailBroken                              plugin.TValue[string]
@@ -18826,6 +19081,22 @@ func (c *mqlMicrosoftDevicemanagementManageddevice) GetId() *plugin.TValue[strin
 
 func (c *mqlMicrosoftDevicemanagementManageddevice) GetUserId() *plugin.TValue[string] {
 	return &c.UserId
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.manageddevice", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
 }
 
 func (c *mqlMicrosoftDevicemanagementManageddevice) GetName() *plugin.TValue[string] {
@@ -19242,6 +19513,7 @@ type mqlMicrosoftDevicemanagementPolicyAssignment struct {
 	Id         plugin.TValue[string]
 	TargetType plugin.TValue[string]
 	GroupId    plugin.TValue[string]
+	Group      plugin.TValue[*mqlMicrosoftGroup]
 	Excluded   plugin.TValue[bool]
 	FilterType plugin.TValue[string]
 	FilterId   plugin.TValue[string]
@@ -19294,6 +19566,22 @@ func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetTargetType() *plugin.T
 
 func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetGroupId() *plugin.TValue[string] {
 	return &c.GroupId
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetGroup() *plugin.TValue[*mqlMicrosoftGroup] {
+	return plugin.GetOrCompute[*mqlMicrosoftGroup](&c.Group, func() (*mqlMicrosoftGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.policyAssignment", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftGroup), nil
+			}
+		}
+
+		return c.group()
+	})
 }
 
 func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetExcluded() *plugin.TValue[bool] {

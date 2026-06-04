@@ -84,21 +84,7 @@ func (a *mqlMicrosoftRoles) list() ([]any, error) {
 
 	res := []any{}
 	for _, role := range roles {
-		rolePermissions, err := convert.JsonToDictSlice(newUnifiedRolePermissions(role.GetRolePermissions()))
-		if err != nil {
-			return nil, err
-		}
-		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roledefinition",
-			map[string]*llx.RawData{
-				"id":              llx.StringDataPtr(role.GetId()),
-				"description":     llx.StringDataPtr(role.GetDescription()),
-				"displayName":     llx.StringDataPtr(role.GetDisplayName()),
-				"isBuiltIn":       llx.BoolDataPtr(role.GetIsBuiltIn()),
-				"isEnabled":       llx.BoolDataPtr(role.GetIsEnabled()),
-				"rolePermissions": llx.ArrayData(rolePermissions, types.Any),
-				"templateId":      llx.StringDataPtr(role.GetTemplateId()),
-				"version":         llx.StringDataPtr(role.GetVersion()),
-			})
+		mqlResource, err := newMqlMicrosoftRoleDefinition(a.MqlRuntime, role)
 		if err != nil {
 			return nil, err
 		}
@@ -106,6 +92,68 @@ func (a *mqlMicrosoftRoles) list() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// newMqlMicrosoftRoleDefinition builds a microsoft.rolemanagement.roledefinition
+// resource from a Graph unified role definition.
+func newMqlMicrosoftRoleDefinition(runtime *plugin.Runtime, role models.UnifiedRoleDefinitionable) (*mqlMicrosoftRolemanagementRoledefinition, error) {
+	rolePermissions, err := convert.JsonToDictSlice(newUnifiedRolePermissions(role.GetRolePermissions()))
+	if err != nil {
+		return nil, err
+	}
+	mqlResource, err := CreateResource(runtime, "microsoft.rolemanagement.roledefinition",
+		map[string]*llx.RawData{
+			"id":              llx.StringDataPtr(role.GetId()),
+			"description":     llx.StringDataPtr(role.GetDescription()),
+			"displayName":     llx.StringDataPtr(role.GetDisplayName()),
+			"isBuiltIn":       llx.BoolDataPtr(role.GetIsBuiltIn()),
+			"isEnabled":       llx.BoolDataPtr(role.GetIsEnabled()),
+			"rolePermissions": llx.ArrayData(rolePermissions, types.Any),
+			"templateId":      llx.StringDataPtr(role.GetTemplateId()),
+			"version":         llx.StringDataPtr(role.GetVersion()),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlResource.(*mqlMicrosoftRolemanagementRoledefinition), nil
+}
+
+// initMicrosoftRolemanagementRoledefinition resolves a single role definition
+// by its ID, enabling typed role references from Conditional Access conditions
+// and role assignments.
+func initMicrosoftRolemanagementRoledefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// only resolve when handed a bare id; a fully populated role definition
+	// passes through untouched
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+	rawId, ok := args["id"]
+	if !ok {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	role, err := graphClient.
+		RoleManagement().
+		Directory().
+		RoleDefinitions().
+		ByUnifiedRoleDefinitionId(rawId.Value.(string)).
+		Get(ctx, nil)
+	if err != nil {
+		return nil, nil, transformError(err)
+	}
+
+	mqlRole, err := newMqlMicrosoftRoleDefinition(runtime, role)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlRole, nil
 }
 
 func (a *mqlMicrosoft) roles() (*mqlMicrosoftRoles, error) {
@@ -134,6 +182,22 @@ func (m *mqlMicrosoftRolemanagementRoledefinition) id() (string, error) {
 // Deprecated: use mqlMicrosoft roles() instead
 func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
 	return m.Id.Data, nil
+}
+
+// roleDefinition resolves the role definition this assignment grants.
+func (m *mqlMicrosoftRolemanagementRoleassignment) roleDefinition() (*mqlMicrosoftRolemanagementRoledefinition, error) {
+	id := m.RoleDefinitionId.Data
+	if id == "" {
+		m.RoleDefinition.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "microsoft.rolemanagement.roledefinition", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftRolemanagementRoledefinition), nil
 }
 
 // Deprecated: use mqlMicrosoft roles() instead

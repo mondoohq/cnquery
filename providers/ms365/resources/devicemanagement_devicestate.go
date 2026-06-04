@@ -17,6 +17,39 @@ func (m *mqlMicrosoftDevicemanagementPolicyAssignment) id() (string, error) {
 	return m.Id.Data, nil
 }
 
+// group resolves the Entra ID group a policy assignment targets, when the
+// assignment targets a group.
+func (m *mqlMicrosoftDevicemanagementPolicyAssignment) group() (*mqlMicrosoftGroup, error) {
+	id := m.GroupId.Data
+	if id == "" {
+		m.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "microsoft.group", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftGroup), nil
+}
+
+// user resolves the Entra ID user associated with the managed device.
+func (m *mqlMicrosoftDevicemanagementManageddevice) user() (*mqlMicrosoftUser, error) {
+	id := m.UserId.Data
+	if id == "" {
+		m.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "microsoft.user", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftUser), nil
+}
+
 func (m *mqlMicrosoftDevicemanagementManageddevicePolicyState) id() (string, error) {
 	return m.Id.Data, nil
 }
