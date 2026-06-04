@@ -37,9 +37,10 @@ Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
 Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $complianceToken -AppID $appId -Organization $organization -ShowBanner:$false
 $DlpCompliancePolicy = @(Get-DlpCompliancePolicy)
-$securityAndCompliance = @{ DlpCompliancePolicy = $DlpCompliancePolicy}
+$DlpComplianceRule = @(Get-DlpComplianceRule)
+$securityAndCompliance = @{ DlpCompliancePolicy = $DlpCompliancePolicy; DlpComplianceRule = $DlpComplianceRule }
 
-ConvertTo-Json -Depth 4 $securityAndCompliance
+ConvertTo-Json -Depth 6 $securityAndCompliance
 `
 
 var exchangeReport = `
@@ -156,6 +157,7 @@ type MailboxAuditBypassAssociation struct {
 
 type SecurityAndComplianceReport struct {
 	DlpCompliancePolicy []any `json:"DlpCompliancePolicy"`
+	DlpComplianceRule   []any `json:"DlpComplianceRule"`
 }
 
 type MailboxWithAudit struct {

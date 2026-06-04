@@ -3302,6 +3302,51 @@ private ms365.exchangeonline.securityAndCompliance {
   dlpCompliancePolicies() @maturity("deprecated") []dict
   // Data Loss Prevention (DLP) compliance policies
   dlpPolicies() []ms365.exchangeonline.dlpCompliancePolicy
+  // Data Loss Prevention (DLP) compliance rules
+  dlpRules() []ms365.exchangeonline.dlpComplianceRule
+}
+
+// Microsoft 365 Data Loss Prevention compliance rule
+//
+// Examine a Data Loss Prevention (DLP) rule, the conditions and actions that
+// make up a DLP policy, selected by its `name`. `parentPolicyName` links the
+// rule to its policy. The rule detects the sensitive information types listed
+// in `sensitiveInformationTypes`, and when matched it can block access
+// (`blockAccess`, `blockAccessScope`), notify users (`notifyUser`,
+// `notifyUserType`), and raise alerts at `reportSeverityLevel`. `disabled`
+// reports whether the rule is turned off, `mode` its enforcement level, and
+// `isAdvancedRule` whether it uses the advanced (JSON) condition builder.
+private ms365.exchangeonline.dlpComplianceRule @defaults("name parentPolicyName disabled blockAccess") {
+  // Rule name
+  name string
+  // Rule GUID
+  guid string
+  // Name of the DLP policy the rule belongs to
+  parentPolicyName string
+  // Whether the rule is disabled
+  disabled bool
+  // Enforcement mode (Enable, TestWithNotifications, TestWithoutNotifications, Disable)
+  mode string
+  // Rule priority; lower numbers are evaluated first
+  priority int
+  // Sensitive information types the rule detects
+  sensitiveInformationTypes []string
+  // Whether the rule blocks access to matching content
+  blockAccess bool
+  // Scope of the block action (All, PerUser)
+  blockAccessScope string
+  // Recipients notified when the rule matches (for example LastModifier, Owner, SiteAdmin, or addresses)
+  notifyUser []string
+  // Notification delivery type (Email, PolicyTip, or both)
+  notifyUserType string
+  // Recipients of the incident report when the rule matches
+  generateIncidentReport []string
+  // Severity level reported for matches (Low, Medium, High)
+  reportSeverityLevel string
+  // Access scope the rule applies to (InOrganization, NotInOrganization, ...)
+  accessScope string
+  // Whether the rule uses the advanced (JSON) condition builder
+  isAdvancedRule bool
 }
 
 // Microsoft 365 Data Loss Prevention compliance policy
