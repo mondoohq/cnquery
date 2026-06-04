@@ -61,6 +61,9 @@ func (r *mqlMs365Teams) teams() ([]any, error) {
 // fetchTeam lazily loads the full team via a single GET, caching it so the
 // per-field accessors share one Graph call.
 func (t *mqlMs365TeamsTeam) fetchTeam() (models.Teamable, error) {
+	if t.fetched {
+		return t.teamCache, nil
+	}
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if t.fetched {
