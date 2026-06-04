@@ -4,10 +4,39 @@
 package resources
 
 import (
+	"sort"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// parentPolicy resolves the DLP policy this rule belongs to by matching its
+// name against the policies in the same Security & Compliance report.
+func (r *mqlMs365ExchangeonlineDlpComplianceRule) parentPolicy() (*mqlMs365ExchangeonlineDlpCompliancePolicy, error) {
+	name := r.ParentPolicyName.Data
+	if name == "" {
+		r.ParentPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	sc, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.securityAndCompliance", nil)
+	if err != nil {
+		return nil, err
+	}
+	policies := sc.(*mqlMs365ExchangeonlineSecurityAndCompliance).GetDlpPolicies()
+	if policies.Error != nil {
+		return nil, policies.Error
+	}
+	for _, p := range policies.Data {
+		if pol, ok := p.(*mqlMs365ExchangeonlineDlpCompliancePolicy); ok && pol.Name.Data == name {
+			return pol, nil
+		}
+	}
+
+	r.ParentPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
 
 // dlpRules returns the Data Loss Prevention compliance rules as typed
 // resources. Like dlpPolicies, fields are extracted defensively from the
@@ -110,6 +139,8 @@ func dlpSensitiveInfoTypes(v any) []any {
 	}
 	walk(v)
 
+	// sort for deterministic output across runs
+	sort.Strings(names)
 	res := make([]any, 0, len(names))
 	for _, n := range names {
 		res = append(res, n)

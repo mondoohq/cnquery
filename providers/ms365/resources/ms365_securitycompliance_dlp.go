@@ -70,8 +70,12 @@ func dlpString(m map[string]any, key string) string {
 }
 
 func dlpBool(m map[string]any, key string) bool {
-	if v, ok := m[key].(bool); ok {
+	switch v := m[key].(type) {
+	case bool:
 		return v
+	case string:
+		// some PowerShell JSON serializers emit booleans as "True"/"False"
+		return strings.EqualFold(v, "true")
 	}
 	return false
 }

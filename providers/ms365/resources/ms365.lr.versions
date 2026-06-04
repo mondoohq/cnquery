@@ -1196,6 +1196,7 @@ ms365.exchangeonline.dlpComplianceRule.mode 13.3.1
 ms365.exchangeonline.dlpComplianceRule.name 13.3.1
 ms365.exchangeonline.dlpComplianceRule.notifyUser 13.3.1
 ms365.exchangeonline.dlpComplianceRule.notifyUserType 13.3.1
+ms365.exchangeonline.dlpComplianceRule.parentPolicy 13.3.1
 ms365.exchangeonline.dlpComplianceRule.parentPolicyName 13.3.1
 ms365.exchangeonline.dlpComplianceRule.priority 13.3.1
 ms365.exchangeonline.dlpComplianceRule.reportSeverityLevel 13.3.1

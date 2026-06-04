@@ -4200,6 +4200,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.dlpComplianceRule.parentPolicyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineDlpComplianceRule).GetParentPolicyName()).ToDataRes(types.String)
 	},
+	"ms365.exchangeonline.dlpComplianceRule.parentPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpComplianceRule).GetParentPolicy()).ToDataRes(types.Resource("ms365.exchangeonline.dlpCompliancePolicy"))
+	},
 	"ms365.exchangeonline.dlpComplianceRule.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineDlpComplianceRule).GetDisabled()).ToDataRes(types.Bool)
 	},
@@ -10038,6 +10041,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.dlpComplianceRule.parentPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineDlpComplianceRule).ParentPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpComplianceRule.parentPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpComplianceRule).ParentPolicy, ok = plugin.RawToTValue[*mqlMs365ExchangeonlineDlpCompliancePolicy](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.dlpComplianceRule.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24192,6 +24199,7 @@ type mqlMs365ExchangeonlineDlpComplianceRule struct {
 	Name                      plugin.TValue[string]
 	Guid                      plugin.TValue[string]
 	ParentPolicyName          plugin.TValue[string]
+	ParentPolicy              plugin.TValue[*mqlMs365ExchangeonlineDlpCompliancePolicy]
 	Disabled                  plugin.TValue[bool]
 	Mode                      plugin.TValue[string]
 	Priority                  plugin.TValue[int64]
@@ -24248,6 +24256,22 @@ func (c *mqlMs365ExchangeonlineDlpComplianceRule) GetGuid() *plugin.TValue[strin
 
 func (c *mqlMs365ExchangeonlineDlpComplianceRule) GetParentPolicyName() *plugin.TValue[string] {
 	return &c.ParentPolicyName
+}
+
+func (c *mqlMs365ExchangeonlineDlpComplianceRule) GetParentPolicy() *plugin.TValue[*mqlMs365ExchangeonlineDlpCompliancePolicy] {
+	return plugin.GetOrCompute[*mqlMs365ExchangeonlineDlpCompliancePolicy](&c.ParentPolicy, func() (*mqlMs365ExchangeonlineDlpCompliancePolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline.dlpComplianceRule", c.__id, "parentPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365ExchangeonlineDlpCompliancePolicy), nil
+			}
+		}
+
+		return c.parentPolicy()
+	})
 }
 
 func (c *mqlMs365ExchangeonlineDlpComplianceRule) GetDisabled() *plugin.TValue[bool] {

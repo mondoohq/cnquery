@@ -3323,6 +3323,8 @@ private ms365.exchangeonline.dlpComplianceRule @defaults("name parentPolicyName 
   guid string
   // Name of the DLP policy the rule belongs to
   parentPolicyName string
+  // DLP policy the rule belongs to
+  parentPolicy() ms365.exchangeonline.dlpCompliancePolicy
   // Whether the rule is disabled
   disabled bool
   // Enforcement mode (Enable, TestWithNotifications, TestWithoutNotifications, Disable)
