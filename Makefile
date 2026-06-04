@@ -312,6 +312,7 @@ providers/test:
 	@$(call testGoModProvider, providers/snowflake)
 	@$(call testGoModProvider, providers/tailscale)
 	@$(call testGoModProvider, providers/terraform)
+	@$(call testGoModProvider, providers/together)
 	@$(call testGoModProvider, providers/vcd)
 	@$(call testGoModProvider, providers/vllm)
 	@$(call testGoModProvider, providers/vsphere)
