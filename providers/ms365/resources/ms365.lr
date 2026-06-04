@@ -2433,6 +2433,59 @@ microsoft.devicemanagement {
   complianceManagementPartners() []microsoft.devicemanagement.complianceManagementPartner
   // Settings catalog configuration policies
   configurationPolicies() []microsoft.devicemanagement.configurationPolicy
+  // App configuration policies for managed apps (MAM)
+  managedAppConfigurations() []microsoft.devicemanagement.managedAppConfiguration
+  // App configuration policies for managed devices (MDM)
+  mobileAppConfigurations() []microsoft.devicemanagement.mobileAppConfiguration
+}
+
+// Microsoft Intune managed app configuration policy
+//
+// Examine an app configuration policy that delivers settings to managed apps
+// (MAM), selected by its `id`. `customSettings` holds the configured key/value
+// pairs delivered to the apps, `deployedAppCount` reports how many apps it
+// targets, and `isAssigned` whether it is assigned to any group.
+private microsoft.devicemanagement.managedAppConfiguration @defaults("displayName deployedAppCount isAssigned") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Policy version
+  version string
+  // Configured key/value settings delivered to the apps
+  customSettings map[string]string
+  // Number of apps the policy is deployed to
+  deployedAppCount int
+  // Whether the policy is assigned to any group
+  isAssigned bool
+  // Date and time the policy was created
+  createdDateTime time
+  // Date and time the policy was last modified
+  lastModifiedDateTime time
+}
+
+// Microsoft Intune managed device app configuration policy
+//
+// Examine an app configuration policy that delivers settings to managed
+// devices (MDM), selected by its `id`. `targetedMobileApps` lists the IDs of
+// the apps the policy configures.
+private microsoft.devicemanagement.mobileAppConfiguration @defaults("displayName") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Policy version
+  version int
+  // IDs of the apps the policy configures
+  targetedMobileApps []string
+  // Date and time the policy was created
+  createdDateTime time
+  // Date and time the policy was last modified
+  lastModifiedDateTime time
 }
 
 // Microsoft Intune settings catalog policy
