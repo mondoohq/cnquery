@@ -2431,6 +2431,49 @@ microsoft.devicemanagement {
   mobileThreatDefenseConnectors() []microsoft.devicemanagement.mobileThreatDefenseConnector
   // Compliance management partner connectors
   complianceManagementPartners() []microsoft.devicemanagement.complianceManagementPartner
+  // Settings catalog configuration policies
+  configurationPolicies() []microsoft.devicemanagement.configurationPolicy
+}
+
+// Microsoft Intune settings catalog policy
+//
+// Examine a settings catalog (unified configuration) policy, selected by its
+// `id`. Metadata covers the `name`, `description`, the `platforms` and
+// `technologies` the policy targets, the number of configured settings
+// (`settingCount`), `roleScopeTagIds`, and whether it `isAssigned`. When the
+// policy was created from a template, `templateId`, `templateDisplayName`, and
+// `templateFamily` identify it. Use `settings` to read the individual
+// configured settings; each entry reports its `settingDefinitionId`,
+// `settingType`, and `value`.
+private microsoft.devicemanagement.configurationPolicy @defaults("name platforms technologies settingCount") {
+  // Policy ID
+  id string
+  // Policy name
+  name string
+  // Policy description
+  description string
+  // Platforms the policy targets (for example windows10, iOS, macOS, android, linux)
+  platforms string
+  // Technologies that enforce the policy (for example mdm, configManager, microsoftSense)
+  technologies string
+  // Whether the policy is assigned to any group
+  isAssigned bool
+  // Number of settings configured by the policy
+  settingCount int
+  // Role scope tag IDs assigned to the policy
+  roleScopeTagIds []string
+  // Template ID when the policy was created from a template, empty otherwise
+  templateId string
+  // Template display name when the policy was created from a template
+  templateDisplayName string
+  // Template family when the policy was created from a template (for example endpointSecurityAntivirus, baseline)
+  templateFamily string
+  // Date and time the policy was created
+  createdDateTime time
+  // Date and time the policy was last modified
+  lastModifiedDateTime time
+  // Configured settings, each a dictionary of settingDefinitionId, settingType, and value
+  settings() []dict
 }
 
 // Microsoft Intune Mobile Threat Defense connector
