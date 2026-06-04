@@ -1410,6 +1410,7 @@ ms365.exchangeonline.transportRuleEntry.identity 13.3.1
 ms365.exchangeonline.transportRuleEntry.mode 13.3.1
 ms365.exchangeonline.transportRuleEntry.name 13.3.1
 ms365.exchangeonline.transportRuleEntry.priority 13.3.1
+ms365.exchangeonline.transportRuleEntry.routeMessageOutboundRequireTls 13.3.1
 ms365.exchangeonline.transportRuleEntry.state 13.3.1
 ms365.exchangeonline.transportRules 13.3.1
 ms365.exchangeonlineMailboxAuditBypassAssociation 11.1.43

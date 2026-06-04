@@ -3941,9 +3941,10 @@ private ms365.exchangeonline.retentionPolicy @defaults("name retentionPolicyTagL
 //
 // Examine a single mail flow rule returned by Get-TransportRule, selected by
 // `name`. Each rule reports its evaluation `priority` (lower numbers run
-// first), enablement `state`, operating `mode`, and administrator `comments`.
-// The full condition and action set of a rule remains available through the
-// deprecated `transportRule` dictionary.
+// first), enablement `state`, operating `mode`, administrator `comments`, and
+// whether it forces outbound TLS via `routeMessageOutboundRequireTls`. The full
+// condition and action set of a rule remains available through the deprecated
+// `transportRule` dictionary.
 private ms365.exchangeonline.transportRuleEntry @defaults("name state priority") {
   // The rule identity
   identity string
@@ -3955,6 +3956,8 @@ private ms365.exchangeonline.transportRuleEntry @defaults("name state priority")
   state string
   // Rule operating mode (Enforce, Audit, or AuditAndNotify)
   mode string
+  // Whether the rule forces matching messages to be routed outbound over TLS
+  routeMessageOutboundRequireTls bool
   // Administrator comments on the rule
   comments string
 }

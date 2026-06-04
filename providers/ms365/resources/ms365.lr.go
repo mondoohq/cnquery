@@ -4864,6 +4864,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.transportRuleEntry.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetMode()).ToDataRes(types.String)
 	},
+	"ms365.exchangeonline.transportRuleEntry.routeMessageOutboundRequireTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetRouteMessageOutboundRequireTls()).ToDataRes(types.Bool)
+	},
 	"ms365.exchangeonline.transportRuleEntry.comments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetComments()).ToDataRes(types.String)
 	},
@@ -11065,6 +11068,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.transportRuleEntry.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.transportRuleEntry.routeMessageOutboundRequireTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).RouteMessageOutboundRequireTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.transportRuleEntry.comments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26491,12 +26498,13 @@ type mqlMs365ExchangeonlineTransportRuleEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMs365ExchangeonlineTransportRuleEntryInternal it will be used here
-	Identity plugin.TValue[string]
-	Name     plugin.TValue[string]
-	Priority plugin.TValue[int64]
-	State    plugin.TValue[string]
-	Mode     plugin.TValue[string]
-	Comments plugin.TValue[string]
+	Identity                       plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Priority                       plugin.TValue[int64]
+	State                          plugin.TValue[string]
+	Mode                           plugin.TValue[string]
+	RouteMessageOutboundRequireTls plugin.TValue[bool]
+	Comments                       plugin.TValue[string]
 }
 
 // createMs365ExchangeonlineTransportRuleEntry creates a new instance of this resource
@@ -26549,6 +26557,10 @@ func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetState() *plugin.TValue[str
 
 func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetMode() *plugin.TValue[string] {
 	return &c.Mode
+}
+
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetRouteMessageOutboundRequireTls() *plugin.TValue[bool] {
+	return &c.RouteMessageOutboundRequireTls
 }
 
 func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetComments() *plugin.TValue[string] {

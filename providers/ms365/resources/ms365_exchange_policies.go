@@ -32,12 +32,13 @@ func decodeExchangeList[T any](raw any) ([]*T, error) {
 // --- Transport rules ---
 
 type ExchangeTransportRule struct {
-	Identity string `json:"Identity"`
-	Name     string `json:"Name"`
-	Priority int64  `json:"Priority"`
-	State    string `json:"State"`
-	Mode     string `json:"Mode"`
-	Comments string `json:"Comments"`
+	Identity                       string `json:"Identity"`
+	Name                           string `json:"Name"`
+	Priority                       int64  `json:"Priority"`
+	State                          string `json:"State"`
+	Mode                           string `json:"Mode"`
+	RouteMessageOutboundRequireTls bool   `json:"RouteMessageOutboundRequireTls"`
+	Comments                       string `json:"Comments"`
 }
 
 func convertTransportRules(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -52,13 +53,14 @@ func convertTransportRules(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.transportRuleEntry",
 			map[string]*llx.RawData{
-				"__id":     llx.StringData("transportRule-" + t.Identity),
-				"identity": llx.StringData(t.Identity),
-				"name":     llx.StringData(t.Name),
-				"priority": llx.IntData(t.Priority),
-				"state":    llx.StringData(t.State),
-				"mode":     llx.StringData(t.Mode),
-				"comments": llx.StringData(t.Comments),
+				"__id":                           llx.StringData("transportRule-" + t.Identity),
+				"identity":                       llx.StringData(t.Identity),
+				"name":                           llx.StringData(t.Name),
+				"priority":                       llx.IntData(t.Priority),
+				"state":                          llx.StringData(t.State),
+				"mode":                           llx.StringData(t.Mode),
+				"routeMessageOutboundRequireTls": llx.BoolData(t.RouteMessageOutboundRequireTls),
+				"comments":                       llx.StringData(t.Comments),
 			})
 		if err != nil {
 			return nil, err
