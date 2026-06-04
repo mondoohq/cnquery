@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
@@ -267,7 +268,7 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 				"__id":        llx.StringDataPtr(owner.GetId()),
 				"id":          llx.StringDataPtr(owner.GetId()),
 				"displayName": llx.StringDataPtr(displayName),
-				"ownerType":   llx.StringDataPtr(owner.GetOdataType()),
+				"ownerType":   llx.StringDataPtr(normalizeOwnerType(owner.GetOdataType())),
 			})
 		if err != nil {
 			return nil, err
@@ -278,10 +279,24 @@ func (a *mqlMicrosoftGroup) owners() ([]any, error) {
 	return owners, nil
 }
 
+// normalizeOwnerType converts a raw Graph OData type (e.g.
+// "#microsoft.graph.user") to the documented short form ("user",
+// "servicePrincipal"). Returns nil for a nil input.
+func normalizeOwnerType(odataType *string) *string {
+	if odataType == nil {
+		return nil
+	}
+	short := strings.TrimPrefix(*odataType, "#microsoft.graph.")
+	return &short
+}
+
 func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
-	ownerType := a.OwnerType.Data
-	if ownerType != "#microsoft.graph.user" {
-		return nil, errors.New("owner type is not a user")
+	if a.OwnerType.Data != "user" {
+		// This owner is a service principal (or other type); the user ref is
+		// legitimately absent. Mark it null so callers can select user() and
+		// servicePrincipal() side by side without erroring the whole query.
+		a.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	userId := a.Id.Data
@@ -296,9 +311,12 @@ func (a *mqlMicrosoftGroupOwner) user() (*mqlMicrosoftUser, error) {
 }
 
 func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
-	ownerType := a.OwnerType.Data
-	if ownerType != "#microsoft.graph.servicePrincipal" {
-		return nil, errors.New("owner type is not a service principal")
+	if a.OwnerType.Data != "servicePrincipal" {
+		// This owner is a user (or other type); the service principal ref is
+		// legitimately absent. Mark it null so callers can select user() and
+		// servicePrincipal() side by side without erroring the whole query.
+		a.ServicePrincipal.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	spId := a.Id.Data

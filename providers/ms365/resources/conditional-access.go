@@ -554,6 +554,26 @@ func convertEnumCollectionToStrings[T fmt.Stringer](enums []T) []string {
 	return result
 }
 
+// initMicrosoftConditionalAccessAuthenticationMethodsPolicy populates the
+// policy when it is queried directly
+// (microsoft.conditionalAccess.authenticationMethodsPolicy) rather than through
+// the microsoft.conditionalAccess accessor. Without this, a direct query
+// returns a bare husk with all fields null. We build it through the parent
+// accessor, which fetches and caches the policy.
+func initMicrosoftConditionalAccessAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	caResource, err := CreateResource(runtime, "microsoft.conditionalAccess", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policy, err := caResource.(*mqlMicrosoftConditionalAccess).authenticationMethodsPolicy()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, policy, nil
+}
+
 func (a *mqlMicrosoftConditionalAccess) authenticationMethodsPolicy() (*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()

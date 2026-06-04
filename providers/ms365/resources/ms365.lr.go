@@ -306,7 +306,7 @@ func init() {
 			Create: createMicrosoftIdentityAndAccessIdentityAndSignInPolicies,
 		},
 		"microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy": {
-			// to override args, implement: initMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy,
 			Create: createMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy,
 		},
 		"microsoft.user.assignedLicense": {
@@ -326,7 +326,7 @@ func init() {
 			Create: createMicrosoftConditionalAccess,
 		},
 		"microsoft.conditionalAccess.authenticationMethodsPolicy": {
-			// to override args, implement: initMicrosoftConditionalAccessAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftConditionalAccessAuthenticationMethodsPolicy,
 			Create: createMicrosoftConditionalAccessAuthenticationMethodsPolicy,
 		},
 		"microsoft.conditionalAccess.authenticationMethodConfiguration": {

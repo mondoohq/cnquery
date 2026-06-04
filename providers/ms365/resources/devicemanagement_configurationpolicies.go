@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	betadm "github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement"
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -25,7 +26,15 @@ func (a *mqlMicrosoftDevicemanagement) configurationPolicies() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().ConfigurationPolicies().Get(ctx, nil)
+	// Expand assignments so isAssigned can be derived reliably: the list
+	// endpoint omits the computed isAssigned property (returns a nil *bool)
+	// unless assignments are expanded.
+	reqConfig := &betadm.ConfigurationPoliciesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &betadm.ConfigurationPoliciesRequestBuilderGetQueryParameters{
+			Expand: []string{"assignments"},
+		},
+	}
+	resp, err := graphClient.DeviceManagement().ConfigurationPolicies().Get(ctx, reqConfig)
 	if err != nil {
 		return nil, transformError(err)
 	}
@@ -55,7 +64,7 @@ func (a *mqlMicrosoftDevicemanagement) configurationPolicies() ([]any, error) {
 				"description":          llx.StringDataPtr(p.GetDescription()),
 				"platforms":            llx.StringDataPtr(enumPtrString(p.GetPlatforms())),
 				"technologies":         llx.StringDataPtr(enumPtrString(p.GetTechnologies())),
-				"isAssigned":           llx.BoolDataPtr(p.GetIsAssigned()),
+				"isAssigned":           llx.BoolData(len(p.GetAssignments()) > 0),
 				"settingCount":         llx.IntDataPtr(p.GetSettingCount()),
 				"roleScopeTagIds":      llx.ArrayData(llx.TArr2Raw(p.GetRoleScopeTagIds()), types.String),
 				"templateId":           llx.StringDataPtr(templateId),

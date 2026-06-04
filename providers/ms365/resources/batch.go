@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoft/kiota-abstractions-go/serialization"
@@ -77,10 +78,21 @@ func batchGet[T serialization.Parsable](
 
 	statusCodes := resp.GetStatusCodes()
 	for id, key := range idToKey {
-		if code, ok := statusCodes[id]; ok {
+		code, hasCode := statusCodes[id]
+		if hasCode {
 			out.statuses[key] = code
 		}
-		val, err := msgraphgocore.GetBatchResponseById[T](resp, id, constructor)
+		// A non-2xx sub-response carries an error body, not a T. The kiota core
+		// helper GetBatchResponseById panics trying to deserialize that body as
+		// T (e.g. a 403 when the app lacks AuditLog.Read.All for signInActivity).
+		// Skip the parse when we already know the sub-request failed...
+		if hasCode && (code < 200 || code >= 300) {
+			out.errs[key] = fmt.Errorf("batch request failed with status %d", code)
+			continue
+		}
+		// ...and recover defensively around the parse itself, since the helper
+		// can still panic on malformed/error bodies the status map does not flag.
+		val, err := safeGetBatchResponseByID[T](resp, id, constructor)
 		if err != nil {
 			out.errs[key] = transformError(err)
 			continue
@@ -88,4 +100,24 @@ func batchGet[T serialization.Parsable](
 		out.results[key] = val
 	}
 	return out, nil
+}
+
+// safeGetBatchResponseByID wraps msgraphgocore.GetBatchResponseById, which can
+// panic (rather than return an error) when a batch sub-response holds an error
+// body that does not deserialize into T -- e.g. a 403 error object parsed as a
+// User. Recovering keeps one failed sub-request from crashing the whole batched
+// query; the caller records it as a per-item error like any other failure.
+func safeGetBatchResponseByID[T serialization.Parsable](
+	resp msgraphgocore.BatchResponse,
+	id string,
+	constructor serialization.ParsableFactory,
+) (val T, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var zero T
+			val = zero
+			err = fmt.Errorf("batch sub-response %q could not be parsed: %v", id, r)
+		}
+	}()
+	return msgraphgocore.GetBatchResponseById[T](resp, id, constructor)
 }

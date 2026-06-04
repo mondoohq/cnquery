@@ -390,6 +390,33 @@ func (a *mqlMicrosoftIdentityAndAccessIdentityAndSignIn) policies() (*mqlMicroso
 	return resource.(*mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies), nil
 }
 
+// initMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy
+// populates the policy when it is queried directly via its full dotted path
+// rather than through the parent accessor chain. Without this, the terminal
+// resource is built as a bare husk with all fields null. We rebuild the chain
+// (identityAndSignIn -> policies -> identitySecurityDefaultsEnforcementPolicy),
+// which fetches the policy.
+func initMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	signIn, err := CreateResource(runtime, "microsoft.identityAndAccess.identityAndSignIn", map[string]*llx.RawData{
+		"__id": llx.StringData("identityAndSignIn"),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policies, err := signIn.(*mqlMicrosoftIdentityAndAccessIdentityAndSignIn).policies()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policy, err := policies.identitySecurityDefaultsEnforcementPolicy()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, policy, nil
+}
+
 // Implementation for the identitySecurityDefaultsEnforcementPolicy resource
 func (a *mqlMicrosoftIdentityAndAccessIdentityAndSignInPolicies) identitySecurityDefaultsEnforcementPolicy() (*mqlMicrosoftIdentityAndAccessIdentityAndSignInPoliciesIdentitySecurityDefaultsEnforcementPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
