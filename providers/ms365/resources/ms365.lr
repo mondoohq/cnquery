@@ -1306,7 +1306,7 @@ private microsoft.domaindnsrecord @defaults("id label") {
   weight int
   // Raw domain record properties
   //
-  // Deprecated in favor of the typed fields on this resource (`recordType`, `supportedService`, `ttl`, `label`, `text`, `canonicalName`, `mailExchange`, `preference`, `nameTarget`, `service`, `protocol`, `port`, `priority`, `weight`).
+  // Deprecated in favor of the individual fields on this resource (`recordType`, `supportedService`, `ttl`, `label`, `text`, `canonicalName`, `mailExchange`, `preference`, `nameTarget`, `service`, `protocol`, `port`, `priority`, `weight`).
   properties @maturity("deprecated") dict
 }
 
@@ -2624,48 +2624,152 @@ private microsoft.devicemanagement.roleScopeTag @defaults("id displayName isBuil
 // quarantine policies, retention policies, journal rules, report submission
 // policies, Teams protection policies, and organization-wide configuration.
 ms365.exchangeonline {
-  // List of malware filter policies
-  malwareFilterPolicy() []dict
-  // List of hosted outbound spam filter policies
-  hostedOutboundSpamFilterPolicy() []dict
-  // List of hosted spam filter policies
-  hostedContentFilterPolicy() []dict
-  // Transport rules
-  transportRule() []dict
-  // List of remote domains
-  remoteDomain() []dict
-  // List of safe links policies
-  safeLinksPolicy() []dict
-  // List of safe attachment policies
-  safeAttachmentPolicy() []dict
+  // Malware filter policies as raw dictionaries
+  //
+  // Deprecated in favor of malwareFilterPolicies.
+  malwareFilterPolicy() @maturity("deprecated") []dict
+  // Malware filter policies
+  //
+  // Each policy exposes fields for common-attachment filtering, zero-hour auto purge,
+  // and admin notification settings.
+  malwareFilterPolicies() []ms365.exchangeonline.malwareFilterPolicy
+  // Hosted outbound spam filter policies as raw dictionaries
+  //
+  // Deprecated in favor of hostedOutboundSpamFilterPolicies.
+  hostedOutboundSpamFilterPolicy() @maturity("deprecated") []dict
+  // Outbound spam filter policies
+  //
+  // Each policy exposes fields for the sending limits and the automatic
+  // email-forwarding mode.
+  hostedOutboundSpamFilterPolicies() []ms365.exchangeonline.hostedOutboundSpamFilterPolicy
+  // Hosted content (anti-spam) filter policies as raw dictionaries
+  //
+  // Deprecated in favor of hostedContentFilterPolicies.
+  hostedContentFilterPolicy() @maturity("deprecated") []dict
+  // Inbound anti-spam policies
+  //
+  // Each policy exposes fields for the spam, phishing, and bulk-mail actions and the
+  // allowed and blocked sender domains.
+  hostedContentFilterPolicies() []ms365.exchangeonline.hostedContentFilterPolicy
+  // Transport rules as raw dictionaries
+  //
+  // Deprecated in favor of transportRules.
+  transportRule() @maturity("deprecated") []dict
+  // Mail flow (transport) rules
+  //
+  // Each rule exposes fields for its name, evaluation priority, and
+  // enablement state.
+  transportRules() []ms365.exchangeonline.transportRule
+  // Remote domains as raw dictionaries
+  //
+  // Deprecated in favor of remoteDomains.
+  remoteDomain() @maturity("deprecated") []dict
+  // Remote domain configurations
+  //
+  // Each configuration exposes fields for the automatic reply, forwarding, and
+  // delivery-report settings for mail sent to that domain.
+  remoteDomains() []ms365.exchangeonline.remoteDomain
+  // Safe Links policies as raw dictionaries
+  //
+  // Deprecated in favor of safeLinksPolicies.
+  safeLinksPolicy() @maturity("deprecated") []dict
+  // Defender for Office 365 Safe Links policies
+  //
+  // Each policy exposes fields for the URL scanning coverage, click tracking, and
+  // click-through settings.
+  safeLinksPolicies() []ms365.exchangeonline.safeLinksPolicy
+  // Safe Attachments policies as raw dictionaries
+  //
+  // Deprecated in favor of safeAttachmentPolicies.
+  safeAttachmentPolicy() @maturity("deprecated") []dict
+  // Defender for Office 365 Safe Attachments policies
+  //
+  // Each policy exposes fields for the malware-detection action and redirect settings.
+  safeAttachmentPolicies() []ms365.exchangeonline.safeAttachmentPolicy
   // Organization configurations
   organizationConfig() dict
-  // List of authentication policies
-  authenticationPolicy() []dict
-  // List of anti-phishing policies
-  antiPhishPolicy() []dict
-  // List of dkim signing configurations
-  dkimSigningConfig() []dict
-  // List of OWA mailbox policies
-  owaMailboxPolicy() []dict
+  // Authentication policies as raw dictionaries
+  //
+  // Deprecated in favor of authenticationPolicies.
+  authenticationPolicy() @maturity("deprecated") []dict
+  // Authentication policies
+  //
+  // Each policy exposes fields for which legacy basic authentication protocols are
+  // still allowed.
+  authenticationPolicies() []ms365.exchangeonline.authenticationPolicy
+  // Anti-phishing policies as raw dictionaries
+  //
+  // Deprecated in favor of antiPhishPolicies.
+  antiPhishPolicy() @maturity("deprecated") []dict
+  // Anti-phishing policies
+  //
+  // Each policy exposes fields for the impersonation protection, spoof intelligence,
+  // and phishing threshold settings.
+  antiPhishPolicies() []ms365.exchangeonline.antiPhishPolicy
+  // DKIM signing configurations as raw dictionaries
+  //
+  // Deprecated in favor of dkimSigningConfigs.
+  dkimSigningConfig() @maturity("deprecated") []dict
+  // DKIM signing configurations
+  //
+  // One configuration per accepted domain, with fields for whether outbound
+  // DKIM signing is enabled and its status.
+  dkimSigningConfigs() []ms365.exchangeonline.dkimSigningConfig
+  // OWA mailbox policies as raw dictionaries
+  //
+  // Deprecated in favor of owaMailboxPolicies.
+  owaMailboxPolicy() @maturity("deprecated") []dict
+  // Outlook on the web mailbox policies
+  //
+  // Each policy exposes fields for the third-party storage availability and direct
+  // file-access settings.
+  owaMailboxPolicies() []ms365.exchangeonline.owaMailboxPolicy
   // Admin audit log configuration
   adminAuditLogConfig() dict
   // List of phishing filter policies
   phishFilterPolicy() []dict
-  // List of quarantine policies
-  quarantinePolicy() []dict
+  // Quarantine policies as raw dictionaries
+  //
+  // Deprecated in favor of quarantinePolicies.
+  quarantinePolicy() @maturity("deprecated") []dict
+  // Quarantine policies
+  //
+  // Each policy exposes fields for the end-user permission bitmask and whether
+  // quarantine notifications are sent.
+  quarantinePolicies() []ms365.exchangeonline.quarantinePolicy
   // List of mailbox plans
   mailboxPlans() []ms365.exchangeonline.mailboxPlan
   // List of retention policies
   retentionPolicies() []ms365.exchangeonline.retentionPolicy
   // List of mailboxes
   mailbox() []dict
-  // List of APT policies for Office 365
-  atpPolicyForO365() []dict
-  // List of sharing policies
-  sharingPolicy() []dict
-  // List of role assignment policies
-  roleAssignmentPolicy() []dict
+  // ATP policies for Office 365 as raw dictionaries
+  //
+  // Deprecated in favor of atpPoliciesForO365.
+  atpPolicyForO365() @maturity("deprecated") []dict
+  // Defender for Office 365 ATP policies
+  //
+  // Each policy exposes fields for the Safe Documents and SharePoint, OneDrive, and
+  // Teams protection settings.
+  atpPoliciesForO365() []ms365.exchangeonline.atpPolicyForO365
+  // Sharing policies as raw dictionaries
+  //
+  // Deprecated in favor of sharingPolicies.
+  sharingPolicy() @maturity("deprecated") []dict
+  // Calendar and contact sharing policies
+  //
+  // Each policy exposes fields for whether sharing is enabled and the domains and
+  // sharing actions it permits.
+  sharingPolicies() []ms365.exchangeonline.sharingPolicy
+  // Role assignment policies as raw dictionaries
+  //
+  // Deprecated in favor of roleAssignmentPolicies.
+  roleAssignmentPolicy() @maturity("deprecated") []dict
+  // Role assignment policies
+  //
+  // Each policy exposes fields for the management roles assigned to mailboxes and
+  // whether it is the default policy.
+  roleAssignmentPolicies() []ms365.exchangeonline.roleAssignmentPolicy
   // List of external sender configurations
   externalInOutlook() []ms365.exchangeonline.externalSender
   // List of shared mailboxes
@@ -2815,10 +2919,10 @@ private ms365.exchangeonline.mailbox @defaults("identity displayName auditEnable
 // script permissions), and `defaultLinkPermission` (the default sharing link
 // permission level for the tenant).
 ms365.sharepointonline {
-  // SharePoint Online tenant settings as an untyped dictionary
+  // SharePoint Online tenant settings as a raw dictionary
   //
-  // Deprecated in favor of tenantConfiguration, which exposes the
-  // security-relevant settings as typed fields.
+  // Deprecated in favor of tenantConfiguration, which models the
+  // security-relevant settings as individual fields.
   spoTenant() @maturity("deprecated") dict
   // SharePoint Online tenant configuration
   tenantConfiguration() ms365.sharepointonline.tenantConfig
@@ -2937,10 +3041,10 @@ private ms365.sharepointonline.site {
 // `csTeamsMeetingPolicy` (meeting lobby, recording, and participant controls),
 // and `csTeamsMessagingPolicy` (messaging and security reporting controls).
 ms365.teams {
-  // Teams client configuration as an untyped dictionary
+  // Teams client configuration as a raw dictionary
   //
-  // Deprecated in favor of clientConfiguration, which exposes the same
-  // settings as typed fields.
+  // Deprecated in favor of clientConfiguration, which models the same
+  // settings as individual fields.
   csTeamsClientConfiguration() @maturity("deprecated") dict
   // Teams client configuration
   //
@@ -3091,4 +3195,392 @@ private ms365.exchangeonline.retentionPolicy @defaults("name retentionPolicyTagL
   retentionPolicyTagLinks []string
   // Retention ID
   retentionId string
+}
+
+// Exchange Online mail flow transport rule
+//
+// Examine a single mail flow rule returned by Get-TransportRule, selected by
+// `name`. Each rule reports its evaluation `priority` (lower numbers run
+// first), enablement `state`, operating `mode`, and administrator `comments`.
+// The full condition and action set of a rule remains available through the
+// deprecated `transportRule` dictionary.
+private ms365.exchangeonline.transportRule @defaults("name state priority") {
+  // The rule identity
+  identity string
+  // The rule name
+  name string
+  // Rule evaluation priority (lower runs first)
+  priority int
+  // Whether the rule is enabled or disabled
+  state string
+  // Rule operating mode (Enforce, Audit, or AuditAndNotify)
+  mode string
+  // Administrator comments on the rule
+  comments string
+}
+
+// Exchange Online anti-phishing policy
+//
+// Examine a single anti-phishing policy returned by Get-AntiPhishPolicy,
+// selected by `name`. Each policy reports whether it is `enabled`, the
+// `phishThresholdLevel` (1-4, where higher is more aggressive), the
+// mailbox-intelligence, spoof-intelligence, and impersonation-protection
+// toggles, and the actions taken when impersonation is detected or sender
+// authentication fails.
+private ms365.exchangeonline.antiPhishPolicy @defaults("name enabled phishThresholdLevel") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether the policy is enabled
+  enabled bool
+  // Phishing detection aggressiveness (1-4, higher is more aggressive)
+  phishThresholdLevel int
+  // Whether mailbox intelligence is enabled
+  enableMailboxIntelligence bool
+  // Whether mailbox intelligence impersonation protection is enabled
+  enableMailboxIntelligenceProtection bool
+  // Whether spoof intelligence is enabled
+  enableSpoofIntelligence bool
+  // Whether first-contact safety tips are shown
+  enableFirstContactSafetyTips bool
+  // Whether protected-user impersonation protection is enabled
+  enableTargetedUserProtection bool
+  // Whether protected-domain impersonation protection is enabled
+  enableTargetedDomainsProtection bool
+  // Whether impersonation protection covers all organization domains
+  enableOrganizationDomainsProtection bool
+  // Action for detected user impersonation (for example Quarantine or MoveToJmf)
+  targetedUserProtectionAction string
+  // Action for detected domain impersonation (for example Quarantine or MoveToJmf)
+  targetedDomainProtectionAction string
+  // Action when sender authentication (SPF/DKIM/DMARC) fails
+  authenticationFailAction string
+}
+
+// Exchange Online Safe Links policy
+//
+// Examine a single Defender for Office 365 Safe Links policy returned by
+// Get-SafeLinksPolicy, selected by `name`. Each policy reports which
+// workloads URL scanning covers (email, Teams, and Office apps), whether
+// clicks are tracked, whether users may click through to the original URL,
+// and whether URL rewriting is disabled.
+private ms365.exchangeonline.safeLinksPolicy @defaults("name enableSafeLinksForEmail") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether Safe Links scanning applies to email
+  enableSafeLinksForEmail bool
+  // Whether Safe Links scanning applies to Microsoft Teams
+  enableSafeLinksForTeams bool
+  // Whether Safe Links scanning applies to Office apps
+  enableSafeLinksForOffice bool
+  // Whether user clicks are tracked
+  trackClicks bool
+  // Whether users can click through to the original URL
+  allowClickThrough bool
+  // Whether URLs are scanned in real time
+  scanUrls bool
+  // Whether scanning applies to internal senders
+  enableForInternalSenders bool
+  // Whether messages are held until scanning completes
+  deliverMessageAfterScan bool
+  // Whether URL rewriting is disabled
+  disableUrlRewrite bool
+}
+
+// Exchange Online Safe Attachments policy
+//
+// Examine a single Defender for Office 365 Safe Attachments policy returned
+// by Get-SafeAttachmentPolicy, selected by `name`. Each policy reports
+// whether it is enabled, the `action` taken on detected malware (Allow,
+// Block, Replace, or DynamicDelivery), and whether and where detected
+// messages are redirected.
+private ms365.exchangeonline.safeAttachmentPolicy @defaults("name enable action") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether the policy is enabled
+  enable bool
+  // Action for detected malware (Allow, Block, Replace, or DynamicDelivery)
+  action string
+  // Whether detected messages are redirected
+  redirect bool
+  // Address detected messages are redirected to
+  redirectAddress string
+}
+
+// Exchange Online malware filter policy
+//
+// Examine a single malware filter policy returned by Get-MalwareFilterPolicy,
+// selected by `name`. Each policy reports whether the common-attachment file
+// filter is enabled and the `fileTypes` it blocks, whether zero-hour auto
+// purge is on, and whether internal- and external-sender admin notifications
+// are sent.
+private ms365.exchangeonline.malwareFilterPolicy @defaults("name enableFileFilter zapEnabled") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether the common attachment file filter is enabled
+  enableFileFilter bool
+  // Whether zero-hour auto purge (ZAP) is enabled
+  zapEnabled bool
+  // Whether internal-sender admin notifications are enabled
+  enableInternalSenderAdminNotifications bool
+  // Whether external-sender admin notifications are enabled
+  enableExternalSenderAdminNotifications bool
+  // File extensions blocked by the common attachment filter
+  fileTypes []string
+}
+
+// Exchange Online hosted content (anti-spam) filter policy
+//
+// Examine a single inbound anti-spam policy returned by
+// Get-HostedContentFilterPolicy, selected by `name`. Each policy reports the
+// actions taken on spam, high-confidence spam, phishing, high-confidence
+// phishing, and bulk mail, the `bulkThreshold` (1-9), whether end-user spam
+// notifications are sent, and the always-allowed and always-blocked sender
+// domains.
+private ms365.exchangeonline.hostedContentFilterPolicy @defaults("name spamAction highConfidenceSpamAction") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Action applied to spam
+  spamAction string
+  // Action applied to high-confidence spam
+  highConfidenceSpamAction string
+  // Action applied to phishing
+  phishSpamAction string
+  // Action applied to high-confidence phishing
+  highConfidencePhishAction string
+  // Action applied to bulk mail
+  bulkSpamAction string
+  // Bulk complaint level threshold (1-9)
+  bulkThreshold int
+  // Whether end-user spam notifications are enabled
+  enableEndUserSpamNotifications bool
+  // Sender domains always treated as allowed
+  allowedSenderDomains []string
+  // Sender domains always treated as blocked
+  blockedSenderDomains []string
+}
+
+// Exchange Online hosted outbound spam filter policy
+//
+// Examine a single outbound spam policy returned by
+// Get-HostedOutboundSpamFilterPolicy, selected by `name`. Each policy reports
+// the external, internal, and daily recipient limits, the action taken when a
+// limit is reached, the automatic email-forwarding mode (Automatic, On, or
+// Off), and whether suspicious outbound mail is bcc'd and notified.
+private ms365.exchangeonline.hostedOutboundSpamFilterPolicy @defaults("name autoForwardingMode") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // External recipient limit per hour
+  recipientLimitExternalPerHour int
+  // Internal recipient limit per hour
+  recipientLimitInternalPerHour int
+  // Recipient limit per day
+  recipientLimitPerDay int
+  // Action taken when a sending limit is reached
+  actionWhenThresholdReached string
+  // Automatic external email forwarding mode (Automatic, On, or Off)
+  autoForwardingMode string
+  // Whether suspicious outbound mail is blind-copied to a designated address
+  bccSuspiciousOutboundMail bool
+  // Whether notifications are sent for outbound spam
+  notifyOutboundSpam bool
+}
+
+// Exchange Online DKIM signing configuration
+//
+// Examine the DKIM signing configuration for one accepted domain, returned by
+// Get-DkimSigningConfig and selected by `domain`. The `enabled` field reports
+// whether outbound DKIM signing is on for the domain, and `status` reports its
+// current state.
+private ms365.exchangeonline.dkimSigningConfig @defaults("domain enabled status") {
+  // The configuration identity
+  identity string
+  // The domain the configuration applies to
+  domain string
+  // Whether DKIM signing is enabled for the domain
+  enabled bool
+  // The configuration status
+  status string
+}
+
+// Exchange Online authentication policy
+//
+// Examine a single authentication policy returned by Get-AuthenticationPolicy,
+// selected by `name`. Each policy exposes one boolean per connection protocol
+// (ActiveSync, Autodiscover, IMAP, MAPI, offline address book, the Outlook
+// service, POP, remote PowerShell, reporting web services, Outlook RPC,
+// authenticated SMTP, and Exchange Web Services) indicating whether legacy
+// basic authentication is still allowed for it.
+private ms365.exchangeonline.authenticationPolicy @defaults("name allowBasicAuthSmtp") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether basic authentication is allowed for Exchange ActiveSync
+  allowBasicAuthActiveSync bool
+  // Whether basic authentication is allowed for Autodiscover
+  allowBasicAuthAutodiscover bool
+  // Whether basic authentication is allowed for IMAP
+  allowBasicAuthImap bool
+  // Whether basic authentication is allowed for MAPI
+  allowBasicAuthMapi bool
+  // Whether basic authentication is allowed for the offline address book
+  allowBasicAuthOfflineAddressBook bool
+  // Whether basic authentication is allowed for the Outlook service
+  allowBasicAuthOutlookService bool
+  // Whether basic authentication is allowed for POP3
+  allowBasicAuthPop bool
+  // Whether basic authentication is allowed for remote PowerShell
+  allowBasicAuthPowershell bool
+  // Whether basic authentication is allowed for reporting web services
+  allowBasicAuthReportingWebServices bool
+  // Whether basic authentication is allowed for Outlook RPC
+  allowBasicAuthRpc bool
+  // Whether basic authentication is allowed for authenticated SMTP
+  allowBasicAuthSmtp bool
+  // Whether basic authentication is allowed for Exchange Web Services
+  allowBasicAuthWebServices bool
+}
+
+// Exchange Online Outlook on the web mailbox policy
+//
+// Examine a single Outlook on the web mailbox policy returned by
+// Get-OwaMailboxPolicy, selected by `name`. Each policy reports whether
+// third-party storage providers are available, whether direct file access is
+// enabled on public and private computers, whether forced save applies to
+// filtered attachments, and the allowed and blocked attachment file types.
+private ms365.exchangeonline.owaMailboxPolicy @defaults("name additionalStorageProvidersAvailable") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether third-party storage providers are available in Outlook on the web
+  additionalStorageProvidersAvailable bool
+  // Whether direct file access is enabled on public computers
+  directFileAccessOnPublicComputersEnabled bool
+  // Whether direct file access is enabled on private computers
+  directFileAccessOnPrivateComputersEnabled bool
+  // Whether forced save is applied to filtered attachments
+  forceSaveAttachmentFilteringEnabled bool
+  // File types users are allowed to open or save
+  allowedFileTypes []string
+  // File types users are blocked from opening or saving
+  blockedFileTypes []string
+}
+
+// Exchange Online remote domain configuration
+//
+// Examine the mail-handling configuration for one remote domain returned by
+// Get-RemoteDomain, selected by `name`. The `domainName` field reports the
+// domain it applies to, and further fields report the out-of-office reply type
+// allowed and whether automatic replies, automatic forwarding, delivery
+// reports, and non-delivery reports are permitted to that domain.
+private ms365.exchangeonline.remoteDomain @defaults("name domainName autoForwardEnabled") {
+  // The remote domain identity
+  identity string
+  // The remote domain name
+  name string
+  // The domain the configuration applies to
+  domainName string
+  // Out-of-office reply type allowed to the domain (External, ExternalLegacy, or InternalLegacy)
+  allowedOOFType string
+  // Whether automatic replies are allowed to the domain
+  autoReplyEnabled bool
+  // Whether automatic forwarding is allowed to the domain
+  autoForwardEnabled bool
+  // Whether delivery reports are allowed to the domain
+  deliveryReportEnabled bool
+  // Whether non-delivery reports are allowed to the domain
+  ndrEnabled bool
+  // Whether the domain is treated as internal
+  isInternal bool
+}
+
+// Exchange Online quarantine policy
+//
+// Examine a single quarantine policy returned by Get-QuarantinePolicy,
+// selected by `name`. Each policy reports the
+// `endUserQuarantinePermissionsValue` bitmask that controls what recipients
+// may do with their quarantined messages, and whether end-user spam
+// (quarantine) notifications are enabled.
+private ms365.exchangeonline.quarantinePolicy @defaults("name esnEnabled") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Bitmask of end-user permissions granted for quarantined messages
+  endUserQuarantinePermissionsValue int
+  // Whether end-user spam notifications (quarantine notifications) are enabled
+  esnEnabled bool
+}
+
+// Exchange Online Defender for Office 365 ATP policy
+//
+// Examine the Defender for Office 365 advanced threat protection policy
+// returned by Get-AtpPolicyForO365, selected by `name`. It reports whether
+// Safe Documents is enabled, whether users may bypass it to open a file, and
+// whether ATP protection is enabled for SharePoint, OneDrive, and Teams.
+private ms365.exchangeonline.atpPolicyForO365 @defaults("name enableSafeDocs") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether Safe Documents is enabled
+  enableSafeDocs bool
+  // Whether users can bypass Safe Documents and open the file
+  allowSafeDocsOpen bool
+  // Whether ATP is enabled for SharePoint, OneDrive, and Teams
+  enableATPForSPOTeamsODB bool
+}
+
+// Exchange Online sharing policy
+//
+// Examine a single calendar and contact sharing policy returned by
+// Get-SharingPolicy, selected by `name`. The `enabled` field reports whether
+// the policy is active, `isDefault` reports whether it is the tenant default,
+// and the `domains` field lists which external domains may be shared with and
+// at what level.
+private ms365.exchangeonline.sharingPolicy @defaults("name enabled isDefault") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether the policy is enabled
+  enabled bool
+  // Whether this is the default sharing policy
+  isDefault bool
+  // Domains and sharing actions defined by the policy
+  domains []string
+}
+
+// Exchange Online role assignment policy
+//
+// Examine a single role assignment policy returned by
+// Get-RoleAssignmentPolicy, selected by `name`. Each policy reports whether
+// it is the tenant default, its `description`, and the management roles it
+// assigns to mailboxes (for example MyProfileInformation or MyBaseOptions),
+// which govern the self-service capabilities users have over their own
+// mailbox.
+private ms365.exchangeonline.roleAssignmentPolicy @defaults("name isDefault") {
+  // The policy identity
+  identity string
+  // The policy name
+  name string
+  // Whether this is the default role assignment policy
+  isDefault bool
+  // The policy description
+  description string
+  // Management roles assigned by the policy
+  assignedRoles []string
 }

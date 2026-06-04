@@ -637,6 +637,67 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	}
 	r.MailboxAuditBypassAssociation = plugin.TValue[[]any]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
 
+	// resource views of the policies above, decoded from the same payload (see
+	// ms365_exchange_policies.go). The deprecated []dict accessors keep
+	// returning every property; these expose the security-relevant subset.
+	//
+	// assignPolicies mirrors the null/empty distinction used by the other typed
+	// resources above: a field absent from the report (isNull) becomes a null
+	// value rather than an empty list. The isNull check must be made by the
+	// caller on the concrete report field, since a nil []any boxed into an
+	// `any` parameter would no longer compare equal to nil.
+	assignPolicies := func(isNull bool, data []any, err error) plugin.TValue[[]any] {
+		if isNull {
+			return plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		}
+		return plugin.TValue[[]any]{Data: data, State: plugin.StateIsSet, Error: err}
+	}
+
+	transportRules, transportRulesErr := convertTransportRules(r, report.TransportRule)
+	r.TransportRules = assignPolicies(report.TransportRule == nil, transportRules, transportRulesErr)
+
+	antiPhishPolicies, antiPhishPoliciesErr := convertAntiPhishPolicies(r, report.AntiPhishPolicy)
+	r.AntiPhishPolicies = assignPolicies(report.AntiPhishPolicy == nil, antiPhishPolicies, antiPhishPoliciesErr)
+
+	safeLinksPolicies, safeLinksPoliciesErr := convertSafeLinksPolicies(r, report.SafeLinksPolicy)
+	r.SafeLinksPolicies = assignPolicies(report.SafeLinksPolicy == nil, safeLinksPolicies, safeLinksPoliciesErr)
+
+	safeAttachmentPolicies, safeAttachmentPoliciesErr := convertSafeAttachmentPolicies(r, report.SafeAttachmentPolicy)
+	r.SafeAttachmentPolicies = assignPolicies(report.SafeAttachmentPolicy == nil, safeAttachmentPolicies, safeAttachmentPoliciesErr)
+
+	malwareFilterPolicies, malwareFilterPoliciesErr := convertMalwareFilterPolicies(r, report.MalwareFilterPolicy)
+	r.MalwareFilterPolicies = assignPolicies(report.MalwareFilterPolicy == nil, malwareFilterPolicies, malwareFilterPoliciesErr)
+
+	hostedContentFilterPolicies, hostedContentFilterPoliciesErr := convertHostedContentFilterPolicies(r, report.HostedContentFilterPolicy)
+	r.HostedContentFilterPolicies = assignPolicies(report.HostedContentFilterPolicy == nil, hostedContentFilterPolicies, hostedContentFilterPoliciesErr)
+
+	hostedOutboundSpamFilterPolicies, hostedOutboundSpamFilterPoliciesErr := convertHostedOutboundSpamFilterPolicies(r, report.HostedOutboundSpamFilterPolicy)
+	r.HostedOutboundSpamFilterPolicies = assignPolicies(report.HostedOutboundSpamFilterPolicy == nil, hostedOutboundSpamFilterPolicies, hostedOutboundSpamFilterPoliciesErr)
+
+	dkimSigningConfigs, dkimSigningConfigsErr := convertDkimSigningConfigs(r, report.DkimSigningConfig)
+	r.DkimSigningConfigs = assignPolicies(report.DkimSigningConfig == nil, dkimSigningConfigs, dkimSigningConfigsErr)
+
+	authenticationPolicies, authenticationPoliciesErr := convertAuthenticationPolicies(r, report.AuthenticationPolicy)
+	r.AuthenticationPolicies = assignPolicies(report.AuthenticationPolicy == nil, authenticationPolicies, authenticationPoliciesErr)
+
+	owaMailboxPolicies, owaMailboxPoliciesErr := convertOwaMailboxPolicies(r, report.OwaMailboxPolicy)
+	r.OwaMailboxPolicies = assignPolicies(report.OwaMailboxPolicy == nil, owaMailboxPolicies, owaMailboxPoliciesErr)
+
+	remoteDomains, remoteDomainsErr := convertRemoteDomains(r, report.RemoteDomain)
+	r.RemoteDomains = assignPolicies(report.RemoteDomain == nil, remoteDomains, remoteDomainsErr)
+
+	quarantinePolicies, quarantinePoliciesErr := convertQuarantinePolicies(r, report.QuarantinePolicy)
+	r.QuarantinePolicies = assignPolicies(report.QuarantinePolicy == nil, quarantinePolicies, quarantinePoliciesErr)
+
+	atpPoliciesForO365, atpPoliciesForO365Err := convertAtpPoliciesForO365(r, report.AtpPolicyForO365)
+	r.AtpPoliciesForO365 = assignPolicies(report.AtpPolicyForO365 == nil, atpPoliciesForO365, atpPoliciesForO365Err)
+
+	sharingPolicies, sharingPoliciesErr := convertSharingPolicies(r, report.SharingPolicy)
+	r.SharingPolicies = assignPolicies(report.SharingPolicy == nil, sharingPolicies, sharingPoliciesErr)
+
+	roleAssignmentPolicies, roleAssignmentPoliciesErr := convertRoleAssignmentPolicies(r, report.RoleAssignmentPolicy)
+	r.RoleAssignmentPolicies = assignPolicies(report.RoleAssignmentPolicy == nil, roleAssignmentPolicies, roleAssignmentPoliciesErr)
+
 	r.fetched = true
 	return nil
 }
