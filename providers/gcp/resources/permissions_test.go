@@ -202,6 +202,10 @@ var validatedGCPPermissions = []string{
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
 	"dns.responsePolicies.list",
+	// Real and required (Cloud Domains), but customRolesSupportLevel is
+	// NOT_SUPPORTED: GCP grants it only via a predefined role (roles/domains.viewer),
+	// never a custom role. It is therefore absent from list-testable-permissions and
+	// rejected by `gcloud iam roles create` — that is expected, not a bug. Keep it.
 	"domains.registrations.list",
 	"essentialcontacts.contacts.list",
 	"eventarc.channels.list",
@@ -249,7 +253,6 @@ var validatedGCPPermissions = []string{
 	"networksecurity.tlsInspectionPolicies.list",
 	"networksecurity.urlLists.list",
 	"orgpolicy.constraints.list",
-	"orgpolicy.customConstraints.list",
 	"orgpolicy.policies.list",
 	"osconfig.inventories.get",
 	"osconfig.osPolicyAssignments.list",
@@ -264,7 +267,6 @@ var validatedGCPPermissions = []string{
 	"redis.backups.list",
 	"redis.clusters.list",
 	"redis.instances.list",
-	"resourcemanager.folders.getIamPolicy",
 	"resourcemanager.projects.get",
 	"resourcemanager.projects.getIamPolicy",
 	"resourcemanager.resourceTagBindings.list",

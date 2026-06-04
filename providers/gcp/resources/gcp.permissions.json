@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.21.0",
-  "generated_at": "2026-06-04T13:47:42-07:00",
+  "generated_at": "2026-06-04T15:12:41-06:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -214,7 +214,6 @@
     "networksecurity.tlsInspectionPolicies.list",
     "networksecurity.urlLists.list",
     "orgpolicy.constraints.list",
-    "orgpolicy.customConstraints.list",
     "orgpolicy.policies.list",
     "osconfig.inventories.get",
     "osconfig.osPolicyAssignments.list",
@@ -229,7 +228,6 @@
     "redis.backups.list",
     "redis.clusters.list",
     "redis.instances.list",
-    "resourcemanager.folders.getIamPolicy",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
     "resourcemanager.resourceTagBindings.list",
@@ -1578,7 +1576,8 @@
       "permission": "orgpolicy.customConstraints.list",
       "service": "orgpolicy",
       "action": "ListCustomConstraints",
-      "source_file": "orgpolicy.go"
+      "source_file": "orgpolicy.go",
+      "scope": "org"
     },
     {
       "permission": "orgpolicy.policies.list",
@@ -1675,7 +1674,8 @@
       "permission": "resourcemanager.folders.getIamPolicy",
       "service": "resourcemanager",
       "action": "Folders.GetIamPolicy",
-      "source_file": "folder.go"
+      "source_file": "folder.go",
+      "scope": "org"
     },
     {
       "permission": "resourcemanager.folders.list",
@@ -1882,7 +1882,9 @@
     }
   ],
   "org_level_permissions": [
+    "orgpolicy.customConstraints.list",
     "resourcemanager.folders.get",
+    "resourcemanager.folders.getIamPolicy",
     "resourcemanager.folders.list",
     "resourcemanager.organizations.get",
     "resourcemanager.organizations.getIamPolicy",

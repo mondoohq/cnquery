@@ -1239,7 +1239,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 // level, not the project level. They are placed in the org_level_permissions
 // section of the manifest instead of the main permissions list.
 var gcpOrgLevelPermissions = map[string]bool{
+	// Custom org-policy constraints are an organization-scoped resource;
+	// ListCustomConstraints is only callable with an "organizations/{id}"
+	// parent, so the permission is rejected in a project-level custom role.
+	"orgpolicy.customConstraints.list":           true,
 	"resourcemanager.folders.get":                true,
+	"resourcemanager.folders.getIamPolicy":       true,
 	"resourcemanager.folders.list":               true,
 	"resourcemanager.folders.search":             true,
 	"resourcemanager.organizations.get":          true,
