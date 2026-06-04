@@ -36,6 +36,10 @@ func (a *mqlMicrosoftDevicemanagement) configurationPolicies() ([]any, error) {
 
 	res := []any{}
 	for _, p := range policies {
+		// skip policies without an id; their cache key would collide
+		if p.GetId() == nil {
+			continue
+		}
 		var templateId, templateDisplayName, templateFamily *string
 		if tr := p.GetTemplateReference(); tr != nil {
 			templateId = tr.GetTemplateId()
@@ -71,6 +75,9 @@ func (a *mqlMicrosoftDevicemanagement) configurationPolicies() ([]any, error) {
 // settings loads the individual configured settings of a configuration policy,
 // flattening each polymorphic setting instance into a dictionary.
 func (p *mqlMicrosoftDevicemanagementConfigurationPolicy) settings() ([]any, error) {
+	if p.Id.Data == "" {
+		return []any{}, nil
+	}
 	conn := p.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.BetaGraphClient()
 	if err != nil {
@@ -106,6 +113,8 @@ func flattenConfigurationSetting(inst betamodels.DeviceManagementConfigurationSe
 		return d
 	}
 	d["settingDefinitionId"] = convert.ToValue(inst.GetSettingDefinitionId())
+	// always present so consumers can rely on the key across all setting types
+	d["value"] = nil
 
 	switch v := inst.(type) {
 	case betamodels.DeviceManagementConfigurationChoiceSettingInstanceable:
