@@ -222,28 +222,36 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 
 		// decode the same payload into the typed client configuration resource
 		clientConfig := &CsTeamsClientConfig{}
-		if raw, err := json.Marshal(report.CsTeamsClientConfiguration); err == nil {
+		raw, err := json.Marshal(report.CsTeamsClientConfiguration)
+		if err == nil {
 			err = json.Unmarshal(raw, clientConfig)
 		}
-		mqlClientConfig, mqlClientConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.clientConfig",
-			map[string]*llx.RawData{
-				"allowEmailIntoChannel":            llx.BoolData(clientConfig.AllowEmailIntoChannel),
-				"allowDropBox":                     llx.BoolData(clientConfig.AllowDropBox),
-				"allowBox":                         llx.BoolData(clientConfig.AllowBox),
-				"allowGoogleDrive":                 llx.BoolData(clientConfig.AllowGoogleDrive),
-				"allowShareFile":                   llx.BoolData(clientConfig.AllowShareFile),
-				"allowEgnyte":                      llx.BoolData(clientConfig.AllowEgnyte),
-				"allowOrganizationTab":             llx.BoolData(clientConfig.AllowOrganizationTab),
-				"allowSkypeBusinessInterop":        llx.BoolData(clientConfig.AllowSkypeBusinessInterop),
-				"allowGuestUser":                   llx.BoolData(clientConfig.AllowGuestUser),
-				"contentPin":                       llx.StringData(clientConfig.ContentPin),
-				"allowResourceAccountSendMessage":  llx.BoolData(clientConfig.AllowResourceAccountSendMessage),
-				"allowScopedPeopleSearchandAccess": llx.BoolData(clientConfig.AllowScopedPeopleSearchandAccess),
-			})
-		if mqlClientConfigErr != nil {
-			r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{State: plugin.StateIsSet, Error: mqlClientConfigErr}
+		if err != nil {
+			// a decode failure must surface as an error rather than reporting a
+			// zero-value config (all false/"") as if it were the real client state
+			r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{State: plugin.StateIsSet, Error: err}
 		} else {
-			r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{Data: mqlClientConfig.(*mqlMs365TeamsClientConfig), State: plugin.StateIsSet}
+			mqlClientConfig, mqlClientConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.clientConfig",
+				map[string]*llx.RawData{
+					"__id":                             llx.StringData("ms365.teams.clientConfig"),
+					"allowEmailIntoChannel":            llx.BoolData(clientConfig.AllowEmailIntoChannel),
+					"allowDropBox":                     llx.BoolData(clientConfig.AllowDropBox),
+					"allowBox":                         llx.BoolData(clientConfig.AllowBox),
+					"allowGoogleDrive":                 llx.BoolData(clientConfig.AllowGoogleDrive),
+					"allowShareFile":                   llx.BoolData(clientConfig.AllowShareFile),
+					"allowEgnyte":                      llx.BoolData(clientConfig.AllowEgnyte),
+					"allowOrganizationTab":             llx.BoolData(clientConfig.AllowOrganizationTab),
+					"allowSkypeBusinessInterop":        llx.BoolData(clientConfig.AllowSkypeBusinessInterop),
+					"allowGuestUser":                   llx.BoolData(clientConfig.AllowGuestUser),
+					"contentPin":                       llx.StringData(clientConfig.ContentPin),
+					"allowResourceAccountSendMessage":  llx.BoolData(clientConfig.AllowResourceAccountSendMessage),
+					"allowScopedPeopleSearchandAccess": llx.BoolData(clientConfig.AllowScopedPeopleSearchandAccess),
+				})
+			if mqlClientConfigErr != nil {
+				r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{State: plugin.StateIsSet, Error: mqlClientConfigErr}
+			} else {
+				r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{Data: mqlClientConfig.(*mqlMs365TeamsClientConfig), State: plugin.StateIsSet}
+			}
 		}
 	} else {
 		r.CsTeamsClientConfiguration = plugin.TValue[any]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}

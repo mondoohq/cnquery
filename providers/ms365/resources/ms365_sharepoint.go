@@ -225,37 +225,45 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 
 	// decode the same payload into the typed tenant configuration resource
 	tenantConfig := &SpoTenantConfig{}
-	if raw, err := json.Marshal(report.SpoTenant); err == nil {
+	raw, err := json.Marshal(report.SpoTenant)
+	if err == nil {
 		err = json.Unmarshal(raw, tenantConfig)
 	}
-	mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.sharepointonline.tenantConfig",
-		map[string]*llx.RawData{
-			"sharingCapability":                          llx.StringData(tenantConfig.SharingCapability),
-			"sharingDomainRestrictionMode":               llx.StringData(tenantConfig.SharingDomainRestrictionMode),
-			"sharingAllowedDomainList":                   llx.StringData(tenantConfig.SharingAllowedDomainList),
-			"sharingBlockedDomainList":                   llx.StringData(tenantConfig.SharingBlockedDomainList),
-			"defaultSharingLinkType":                     llx.StringData(tenantConfig.DefaultSharingLinkType),
-			"defaultLinkPermission":                      llx.StringData(tenantConfig.DefaultLinkPermission),
-			"requireAcceptingAccountMatchInvitedAccount": llx.BoolData(tenantConfig.RequireAcceptingAccountMatchInvitedAccount),
-			"preventExternalUsersFromResharing":          llx.BoolData(tenantConfig.PreventExternalUsersFromResharing),
-			"externalUserExpirationRequired":             llx.BoolData(tenantConfig.ExternalUserExpirationRequired),
-			"externalUserExpireInDays":                   llx.IntData(tenantConfig.ExternalUserExpireInDays),
-			"emailAttestationRequired":                   llx.BoolData(tenantConfig.EmailAttestationRequired),
-			"emailAttestationReAuthDays":                 llx.IntData(tenantConfig.EmailAttestationReAuthDays),
-			"requireAnonymousLinksExpireInDays":          llx.IntData(tenantConfig.RequireAnonymousLinksExpireInDays),
-			"showEveryoneClaim":                          llx.BoolData(tenantConfig.ShowEveryoneClaim),
-			"showAllUsersClaim":                          llx.BoolData(tenantConfig.ShowAllUsersClaim),
-			"showEveryoneExceptExternalUsersClaim":       llx.BoolData(tenantConfig.ShowEveryoneExceptExternalUsersClaim),
-			"notifyOwnersWhenItemsReshared":              llx.BoolData(tenantConfig.NotifyOwnersWhenItemsReshared),
-			"legacyAuthProtocolsEnabled":                 llx.BoolData(tenantConfig.LegacyAuthProtocolsEnabled),
-			"conditionalAccessPolicy":                    llx.StringData(tenantConfig.ConditionalAccessPolicy),
-			"isUnmanagedSyncClientForTenantRestricted":   llx.BoolData(tenantConfig.IsUnmanagedSyncClientForTenantRestricted),
-			"disallowInfectedFileDownload":               llx.BoolData(tenantConfig.DisallowInfectedFileDownload),
-		})
-	if mqlTenantConfigErr != nil {
-		r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
+	if err != nil {
+		// a decode failure must surface as an error rather than reporting a
+		// zero-value config (all false/0/"") as if it were the real tenant state
+		r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: err}
 	} else {
-		r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{Data: mqlTenantConfig.(*mqlMs365SharepointonlineTenantConfig), State: plugin.StateIsSet}
+		mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.sharepointonline.tenantConfig",
+			map[string]*llx.RawData{
+				"__id":                                       llx.StringData("ms365.sharepointonline.tenantConfig"),
+				"sharingCapability":                          llx.StringData(tenantConfig.SharingCapability),
+				"sharingDomainRestrictionMode":               llx.StringData(tenantConfig.SharingDomainRestrictionMode),
+				"sharingAllowedDomainList":                   llx.StringData(tenantConfig.SharingAllowedDomainList),
+				"sharingBlockedDomainList":                   llx.StringData(tenantConfig.SharingBlockedDomainList),
+				"defaultSharingLinkType":                     llx.StringData(tenantConfig.DefaultSharingLinkType),
+				"defaultLinkPermission":                      llx.StringData(tenantConfig.DefaultLinkPermission),
+				"requireAcceptingAccountMatchInvitedAccount": llx.BoolData(tenantConfig.RequireAcceptingAccountMatchInvitedAccount),
+				"preventExternalUsersFromResharing":          llx.BoolData(tenantConfig.PreventExternalUsersFromResharing),
+				"externalUserExpirationRequired":             llx.BoolData(tenantConfig.ExternalUserExpirationRequired),
+				"externalUserExpireInDays":                   llx.IntData(tenantConfig.ExternalUserExpireInDays),
+				"emailAttestationRequired":                   llx.BoolData(tenantConfig.EmailAttestationRequired),
+				"emailAttestationReAuthDays":                 llx.IntData(tenantConfig.EmailAttestationReAuthDays),
+				"requireAnonymousLinksExpireInDays":          llx.IntData(tenantConfig.RequireAnonymousLinksExpireInDays),
+				"showEveryoneClaim":                          llx.BoolData(tenantConfig.ShowEveryoneClaim),
+				"showAllUsersClaim":                          llx.BoolData(tenantConfig.ShowAllUsersClaim),
+				"showEveryoneExceptExternalUsersClaim":       llx.BoolData(tenantConfig.ShowEveryoneExceptExternalUsersClaim),
+				"notifyOwnersWhenItemsReshared":              llx.BoolData(tenantConfig.NotifyOwnersWhenItemsReshared),
+				"legacyAuthProtocolsEnabled":                 llx.BoolData(tenantConfig.LegacyAuthProtocolsEnabled),
+				"conditionalAccessPolicy":                    llx.StringData(tenantConfig.ConditionalAccessPolicy),
+				"isUnmanagedSyncClientForTenantRestricted":   llx.BoolData(tenantConfig.IsUnmanagedSyncClientForTenantRestricted),
+				"disallowInfectedFileDownload":               llx.BoolData(tenantConfig.DisallowInfectedFileDownload),
+			})
+		if mqlTenantConfigErr != nil {
+			r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
+		} else {
+			r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{Data: mqlTenantConfig.(*mqlMs365SharepointonlineTenantConfig), State: plugin.StateIsSet}
+		}
 	}
 
 	spoTenantSyncClientRestriction, spoTenantSyncClientRestrictionErr := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
