@@ -2443,6 +2443,59 @@ microsoft.devicemanagement {
   windowsFeatureUpdateProfiles() []microsoft.devicemanagement.windowsFeatureUpdateProfile
   // Windows quality update deployment profiles
   windowsQualityUpdateProfiles() []microsoft.devicemanagement.windowsQualityUpdateProfile
+  // Group policy (administrative template) configurations
+  groupPolicyConfigurations() []microsoft.devicemanagement.groupPolicyConfiguration
+}
+
+// Microsoft Intune group policy configuration
+//
+// Examine an administrative-templates (ADMX) policy configuration, selected by
+// its `id`. `policyConfigurationIngestionType` reports whether it uses the
+// built-in or custom (ingested) ADMX templates. Use `definitionValues` to read
+// the individual administrative-template settings the configuration sets.
+private microsoft.devicemanagement.groupPolicyConfiguration @defaults("displayName policyConfigurationIngestionType") {
+  // Configuration ID
+  id string
+  // Configuration display name
+  displayName string
+  // Configuration description
+  description string
+  // How the ADMX templates are sourced (unknown, builtIn, custom, mixed)
+  policyConfigurationIngestionType string
+  // Role scope tag IDs assigned to the configuration
+  roleScopeTagIds []string
+  // Date and time the configuration was created
+  createdDateTime time
+  // Date and time the configuration was last modified
+  lastModifiedDateTime time
+  // Administrative-template settings configured by this configuration
+  definitionValues() []microsoft.devicemanagement.groupPolicyDefinitionValue
+}
+
+// Microsoft Intune group policy definition value
+//
+// Examine a single administrative-template setting configured by a group
+// policy configuration. `definitionName` names the policy, `enabled` reports
+// whether it is enabled or disabled, `definitionClassType` whether it applies
+// to the machine or the user, and `definitionCategoryPath` its location in the
+// administrative-templates tree.
+private microsoft.devicemanagement.groupPolicyDefinitionValue @defaults("definitionName enabled") {
+  // Definition value ID
+  id string
+  // Whether the setting is enabled
+  enabled bool
+  // Configuration type (policy, preference)
+  configurationType string
+  // Name of the administrative-template definition
+  definitionName string
+  // Whether the definition applies to the machine or the user (machine, user)
+  definitionClassType string
+  // Location of the definition in the administrative-templates tree
+  definitionCategoryPath string
+  // Date and time the setting was created
+  createdDateTime time
+  // Date and time the setting was last modified
+  lastModifiedDateTime time
 }
 
 // Microsoft Intune Windows Update for Business ring

@@ -127,6 +127,8 @@ const (
 	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
 	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
 	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementGroupPolicyConfiguration                                            string = "microsoft.devicemanagement.groupPolicyConfiguration"
+	ResourceMicrosoftDevicemanagementGroupPolicyDefinitionValue                                          string = "microsoft.devicemanagement.groupPolicyDefinitionValue"
 	ResourceMicrosoftDevicemanagementWindowsUpdateRing                                                   string = "microsoft.devicemanagement.windowsUpdateRing"
 	ResourceMicrosoftDevicemanagementWindowsFeatureUpdateProfile                                         string = "microsoft.devicemanagement.windowsFeatureUpdateProfile"
 	ResourceMicrosoftDevicemanagementWindowsQualityUpdateProfile                                         string = "microsoft.devicemanagement.windowsQualityUpdateProfile"
@@ -638,6 +640,14 @@ func init() {
 		"microsoft.devicemanagement": {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
+		},
+		"microsoft.devicemanagement.groupPolicyConfiguration": {
+			// to override args, implement: initMicrosoftDevicemanagementGroupPolicyConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementGroupPolicyConfiguration,
+		},
+		"microsoft.devicemanagement.groupPolicyDefinitionValue": {
+			// to override args, implement: initMicrosoftDevicemanagementGroupPolicyDefinitionValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementGroupPolicyDefinitionValue,
 		},
 		"microsoft.devicemanagement.windowsUpdateRing": {
 			// to override args, implement: initMicrosoftDevicemanagementWindowsUpdateRing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3378,6 +3388,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.windowsQualityUpdateProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetWindowsQualityUpdateProfiles()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.windowsQualityUpdateProfile")))
+	},
+	"microsoft.devicemanagement.groupPolicyConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetGroupPolicyConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.groupPolicyConfiguration")))
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.policyConfigurationIngestionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetPolicyConfigurationIngestionType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.roleScopeTagIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetRoleScopeTagIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.definitionValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetDefinitionValues()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.groupPolicyDefinitionValue")))
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.configurationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetConfigurationType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetDefinitionName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionClassType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetDefinitionClassType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionCategoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetDefinitionCategoryPath()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).GetLastModifiedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.devicemanagement.windowsUpdateRing.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementWindowsUpdateRing).GetId()).ToDataRes(types.String)
@@ -9026,6 +9087,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.windowsQualityUpdateProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).WindowsQualityUpdateProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).GroupPolicyConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.policyConfigurationIngestionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).PolicyConfigurationIngestionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.roleScopeTagIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).RoleScopeTagIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyConfiguration.definitionValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).DefinitionValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.configurationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).ConfigurationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).DefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionClassType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).DefinitionClassType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.definitionCategoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).DefinitionCategoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.groupPolicyDefinitionValue.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.windowsUpdateRing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21557,6 +21694,7 @@ type mqlMicrosoftDevicemanagement struct {
 	WindowsUpdateRings                 plugin.TValue[[]any]
 	WindowsFeatureUpdateProfiles       plugin.TValue[[]any]
 	WindowsQualityUpdateProfiles       plugin.TValue[[]any]
+	GroupPolicyConfigurations          plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -21925,6 +22063,192 @@ func (c *mqlMicrosoftDevicemanagement) GetWindowsQualityUpdateProfiles() *plugin
 
 		return c.windowsQualityUpdateProfiles()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetGroupPolicyConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GroupPolicyConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "groupPolicyConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groupPolicyConfigurations()
+	})
+}
+
+// mqlMicrosoftDevicemanagementGroupPolicyConfiguration for the microsoft.devicemanagement.groupPolicyConfiguration resource
+type mqlMicrosoftDevicemanagementGroupPolicyConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementGroupPolicyConfigurationInternal it will be used here
+	Id                               plugin.TValue[string]
+	DisplayName                      plugin.TValue[string]
+	Description                      plugin.TValue[string]
+	PolicyConfigurationIngestionType plugin.TValue[string]
+	RoleScopeTagIds                  plugin.TValue[[]any]
+	CreatedDateTime                  plugin.TValue[*time.Time]
+	LastModifiedDateTime             plugin.TValue[*time.Time]
+	DefinitionValues                 plugin.TValue[[]any]
+}
+
+// createMicrosoftDevicemanagementGroupPolicyConfiguration creates a new instance of this resource
+func createMicrosoftDevicemanagementGroupPolicyConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementGroupPolicyConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.groupPolicyConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) MqlName() string {
+	return "microsoft.devicemanagement.groupPolicyConfiguration"
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetPolicyConfigurationIngestionType() *plugin.TValue[string] {
+	return &c.PolicyConfigurationIngestionType
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetRoleScopeTagIds() *plugin.TValue[[]any] {
+	return &c.RoleScopeTagIds
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyConfiguration) GetDefinitionValues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefinitionValues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.groupPolicyConfiguration", c.__id, "definitionValues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.definitionValues()
+	})
+}
+
+// mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue for the microsoft.devicemanagement.groupPolicyDefinitionValue resource
+type mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementGroupPolicyDefinitionValueInternal it will be used here
+	Id                     plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
+	ConfigurationType      plugin.TValue[string]
+	DefinitionName         plugin.TValue[string]
+	DefinitionClassType    plugin.TValue[string]
+	DefinitionCategoryPath plugin.TValue[string]
+	CreatedDateTime        plugin.TValue[*time.Time]
+	LastModifiedDateTime   plugin.TValue[*time.Time]
+}
+
+// createMicrosoftDevicemanagementGroupPolicyDefinitionValue creates a new instance of this resource
+func createMicrosoftDevicemanagementGroupPolicyDefinitionValue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.groupPolicyDefinitionValue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) MqlName() string {
+	return "microsoft.devicemanagement.groupPolicyDefinitionValue"
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetConfigurationType() *plugin.TValue[string] {
+	return &c.ConfigurationType
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetDefinitionName() *plugin.TValue[string] {
+	return &c.DefinitionName
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetDefinitionClassType() *plugin.TValue[string] {
+	return &c.DefinitionClassType
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetDefinitionCategoryPath() *plugin.TValue[string] {
+	return &c.DefinitionCategoryPath
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementGroupPolicyDefinitionValue) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
 }
 
 // mqlMicrosoftDevicemanagementWindowsUpdateRing for the microsoft.devicemanagement.windowsUpdateRing resource
