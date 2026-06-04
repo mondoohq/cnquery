@@ -1078,6 +1078,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// ModelClient.GetModel → singular "model" by default; the real IAM
 		// permission is the plural form (matching aiplatform.models.list).
 		"GetModel": "aiplatform.models.get",
+		// EndpointClient.GetEndpoint → singular "endpoint" by default; the real
+		// IAM permission is the plural form (matching aiplatform.endpoints.list).
+		"GetEndpoint": "aiplatform.endpoints.get",
 	},
 	"pubsub": {
 		// SchemaClient.GetSchema → singular "schema" by default; real IAM

@@ -44,6 +44,7 @@ var validatedGCPPermissions = []string{
 	"aiplatform.customJobs.list",
 	"aiplatform.datasets.list",
 	"aiplatform.deploymentResourcePools.list",
+	"aiplatform.endpoints.get",
 	"aiplatform.endpoints.list",
 	"aiplatform.featureGroups.list",
 	"aiplatform.featureOnlineStores.list",
