@@ -168,21 +168,21 @@ const (
 	ResourceMs365TeamsChannel                                                                            string = "ms365.teams.channel"
 	ResourceMs365ExchangeonlineMailboxPlan                                                               string = "ms365.exchangeonline.mailboxPlan"
 	ResourceMs365ExchangeonlineRetentionPolicy                                                           string = "ms365.exchangeonline.retentionPolicy"
-	ResourceMs365ExchangeonlineTransportRule                                                             string = "ms365.exchangeonline.transportRule"
-	ResourceMs365ExchangeonlineAntiPhishPolicy                                                           string = "ms365.exchangeonline.antiPhishPolicy"
-	ResourceMs365ExchangeonlineSafeLinksPolicy                                                           string = "ms365.exchangeonline.safeLinksPolicy"
-	ResourceMs365ExchangeonlineSafeAttachmentPolicy                                                      string = "ms365.exchangeonline.safeAttachmentPolicy"
-	ResourceMs365ExchangeonlineMalwareFilterPolicy                                                       string = "ms365.exchangeonline.malwareFilterPolicy"
-	ResourceMs365ExchangeonlineHostedContentFilterPolicy                                                 string = "ms365.exchangeonline.hostedContentFilterPolicy"
-	ResourceMs365ExchangeonlineHostedOutboundSpamFilterPolicy                                            string = "ms365.exchangeonline.hostedOutboundSpamFilterPolicy"
-	ResourceMs365ExchangeonlineDkimSigningConfig                                                         string = "ms365.exchangeonline.dkimSigningConfig"
-	ResourceMs365ExchangeonlineAuthenticationPolicy                                                      string = "ms365.exchangeonline.authenticationPolicy"
-	ResourceMs365ExchangeonlineOwaMailboxPolicy                                                          string = "ms365.exchangeonline.owaMailboxPolicy"
-	ResourceMs365ExchangeonlineRemoteDomain                                                              string = "ms365.exchangeonline.remoteDomain"
-	ResourceMs365ExchangeonlineQuarantinePolicy                                                          string = "ms365.exchangeonline.quarantinePolicy"
-	ResourceMs365ExchangeonlineAtpPolicyForO365                                                          string = "ms365.exchangeonline.atpPolicyForO365"
-	ResourceMs365ExchangeonlineSharingPolicy                                                             string = "ms365.exchangeonline.sharingPolicy"
-	ResourceMs365ExchangeonlineRoleAssignmentPolicy                                                      string = "ms365.exchangeonline.roleAssignmentPolicy"
+	ResourceMs365ExchangeonlineTransportRuleEntry                                                        string = "ms365.exchangeonline.transportRuleEntry"
+	ResourceMs365ExchangeonlineAntiPhishPolicyEntry                                                      string = "ms365.exchangeonline.antiPhishPolicyEntry"
+	ResourceMs365ExchangeonlineSafeLinksPolicyEntry                                                      string = "ms365.exchangeonline.safeLinksPolicyEntry"
+	ResourceMs365ExchangeonlineSafeAttachmentPolicyEntry                                                 string = "ms365.exchangeonline.safeAttachmentPolicyEntry"
+	ResourceMs365ExchangeonlineMalwareFilterPolicyEntry                                                  string = "ms365.exchangeonline.malwareFilterPolicyEntry"
+	ResourceMs365ExchangeonlineHostedContentFilterPolicyEntry                                            string = "ms365.exchangeonline.hostedContentFilterPolicyEntry"
+	ResourceMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry                                       string = "ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry"
+	ResourceMs365ExchangeonlineDkimSigningConfigEntry                                                    string = "ms365.exchangeonline.dkimSigningConfigEntry"
+	ResourceMs365ExchangeonlineAuthenticationPolicyEntry                                                 string = "ms365.exchangeonline.authenticationPolicyEntry"
+	ResourceMs365ExchangeonlineOwaMailboxPolicyEntry                                                     string = "ms365.exchangeonline.owaMailboxPolicyEntry"
+	ResourceMs365ExchangeonlineRemoteDomainEntry                                                         string = "ms365.exchangeonline.remoteDomainEntry"
+	ResourceMs365ExchangeonlineQuarantinePolicyEntry                                                     string = "ms365.exchangeonline.quarantinePolicyEntry"
+	ResourceMs365ExchangeonlineAtpPolicyForO365Entry                                                     string = "ms365.exchangeonline.atpPolicyForO365Entry"
+	ResourceMs365ExchangeonlineSharingPolicyEntry                                                        string = "ms365.exchangeonline.sharingPolicyEntry"
+	ResourceMs365ExchangeonlineRoleAssignmentPolicyEntry                                                 string = "ms365.exchangeonline.roleAssignmentPolicyEntry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -797,65 +797,65 @@ func init() {
 			// to override args, implement: initMs365ExchangeonlineRetentionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineRetentionPolicy,
 		},
-		"ms365.exchangeonline.transportRule": {
-			// to override args, implement: initMs365ExchangeonlineTransportRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineTransportRule,
+		"ms365.exchangeonline.transportRuleEntry": {
+			// to override args, implement: initMs365ExchangeonlineTransportRuleEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineTransportRuleEntry,
 		},
-		"ms365.exchangeonline.antiPhishPolicy": {
-			// to override args, implement: initMs365ExchangeonlineAntiPhishPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineAntiPhishPolicy,
+		"ms365.exchangeonline.antiPhishPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineAntiPhishPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineAntiPhishPolicyEntry,
 		},
-		"ms365.exchangeonline.safeLinksPolicy": {
-			// to override args, implement: initMs365ExchangeonlineSafeLinksPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineSafeLinksPolicy,
+		"ms365.exchangeonline.safeLinksPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineSafeLinksPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineSafeLinksPolicyEntry,
 		},
-		"ms365.exchangeonline.safeAttachmentPolicy": {
-			// to override args, implement: initMs365ExchangeonlineSafeAttachmentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineSafeAttachmentPolicy,
+		"ms365.exchangeonline.safeAttachmentPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineSafeAttachmentPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineSafeAttachmentPolicyEntry,
 		},
-		"ms365.exchangeonline.malwareFilterPolicy": {
-			// to override args, implement: initMs365ExchangeonlineMalwareFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineMalwareFilterPolicy,
+		"ms365.exchangeonline.malwareFilterPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineMalwareFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineMalwareFilterPolicyEntry,
 		},
-		"ms365.exchangeonline.hostedContentFilterPolicy": {
-			// to override args, implement: initMs365ExchangeonlineHostedContentFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineHostedContentFilterPolicy,
+		"ms365.exchangeonline.hostedContentFilterPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineHostedContentFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineHostedContentFilterPolicyEntry,
 		},
-		"ms365.exchangeonline.hostedOutboundSpamFilterPolicy": {
-			// to override args, implement: initMs365ExchangeonlineHostedOutboundSpamFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineHostedOutboundSpamFilterPolicy,
+		"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry,
 		},
-		"ms365.exchangeonline.dkimSigningConfig": {
-			// to override args, implement: initMs365ExchangeonlineDkimSigningConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineDkimSigningConfig,
+		"ms365.exchangeonline.dkimSigningConfigEntry": {
+			// to override args, implement: initMs365ExchangeonlineDkimSigningConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineDkimSigningConfigEntry,
 		},
-		"ms365.exchangeonline.authenticationPolicy": {
-			// to override args, implement: initMs365ExchangeonlineAuthenticationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineAuthenticationPolicy,
+		"ms365.exchangeonline.authenticationPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineAuthenticationPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineAuthenticationPolicyEntry,
 		},
-		"ms365.exchangeonline.owaMailboxPolicy": {
-			// to override args, implement: initMs365ExchangeonlineOwaMailboxPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineOwaMailboxPolicy,
+		"ms365.exchangeonline.owaMailboxPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineOwaMailboxPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineOwaMailboxPolicyEntry,
 		},
-		"ms365.exchangeonline.remoteDomain": {
-			// to override args, implement: initMs365ExchangeonlineRemoteDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineRemoteDomain,
+		"ms365.exchangeonline.remoteDomainEntry": {
+			// to override args, implement: initMs365ExchangeonlineRemoteDomainEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineRemoteDomainEntry,
 		},
-		"ms365.exchangeonline.quarantinePolicy": {
-			// to override args, implement: initMs365ExchangeonlineQuarantinePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineQuarantinePolicy,
+		"ms365.exchangeonline.quarantinePolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineQuarantinePolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineQuarantinePolicyEntry,
 		},
-		"ms365.exchangeonline.atpPolicyForO365": {
-			// to override args, implement: initMs365ExchangeonlineAtpPolicyForO365(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineAtpPolicyForO365,
+		"ms365.exchangeonline.atpPolicyForO365Entry": {
+			// to override args, implement: initMs365ExchangeonlineAtpPolicyForO365Entry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineAtpPolicyForO365Entry,
 		},
-		"ms365.exchangeonline.sharingPolicy": {
-			// to override args, implement: initMs365ExchangeonlineSharingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineSharingPolicy,
+		"ms365.exchangeonline.sharingPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineSharingPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineSharingPolicyEntry,
 		},
-		"ms365.exchangeonline.roleAssignmentPolicy": {
-			// to override args, implement: initMs365ExchangeonlineRoleAssignmentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365ExchangeonlineRoleAssignmentPolicy,
+		"ms365.exchangeonline.roleAssignmentPolicyEntry": {
+			// to override args, implement: initMs365ExchangeonlineRoleAssignmentPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineRoleAssignmentPolicyEntry,
 		},
 	}
 }
@@ -4040,43 +4040,43 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.malwareFilterPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.malwareFilterPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.malwareFilterPolicyEntry")))
 	},
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetHostedOutboundSpamFilterPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetHostedOutboundSpamFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.hostedOutboundSpamFilterPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetHostedOutboundSpamFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry")))
 	},
 	"ms365.exchangeonline.hostedContentFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetHostedContentFilterPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.hostedContentFilterPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetHostedContentFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.hostedContentFilterPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetHostedContentFilterPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.hostedContentFilterPolicyEntry")))
 	},
 	"ms365.exchangeonline.transportRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetTransportRule()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.transportRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetTransportRules()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.transportRule")))
+		return (r.(*mqlMs365Exchangeonline).GetTransportRules()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.transportRuleEntry")))
 	},
 	"ms365.exchangeonline.remoteDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetRemoteDomain()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.remoteDomains": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetRemoteDomains()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.remoteDomain")))
+		return (r.(*mqlMs365Exchangeonline).GetRemoteDomains()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.remoteDomainEntry")))
 	},
 	"ms365.exchangeonline.safeLinksPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetSafeLinksPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.safeLinksPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetSafeLinksPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.safeLinksPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetSafeLinksPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.safeLinksPolicyEntry")))
 	},
 	"ms365.exchangeonline.safeAttachmentPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetSafeAttachmentPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.safeAttachmentPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetSafeAttachmentPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.safeAttachmentPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetSafeAttachmentPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.safeAttachmentPolicyEntry")))
 	},
 	"ms365.exchangeonline.organizationConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetOrganizationConfig()).ToDataRes(types.Dict)
@@ -4085,25 +4085,25 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Exchangeonline).GetAuthenticationPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.authenticationPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetAuthenticationPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.authenticationPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetAuthenticationPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.authenticationPolicyEntry")))
 	},
 	"ms365.exchangeonline.antiPhishPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetAntiPhishPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.antiPhishPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetAntiPhishPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.antiPhishPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetAntiPhishPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.antiPhishPolicyEntry")))
 	},
 	"ms365.exchangeonline.dkimSigningConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetDkimSigningConfig()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.dkimSigningConfigs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetDkimSigningConfigs()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.dkimSigningConfig")))
+		return (r.(*mqlMs365Exchangeonline).GetDkimSigningConfigs()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.dkimSigningConfigEntry")))
 	},
 	"ms365.exchangeonline.owaMailboxPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetOwaMailboxPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.owaMailboxPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetOwaMailboxPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.owaMailboxPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetOwaMailboxPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.owaMailboxPolicyEntry")))
 	},
 	"ms365.exchangeonline.adminAuditLogConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetAdminAuditLogConfig()).ToDataRes(types.Dict)
@@ -4115,7 +4115,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Exchangeonline).GetQuarantinePolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.quarantinePolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetQuarantinePolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.quarantinePolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetQuarantinePolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.quarantinePolicyEntry")))
 	},
 	"ms365.exchangeonline.mailboxPlans": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailboxPlans()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.mailboxPlan")))
@@ -4130,19 +4130,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Exchangeonline).GetAtpPolicyForO365()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.atpPoliciesForO365": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetAtpPoliciesForO365()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.atpPolicyForO365")))
+		return (r.(*mqlMs365Exchangeonline).GetAtpPoliciesForO365()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.atpPolicyForO365Entry")))
 	},
 	"ms365.exchangeonline.sharingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetSharingPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.sharingPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetSharingPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.sharingPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetSharingPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.sharingPolicyEntry")))
 	},
 	"ms365.exchangeonline.roleAssignmentPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetRoleAssignmentPolicy()).ToDataRes(types.Array(types.Dict))
 	},
 	"ms365.exchangeonline.roleAssignmentPolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Exchangeonline).GetRoleAssignmentPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.roleAssignmentPolicy")))
+		return (r.(*mqlMs365Exchangeonline).GetRoleAssignmentPolicies()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.roleAssignmentPolicyEntry")))
 	},
 	"ms365.exchangeonline.externalInOutlook": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetExternalInOutlook()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.externalSender")))
@@ -4729,359 +4729,359 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.retentionPolicy.retentionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineRetentionPolicy).GetRetentionId()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.transportRule.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.transportRuleEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.transportRule.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.transportRuleEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.transportRule.priority": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetPriority()).ToDataRes(types.Int)
+	"ms365.exchangeonline.transportRuleEntry.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetPriority()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.transportRule.state": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetState()).ToDataRes(types.String)
+	"ms365.exchangeonline.transportRuleEntry.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetState()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.transportRule.mode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetMode()).ToDataRes(types.String)
+	"ms365.exchangeonline.transportRuleEntry.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetMode()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.transportRule.comments": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineTransportRule).GetComments()).ToDataRes(types.String)
+	"ms365.exchangeonline.transportRuleEntry.comments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetComments()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.antiPhishPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.antiPhishPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.phishThresholdLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetPhishThresholdLevel()).ToDataRes(types.Int)
+	"ms365.exchangeonline.antiPhishPolicyEntry.phishThresholdLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetPhishThresholdLevel()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableMailboxIntelligence": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableMailboxIntelligence()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableMailboxIntelligence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableMailboxIntelligence()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableMailboxIntelligenceProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableMailboxIntelligenceProtection()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableMailboxIntelligenceProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableMailboxIntelligenceProtection()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableSpoofIntelligence": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableSpoofIntelligence()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSpoofIntelligence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableSpoofIntelligence()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableFirstContactSafetyTips": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableFirstContactSafetyTips()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableFirstContactSafetyTips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableFirstContactSafetyTips()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableTargetedUserProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableTargetedUserProtection()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableTargetedUserProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableTargetedUserProtection()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableTargetedDomainsProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableTargetedDomainsProtection()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableTargetedDomainsProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableTargetedDomainsProtection()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableOrganizationDomainsProtection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetEnableOrganizationDomainsProtection()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableOrganizationDomainsProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableOrganizationDomainsProtection()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.targetedUserProtectionAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetTargetedUserProtectionAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.antiPhishPolicyEntry.targetedUserProtectionAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetTargetedUserProtectionAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.targetedDomainProtectionAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetTargetedDomainProtectionAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.antiPhishPolicyEntry.targetedDomainProtectionAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetTargetedDomainProtectionAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.antiPhishPolicy.authenticationFailAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicy).GetAuthenticationFailAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.antiPhishPolicyEntry.authenticationFailAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetAuthenticationFailAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeLinksPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeLinksPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForEmail": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetEnableSafeLinksForEmail()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetEnableSafeLinksForEmail()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForTeams": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetEnableSafeLinksForTeams()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForTeams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetEnableSafeLinksForTeams()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForOffice": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetEnableSafeLinksForOffice()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForOffice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetEnableSafeLinksForOffice()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.trackClicks": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetTrackClicks()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.trackClicks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetTrackClicks()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.allowClickThrough": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetAllowClickThrough()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.allowClickThrough": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetAllowClickThrough()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.scanUrls": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetScanUrls()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.scanUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetScanUrls()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableForInternalSenders": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetEnableForInternalSenders()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableForInternalSenders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetEnableForInternalSenders()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.deliverMessageAfterScan": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetDeliverMessageAfterScan()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.deliverMessageAfterScan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetDeliverMessageAfterScan()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeLinksPolicy.disableUrlRewrite": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicy).GetDisableUrlRewrite()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeLinksPolicyEntry.disableUrlRewrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetDisableUrlRewrite()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.enable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetEnable()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetEnable()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.action": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.redirect": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetRedirect()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.redirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetRedirect()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.redirectAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).GetRedirectAddress()).ToDataRes(types.String)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.redirectAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetRedirectAddress()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableFileFilter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetEnableFileFilter()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableFileFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetEnableFileFilter()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetZapEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetZapEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableInternalSenderAdminNotifications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetEnableInternalSenderAdminNotifications()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableInternalSenderAdminNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetEnableInternalSenderAdminNotifications()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableExternalSenderAdminNotifications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetEnableExternalSenderAdminNotifications()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableExternalSenderAdminNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetEnableExternalSenderAdminNotifications()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.fileTypes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).GetFileTypes()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetFileTypes()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.spamAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetSpamAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.spamAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetSpamAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.highConfidenceSpamAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetHighConfidenceSpamAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.highConfidenceSpamAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetHighConfidenceSpamAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.phishSpamAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetPhishSpamAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.phishSpamAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetPhishSpamAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.highConfidencePhishAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetHighConfidencePhishAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.highConfidencePhishAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetHighConfidencePhishAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.bulkSpamAction": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetBulkSpamAction()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.bulkSpamAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetBulkSpamAction()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.bulkThreshold": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetBulkThreshold()).ToDataRes(types.Int)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.bulkThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetBulkThreshold()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.enableEndUserSpamNotifications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetEnableEndUserSpamNotifications()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.enableEndUserSpamNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetEnableEndUserSpamNotifications()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.allowedSenderDomains": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetAllowedSenderDomains()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.allowedSenderDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetAllowedSenderDomains()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.blockedSenderDomains": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).GetBlockedSenderDomains()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.blockedSenderDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetBlockedSenderDomains()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitExternalPerHour": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetRecipientLimitExternalPerHour()).ToDataRes(types.Int)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitExternalPerHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetRecipientLimitExternalPerHour()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitInternalPerHour": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetRecipientLimitInternalPerHour()).ToDataRes(types.Int)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitInternalPerHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetRecipientLimitInternalPerHour()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitPerDay": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetRecipientLimitPerDay()).ToDataRes(types.Int)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitPerDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetRecipientLimitPerDay()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.actionWhenThresholdReached": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetActionWhenThresholdReached()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.actionWhenThresholdReached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetActionWhenThresholdReached()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.autoForwardingMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetAutoForwardingMode()).ToDataRes(types.String)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.autoForwardingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetAutoForwardingMode()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.bccSuspiciousOutboundMail": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetBccSuspiciousOutboundMail()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.bccSuspiciousOutboundMail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetBccSuspiciousOutboundMail()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.notifyOutboundSpam": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).GetNotifyOutboundSpam()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetNotifyOutboundSpam()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.dkimSigningConfig.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineDkimSigningConfig).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.dkimSigningConfigEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.dkimSigningConfig.domain": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineDkimSigningConfig).GetDomain()).ToDataRes(types.String)
+	"ms365.exchangeonline.dkimSigningConfigEntry.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).GetDomain()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.dkimSigningConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineDkimSigningConfig).GetEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.dkimSigningConfigEntry.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).GetEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.dkimSigningConfig.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineDkimSigningConfig).GetStatus()).ToDataRes(types.String)
+	"ms365.exchangeonline.dkimSigningConfigEntry.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).GetStatus()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.authenticationPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.authenticationPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.authenticationPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.authenticationPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthActiveSync": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthActiveSync()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthActiveSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthActiveSync()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthAutodiscover": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthAutodiscover()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthAutodiscover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthAutodiscover()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthImap": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthImap()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthImap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthImap()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthMapi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthMapi()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthMapi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthMapi()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthOfflineAddressBook": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthOfflineAddressBook()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthOfflineAddressBook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthOfflineAddressBook()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthOutlookService": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthOutlookService()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthOutlookService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthOutlookService()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthPop": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthPop()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthPop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthPop()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthPowershell": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthPowershell()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthPowershell": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthPowershell()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthReportingWebServices": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthReportingWebServices()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthReportingWebServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthReportingWebServices()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthRpc": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthRpc()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthRpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthRpc()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthSmtp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthSmtp()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthSmtp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthSmtp()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthWebServices": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicy).GetAllowBasicAuthWebServices()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthWebServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).GetAllowBasicAuthWebServices()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.additionalStorageProvidersAvailable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetAdditionalStorageProvidersAvailable()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.additionalStorageProvidersAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetAdditionalStorageProvidersAvailable()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.directFileAccessOnPublicComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetDirectFileAccessOnPublicComputersEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.directFileAccessOnPublicComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetDirectFileAccessOnPublicComputersEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.directFileAccessOnPrivateComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetDirectFileAccessOnPrivateComputersEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.directFileAccessOnPrivateComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetDirectFileAccessOnPrivateComputersEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.forceSaveAttachmentFilteringEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetForceSaveAttachmentFilteringEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.forceSaveAttachmentFilteringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetForceSaveAttachmentFilteringEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.allowedFileTypes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetAllowedFileTypes()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allowedFileTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetAllowedFileTypes()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.blockedFileTypes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).GetBlockedFileTypes()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.owaMailboxPolicyEntry.blockedFileTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetBlockedFileTypes()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.remoteDomain.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.remoteDomainEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.remoteDomain.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.remoteDomainEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.remoteDomain.domainName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetDomainName()).ToDataRes(types.String)
+	"ms365.exchangeonline.remoteDomainEntry.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetDomainName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.remoteDomain.allowedOOFType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetAllowedOOFType()).ToDataRes(types.String)
+	"ms365.exchangeonline.remoteDomainEntry.allowedOOFType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetAllowedOOFType()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.remoteDomain.autoReplyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetAutoReplyEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.remoteDomainEntry.autoReplyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetAutoReplyEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.remoteDomain.autoForwardEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetAutoForwardEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.remoteDomainEntry.autoForwardEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetAutoForwardEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.remoteDomain.deliveryReportEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetDeliveryReportEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.remoteDomainEntry.deliveryReportEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetDeliveryReportEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.remoteDomain.ndrEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetNdrEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.remoteDomainEntry.ndrEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetNdrEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.remoteDomain.isInternal": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRemoteDomain).GetIsInternal()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.remoteDomainEntry.isInternal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetIsInternal()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.quarantinePolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineQuarantinePolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.quarantinePolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.quarantinePolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineQuarantinePolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.quarantinePolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.quarantinePolicy.endUserQuarantinePermissionsValue": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineQuarantinePolicy).GetEndUserQuarantinePermissionsValue()).ToDataRes(types.Int)
+	"ms365.exchangeonline.quarantinePolicyEntry.endUserQuarantinePermissionsValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).GetEndUserQuarantinePermissionsValue()).ToDataRes(types.Int)
 	},
-	"ms365.exchangeonline.quarantinePolicy.esnEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineQuarantinePolicy).GetEsnEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.quarantinePolicyEntry.esnEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).GetEsnEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.atpPolicyForO365.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.atpPolicyForO365Entry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.atpPolicyForO365.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.atpPolicyForO365Entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.atpPolicyForO365.enableSafeDocs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365).GetEnableSafeDocs()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.atpPolicyForO365Entry.enableSafeDocs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).GetEnableSafeDocs()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.atpPolicyForO365.allowSafeDocsOpen": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365).GetAllowSafeDocsOpen()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.atpPolicyForO365Entry.allowSafeDocsOpen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).GetAllowSafeDocsOpen()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.atpPolicyForO365.enableATPForSPOTeamsODB": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365).GetEnableATPForSPOTeamsODB()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.atpPolicyForO365Entry.enableATPForSPOTeamsODB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).GetEnableATPForSPOTeamsODB()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.sharingPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSharingPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.sharingPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSharingPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.sharingPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSharingPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.sharingPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSharingPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.sharingPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSharingPolicy).GetEnabled()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.sharingPolicyEntry.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSharingPolicyEntry).GetEnabled()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.sharingPolicy.isDefault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSharingPolicy).GetIsDefault()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.sharingPolicyEntry.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSharingPolicyEntry).GetIsDefault()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.sharingPolicy.domains": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineSharingPolicy).GetDomains()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.sharingPolicyEntry.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSharingPolicyEntry).GetDomains()).ToDataRes(types.Array(types.String))
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.identity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).GetIdentity()).ToDataRes(types.String)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).GetName()).ToDataRes(types.String)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetName()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.isDefault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).GetIsDefault()).ToDataRes(types.Bool)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetIsDefault()).ToDataRes(types.Bool)
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).GetDescription()).ToDataRes(types.String)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetDescription()).ToDataRes(types.String)
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.assignedRoles": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).GetAssignedRoles()).ToDataRes(types.Array(types.String))
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.assignedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetAssignedRoles()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -10771,536 +10771,536 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineRetentionPolicy).RetentionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.transportRuleEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.transportRule.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.transportRule.comments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineTransportRule).Comments, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.transportRuleEntry.comments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Comments, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.antiPhishPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.phishThresholdLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).PhishThresholdLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.phishThresholdLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).PhishThresholdLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableMailboxIntelligence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableMailboxIntelligence, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableMailboxIntelligence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableMailboxIntelligence, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableMailboxIntelligenceProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableMailboxIntelligenceProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableMailboxIntelligenceProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableMailboxIntelligenceProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableSpoofIntelligence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableSpoofIntelligence, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSpoofIntelligence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableSpoofIntelligence, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableFirstContactSafetyTips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableFirstContactSafetyTips, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableFirstContactSafetyTips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableFirstContactSafetyTips, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableTargetedUserProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableTargetedUserProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableTargetedUserProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableTargetedUserProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableTargetedDomainsProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableTargetedDomainsProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableTargetedDomainsProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableTargetedDomainsProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.enableOrganizationDomainsProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).EnableOrganizationDomainsProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableOrganizationDomainsProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableOrganizationDomainsProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.targetedUserProtectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).TargetedUserProtectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.targetedUserProtectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).TargetedUserProtectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.targetedDomainProtectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).TargetedDomainProtectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.targetedDomainProtectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).TargetedDomainProtectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.antiPhishPolicy.authenticationFailAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAntiPhishPolicy).AuthenticationFailAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.antiPhishPolicyEntry.authenticationFailAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).AuthenticationFailAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.safeLinksPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).EnableSafeLinksForEmail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).EnableSafeLinksForEmail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForTeams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).EnableSafeLinksForTeams, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForTeams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).EnableSafeLinksForTeams, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableSafeLinksForOffice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).EnableSafeLinksForOffice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableSafeLinksForOffice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).EnableSafeLinksForOffice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.trackClicks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).TrackClicks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.trackClicks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).TrackClicks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.allowClickThrough": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).AllowClickThrough, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.allowClickThrough": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).AllowClickThrough, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.scanUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).ScanUrls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.scanUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).ScanUrls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.enableForInternalSenders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).EnableForInternalSenders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.enableForInternalSenders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).EnableForInternalSenders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.deliverMessageAfterScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).DeliverMessageAfterScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.deliverMessageAfterScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).DeliverMessageAfterScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeLinksPolicy.disableUrlRewrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeLinksPolicy).DisableUrlRewrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeLinksPolicyEntry.disableUrlRewrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).DisableUrlRewrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).Enable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).Enable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).Redirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.redirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).Redirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.safeAttachmentPolicy.redirectAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicy).RedirectAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.redirectAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).RedirectAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableFileFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).EnableFileFilter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableFileFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).EnableFileFilter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.zapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).ZapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.zapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).ZapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableInternalSenderAdminNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).EnableInternalSenderAdminNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableInternalSenderAdminNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).EnableInternalSenderAdminNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.enableExternalSenderAdminNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).EnableExternalSenderAdminNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.enableExternalSenderAdminNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).EnableExternalSenderAdminNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.malwareFilterPolicy.fileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineMalwareFilterPolicy).FileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).FileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.spamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).SpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.spamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).SpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.highConfidenceSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).HighConfidenceSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.highConfidenceSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).HighConfidenceSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.phishSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).PhishSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.phishSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).PhishSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.highConfidencePhishAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).HighConfidencePhishAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.highConfidencePhishAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).HighConfidencePhishAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.bulkSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).BulkSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.bulkSpamAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).BulkSpamAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.bulkThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).BulkThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.bulkThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).BulkThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.enableEndUserSpamNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).EnableEndUserSpamNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.enableEndUserSpamNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).EnableEndUserSpamNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.allowedSenderDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).AllowedSenderDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.allowedSenderDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).AllowedSenderDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedContentFilterPolicy.blockedSenderDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicy).BlockedSenderDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.hostedContentFilterPolicyEntry.blockedSenderDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).BlockedSenderDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitExternalPerHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).RecipientLimitExternalPerHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitExternalPerHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).RecipientLimitExternalPerHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitInternalPerHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).RecipientLimitInternalPerHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitInternalPerHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).RecipientLimitInternalPerHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.recipientLimitPerDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).RecipientLimitPerDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.recipientLimitPerDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).RecipientLimitPerDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.actionWhenThresholdReached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).ActionWhenThresholdReached, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.actionWhenThresholdReached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).ActionWhenThresholdReached, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.autoForwardingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).AutoForwardingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.autoForwardingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).AutoForwardingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.bccSuspiciousOutboundMail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).BccSuspiciousOutboundMail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.bccSuspiciousOutboundMail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).BccSuspiciousOutboundMail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.hostedOutboundSpamFilterPolicy.notifyOutboundSpam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy).NotifyOutboundSpam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).NotifyOutboundSpam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.dkimSigningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineDkimSigningConfig).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.dkimSigningConfigEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.dkimSigningConfig.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineDkimSigningConfig).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.dkimSigningConfigEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.dkimSigningConfig.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineDkimSigningConfig).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.dkimSigningConfigEntry.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.dkimSigningConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineDkimSigningConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.dkimSigningConfigEntry.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.dkimSigningConfig.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineDkimSigningConfig).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.dkimSigningConfigEntry.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.authenticationPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthActiveSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthActiveSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthActiveSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthActiveSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthAutodiscover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthAutodiscover, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthAutodiscover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthAutodiscover, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthImap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthImap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthImap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthImap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthMapi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthMapi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthMapi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthMapi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthOfflineAddressBook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthOfflineAddressBook, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthOfflineAddressBook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthOfflineAddressBook, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthOutlookService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthOutlookService, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthOutlookService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthOutlookService, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthPop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthPop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthPop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthPop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthPowershell": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthPowershell, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthPowershell": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthPowershell, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthReportingWebServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthReportingWebServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthReportingWebServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthReportingWebServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthRpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthRpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthRpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthRpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthSmtp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthSmtp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthSmtp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthSmtp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.authenticationPolicy.allowBasicAuthWebServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAuthenticationPolicy).AllowBasicAuthWebServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.authenticationPolicyEntry.allowBasicAuthWebServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAuthenticationPolicyEntry).AllowBasicAuthWebServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.additionalStorageProvidersAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).AdditionalStorageProvidersAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.additionalStorageProvidersAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).AdditionalStorageProvidersAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.directFileAccessOnPublicComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).DirectFileAccessOnPublicComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.directFileAccessOnPublicComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).DirectFileAccessOnPublicComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.directFileAccessOnPrivateComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).DirectFileAccessOnPrivateComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.directFileAccessOnPrivateComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).DirectFileAccessOnPrivateComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.forceSaveAttachmentFilteringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).ForceSaveAttachmentFilteringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.forceSaveAttachmentFilteringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).ForceSaveAttachmentFilteringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.allowedFileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).AllowedFileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allowedFileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).AllowedFileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.owaMailboxPolicy.blockedFileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineOwaMailboxPolicy).BlockedFileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.owaMailboxPolicyEntry.blockedFileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).BlockedFileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.remoteDomainEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.allowedOOFType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).AllowedOOFType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.allowedOOFType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).AllowedOOFType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.autoReplyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).AutoReplyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.autoReplyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).AutoReplyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.autoForwardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).AutoForwardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.autoForwardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).AutoForwardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.deliveryReportEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).DeliveryReportEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.deliveryReportEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).DeliveryReportEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.ndrEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).NdrEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.ndrEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).NdrEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.remoteDomain.isInternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRemoteDomain).IsInternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.remoteDomainEntry.isInternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).IsInternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.quarantinePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineQuarantinePolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.quarantinePolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.quarantinePolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineQuarantinePolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.quarantinePolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.quarantinePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineQuarantinePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.quarantinePolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.quarantinePolicy.endUserQuarantinePermissionsValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineQuarantinePolicy).EndUserQuarantinePermissionsValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"ms365.exchangeonline.quarantinePolicyEntry.endUserQuarantinePermissionsValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).EndUserQuarantinePermissionsValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.quarantinePolicy.esnEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineQuarantinePolicy).EsnEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.quarantinePolicyEntry.esnEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).EsnEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.atpPolicyForO365Entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.atpPolicyForO365Entry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.atpPolicyForO365Entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.enableSafeDocs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).EnableSafeDocs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.atpPolicyForO365Entry.enableSafeDocs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).EnableSafeDocs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.allowSafeDocsOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).AllowSafeDocsOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.atpPolicyForO365Entry.allowSafeDocsOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).AllowSafeDocsOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.atpPolicyForO365.enableATPForSPOTeamsODB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineAtpPolicyForO365).EnableATPForSPOTeamsODB, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.atpPolicyForO365Entry.enableATPForSPOTeamsODB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAtpPolicyForO365Entry).EnableATPForSPOTeamsODB, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.sharingPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.sharingPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.sharingPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.sharingPolicyEntry.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.sharingPolicyEntry.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.sharingPolicy.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineSharingPolicy).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.sharingPolicyEntry.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSharingPolicyEntry).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).__id, ok = v.Value.(string)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).__id, ok = v.Value.(string)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"ms365.exchangeonline.roleAssignmentPolicy.assignedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicy).AssignedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"ms365.exchangeonline.roleAssignmentPolicyEntry.assignedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).AssignedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -25874,11 +25874,11 @@ func (c *mqlMs365ExchangeonlineRetentionPolicy) GetRetentionId() *plugin.TValue[
 	return &c.RetentionId
 }
 
-// mqlMs365ExchangeonlineTransportRule for the ms365.exchangeonline.transportRule resource
-type mqlMs365ExchangeonlineTransportRule struct {
+// mqlMs365ExchangeonlineTransportRuleEntry for the ms365.exchangeonline.transportRuleEntry resource
+type mqlMs365ExchangeonlineTransportRuleEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineTransportRuleInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineTransportRuleEntryInternal it will be used here
 	Identity plugin.TValue[string]
 	Name     plugin.TValue[string]
 	Priority plugin.TValue[int64]
@@ -25887,9 +25887,9 @@ type mqlMs365ExchangeonlineTransportRule struct {
 	Comments plugin.TValue[string]
 }
 
-// createMs365ExchangeonlineTransportRule creates a new instance of this resource
-func createMs365ExchangeonlineTransportRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineTransportRule{
+// createMs365ExchangeonlineTransportRuleEntry creates a new instance of this resource
+func createMs365ExchangeonlineTransportRuleEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineTransportRuleEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -25901,7 +25901,7 @@ func createMs365ExchangeonlineTransportRule(runtime *plugin.Runtime, args map[st
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.transportRule", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.transportRuleEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -25911,43 +25911,43 @@ func createMs365ExchangeonlineTransportRule(runtime *plugin.Runtime, args map[st
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) MqlName() string {
-	return "ms365.exchangeonline.transportRule"
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) MqlName() string {
+	return "ms365.exchangeonline.transportRuleEntry"
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) MqlID() string {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetPriority() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetState() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetMode() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetMode() *plugin.TValue[string] {
 	return &c.Mode
 }
 
-func (c *mqlMs365ExchangeonlineTransportRule) GetComments() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetComments() *plugin.TValue[string] {
 	return &c.Comments
 }
 
-// mqlMs365ExchangeonlineAntiPhishPolicy for the ms365.exchangeonline.antiPhishPolicy resource
-type mqlMs365ExchangeonlineAntiPhishPolicy struct {
+// mqlMs365ExchangeonlineAntiPhishPolicyEntry for the ms365.exchangeonline.antiPhishPolicyEntry resource
+type mqlMs365ExchangeonlineAntiPhishPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineAntiPhishPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineAntiPhishPolicyEntryInternal it will be used here
 	Identity                            plugin.TValue[string]
 	Name                                plugin.TValue[string]
 	Enabled                             plugin.TValue[bool]
@@ -25964,9 +25964,9 @@ type mqlMs365ExchangeonlineAntiPhishPolicy struct {
 	AuthenticationFailAction            plugin.TValue[string]
 }
 
-// createMs365ExchangeonlineAntiPhishPolicy creates a new instance of this resource
-func createMs365ExchangeonlineAntiPhishPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineAntiPhishPolicy{
+// createMs365ExchangeonlineAntiPhishPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineAntiPhishPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineAntiPhishPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -25978,7 +25978,7 @@ func createMs365ExchangeonlineAntiPhishPolicy(runtime *plugin.Runtime, args map[
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.antiPhishPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.antiPhishPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -25988,75 +25988,75 @@ func createMs365ExchangeonlineAntiPhishPolicy(runtime *plugin.Runtime, args map[
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) MqlName() string {
-	return "ms365.exchangeonline.antiPhishPolicy"
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.antiPhishPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetPhishThresholdLevel() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetPhishThresholdLevel() *plugin.TValue[int64] {
 	return &c.PhishThresholdLevel
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableMailboxIntelligence() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableMailboxIntelligence() *plugin.TValue[bool] {
 	return &c.EnableMailboxIntelligence
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableMailboxIntelligenceProtection() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableMailboxIntelligenceProtection() *plugin.TValue[bool] {
 	return &c.EnableMailboxIntelligenceProtection
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableSpoofIntelligence() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableSpoofIntelligence() *plugin.TValue[bool] {
 	return &c.EnableSpoofIntelligence
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableFirstContactSafetyTips() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableFirstContactSafetyTips() *plugin.TValue[bool] {
 	return &c.EnableFirstContactSafetyTips
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableTargetedUserProtection() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableTargetedUserProtection() *plugin.TValue[bool] {
 	return &c.EnableTargetedUserProtection
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableTargetedDomainsProtection() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableTargetedDomainsProtection() *plugin.TValue[bool] {
 	return &c.EnableTargetedDomainsProtection
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetEnableOrganizationDomainsProtection() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableOrganizationDomainsProtection() *plugin.TValue[bool] {
 	return &c.EnableOrganizationDomainsProtection
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetTargetedUserProtectionAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetTargetedUserProtectionAction() *plugin.TValue[string] {
 	return &c.TargetedUserProtectionAction
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetTargetedDomainProtectionAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetTargetedDomainProtectionAction() *plugin.TValue[string] {
 	return &c.TargetedDomainProtectionAction
 }
 
-func (c *mqlMs365ExchangeonlineAntiPhishPolicy) GetAuthenticationFailAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetAuthenticationFailAction() *plugin.TValue[string] {
 	return &c.AuthenticationFailAction
 }
 
-// mqlMs365ExchangeonlineSafeLinksPolicy for the ms365.exchangeonline.safeLinksPolicy resource
-type mqlMs365ExchangeonlineSafeLinksPolicy struct {
+// mqlMs365ExchangeonlineSafeLinksPolicyEntry for the ms365.exchangeonline.safeLinksPolicyEntry resource
+type mqlMs365ExchangeonlineSafeLinksPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineSafeLinksPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineSafeLinksPolicyEntryInternal it will be used here
 	Identity                 plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	EnableSafeLinksForEmail  plugin.TValue[bool]
@@ -26070,9 +26070,9 @@ type mqlMs365ExchangeonlineSafeLinksPolicy struct {
 	DisableUrlRewrite        plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineSafeLinksPolicy creates a new instance of this resource
-func createMs365ExchangeonlineSafeLinksPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineSafeLinksPolicy{
+// createMs365ExchangeonlineSafeLinksPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineSafeLinksPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineSafeLinksPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26084,7 +26084,7 @@ func createMs365ExchangeonlineSafeLinksPolicy(runtime *plugin.Runtime, args map[
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.safeLinksPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.safeLinksPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26094,63 +26094,63 @@ func createMs365ExchangeonlineSafeLinksPolicy(runtime *plugin.Runtime, args map[
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) MqlName() string {
-	return "ms365.exchangeonline.safeLinksPolicy"
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.safeLinksPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetEnableSafeLinksForEmail() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetEnableSafeLinksForEmail() *plugin.TValue[bool] {
 	return &c.EnableSafeLinksForEmail
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetEnableSafeLinksForTeams() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetEnableSafeLinksForTeams() *plugin.TValue[bool] {
 	return &c.EnableSafeLinksForTeams
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetEnableSafeLinksForOffice() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetEnableSafeLinksForOffice() *plugin.TValue[bool] {
 	return &c.EnableSafeLinksForOffice
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetTrackClicks() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetTrackClicks() *plugin.TValue[bool] {
 	return &c.TrackClicks
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetAllowClickThrough() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetAllowClickThrough() *plugin.TValue[bool] {
 	return &c.AllowClickThrough
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetScanUrls() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetScanUrls() *plugin.TValue[bool] {
 	return &c.ScanUrls
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetEnableForInternalSenders() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetEnableForInternalSenders() *plugin.TValue[bool] {
 	return &c.EnableForInternalSenders
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetDeliverMessageAfterScan() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetDeliverMessageAfterScan() *plugin.TValue[bool] {
 	return &c.DeliverMessageAfterScan
 }
 
-func (c *mqlMs365ExchangeonlineSafeLinksPolicy) GetDisableUrlRewrite() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeLinksPolicyEntry) GetDisableUrlRewrite() *plugin.TValue[bool] {
 	return &c.DisableUrlRewrite
 }
 
-// mqlMs365ExchangeonlineSafeAttachmentPolicy for the ms365.exchangeonline.safeAttachmentPolicy resource
-type mqlMs365ExchangeonlineSafeAttachmentPolicy struct {
+// mqlMs365ExchangeonlineSafeAttachmentPolicyEntry for the ms365.exchangeonline.safeAttachmentPolicyEntry resource
+type mqlMs365ExchangeonlineSafeAttachmentPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineSafeAttachmentPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineSafeAttachmentPolicyEntryInternal it will be used here
 	Identity        plugin.TValue[string]
 	Name            plugin.TValue[string]
 	Enable          plugin.TValue[bool]
@@ -26159,9 +26159,9 @@ type mqlMs365ExchangeonlineSafeAttachmentPolicy struct {
 	RedirectAddress plugin.TValue[string]
 }
 
-// createMs365ExchangeonlineSafeAttachmentPolicy creates a new instance of this resource
-func createMs365ExchangeonlineSafeAttachmentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineSafeAttachmentPolicy{
+// createMs365ExchangeonlineSafeAttachmentPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineSafeAttachmentPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineSafeAttachmentPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26173,7 +26173,7 @@ func createMs365ExchangeonlineSafeAttachmentPolicy(runtime *plugin.Runtime, args
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.safeAttachmentPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.safeAttachmentPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26183,43 +26183,43 @@ func createMs365ExchangeonlineSafeAttachmentPolicy(runtime *plugin.Runtime, args
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) MqlName() string {
-	return "ms365.exchangeonline.safeAttachmentPolicy"
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.safeAttachmentPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetEnable() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetEnable() *plugin.TValue[bool] {
 	return &c.Enable
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetAction() *plugin.TValue[string] {
 	return &c.Action
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetRedirect() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetRedirect() *plugin.TValue[bool] {
 	return &c.Redirect
 }
 
-func (c *mqlMs365ExchangeonlineSafeAttachmentPolicy) GetRedirectAddress() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetRedirectAddress() *plugin.TValue[string] {
 	return &c.RedirectAddress
 }
 
-// mqlMs365ExchangeonlineMalwareFilterPolicy for the ms365.exchangeonline.malwareFilterPolicy resource
-type mqlMs365ExchangeonlineMalwareFilterPolicy struct {
+// mqlMs365ExchangeonlineMalwareFilterPolicyEntry for the ms365.exchangeonline.malwareFilterPolicyEntry resource
+type mqlMs365ExchangeonlineMalwareFilterPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineMalwareFilterPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineMalwareFilterPolicyEntryInternal it will be used here
 	Identity                               plugin.TValue[string]
 	Name                                   plugin.TValue[string]
 	EnableFileFilter                       plugin.TValue[bool]
@@ -26229,9 +26229,9 @@ type mqlMs365ExchangeonlineMalwareFilterPolicy struct {
 	FileTypes                              plugin.TValue[[]any]
 }
 
-// createMs365ExchangeonlineMalwareFilterPolicy creates a new instance of this resource
-func createMs365ExchangeonlineMalwareFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineMalwareFilterPolicy{
+// createMs365ExchangeonlineMalwareFilterPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineMalwareFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineMalwareFilterPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26243,7 +26243,7 @@ func createMs365ExchangeonlineMalwareFilterPolicy(runtime *plugin.Runtime, args 
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.malwareFilterPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.malwareFilterPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26253,47 +26253,47 @@ func createMs365ExchangeonlineMalwareFilterPolicy(runtime *plugin.Runtime, args 
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) MqlName() string {
-	return "ms365.exchangeonline.malwareFilterPolicy"
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.malwareFilterPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetEnableFileFilter() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetEnableFileFilter() *plugin.TValue[bool] {
 	return &c.EnableFileFilter
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetZapEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetZapEnabled() *plugin.TValue[bool] {
 	return &c.ZapEnabled
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetEnableInternalSenderAdminNotifications() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetEnableInternalSenderAdminNotifications() *plugin.TValue[bool] {
 	return &c.EnableInternalSenderAdminNotifications
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetEnableExternalSenderAdminNotifications() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetEnableExternalSenderAdminNotifications() *plugin.TValue[bool] {
 	return &c.EnableExternalSenderAdminNotifications
 }
 
-func (c *mqlMs365ExchangeonlineMalwareFilterPolicy) GetFileTypes() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetFileTypes() *plugin.TValue[[]any] {
 	return &c.FileTypes
 }
 
-// mqlMs365ExchangeonlineHostedContentFilterPolicy for the ms365.exchangeonline.hostedContentFilterPolicy resource
-type mqlMs365ExchangeonlineHostedContentFilterPolicy struct {
+// mqlMs365ExchangeonlineHostedContentFilterPolicyEntry for the ms365.exchangeonline.hostedContentFilterPolicyEntry resource
+type mqlMs365ExchangeonlineHostedContentFilterPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineHostedContentFilterPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineHostedContentFilterPolicyEntryInternal it will be used here
 	Identity                       plugin.TValue[string]
 	Name                           plugin.TValue[string]
 	SpamAction                     plugin.TValue[string]
@@ -26307,9 +26307,9 @@ type mqlMs365ExchangeonlineHostedContentFilterPolicy struct {
 	BlockedSenderDomains           plugin.TValue[[]any]
 }
 
-// createMs365ExchangeonlineHostedContentFilterPolicy creates a new instance of this resource
-func createMs365ExchangeonlineHostedContentFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineHostedContentFilterPolicy{
+// createMs365ExchangeonlineHostedContentFilterPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineHostedContentFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineHostedContentFilterPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26321,7 +26321,7 @@ func createMs365ExchangeonlineHostedContentFilterPolicy(runtime *plugin.Runtime,
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.hostedContentFilterPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.hostedContentFilterPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26331,63 +26331,63 @@ func createMs365ExchangeonlineHostedContentFilterPolicy(runtime *plugin.Runtime,
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) MqlName() string {
-	return "ms365.exchangeonline.hostedContentFilterPolicy"
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.hostedContentFilterPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetSpamAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetSpamAction() *plugin.TValue[string] {
 	return &c.SpamAction
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetHighConfidenceSpamAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetHighConfidenceSpamAction() *plugin.TValue[string] {
 	return &c.HighConfidenceSpamAction
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetPhishSpamAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetPhishSpamAction() *plugin.TValue[string] {
 	return &c.PhishSpamAction
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetHighConfidencePhishAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetHighConfidencePhishAction() *plugin.TValue[string] {
 	return &c.HighConfidencePhishAction
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetBulkSpamAction() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetBulkSpamAction() *plugin.TValue[string] {
 	return &c.BulkSpamAction
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetBulkThreshold() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetBulkThreshold() *plugin.TValue[int64] {
 	return &c.BulkThreshold
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetEnableEndUserSpamNotifications() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetEnableEndUserSpamNotifications() *plugin.TValue[bool] {
 	return &c.EnableEndUserSpamNotifications
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetAllowedSenderDomains() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetAllowedSenderDomains() *plugin.TValue[[]any] {
 	return &c.AllowedSenderDomains
 }
 
-func (c *mqlMs365ExchangeonlineHostedContentFilterPolicy) GetBlockedSenderDomains() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineHostedContentFilterPolicyEntry) GetBlockedSenderDomains() *plugin.TValue[[]any] {
 	return &c.BlockedSenderDomains
 }
 
-// mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy for the ms365.exchangeonline.hostedOutboundSpamFilterPolicy resource
-type mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy struct {
+// mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry for the ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry resource
+type mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntryInternal it will be used here
 	Identity                      plugin.TValue[string]
 	Name                          plugin.TValue[string]
 	RecipientLimitExternalPerHour plugin.TValue[int64]
@@ -26399,9 +26399,9 @@ type mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy struct {
 	NotifyOutboundSpam            plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineHostedOutboundSpamFilterPolicy creates a new instance of this resource
-func createMs365ExchangeonlineHostedOutboundSpamFilterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy{
+// createMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26413,7 +26413,7 @@ func createMs365ExchangeonlineHostedOutboundSpamFilterPolicy(runtime *plugin.Run
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.hostedOutboundSpamFilterPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26423,64 +26423,64 @@ func createMs365ExchangeonlineHostedOutboundSpamFilterPolicy(runtime *plugin.Run
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) MqlName() string {
-	return "ms365.exchangeonline.hostedOutboundSpamFilterPolicy"
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetRecipientLimitExternalPerHour() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetRecipientLimitExternalPerHour() *plugin.TValue[int64] {
 	return &c.RecipientLimitExternalPerHour
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetRecipientLimitInternalPerHour() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetRecipientLimitInternalPerHour() *plugin.TValue[int64] {
 	return &c.RecipientLimitInternalPerHour
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetRecipientLimitPerDay() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetRecipientLimitPerDay() *plugin.TValue[int64] {
 	return &c.RecipientLimitPerDay
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetActionWhenThresholdReached() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetActionWhenThresholdReached() *plugin.TValue[string] {
 	return &c.ActionWhenThresholdReached
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetAutoForwardingMode() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetAutoForwardingMode() *plugin.TValue[string] {
 	return &c.AutoForwardingMode
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetBccSuspiciousOutboundMail() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetBccSuspiciousOutboundMail() *plugin.TValue[bool] {
 	return &c.BccSuspiciousOutboundMail
 }
 
-func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicy) GetNotifyOutboundSpam() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetNotifyOutboundSpam() *plugin.TValue[bool] {
 	return &c.NotifyOutboundSpam
 }
 
-// mqlMs365ExchangeonlineDkimSigningConfig for the ms365.exchangeonline.dkimSigningConfig resource
-type mqlMs365ExchangeonlineDkimSigningConfig struct {
+// mqlMs365ExchangeonlineDkimSigningConfigEntry for the ms365.exchangeonline.dkimSigningConfigEntry resource
+type mqlMs365ExchangeonlineDkimSigningConfigEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineDkimSigningConfigInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineDkimSigningConfigEntryInternal it will be used here
 	Identity plugin.TValue[string]
 	Domain   plugin.TValue[string]
 	Enabled  plugin.TValue[bool]
 	Status   plugin.TValue[string]
 }
 
-// createMs365ExchangeonlineDkimSigningConfig creates a new instance of this resource
-func createMs365ExchangeonlineDkimSigningConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineDkimSigningConfig{
+// createMs365ExchangeonlineDkimSigningConfigEntry creates a new instance of this resource
+func createMs365ExchangeonlineDkimSigningConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineDkimSigningConfigEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26492,7 +26492,7 @@ func createMs365ExchangeonlineDkimSigningConfig(runtime *plugin.Runtime, args ma
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.dkimSigningConfig", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.dkimSigningConfigEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26502,35 +26502,35 @@ func createMs365ExchangeonlineDkimSigningConfig(runtime *plugin.Runtime, args ma
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) MqlName() string {
-	return "ms365.exchangeonline.dkimSigningConfig"
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) MqlName() string {
+	return "ms365.exchangeonline.dkimSigningConfigEntry"
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) MqlID() string {
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) GetDomain() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) GetDomain() *plugin.TValue[string] {
 	return &c.Domain
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) GetEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
-func (c *mqlMs365ExchangeonlineDkimSigningConfig) GetStatus() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineDkimSigningConfigEntry) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-// mqlMs365ExchangeonlineAuthenticationPolicy for the ms365.exchangeonline.authenticationPolicy resource
-type mqlMs365ExchangeonlineAuthenticationPolicy struct {
+// mqlMs365ExchangeonlineAuthenticationPolicyEntry for the ms365.exchangeonline.authenticationPolicyEntry resource
+type mqlMs365ExchangeonlineAuthenticationPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineAuthenticationPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineAuthenticationPolicyEntryInternal it will be used here
 	Identity                           plugin.TValue[string]
 	Name                               plugin.TValue[string]
 	AllowBasicAuthActiveSync           plugin.TValue[bool]
@@ -26547,9 +26547,9 @@ type mqlMs365ExchangeonlineAuthenticationPolicy struct {
 	AllowBasicAuthWebServices          plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineAuthenticationPolicy creates a new instance of this resource
-func createMs365ExchangeonlineAuthenticationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineAuthenticationPolicy{
+// createMs365ExchangeonlineAuthenticationPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineAuthenticationPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineAuthenticationPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26561,7 +26561,7 @@ func createMs365ExchangeonlineAuthenticationPolicy(runtime *plugin.Runtime, args
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.authenticationPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.authenticationPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26571,75 +26571,75 @@ func createMs365ExchangeonlineAuthenticationPolicy(runtime *plugin.Runtime, args
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) MqlName() string {
-	return "ms365.exchangeonline.authenticationPolicy"
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.authenticationPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthActiveSync() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthActiveSync() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthActiveSync
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthAutodiscover() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthAutodiscover() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthAutodiscover
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthImap() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthImap() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthImap
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthMapi() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthMapi() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthMapi
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthOfflineAddressBook() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthOfflineAddressBook() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthOfflineAddressBook
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthOutlookService() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthOutlookService() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthOutlookService
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthPop() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthPop() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthPop
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthPowershell() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthPowershell() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthPowershell
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthReportingWebServices() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthReportingWebServices() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthReportingWebServices
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthRpc() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthRpc() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthRpc
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthSmtp() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthSmtp() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthSmtp
 }
 
-func (c *mqlMs365ExchangeonlineAuthenticationPolicy) GetAllowBasicAuthWebServices() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAuthenticationPolicyEntry) GetAllowBasicAuthWebServices() *plugin.TValue[bool] {
 	return &c.AllowBasicAuthWebServices
 }
 
-// mqlMs365ExchangeonlineOwaMailboxPolicy for the ms365.exchangeonline.owaMailboxPolicy resource
-type mqlMs365ExchangeonlineOwaMailboxPolicy struct {
+// mqlMs365ExchangeonlineOwaMailboxPolicyEntry for the ms365.exchangeonline.owaMailboxPolicyEntry resource
+type mqlMs365ExchangeonlineOwaMailboxPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineOwaMailboxPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineOwaMailboxPolicyEntryInternal it will be used here
 	Identity                                  plugin.TValue[string]
 	Name                                      plugin.TValue[string]
 	AdditionalStorageProvidersAvailable       plugin.TValue[bool]
@@ -26650,9 +26650,9 @@ type mqlMs365ExchangeonlineOwaMailboxPolicy struct {
 	BlockedFileTypes                          plugin.TValue[[]any]
 }
 
-// createMs365ExchangeonlineOwaMailboxPolicy creates a new instance of this resource
-func createMs365ExchangeonlineOwaMailboxPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineOwaMailboxPolicy{
+// createMs365ExchangeonlineOwaMailboxPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineOwaMailboxPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineOwaMailboxPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26664,7 +26664,7 @@ func createMs365ExchangeonlineOwaMailboxPolicy(runtime *plugin.Runtime, args map
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.owaMailboxPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.owaMailboxPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26674,51 +26674,51 @@ func createMs365ExchangeonlineOwaMailboxPolicy(runtime *plugin.Runtime, args map
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) MqlName() string {
-	return "ms365.exchangeonline.owaMailboxPolicy"
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.owaMailboxPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetAdditionalStorageProvidersAvailable() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetAdditionalStorageProvidersAvailable() *plugin.TValue[bool] {
 	return &c.AdditionalStorageProvidersAvailable
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetDirectFileAccessOnPublicComputersEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetDirectFileAccessOnPublicComputersEnabled() *plugin.TValue[bool] {
 	return &c.DirectFileAccessOnPublicComputersEnabled
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetDirectFileAccessOnPrivateComputersEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetDirectFileAccessOnPrivateComputersEnabled() *plugin.TValue[bool] {
 	return &c.DirectFileAccessOnPrivateComputersEnabled
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetForceSaveAttachmentFilteringEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetForceSaveAttachmentFilteringEnabled() *plugin.TValue[bool] {
 	return &c.ForceSaveAttachmentFilteringEnabled
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetAllowedFileTypes() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetAllowedFileTypes() *plugin.TValue[[]any] {
 	return &c.AllowedFileTypes
 }
 
-func (c *mqlMs365ExchangeonlineOwaMailboxPolicy) GetBlockedFileTypes() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetBlockedFileTypes() *plugin.TValue[[]any] {
 	return &c.BlockedFileTypes
 }
 
-// mqlMs365ExchangeonlineRemoteDomain for the ms365.exchangeonline.remoteDomain resource
-type mqlMs365ExchangeonlineRemoteDomain struct {
+// mqlMs365ExchangeonlineRemoteDomainEntry for the ms365.exchangeonline.remoteDomainEntry resource
+type mqlMs365ExchangeonlineRemoteDomainEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineRemoteDomainInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineRemoteDomainEntryInternal it will be used here
 	Identity              plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	DomainName            plugin.TValue[string]
@@ -26730,9 +26730,9 @@ type mqlMs365ExchangeonlineRemoteDomain struct {
 	IsInternal            plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineRemoteDomain creates a new instance of this resource
-func createMs365ExchangeonlineRemoteDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineRemoteDomain{
+// createMs365ExchangeonlineRemoteDomainEntry creates a new instance of this resource
+func createMs365ExchangeonlineRemoteDomainEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineRemoteDomainEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26744,7 +26744,7 @@ func createMs365ExchangeonlineRemoteDomain(runtime *plugin.Runtime, args map[str
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.remoteDomain", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.remoteDomainEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26754,64 +26754,64 @@ func createMs365ExchangeonlineRemoteDomain(runtime *plugin.Runtime, args map[str
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) MqlName() string {
-	return "ms365.exchangeonline.remoteDomain"
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) MqlName() string {
+	return "ms365.exchangeonline.remoteDomainEntry"
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) MqlID() string {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetDomainName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetAllowedOOFType() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetAllowedOOFType() *plugin.TValue[string] {
 	return &c.AllowedOOFType
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetAutoReplyEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetAutoReplyEnabled() *plugin.TValue[bool] {
 	return &c.AutoReplyEnabled
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetAutoForwardEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetAutoForwardEnabled() *plugin.TValue[bool] {
 	return &c.AutoForwardEnabled
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetDeliveryReportEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetDeliveryReportEnabled() *plugin.TValue[bool] {
 	return &c.DeliveryReportEnabled
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetNdrEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetNdrEnabled() *plugin.TValue[bool] {
 	return &c.NdrEnabled
 }
 
-func (c *mqlMs365ExchangeonlineRemoteDomain) GetIsInternal() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetIsInternal() *plugin.TValue[bool] {
 	return &c.IsInternal
 }
 
-// mqlMs365ExchangeonlineQuarantinePolicy for the ms365.exchangeonline.quarantinePolicy resource
-type mqlMs365ExchangeonlineQuarantinePolicy struct {
+// mqlMs365ExchangeonlineQuarantinePolicyEntry for the ms365.exchangeonline.quarantinePolicyEntry resource
+type mqlMs365ExchangeonlineQuarantinePolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineQuarantinePolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineQuarantinePolicyEntryInternal it will be used here
 	Identity                          plugin.TValue[string]
 	Name                              plugin.TValue[string]
 	EndUserQuarantinePermissionsValue plugin.TValue[int64]
 	EsnEnabled                        plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineQuarantinePolicy creates a new instance of this resource
-func createMs365ExchangeonlineQuarantinePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineQuarantinePolicy{
+// createMs365ExchangeonlineQuarantinePolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineQuarantinePolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineQuarantinePolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26823,7 +26823,7 @@ func createMs365ExchangeonlineQuarantinePolicy(runtime *plugin.Runtime, args map
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.quarantinePolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.quarantinePolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26833,35 +26833,35 @@ func createMs365ExchangeonlineQuarantinePolicy(runtime *plugin.Runtime, args map
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) MqlName() string {
-	return "ms365.exchangeonline.quarantinePolicy"
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.quarantinePolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) GetEndUserQuarantinePermissionsValue() *plugin.TValue[int64] {
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) GetEndUserQuarantinePermissionsValue() *plugin.TValue[int64] {
 	return &c.EndUserQuarantinePermissionsValue
 }
 
-func (c *mqlMs365ExchangeonlineQuarantinePolicy) GetEsnEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineQuarantinePolicyEntry) GetEsnEnabled() *plugin.TValue[bool] {
 	return &c.EsnEnabled
 }
 
-// mqlMs365ExchangeonlineAtpPolicyForO365 for the ms365.exchangeonline.atpPolicyForO365 resource
-type mqlMs365ExchangeonlineAtpPolicyForO365 struct {
+// mqlMs365ExchangeonlineAtpPolicyForO365Entry for the ms365.exchangeonline.atpPolicyForO365Entry resource
+type mqlMs365ExchangeonlineAtpPolicyForO365Entry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineAtpPolicyForO365Internal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineAtpPolicyForO365EntryInternal it will be used here
 	Identity                plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	EnableSafeDocs          plugin.TValue[bool]
@@ -26869,9 +26869,9 @@ type mqlMs365ExchangeonlineAtpPolicyForO365 struct {
 	EnableATPForSPOTeamsODB plugin.TValue[bool]
 }
 
-// createMs365ExchangeonlineAtpPolicyForO365 creates a new instance of this resource
-func createMs365ExchangeonlineAtpPolicyForO365(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineAtpPolicyForO365{
+// createMs365ExchangeonlineAtpPolicyForO365Entry creates a new instance of this resource
+func createMs365ExchangeonlineAtpPolicyForO365Entry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineAtpPolicyForO365Entry{
 		MqlRuntime: runtime,
 	}
 
@@ -26883,7 +26883,7 @@ func createMs365ExchangeonlineAtpPolicyForO365(runtime *plugin.Runtime, args map
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.atpPolicyForO365", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.atpPolicyForO365Entry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26893,39 +26893,39 @@ func createMs365ExchangeonlineAtpPolicyForO365(runtime *plugin.Runtime, args map
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) MqlName() string {
-	return "ms365.exchangeonline.atpPolicyForO365"
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) MqlName() string {
+	return "ms365.exchangeonline.atpPolicyForO365Entry"
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) MqlID() string {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) GetEnableSafeDocs() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) GetEnableSafeDocs() *plugin.TValue[bool] {
 	return &c.EnableSafeDocs
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) GetAllowSafeDocsOpen() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) GetAllowSafeDocsOpen() *plugin.TValue[bool] {
 	return &c.AllowSafeDocsOpen
 }
 
-func (c *mqlMs365ExchangeonlineAtpPolicyForO365) GetEnableATPForSPOTeamsODB() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineAtpPolicyForO365Entry) GetEnableATPForSPOTeamsODB() *plugin.TValue[bool] {
 	return &c.EnableATPForSPOTeamsODB
 }
 
-// mqlMs365ExchangeonlineSharingPolicy for the ms365.exchangeonline.sharingPolicy resource
-type mqlMs365ExchangeonlineSharingPolicy struct {
+// mqlMs365ExchangeonlineSharingPolicyEntry for the ms365.exchangeonline.sharingPolicyEntry resource
+type mqlMs365ExchangeonlineSharingPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineSharingPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineSharingPolicyEntryInternal it will be used here
 	Identity  plugin.TValue[string]
 	Name      plugin.TValue[string]
 	Enabled   plugin.TValue[bool]
@@ -26933,9 +26933,9 @@ type mqlMs365ExchangeonlineSharingPolicy struct {
 	Domains   plugin.TValue[[]any]
 }
 
-// createMs365ExchangeonlineSharingPolicy creates a new instance of this resource
-func createMs365ExchangeonlineSharingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineSharingPolicy{
+// createMs365ExchangeonlineSharingPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineSharingPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineSharingPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -26947,7 +26947,7 @@ func createMs365ExchangeonlineSharingPolicy(runtime *plugin.Runtime, args map[st
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.sharingPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.sharingPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -26957,39 +26957,39 @@ func createMs365ExchangeonlineSharingPolicy(runtime *plugin.Runtime, args map[st
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) MqlName() string {
-	return "ms365.exchangeonline.sharingPolicy"
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.sharingPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) GetEnabled() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) GetIsDefault() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
 }
 
-func (c *mqlMs365ExchangeonlineSharingPolicy) GetDomains() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineSharingPolicyEntry) GetDomains() *plugin.TValue[[]any] {
 	return &c.Domains
 }
 
-// mqlMs365ExchangeonlineRoleAssignmentPolicy for the ms365.exchangeonline.roleAssignmentPolicy resource
-type mqlMs365ExchangeonlineRoleAssignmentPolicy struct {
+// mqlMs365ExchangeonlineRoleAssignmentPolicyEntry for the ms365.exchangeonline.roleAssignmentPolicyEntry resource
+type mqlMs365ExchangeonlineRoleAssignmentPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMs365ExchangeonlineRoleAssignmentPolicyInternal it will be used here
+	// optional: if you define mqlMs365ExchangeonlineRoleAssignmentPolicyEntryInternal it will be used here
 	Identity      plugin.TValue[string]
 	Name          plugin.TValue[string]
 	IsDefault     plugin.TValue[bool]
@@ -26997,9 +26997,9 @@ type mqlMs365ExchangeonlineRoleAssignmentPolicy struct {
 	AssignedRoles plugin.TValue[[]any]
 }
 
-// createMs365ExchangeonlineRoleAssignmentPolicy creates a new instance of this resource
-func createMs365ExchangeonlineRoleAssignmentPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365ExchangeonlineRoleAssignmentPolicy{
+// createMs365ExchangeonlineRoleAssignmentPolicyEntry creates a new instance of this resource
+func createMs365ExchangeonlineRoleAssignmentPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineRoleAssignmentPolicyEntry{
 		MqlRuntime: runtime,
 	}
 
@@ -27011,7 +27011,7 @@ func createMs365ExchangeonlineRoleAssignmentPolicy(runtime *plugin.Runtime, args
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.roleAssignmentPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.roleAssignmentPolicyEntry", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -27021,30 +27021,30 @@ func createMs365ExchangeonlineRoleAssignmentPolicy(runtime *plugin.Runtime, args
 	return res, nil
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) MqlName() string {
-	return "ms365.exchangeonline.roleAssignmentPolicy"
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) MqlName() string {
+	return "ms365.exchangeonline.roleAssignmentPolicyEntry"
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) MqlID() string {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) GetIdentity() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetIdentity() *plugin.TValue[string] {
 	return &c.Identity
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) GetName() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) GetIsDefault() *plugin.TValue[bool] {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) GetDescription() *plugin.TValue[string] {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlMs365ExchangeonlineRoleAssignmentPolicy) GetAssignedRoles() *plugin.TValue[[]any] {
+func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetAssignedRoles() *plugin.TValue[[]any] {
 	return &c.AssignedRoles
 }

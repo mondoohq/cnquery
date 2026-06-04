@@ -50,7 +50,7 @@ func convertTransportRules(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 		if t == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.transportRule",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.transportRuleEntry",
 			map[string]*llx.RawData{
 				"__id":     llx.StringData("transportRule-" + t.Identity),
 				"identity": llx.StringData(t.Identity),
@@ -97,7 +97,7 @@ func convertAntiPhishPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error)
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.antiPhishPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.antiPhishPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                                llx.StringData("antiPhishPolicy-" + p.Identity),
 				"identity":                            llx.StringData(p.Identity),
@@ -149,7 +149,7 @@ func convertSafeLinksPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error)
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.safeLinksPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.safeLinksPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                     llx.StringData("safeLinksPolicy-" + p.Identity),
 				"identity":                 llx.StringData(p.Identity),
@@ -193,7 +193,7 @@ func convertSafeAttachmentPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, e
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.safeAttachmentPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.safeAttachmentPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":            llx.StringData("safeAttachmentPolicy-" + p.Identity),
 				"identity":        llx.StringData(p.Identity),
@@ -233,7 +233,7 @@ func convertMalwareFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, er
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.malwareFilterPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.malwareFilterPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                                   llx.StringData("malwareFilterPolicy-" + p.Identity),
 				"identity":                               llx.StringData(p.Identity),
@@ -278,7 +278,7 @@ func convertHostedContentFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]a
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.hostedContentFilterPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.hostedContentFilterPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                           llx.StringData("hostedContentFilterPolicy-" + p.Identity),
 				"identity":                       llx.StringData(p.Identity),
@@ -325,7 +325,7 @@ func convertHostedOutboundSpamFilterPolicies(r *mqlMs365Exchangeonline, raw any)
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.hostedOutboundSpamFilterPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                          llx.StringData("hostedOutboundSpamFilterPolicy-" + p.Identity),
 				"identity":                      llx.StringData(p.Identity),
@@ -365,7 +365,7 @@ func convertDkimSigningConfigs(r *mqlMs365Exchangeonline, raw any) ([]any, error
 		if c == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.dkimSigningConfig",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.dkimSigningConfigEntry",
 			map[string]*llx.RawData{
 				"__id":     llx.StringData("dkimSigningConfig-" + c.Identity),
 				"identity": llx.StringData(c.Identity),
@@ -410,7 +410,7 @@ func convertAuthenticationPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, e
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.authenticationPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.authenticationPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                               llx.StringData("authenticationPolicy-" + p.Identity),
 				"identity":                           llx.StringData(p.Identity),
@@ -459,7 +459,7 @@ func convertOwaMailboxPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.owaMailboxPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.owaMailboxPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                                llx.StringData("owaMailboxPolicy-" + p.Identity),
 				"identity":                            llx.StringData(p.Identity),
@@ -503,7 +503,7 @@ func convertRemoteDomains(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 		if d == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.remoteDomain",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.remoteDomainEntry",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringData("remoteDomain-" + d.Identity),
 				"identity":              llx.StringData(d.Identity),
@@ -543,7 +543,7 @@ func convertQuarantinePolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.quarantinePolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.quarantinePolicyEntry",
 			map[string]*llx.RawData{
 				"__id":                              llx.StringData("quarantinePolicy-" + p.Identity),
 				"identity":                          llx.StringData(p.Identity),
@@ -579,7 +579,7 @@ func convertAtpPoliciesForO365(r *mqlMs365Exchangeonline, raw any) ([]any, error
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.atpPolicyForO365",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.atpPolicyForO365Entry",
 			map[string]*llx.RawData{
 				"__id":                    llx.StringData("atpPolicyForO365-" + p.Identity),
 				"identity":                llx.StringData(p.Identity),
@@ -616,7 +616,7 @@ func convertSharingPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.sharingPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.sharingPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":      llx.StringData("sharingPolicy-" + p.Identity),
 				"identity":  llx.StringData(p.Identity),
@@ -653,7 +653,7 @@ func convertRoleAssignmentPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, e
 		if p == nil {
 			continue
 		}
-		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.roleAssignmentPolicy",
+		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.roleAssignmentPolicyEntry",
 			map[string]*llx.RawData{
 				"__id":          llx.StringData("roleAssignmentPolicy-" + p.Identity),
 				"identity":      llx.StringData(p.Identity),
