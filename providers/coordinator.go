@@ -308,10 +308,10 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		}
 	}
 
-	if provider.Schema == nil {
-		if err := provider.LoadResources(); err != nil {
-			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
-		}
+	// LoadResources is idempotent and safe under concurrent calls; it
+	// also synchronizes the Schema read below via Provider.schemaMu.
+	if err := provider.LoadResources(); err != nil {
+		return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
 	}
 
 	// crashLog tees the plugin subprocess's stderr to logger.LogOutputWriter
@@ -439,10 +439,10 @@ func (c *coordinator) LoadSchema(name string) (resources.ResourcesSchema, error)
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}
 
-	if provider.Schema == nil {
-		if err := provider.LoadResources(); err != nil {
-			return nil, errors.Wrap(err, "failed to load provider '"+name+"' resources info")
-		}
+	// LoadResources is idempotent and safe under concurrent calls; it
+	// also synchronizes the Schema read below via Provider.schemaMu.
+	if err := provider.LoadResources(); err != nil {
+		return nil, errors.Wrap(err, "failed to load provider '"+name+"' resources info")
 	}
 
 	return provider.Schema, nil

@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -167,6 +168,13 @@ func (p Providers) Add(nu *Provider) {
 
 type Provider struct {
 	*plugin.Provider
+	// schemaMu serializes lazy loads of Schema. Schema is read by many
+	// callers (often concurrently, e.g. multiple assets connecting at once
+	// via Runtime.AddConnection -> EnsureProvider -> installDependencies)
+	// while the first reader is still populating it. Every access to
+	// Schema must be preceded by a successful LoadResources call so the
+	// reader synchronizes with the (single) writer through this mutex.
+	schemaMu  sync.Mutex
 	Schema    resources.ResourcesSchema
 	Path      string
 	HasBinary bool
@@ -471,18 +479,19 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 
 // installDependencies ensures all dependencies of a provider are installed
 func installDependencies(provider *Provider, existing Providers) error {
-	if provider.Schema == nil {
-		// Schemas are loaded lazily (see readProviderDir / ListAll), so most
-		// providers reach this point without one. Load just this provider's
-		// schema on demand to inspect its dependencies — builtins have no path
-		// and legitimately carry no file-backed schema, so skip those.
-		if provider.Path == "" {
-			return nil
-		}
+	// Builtins have no file-backed schema; their Schema is set at init time
+	// in builtinProviders and never mutated again, so reading it is safe.
+	// File-backed providers (Path != "") load their schema lazily — call
+	// LoadResources unconditionally so the (racy-without-it) Schema read
+	// below is synchronized through Provider.schemaMu.
+	if provider.Path != "" {
 		if err := provider.LoadResources(); err != nil {
 			log.Error().Err(err).Str("provider", provider.Name).Msg("failed to load provider schema, unable to look up dependencies")
 			return nil
 		}
+	}
+	if provider.Schema == nil {
+		return nil
 	}
 
 	for _, dependency := range provider.Schema.AllDependencies() {
@@ -961,7 +970,18 @@ func (p *Provider) LoadJSON() error {
 	return nil
 }
 
+// LoadResources reads and parses the provider's resource schema from disk
+// into p.Schema. Safe to call concurrently and idempotent: the first
+// successful call populates Schema; subsequent calls return immediately.
+// Callers that need to read Schema must call LoadResources first so the
+// read synchronizes-after the write via schemaMu.
 func (p *Provider) LoadResources() error {
+	p.schemaMu.Lock()
+	defer p.schemaMu.Unlock()
+	if p.Schema != nil {
+		return nil
+	}
+
 	path := filepath.Join(p.Path, p.Name+".resources.json")
 	res, err := afero.ReadFile(config.AppFs, path)
 	if err != nil {
