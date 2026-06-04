@@ -158,6 +158,8 @@ const (
 	ResourceMs365TeamsTenantFederationConfig                                                             string = "ms365.teams.tenantFederationConfig"
 	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
 	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
+	ResourceMs365TeamsTeam                                                                               string = "ms365.teams.team"
+	ResourceMs365TeamsChannel                                                                            string = "ms365.teams.channel"
 	ResourceMs365ExchangeonlineMailboxPlan                                                               string = "ms365.exchangeonline.mailboxPlan"
 	ResourceMs365ExchangeonlineRetentionPolicy                                                           string = "ms365.exchangeonline.retentionPolicy"
 	ResourceMs365ExchangeonlineTransportRule                                                             string = "ms365.exchangeonline.transportRule"
@@ -748,6 +750,14 @@ func init() {
 		"ms365.teams.teamsMessagingPolicyConfig": {
 			// to override args, implement: initMs365TeamsTeamsMessagingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365TeamsTeamsMessagingPolicyConfig,
+		},
+		"ms365.teams.team": {
+			// to override args, implement: initMs365TeamsTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTeam,
+		},
+		"ms365.teams.channel": {
+			// to override args, implement: initMs365TeamsChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsChannel,
 		},
 		"ms365.exchangeonline.mailboxPlan": {
 			// to override args, implement: initMs365ExchangeonlineMailboxPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4134,6 +4144,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.csTeamsMessagingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsMessagingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMessagingPolicyConfig"))
 	},
+	"ms365.teams.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetTeams()).ToDataRes(types.Array(types.Resource("ms365.teams.team")))
+	},
 	"ms365.teams.clientConfig.allowEmailIntoChannel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsClientConfig).GetAllowEmailIntoChannel()).ToDataRes(types.Bool)
 	},
@@ -4265,6 +4278,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.readReceiptsEnabledType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).GetReadReceiptsEnabledType()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetId()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetDisplayName()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetDescription()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetVisibility()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.isArchived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetIsArchived()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.specialization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetSpecialization()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetClassification()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"ms365.teams.team.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetWebUrl()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.allowCreateUpdateChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowCreateUpdateChannels()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowCreatePrivateChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowCreatePrivateChannels()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowDeleteChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowDeleteChannels()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowAddRemoveApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowAddRemoveApps()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowCreateUpdateRemoveTabs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowCreateUpdateRemoveTabs()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowCreateUpdateRemoveConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowCreateUpdateRemoveConnectors()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.guestAllowCreateUpdateChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetGuestAllowCreateUpdateChannels()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.guestAllowDeleteChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetGuestAllowDeleteChannels()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowUserEditMessages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowUserEditMessages()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowUserDeleteMessages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowUserDeleteMessages()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowOwnerDeleteMessages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowOwnerDeleteMessages()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowTeamMentions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowTeamMentions()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowChannelMentions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowChannelMentions()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowGiphy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowGiphy()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.giphyContentRating": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetGiphyContentRating()).ToDataRes(types.String)
+	},
+	"ms365.teams.team.allowStickersAndMemes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowStickersAndMemes()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.allowCustomMemes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetAllowCustomMemes()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.team.channels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeam).GetChannels()).ToDataRes(types.Array(types.Resource("ms365.teams.channel")))
+	},
+	"ms365.teams.channel.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetId()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetDisplayName()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetDescription()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.membershipType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetMembershipType()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetEmail()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.webUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetWebUrl()).ToDataRes(types.String)
+	},
+	"ms365.teams.channel.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"ms365.teams.channel.isArchived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsChannel).GetIsArchived()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.mailboxPlan.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxPlan).GetName()).ToDataRes(types.String)
@@ -9536,6 +9654,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Teams).CsTeamsMessagingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMessagingPolicyConfig](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.clientConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsClientConfig).__id, ok = v.Value.(string)
 		return
@@ -9726,6 +9848,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.teams.teamsMessagingPolicyConfig.readReceiptsEnabledType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMessagingPolicyConfig).ReadReceiptsEnabledType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.teams.team.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.isArchived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).IsArchived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.specialization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Specialization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowCreateUpdateChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowCreateUpdateChannels, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowCreatePrivateChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowCreatePrivateChannels, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowDeleteChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowDeleteChannels, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowAddRemoveApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowAddRemoveApps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowCreateUpdateRemoveTabs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowCreateUpdateRemoveTabs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowCreateUpdateRemoveConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowCreateUpdateRemoveConnectors, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.guestAllowCreateUpdateChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).GuestAllowCreateUpdateChannels, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.guestAllowDeleteChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).GuestAllowDeleteChannels, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowUserEditMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowUserEditMessages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowUserDeleteMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowUserDeleteMessages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowOwnerDeleteMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowOwnerDeleteMessages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowTeamMentions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowTeamMentions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowChannelMentions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowChannelMentions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowGiphy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowGiphy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.giphyContentRating": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).GiphyContentRating, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowStickersAndMemes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowStickersAndMemes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.allowCustomMemes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).AllowCustomMemes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.team.channels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeam).Channels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.teams.channel.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.membershipType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).MembershipType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.webUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).WebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.channel.isArchived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsChannel).IsArchived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.mailboxPlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23140,6 +23410,7 @@ type mqlMs365Teams struct {
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy            plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
 	CsTeamsMessagingPolicy          plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
+	Teams                           plugin.TValue[[]any]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -23241,6 +23512,22 @@ func (c *mqlMs365Teams) GetCsTeamsMessagingPolicy() *plugin.TValue[*mqlMs365Team
 		}
 
 		return c.csTeamsMessagingPolicy()
+	})
+}
+
+func (c *mqlMs365Teams) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
 	})
 }
 
@@ -23618,6 +23905,317 @@ func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetAllowUserDeleteChat() *plug
 
 func (c *mqlMs365TeamsTeamsMessagingPolicyConfig) GetReadReceiptsEnabledType() *plugin.TValue[string] {
 	return &c.ReadReceiptsEnabledType
+}
+
+// mqlMs365TeamsTeam for the ms365.teams.team resource
+type mqlMs365TeamsTeam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMs365TeamsTeamInternal
+	Id                                plugin.TValue[string]
+	DisplayName                       plugin.TValue[string]
+	Description                       plugin.TValue[string]
+	Visibility                        plugin.TValue[string]
+	IsArchived                        plugin.TValue[bool]
+	Specialization                    plugin.TValue[string]
+	Classification                    plugin.TValue[string]
+	CreatedDateTime                   plugin.TValue[*time.Time]
+	WebUrl                            plugin.TValue[string]
+	AllowCreateUpdateChannels         plugin.TValue[bool]
+	AllowCreatePrivateChannels        plugin.TValue[bool]
+	AllowDeleteChannels               plugin.TValue[bool]
+	AllowAddRemoveApps                plugin.TValue[bool]
+	AllowCreateUpdateRemoveTabs       plugin.TValue[bool]
+	AllowCreateUpdateRemoveConnectors plugin.TValue[bool]
+	GuestAllowCreateUpdateChannels    plugin.TValue[bool]
+	GuestAllowDeleteChannels          plugin.TValue[bool]
+	AllowUserEditMessages             plugin.TValue[bool]
+	AllowUserDeleteMessages           plugin.TValue[bool]
+	AllowOwnerDeleteMessages          plugin.TValue[bool]
+	AllowTeamMentions                 plugin.TValue[bool]
+	AllowChannelMentions              plugin.TValue[bool]
+	AllowGiphy                        plugin.TValue[bool]
+	GiphyContentRating                plugin.TValue[string]
+	AllowStickersAndMemes             plugin.TValue[bool]
+	AllowCustomMemes                  plugin.TValue[bool]
+	Channels                          plugin.TValue[[]any]
+}
+
+// createMs365TeamsTeam creates a new instance of this resource
+func createMs365TeamsTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTeam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.team", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTeam) MqlName() string {
+	return "ms365.teams.team"
+}
+
+func (c *mqlMs365TeamsTeam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTeam) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMs365TeamsTeam) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMs365TeamsTeam) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMs365TeamsTeam) GetVisibility() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Visibility, func() (string, error) {
+		return c.visibility()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetIsArchived() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsArchived, func() (bool, error) {
+		return c.isArchived()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetSpecialization() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Specialization, func() (string, error) {
+		return c.specialization()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetClassification() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Classification, func() (string, error) {
+		return c.classification()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedDateTime, func() (*time.Time, error) {
+		return c.createdDateTime()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetWebUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WebUrl, func() (string, error) {
+		return c.webUrl()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowCreateUpdateChannels() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowCreateUpdateChannels, func() (bool, error) {
+		return c.allowCreateUpdateChannels()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowCreatePrivateChannels() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowCreatePrivateChannels, func() (bool, error) {
+		return c.allowCreatePrivateChannels()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowDeleteChannels() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowDeleteChannels, func() (bool, error) {
+		return c.allowDeleteChannels()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowAddRemoveApps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowAddRemoveApps, func() (bool, error) {
+		return c.allowAddRemoveApps()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowCreateUpdateRemoveTabs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowCreateUpdateRemoveTabs, func() (bool, error) {
+		return c.allowCreateUpdateRemoveTabs()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowCreateUpdateRemoveConnectors() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowCreateUpdateRemoveConnectors, func() (bool, error) {
+		return c.allowCreateUpdateRemoveConnectors()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetGuestAllowCreateUpdateChannels() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GuestAllowCreateUpdateChannels, func() (bool, error) {
+		return c.guestAllowCreateUpdateChannels()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetGuestAllowDeleteChannels() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GuestAllowDeleteChannels, func() (bool, error) {
+		return c.guestAllowDeleteChannels()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowUserEditMessages() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserEditMessages, func() (bool, error) {
+		return c.allowUserEditMessages()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowUserDeleteMessages() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserDeleteMessages, func() (bool, error) {
+		return c.allowUserDeleteMessages()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowOwnerDeleteMessages() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowOwnerDeleteMessages, func() (bool, error) {
+		return c.allowOwnerDeleteMessages()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowTeamMentions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowTeamMentions, func() (bool, error) {
+		return c.allowTeamMentions()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowChannelMentions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowChannelMentions, func() (bool, error) {
+		return c.allowChannelMentions()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowGiphy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowGiphy, func() (bool, error) {
+		return c.allowGiphy()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetGiphyContentRating() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GiphyContentRating, func() (string, error) {
+		return c.giphyContentRating()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowStickersAndMemes() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowStickersAndMemes, func() (bool, error) {
+		return c.allowStickersAndMemes()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetAllowCustomMemes() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowCustomMemes, func() (bool, error) {
+		return c.allowCustomMemes()
+	})
+}
+
+func (c *mqlMs365TeamsTeam) GetChannels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Channels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams.team", c.__id, "channels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.channels()
+	})
+}
+
+// mqlMs365TeamsChannel for the ms365.teams.channel resource
+type mqlMs365TeamsChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365TeamsChannelInternal it will be used here
+	Id              plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	MembershipType  plugin.TValue[string]
+	Email           plugin.TValue[string]
+	WebUrl          plugin.TValue[string]
+	CreatedDateTime plugin.TValue[*time.Time]
+	IsArchived      plugin.TValue[bool]
+}
+
+// createMs365TeamsChannel creates a new instance of this resource
+func createMs365TeamsChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.channel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsChannel) MqlName() string {
+	return "ms365.teams.channel"
+}
+
+func (c *mqlMs365TeamsChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsChannel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMs365TeamsChannel) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMs365TeamsChannel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMs365TeamsChannel) GetMembershipType() *plugin.TValue[string] {
+	return &c.MembershipType
+}
+
+func (c *mqlMs365TeamsChannel) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlMs365TeamsChannel) GetWebUrl() *plugin.TValue[string] {
+	return &c.WebUrl
+}
+
+func (c *mqlMs365TeamsChannel) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMs365TeamsChannel) GetIsArchived() *plugin.TValue[bool] {
+	return &c.IsArchived
 }
 
 // mqlMs365ExchangeonlineMailboxPlan for the ms365.exchangeonline.mailboxPlan resource

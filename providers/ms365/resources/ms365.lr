@@ -3316,6 +3316,8 @@ ms365.teams {
   csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
   // Teams message policy configuration
   csTeamsMessagingPolicy() ms365.teams.teamsMessagingPolicyConfig
+  // Teams (group-backed) provisioned in the tenant
+  teams() []ms365.teams.team
 }
 
 // Microsoft 365 Teams client configuration
@@ -3429,6 +3431,108 @@ private ms365.teams.teamsMessagingPolicyConfig {
   // One of UserPreference, Everyone, or None, indicating whether read
   // receipts are user-controlled, forced on, or forced off.
   readReceiptsEnabledType string
+}
+
+// Microsoft Teams team
+//
+// Examine a single team provisioned in the tenant, selected by its group
+// `id`. Beyond identity (`displayName`, `description`, `visibility`,
+// `classification`, `createdDateTime`, `webUrl`) it exposes the team's
+// governance settings: whether members can create, update, or delete
+// channels and create private channels (`allowCreateUpdateChannels`,
+// `allowCreatePrivateChannels`, `allowDeleteChannels`), add or remove apps,
+// tabs, and connectors, what guests are allowed to do
+// (`guestAllowCreateUpdateChannels`, `guestAllowDeleteChannels`), the
+// messaging controls (`allowUserDeleteMessages`, `allowOwnerDeleteMessages`,
+// and mention settings), and the fun settings (`allowGiphy`,
+// `giphyContentRating`, `allowStickersAndMemes`, `allowCustomMemes`). Use
+// `channels` to enumerate the team's channels and `isArchived` to spot
+// archived teams.
+private ms365.teams.team @defaults("displayName description visibility") {
+  // Team (group) ID
+  id string
+  // Team display name
+  displayName string
+  // Team description
+  description string
+  // Team visibility (public, private, hiddenMembership)
+  visibility() string
+  // Whether the team is archived
+  isArchived() bool
+  // Team specialization
+  //
+  // One of none, educationStandard, educationClass,
+  // educationProfessionalLearningCommunity, educationStaff,
+  // healthcareStandard, or healthcareCareCoordination.
+  specialization() string
+  // Team data classification
+  classification() string
+  // Date and time the team was created
+  createdDateTime() time
+  // URL that opens the team in the Teams client
+  webUrl() string
+  // Whether members can create and update channels
+  allowCreateUpdateChannels() bool
+  // Whether members can create private channels
+  allowCreatePrivateChannels() bool
+  // Whether members can delete channels
+  allowDeleteChannels() bool
+  // Whether members can add and remove apps
+  allowAddRemoveApps() bool
+  // Whether members can create, update, and remove tabs
+  allowCreateUpdateRemoveTabs() bool
+  // Whether members can create, update, and remove connectors
+  allowCreateUpdateRemoveConnectors() bool
+  // Whether guests can create and update channels
+  guestAllowCreateUpdateChannels() bool
+  // Whether guests can delete channels
+  guestAllowDeleteChannels() bool
+  // Whether users can edit their own sent messages
+  allowUserEditMessages() bool
+  // Whether users can delete their own sent messages
+  allowUserDeleteMessages() bool
+  // Whether team owners can delete messages sent by others
+  allowOwnerDeleteMessages() bool
+  // Whether @team mentions are allowed
+  allowTeamMentions() bool
+  // Whether @channel mentions are allowed
+  allowChannelMentions() bool
+  // Whether Giphy can be used in conversations
+  allowGiphy() bool
+  // Giphy content rating (moderate, strict)
+  giphyContentRating() string
+  // Whether stickers and memes can be used
+  allowStickersAndMemes() bool
+  // Whether custom memes can be uploaded and used
+  allowCustomMemes() bool
+  // Channels in the team
+  channels() []ms365.teams.channel
+}
+
+// Microsoft Teams channel
+//
+// Examine a single channel within a team. Exposes the channel
+// `displayName`, `description`, `membershipType` (standard, private, or
+// shared), `email`, `webUrl`, `createdDateTime`, and whether the channel
+// `isArchived`. Private and shared channels narrow who can participate, so
+// `membershipType` is a key governance signal.
+private ms365.teams.channel @defaults("displayName membershipType") {
+  // Channel ID
+  id string
+  // Channel display name
+  displayName string
+  // Channel description
+  description string
+  // Channel membership type (standard, private, shared, unknownFutureValue)
+  membershipType string
+  // Email address for sending messages to the channel
+  email string
+  // URL that opens the channel in the Teams client
+  webUrl string
+  // Date and time the channel was created
+  createdDateTime time
+  // Whether the channel is archived
+  isArchived bool
 }
 
 // Mailbox Plan
