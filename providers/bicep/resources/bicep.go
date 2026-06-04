@@ -31,6 +31,24 @@ func (r *mqlBicep) files() ([]any, error) {
 	return mqlFiles, nil
 }
 
+// resources flattens every file's top-level resources into a single list so
+// policies can query `bicep.resources` directly, mirroring `terraform.resources`.
+func (r *mqlBicep) resources() ([]any, error) {
+	files, err := r.files()
+	if err != nil {
+		return nil, err
+	}
+	var out []any
+	for _, f := range files {
+		rs, err := f.(*mqlBicepFile).resources()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, rs...)
+	}
+	return out, nil
+}
+
 func (r *mqlBicep) paramFiles() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.BicepConnection)
 	paramFiles := conn.BicepParamFiles()

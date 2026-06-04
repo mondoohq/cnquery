@@ -120,6 +120,7 @@ bicep.resource.scope 13.1.2
 bicep.resource.symbolicName 13.0.0
 bicep.resource.tags 13.0.9
 bicep.resource.type 13.0.0
+bicep.resources 13.2.2
 bicep.template 13.0.0
 bicep.template.contentVersion 13.0.0
 bicep.template.output 13.1.2

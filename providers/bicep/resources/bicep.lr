@@ -14,6 +14,15 @@ option go_package = "go.mondoo.com/mql/v13/providers/bicep/resources"
 bicep {
   // All Bicep source files found
   files() []bicep.file
+  // All top-level resources across every Bicep source file
+  //
+  // The combined list of every source file's resource declarations, so a query
+  // can reach resources directly — for example
+  // `bicep.resources.where(type == "Microsoft.Storage/storageAccounts")` —
+  // instead of iterating the files first. Only top-level resource declarations
+  // are included; nested child resources remain available through
+  // `bicep.resource.resources`.
+  resources() []bicep.resource
   // All Bicep parameter (.bicepparam) files found
   paramFiles() []bicep.paramFile
   // Compiled ARM template (if available via JSON or bicep build)

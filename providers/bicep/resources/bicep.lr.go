@@ -190,6 +190,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicep).GetFiles()).ToDataRes(types.Array(types.Resource("bicep.file")))
 	},
+	"bicep.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicep).GetResources()).ToDataRes(types.Array(types.Resource("bicep.resource")))
+	},
 	"bicep.paramFiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicep).GetParamFiles()).ToDataRes(types.Array(types.Resource("bicep.paramFile")))
 	},
@@ -679,6 +682,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicep).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"bicep.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicep).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.paramFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1411,6 +1418,7 @@ type mqlBicep struct {
 	__id       string
 	// optional: if you define mqlBicepInternal it will be used here
 	Files      plugin.TValue[[]any]
+	Resources  plugin.TValue[[]any]
 	ParamFiles plugin.TValue[[]any]
 	Template   plugin.TValue[*mqlBicepTemplate]
 }
@@ -1465,6 +1473,22 @@ func (c *mqlBicep) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files()
+	})
+}
+
+func (c *mqlBicep) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("bicep", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
 	})
 }
 

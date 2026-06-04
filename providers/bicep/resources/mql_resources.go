@@ -109,6 +109,10 @@ type mqlBicepResourceInternal struct {
 	// re-walk it with quoting intact — the parsed `properties` dict has already
 	// stripped quotes, losing the literal-vs-expression distinction.
 	propertiesBody string
+	// rawName is the resource's name expression with quotes intact, kept so
+	// nameTree() can classify it (literal vs interpolation vs functionCall)
+	// even though the public `name` field strips surrounding literal quotes.
+	rawName string
 }
 
 func createMqlResources(runtime *plugin.Runtime, filePath string, resources []parsedResource, resolver *symbolResolver) ([]any, error) {
@@ -184,7 +188,7 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 		"symbolicName": llx.StringData(r.symbolicName),
 		"type":         llx.StringData(r.typ),
 		"apiVersion":   llx.StringData(r.apiVersion),
-		"name":         llx.StringData(r.name),
+		"name":         llx.StringData(stripLiteralQuotes(r.name)),
 		"location":     llx.StringData(r.location),
 		"existing":     llx.BoolData(r.existing),
 		"condition":    llx.StringData(r.condition),
@@ -214,6 +218,7 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 	mqlRes.nested = r.nested
 	mqlRes.resolver = resolver
 	mqlRes.propertiesBody = propertiesBody
+	mqlRes.rawName = r.name
 	return mqlRes, nil
 }
 
@@ -461,7 +466,7 @@ func (o *mqlBicepOutput) expressionTree() (*mqlBicepExpression, error) {
 }
 
 func (r *mqlBicepResource) nameTree() (*mqlBicepExpression, error) {
-	return expressionTreeFor(r.MqlRuntime, r.__id, "/nameTree", r.Name.Data, r.resolver)
+	return expressionTreeFor(r.MqlRuntime, r.__id, "/nameTree", r.rawName, r.resolver)
 }
 
 func (r *mqlBicepResource) locationTree() (*mqlBicepExpression, error) {

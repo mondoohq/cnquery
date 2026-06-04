@@ -355,7 +355,7 @@ func TestResourceBodyInner(t *testing.T) {
 		assert.Equal(t, "app", obj["kind"])
 		props, ok := obj["properties"].(map[string]any)
 		require.True(t, ok)
-		assert.Equal(t, "true", props["httpsOnly"])
+		assert.Equal(t, true, props["httpsOnly"])
 	})
 
 	t.Run("skips nested resource declarations", func(t *testing.T) {
@@ -800,7 +800,7 @@ func TestParseBicepObject(t *testing.T) {
 `
 		obj := parseBicepObject(body)
 		assert.Equal(t, "Hot", obj["accessTier"])
-		assert.Equal(t, "true", obj["supportsHttpsTrafficOnly"])
+		assert.Equal(t, true, obj["supportsHttpsTrafficOnly"])
 		assert.Equal(t, "TLS1_2", obj["minimumTlsVersion"])
 
 		nested, ok := obj["networkAcls"].(map[string]any)
@@ -821,8 +821,8 @@ func TestParseBicepObject(t *testing.T) {
   count: 3
 `
 		obj := parseBicepObject(body)
-		assert.Equal(t, "true", obj["enabled"])
-		assert.Equal(t, "3", obj["count"])
+		assert.Equal(t, true, obj["enabled"])
+		assert.Equal(t, float64(3), obj["count"])
 		_, present := obj["inline"]
 		assert.False(t, present)
 	})
@@ -928,7 +928,7 @@ hello { world }
 		// We don't unquote `'''` strings (the surrounding quotes are
 		// part of the value form), but the scanner has to walk past
 		// them without splitting the entry — `enabled` must survive.
-		assert.Equal(t, "true", obj["enabled"])
+		assert.Equal(t, true, obj["enabled"])
 		_, present := obj["script"]
 		assert.True(t, present, "triple-quoted entry should still be captured")
 	})
