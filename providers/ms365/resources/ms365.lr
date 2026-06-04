@@ -334,13 +334,15 @@ microsoft.identityAndAccess.privilegedIdentityManagement.policies {
 }
 
 // Represents an instance of a role eligibility in PIM
-private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("memberType principalId roleDefinitionId") {
+private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("memberType principalId") {
   // The unique identifier of the role eligibility schedule instance
   id string
   // The identifier of the principal (user, group, or service principal) that has the role eligibility
   principalId string
   // The identifier of the role definition that the eligibility is for
-  roleDefinitionId string
+  //
+  // Deprecated in favor of roleDefinition.
+  roleDefinitionId @maturity("deprecated") string
   // Role definition the eligibility grants
   roleDefinition() microsoft.rolemanagement.roledefinition
   // The identifier of the directory object representing the scope of the role eligibility
@@ -2155,7 +2157,9 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   // Role assignment ID
   id string
   // Role definition ID
-  roleDefinitionId string
+  //
+  // Deprecated in favor of roleDefinition.
+  roleDefinitionId @maturity("deprecated") string
   // Role definition assigned
   roleDefinition() microsoft.rolemanagement.roledefinition
   // Service principal ID
@@ -2228,7 +2232,9 @@ private microsoft.devicemanagement.manageddevice {
   // Managed device ID
   id string
   // Unique identifier for the user associated with the device
-  userId string
+  //
+  // Deprecated in favor of user.
+  userId @maturity("deprecated") string
   // User associated with the device
   user() microsoft.user
   // Name of the device
@@ -2400,13 +2406,15 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
 // (`groupAssignmentTarget`, `exclusionGroupAssignmentTarget`,
 // `allDevicesAssignmentTarget`, `allLicensedUsersAssignmentTarget`); `groupId`
 // is populated only when the target is a group.
-private microsoft.devicemanagement.policyAssignment @defaults("id targetType groupId") {
+private microsoft.devicemanagement.policyAssignment @defaults("id targetType") {
   // Assignment ID
   id string
   // Target kind (groupAssignmentTarget, exclusionGroupAssignmentTarget, allDevicesAssignmentTarget, allLicensedUsersAssignmentTarget)
   targetType string
   // Group ID when the target is a group, empty otherwise
-  groupId string
+  //
+  // Deprecated in favor of group.
+  groupId @maturity("deprecated") string
   // Group the assignment targets, when targetType is a group
   group() microsoft.group
   // Whether the assignment excludes the target rather than including it
