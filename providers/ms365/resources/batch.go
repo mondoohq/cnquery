@@ -10,6 +10,7 @@ import (
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoft/kiota-abstractions-go/serialization"
 	msgraphgocore "github.com/microsoftgraph/msgraph-sdk-go-core"
+	"github.com/rs/zerolog/log"
 )
 
 // batchItemRequest pairs a caller-defined key with the Graph request to issue
@@ -116,7 +117,11 @@ func safeGetBatchResponseByID[T serialization.Parsable](
 		if r := recover(); r != nil {
 			var zero T
 			val = zero
-			err = fmt.Errorf("batch sub-response %q could not be parsed: %v", id, r)
+			err = fmt.Errorf("batch sub-response %q could not be parsed (recovered panic): %v", id, r)
+			// Surface the recovered panic so it is not lost during debugging --
+			// the status-code guard handles the expected non-2xx case, so a panic
+			// reaching here means an unexpected/malformed body the SDK mishandled.
+			log.Warn().Str("id", id).Msgf("recovered panic parsing batch sub-response: %v", r)
 		}
 	}()
 	return msgraphgocore.GetBatchResponseById[T](resp, id, constructor)
