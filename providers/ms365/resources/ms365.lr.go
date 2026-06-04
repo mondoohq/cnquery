@@ -558,7 +558,7 @@ func init() {
 			Create: createMicrosoftGraphAccessReviewReviewerScope,
 		},
 		"microsoft.authenticationMethodsPolicy": {
-			// to override args, implement: initMicrosoftAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftAuthenticationMethodsPolicy,
 			Create: createMicrosoftAuthenticationMethodsPolicy,
 		},
 		"microsoft.authenticationMethodConfiguration": {

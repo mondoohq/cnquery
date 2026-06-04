@@ -14,6 +14,26 @@ type mqlMicrosoftAuthenticationMethodsPolicyInternal struct {
 	cachePolicy models.AuthenticationMethodsPolicyable
 }
 
+// initMicrosoftAuthenticationMethodsPolicy populates the policy when it is
+// queried directly (microsoft.authenticationMethodsPolicy) rather than through
+// microsoft.policies.authenticationMethodsPolicy. Without this, a direct query
+// returns a bare resource whose cachePolicy is nil, so every per-method
+// accessor (fido2, microsoftAuthenticator, ...) resolves to null. We delegate
+// to the policies accessor, which fetches the policy and caches it.
+func initMicrosoftAuthenticationMethodsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	policiesResource, err := CreateResource(runtime, ResourceMicrosoftPolicies, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policy, err := policiesResource.(*mqlMicrosoftPolicies).authenticationMethodsPolicy()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return nil, policy, nil
+}
+
 // authMethodTargets renders the include/exclude target lists of an
 // authentication method (or the registration campaign) as dictionaries. Every
 // target type shares the id and targetType accessors.
