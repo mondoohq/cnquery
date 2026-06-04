@@ -561,6 +561,34 @@ func newMqlMicrosoftSignIn(runtime *plugin.Runtime, signIn betamodels.SignInable
 		s := signIn.GetRiskState().String()
 		signInRiskState = &s
 	}
+	var riskLevelAggregated *string
+	if signIn.GetRiskLevelAggregated() != nil {
+		s := signIn.GetRiskLevelAggregated().String()
+		riskLevelAggregated = &s
+	}
+	var riskLevelDuringSignIn *string
+	if signIn.GetRiskLevelDuringSignIn() != nil {
+		s := signIn.GetRiskLevelDuringSignIn().String()
+		riskLevelDuringSignIn = &s
+	}
+	riskEventTypes := []any{}
+	for _, t := range signIn.GetRiskEventTypesV2() {
+		riskEventTypes = append(riskEventTypes, t)
+	}
+
+	var statusErrorCode *int32
+	var statusFailureReason *string
+	if status := signIn.GetStatus(); status != nil {
+		statusErrorCode = status.GetErrorCode()
+		statusFailureReason = status.GetFailureReason()
+	}
+
+	var city, state, countryOrRegion *string
+	if loc := signIn.GetLocation(); loc != nil {
+		city = loc.GetCity()
+		state = loc.GetState()
+		countryOrRegion = loc.GetCountryOrRegion()
+	}
 
 	mqlSignIn, err := CreateResource(runtime, "microsoft.user.signin",
 		map[string]*llx.RawData{
@@ -581,6 +609,14 @@ func newMqlMicrosoftSignIn(runtime *plugin.Runtime, signIn betamodels.SignInable
 			"conditionalAccessStatus": llx.StringDataPtr(conditionalAccessStatus),
 			"riskDetail":              llx.StringDataPtr(signInRiskDetail),
 			"riskState":               llx.StringDataPtr(signInRiskState),
+			"riskLevelAggregated":     llx.StringDataPtr(riskLevelAggregated),
+			"riskLevelDuringSignIn":   llx.StringDataPtr(riskLevelDuringSignIn),
+			"riskEventTypes":          llx.ArrayData(riskEventTypes, types.String),
+			"statusErrorCode":         llx.IntDataPtr(statusErrorCode),
+			"statusFailureReason":     llx.StringDataPtr(statusFailureReason),
+			"city":                    llx.StringDataPtr(city),
+			"state":                   llx.StringDataPtr(state),
+			"countryOrRegion":         llx.StringDataPtr(countryOrRegion),
 		})
 	if err != nil {
 		return nil, err

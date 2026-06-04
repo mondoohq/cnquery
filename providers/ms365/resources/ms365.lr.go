@@ -93,6 +93,7 @@ const (
 	ResourceMicrosoftSecurity                                                                            string = "microsoft.security"
 	ResourceMicrosoftSecuritySecurityscore                                                               string = "microsoft.security.securityscore"
 	ResourceMicrosoftSecurityRiskyUser                                                                   string = "microsoft.security.riskyUser"
+	ResourceMicrosoftSecurityRiskDetection                                                               string = "microsoft.security.riskDetection"
 	ResourceMicrosoftSecurityAlert                                                                       string = "microsoft.security.alert"
 	ResourceMicrosoftSecurityIncident                                                                    string = "microsoft.security.incident"
 	ResourceMicrosoftSecurityExchange                                                                    string = "microsoft.security.exchange"
@@ -481,6 +482,10 @@ func init() {
 		"microsoft.security.riskyUser": {
 			// to override args, implement: initMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityRiskyUser,
+		},
+		"microsoft.security.riskDetection": {
+			// to override args, implement: initMicrosoftSecurityRiskDetection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityRiskDetection,
 		},
 		"microsoft.security.alert": {
 			// to override args, implement: initMicrosoftSecurityAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1801,6 +1806,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.signin.riskState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserSignin).GetRiskState()).ToDataRes(types.String)
 	},
+	"microsoft.user.signin.riskLevelAggregated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetRiskLevelAggregated()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.riskLevelDuringSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetRiskLevelDuringSignIn()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.riskEventTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetRiskEventTypes()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.user.signin.statusErrorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetStatusErrorCode()).ToDataRes(types.Int)
+	},
+	"microsoft.user.signin.statusFailureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetStatusFailureReason()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.city": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetCity()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.countryOrRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetCountryOrRegion()).ToDataRes(types.String)
+	},
 	"microsoft.user.authenticationMethods.count": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetCount()).ToDataRes(types.Int)
 	},
@@ -2500,6 +2529,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.riskyUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetRiskyUsers()).ToDataRes(types.Array(types.Resource("microsoft.security.riskyUser")))
 	},
+	"microsoft.security.riskDetections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetRiskDetections()).ToDataRes(types.Array(types.Resource("microsoft.security.riskDetection")))
+	},
 	"microsoft.security.alerts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetAlerts()).ToDataRes(types.Array(types.Resource("microsoft.security.alert")))
 	},
@@ -2574,6 +2606,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityRiskyUser).GetIsProcessing()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.riskDetection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.riskEventType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetRiskEventType()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.riskState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetRiskState()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.riskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetRiskLevel()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.riskDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetRiskDetail()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetSource()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.detectionTimingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetDetectionTimingType()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.activity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetActivity()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetIpAddress()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.city": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetCity()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.countryOrRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetCountryOrRegion()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.userPrincipalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetUserPrincipalName()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.userDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetUserDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"microsoft.security.riskDetection.correlationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetCorrelationId()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.additionalInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetAdditionalInfo()).ToDataRes(types.String)
+	},
+	"microsoft.security.riskDetection.activityDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetActivityDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.riskDetection.detectedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetDetectedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.riskDetection.lastUpdatedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskDetection).GetLastUpdatedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.security.alert.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityAlert).GetId()).ToDataRes(types.String)
@@ -5906,6 +5998,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftUserSignin).RiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.signin.riskLevelAggregated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).RiskLevelAggregated, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.riskLevelDuringSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).RiskLevelDuringSignIn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.riskEventTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).RiskEventTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.statusErrorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).StatusErrorCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.statusFailureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).StatusFailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.countryOrRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).CountryOrRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationMethods).__id, ok = v.Value.(string)
 		return
@@ -6910,6 +7034,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftSecurity).RiskyUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.riskDetections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).RiskDetections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurity).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -7016,6 +7144,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityRiskyUser).IsProcessing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.riskDetection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.riskEventType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).RiskEventType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.riskState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).RiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.riskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).RiskLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.riskDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).RiskDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.detectionTimingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).DetectionTimingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.activity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).Activity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.countryOrRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).CountryOrRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.userPrincipalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).UserPrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.userDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).UserDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.correlationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).CorrelationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.additionalInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).AdditionalInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.activityDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).ActivityDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.detectedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).DetectedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskDetection.lastUpdatedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskDetection).LastUpdatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14169,6 +14381,14 @@ type mqlMicrosoftUserSignin struct {
 	ConditionalAccessStatus plugin.TValue[string]
 	RiskDetail              plugin.TValue[string]
 	RiskState               plugin.TValue[string]
+	RiskLevelAggregated     plugin.TValue[string]
+	RiskLevelDuringSignIn   plugin.TValue[string]
+	RiskEventTypes          plugin.TValue[[]any]
+	StatusErrorCode         plugin.TValue[int64]
+	StatusFailureReason     plugin.TValue[string]
+	City                    plugin.TValue[string]
+	State                   plugin.TValue[string]
+	CountryOrRegion         plugin.TValue[string]
 }
 
 // createMicrosoftUserSignin creates a new instance of this resource
@@ -14265,6 +14485,38 @@ func (c *mqlMicrosoftUserSignin) GetRiskDetail() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftUserSignin) GetRiskState() *plugin.TValue[string] {
 	return &c.RiskState
+}
+
+func (c *mqlMicrosoftUserSignin) GetRiskLevelAggregated() *plugin.TValue[string] {
+	return &c.RiskLevelAggregated
+}
+
+func (c *mqlMicrosoftUserSignin) GetRiskLevelDuringSignIn() *plugin.TValue[string] {
+	return &c.RiskLevelDuringSignIn
+}
+
+func (c *mqlMicrosoftUserSignin) GetRiskEventTypes() *plugin.TValue[[]any] {
+	return &c.RiskEventTypes
+}
+
+func (c *mqlMicrosoftUserSignin) GetStatusErrorCode() *plugin.TValue[int64] {
+	return &c.StatusErrorCode
+}
+
+func (c *mqlMicrosoftUserSignin) GetStatusFailureReason() *plugin.TValue[string] {
+	return &c.StatusFailureReason
+}
+
+func (c *mqlMicrosoftUserSignin) GetCity() *plugin.TValue[string] {
+	return &c.City
+}
+
+func (c *mqlMicrosoftUserSignin) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftUserSignin) GetCountryOrRegion() *plugin.TValue[string] {
+	return &c.CountryOrRegion
 }
 
 // mqlMicrosoftUserAuthenticationMethods for the microsoft.user.authenticationMethods resource
@@ -16273,6 +16525,7 @@ type mqlMicrosoftSecurity struct {
 	SecureScores          plugin.TValue[[]any]
 	LatestSecureScores    plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
 	RiskyUsers            plugin.TValue[[]any]
+	RiskDetections        plugin.TValue[[]any]
 	Alerts                plugin.TValue[[]any]
 	Incidents             plugin.TValue[[]any]
 	Exchange              plugin.TValue[*mqlMicrosoftSecurityExchange]
@@ -16356,6 +16609,22 @@ func (c *mqlMicrosoftSecurity) GetRiskyUsers() *plugin.TValue[[]any] {
 		}
 
 		return c.riskyUsers()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetRiskDetections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RiskDetections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "riskDetections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.riskDetections()
 	})
 }
 
@@ -16621,6 +16890,157 @@ func (c *mqlMicrosoftSecurityRiskyUser) GetIsDeleted() *plugin.TValue[bool] {
 
 func (c *mqlMicrosoftSecurityRiskyUser) GetIsProcessing() *plugin.TValue[bool] {
 	return &c.IsProcessing
+}
+
+// mqlMicrosoftSecurityRiskDetection for the microsoft.security.riskDetection resource
+type mqlMicrosoftSecurityRiskDetection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMicrosoftSecurityRiskDetectionInternal
+	Id                  plugin.TValue[string]
+	RiskEventType       plugin.TValue[string]
+	RiskState           plugin.TValue[string]
+	RiskLevel           plugin.TValue[string]
+	RiskDetail          plugin.TValue[string]
+	Source              plugin.TValue[string]
+	DetectionTimingType plugin.TValue[string]
+	Activity            plugin.TValue[string]
+	IpAddress           plugin.TValue[string]
+	City                plugin.TValue[string]
+	State               plugin.TValue[string]
+	CountryOrRegion     plugin.TValue[string]
+	UserPrincipalName   plugin.TValue[string]
+	UserDisplayName     plugin.TValue[string]
+	User                plugin.TValue[*mqlMicrosoftUser]
+	CorrelationId       plugin.TValue[string]
+	AdditionalInfo      plugin.TValue[string]
+	ActivityDateTime    plugin.TValue[*time.Time]
+	DetectedDateTime    plugin.TValue[*time.Time]
+	LastUpdatedDateTime plugin.TValue[*time.Time]
+}
+
+// createMicrosoftSecurityRiskDetection creates a new instance of this resource
+func createMicrosoftSecurityRiskDetection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityRiskDetection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.riskDetection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) MqlName() string {
+	return "microsoft.security.riskDetection"
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetRiskEventType() *plugin.TValue[string] {
+	return &c.RiskEventType
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetRiskState() *plugin.TValue[string] {
+	return &c.RiskState
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetRiskLevel() *plugin.TValue[string] {
+	return &c.RiskLevel
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetRiskDetail() *plugin.TValue[string] {
+	return &c.RiskDetail
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetDetectionTimingType() *plugin.TValue[string] {
+	return &c.DetectionTimingType
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetActivity() *plugin.TValue[string] {
+	return &c.Activity
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetCity() *plugin.TValue[string] {
+	return &c.City
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetCountryOrRegion() *plugin.TValue[string] {
+	return &c.CountryOrRegion
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetUserPrincipalName() *plugin.TValue[string] {
+	return &c.UserPrincipalName
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetUserDisplayName() *plugin.TValue[string] {
+	return &c.UserDisplayName
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.riskDetection", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetCorrelationId() *plugin.TValue[string] {
+	return &c.CorrelationId
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetAdditionalInfo() *plugin.TValue[string] {
+	return &c.AdditionalInfo
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetActivityDateTime() *plugin.TValue[*time.Time] {
+	return &c.ActivityDateTime
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetDetectedDateTime() *plugin.TValue[*time.Time] {
+	return &c.DetectedDateTime
+}
+
+func (c *mqlMicrosoftSecurityRiskDetection) GetLastUpdatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedDateTime
 }
 
 // mqlMicrosoftSecurityAlert for the microsoft.security.alert resource

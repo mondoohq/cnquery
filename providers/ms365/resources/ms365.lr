@@ -1020,6 +1020,22 @@ private microsoft.user.signin {
   riskDetail string
   // The risk state (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised, unknownFutureValue)
   riskState string
+  // The aggregated risk level (none, low, medium, high, hidden, unknownFutureValue)
+  riskLevelAggregated string
+  // The risk level during sign-in (none, low, medium, high, hidden, unknownFutureValue)
+  riskLevelDuringSignIn string
+  // The risk event types associated with the sign-in
+  riskEventTypes []string
+  // The sign-in error code; 0 indicates the sign-in succeeded
+  statusErrorCode int
+  // The reason behind a failed sign-in
+  statusFailureReason string
+  // The city the sign-in originated from
+  city string
+  // The state or province the sign-in originated from
+  state string
+  // The country or region the sign-in originated from
+  countryOrRegion string
 }
 
 // Microsoft Entra authentication methods
@@ -1641,6 +1657,8 @@ microsoft.security {
   latestSecureScores() microsoft.security.securityscore
   // List Microsoft Entra users who are at risk
   riskyUsers() []microsoft.security.riskyUser
+  // Microsoft Entra ID Protection risk detections
+  riskDetections() []microsoft.security.riskDetection
   // Microsoft Defender XDR alerts
   alerts() []microsoft.security.alert
   // Microsoft Defender XDR incidents
@@ -1705,6 +1723,62 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   isDeleted bool
   // Whether the backend is processing the user's risky state
   isProcessing bool
+}
+
+// Microsoft Entra ID Protection risk detection
+//
+// Examine a single risk detection raised by Microsoft Entra ID Protection.
+// A detection records one risky event tied to a user or a sign-in — select
+// by its `id`. Exposes the `riskEventType` (for example `unfamiliarFeatures`,
+// `anonymizedIPAddress`, `maliciousIPAddress`, or `leakedCredentials`), the
+// `riskLevel` and `riskState`, `riskDetail`, the reporting `source`, and the
+// `detectionTimingType` (realtime versus offline). The `activity` reports
+// whether the detection relates to a sign-in or a user. Location is broken
+// out into `ipAddress`, `city`, `state`, and `countryOrRegion`, and the
+// `activityDateTime`, `detectedDateTime`, and `lastUpdatedDateTime` timestamps
+// frame when it happened. Use `user` to navigate to the affected
+// `microsoft.user` record.
+microsoft.security.riskDetection @defaults("riskEventType riskLevel riskState detectedDateTime") {
+  // Risk detection ID
+  id string
+  // Type of risk event detected (for example unfamiliarFeatures, anonymizedIPAddress, maliciousIPAddress, leakedCredentials, unlikelyTravel)
+  riskEventType string
+  // Risk state (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised, unknownFutureValue)
+  riskState string
+  // Risk level (low, medium, high, hidden, none, unknownFutureValue)
+  riskLevel string
+  // Risk detail
+  riskDetail string
+  // Source that reported the detection
+  source string
+  // Detection timing (notDefined, realtime, nearRealtime, offline, unknownFutureValue)
+  detectionTimingType string
+  // Activity the detection relates to (signin, user, unknownFutureValue)
+  activity string
+  // IP address of the activity that triggered the detection
+  ipAddress string
+  // City the activity originated from
+  city string
+  // State or province the activity originated from
+  state string
+  // Country or region the activity originated from
+  countryOrRegion string
+  // User principal name of the affected user
+  userPrincipalName string
+  // Display name of the affected user
+  userDisplayName string
+  // Affected user
+  user() microsoft.user
+  // Correlation identifier for the activity
+  correlationId string
+  // Additional detection details as a JSON string
+  additionalInfo string
+  // Time of the activity that triggered the detection
+  activityDateTime time
+  // Time the risk was detected
+  detectedDateTime time
+  // Time the detection was last updated
+  lastUpdatedDateTime time
 }
 
 // Microsoft Defender XDR Alert
