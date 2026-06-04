@@ -1,0 +1,9 @@
+---
+- name: Install base packages
+  ansible.builtin.package:
+    name: curl
+    state: present
+- name: Create app directory
+  ansible.builtin.file:
+    path: /opt/app
+    state: directory

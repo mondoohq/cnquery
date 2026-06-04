@@ -235,3 +235,23 @@ func DecodePlaybook(data []byte) (Playbook, error) {
 	}
 	return playbook, nil
 }
+
+// DecodeTaskList decodes a bare YAML list of tasks, the shape used by a role's
+// tasks/main.yml and by files referenced through import_tasks / include_tasks.
+func DecodeTaskList(data []byte) ([]*Task, error) {
+	var tasks []*Task
+	if err := yaml.Unmarshal(data, &tasks); err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+// DecodeHandlerList decodes a bare YAML list of handlers, the shape used by a
+// role's handlers/main.yml.
+func DecodeHandlerList(data []byte) ([]*Handler, error) {
+	var handlers []*Handler
+	if err := yaml.Unmarshal(data, &handlers); err != nil {
+		return nil, err
+	}
+	return handlers, nil
+}

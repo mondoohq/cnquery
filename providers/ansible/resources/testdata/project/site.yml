@@ -1,0 +1,14 @@
+---
+- name: Configure web servers
+  hosts: webservers
+  become: true
+  roles:
+    - nginx
+  pre_tasks:
+    - name: Load setup tasks
+      import_tasks: tasks/setup.yml
+  tasks:
+    - name: Ensure service is running
+      ansible.builtin.service:
+        name: nginx
+        state: started

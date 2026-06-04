@@ -1,0 +1,3 @@
+---
+ntp_server: pool.ntp.org
+environment_name: production

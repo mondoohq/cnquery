@@ -1,0 +1,9 @@
+[webservers]
+web1.example.com ansible_host=10.0.0.1
+web2.example.com ansible_host=10.0.0.2
+
+[webservers:vars]
+http_port=80
+
+[production:children]
+webservers

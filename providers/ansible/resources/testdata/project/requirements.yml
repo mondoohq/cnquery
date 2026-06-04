@@ -1,0 +1,12 @@
+---
+roles:
+  - name: geerlingguy.nginx
+    version: 3.1.4
+  - src: https://github.com/example/role-foo
+    scm: git
+    version: main
+
+collections:
+  - name: community.general
+    version: 8.0.0
+  - name: ansible.posix

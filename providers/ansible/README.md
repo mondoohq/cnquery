@@ -1,6 +1,13 @@
 # Ansible Provider
 
-he Ansible provider enables security and compliance verification of Ansible playbooks using cnquery.
+The Ansible provider enables security and compliance verification of Ansible infrastructure as code using cnquery.
+
+Point the provider at a **single playbook file** to analyze its plays, tasks,
+handlers, and variables. Point it at an **Ansible project directory** to analyze
+the whole codebase — its playbooks, roles (tasks, handlers, defaults, variables,
+metadata, and dependencies), static inventory and host/group variables, Galaxy
+requirements, `ansible.cfg`, and vault-encrypted files. Nothing is executed
+against an inventory; the analysis is entirely static.
 
 ## Get started
 
@@ -32,6 +39,32 @@ Access specific play details:
 ```javascript
 ansible.plays.first.name
 ```
+
+## Project analysis
+
+Connect to a project directory to analyze the whole codebase through the
+`ansible.project` resource:
+
+```shell
+cnquery shell ansible ./my-ansible-project
+```
+
+```javascript
+// Roles defined in the project, with the roles they depend on
+ansible.project.roles { name dependencies { name } }
+
+// External roles and collections pulled in from Galaxy
+ansible.project.requirements { roles collections }
+
+// Security-relevant ansible.cfg settings
+ansible.project.config { hostKeyChecking become }
+
+// Vault-encrypted files detected in the project
+ansible.project.vault.files
+```
+
+The single-playbook queries above continue to work unchanged when the provider
+is pointed at a file rather than a directory.
 
 ## Example
 

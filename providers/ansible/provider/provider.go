@@ -122,12 +122,25 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnection) error {
 	asset.Id = conn.Conf.Type
-	asset.Platform = &inventory.Platform{
-		Name:                  "ansible-playbook",
-		Family:                []string{"ansible"},
-		Kind:                  "api",
-		Title:                 "Ansible Playbook",
-		TechnologyUrlSegments: []string{"iac", "ansible", "playbook"},
+
+	nameKind := "Ansible Playbook Static Analysis "
+	if conn.IsProject() {
+		asset.Platform = &inventory.Platform{
+			Name:                  "ansible-project",
+			Family:                []string{"ansible"},
+			Kind:                  "api",
+			Title:                 "Ansible Project",
+			TechnologyUrlSegments: []string{"iac", "ansible", "project"},
+		}
+		nameKind = "Ansible Project Static Analysis "
+	} else {
+		asset.Platform = &inventory.Platform{
+			Name:                  "ansible-playbook",
+			Family:                []string{"ansible"},
+			Kind:                  "api",
+			Title:                 "Ansible Playbook",
+			TechnologyUrlSegments: []string{"iac", "ansible", "playbook"},
+		}
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]
@@ -145,7 +158,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnect
 	platformID := "//platformid.api.mondoo.app/runtime/ansible/hash/" + hex.EncodeToString(h.Sum(nil))
 	asset.Connections[0].PlatformId = platformID
 	asset.PlatformIds = []string{platformID}
-	asset.Name = "Ansible Playbook Static Analysis " + parseNameFromPath(projectPath)
+	asset.Name = nameKind + parseNameFromPath(projectPath)
 	return nil
 }
 
