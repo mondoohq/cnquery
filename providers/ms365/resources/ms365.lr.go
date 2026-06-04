@@ -127,6 +127,8 @@ const (
 	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
 	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
 	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementMobileThreatDefenseConnector                                        string = "microsoft.devicemanagement.mobileThreatDefenseConnector"
+	ResourceMicrosoftDevicemanagementComplianceManagementPartner                                         string = "microsoft.devicemanagement.complianceManagementPartner"
 	ResourceMicrosoftDevicemanagementAssignmentFilter                                                    string = "microsoft.devicemanagement.assignmentFilter"
 	ResourceMicrosoftDevicemanagementAppProtectionPolicy                                                 string = "microsoft.devicemanagement.appProtectionPolicy"
 	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                       string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
@@ -628,6 +630,14 @@ func init() {
 		"microsoft.devicemanagement": {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
+		},
+		"microsoft.devicemanagement.mobileThreatDefenseConnector": {
+			// to override args, implement: initMicrosoftDevicemanagementMobileThreatDefenseConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementMobileThreatDefenseConnector,
+		},
+		"microsoft.devicemanagement.complianceManagementPartner": {
+			// to override args, implement: initMicrosoftDevicemanagementComplianceManagementPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementComplianceManagementPartner,
 		},
 		"microsoft.devicemanagement.assignmentFilter": {
 			Init:   initMicrosoftDevicemanagementAssignmentFilter,
@@ -3304,6 +3314,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.assignmentFilters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetAssignmentFilters()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.assignmentFilter")))
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetMobileThreatDefenseConnectors()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.mobileThreatDefenseConnector")))
+	},
+	"microsoft.devicemanagement.complianceManagementPartners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetComplianceManagementPartners()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.complianceManagementPartner")))
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetPartnerState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.lastHeartbeatDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetLastHeartbeatDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerUnresponsivenessThresholdInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetPartnerUnresponsivenessThresholdInDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerUnsupportedOsVersionBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetPartnerUnsupportedOsVersionBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetAndroidEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetIosEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.windowsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetWindowsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidMobileApplicationManagementEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetAndroidMobileApplicationManagementEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosMobileApplicationManagementEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetIosMobileApplicationManagementEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidDeviceBlockedOnMissingPartnerData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetAndroidDeviceBlockedOnMissingPartnerData()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosDeviceBlockedOnMissingPartnerData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetIosDeviceBlockedOnMissingPartnerData()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.windowsDeviceBlockedOnMissingPartnerData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetWindowsDeviceBlockedOnMissingPartnerData()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.microsoftDefenderForEndpointAttachEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetMicrosoftDefenderForEndpointAttachEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.allowPartnerToCollectIosApplicationMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetAllowPartnerToCollectIosApplicationMetadata()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.allowPartnerToCollectIosPersonalApplicationMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).GetAllowPartnerToCollectIosPersonalApplicationMetadata()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.partnerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetPartnerState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.lastHeartbeatDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetLastHeartbeatDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.androidOnboarded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetAndroidOnboarded()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.iosOnboarded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetIosOnboarded()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.macOsOnboarded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).GetMacOsOnboarded()).ToDataRes(types.Bool)
 	},
 	"microsoft.devicemanagement.assignmentFilter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementAssignmentFilter).GetId()).ToDataRes(types.String)
@@ -8554,6 +8639,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.assignmentFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).AssignmentFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).MobileThreatDefenseConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).ComplianceManagementPartners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).PartnerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.lastHeartbeatDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).LastHeartbeatDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerUnresponsivenessThresholdInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).PartnerUnresponsivenessThresholdInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.partnerUnsupportedOsVersionBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).PartnerUnsupportedOsVersionBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).AndroidEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).IosEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.windowsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).WindowsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidMobileApplicationManagementEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).AndroidMobileApplicationManagementEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosMobileApplicationManagementEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).IosMobileApplicationManagementEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.androidDeviceBlockedOnMissingPartnerData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).AndroidDeviceBlockedOnMissingPartnerData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.iosDeviceBlockedOnMissingPartnerData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).IosDeviceBlockedOnMissingPartnerData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.windowsDeviceBlockedOnMissingPartnerData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).WindowsDeviceBlockedOnMissingPartnerData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.microsoftDefenderForEndpointAttachEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).MicrosoftDefenderForEndpointAttachEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.allowPartnerToCollectIosApplicationMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).AllowPartnerToCollectIosApplicationMetadata, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileThreatDefenseConnector.allowPartnerToCollectIosPersonalApplicationMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileThreatDefenseConnector).AllowPartnerToCollectIosPersonalApplicationMetadata, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.partnerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).PartnerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.lastHeartbeatDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).LastHeartbeatDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.androidOnboarded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).AndroidOnboarded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.iosOnboarded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).IosOnboarded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.complianceManagementPartner.macOsOnboarded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementComplianceManagementPartner).MacOsOnboarded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.assignmentFilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20549,6 +20742,8 @@ type mqlMicrosoftDevicemanagement struct {
 	RoleScopeTags                      plugin.TValue[[]any]
 	AppProtectionPolicies              plugin.TValue[[]any]
 	AssignmentFilters                  plugin.TValue[[]any]
+	MobileThreatDefenseConnectors      plugin.TValue[[]any]
+	ComplianceManagementPartners       plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -20789,6 +20984,231 @@ func (c *mqlMicrosoftDevicemanagement) GetAssignmentFilters() *plugin.TValue[[]a
 
 		return c.assignmentFilters()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetMobileThreatDefenseConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobileThreatDefenseConnectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "mobileThreatDefenseConnectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobileThreatDefenseConnectors()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetComplianceManagementPartners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ComplianceManagementPartners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "complianceManagementPartners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.complianceManagementPartners()
+	})
+}
+
+// mqlMicrosoftDevicemanagementMobileThreatDefenseConnector for the microsoft.devicemanagement.mobileThreatDefenseConnector resource
+type mqlMicrosoftDevicemanagementMobileThreatDefenseConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementMobileThreatDefenseConnectorInternal it will be used here
+	Id                                                  plugin.TValue[string]
+	PartnerState                                        plugin.TValue[string]
+	LastHeartbeatDateTime                               plugin.TValue[*time.Time]
+	PartnerUnresponsivenessThresholdInDays              plugin.TValue[int64]
+	PartnerUnsupportedOsVersionBlocked                  plugin.TValue[bool]
+	AndroidEnabled                                      plugin.TValue[bool]
+	IosEnabled                                          plugin.TValue[bool]
+	WindowsEnabled                                      plugin.TValue[bool]
+	AndroidMobileApplicationManagementEnabled           plugin.TValue[bool]
+	IosMobileApplicationManagementEnabled               plugin.TValue[bool]
+	AndroidDeviceBlockedOnMissingPartnerData            plugin.TValue[bool]
+	IosDeviceBlockedOnMissingPartnerData                plugin.TValue[bool]
+	WindowsDeviceBlockedOnMissingPartnerData            plugin.TValue[bool]
+	MicrosoftDefenderForEndpointAttachEnabled           plugin.TValue[bool]
+	AllowPartnerToCollectIosApplicationMetadata         plugin.TValue[bool]
+	AllowPartnerToCollectIosPersonalApplicationMetadata plugin.TValue[bool]
+}
+
+// createMicrosoftDevicemanagementMobileThreatDefenseConnector creates a new instance of this resource
+func createMicrosoftDevicemanagementMobileThreatDefenseConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementMobileThreatDefenseConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.mobileThreatDefenseConnector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) MqlName() string {
+	return "microsoft.devicemanagement.mobileThreatDefenseConnector"
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetPartnerState() *plugin.TValue[string] {
+	return &c.PartnerState
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetLastHeartbeatDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastHeartbeatDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetPartnerUnresponsivenessThresholdInDays() *plugin.TValue[int64] {
+	return &c.PartnerUnresponsivenessThresholdInDays
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetPartnerUnsupportedOsVersionBlocked() *plugin.TValue[bool] {
+	return &c.PartnerUnsupportedOsVersionBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetAndroidEnabled() *plugin.TValue[bool] {
+	return &c.AndroidEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetIosEnabled() *plugin.TValue[bool] {
+	return &c.IosEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetWindowsEnabled() *plugin.TValue[bool] {
+	return &c.WindowsEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetAndroidMobileApplicationManagementEnabled() *plugin.TValue[bool] {
+	return &c.AndroidMobileApplicationManagementEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetIosMobileApplicationManagementEnabled() *plugin.TValue[bool] {
+	return &c.IosMobileApplicationManagementEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetAndroidDeviceBlockedOnMissingPartnerData() *plugin.TValue[bool] {
+	return &c.AndroidDeviceBlockedOnMissingPartnerData
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetIosDeviceBlockedOnMissingPartnerData() *plugin.TValue[bool] {
+	return &c.IosDeviceBlockedOnMissingPartnerData
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetWindowsDeviceBlockedOnMissingPartnerData() *plugin.TValue[bool] {
+	return &c.WindowsDeviceBlockedOnMissingPartnerData
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetMicrosoftDefenderForEndpointAttachEnabled() *plugin.TValue[bool] {
+	return &c.MicrosoftDefenderForEndpointAttachEnabled
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetAllowPartnerToCollectIosApplicationMetadata() *plugin.TValue[bool] {
+	return &c.AllowPartnerToCollectIosApplicationMetadata
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileThreatDefenseConnector) GetAllowPartnerToCollectIosPersonalApplicationMetadata() *plugin.TValue[bool] {
+	return &c.AllowPartnerToCollectIosPersonalApplicationMetadata
+}
+
+// mqlMicrosoftDevicemanagementComplianceManagementPartner for the microsoft.devicemanagement.complianceManagementPartner resource
+type mqlMicrosoftDevicemanagementComplianceManagementPartner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementComplianceManagementPartnerInternal it will be used here
+	Id                    plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	PartnerState          plugin.TValue[string]
+	LastHeartbeatDateTime plugin.TValue[*time.Time]
+	AndroidOnboarded      plugin.TValue[bool]
+	IosOnboarded          plugin.TValue[bool]
+	MacOsOnboarded        plugin.TValue[bool]
+}
+
+// createMicrosoftDevicemanagementComplianceManagementPartner creates a new instance of this resource
+func createMicrosoftDevicemanagementComplianceManagementPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementComplianceManagementPartner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.complianceManagementPartner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) MqlName() string {
+	return "microsoft.devicemanagement.complianceManagementPartner"
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetPartnerState() *plugin.TValue[string] {
+	return &c.PartnerState
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetLastHeartbeatDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastHeartbeatDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetAndroidOnboarded() *plugin.TValue[bool] {
+	return &c.AndroidOnboarded
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetIosOnboarded() *plugin.TValue[bool] {
+	return &c.IosOnboarded
+}
+
+func (c *mqlMicrosoftDevicemanagementComplianceManagementPartner) GetMacOsOnboarded() *plugin.TValue[bool] {
+	return &c.MacOsOnboarded
 }
 
 // mqlMicrosoftDevicemanagementAssignmentFilter for the microsoft.devicemanagement.assignmentFilter resource

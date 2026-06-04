@@ -2427,6 +2427,79 @@ microsoft.devicemanagement {
   appProtectionPolicies() []microsoft.devicemanagement.appProtectionPolicy
   // Assignment filters used to scope policy and app assignments
   assignmentFilters() []microsoft.devicemanagement.assignmentFilter
+  // Mobile Threat Defense partner connectors
+  mobileThreatDefenseConnectors() []microsoft.devicemanagement.mobileThreatDefenseConnector
+  // Compliance management partner connectors
+  complianceManagementPartners() []microsoft.devicemanagement.complianceManagementPartner
+}
+
+// Microsoft Intune Mobile Threat Defense connector
+//
+// Examine the integration between Intune and a Mobile Threat Defense (MTD)
+// partner, selected by its `id`. `partnerState` and `lastHeartbeatDateTime`
+// report whether the partner is connected and responsive, and the per-platform
+// flags show where the connection is active: `androidEnabled`, `iosEnabled`,
+// and `windowsEnabled` gate device-compliance evaluation, the
+// `*MobileApplicationManagementEnabled` flags gate app protection, and the
+// `*DeviceBlockedOnMissingPartnerData` flags decide whether devices are blocked
+// when the partner has not reported. `microsoftDefenderForEndpointAttachEnabled`
+// indicates the Defender for Endpoint connector is attached.
+private microsoft.devicemanagement.mobileThreatDefenseConnector @defaults("id partnerState lastHeartbeatDateTime") {
+  // Connector ID
+  id string
+  // Partner connection state (available, enabled, unavailable, unresponsive, unknown, notSetUp)
+  partnerState string
+  // Date and time the partner last reported a heartbeat
+  lastHeartbeatDateTime time
+  // Days without a heartbeat before the partner is treated as unresponsive
+  partnerUnresponsivenessThresholdInDays int
+  // Whether devices on an unsupported OS version are blocked
+  partnerUnsupportedOsVersionBlocked bool
+  // Whether the partner evaluates compliance for Android devices
+  androidEnabled bool
+  // Whether the partner evaluates compliance for iOS devices
+  iosEnabled bool
+  // Whether the partner evaluates compliance for Windows devices
+  windowsEnabled bool
+  // Whether the partner provides app protection for Android
+  androidMobileApplicationManagementEnabled bool
+  // Whether the partner provides app protection for iOS
+  iosMobileApplicationManagementEnabled bool
+  // Whether Android devices are blocked when the partner has no data on them
+  androidDeviceBlockedOnMissingPartnerData bool
+  // Whether iOS devices are blocked when the partner has no data on them
+  iosDeviceBlockedOnMissingPartnerData bool
+  // Whether Windows devices are blocked when the partner has no data on them
+  windowsDeviceBlockedOnMissingPartnerData bool
+  // Whether the Microsoft Defender for Endpoint connector is attached
+  microsoftDefenderForEndpointAttachEnabled bool
+  // Whether the partner may collect metadata of managed iOS apps
+  allowPartnerToCollectIosApplicationMetadata bool
+  // Whether the partner may collect metadata of personal iOS apps
+  allowPartnerToCollectIosPersonalApplicationMetadata bool
+}
+
+// Microsoft Intune compliance management partner
+//
+// Examine a device compliance management partner connected to Intune, selected
+// by its `id`. `partnerState` and `lastHeartbeatDateTime` report connection
+// health, and `androidOnboarded`, `iosOnboarded`, and `macOsOnboarded` show
+// which platforms the partner has been onboarded for.
+private microsoft.devicemanagement.complianceManagementPartner @defaults("displayName partnerState") {
+  // Partner ID
+  id string
+  // Partner display name
+  displayName string
+  // Partner connection state (unknown, unavailable, enabled, unresponsive)
+  partnerState string
+  // Date and time the partner last reported a heartbeat
+  lastHeartbeatDateTime time
+  // Whether the partner is onboarded for Android
+  androidOnboarded bool
+  // Whether the partner is onboarded for iOS
+  iosOnboarded bool
+  // Whether the partner is onboarded for macOS
+  macOsOnboarded bool
 }
 
 // Microsoft Intune assignment filter
