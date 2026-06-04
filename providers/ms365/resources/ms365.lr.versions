@@ -306,6 +306,17 @@ microsoft.devicemanagement.appProtectionPolicy.printBlocked 13.3.1
 microsoft.devicemanagement.appProtectionPolicy.saveAsBlocked 13.3.1
 microsoft.devicemanagement.appProtectionPolicy.simplePinBlocked 13.3.1
 microsoft.devicemanagement.appProtectionPolicy.version 13.3.1
+microsoft.devicemanagement.assignmentFilter 13.3.1
+microsoft.devicemanagement.assignmentFilter.assignmentFilterManagementType 13.3.1
+microsoft.devicemanagement.assignmentFilter.createdDateTime 13.3.1
+microsoft.devicemanagement.assignmentFilter.description 13.3.1
+microsoft.devicemanagement.assignmentFilter.displayName 13.3.1
+microsoft.devicemanagement.assignmentFilter.id 13.3.1
+microsoft.devicemanagement.assignmentFilter.lastModifiedDateTime 13.3.1
+microsoft.devicemanagement.assignmentFilter.platform 13.3.1
+microsoft.devicemanagement.assignmentFilter.roleScopeTags 13.3.1
+microsoft.devicemanagement.assignmentFilter.rule 13.3.1
+microsoft.devicemanagement.assignmentFilters 13.3.1
 microsoft.devicemanagement.detectedApps 13.0.12
 microsoft.devicemanagement.detectedapp 13.0.12
 microsoft.devicemanagement.detectedapp.deviceCount 13.0.12
@@ -442,6 +453,7 @@ microsoft.devicemanagement.mobileapp.publisher 13.0.12
 microsoft.devicemanagement.mobileapp.publishingState 13.0.12
 microsoft.devicemanagement.policyAssignment 13.0.12
 microsoft.devicemanagement.policyAssignment.excluded 13.0.12
+microsoft.devicemanagement.policyAssignment.filter 13.3.1
 microsoft.devicemanagement.policyAssignment.filterId 13.0.12
 microsoft.devicemanagement.policyAssignment.filterType 13.0.12
 microsoft.devicemanagement.policyAssignment.group 13.3.1

@@ -2425,6 +2425,40 @@ microsoft.devicemanagement {
   roleScopeTags() []microsoft.devicemanagement.roleScopeTag
   // App protection (MAM) policies for iOS and Android
   appProtectionPolicies() []microsoft.devicemanagement.appProtectionPolicy
+  // Assignment filters used to scope policy and app assignments
+  assignmentFilters() []microsoft.devicemanagement.assignmentFilter
+}
+
+// Microsoft Intune assignment filter
+//
+// Examine an assignment filter used to narrow which devices a policy or app
+// assignment targets, selected by its `id`. The `rule` holds the filter
+// expression evaluated against device properties, `platform` reports the
+// device platform it applies to, and `assignmentFilterManagementType`
+// distinguishes device filters from managed-app filters. A policy assignment
+// references a filter through `microsoft.devicemanagement.policyAssignment.filter`.
+private microsoft.devicemanagement.assignmentFilter @defaults("displayName platform") {
+  // Filter ID
+  id string
+  // Filter display name
+  displayName string
+  // Filter description
+  description string
+  // Device platform the filter applies to
+  //
+  // For example android, androidForWork, iOS, macOS, windowsPhone81,
+  // windows81AndLater, windows10AndLater, or androidWorkProfile.
+  platform string
+  // Filter rule expression evaluated against device properties
+  rule string
+  // What the filter manages (devices, apps)
+  assignmentFilterManagementType string
+  // Role scope tags assigned to the filter
+  roleScopeTags []string
+  // Date and time the filter was created
+  createdDateTime time
+  // Date and time the filter was last modified
+  lastModifiedDateTime time
 }
 
 // Microsoft Intune app protection (MAM) policy
@@ -2731,7 +2765,11 @@ private microsoft.devicemanagement.policyAssignment @defaults("id targetType") {
   // Assignment filter type (none, include, exclude)
   filterType string
   // Assignment filter ID when a filter is applied, empty otherwise
-  filterId string
+  //
+  // Deprecated in favor of filter.
+  filterId @maturity("deprecated") string
+  // Assignment filter applied to the target, when one is set
+  filter() microsoft.devicemanagement.assignmentFilter
 }
 
 // Evaluation state of a single Intune policy on a managed device
