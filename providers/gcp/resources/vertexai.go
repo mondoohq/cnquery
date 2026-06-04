@@ -80,6 +80,11 @@ func isVertexAIRegionSkippable(err error) bool {
 		case codes.InvalidArgument, codes.NotFound:
 			// "not enabled" and "is not supported" surface as these codes
 			return true
+		case codes.FailedPrecondition:
+			// some sub-services (e.g. the RAG data service) report
+			// "<service> is not supported in region <region>" as
+			// FailedPrecondition rather than InvalidArgument
+			return true
 		}
 	}
 	return false

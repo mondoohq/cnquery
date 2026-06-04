@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	locationpb "google.golang.org/genproto/googleapis/cloud/location"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -59,48 +60,79 @@ func (g *mqlGcpProjectCloudTasksService) queues() ([]any, error) {
 	}
 	defer client.Close()
 
-	it := client.ListQueues(ctx, &cloudtaskspb.ListQueuesRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
-	})
+	// The Cloud Tasks ListQueues API rejects the "projects/<p>/locations/-"
+	// wildcard, so we enumerate the available locations first and list
+	// queues in each one.
+	locations, err := listCloudTasksLocations(ctx, client, projectId)
+	if err != nil {
+		return nil, err
+	}
 
 	var res []any
+	for _, location := range locations {
+		it := client.ListQueues(ctx, &cloudtaskspb.ListQueuesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, location),
+		})
+
+		for {
+			queue, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			rateLimits, err := cloudTasksConvertRateLimits(queue.RateLimits)
+			if err != nil {
+				return nil, err
+			}
+			retryConfig, err := cloudTasksRetryConfig(g.MqlRuntime, queue.Name, queue.RetryConfig)
+			if err != nil {
+				return nil, err
+			}
+			appEngineRouting, err := cloudTasksConvertAppEngineRouting(queue.AppEngineRoutingOverride)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", map[string]*llx.RawData{
+				"projectId":                llx.StringData(projectId),
+				"name":                     llx.StringData(queue.Name),
+				"state":                    llx.StringData(queue.State.String()),
+				"rateLimits":               llx.DictData(rateLimits),
+				"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
+				"appEngineRoutingOverride": llx.DictData(appEngineRouting),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlQueue)
+		}
+	}
+
+	return res, nil
+}
+
+// listCloudTasksLocations returns the location IDs where Cloud Tasks is
+// available for the project. The Cloud Tasks ListQueues API rejects the
+// "-" location wildcard, so queues must be listed per location.
+func listCloudTasksLocations(ctx context.Context, client *cloudtasks.Client, projectId string) ([]string, error) {
+	it := client.ListLocations(ctx, &locationpb.ListLocationsRequest{
+		Name: fmt.Sprintf("projects/%s", projectId),
+	})
+	var locations []string
 	for {
-		queue, err := it.Next()
+		l, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			return nil, err
 		}
-
-		rateLimits, err := cloudTasksConvertRateLimits(queue.RateLimits)
-		if err != nil {
-			return nil, err
-		}
-		retryConfig, err := cloudTasksRetryConfig(g.MqlRuntime, queue.Name, queue.RetryConfig)
-		if err != nil {
-			return nil, err
-		}
-		appEngineRouting, err := cloudTasksConvertAppEngineRouting(queue.AppEngineRoutingOverride)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", map[string]*llx.RawData{
-			"projectId":                llx.StringData(projectId),
-			"name":                     llx.StringData(queue.Name),
-			"state":                    llx.StringData(queue.State.String()),
-			"rateLimits":               llx.DictData(rateLimits),
-			"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
-			"appEngineRoutingOverride": llx.DictData(appEngineRouting),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlQueue)
+		locations = append(locations, l.LocationId)
 	}
-
-	return res, nil
+	return locations, nil
 }
 
 func (g *mqlGcpProjectCloudTasksServiceQueue) id() (string, error) {
