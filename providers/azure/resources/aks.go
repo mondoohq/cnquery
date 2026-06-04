@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	clusters "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v9"
 	"go.mondoo.com/mql/v13/llx"
@@ -20,6 +22,17 @@ import (
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
 	cacheKmsKeyId   string
 	cacheProperties *clusters.ManagedClusterProperties
+}
+
+type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
+	cacheManagedIdentityId string
+}
+
+type mqlAzureSubscriptionAksServiceClusterNodePoolInternal struct {
+	subscriptionId string
+	resourceGroup  string
+	clusterName    string
+	poolName       string
 }
 
 func (a *mqlAzureSubscriptionAksService) id() (string, error) {
@@ -248,6 +261,11 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				powerState = (*string)(entry.Properties.PowerState.Code)
 			}
 
+			var controlPlaneMetricsEnabled *bool
+			if amp := entry.Properties.AzureMonitorProfile; amp != nil && amp.Metrics != nil && amp.Metrics.ControlPlane != nil {
+				controlPlaneMetricsEnabled = amp.Metrics.ControlPlane.Enabled
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -293,6 +311,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"nodeResourceGroupRestrictionLevel": llx.StringDataPtr(nodeResourceGroupRestrictionLevel),
 					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
+					"controlPlaneMetricsEnabled":        llx.BoolDataPtr(controlPlaneMetricsEnabled),
 				})
 			if err != nil {
 				return nil, err
@@ -477,8 +496,129 @@ func (a *mqlAzureSubscriptionAksServiceCluster) nodePools() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlPool)
+			pool := mqlPool.(*mqlAzureSubscriptionAksServiceClusterNodePool)
+			pool.subscriptionId = resourceID.SubscriptionID
+			pool.resourceGroup = resourceID.ResourceGroup
+			pool.clusterName = a.Name.Data
+			pool.poolName = convert.ToValue(entry.Name)
+			res = append(res, pool)
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) identityBindings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := clusters.NewIdentityBindingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByManagedClusterPager(resourceID.ResourceGroup, a.Name.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			// Identity bindings are a preview capability: the endpoint
+			// returns 404 on clusters/subscriptions where it is not
+			// available, and 403 when the caller lacks access. Treat
+			// both as "no bindings" rather than failing the query.
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			var provisioningState, oidcIssuerUrl string
+			var managedIdentityId, managedIdentityClientId, managedIdentityObjectId, managedIdentityTenantId string
+			if props := entry.Properties; props != nil {
+				provisioningState = convert.ToValue((*string)(props.ProvisioningState))
+				if props.OidcIssuer != nil {
+					oidcIssuerUrl = convert.ToValue(props.OidcIssuer.OidcIssuerURL)
+				}
+				if mi := props.ManagedIdentity; mi != nil {
+					managedIdentityId = convert.ToValue(mi.ResourceID)
+					managedIdentityClientId = convert.ToValue(mi.ClientID)
+					managedIdentityObjectId = convert.ToValue(mi.ObjectID)
+					managedIdentityTenantId = convert.ToValue(mi.TenantID)
+				}
+			}
+
+			mqlBinding, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.identityBinding",
+				map[string]*llx.RawData{
+					"id":                      llx.StringDataPtr(entry.ID),
+					"name":                    llx.StringDataPtr(entry.Name),
+					"provisioningState":       llx.StringData(provisioningState),
+					"managedIdentityClientId": llx.StringData(managedIdentityClientId),
+					"managedIdentityObjectId": llx.StringData(managedIdentityObjectId),
+					"managedIdentityTenantId": llx.StringData(managedIdentityTenantId),
+					"oidcIssuerUrl":           llx.StringData(oidcIssuerUrl),
+				})
+			if err != nil {
+				return nil, err
+			}
+			binding := mqlBinding.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding)
+			binding.cacheManagedIdentityId = managedIdentityId
+			res = append(res, binding)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) managedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cacheManagedIdentityId == "" {
+		a.ManagedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cacheManagedIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceClusterNodePool) recentlyUsedVersions() ([]any, error) {
+	if a.poolName == "" || a.clusterName == "" {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	client, err := clusters.NewAgentPoolsClient(a.subscriptionId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	profile, err := client.GetUpgradeProfile(ctx, a.resourceGroup, a.clusterName, a.poolName, nil)
+	if err != nil {
+		return nil, err
+	}
+	if profile.Properties == nil {
+		return []any{}, nil
+	}
+	return convert.JsonToDictSlice(profile.Properties.RecentlyUsedVersions)
 }

@@ -64,6 +64,7 @@ azure.subscription.aksService.cluster.autoUpgradeProfile.upgradeChannel 11.4.28
 azure.subscription.aksService.cluster.azureKeyVaultKmsEnabled 11.4.28
 azure.subscription.aksService.cluster.azureKeyVaultKmsKey 13.1.8
 azure.subscription.aksService.cluster.azureKeyVaultKmsNetworkAccess 11.4.28
+azure.subscription.aksService.cluster.controlPlaneMetricsEnabled 13.15.2
 azure.subscription.aksService.cluster.createdAt 9.0.1
 azure.subscription.aksService.cluster.defenderEnabled 11.4.28
 azure.subscription.aksService.cluster.disableLocalAccounts 11.4.28
@@ -75,6 +76,16 @@ azure.subscription.aksService.cluster.fqdn 9.0.1
 azure.subscription.aksService.cluster.fqdnSubdomain 13.1.8
 azure.subscription.aksService.cluster.httpProxyConfig 9.0.1
 azure.subscription.aksService.cluster.id 9.0.1
+azure.subscription.aksService.cluster.identityBinding 13.15.2
+azure.subscription.aksService.cluster.identityBinding.id 13.15.2
+azure.subscription.aksService.cluster.identityBinding.managedIdentity 13.15.2
+azure.subscription.aksService.cluster.identityBinding.managedIdentityClientId 13.15.2
+azure.subscription.aksService.cluster.identityBinding.managedIdentityObjectId 13.15.2
+azure.subscription.aksService.cluster.identityBinding.managedIdentityTenantId 13.15.2
+azure.subscription.aksService.cluster.identityBinding.name 13.15.2
+azure.subscription.aksService.cluster.identityBinding.oidcIssuerUrl 13.15.2
+azure.subscription.aksService.cluster.identityBinding.provisioningState 13.15.2
+azure.subscription.aksService.cluster.identityBindings 13.15.2
 azure.subscription.aksService.cluster.imageCleanerEnabled 11.4.28
 azure.subscription.aksService.cluster.imageCleanerIntervalHours 11.4.28
 azure.subscription.aksService.cluster.kubernetesVersion 9.0.1
@@ -114,6 +125,7 @@ azure.subscription.aksService.cluster.nodePool.podSubnetId 13.10.2
 azure.subscription.aksService.cluster.nodePool.powerState 13.10.2
 azure.subscription.aksService.cluster.nodePool.provisioningState 13.10.2
 azure.subscription.aksService.cluster.nodePool.proximityPlacementGroupId 13.10.2
+azure.subscription.aksService.cluster.nodePool.recentlyUsedVersions 13.15.2
 azure.subscription.aksService.cluster.nodePool.scaleSetEvictionPolicy 13.10.2
 azure.subscription.aksService.cluster.nodePool.scaleSetPriority 13.10.2
 azure.subscription.aksService.cluster.nodePool.spotMaxPrice 13.10.2

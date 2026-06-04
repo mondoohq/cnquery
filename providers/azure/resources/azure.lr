@@ -7085,6 +7085,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   aadProfile() azure.subscription.aksService.cluster.aadProfile
   // Auto-upgrade configuration for the cluster
   autoUpgradeProfile() azure.subscription.aksService.cluster.autoUpgradeProfile
+  // Whether managed Prometheus collects control-plane metrics for the cluster
+  controlPlaneMetricsEnabled bool
+  // Workload identity bindings attached to the cluster
+  identityBindings() []azure.subscription.aksService.cluster.identityBinding
 }
 
 // Azure Kubernetes Service cluster AAD profile
@@ -7121,6 +7125,34 @@ private azure.subscription.aksService.cluster.advancedNetworking @defaults("tran
   accelerationMode string
   // Whether advanced network security (FQDN-based policies) is enabled
   securityEnabled bool
+}
+
+// Azure Kubernetes Service cluster identity binding
+//
+// Examine a binding between an external workload identity and an Azure
+// user-assigned managed identity on an AKS cluster. Each binding ties a
+// federated identity — selected by the `name` field — to a managed
+// identity, letting in-cluster workloads authenticate as that identity
+// through the cluster's OIDC issuer. Surfaces the bound managed
+// identity's client, object, and tenant IDs, the OIDC issuer URL the
+// binding federates against, and the provisioning state.
+private azure.subscription.aksService.cluster.identityBinding @defaults("name provisioningState") {
+  // Resource ID of the identity binding
+  id string
+  // Name of the identity binding
+  name string
+  // Provisioning state of the identity binding
+  provisioningState string
+  // Client ID of the bound user-assigned managed identity
+  managedIdentityClientId string
+  // Object (principal) ID of the bound user-assigned managed identity
+  managedIdentityObjectId string
+  // Tenant ID of the bound user-assigned managed identity
+  managedIdentityTenantId string
+  // OIDC issuer URL the binding federates against
+  oidcIssuerUrl string
+  // Bound user-assigned managed identity
+  managedIdentity() azure.subscription.managedIdentity
 }
 
 // Azure Kubernetes Service cluster node pool (agent pool)
@@ -7211,6 +7243,11 @@ private azure.subscription.aksService.cluster.nodePool @defaults("name mode vmSi
   enableVTPM bool
   // Whether Secure Boot is enabled on nodes (Trusted Launch)
   enableSecureBoot bool
+  // Node image and Kubernetes versions recently used by the pool, available for rollback
+  //
+  // Each entry has `orchestratorVersion`, `nodeImageVersion`, and the
+  // `timestamp` when that version was last in use.
+  recentlyUsedVersions() []dict
 }
 
 // Azure Advisor

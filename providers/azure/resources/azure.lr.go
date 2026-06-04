@@ -255,6 +255,7 @@ const (
 	ResourceAzureSubscriptionAksServiceClusterAadProfile                                         string = "azure.subscription.aksService.cluster.aadProfile"
 	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                 string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
 	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                 string = "azure.subscription.aksService.cluster.advancedNetworking"
+	ResourceAzureSubscriptionAksServiceClusterIdentityBinding                                    string = "azure.subscription.aksService.cluster.identityBinding"
 	ResourceAzureSubscriptionAksServiceClusterNodePool                                           string = "azure.subscription.aksService.cluster.nodePool"
 	ResourceAzureSubscriptionAdvisorService                                                      string = "azure.subscription.advisorService"
 	ResourceAzureSubscriptionAdvisorServiceRecommendation                                        string = "azure.subscription.advisorService.recommendation"
@@ -1354,6 +1355,10 @@ func init() {
 		"azure.subscription.aksService.cluster.advancedNetworking": {
 			// to override args, implement: initAzureSubscriptionAksServiceClusterAdvancedNetworking(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionAksServiceClusterAdvancedNetworking,
+		},
+		"azure.subscription.aksService.cluster.identityBinding": {
+			// to override args, implement: initAzureSubscriptionAksServiceClusterIdentityBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAksServiceClusterIdentityBinding,
 		},
 		"azure.subscription.aksService.cluster.nodePool": {
 			// to override args, implement: initAzureSubscriptionAksServiceClusterNodePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10111,6 +10116,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.autoUpgradeProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAutoUpgradeProfile()).ToDataRes(types.Resource("azure.subscription.aksService.cluster.autoUpgradeProfile"))
 	},
+	"azure.subscription.aksService.cluster.controlPlaneMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetControlPlaneMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.identityBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetIdentityBindings()).ToDataRes(types.Array(types.Resource("azure.subscription.aksService.cluster.identityBinding")))
+	},
 	"azure.subscription.aksService.cluster.aadProfile.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterAadProfile).GetId()).ToDataRes(types.String)
 	},
@@ -10146,6 +10157,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetManagedIdentityClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityObjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetManagedIdentityObjectId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityTenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetManagedIdentityTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.oidcIssuerUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetOidcIssuerUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).GetManagedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
 	},
 	"azure.subscription.aksService.cluster.nodePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetId()).ToDataRes(types.String)
@@ -10275,6 +10310,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.aksService.cluster.nodePool.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableSecureBoot()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.recentlyUsedVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetRecentlyUsedVersions()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.advisorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAdvisorService).GetSubscriptionId()).ToDataRes(types.String)
@@ -26000,6 +26038,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).AutoUpgradeProfile, ok = plugin.RawToTValue[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.aksService.cluster.controlPlaneMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).ControlPlaneMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).IdentityBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.aksService.cluster.aadProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceClusterAadProfile).__id, ok = v.Value.(string)
 		return
@@ -26058,6 +26104,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).SecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).ManagedIdentityClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityObjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).ManagedIdentityObjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentityTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).ManagedIdentityTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.oidcIssuerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).OidcIssuerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.identityBinding.managedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterIdentityBinding).ManagedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26234,6 +26316,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.nodePool.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.recentlyUsedVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).RecentlyUsedVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.advisorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59767,6 +59853,8 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	AdvancedNetworking                plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking]
 	AadProfile                        plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile]
 	AutoUpgradeProfile                plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile]
+	ControlPlaneMetricsEnabled        plugin.TValue[bool]
+	IdentityBindings                  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionAksServiceCluster creates a new instance of this resource
@@ -60046,6 +60134,26 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetAutoUpgradeProfile() *plugin.
 	})
 }
 
+func (c *mqlAzureSubscriptionAksServiceCluster) GetControlPlaneMetricsEnabled() *plugin.TValue[bool] {
+	return &c.ControlPlaneMetricsEnabled
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetIdentityBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "identityBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityBindings()
+	})
+}
+
 // mqlAzureSubscriptionAksServiceClusterAadProfile for the azure.subscription.aksService.cluster.aadProfile resource
 type mqlAzureSubscriptionAksServiceClusterAadProfile struct {
 	MqlRuntime *plugin.Runtime
@@ -60238,11 +60346,107 @@ func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetSecurityEna
 	return &c.SecurityEnabled
 }
 
+// mqlAzureSubscriptionAksServiceClusterIdentityBinding for the azure.subscription.aksService.cluster.identityBinding resource
+type mqlAzureSubscriptionAksServiceClusterIdentityBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	ProvisioningState       plugin.TValue[string]
+	ManagedIdentityClientId plugin.TValue[string]
+	ManagedIdentityObjectId plugin.TValue[string]
+	ManagedIdentityTenantId plugin.TValue[string]
+	OidcIssuerUrl           plugin.TValue[string]
+	ManagedIdentity         plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+}
+
+// createAzureSubscriptionAksServiceClusterIdentityBinding creates a new instance of this resource
+func createAzureSubscriptionAksServiceClusterIdentityBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAksServiceClusterIdentityBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.aksService.cluster.identityBinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) MqlName() string {
+	return "azure.subscription.aksService.cluster.identityBinding"
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetManagedIdentityClientId() *plugin.TValue[string] {
+	return &c.ManagedIdentityClientId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetManagedIdentityObjectId() *plugin.TValue[string] {
+	return &c.ManagedIdentityObjectId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetManagedIdentityTenantId() *plugin.TValue[string] {
+	return &c.ManagedIdentityTenantId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetOidcIssuerUrl() *plugin.TValue[string] {
+	return &c.OidcIssuerUrl
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterIdentityBinding) GetManagedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.ManagedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster.identityBinding", c.__id, "managedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.managedIdentity()
+	})
+}
+
 // mqlAzureSubscriptionAksServiceClusterNodePool for the azure.subscription.aksService.cluster.nodePool resource
 type mqlAzureSubscriptionAksServiceClusterNodePool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionAksServiceClusterNodePoolInternal it will be used here
+	mqlAzureSubscriptionAksServiceClusterNodePoolInternal
 	Id                               plugin.TValue[string]
 	Name                             plugin.TValue[string]
 	Mode                             plugin.TValue[string]
@@ -60286,6 +60490,7 @@ type mqlAzureSubscriptionAksServiceClusterNodePool struct {
 	SshAccess                        plugin.TValue[string]
 	EnableVTPM                       plugin.TValue[bool]
 	EnableSecureBoot                 plugin.TValue[bool]
+	RecentlyUsedVersions             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionAksServiceClusterNodePool creates a new instance of this resource
@@ -60495,6 +60700,12 @@ func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableVTPM() *plugin.
 
 func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableSecureBoot() *plugin.TValue[bool] {
 	return &c.EnableSecureBoot
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetRecentlyUsedVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RecentlyUsedVersions, func() ([]any, error) {
+		return c.recentlyUsedVersions()
+	})
 }
 
 // mqlAzureSubscriptionAdvisorService for the azure.subscription.advisorService resource
