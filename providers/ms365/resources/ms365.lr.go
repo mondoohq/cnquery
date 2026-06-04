@@ -127,6 +127,7 @@ const (
 	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
 	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
 	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementAppProtectionPolicy                                                 string = "microsoft.devicemanagement.appProtectionPolicy"
 	ResourceMicrosoftDevicemanagementDeviceEnrollmentConfiguration                                       string = "microsoft.devicemanagement.deviceEnrollmentConfiguration"
 	ResourceMicrosoftDevicemanagementManageddevice                                                       string = "microsoft.devicemanagement.manageddevice"
 	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                 string = "microsoft.devicemanagement.deviceconfiguration"
@@ -626,6 +627,10 @@ func init() {
 		"microsoft.devicemanagement": {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
+		},
+		"microsoft.devicemanagement.appProtectionPolicy": {
+			// to override args, implement: initMicrosoftDevicemanagementAppProtectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementAppProtectionPolicy,
 		},
 		"microsoft.devicemanagement.deviceEnrollmentConfiguration": {
 			// to override args, implement: initMicrosoftDevicemanagementDeviceEnrollmentConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3288,6 +3293,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.roleScopeTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetRoleScopeTags()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.roleScopeTag")))
+	},
+	"microsoft.devicemanagement.appProtectionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetAppProtectionPolicies()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.appProtectionPolicy")))
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.platformType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPlatformType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetVersion()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.isAssigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetIsAssigned()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.pinRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPinRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumPinLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetMinimumPinLength()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.maximumPinRetries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetMaximumPinRetries()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.simplePinBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetSimplePinBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.pinCharacterSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPinCharacterSet()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.fingerprintBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetFingerprintBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.disableAppPinIfDevicePinIsSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetDisableAppPinIfDevicePinIsSet()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.organizationalCredentialsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetOrganizationalCredentialsRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOfflineBeforeAccessCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPeriodOfflineBeforeAccessCheck()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOnlineBeforeAccessCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPeriodOnlineBeforeAccessCheck()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOfflineBeforeWipeIsEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPeriodOfflineBeforeWipeIsEnforced()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.dataBackupBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetDataBackupBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.deviceComplianceRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetDeviceComplianceRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.managedBrowserToOpenLinksRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetManagedBrowserToOpenLinksRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.saveAsBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetSaveAsBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.printBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetPrintBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.contactSyncBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetContactSyncBlocked()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedDataStorageLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetAllowedDataStorageLocations()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedInboundDataTransferSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetAllowedInboundDataTransferSources()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedOutboundDataTransferDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetAllowedOutboundDataTransferDestinations()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedOutboundClipboardSharingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetAllowedOutboundClipboardSharingLevel()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.managedBrowser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetManagedBrowser()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumRequiredOsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetMinimumRequiredOsVersion()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumRequiredAppVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).GetMinimumRequiredAppVersion()).ToDataRes(types.String)
 	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetId()).ToDataRes(types.String)
@@ -8404,6 +8508,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.roleScopeTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).RoleScopeTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).AppProtectionPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.platformType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PlatformType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.isAssigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).IsAssigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.pinRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PinRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumPinLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).MinimumPinLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.maximumPinRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).MaximumPinRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.simplePinBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).SimplePinBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.pinCharacterSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PinCharacterSet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.fingerprintBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).FingerprintBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.disableAppPinIfDevicePinIsSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).DisableAppPinIfDevicePinIsSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.organizationalCredentialsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).OrganizationalCredentialsRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOfflineBeforeAccessCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PeriodOfflineBeforeAccessCheck, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOnlineBeforeAccessCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PeriodOnlineBeforeAccessCheck, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.periodOfflineBeforeWipeIsEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PeriodOfflineBeforeWipeIsEnforced, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.dataBackupBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).DataBackupBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.deviceComplianceRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).DeviceComplianceRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.managedBrowserToOpenLinksRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).ManagedBrowserToOpenLinksRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.saveAsBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).SaveAsBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.printBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).PrintBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.contactSyncBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).ContactSyncBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedDataStorageLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).AllowedDataStorageLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedInboundDataTransferSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).AllowedInboundDataTransferSources, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedOutboundDataTransferDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).AllowedOutboundDataTransferDestinations, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.allowedOutboundClipboardSharingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).AllowedOutboundClipboardSharingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.managedBrowser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).ManagedBrowser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumRequiredOsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).MinimumRequiredOsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.appProtectionPolicy.minimumRequiredAppVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementAppProtectionPolicy).MinimumRequiredAppVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20221,6 +20461,7 @@ type mqlMicrosoftDevicemanagement struct {
 	RoleDefinitions                    plugin.TValue[[]any]
 	RoleAssignments                    plugin.TValue[[]any]
 	RoleScopeTags                      plugin.TValue[[]any]
+	AppProtectionPolicies              plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -20429,6 +20670,221 @@ func (c *mqlMicrosoftDevicemanagement) GetRoleScopeTags() *plugin.TValue[[]any] 
 
 		return c.roleScopeTags()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetAppProtectionPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppProtectionPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "appProtectionPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appProtectionPolicies()
+	})
+}
+
+// mqlMicrosoftDevicemanagementAppProtectionPolicy for the microsoft.devicemanagement.appProtectionPolicy resource
+type mqlMicrosoftDevicemanagementAppProtectionPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementAppProtectionPolicyInternal it will be used here
+	Id                                      plugin.TValue[string]
+	DisplayName                             plugin.TValue[string]
+	Description                             plugin.TValue[string]
+	PlatformType                            plugin.TValue[string]
+	CreatedDateTime                         plugin.TValue[*time.Time]
+	LastModifiedDateTime                    plugin.TValue[*time.Time]
+	Version                                 plugin.TValue[string]
+	IsAssigned                              plugin.TValue[bool]
+	PinRequired                             plugin.TValue[bool]
+	MinimumPinLength                        plugin.TValue[int64]
+	MaximumPinRetries                       plugin.TValue[int64]
+	SimplePinBlocked                        plugin.TValue[bool]
+	PinCharacterSet                         plugin.TValue[string]
+	FingerprintBlocked                      plugin.TValue[bool]
+	DisableAppPinIfDevicePinIsSet           plugin.TValue[bool]
+	OrganizationalCredentialsRequired       plugin.TValue[bool]
+	PeriodOfflineBeforeAccessCheck          plugin.TValue[string]
+	PeriodOnlineBeforeAccessCheck           plugin.TValue[string]
+	PeriodOfflineBeforeWipeIsEnforced       plugin.TValue[string]
+	DataBackupBlocked                       plugin.TValue[bool]
+	DeviceComplianceRequired                plugin.TValue[bool]
+	ManagedBrowserToOpenLinksRequired       plugin.TValue[bool]
+	SaveAsBlocked                           plugin.TValue[bool]
+	PrintBlocked                            plugin.TValue[bool]
+	ContactSyncBlocked                      plugin.TValue[bool]
+	AllowedDataStorageLocations             plugin.TValue[[]any]
+	AllowedInboundDataTransferSources       plugin.TValue[string]
+	AllowedOutboundDataTransferDestinations plugin.TValue[string]
+	AllowedOutboundClipboardSharingLevel    plugin.TValue[string]
+	ManagedBrowser                          plugin.TValue[string]
+	MinimumRequiredOsVersion                plugin.TValue[string]
+	MinimumRequiredAppVersion               plugin.TValue[string]
+}
+
+// createMicrosoftDevicemanagementAppProtectionPolicy creates a new instance of this resource
+func createMicrosoftDevicemanagementAppProtectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementAppProtectionPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.appProtectionPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) MqlName() string {
+	return "microsoft.devicemanagement.appProtectionPolicy"
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPlatformType() *plugin.TValue[string] {
+	return &c.PlatformType
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetIsAssigned() *plugin.TValue[bool] {
+	return &c.IsAssigned
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPinRequired() *plugin.TValue[bool] {
+	return &c.PinRequired
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetMinimumPinLength() *plugin.TValue[int64] {
+	return &c.MinimumPinLength
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetMaximumPinRetries() *plugin.TValue[int64] {
+	return &c.MaximumPinRetries
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetSimplePinBlocked() *plugin.TValue[bool] {
+	return &c.SimplePinBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPinCharacterSet() *plugin.TValue[string] {
+	return &c.PinCharacterSet
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetFingerprintBlocked() *plugin.TValue[bool] {
+	return &c.FingerprintBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetDisableAppPinIfDevicePinIsSet() *plugin.TValue[bool] {
+	return &c.DisableAppPinIfDevicePinIsSet
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetOrganizationalCredentialsRequired() *plugin.TValue[bool] {
+	return &c.OrganizationalCredentialsRequired
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPeriodOfflineBeforeAccessCheck() *plugin.TValue[string] {
+	return &c.PeriodOfflineBeforeAccessCheck
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPeriodOnlineBeforeAccessCheck() *plugin.TValue[string] {
+	return &c.PeriodOnlineBeforeAccessCheck
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPeriodOfflineBeforeWipeIsEnforced() *plugin.TValue[string] {
+	return &c.PeriodOfflineBeforeWipeIsEnforced
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetDataBackupBlocked() *plugin.TValue[bool] {
+	return &c.DataBackupBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetDeviceComplianceRequired() *plugin.TValue[bool] {
+	return &c.DeviceComplianceRequired
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetManagedBrowserToOpenLinksRequired() *plugin.TValue[bool] {
+	return &c.ManagedBrowserToOpenLinksRequired
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetSaveAsBlocked() *plugin.TValue[bool] {
+	return &c.SaveAsBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetPrintBlocked() *plugin.TValue[bool] {
+	return &c.PrintBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetContactSyncBlocked() *plugin.TValue[bool] {
+	return &c.ContactSyncBlocked
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetAllowedDataStorageLocations() *plugin.TValue[[]any] {
+	return &c.AllowedDataStorageLocations
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetAllowedInboundDataTransferSources() *plugin.TValue[string] {
+	return &c.AllowedInboundDataTransferSources
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetAllowedOutboundDataTransferDestinations() *plugin.TValue[string] {
+	return &c.AllowedOutboundDataTransferDestinations
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetAllowedOutboundClipboardSharingLevel() *plugin.TValue[string] {
+	return &c.AllowedOutboundClipboardSharingLevel
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetManagedBrowser() *plugin.TValue[string] {
+	return &c.ManagedBrowser
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetMinimumRequiredOsVersion() *plugin.TValue[string] {
+	return &c.MinimumRequiredOsVersion
+}
+
+func (c *mqlMicrosoftDevicemanagementAppProtectionPolicy) GetMinimumRequiredAppVersion() *plugin.TValue[string] {
+	return &c.MinimumRequiredAppVersion
 }
 
 // mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration for the microsoft.devicemanagement.deviceEnrollmentConfiguration resource

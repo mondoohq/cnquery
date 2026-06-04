@@ -2423,6 +2423,89 @@ microsoft.devicemanagement {
   roleAssignments() []microsoft.devicemanagement.roleAssignment
   // Intune RBAC role scope tags
   roleScopeTags() []microsoft.devicemanagement.roleScopeTag
+  // App protection (MAM) policies for iOS and Android
+  appProtectionPolicies() []microsoft.devicemanagement.appProtectionPolicy
+}
+
+// Microsoft Intune app protection (MAM) policy
+//
+// Examine an Intune mobile application management policy that protects
+// corporate data inside managed apps on iOS and Android, selected by its
+// `id`; `platformType` reports which platform it targets. The policy governs
+// access protection (`pinRequired`, `minimumPinLength`, `maximumPinRetries`,
+// `simplePinBlocked`, `fingerprintBlocked`, `periodOfflineBeforeAccessCheck`),
+// data containment (`dataBackupBlocked`, `saveAsBlocked`, `printBlocked`,
+// `contactSyncBlocked`, `allowedDataStorageLocations`, the inbound/outbound
+// data-transfer levels, and `allowedOutboundClipboardSharingLevel`), the
+// required `managedBrowser` behavior, and device-health requirements
+// (`deviceComplianceRequired`, `minimumRequiredOsVersion`,
+// `minimumRequiredAppVersion`). Use `isAssigned` to spot policies that are
+// configured but not targeted at anyone.
+private microsoft.devicemanagement.appProtectionPolicy @defaults("displayName platformType pinRequired") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Platform the policy targets (ios, android)
+  platformType string
+  // Date and time the policy was created
+  createdDateTime time
+  // Date and time the policy was last modified
+  lastModifiedDateTime time
+  // Policy version
+  version string
+  // Whether the policy is assigned to any group
+  isAssigned bool
+  // Whether an access PIN is required to use the managed app
+  pinRequired bool
+  // Minimum number of characters required for the app PIN
+  minimumPinLength int
+  // Number of PIN retries allowed before the configured action is taken
+  maximumPinRetries int
+  // Whether simple PINs (for example 1234, 1111) are blocked
+  simplePinBlocked bool
+  // Required PIN character set (numeric, alphanumericAndSymbol)
+  pinCharacterSet string
+  // Whether biometric (fingerprint) unlock is blocked in place of the PIN
+  fingerprintBlocked bool
+  // Whether the app PIN is disabled when the device already has a PIN set
+  disableAppPinIfDevicePinIsSet bool
+  // Whether organizational credentials are required to use the app
+  organizationalCredentialsRequired bool
+  // Period a managed app may run offline before an access check is required (ISO 8601 duration)
+  periodOfflineBeforeAccessCheck string
+  // Period a managed app may run online before an access check is required (ISO 8601 duration)
+  periodOnlineBeforeAccessCheck string
+  // Period of offline use before protected data is wiped (ISO 8601 duration)
+  periodOfflineBeforeWipeIsEnforced string
+  // Whether app data backup to iTunes, iCloud, or Android Backup is blocked
+  dataBackupBlocked bool
+  // Whether device compliance is required for the managed app
+  deviceComplianceRequired bool
+  // Whether app web content must open in the managed browser
+  managedBrowserToOpenLinksRequired bool
+  // Whether Save As is blocked in the managed app
+  saveAsBlocked bool
+  // Whether printing organizational data is blocked
+  printBlocked bool
+  // Whether contact sync to the native address book is blocked
+  contactSyncBlocked bool
+  // Data storage locations that organizational data may be saved to
+  allowedDataStorageLocations []string
+  // Sources organizational data may be transferred in from (allApps, managedApps, none)
+  allowedInboundDataTransferSources string
+  // Destinations organizational data may be transferred out to (allApps, managedApps, none)
+  allowedOutboundDataTransferDestinations string
+  // Level at which clipboard content may be shared (allApps, managedAppsWithPasteIn, managedApps, blocked)
+  allowedOutboundClipboardSharingLevel string
+  // Managed browser the policy enforces (notConfigured, microsoftEdge)
+  managedBrowser string
+  // Minimum OS version required to use the managed app
+  minimumRequiredOsVersion string
+  // Minimum app version required to use the managed app
+  minimumRequiredAppVersion string
 }
 
 // Microsoft Device Enrollment Configuration
