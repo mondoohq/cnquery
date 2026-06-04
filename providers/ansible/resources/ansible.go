@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -252,7 +253,7 @@ func (r *mqlAnsibleTask) always() ([]any, error) {
 // yields an empty list; the raw string fields remain authoritative.
 func (r *mqlAnsibleTask) importedTasks() ([]any, error) {
 	ref := firstNonEmpty(r.task.ImportTasks, r.task.IncludeTasks)
-	path := resolveRefPath(r.baseDir, ref)
+	path := r.resolveRef(ref)
 	if path == "" {
 		return []any{}, nil
 	}
@@ -272,7 +273,7 @@ func (r *mqlAnsibleTask) importedTasks() ([]any, error) {
 // yields null.
 func (r *mqlAnsibleTask) importedPlaybook() (*mqlAnsiblePlaybook, error) {
 	ref := firstNonEmpty(r.task.ImportPlaybook, r.task.IncludePlaybook)
-	path := resolveRefPath(r.baseDir, ref)
+	path := r.resolveRef(ref)
 	if path == "" {
 		r.ImportedPlaybook.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -290,17 +291,44 @@ func (r *mqlAnsibleTask) importedPlaybook() (*mqlAnsiblePlaybook, error) {
 	return newMqlAnsiblePlaybook(r.MqlRuntime, path, playbook)
 }
 
-// resolveRefPath turns an include/import reference into an absolute file path,
-// or "" when the reference is empty or built from a Jinja2 expression (which a
-// static analyzer cannot follow).
-func resolveRefPath(baseDir, ref string) string {
-	if ref == "" || strings.Contains(ref, "{{") {
+// resolveRef resolves a literal include/import reference to an absolute file
+// path, contained within the analysis root.
+func (r *mqlAnsibleTask) resolveRef(ref string) string {
+	return resolveRefPath(r.baseDir, ansibleAnalysisRoot(r.MqlRuntime), ref)
+}
+
+// ansibleAnalysisRoot is the directory that include/import resolution is
+// confined to: the project root in directory mode, or the connected playbook's
+// directory in file mode.
+func ansibleAnalysisRoot(runtime *plugin.Runtime) string {
+	conn, ok := runtime.Connection.(*connection.AnsibleConnection)
+	if !ok {
 		return ""
 	}
-	if filepath.IsAbs(ref) {
-		return ref
+	return conn.BaseDir()
+}
+
+// resolveRefPath turns a literal include/import reference into an absolute file
+// path confined to root. It returns "" for a reference that is empty, a Jinja2
+// expression (which a static analyzer cannot follow), an absolute path, or any
+// path that escapes root via `..` — preventing a crafted playbook from reading
+// arbitrary files on the host (for example `import_tasks: /etc/shadow`).
+func resolveRefPath(baseDir, root, ref string) string {
+	if ref == "" || root == "" || strings.Contains(ref, "{{") || filepath.IsAbs(ref) {
+		return ""
 	}
-	return filepath.Join(baseDir, ref)
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return ""
+	}
+	abs, err := filepath.Abs(filepath.Join(baseDir, ref))
+	if err != nil {
+		return ""
+	}
+	if abs != absRoot && !strings.HasPrefix(abs, absRoot+string(os.PathSeparator)) {
+		return ""
+	}
+	return abs
 }
 
 func firstNonEmpty(values ...string) string {
@@ -345,6 +373,9 @@ func normalizeDict(v any) any {
 	case int32:
 		return int64(x)
 	case uint:
+		if uint64(x) > math.MaxInt64 {
+			return float64(x)
+		}
 		return int64(x)
 	case uint8:
 		return int64(x)
@@ -353,6 +384,9 @@ func normalizeDict(v any) any {
 	case uint32:
 		return int64(x)
 	case uint64:
+		if x > math.MaxInt64 {
+			return float64(x)
+		}
 		return int64(x)
 	case float32:
 		return float64(x)

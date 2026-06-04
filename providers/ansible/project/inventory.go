@@ -133,10 +133,10 @@ func loadInventory(root string) (*Inventory, error) {
 		varBases[filepath.Dir(src)] = true
 	}
 	for base := range varBases {
-		if applyVarsDir(filepath.Join(base, "group_vars"), b.groupVars) {
+		if applyVarsDir(root, filepath.Join(base, "group_vars"), b.groupVars) {
 			found = true
 		}
-		if applyVarsDir(filepath.Join(base, "host_vars"), b.hostVars) {
+		if applyVarsDir(root, filepath.Join(base, "host_vars"), b.hostVars) {
 			found = true
 		}
 	}
@@ -148,24 +148,27 @@ func loadInventory(root string) (*Inventory, error) {
 }
 
 // inventorySources returns candidate inventory files: conventional filenames at
-// the root, plus every file inside an inventory/ directory.
+// the root, plus every file inside an inventory/ directory. Files whose real
+// path escapes the project root (via a symlink) are dropped.
 func inventorySources(root string) []string {
 	var sources []string
+	add := func(p string) {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() && withinRoot(root, p) {
+			sources = append(sources, p)
+		}
+	}
 	for _, name := range []string{
 		"inventory", "inventory.ini", "inventory.yml", "inventory.yaml",
 		"hosts", "hosts.ini", "hosts.yml", "hosts.yaml",
 	} {
-		p := filepath.Join(root, name)
-		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
-			sources = append(sources, p)
-		}
+		add(filepath.Join(root, name))
 	}
 	invDir := filepath.Join(root, "inventory")
 	if fi, err := os.Stat(invDir); err == nil && fi.IsDir() {
 		entries, _ := os.ReadDir(invDir)
 		for _, e := range entries {
 			if !e.IsDir() {
-				sources = append(sources, filepath.Join(invDir, e.Name()))
+				add(filepath.Join(invDir, e.Name()))
 			}
 		}
 	}
@@ -295,8 +298,9 @@ func walkYAMLGroup(b *inventoryBuilder, name string, body any) {
 
 // applyVarsDir merges group_vars/ or host_vars/ overlays. Each entry may be a
 // single <name>.yml file or a <name>/ directory of files; the leaf name selects
-// the target group or host via the supplied resolver.
-func applyVarsDir(dir string, resolveVars func(string) map[string]any) bool {
+// the target group or host via the supplied resolver. Files whose real path
+// escapes root (via a symlink) are skipped.
+func applyVarsDir(root, dir string, resolveVars func(string) map[string]any) bool {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return false
@@ -318,6 +322,9 @@ func applyVarsDir(dir string, resolveVars func(string) map[string]any) bool {
 		}
 
 		for _, f := range files {
+			if !withinRoot(root, f) {
+				continue
+			}
 			data, err := os.ReadFile(f)
 			if err != nil || isVaultEncrypted(data) {
 				continue

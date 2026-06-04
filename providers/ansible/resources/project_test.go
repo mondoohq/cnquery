@@ -277,6 +277,26 @@ func TestProjectImportedTasks(t *testing.T) {
 	assert.Equal(t, "Install base packages", imported[0].(*mqlAnsibleTask).Name.Data)
 }
 
+// A crafted import/include reference must not escape the analysis root, so the
+// provider cannot be tricked into reading arbitrary host files.
+func TestResolveRefPathContainment(t *testing.T) {
+	root := "/project"
+	cases := []struct {
+		baseDir, ref string
+		want         string
+	}{
+		{"/project", "tasks/setup.yml", "/project/tasks/setup.yml"},
+		{"/project/roles/web/tasks", "../handlers/main.yml", "/project/roles/web/handlers/main.yml"},
+		{"/project", "/etc/shadow", ""},
+		{"/project", "../../etc/passwd", ""},
+		{"/project", "../outside.yml", ""},
+		{"/project", "{{ role_path }}/tasks.yml", ""},
+	}
+	for _, c := range cases {
+		assert.Equal(t, c.want, resolveRefPath(c.baseDir, root, c.ref), "baseDir=%q ref=%q", c.baseDir, c.ref)
+	}
+}
+
 func TestProjectInventory(t *testing.T) {
 	rt := newProjectRuntime(t)
 	proj := &mqlAnsibleProject{MqlRuntime: rt}

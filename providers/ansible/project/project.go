@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers/ansible/play"
 	"gopkg.in/yaml.v3"
@@ -207,4 +208,23 @@ func firstExisting(candidates ...string) string {
 		}
 	}
 	return ""
+}
+
+// withinRoot reports whether path, with symlinks resolved, stays inside root.
+// It keeps inventory and variable files from reading targets outside the
+// project tree via a symlink.
+func withinRoot(root, path string) bool {
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		realRoot = filepath.Clean(root)
+	}
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+	rel, err := filepath.Rel(realRoot, realPath)
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)))
 }

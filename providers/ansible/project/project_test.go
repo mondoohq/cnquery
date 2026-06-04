@@ -45,3 +45,24 @@ func TestInventoryAdjacentVars(t *testing.T) {
 	assert.Equal(t, true, hosts["host1"].Vars["host_adjacent"])
 	assert.Contains(t, hosts["host1"].Groups, "web")
 }
+
+// A symlinked var file whose target lies outside the project must not be read,
+// so a crafted repo cannot exfiltrate host files into the inventory model.
+func TestSymlinkVarsEscapeSkipped(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(outside, "secret.yml"), []byte("leaked: true\n"), 0o600))
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "group_vars"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(root, "inventory"), []byte("[web]\nhost1\n"), 0o600))
+	require.NoError(t, os.Symlink(filepath.Join(outside, "secret.yml"), filepath.Join(root, "group_vars", "web.yml")))
+
+	inv, err := loadInventory(root)
+	require.NoError(t, err)
+	require.NotNil(t, inv)
+	for _, g := range inv.Groups {
+		if g.Name == "web" {
+			_, leaked := g.Vars["leaked"]
+			assert.False(t, leaked, "symlinked var file escaping the root must be skipped")
+		}
+	}
+}
