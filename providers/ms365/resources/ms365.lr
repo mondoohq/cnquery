@@ -2087,6 +2087,18 @@ private microsoft.authenticationMethodsPolicy @defaults("displayName") {
   authenticationMethodConfigurations []microsoft.authenticationMethodConfiguration
   // System credential preferences for the authentication methods policy
   systemCredentialPreferences() microsoft.systemCredentialPreferences
+  // FIDO2 security key authentication method configuration
+  fido2() microsoft.authenticationMethodsPolicy.fido2
+  // Microsoft Authenticator authentication method configuration
+  microsoftAuthenticator() microsoft.authenticationMethodsPolicy.microsoftAuthenticator
+  // Temporary Access Pass authentication method configuration
+  temporaryAccessPass() microsoft.authenticationMethodsPolicy.temporaryAccessPass
+  // Email one-time passcode authentication method configuration
+  email() microsoft.authenticationMethodsPolicy.email
+  // Voice call authentication method configuration
+  voice() microsoft.authenticationMethodsPolicy.voice
+  // Registration campaign that nudges users to set up a stronger method
+  registrationCampaign() microsoft.authenticationMethodsPolicy.registrationCampaign
 }
 
 // Configuration for a specific authentication method
@@ -2096,6 +2108,138 @@ private microsoft.authenticationMethodConfiguration @defaults("state") {
   // The state of the policy. Possible values are: enabled, disabled.
   state string
   // Groups of users that are excluded from a policy.
+  excludeTargets []dict
+}
+
+// FIDO2 security key authentication method configuration
+//
+// Examine the tenant's FIDO2 (passkey) authentication method policy. Reports
+// whether the method is `state` enabled, whether attestation is enforced
+// (`isAttestationEnforced`) and self-service registration is allowed
+// (`isSelfServiceRegistrationAllowed`), and the AAGUID key restrictions
+// (`keyRestrictionsEnforced`, `keyRestrictionsEnforcementType` of allow or
+// block, and the `keyRestrictionsAaGuids` list). Use `includeTargets` and
+// `excludeTargets` to see which users the method applies to.
+private microsoft.authenticationMethodsPolicy.fido2 @defaults("state isAttestationEnforced") {
+  // Whether FIDO2 is enabled (enabled, disabled)
+  state string
+  // Groups of users that the method applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the method
+  excludeTargets []dict
+  // Whether attestation is enforced for FIDO2 security keys
+  isAttestationEnforced bool
+  // Whether users can self-service register FIDO2 security keys
+  isSelfServiceRegistrationAllowed bool
+  // Whether AAGUID key restrictions are enforced
+  keyRestrictionsEnforced bool
+  // How the AAGUID list is applied (allow, block)
+  keyRestrictionsEnforcementType string
+  // The AAGUIDs that the key restriction allows or blocks
+  keyRestrictionsAaGuids []string
+}
+
+// Microsoft Authenticator authentication method configuration
+//
+// Examine the tenant's Microsoft Authenticator authentication method policy.
+// Reports whether the method is `state` enabled, whether software OATH tokens
+// are enabled (`isSoftwareOathEnabled`), and the push-notification feature
+// states for showing application context (`displayAppInformationRequiredState`)
+// and geographic context (`displayLocationInformationRequiredState`), each one
+// of default, enabled, or disabled. Use `includeTargets` and `excludeTargets`
+// to see which users the method applies to.
+private microsoft.authenticationMethodsPolicy.microsoftAuthenticator @defaults("state") {
+  // Whether Microsoft Authenticator is enabled (enabled, disabled)
+  state string
+  // Groups of users that the method applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the method
+  excludeTargets []dict
+  // Whether software OATH tokens are enabled
+  isSoftwareOathEnabled bool
+  // Application context shown in push notifications (default, enabled, disabled)
+  displayAppInformationRequiredState string
+  // Geographic context shown in push notifications (default, enabled, disabled)
+  displayLocationInformationRequiredState string
+}
+
+// Temporary Access Pass authentication method configuration
+//
+// Examine the tenant's Temporary Access Pass (TAP) authentication method
+// policy. Reports whether the method is `state` enabled, the lifetime bounds
+// (`defaultLifetimeInMinutes`, `minimumLifetimeInMinutes`,
+// `maximumLifetimeInMinutes`), the generated pass `defaultLength`, and whether
+// a pass is single-use (`isUsableOnce`). Use `includeTargets` and
+// `excludeTargets` to see which users the method applies to.
+private microsoft.authenticationMethodsPolicy.temporaryAccessPass @defaults("state isUsableOnce") {
+  // Whether Temporary Access Pass is enabled (enabled, disabled)
+  state string
+  // Groups of users that the method applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the method
+  excludeTargets []dict
+  // Default lifetime of a Temporary Access Pass, in minutes
+  defaultLifetimeInMinutes int
+  // Default length of a generated Temporary Access Pass
+  defaultLength int
+  // Minimum lifetime of a Temporary Access Pass, in minutes
+  minimumLifetimeInMinutes int
+  // Maximum lifetime of a Temporary Access Pass, in minutes
+  maximumLifetimeInMinutes int
+  // Whether a Temporary Access Pass can be used only once
+  isUsableOnce bool
+}
+
+// Email one-time passcode authentication method configuration
+//
+// Examine the tenant's email OTP authentication method policy. Reports whether
+// the method is `state` enabled and whether external Microsoft Entra identities
+// may use email OTP (`allowExternalIdToUseEmailOtp`, one of default, enabled,
+// or disabled). Use `includeTargets` and `excludeTargets` to see which users
+// the method applies to.
+private microsoft.authenticationMethodsPolicy.email @defaults("state") {
+  // Whether email OTP is enabled (enabled, disabled)
+  state string
+  // Groups of users that the method applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the method
+  excludeTargets []dict
+  // Whether external Entra identities may use email OTP (default, enabled, disabled)
+  allowExternalIdToUseEmailOtp string
+}
+
+// Voice call authentication method configuration
+//
+// Examine the tenant's voice call authentication method policy. Reports whether
+// the method is `state` enabled and whether office phones may be used
+// (`isOfficePhoneAllowed`). Use `includeTargets` and `excludeTargets` to see
+// which users the method applies to.
+private microsoft.authenticationMethodsPolicy.voice @defaults("state") {
+  // Whether voice call is enabled (enabled, disabled)
+  state string
+  // Groups of users that the method applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the method
+  excludeTargets []dict
+  // Whether office phones may be used for voice call authentication
+  isOfficePhoneAllowed bool
+}
+
+// Authentication methods registration campaign
+//
+// Examine the registration campaign that nudges users to set up Microsoft
+// Authenticator during sign-in. Reports whether the campaign is `state`
+// enabled, how many times a user may snooze the prompt
+// (`snoozeDurationInDays`), and which users it `includeTargets` or
+// `excludeTargets`.
+private microsoft.authenticationMethodsPolicy.registrationCampaign @defaults("state") {
+  // Whether the registration campaign is enabled (default, enabled, disabled)
+  state string
+  // Number of days a user may defer the registration prompt
+  snoozeDurationInDays int
+  // Groups of users that the campaign applies to
+  includeTargets []dict
+  // Groups of users that are excluded from the campaign
   excludeTargets []dict
 }
 

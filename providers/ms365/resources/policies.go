@@ -189,7 +189,11 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 		return nil, err
 	}
 
-	return mqlAuthenticationMethodsPolicy.(*mqlMicrosoftAuthenticationMethodsPolicy), nil
+	mqlPolicy := mqlAuthenticationMethodsPolicy.(*mqlMicrosoftAuthenticationMethodsPolicy)
+	// cache the raw policy so the per-method accessors can resolve the
+	// method-specific configuration without a second Graph call
+	mqlPolicy.cachePolicy = policy
+	return mqlPolicy, nil
 }
 
 func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []models.AuthenticationMethodConfigurationable) ([]any, error) {
