@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.15.1",
-  "generated_at": "2026-06-04T07:49:59-07:00",
+  "generated_at": "2026-06-04T08:11:09-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -837,7 +837,7 @@
     {
       "permission": "Microsoft.ManagedIdentity/userAssignedIdentities/read",
       "service": "Microsoft.ManagedIdentity",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "iam.go"
     },
     {

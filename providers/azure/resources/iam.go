@@ -316,6 +316,60 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, e
 	return res, nil
 }
 
+// initAzureSubscriptionManagedIdentity resolves a managed identity that is
+// referenced only by its resource ID (e.g. from a typed cross-reference) by
+// fetching it on demand. When the identity was already listed by
+// managedIdentities(), the runtime cache short-circuits this and the init
+// never runs.
+func initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+	idRaw, ok := args["__id"]
+	if !ok {
+		return args, nil, nil
+	}
+	id, ok := idRaw.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return args, nil, nil
+	}
+	name, err := resourceID.Component("userAssignedIdentities")
+	if err != nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	client, err := armmsi.NewUserAssignedIdentitiesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	identity, err := client.Get(context.Background(), resourceID.ResourceGroup, name, nil)
+	if err != nil {
+		// The identity may be inaccessible (deleted, cross-subscription, or
+		// access denied); fall back to the bare reference rather than
+		// failing the surrounding query.
+		return args, nil, nil
+	}
+
+	args["name"] = llx.StringDataPtr(identity.Name)
+	if identity.Properties != nil {
+		args["clientId"] = llx.StringDataPtr(identity.Properties.ClientID)
+		args["principalId"] = llx.StringDataPtr(identity.Properties.PrincipalID)
+		if identity.Properties.TenantID != nil {
+			args["tenantId"] = llx.StringData(string(*identity.Properties.TenantID))
+		}
+	}
+	return args, nil, nil
+}
+
 func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
 	r, err := CreateResource(runtime, "azure.subscription.managedIdentity",
 		map[string]*llx.RawData{

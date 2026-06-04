@@ -1333,7 +1333,7 @@ func init() {
 			Create: createAzureSubscriptionAuthorizationServiceRoleAssignment,
 		},
 		"azure.subscription.managedIdentity": {
-			// to override args, implement: initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionManagedIdentity,
 			Create: createAzureSubscriptionManagedIdentity,
 		},
 		"azure.subscription.aksService": {
