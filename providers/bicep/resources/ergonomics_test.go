@@ -57,6 +57,11 @@ func TestParseBicepNumber(t *testing.T) {
 		{"resourceGroup()", 0, false},
 		{"1.2.3", 0, false},
 		{"TLS1_2", 0, false},
+		// special float forms strconv.ParseFloat would otherwise accept
+		{"Inf", 0, false},
+		{"+Inf", 0, false},
+		{"-Inf", 0, false},
+		{"NaN", 0, false},
 	}
 	for _, c := range cases {
 		got, ok := parseBicepNumber(c.in)

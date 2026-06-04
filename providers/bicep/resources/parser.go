@@ -1393,9 +1393,22 @@ func parseBicepValue(v string) any {
 
 // parseBicepNumber parses a bare integer or float literal into a float64 (the
 // shape MQL uses for numbers inside a dict). Returns false for anything that
-// isn't a plain numeric literal — including expressions that merely start with
-// a digit-like token — so expressions are preserved as raw strings.
+// isn't a plain decimal literal so expressions — and the special float forms
+// `Inf`/`NaN` that `strconv.ParseFloat` would otherwise accept — stay raw
+// strings.
 func parseBicepNumber(v string) (float64, bool) {
+	if v == "" {
+		return 0, false
+	}
+	for i := 0; i < len(v); i++ {
+		c := v[i]
+		switch {
+		case c >= '0' && c <= '9', c == '.':
+		case (c == '-' || c == '+') && i == 0:
+		default:
+			return 0, false
+		}
+	}
 	if f, err := strconv.ParseFloat(v, 64); err == nil {
 		return f, true
 	}
