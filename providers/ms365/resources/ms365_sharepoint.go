@@ -52,6 +52,30 @@ type SharepointOnlineReport struct {
 	DefaultLinkPermission          string     `json:"DefaultLinkPermission"`
 }
 
+type SpoTenantConfig struct {
+	SharingCapability                          string `json:"SharingCapability"`
+	SharingDomainRestrictionMode               string `json:"SharingDomainRestrictionMode"`
+	SharingAllowedDomainList                   string `json:"SharingAllowedDomainList"`
+	SharingBlockedDomainList                   string `json:"SharingBlockedDomainList"`
+	DefaultSharingLinkType                     string `json:"DefaultSharingLinkType"`
+	DefaultLinkPermission                      string `json:"DefaultLinkPermission"`
+	RequireAcceptingAccountMatchInvitedAccount bool   `json:"RequireAcceptingAccountMatchInvitedAccount"`
+	PreventExternalUsersFromResharing          bool   `json:"PreventExternalUsersFromResharing"`
+	ExternalUserExpirationRequired             bool   `json:"ExternalUserExpirationRequired"`
+	ExternalUserExpireInDays                   int64  `json:"ExternalUserExpireInDays"`
+	EmailAttestationRequired                   bool   `json:"EmailAttestationRequired"`
+	EmailAttestationReAuthDays                 int64  `json:"EmailAttestationReAuthDays"`
+	RequireAnonymousLinksExpireInDays          int64  `json:"RequireAnonymousLinksExpireInDays"`
+	ShowEveryoneClaim                          bool   `json:"ShowEveryoneClaim"`
+	ShowAllUsersClaim                          bool   `json:"ShowAllUsersClaim"`
+	ShowEveryoneExceptExternalUsersClaim       bool   `json:"ShowEveryoneExceptExternalUsersClaim"`
+	NotifyOwnersWhenItemsReshared              bool   `json:"NotifyOwnersWhenItemsReshared"`
+	LegacyAuthProtocolsEnabled                 bool   `json:"LegacyAuthProtocolsEnabled"`
+	ConditionalAccessPolicy                    string `json:"ConditionalAccessPolicy"`
+	IsUnmanagedSyncClientForTenantRestricted   bool   `json:"IsUnmanagedSyncClientForTenantRestricted"`
+	DisallowInfectedFileDownload               bool   `json:"DisallowInfectedFileDownload"`
+}
+
 type SpoSite struct {
 	DenyAddAndCustomizePages string `json:"DenyAddAndCustomizePages"`
 	Url                      string `json:"Url"`
@@ -199,6 +223,41 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	spoTenant, spoTenantErr := convert.JsonToDict(report.SpoTenant)
 	r.SpoTenant = plugin.TValue[any]{Data: spoTenant, State: plugin.StateIsSet, Error: spoTenantErr}
 
+	// decode the same payload into the typed tenant configuration resource
+	tenantConfig := &SpoTenantConfig{}
+	if raw, err := json.Marshal(report.SpoTenant); err == nil {
+		err = json.Unmarshal(raw, tenantConfig)
+	}
+	mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.sharepointonline.tenantConfig",
+		map[string]*llx.RawData{
+			"sharingCapability":                          llx.StringData(tenantConfig.SharingCapability),
+			"sharingDomainRestrictionMode":               llx.StringData(tenantConfig.SharingDomainRestrictionMode),
+			"sharingAllowedDomainList":                   llx.StringData(tenantConfig.SharingAllowedDomainList),
+			"sharingBlockedDomainList":                   llx.StringData(tenantConfig.SharingBlockedDomainList),
+			"defaultSharingLinkType":                     llx.StringData(tenantConfig.DefaultSharingLinkType),
+			"defaultLinkPermission":                      llx.StringData(tenantConfig.DefaultLinkPermission),
+			"requireAcceptingAccountMatchInvitedAccount": llx.BoolData(tenantConfig.RequireAcceptingAccountMatchInvitedAccount),
+			"preventExternalUsersFromResharing":          llx.BoolData(tenantConfig.PreventExternalUsersFromResharing),
+			"externalUserExpirationRequired":             llx.BoolData(tenantConfig.ExternalUserExpirationRequired),
+			"externalUserExpireInDays":                   llx.IntData(tenantConfig.ExternalUserExpireInDays),
+			"emailAttestationRequired":                   llx.BoolData(tenantConfig.EmailAttestationRequired),
+			"emailAttestationReAuthDays":                 llx.IntData(tenantConfig.EmailAttestationReAuthDays),
+			"requireAnonymousLinksExpireInDays":          llx.IntData(tenantConfig.RequireAnonymousLinksExpireInDays),
+			"showEveryoneClaim":                          llx.BoolData(tenantConfig.ShowEveryoneClaim),
+			"showAllUsersClaim":                          llx.BoolData(tenantConfig.ShowAllUsersClaim),
+			"showEveryoneExceptExternalUsersClaim":       llx.BoolData(tenantConfig.ShowEveryoneExceptExternalUsersClaim),
+			"notifyOwnersWhenItemsReshared":              llx.BoolData(tenantConfig.NotifyOwnersWhenItemsReshared),
+			"legacyAuthProtocolsEnabled":                 llx.BoolData(tenantConfig.LegacyAuthProtocolsEnabled),
+			"conditionalAccessPolicy":                    llx.StringData(tenantConfig.ConditionalAccessPolicy),
+			"isUnmanagedSyncClientForTenantRestricted":   llx.BoolData(tenantConfig.IsUnmanagedSyncClientForTenantRestricted),
+			"disallowInfectedFileDownload":               llx.BoolData(tenantConfig.DisallowInfectedFileDownload),
+		})
+	if mqlTenantConfigErr != nil {
+		r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{State: plugin.StateIsSet, Error: mqlTenantConfigErr}
+	} else {
+		r.TenantConfiguration = plugin.TValue[*mqlMs365SharepointonlineTenantConfig]{Data: mqlTenantConfig.(*mqlMs365SharepointonlineTenantConfig), State: plugin.StateIsSet}
+	}
+
 	spoTenantSyncClientRestriction, spoTenantSyncClientRestrictionErr := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
 	r.SpoTenantSyncClientRestriction = plugin.TValue[any]{Data: spoTenantSyncClientRestriction, State: plugin.StateIsSet, Error: spoTenantSyncClientRestrictionErr}
 
@@ -233,6 +292,10 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 }
 
 func (r *mqlMs365Sharepointonline) spoTenant() (any, error) {
+	return nil, r.getSharepointOnlineReport()
+}
+
+func (r *mqlMs365Sharepointonline) tenantConfiguration() (*mqlMs365SharepointonlineTenantConfig, error) {
 	return nil, r.getSharepointOnlineReport()
 }
 

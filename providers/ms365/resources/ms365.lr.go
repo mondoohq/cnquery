@@ -144,8 +144,10 @@ const (
 	ResourceMs365ExchangeonlineExoMailbox                                                                string = "ms365.exchangeonline.exoMailbox"
 	ResourceMs365ExchangeonlineMailbox                                                                   string = "ms365.exchangeonline.mailbox"
 	ResourceMs365Sharepointonline                                                                        string = "ms365.sharepointonline"
+	ResourceMs365SharepointonlineTenantConfig                                                            string = "ms365.sharepointonline.tenantConfig"
 	ResourceMs365SharepointonlineSite                                                                    string = "ms365.sharepointonline.site"
 	ResourceMs365Teams                                                                                   string = "ms365.teams"
+	ResourceMs365TeamsClientConfig                                                                       string = "ms365.teams.clientConfig"
 	ResourceMs365TeamsTenantFederationConfig                                                             string = "ms365.teams.tenantFederationConfig"
 	ResourceMs365TeamsTeamsMeetingPolicyConfig                                                           string = "ms365.teams.teamsMeetingPolicyConfig"
 	ResourceMs365TeamsTeamsMessagingPolicyConfig                                                         string = "ms365.teams.teamsMessagingPolicyConfig"
@@ -669,6 +671,10 @@ func init() {
 			// to override args, implement: initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Sharepointonline,
 		},
+		"ms365.sharepointonline.tenantConfig": {
+			// to override args, implement: initMs365SharepointonlineTenantConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365SharepointonlineTenantConfig,
+		},
 		"ms365.sharepointonline.site": {
 			// to override args, implement: initMs365SharepointonlineSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365SharepointonlineSite,
@@ -676,6 +682,10 @@ func init() {
 		"ms365.teams": {
 			// to override args, implement: initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Teams,
+		},
+		"ms365.teams.clientConfig": {
+			// to override args, implement: initMs365TeamsClientConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsClientConfig,
 		},
 		"ms365.teams.tenantFederationConfig": {
 			// to override args, implement: initMs365TeamsTenantFederationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3606,6 +3616,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.sharepointonline.spoTenant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenant()).ToDataRes(types.Dict)
 	},
+	"ms365.sharepointonline.tenantConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Sharepointonline).GetTenantConfiguration()).ToDataRes(types.Resource("ms365.sharepointonline.tenantConfig"))
+	},
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenantSyncClientRestriction()).ToDataRes(types.Dict)
 	},
@@ -3614,6 +3627,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.sharepointonline.defaultLinkPermission": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetDefaultLinkPermission()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.sharingCapability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetSharingCapability()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.sharingDomainRestrictionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetSharingDomainRestrictionMode()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.sharingAllowedDomainList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetSharingAllowedDomainList()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.sharingBlockedDomainList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetSharingBlockedDomainList()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.defaultSharingLinkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetDefaultSharingLinkType()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.defaultLinkPermission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetDefaultLinkPermission()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.requireAcceptingAccountMatchInvitedAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetRequireAcceptingAccountMatchInvitedAccount()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.preventExternalUsersFromResharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetPreventExternalUsersFromResharing()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.externalUserExpirationRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetExternalUserExpirationRequired()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.externalUserExpireInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetExternalUserExpireInDays()).ToDataRes(types.Int)
+	},
+	"ms365.sharepointonline.tenantConfig.emailAttestationRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetEmailAttestationRequired()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.emailAttestationReAuthDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetEmailAttestationReAuthDays()).ToDataRes(types.Int)
+	},
+	"ms365.sharepointonline.tenantConfig.requireAnonymousLinksExpireInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetRequireAnonymousLinksExpireInDays()).ToDataRes(types.Int)
+	},
+	"ms365.sharepointonline.tenantConfig.showEveryoneClaim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetShowEveryoneClaim()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.showAllUsersClaim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetShowAllUsersClaim()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.showEveryoneExceptExternalUsersClaim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetShowEveryoneExceptExternalUsersClaim()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.notifyOwnersWhenItemsReshared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetNotifyOwnersWhenItemsReshared()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.legacyAuthProtocolsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetLegacyAuthProtocolsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.conditionalAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetConditionalAccessPolicy()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.tenantConfig.isUnmanagedSyncClientForTenantRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetIsUnmanagedSyncClientForTenantRestricted()).ToDataRes(types.Bool)
+	},
+	"ms365.sharepointonline.tenantConfig.disallowInfectedFileDownload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineTenantConfig).GetDisallowInfectedFileDownload()).ToDataRes(types.Bool)
 	},
 	"ms365.sharepointonline.site.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365SharepointonlineSite).GetUrl()).ToDataRes(types.String)
@@ -3648,6 +3724,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
 	},
+	"ms365.teams.clientConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetClientConfiguration()).ToDataRes(types.Resource("ms365.teams.clientConfig"))
+	},
 	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTenantFederationConfiguration()).ToDataRes(types.Resource("ms365.teams.tenantFederationConfig"))
 	},
@@ -3656,6 +3735,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.csTeamsMessagingPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsMessagingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMessagingPolicyConfig"))
+	},
+	"ms365.teams.clientConfig.allowEmailIntoChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowEmailIntoChannel()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowDropBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowDropBox()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowBox()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowGoogleDrive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowGoogleDrive()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowShareFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowShareFile()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowEgnyte": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowEgnyte()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowOrganizationTab": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowOrganizationTab()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowSkypeBusinessInterop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowSkypeBusinessInterop()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowGuestUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowGuestUser()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.contentPin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetContentPin()).ToDataRes(types.String)
+	},
+	"ms365.teams.clientConfig.allowResourceAccountSendMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowResourceAccountSendMessage()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.clientConfig.allowScopedPeopleSearchandAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsClientConfig).GetAllowScopedPeopleSearchandAccess()).ToDataRes(types.Bool)
 	},
 	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTenantFederationConfig).GetIdentity()).ToDataRes(types.String)
@@ -8085,6 +8200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Sharepointonline).SpoTenant, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"ms365.sharepointonline.tenantConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Sharepointonline).TenantConfiguration, ok = plugin.RawToTValue[*mqlMs365SharepointonlineTenantConfig](v.Value, v.Error)
+		return
+	},
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Sharepointonline).SpoTenantSyncClientRestriction, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -8095,6 +8214,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.sharepointonline.defaultLinkPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Sharepointonline).DefaultLinkPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.sharingCapability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).SharingCapability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.sharingDomainRestrictionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).SharingDomainRestrictionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.sharingAllowedDomainList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).SharingAllowedDomainList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.sharingBlockedDomainList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).SharingBlockedDomainList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.defaultSharingLinkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).DefaultSharingLinkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.defaultLinkPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).DefaultLinkPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.requireAcceptingAccountMatchInvitedAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).RequireAcceptingAccountMatchInvitedAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.preventExternalUsersFromResharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).PreventExternalUsersFromResharing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.externalUserExpirationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ExternalUserExpirationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.externalUserExpireInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ExternalUserExpireInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.emailAttestationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).EmailAttestationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.emailAttestationReAuthDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).EmailAttestationReAuthDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.requireAnonymousLinksExpireInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).RequireAnonymousLinksExpireInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.showEveryoneClaim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ShowEveryoneClaim, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.showAllUsersClaim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ShowAllUsersClaim, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.showEveryoneExceptExternalUsersClaim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ShowEveryoneExceptExternalUsersClaim, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.notifyOwnersWhenItemsReshared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).NotifyOwnersWhenItemsReshared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.legacyAuthProtocolsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).LegacyAuthProtocolsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.conditionalAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).ConditionalAccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.isUnmanagedSyncClientForTenantRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).IsUnmanagedSyncClientForTenantRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.tenantConfig.disallowInfectedFileDownload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineTenantConfig).DisallowInfectedFileDownload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.sharepointonline.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8149,6 +8356,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"ms365.teams.clientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).ClientConfiguration, ok = plugin.RawToTValue[*mqlMs365TeamsClientConfig](v.Value, v.Error)
+		return
+	},
 	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).CsTenantFederationConfiguration, ok = plugin.RawToTValue[*mqlMs365TeamsTenantFederationConfig](v.Value, v.Error)
 		return
@@ -8159,6 +8370,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.teams.csTeamsMessagingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).CsTeamsMessagingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMessagingPolicyConfig](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.teams.clientConfig.allowEmailIntoChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowEmailIntoChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowDropBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowDropBox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowBox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowGoogleDrive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowGoogleDrive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowShareFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowShareFile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowEgnyte": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowEgnyte, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowOrganizationTab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowOrganizationTab, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowSkypeBusinessInterop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowSkypeBusinessInterop, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowGuestUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowGuestUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.contentPin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).ContentPin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowResourceAccountSendMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowResourceAccountSendMessage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.clientConfig.allowScopedPeopleSearchandAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsClientConfig).AllowScopedPeopleSearchandAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.tenantFederationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19672,6 +19935,7 @@ type mqlMs365Sharepointonline struct {
 	__id       string
 	mqlMs365SharepointonlineInternal
 	SpoTenant                      plugin.TValue[any]
+	TenantConfiguration            plugin.TValue[*mqlMs365SharepointonlineTenantConfig]
 	SpoTenantSyncClientRestriction plugin.TValue[any]
 	SpoSites                       plugin.TValue[[]any]
 	DefaultLinkPermission          plugin.TValue[string]
@@ -19715,6 +19979,22 @@ func (c *mqlMs365Sharepointonline) GetSpoTenant() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlMs365Sharepointonline) GetTenantConfiguration() *plugin.TValue[*mqlMs365SharepointonlineTenantConfig] {
+	return plugin.GetOrCompute[*mqlMs365SharepointonlineTenantConfig](&c.TenantConfiguration, func() (*mqlMs365SharepointonlineTenantConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.sharepointonline", c.__id, "tenantConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365SharepointonlineTenantConfig), nil
+			}
+		}
+
+		return c.tenantConfiguration()
+	})
+}
+
 func (c *mqlMs365Sharepointonline) GetSpoTenantSyncClientRestriction() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.SpoTenantSyncClientRestriction, func() (any, error) {
 		return c.spoTenantSyncClientRestriction()
@@ -19741,6 +20021,150 @@ func (c *mqlMs365Sharepointonline) GetDefaultLinkPermission() *plugin.TValue[str
 	return plugin.GetOrCompute[string](&c.DefaultLinkPermission, func() (string, error) {
 		return c.defaultLinkPermission()
 	})
+}
+
+// mqlMs365SharepointonlineTenantConfig for the ms365.sharepointonline.tenantConfig resource
+type mqlMs365SharepointonlineTenantConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365SharepointonlineTenantConfigInternal it will be used here
+	SharingCapability                          plugin.TValue[string]
+	SharingDomainRestrictionMode               plugin.TValue[string]
+	SharingAllowedDomainList                   plugin.TValue[string]
+	SharingBlockedDomainList                   plugin.TValue[string]
+	DefaultSharingLinkType                     plugin.TValue[string]
+	DefaultLinkPermission                      plugin.TValue[string]
+	RequireAcceptingAccountMatchInvitedAccount plugin.TValue[bool]
+	PreventExternalUsersFromResharing          plugin.TValue[bool]
+	ExternalUserExpirationRequired             plugin.TValue[bool]
+	ExternalUserExpireInDays                   plugin.TValue[int64]
+	EmailAttestationRequired                   plugin.TValue[bool]
+	EmailAttestationReAuthDays                 plugin.TValue[int64]
+	RequireAnonymousLinksExpireInDays          plugin.TValue[int64]
+	ShowEveryoneClaim                          plugin.TValue[bool]
+	ShowAllUsersClaim                          plugin.TValue[bool]
+	ShowEveryoneExceptExternalUsersClaim       plugin.TValue[bool]
+	NotifyOwnersWhenItemsReshared              plugin.TValue[bool]
+	LegacyAuthProtocolsEnabled                 plugin.TValue[bool]
+	ConditionalAccessPolicy                    plugin.TValue[string]
+	IsUnmanagedSyncClientForTenantRestricted   plugin.TValue[bool]
+	DisallowInfectedFileDownload               plugin.TValue[bool]
+}
+
+// createMs365SharepointonlineTenantConfig creates a new instance of this resource
+func createMs365SharepointonlineTenantConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365SharepointonlineTenantConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.sharepointonline.tenantConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) MqlName() string {
+	return "ms365.sharepointonline.tenantConfig"
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetSharingCapability() *plugin.TValue[string] {
+	return &c.SharingCapability
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetSharingDomainRestrictionMode() *plugin.TValue[string] {
+	return &c.SharingDomainRestrictionMode
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetSharingAllowedDomainList() *plugin.TValue[string] {
+	return &c.SharingAllowedDomainList
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetSharingBlockedDomainList() *plugin.TValue[string] {
+	return &c.SharingBlockedDomainList
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetDefaultSharingLinkType() *plugin.TValue[string] {
+	return &c.DefaultSharingLinkType
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetDefaultLinkPermission() *plugin.TValue[string] {
+	return &c.DefaultLinkPermission
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetRequireAcceptingAccountMatchInvitedAccount() *plugin.TValue[bool] {
+	return &c.RequireAcceptingAccountMatchInvitedAccount
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetPreventExternalUsersFromResharing() *plugin.TValue[bool] {
+	return &c.PreventExternalUsersFromResharing
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetExternalUserExpirationRequired() *plugin.TValue[bool] {
+	return &c.ExternalUserExpirationRequired
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetExternalUserExpireInDays() *plugin.TValue[int64] {
+	return &c.ExternalUserExpireInDays
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetEmailAttestationRequired() *plugin.TValue[bool] {
+	return &c.EmailAttestationRequired
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetEmailAttestationReAuthDays() *plugin.TValue[int64] {
+	return &c.EmailAttestationReAuthDays
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetRequireAnonymousLinksExpireInDays() *plugin.TValue[int64] {
+	return &c.RequireAnonymousLinksExpireInDays
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetShowEveryoneClaim() *plugin.TValue[bool] {
+	return &c.ShowEveryoneClaim
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetShowAllUsersClaim() *plugin.TValue[bool] {
+	return &c.ShowAllUsersClaim
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetShowEveryoneExceptExternalUsersClaim() *plugin.TValue[bool] {
+	return &c.ShowEveryoneExceptExternalUsersClaim
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetNotifyOwnersWhenItemsReshared() *plugin.TValue[bool] {
+	return &c.NotifyOwnersWhenItemsReshared
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetLegacyAuthProtocolsEnabled() *plugin.TValue[bool] {
+	return &c.LegacyAuthProtocolsEnabled
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetConditionalAccessPolicy() *plugin.TValue[string] {
+	return &c.ConditionalAccessPolicy
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetIsUnmanagedSyncClientForTenantRestricted() *plugin.TValue[bool] {
+	return &c.IsUnmanagedSyncClientForTenantRestricted
+}
+
+func (c *mqlMs365SharepointonlineTenantConfig) GetDisallowInfectedFileDownload() *plugin.TValue[bool] {
+	return &c.DisallowInfectedFileDownload
 }
 
 // mqlMs365SharepointonlineSite for the ms365.sharepointonline.site resource
@@ -19843,6 +20267,7 @@ type mqlMs365Teams struct {
 	__id       string
 	mqlMs365TeamsInternal
 	CsTeamsClientConfiguration      plugin.TValue[any]
+	ClientConfiguration             plugin.TValue[*mqlMs365TeamsClientConfig]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy            plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
 	CsTeamsMessagingPolicy          plugin.TValue[*mqlMs365TeamsTeamsMessagingPolicyConfig]
@@ -19883,6 +20308,22 @@ func (c *mqlMs365Teams) MqlID() string {
 func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.CsTeamsClientConfiguration, func() (any, error) {
 		return c.csTeamsClientConfiguration()
+	})
+}
+
+func (c *mqlMs365Teams) GetClientConfiguration() *plugin.TValue[*mqlMs365TeamsClientConfig] {
+	return plugin.GetOrCompute[*mqlMs365TeamsClientConfig](&c.ClientConfiguration, func() (*mqlMs365TeamsClientConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "clientConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsClientConfig), nil
+			}
+		}
+
+		return c.clientConfiguration()
 	})
 }
 
@@ -19932,6 +20373,105 @@ func (c *mqlMs365Teams) GetCsTeamsMessagingPolicy() *plugin.TValue[*mqlMs365Team
 
 		return c.csTeamsMessagingPolicy()
 	})
+}
+
+// mqlMs365TeamsClientConfig for the ms365.teams.clientConfig resource
+type mqlMs365TeamsClientConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365TeamsClientConfigInternal it will be used here
+	AllowEmailIntoChannel            plugin.TValue[bool]
+	AllowDropBox                     plugin.TValue[bool]
+	AllowBox                         plugin.TValue[bool]
+	AllowGoogleDrive                 plugin.TValue[bool]
+	AllowShareFile                   plugin.TValue[bool]
+	AllowEgnyte                      plugin.TValue[bool]
+	AllowOrganizationTab             plugin.TValue[bool]
+	AllowSkypeBusinessInterop        plugin.TValue[bool]
+	AllowGuestUser                   plugin.TValue[bool]
+	ContentPin                       plugin.TValue[string]
+	AllowResourceAccountSendMessage  plugin.TValue[bool]
+	AllowScopedPeopleSearchandAccess plugin.TValue[bool]
+}
+
+// createMs365TeamsClientConfig creates a new instance of this resource
+func createMs365TeamsClientConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsClientConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.clientConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsClientConfig) MqlName() string {
+	return "ms365.teams.clientConfig"
+}
+
+func (c *mqlMs365TeamsClientConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowEmailIntoChannel() *plugin.TValue[bool] {
+	return &c.AllowEmailIntoChannel
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowDropBox() *plugin.TValue[bool] {
+	return &c.AllowDropBox
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowBox() *plugin.TValue[bool] {
+	return &c.AllowBox
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowGoogleDrive() *plugin.TValue[bool] {
+	return &c.AllowGoogleDrive
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowShareFile() *plugin.TValue[bool] {
+	return &c.AllowShareFile
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowEgnyte() *plugin.TValue[bool] {
+	return &c.AllowEgnyte
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowOrganizationTab() *plugin.TValue[bool] {
+	return &c.AllowOrganizationTab
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowSkypeBusinessInterop() *plugin.TValue[bool] {
+	return &c.AllowSkypeBusinessInterop
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowGuestUser() *plugin.TValue[bool] {
+	return &c.AllowGuestUser
+}
+
+func (c *mqlMs365TeamsClientConfig) GetContentPin() *plugin.TValue[string] {
+	return &c.ContentPin
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowResourceAccountSendMessage() *plugin.TValue[bool] {
+	return &c.AllowResourceAccountSendMessage
+}
+
+func (c *mqlMs365TeamsClientConfig) GetAllowScopedPeopleSearchandAccess() *plugin.TValue[bool] {
+	return &c.AllowScopedPeopleSearchandAccess
 }
 
 // mqlMs365TeamsTenantFederationConfig for the ms365.teams.tenantFederationConfig resource

@@ -2809,19 +2809,90 @@ private ms365.exchangeonline.mailbox @defaults("identity displayName auditEnable
 // Microsoft 365 SharePoint Online
 //
 // Use this namespace to access SharePoint Online tenant configuration and
-// site inventory. Exposes `spoTenant` (tenant-wide settings), `spoTenantSyncClientRestriction`
-// (sync client access controls), `spoSites` (list of site collections with
-// their URL and custom script permissions), and `defaultLinkPermission`
-// (the default sharing link permission level for the tenant).
+// site inventory. Exposes `tenantConfiguration` (tenant-wide sharing and
+// security settings), `spoTenantSyncClientRestriction` (sync client access
+// controls), `spoSites` (list of site collections with their URL and custom
+// script permissions), and `defaultLinkPermission` (the default sharing link
+// permission level for the tenant).
 ms365.sharepointonline {
-  // SharePoint Online tenant
-  spoTenant() dict
+  // SharePoint Online tenant settings as an untyped dictionary
+  //
+  // Deprecated in favor of tenantConfiguration, which exposes the
+  // security-relevant settings as typed fields.
+  spoTenant() @maturity("deprecated") dict
+  // SharePoint Online tenant configuration
+  tenantConfiguration() ms365.sharepointonline.tenantConfig
   // SharePoint Online tenant sync client restriction
   spoTenantSyncClientRestriction() dict
   // SharePoint Online tenant sites
   spoSites() []ms365.sharepointonline.site
   // The default link permission for the tenant
   defaultLinkPermission() string
+}
+
+// Microsoft 365 SharePoint Online tenant configuration
+//
+// Examine tenant-wide SharePoint Online and OneDrive sharing and security
+// settings, including external sharing capability, domain restrictions,
+// anonymous link controls, guest expiration, and access protections that
+// apply across all sites in the tenant.
+private ms365.sharepointonline.tenantConfig {
+  // External sharing capability for the tenant
+  //
+  // One of Disabled, ExistingExternalUserSharingOnly,
+  // ExternalUserSharingOnly, or ExternalUserAndGuestSharing, setting the
+  // most permissive sharing allowed across the tenant.
+  sharingCapability string
+  // Domain restriction mode for external sharing
+  //
+  // One of None, AllowList, or BlockList, controlling whether external
+  // sharing is limited by the allowed or blocked domain lists.
+  sharingDomainRestrictionMode string
+  // Space-delimited list of domains allowed for external sharing
+  sharingAllowedDomainList string
+  // Space-delimited list of domains blocked from external sharing
+  sharingBlockedDomainList string
+  // Default type of sharing link created by users
+  //
+  // One of None, Direct, Internal, or AnonymousAccess.
+  defaultSharingLinkType string
+  // Default permission granted by sharing links
+  //
+  // One of None, View, or Edit.
+  defaultLinkPermission string
+  // Whether external users must accept invitations with the account they were invited as
+  requireAcceptingAccountMatchInvitedAccount bool
+  // Whether external users are prevented from resharing content
+  preventExternalUsersFromResharing bool
+  // Whether guest access expires automatically
+  externalUserExpirationRequired bool
+  // Number of days before guest access expires
+  externalUserExpireInDays int
+  // Whether guests must reconfirm their email after a period
+  emailAttestationRequired bool
+  // Number of days before guests must reattest their email
+  emailAttestationReAuthDays int
+  // Number of days after which anonymous links expire
+  requireAnonymousLinksExpireInDays int
+  // Whether the "Everyone" claim is shown in people pickers
+  showEveryoneClaim bool
+  // Whether the "All Users" claim is shown in people pickers
+  showAllUsersClaim bool
+  // Whether the "Everyone except external users" claim is shown in people pickers
+  showEveryoneExceptExternalUsersClaim bool
+  // Whether owners are notified when items are reshared
+  notifyOwnersWhenItemsReshared bool
+  // Whether legacy authentication protocols are enabled
+  legacyAuthProtocolsEnabled bool
+  // Conditional access policy applied to SharePoint and OneDrive
+  //
+  // One of AllowFullAccess, AllowLimitedAccess, BlockAccess, or
+  // AuthenticationContext.
+  conditionalAccessPolicy string
+  // Whether unmanaged devices are restricted from using the sync client
+  isUnmanagedSyncClientForTenantRestricted bool
+  // Whether downloading files detected as infected is blocked
+  disallowInfectedFileDownload bool
 }
 
 // Microsoft 365 SharePoint Site
@@ -2861,19 +2932,62 @@ private ms365.sharepointonline.site {
 // Microsoft 365 Teams
 //
 // Use this namespace to access Microsoft Teams configuration for the tenant.
-// Exposes `csTeamsClientConfiguration` (client feature controls),
+// Exposes `clientConfiguration` (client feature controls),
 // `csTenantFederationConfiguration` (external access and federation settings),
 // `csTeamsMeetingPolicy` (meeting lobby, recording, and participant controls),
 // and `csTeamsMessagingPolicy` (messaging and security reporting controls).
 ms365.teams {
+  // Teams client configuration as an untyped dictionary
+  //
+  // Deprecated in favor of clientConfiguration, which exposes the same
+  // settings as typed fields.
+  csTeamsClientConfiguration() @maturity("deprecated") dict
   // Teams client configuration
-  csTeamsClientConfiguration() dict
+  //
+  // Tenant-wide Teams client feature controls covering third-party cloud
+  // storage providers (Dropbox, Box, Google Drive, ShareFile, Egnyte),
+  // guest access, and Skype for Business interoperability.
+  clientConfiguration() ms365.teams.clientConfig
   // Teams tenant federated configuration
   csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
   // Teams meeting policy configuration
   csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
   // Teams message policy configuration
   csTeamsMessagingPolicy() ms365.teams.teamsMessagingPolicyConfig
+}
+
+// Microsoft 365 Teams client configuration
+//
+// Examine tenant-wide Teams client feature controls, including third-party
+// cloud storage providers, guest access, and interoperability settings that
+// govern what users can do from the Teams client.
+private ms365.teams.clientConfig {
+  // Whether users can send email to a channel email address
+  allowEmailIntoChannel bool
+  // Whether Dropbox is allowed as a third-party cloud storage provider
+  allowDropBox bool
+  // Whether Box is allowed as a third-party cloud storage provider
+  allowBox bool
+  // Whether Google Drive is allowed as a third-party cloud storage provider
+  allowGoogleDrive bool
+  // Whether ShareFile is allowed as a third-party cloud storage provider
+  allowShareFile bool
+  // Whether Egnyte is allowed as a third-party cloud storage provider
+  allowEgnyte bool
+  // Whether the organization tab is allowed
+  allowOrganizationTab bool
+  // Whether Skype for Business interoperability is allowed
+  allowSkypeBusinessInterop bool
+  // Whether guest users are allowed in Teams
+  allowGuestUser bool
+  // PIN requirement for accessing meeting content
+  //
+  // One of NotRequired, RequiredOutsideScheduleMeeting, or AlwaysRequired.
+  contentPin string
+  // Whether resource accounts can send messages
+  allowResourceAccountSendMessage bool
+  // Whether scoped people search and access is allowed
+  allowScopedPeopleSearchandAccess bool
 }
 
 // Microsoft 365 Teams tenant federation configuration

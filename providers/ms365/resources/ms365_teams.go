@@ -112,6 +112,21 @@ type CsTeamsMeetingPolicy struct {
 	PreventTollBypass                          bool   `json:"PreventTollBypass"`
 }
 
+type CsTeamsClientConfig struct {
+	AllowEmailIntoChannel            bool   `json:"AllowEmailIntoChannel"`
+	AllowDropBox                     bool   `json:"AllowDropBox"`
+	AllowBox                         bool   `json:"AllowBox"`
+	AllowGoogleDrive                 bool   `json:"AllowGoogleDrive"`
+	AllowShareFile                   bool   `json:"AllowShareFile"`
+	AllowEgnyte                      bool   `json:"AllowEgnyte"`
+	AllowOrganizationTab             bool   `json:"AllowOrganizationTab"`
+	AllowSkypeBusinessInterop        bool   `json:"AllowSkypeBusinessInterop"`
+	AllowGuestUser                   bool   `json:"AllowGuestUser"`
+	ContentPin                       string `json:"ContentPin"`
+	AllowResourceAccountSendMessage  bool   `json:"AllowResourceAccountSendMessage"`
+	AllowScopedPeopleSearchandAccess bool   `json:"AllowScopedPeopleSearchandAccess"`
+}
+
 type CsTeamsMessagingPolicy struct {
 	AllowSecurityEndUserReporting bool   `json:"AllowSecurityEndUserReporting"`
 	AllowUserChat                 bool   `json:"AllowUserChat"`
@@ -204,8 +219,35 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 	if report.CsTeamsClientConfiguration != nil {
 		csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
 		r.CsTeamsClientConfiguration = plugin.TValue[any]{Data: csTeamsConfiguration, State: plugin.StateIsSet, Error: csTeamsConfigurationErr}
+
+		// decode the same payload into the typed client configuration resource
+		clientConfig := &CsTeamsClientConfig{}
+		if raw, err := json.Marshal(report.CsTeamsClientConfiguration); err == nil {
+			err = json.Unmarshal(raw, clientConfig)
+		}
+		mqlClientConfig, mqlClientConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.clientConfig",
+			map[string]*llx.RawData{
+				"allowEmailIntoChannel":            llx.BoolData(clientConfig.AllowEmailIntoChannel),
+				"allowDropBox":                     llx.BoolData(clientConfig.AllowDropBox),
+				"allowBox":                         llx.BoolData(clientConfig.AllowBox),
+				"allowGoogleDrive":                 llx.BoolData(clientConfig.AllowGoogleDrive),
+				"allowShareFile":                   llx.BoolData(clientConfig.AllowShareFile),
+				"allowEgnyte":                      llx.BoolData(clientConfig.AllowEgnyte),
+				"allowOrganizationTab":             llx.BoolData(clientConfig.AllowOrganizationTab),
+				"allowSkypeBusinessInterop":        llx.BoolData(clientConfig.AllowSkypeBusinessInterop),
+				"allowGuestUser":                   llx.BoolData(clientConfig.AllowGuestUser),
+				"contentPin":                       llx.StringData(clientConfig.ContentPin),
+				"allowResourceAccountSendMessage":  llx.BoolData(clientConfig.AllowResourceAccountSendMessage),
+				"allowScopedPeopleSearchandAccess": llx.BoolData(clientConfig.AllowScopedPeopleSearchandAccess),
+			})
+		if mqlClientConfigErr != nil {
+			r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{State: plugin.StateIsSet, Error: mqlClientConfigErr}
+		} else {
+			r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{Data: mqlClientConfig.(*mqlMs365TeamsClientConfig), State: plugin.StateIsSet}
+		}
 	} else {
 		r.CsTeamsClientConfiguration = plugin.TValue[any]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
+		r.ClientConfiguration = plugin.TValue[*mqlMs365TeamsClientConfig]{State: plugin.StateIsSet, Error: errors.New("CsTeamsClientConfiguration is nil")}
 	}
 
 	if report.CsTenantFederationConfiguration != nil {
@@ -287,6 +329,10 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 }
 
 func (r *mqlMs365Teams) csTeamsClientConfiguration() (any, error) {
+	return nil, r.gatherTeamsReport()
+}
+
+func (r *mqlMs365Teams) clientConfiguration() (*mqlMs365TeamsClientConfig, error) {
 	return nil, r.gatherTeamsReport()
 }
 
