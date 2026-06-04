@@ -223,8 +223,22 @@ bicep.resource @defaults("type symbolicName") {
   scope string
   // Nested child resources declared inside this resource
   resources() []bicep.resource
-  // Resource body as dict
+  // The resource's `properties: { ... }` sub-block as a dict
   properties dict
+  // The full resource body as a dict
+  //
+  // Every top-level field of the resource declaration — not just the
+  // `properties: { ... }` sub-block — parsed into a dict: `properties`,
+  // `identity`, `sku`, `kind`, `zones`, and so on. Use it to reach controls
+  // that live on the resource itself rather than inside `properties` (for
+  // example a managed `identity` block), and to inspect Microsoft Graph
+  // resources (`Microsoft.Graph/...`), whose configuration — `displayName`,
+  // `state`, `conditions`, `grantControls` — is declared at the top level with
+  // no `properties:` wrapper. Scalar values are stringified the same way as in
+  // `properties` (`true` becomes `"true"`); nested `resource` declarations are
+  // not included here (reach them through `resources`). Empty only when the
+  // resource has no body.
+  body dict
   // Flattened expression trees of every scalar property leaf
   //
   // Walks the `properties` object and emits one entry per scalar leaf, each

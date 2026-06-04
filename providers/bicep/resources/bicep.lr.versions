@@ -98,6 +98,7 @@ bicep.propertyExpression.expression 13.1.2
 bicep.propertyExpression.path 13.1.2
 bicep.resource 13.0.0
 bicep.resource.apiVersion 13.0.0
+bicep.resource.body 13.2.2
 bicep.resource.condition 13.0.0
 bicep.resource.conditionTree 13.1.2
 bicep.resource.decorators 13.0.0

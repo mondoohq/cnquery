@@ -346,6 +346,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.resource.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetProperties()).ToDataRes(types.Dict)
 	},
+	"bicep.resource.body": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepResource).GetBody()).ToDataRes(types.Dict)
+	},
 	"bicep.resource.propertyExpressions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepResource).GetPropertyExpressions()).ToDataRes(types.Array(types.Resource("bicep.propertyExpression")))
 	},
@@ -904,6 +907,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.resource.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepResource).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"bicep.resource.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepResource).Body, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"bicep.resource.propertyExpressions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1973,6 +1980,7 @@ type mqlBicepResource struct {
 	Scope               plugin.TValue[string]
 	Resources           plugin.TValue[[]any]
 	Properties          plugin.TValue[any]
+	Body                plugin.TValue[any]
 	PropertyExpressions plugin.TValue[[]any]
 	Tags                plugin.TValue[map[string]any]
 	DependsOn           plugin.TValue[[]any]
@@ -2117,6 +2125,10 @@ func (c *mqlBicepResource) GetResources() *plugin.TValue[[]any] {
 
 func (c *mqlBicepResource) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlBicepResource) GetBody() *plugin.TValue[any] {
+	return &c.Body
 }
 
 func (c *mqlBicepResource) GetPropertyExpressions() *plugin.TValue[[]any] {

@@ -336,6 +336,76 @@ func TestParseResourceDecl(t *testing.T) {
 	})
 }
 
+func TestResourceBodyInner(t *testing.T) {
+	t.Run("exposes top-level fields beyond properties", func(t *testing.T) {
+		body := `resource webApp 'Microsoft.Web/sites@2024-04-01' = {
+  name: 'example-webapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  kind: 'app'
+  properties: {
+    httpsOnly: true
+  }
+}`
+		obj := parseBicepObject(resourceBodyInner(body))
+		identity, ok := obj["identity"].(map[string]any)
+		require.True(t, ok, "identity should be a top-level field")
+		assert.Equal(t, "SystemAssigned", identity["type"])
+		assert.Equal(t, "app", obj["kind"])
+		props, ok := obj["properties"].(map[string]any)
+		require.True(t, ok)
+		assert.Equal(t, "true", props["httpsOnly"])
+	})
+
+	t.Run("skips nested resource declarations", func(t *testing.T) {
+		body := `resource pg 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
+  name: 'pg'
+  properties: {
+    version: '16'
+  }
+  resource cfg 'configurations@2024-08-01' = {
+    name: 'require_secure_transport'
+    properties: {
+      value: 'ON'
+    }
+  }
+}`
+		obj := parseBicepObject(resourceBodyInner(body))
+		assert.Equal(t, "pg", obj["name"])
+		_, hasProps := obj["properties"].(map[string]any)
+		assert.True(t, hasProps)
+		// the nested `resource cfg ...` block carries no top-level colon and
+		// must not leak in as a key; reach nested resources via `resources`.
+		for k := range obj {
+			assert.NotContains(t, k, "resource cfg")
+		}
+	})
+
+	t.Run("microsoft graph resource (no properties wrapper)", func(t *testing.T) {
+		body := `resource ca 'Microsoft.Graph/conditionalAccessPolicies@v1.0' = {
+  displayName: 'Block legacy'
+  state: 'enabled'
+  grantControls: {
+    builtInControls: ['block']
+  }
+}`
+		obj := parseBicepObject(resourceBodyInner(body))
+		assert.Equal(t, "enabled", obj["state"])
+		assert.Equal(t, "Block legacy", obj["displayName"])
+		gc, ok := obj["grantControls"].(map[string]any)
+		require.True(t, ok)
+		controls, ok := gc["builtInControls"].([]any)
+		require.True(t, ok)
+		assert.Equal(t, []any{"block"}, controls)
+	})
+
+	t.Run("no braces returns empty", func(t *testing.T) {
+		assert.Equal(t, "", resourceBodyInner("resource x 'T' = "))
+		assert.Empty(t, parseBicepObject(resourceBodyInner("")))
+	})
+}
+
 func TestParseModuleDecl(t *testing.T) {
 	t.Run("local module", func(t *testing.T) {
 		input := `module network './modules/network.bicep' = {

@@ -123,6 +123,23 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 	return mqlResources, nil
 }
 
+// resourceBodyInner returns the content between a resource declaration's outer
+// braces. `parsedResource.body` is the full `resource <name> '<type>' = { ... }`
+// text (braces included), so this drops everything up to and including the
+// first `{` and the final `}`, leaving the top-level field block that
+// parseBicepObject expects. Returns "" when no braces are present.
+func resourceBodyInner(body string) string {
+	open := strings.IndexByte(body, '{')
+	if open < 0 {
+		return ""
+	}
+	inner := body[open+1:]
+	if close := strings.LastIndexByte(inner, '}'); close >= 0 {
+		inner = inner[:close]
+	}
+	return inner
+}
+
 // newMqlBicepResource builds a single bicep.resource from a parsedResource.
 // The id is supplied by the caller: top-level resources use
 // `bicep.resource:<file>:<symbolicName>`, while nested resources use a
@@ -148,6 +165,20 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 		}
 	}
 
+	// Surface the entire resource body as a dict so audits can reach
+	// top-level fields the `properties` sub-block doesn't carry — `identity`,
+	// `sku`, `kind`, … — and Microsoft Graph resources, whose config lives at
+	// the top level with no `properties:` wrapper. `r.body` is the full
+	// `resource <name> '<type>' = { ... }` declaration, so strip the header up
+	// to the opening brace and the trailing close brace before parsing the
+	// top-level fields. Nested `resource` declarations carry no top-level
+	// `key: value` colon and are skipped by parseBicepObject; reach them
+	// through `resources` instead.
+	var body any = map[string]any{}
+	if inner := resourceBodyInner(r.body); inner != "" {
+		body = parseBicepObject(inner)
+	}
+
 	args := map[string]*llx.RawData{
 		"__id":         llx.StringData(id),
 		"symbolicName": llx.StringData(r.symbolicName),
@@ -160,6 +191,7 @@ func newMqlBicepResource(runtime *plugin.Runtime, id string, r parsedResource, r
 		"parent":       llx.StringData(r.parent),
 		"scope":        llx.StringData(r.scope),
 		"properties":   llx.DictData(properties),
+		"body":         llx.DictData(body),
 		"dependsOn":    llx.ArrayData(dependsOn, types.String),
 		"decorators":   llx.ArrayData(decorators, types.String),
 	}
