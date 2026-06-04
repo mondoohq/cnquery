@@ -240,6 +240,7 @@ PROVIDERS := \
 	snowflake \
 	tailscale \
 	terraform \
+	together \
 	vcd \
 	vllm \
 	vsphere
