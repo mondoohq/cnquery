@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.21.0",
-  "generated_at": "2026-06-04T15:12:41-06:00",
+  "generated_at": "2026-06-04T15:13:13-06:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -1233,7 +1233,7 @@
     {
       "permission": "dlp.jobTriggers.list",
       "service": "dlp",
-      "action": "ListDiscoveryConfigs",
+      "action": "ListJobTriggers",
       "source_file": "dlp.go"
     },
     {

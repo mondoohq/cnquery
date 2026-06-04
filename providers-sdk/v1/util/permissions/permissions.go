@@ -36,6 +36,13 @@ type PermissionDetail struct {
 	Action     string `json:"action"`
 	SourceFile string `json:"source_file"`
 	Scope      string `json:"scope,omitempty"`
+
+	// overridden is an internal dedup hint (never serialized): true when the
+	// Permission came from an override map rather than the natural derivation of
+	// Action. When several call sites in one file resolve to the same permission,
+	// dedup keeps the natural detail so the surviving Action reflects the real API
+	// call. It is reset to false before the manifest is emitted.
+	overridden bool
 }
 
 func main() {
@@ -117,6 +124,14 @@ func main() {
 		if details[i].SourceFile != details[j].SourceFile {
 			return details[i].SourceFile < details[j].SourceFile
 		}
+		// Prefer the natural derivation over an override-sourced one so the
+		// surviving detail's Action reflects the real API call. Without this, an
+		// override that redirects method A to a permission also produced naturally
+		// by method B (e.g. dlp ListDiscoveryConfigs and ListJobTriggers both →
+		// dlp.jobTriggers.list) could leave the override's misleading action.
+		if details[i].overridden != details[j].overridden {
+			return !details[i].overridden
+		}
 		if details[i].Action != details[j].Action {
 			return details[i].Action < details[j].Action
 		}
@@ -133,6 +148,12 @@ func main() {
 			}
 		}
 		details = deduped
+	}
+
+	// overridden is an internal dedup hint only; clear it so it never affects the
+	// serialization-equality check used to skip rewrites.
+	for i := range details {
+		details[i].overridden = false
 	}
 
 	manifest := PermissionManifest{
@@ -927,13 +948,14 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 			if ident, ok := sel.X.(*ast.Ident); ok {
 				if cv, ok := clientVars[ident.Name]; ok {
 					if isGCPAPIMethod(methodName) {
-						perm := gcpMethodToPermission(cv.imp.service, cv.clientType, methodName)
+						perm, overridden := gcpMethodToPermission(cv.imp.service, cv.clientType, methodName)
 						if perm != "" {
 							details = append(details, PermissionDetail{
 								Permission: perm,
 								Service:    cv.imp.service,
 								Action:     methodName,
 								SourceFile: fileName,
+								overridden: overridden,
 							})
 						}
 					}
@@ -945,13 +967,14 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 				resource := innerSel.Sel.Name
 				if ident, ok := innerSel.X.(*ast.Ident); ok {
 					if imp, ok := restVars[ident.Name]; ok {
-						perm := gcpRESTToPermission(imp.service, resource, methodName)
+						perm, overridden := gcpRESTToPermission(imp.service, resource, methodName)
 						if perm != "" {
 							details = append(details, PermissionDetail{
 								Permission: perm,
 								Service:    imp.service,
 								Action:     resource + "." + methodName,
 								SourceFile: fileName,
+								overridden: overridden,
 							})
 						}
 					}
@@ -968,13 +991,14 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 								method := chain[len(chain)-1]
 								// Find the meaningful resource (skip "Projects", "Locations")
 								resourceName := findMeaningfulResource(chain[:len(chain)-1])
-								perm := gcpRESTToPermission(imp.service, resourceName, method)
+								perm, overridden := gcpRESTToPermission(imp.service, resourceName, method)
 								if perm != "" {
 									details = append(details, PermissionDetail{
 										Permission: perm,
 										Service:    imp.service,
 										Action:     resourceName + "." + method,
 										SourceFile: fileName,
+										overridden: overridden,
 									})
 								}
 							}
@@ -1266,10 +1290,13 @@ var gcpSkipMethods = map[string]bool{
 // clientType (e.g., "InstanceAdmin" from NewInstanceAdminClient) lets services with
 // multiple admin clients disambiguate methods like GetIamPolicy that don't carry a
 // resource hint in their name.
-func gcpMethodToPermission(service, clientType, method string) string {
+// gcpMethodToPermission returns the IAM permission for a gRPC method and a bool
+// reporting whether the result came from an override (rather than the natural
+// derivation), used by detail dedup to prefer the natural call site.
+func gcpMethodToPermission(service, clientType, method string) (string, bool) {
 	// Skip known non-API methods
 	if gcpSkipMethods[method] {
-		return ""
+		return "", false
 	}
 
 	// Strip "Iter" suffix from iterator helper methods (e.g., ListRolesIter -> ListRoles)
@@ -1280,11 +1307,11 @@ func gcpMethodToPermission(service, clientType, method string) string {
 	if overrides, ok := gcpPermissionOverrides[service]; ok {
 		if clientType != "" {
 			if perm, ok := overrides[clientType+"."+method]; ok {
-				return perm
+				return perm, true
 			}
 		}
 		if perm, ok := overrides[method]; ok {
-			return perm
+			return perm, true
 		}
 	}
 
@@ -1305,7 +1332,7 @@ func gcpMethodToPermission(service, clientType, method string) string {
 		verb = "get"
 		resource = strings.TrimPrefix(method, "Get")
 		if resource == "" {
-			return "" // bare Get without resource name is ambiguous
+			return "", false // bare Get without resource name is ambiguous
 		}
 	} else if strings.HasPrefix(method, "Create") {
 		verb = "create"
@@ -1326,29 +1353,30 @@ func gcpMethodToPermission(service, clientType, method string) string {
 		verb = "list"
 		resource = strings.TrimPrefix(method, "Search")
 	} else {
-		return ""
+		return "", false
 	}
 
 	if resource == "" {
-		return ""
+		return "", false
 	}
 
 	// Convert PascalCase to camelCase
 	resource = strings.ToLower(resource[:1]) + resource[1:]
 
-	return service + "." + resource + "." + verb
+	return service + "." + resource + "." + verb, false
 }
 
-// gcpRESTToPermission maps a REST-style call to a GCP IAM permission.
-func gcpRESTToPermission(service, resource, method string) string {
+// gcpRESTToPermission maps a REST-style call to a GCP IAM permission. The bool
+// reports whether the result came from an override (see gcpMethodToPermission).
+func gcpRESTToPermission(service, resource, method string) (string, bool) {
 	if resource == "" {
-		return ""
+		return "", false
 	}
 
 	// Check for explicit overrides using "Resource.Method" as the key
 	if overrides, ok := gcpPermissionOverrides[service]; ok {
 		if perm, ok := overrides[resource+"."+method]; ok {
-			return perm
+			return perm, true
 		}
 	}
 
@@ -1365,16 +1393,16 @@ func gcpRESTToPermission(service, resource, method string) string {
 	case "Update", "Patch":
 		verb = "update"
 	case "GetIamPolicy":
-		return service + "." + strings.ToLower(resource[:1]) + resource[1:] + ".getIamPolicy"
+		return service + "." + strings.ToLower(resource[:1]) + resource[1:] + ".getIamPolicy", false
 	case "SetIamPolicy":
-		return service + "." + strings.ToLower(resource[:1]) + resource[1:] + ".setIamPolicy"
+		return service + "." + strings.ToLower(resource[:1]) + resource[1:] + ".setIamPolicy", false
 	default:
 		verb = strings.ToLower(method)
 	}
 
 	// Convert PascalCase resource to camelCase
 	res := strings.ToLower(resource[:1]) + resource[1:]
-	return service + "." + res + "." + verb
+	return service + "." + res + "." + verb, false
 }
 
 // =============================================================================
@@ -1496,6 +1524,11 @@ func extractAzurePermissions(resourcesDir string) []PermissionDetail {
 				// Only care about read operations
 				if isAzureReadMethod(methodName) {
 					perm := azurePermission(info.armProvider, info.resourceType)
+					// A client serving multiple read methods may need per-method
+					// permissions that the client-level derivation can't express.
+					if o, ok := azureMethodPermissionOverrides[info.resourceType+"."+methodName]; ok {
+						perm = o
+					}
 					details = append(details, PermissionDetail{
 						Permission: perm,
 						Service:    info.armProvider,
@@ -1621,6 +1654,21 @@ func azureServiceToARM(service string) string {
 	}
 	// Default: Microsoft.<Capitalized service name>
 	return "Microsoft." + strings.ToUpper(service[:1]) + service[1:]
+}
+
+// azureMethodPermissionOverrides maps "<ResourceType>.<Method>" to the correct
+// permission for cases where one SDK client serves multiple read methods that
+// require different RBAC permissions. The client-derived permission is the same
+// for every method on the client, so a permission-string override (which keys on
+// that shared result) cannot distinguish them — this map keys on the
+// constructor-derived resource type plus the read method name instead.
+var azureMethodPermissionOverrides = map[string]string{
+	// SQLResourcesClient serves SQL container, role-assignment and role-definition
+	// reads. The client maps everything to sqlDatabases/containers/read (see the
+	// sQLResources override below), so the role calls each need their own mapping
+	// to the correct resource.
+	"SQLResources.NewListSQLRoleAssignmentsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
+	"SQLResources.NewListSQLRoleDefinitionsPager": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
 }
 
 // azurePermissionOverrides maps generated permission strings to the correct

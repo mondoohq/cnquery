@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.16.0",
-  "generated_at": "2026-06-04T13:47:42-07:00",
+  "generated_at": "2026-06-04T15:13:13-06:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -84,6 +84,8 @@
     "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
+    "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
+    "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
     "Microsoft.DocumentDB/mongoClusters/read",
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
@@ -705,14 +707,20 @@
     {
       "permission": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
       "service": "Microsoft.DocumentDB",
+      "action": "NewListSQLContainersPager",
+      "source_file": "cosmosdb_extras.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments/read",
+      "service": "Microsoft.DocumentDB",
       "action": "NewListSQLRoleAssignmentsPager",
       "source_file": "cosmosdb.go"
     },
     {
-      "permission": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
+      "permission": "Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLContainersPager",
-      "source_file": "cosmosdb_extras.go"
+      "action": "NewListSQLRoleDefinitionsPager",
+      "source_file": "cosmosdb.go"
     },
     {
       "permission": "Microsoft.DocumentDB/mongoClusters/read",
