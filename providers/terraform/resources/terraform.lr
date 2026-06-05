@@ -74,6 +74,10 @@ private terraform.block @defaults("type labels") {
   labels []string
   // Block name label
   nameLabel() string
+  // Terraform resource type, e.g. "aws_instance" (mirrors terraform.state.resource.type and terraform.plan.resourceChange.type)
+  resourceType() string
+  // Terraform resource name, e.g. "web" in `resource "aws_instance" "web"` (mirrors terraform.state.resource.name and terraform.plan.resourceChange.name)
+  resourceName() string
   // Block start position
   start terraform.fileposition
   // Block end position

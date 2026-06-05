@@ -341,6 +341,30 @@ func (t *mqlTerraformBlock) nameLabel() (string, error) {
 	return labels[0].(string), nil
 }
 
+// resourceType returns the Terraform resource type (the first label, e.g.
+// "aws_instance"). It mirrors terraform.state.resource.type and
+// terraform.plan.resourceChange.type so HCL policies can use the same field
+// name as plan/state policies instead of nameLabel.
+func (t *mqlTerraformBlock) resourceType() (string, error) {
+	labels := t.Labels.Data
+	if len(labels) == 0 {
+		return "", nil
+	}
+	return labels[0].(string), nil
+}
+
+// resourceName returns the Terraform resource name (the second label, e.g.
+// "web" in `resource "aws_instance" "web"`). It mirrors
+// terraform.state.resource.name and terraform.plan.resourceChange.name,
+// replacing the cryptic labels[1] index access in policies.
+func (t *mqlTerraformBlock) resourceName() (string, error) {
+	labels := t.Labels.Data
+	if len(labels) < 2 {
+		return "", nil
+	}
+	return labels[1].(string), nil
+}
+
 func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	tfraw, err := CreateResource(runtime, "terraform", map[string]*llx.RawData{})
 	if err != nil {

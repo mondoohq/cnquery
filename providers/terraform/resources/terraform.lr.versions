@@ -10,6 +10,8 @@ terraform.block.end 9.0.0
 terraform.block.labels 9.0.0
 terraform.block.nameLabel 9.0.0
 terraform.block.related 9.0.12
+terraform.block.resourceName 13.0.15
+terraform.block.resourceType 13.0.15
 terraform.block.snippet 9.0.0
 terraform.block.start 9.0.0
 terraform.block.type 9.0.0

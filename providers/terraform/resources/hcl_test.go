@@ -10,7 +10,52 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+func blockWithLabels(labels ...string) *mqlTerraformBlock {
+	data := make([]any, len(labels))
+	for i, l := range labels {
+		data[i] = l
+	}
+	b := &mqlTerraformBlock{}
+	b.Labels = plugin.TValue[[]any]{Data: data, State: plugin.StateIsSet}
+	return b
+}
+
+func TestBlockResourceTypeAndName(t *testing.T) {
+	// resource "aws_instance" "web" { ... }
+	b := blockWithLabels("aws_instance", "web")
+	rt, err := b.resourceType()
+	require.NoError(t, err)
+	assert.Equal(t, "aws_instance", rt)
+	rn, err := b.resourceName()
+	require.NoError(t, err)
+	assert.Equal(t, "web", rn)
+
+	// resourceType mirrors nameLabel (first label)
+	nl, err := b.nameLabel()
+	require.NoError(t, err)
+	assert.Equal(t, nl, rt)
+
+	// Blocks without a second label (e.g. provider blocks) yield an empty name.
+	single := blockWithLabels("aws")
+	rn, err = single.resourceName()
+	require.NoError(t, err)
+	assert.Equal(t, "", rn)
+	rt, err = single.resourceType()
+	require.NoError(t, err)
+	assert.Equal(t, "aws", rt)
+
+	// Blocks with no labels yield empty strings rather than panicking.
+	none := blockWithLabels()
+	rt, err = none.resourceType()
+	require.NoError(t, err)
+	assert.Equal(t, "", rt)
+	rn, err = none.resourceName()
+	require.NoError(t, err)
+	assert.Equal(t, "", rn)
+}
 
 // parseAttrs parses an HCL snippet and returns the top-level attributes.
 // The snippet must contain attribute definitions only (no blocks).
