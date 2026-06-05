@@ -183,6 +183,31 @@ func (f EcrDiscoveryFilters) MatchesExcludeTags(imageTags []string) bool {
 	return false
 }
 
+// ECRDescribeRepositoriesNameLimit is the maximum number of repository names AWS
+// accepts in the repositoryNames parameter of a single DescribeRepositories request.
+const ECRDescribeRepositoriesNameLimit = 100
+
+// Splits the repository names in batches. 0 batches are returned when no names are specified.
+func (f EcrDiscoveryFilters) PrivateRepositoryNameBatches() [][]string {
+	return batchRepositoryNames(f.PrivateRepositoryNames)
+}
+
+// Splits the repository names in batches. 0 batches are returned when no names are specified.
+func (f EcrDiscoveryFilters) PublicRepositoryNameBatches() [][]string {
+	return batchRepositoryNames(f.PublicRepositoryNames)
+}
+
+func batchRepositoryNames(names []string) [][]string {
+	if len(names) == 0 {
+		return nil
+	}
+	batches := make([][]string, 0, (len(names)+ECRDescribeRepositoriesNameLimit-1)/ECRDescribeRepositoriesNameLimit)
+	for batch := range slices.Chunk(names, ECRDescribeRepositoriesNameLimit) {
+		batches = append(batches, batch)
+	}
+	return batches
+}
+
 type EcsDiscoveryFilters struct {
 	OnlyRunningContainers bool
 	DiscoverImages        bool

@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -436,5 +437,68 @@ func TestParseBoolOpt(t *testing.T) {
 
 		result = parseBoolOpt(map[string]string{}, "key", false)
 		require.False(t, result)
+	})
+}
+
+func TestBatchRepositoryNames(t *testing.T) {
+	makeNames := func(n int) []string {
+		names := make([]string, n)
+		for i := range names {
+			names[i] = "repo-" + strconv.Itoa(i)
+		}
+		return names
+	}
+
+	t.Run("no filter returns nil so the caller describes everything", func(t *testing.T) {
+		require.Nil(t, batchRepositoryNames(nil))
+		require.Nil(t, batchRepositoryNames([]string{}))
+	})
+
+	t.Run("within the limit returns a single batch", func(t *testing.T) {
+		names := makeNames(3)
+		batches := batchRepositoryNames(names)
+		require.Len(t, batches, 1)
+		require.Equal(t, names, batches[0])
+	})
+
+	t.Run("exactly at the limit stays a single batch", func(t *testing.T) {
+		names := makeNames(ECRDescribeRepositoriesNameLimit)
+		batches := batchRepositoryNames(names)
+		require.Len(t, batches, 1)
+		require.Len(t, batches[0], ECRDescribeRepositoriesNameLimit)
+	})
+
+	t.Run("over the limit splits into limit-sized batches", func(t *testing.T) {
+		// 1000 names -> 10 batches of 100
+		names := makeNames(1000)
+		batches := batchRepositoryNames(names)
+		require.Len(t, batches, 10)
+		for _, b := range batches {
+			require.Len(t, b, ECRDescribeRepositoriesNameLimit)
+		}
+		// every name is covered exactly once, in order
+		var flat []string
+		for _, b := range batches {
+			flat = append(flat, b...)
+		}
+		require.Equal(t, names, flat)
+	})
+
+	t.Run("a partial trailing batch keeps the remainder", func(t *testing.T) {
+		// 101 names -> 100 + 1
+		names := makeNames(ECRDescribeRepositoriesNameLimit + 1)
+		batches := batchRepositoryNames(names)
+		require.Len(t, batches, 2)
+		require.Len(t, batches[0], ECRDescribeRepositoriesNameLimit)
+		require.Len(t, batches[1], 1)
+	})
+
+	t.Run("scope helpers batch the matching name list", func(t *testing.T) {
+		f := EcrDiscoveryFilters{
+			PrivateRepositoryNames: []string{"priv1", "priv2"},
+			PublicRepositoryNames:  []string{"pub1"},
+		}
+		require.Equal(t, [][]string{{"priv1", "priv2"}}, f.PrivateRepositoryNameBatches())
+		require.Equal(t, [][]string{{"pub1"}}, f.PublicRepositoryNameBatches())
 	})
 }

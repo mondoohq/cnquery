@@ -159,47 +159,57 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			svc := conn.Ecr(region)
 			res := []any{}
 
-			req := &ecr.DescribeRepositoriesInput{}
-			if len(conn.Filters.Ecr.PrivateRepositoryNames) > 0 {
-				req.RepositoryNames = conn.Filters.Ecr.PrivateRepositoryNames
+			// AWS caps repositoryNames at ECRDescribeRepositoriesNameLimit per request, so
+			// a larger filter is split into batches and each batch is described separately.
+			// 0 batches means all repositories should be described.
+			batches := conn.Filters.Ecr.PublicRepositoryNameBatches()
+			if len(batches) == 0 {
+				batches = [][]string{{}}
 			}
 
-			paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
-			for paginator.HasMorePages() {
-				repoResp, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
+			for _, batch := range batches {
+				req := &ecr.DescribeRepositoriesInput{}
+				if len(batch) > 0 {
+					req.RepositoryNames = batch
 				}
-				for _, r := range repoResp.Repositories {
-					imageScanOnPush := false
-					if r.ImageScanningConfiguration != nil {
-						imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
-					}
-					var encryptionType string
-					if r.EncryptionConfiguration != nil {
-						encryptionType = string(r.EncryptionConfiguration.EncryptionType)
-					}
-					mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
-						map[string]*llx.RawData{
-							"arn":                llx.StringDataPtr(r.RepositoryArn),
-							"name":               llx.StringDataPtr(r.RepositoryName),
-							"uri":                llx.StringDataPtr(r.RepositoryUri),
-							"registryId":         llx.StringDataPtr(r.RegistryId),
-							"public":             llx.BoolData(false),
-							"region":             llx.StringData(region),
-							"imageScanOnPush":    llx.BoolData(imageScanOnPush),
-							"imageTagMutability": llx.StringData(string(r.ImageTagMutability)),
-							"encryptionType":     llx.StringData(encryptionType),
-							"createdAt":          llx.TimeDataPtr(r.CreatedAt),
-						})
+
+				paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
+				for paginator.HasMorePages() {
+					repoResp, err := paginator.NextPage(ctx)
 					if err != nil {
+						if Is400AccessDeniedError(err) {
+							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+							return res, nil
+						}
 						return nil, err
 					}
-					res = append(res, mqlRepoResource)
+					for _, r := range repoResp.Repositories {
+						imageScanOnPush := false
+						if r.ImageScanningConfiguration != nil {
+							imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
+						}
+						var encryptionType string
+						if r.EncryptionConfiguration != nil {
+							encryptionType = string(r.EncryptionConfiguration.EncryptionType)
+						}
+						mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
+							map[string]*llx.RawData{
+								"arn":                llx.StringDataPtr(r.RepositoryArn),
+								"name":               llx.StringDataPtr(r.RepositoryName),
+								"uri":                llx.StringDataPtr(r.RepositoryUri),
+								"registryId":         llx.StringDataPtr(r.RegistryId),
+								"public":             llx.BoolData(false),
+								"region":             llx.StringData(region),
+								"imageScanOnPush":    llx.BoolData(imageScanOnPush),
+								"imageTagMutability": llx.StringData(string(r.ImageTagMutability)),
+								"encryptionType":     llx.StringData(encryptionType),
+								"createdAt":          llx.TimeDataPtr(r.CreatedAt),
+							})
+						if err != nil {
+							return nil, err
+						}
+						res = append(res, mqlRepoResource)
+					}
 				}
 			}
 
@@ -523,43 +533,53 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []any{}
 
-	req := &ecrpublic.DescribeRepositoriesInput{
-		RegistryId: aws.String(conn.AccountId()),
-	}
-	if len(conn.Filters.Ecr.PublicRepositoryNames) > 0 {
-		// AWS does not do partial results and returns an error if a single repository
-		// supplied in the filters is not found
-		req.RepositoryNames = conn.Filters.Ecr.PublicRepositoryNames
+	// AWS caps repositoryNames at ECRDescribeRepositoriesNameLimit per request, so
+	// a larger filter is split into batches and each batch is described separately.
+	// 0 batches means all repositories should be described.
+	batches := conn.Filters.Ecr.PublicRepositoryNameBatches()
+	if len(batches) == 0 {
+		batches = [][]string{{}}
 	}
 
-	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, req)
-	for paginator.HasMorePages() {
-		repoResp, err := paginator.NextPage(context.TODO())
-		if err != nil {
-			return nil, err
+	for _, batch := range batches {
+		req := &ecrpublic.DescribeRepositoriesInput{
+			RegistryId: aws.String(conn.AccountId()),
+		}
+		if len(batch) > 0 {
+			// AWS does not do partial results and returns an error if a single repository
+			// supplied in the filters is not found
+			req.RepositoryNames = batch
 		}
 
-		for _, r := range repoResp.Repositories {
-			mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
-				map[string]*llx.RawData{
-					"arn":        llx.StringDataPtr(r.RepositoryArn),
-					"name":       llx.StringDataPtr(r.RepositoryName),
-					"uri":        llx.StringDataPtr(r.RepositoryUri),
-					"registryId": llx.StringDataPtr(r.RegistryId),
-					"public":     llx.BoolData(true),
-					"region":     llx.StringData("us-east-1"),
-					// Public ECR does not support scan-on-push, uses immutable tags,
-					// and always uses AES256 encryption. These are platform-enforced
-					// defaults (not returned by the public ECR DescribeRepositories API).
-					"imageScanOnPush":    llx.BoolData(false),
-					"imageTagMutability": llx.StringData("IMMUTABLE"),
-					"encryptionType":     llx.StringData("AES256"),
-					"createdAt":          llx.TimeDataPtr(r.CreatedAt),
-				})
+		paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, req)
+		for paginator.HasMorePages() {
+			repoResp, err := paginator.NextPage(context.TODO())
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlRepoResource)
+
+			for _, r := range repoResp.Repositories {
+				mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
+					map[string]*llx.RawData{
+						"arn":        llx.StringDataPtr(r.RepositoryArn),
+						"name":       llx.StringDataPtr(r.RepositoryName),
+						"uri":        llx.StringDataPtr(r.RepositoryUri),
+						"registryId": llx.StringDataPtr(r.RegistryId),
+						"public":     llx.BoolData(true),
+						"region":     llx.StringData("us-east-1"),
+						// Public ECR does not support scan-on-push, uses immutable tags,
+						// and always uses AES256 encryption. These are platform-enforced
+						// defaults (not returned by the public ECR DescribeRepositories API).
+						"imageScanOnPush":    llx.BoolData(false),
+						"imageTagMutability": llx.StringData("IMMUTABLE"),
+						"encryptionType":     llx.StringData("AES256"),
+						"createdAt":          llx.TimeDataPtr(r.CreatedAt),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlRepoResource)
+			}
 		}
 	}
 
