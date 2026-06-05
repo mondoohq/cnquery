@@ -228,6 +228,216 @@ func (m *mqlTerraformModule) references() ([]any, error) {
 	return b.references()
 }
 
+// --- navigating into a module's own source ---
+
+// terraformRef resolves the parent terraform resource, constructing it when the
+// module was created bare (e.g. a manifest module from terraform.modules).
+func (m *mqlTerraformModule) terraformRef() (*mqlTerraform, error) {
+	if m.tf != nil {
+		return m.tf, nil
+	}
+	o, err := CreateResource(m.MqlRuntime, "terraform", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	tf := o.(*mqlTerraform)
+	if err := tf.refreshCache(nil); err != nil {
+		return nil, err
+	}
+	m.tf = tf
+	return tf, nil
+}
+
+// callBlock returns the module-call HCL block, located by key when it was not
+// captured at construction.
+func (m *mqlTerraformModule) callBlock(tf *mqlTerraform) *mqlTerraformBlock {
+	if m.tfBlock != nil {
+		return m.tfBlock
+	}
+	key := m.Key.Data
+	blocksRaw := tf.GetBlocks()
+	if blocksRaw.Error != nil {
+		return nil
+	}
+	for i := range blocksRaw.Data {
+		b := blocksRaw.Data[i].(*mqlTerraformBlock)
+		if b.Type.Data == "module" && labelAt(b, 0) == key {
+			return b
+		}
+	}
+	return nil
+}
+
+// scopedBlocks returns the blocks of a given type declared inside this module's
+// source (i.e. associated with this module call).
+func (m *mqlTerraformModule) scopedBlocks(blockType string) ([]*mqlTerraformBlock, *mqlTerraform, error) {
+	tf, err := m.terraformRef()
+	if err != nil {
+		return nil, nil, err
+	}
+	call := m.callBlock(tf)
+	if call == nil {
+		return nil, tf, nil
+	}
+	callID, _ := call.id()
+	entries := tf.fileModuleIndex()
+
+	blocksRaw := tf.GetBlocks()
+	if blocksRaw.Error != nil {
+		return nil, tf, blocksRaw.Error
+	}
+
+	var out []*mqlTerraformBlock
+	for i := range blocksRaw.Data {
+		b := blocksRaw.Data[i].(*mqlTerraformBlock)
+		if b.Type.Data == blockType && blockModuleKey(b, entries) == callID {
+			out = append(out, b)
+		}
+	}
+	return out, tf, nil
+}
+
+func (m *mqlTerraformModule) resources() ([]any, error) {
+	blocks, tf, err := m.scopedBlocks("resource")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(blocks))
+	for _, b := range blocks {
+		r, err := newTerraformResource(tf, b)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func (m *mqlTerraformModule) dataSources() ([]any, error) {
+	blocks, tf, err := m.scopedBlocks("data")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(blocks))
+	for _, b := range blocks {
+		r, err := newTerraformDatasource(tf, b)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func (m *mqlTerraformModule) variables() ([]any, error) {
+	blocks, tf, err := m.scopedBlocks("variable")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(blocks))
+	for _, b := range blocks {
+		r, err := newTerraformVariable(tf, b)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func (m *mqlTerraformModule) outputs() ([]any, error) {
+	blocks, tf, err := m.scopedBlocks("output")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(blocks))
+	for _, b := range blocks {
+		r, err := newTerraformOutput(tf, b)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func (m *mqlTerraformModule) childModules() ([]any, error) {
+	blocks, tf, err := m.scopedBlocks("module")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(blocks))
+	for _, b := range blocks {
+		r, err := newModuleFromBlock(tf, b)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+func (m *mqlTerraformModule) files() ([]any, error) {
+	tf, err := m.terraformRef()
+	if err != nil {
+		return nil, err
+	}
+	dir := m.moduleDir(tf)
+	if dir == "" {
+		return []any{}, nil
+	}
+	conn, ok := tf.MqlRuntime.Connection.(*connection.Connection)
+	if !ok || conn.Parser() == nil {
+		return []any{}, nil
+	}
+
+	out := []any{}
+	for path := range conn.Parser().Files() {
+		fileDir := filepath.Dir(path)
+		if fileDir == dir || strings.HasPrefix(fileDir, dir+string(filepath.Separator)) {
+			f, err := CreateResource(tf.MqlRuntime, "terraform.file", map[string]*llx.RawData{
+				"path": llx.StringData(path),
+			})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, f)
+		}
+	}
+	return out, nil
+}
+
+// moduleDir returns the on-disk source directory of this module.
+func (m *mqlTerraformModule) moduleDir(tf *mqlTerraform) string {
+	call := m.callBlock(tf)
+	if call != nil {
+		entries := tf.fileModuleIndex()
+		for i := range entries {
+			if entries[i].call == call {
+				return entries[i].dir
+			}
+		}
+	}
+	return m.Dir.Data
+}
+
+// newModuleFromBlock builds a terraform.module from a `module` block.
+func newModuleFromBlock(t *mqlTerraform, b *mqlTerraformBlock) (*mqlTerraformModule, error) {
+	r, err := CreateResource(t.MqlRuntime, "terraform.module", map[string]*llx.RawData{
+		"key":     llx.StringData(labelAt(b, 0)),
+		"source":  llx.StringData(blockStringArgument(b, "source")),
+		"version": llx.StringData(blockStringArgument(b, "version")),
+		"dir":     llx.StringData(""),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mod := r.(*mqlTerraformModule)
+	mod.tf = t
+	mod.tfBlock = b
+	return mod, nil
+}
+
 // blockModuleCall returns the module call a block belongs to, by file path.
 func blockModuleCall(t *mqlTerraform, b *mqlTerraformBlock) *mqlTerraformBlock {
 	if b == nil || b.Start.State != plugin.StateIsSet || b.Start.Data == nil {

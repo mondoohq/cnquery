@@ -527,6 +527,24 @@ terraform.module @defaults("key source") {
   inputs() dict
   // References made by the module's input values
   references() []terraform.reference
+  // Managed resources declared in this module's source
+  //
+  // Navigate into the module's own configuration: the `resource` blocks
+  // in the module's source directory, as terraform.resource records with
+  // values resolved in this module's context (its variable defaults
+  // overridden by the call's inputs). Available for local modules and for
+  // registry / git modules once `terraform init` has fetched them.
+  resources() []terraform.resource
+  // Data sources declared in this module's source
+  dataSources() []terraform.datasource
+  // Input variables declared in this module's source
+  variables() []terraform.variable
+  // Outputs declared in this module's source
+  outputs() []terraform.output
+  // Module calls declared within this module's source
+  childModules() []terraform.module
+  // Source files of this module
+  files() []terraform.file
 
   // Block (including the configuration)
   block() terraform.block
