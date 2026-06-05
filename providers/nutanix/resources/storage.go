@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	clustermgmtconfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	volconfig "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	"go.mondoo.com/mql/v13/llx"
@@ -133,7 +135,14 @@ func (a *mqlNutanixStorageContainer) cluster() (*mqlNutanixCluster, error) {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return clusterByID(a.MqlRuntime, a.cacheClusterId)
+	res, err := clusterByID(a.MqlRuntime, a.cacheClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -223,29 +232,77 @@ func (a *mqlNutanixStorageVolumeGroup) cluster() (*mqlNutanixCluster, error) {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return clusterByID(a.MqlRuntime, a.cacheClusterId)
+	res, err := clusterByID(a.MqlRuntime, a.cacheClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixStorageVolumeGroup) disks() ([]any, error) {
 	res := []any{}
 	for i := range a.cacheDisks {
 		d := a.cacheDisks[i]
-		extId := ""
-		if d.ExtId != nil {
-			extId = *d.ExtId
+		// ExtId is the disk's stable identifier; fall back to a parent-qualified
+		// synthetic key so disks without an ExtId don't collide in the cache.
+		id := fmt.Sprintf("%s/disk/%d", a.Id.Data, derefInt(d.Index))
+		if d.ExtId != nil && *d.ExtId != "" {
+			id = *d.ExtId
 		}
 		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.storage.volumeGroupDisk", map[string]*llx.RawData{
-			"__id":               llx.StringData(extId),
-			"id":                 llx.StringData(extId),
-			"description":        llx.StringDataPtr(d.Description),
-			"index":              llx.IntData(derefInt(d.Index)),
-			"sizeBytes":          llx.IntData(derefInt64(d.DiskSizeBytes)),
-			"storageContainerId": llx.StringDataPtr(d.StorageContainerId),
+			"__id":        llx.StringData(id),
+			"id":          llx.StringData(id),
+			"description": llx.StringDataPtr(d.Description),
+			"index":       llx.IntData(derefInt(d.Index)),
+			"sizeBytes":   llx.IntData(derefInt64(d.DiskSizeBytes)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlDisk)
+		mqlDiskRes := mqlDisk.(*mqlNutanixStorageVolumeGroupDisk)
+		if d.StorageContainerId != nil {
+			mqlDiskRes.cacheStorageContainerId = *d.StorageContainerId
+		}
+		res = append(res, mqlDiskRes)
 	}
 	return res, nil
+}
+
+type mqlNutanixStorageVolumeGroupDiskInternal struct {
+	cacheStorageContainerId string
+}
+
+func (a *mqlNutanixStorageVolumeGroupDisk) storageContainer() (*mqlNutanixStorageContainer, error) {
+	if a.cacheStorageContainerId == "" {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := storageContainerByID(a.MqlRuntime, a.cacheStorageContainerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
+func storageContainerByID(runtime *plugin.Runtime, containerID string) (*mqlNutanixStorageContainer, error) {
+	conn := runtime.Connection.(*connection.NutanixConnection)
+	resp, err := conn.StorageContainersApi().GetStorageContainerById(&containerID)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.GetData()
+	if data == nil {
+		return nil, nil
+	}
+	container, ok := data.(clustermgmtconfig.StorageContainer)
+	if !ok {
+		return nil, nil
+	}
+	return newMqlStorageContainer(runtime, &container)
 }

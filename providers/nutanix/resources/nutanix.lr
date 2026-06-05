@@ -301,12 +301,12 @@ private nutanix.host @defaults("name cpuModel hypervisorType") {
   failoverClusterFqdn string
   // Failover cluster node status (Hyper-V)
   failoverClusterNodeStatus string
-  // Default container UUID for virtual machines
-  defaultVmContainerUuid string
+  // Default storage container for virtual machines
+  defaultVmContainer() nutanix.storage.container
   // Default location for virtual machines
   defaultVmLocation string
-  // Default container UUID for virtual hard disks
-  defaultVhdContainerUuid string
+  // Default storage container for virtual hard disks
+  defaultVhdContainer() nutanix.storage.container
   // Default location for virtual hard disks
   defaultVhdLocation string
   // Cluster the host belongs to
@@ -473,8 +473,8 @@ private nutanix.vm.disk @defaults("id busType sizeBytes") {
   sizeBytes int
   // UUID of the backing virtual disk
   diskExtId string
-  // External UUID of the storage container backing the disk
-  storageContainerId string
+  // Storage container backing the disk
+  storageContainer() nutanix.storage.container
   // Whether the disk is migrating to another container
   isMigrationInProgress bool
 }
@@ -503,8 +503,8 @@ private nutanix.vm.nic @defaults("id macAddress nicType") {
   //
   // One of ACCESS or TRUNK.
   vlanMode string
-  // External UUID of the subnet the NIC is attached to
-  subnetId string
+  // Subnet the NIC is attached to
+  subnet() nutanix.network.subnet
   // Configured IP addresses
   ipAddresses []string
   // IP addresses learned from the guest
@@ -559,8 +559,8 @@ private nutanix.vm.cdrom @defaults("id isoType busType") {
   busIndex int
   // Backing disk size in bytes
   sizeBytes int
-  // External UUID of the storage container backing the CD-ROM
-  storageContainerId string
+  // Storage container backing the CD-ROM
+  storageContainer() nutanix.storage.container
 }
 
 // Nutanix Guest Tools status of a virtual machine
@@ -1017,6 +1017,6 @@ private nutanix.storage.volumeGroupDisk @defaults("id sizeBytes") {
   index int
   // Size of the disk in bytes
   sizeBytes int
-  // External UUID of the backing storage container
-  storageContainerId string
+  // Storage container backing the disk
+  storageContainer() nutanix.storage.container
 }

@@ -152,3 +152,6 @@ Ip\..*
 # `apis` as a literal segment of a GCP resource name path, e.g.
 # projects/{project}/locations/global/apis/{api}.
 /apis/
+
+# CPU architecture enum identifiers (e.g. Nutanix cluster arch values)
+\b(?:X86_64|PPC64LE)\b

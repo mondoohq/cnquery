@@ -537,14 +537,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.host.failoverClusterNodeStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixHost).GetFailoverClusterNodeStatus()).ToDataRes(types.String)
 	},
-	"nutanix.host.defaultVmContainerUuid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixHost).GetDefaultVmContainerUuid()).ToDataRes(types.String)
+	"nutanix.host.defaultVmContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixHost).GetDefaultVmContainer()).ToDataRes(types.Resource("nutanix.storage.container"))
 	},
 	"nutanix.host.defaultVmLocation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixHost).GetDefaultVmLocation()).ToDataRes(types.String)
 	},
-	"nutanix.host.defaultVhdContainerUuid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixHost).GetDefaultVhdContainerUuid()).ToDataRes(types.String)
+	"nutanix.host.defaultVhdContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixHost).GetDefaultVhdContainer()).ToDataRes(types.Resource("nutanix.storage.container"))
 	},
 	"nutanix.host.defaultVhdLocation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixHost).GetDefaultVhdLocation()).ToDataRes(types.String)
@@ -720,8 +720,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.vm.disk.diskExtId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmDisk).GetDiskExtId()).ToDataRes(types.String)
 	},
-	"nutanix.vm.disk.storageContainerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixVmDisk).GetStorageContainerId()).ToDataRes(types.String)
+	"nutanix.vm.disk.storageContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixVmDisk).GetStorageContainer()).ToDataRes(types.Resource("nutanix.storage.container"))
 	},
 	"nutanix.vm.disk.isMigrationInProgress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmDisk).GetIsMigrationInProgress()).ToDataRes(types.Bool)
@@ -744,8 +744,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.vm.nic.vlanMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmNic).GetVlanMode()).ToDataRes(types.String)
 	},
-	"nutanix.vm.nic.subnetId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixVmNic).GetSubnetId()).ToDataRes(types.String)
+	"nutanix.vm.nic.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixVmNic).GetSubnet()).ToDataRes(types.Resource("nutanix.network.subnet"))
 	},
 	"nutanix.vm.nic.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmNic).GetIpAddresses()).ToDataRes(types.Array(types.String))
@@ -795,8 +795,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.vm.cdrom.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmCdrom).GetSizeBytes()).ToDataRes(types.Int)
 	},
-	"nutanix.vm.cdrom.storageContainerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixVmCdrom).GetStorageContainerId()).ToDataRes(types.String)
+	"nutanix.vm.cdrom.storageContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixVmCdrom).GetStorageContainer()).ToDataRes(types.Resource("nutanix.storage.container"))
 	},
 	"nutanix.vm.guestToolsInfo.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmGuestToolsInfo).GetIsEnabled()).ToDataRes(types.Bool)
@@ -1260,8 +1260,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.storage.volumeGroupDisk.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetSizeBytes()).ToDataRes(types.Int)
 	},
-	"nutanix.storage.volumeGroupDisk.storageContainerId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetStorageContainerId()).ToDataRes(types.String)
+	"nutanix.storage.volumeGroupDisk.storageContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetStorageContainer()).ToDataRes(types.Resource("nutanix.storage.container"))
 	},
 }
 
@@ -1711,16 +1711,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixHost).FailoverClusterNodeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"nutanix.host.defaultVmContainerUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixHost).DefaultVmContainerUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.host.defaultVmContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixHost).DefaultVmContainer, ok = plugin.RawToTValue[*mqlNutanixStorageContainer](v.Value, v.Error)
 		return
 	},
 	"nutanix.host.defaultVmLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNutanixHost).DefaultVmLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"nutanix.host.defaultVhdContainerUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixHost).DefaultVhdContainerUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.host.defaultVhdContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixHost).DefaultVhdContainer, ok = plugin.RawToTValue[*mqlNutanixStorageContainer](v.Value, v.Error)
 		return
 	},
 	"nutanix.host.defaultVhdLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1975,8 +1975,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixVmDisk).DiskExtId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"nutanix.vm.disk.storageContainerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixVmDisk).StorageContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.vm.disk.storageContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixVmDisk).StorageContainer, ok = plugin.RawToTValue[*mqlNutanixStorageContainer](v.Value, v.Error)
 		return
 	},
 	"nutanix.vm.disk.isMigrationInProgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2011,8 +2011,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixVmNic).VlanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"nutanix.vm.nic.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixVmNic).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.vm.nic.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixVmNic).Subnet, ok = plugin.RawToTValue[*mqlNutanixNetworkSubnet](v.Value, v.Error)
 		return
 	},
 	"nutanix.vm.nic.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2087,8 +2087,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixVmCdrom).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"nutanix.vm.cdrom.storageContainerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixVmCdrom).StorageContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.vm.cdrom.storageContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixVmCdrom).StorageContainer, ok = plugin.RawToTValue[*mqlNutanixStorageContainer](v.Value, v.Error)
 		return
 	},
 	"nutanix.vm.guestToolsInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2759,8 +2759,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixStorageVolumeGroupDisk).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"nutanix.storage.volumeGroupDisk.storageContainerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNutanixStorageVolumeGroupDisk).StorageContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"nutanix.storage.volumeGroupDisk.storageContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).StorageContainer, ok = plugin.RawToTValue[*mqlNutanixStorageContainer](v.Value, v.Error)
 		return
 	},
 }
@@ -3598,9 +3598,9 @@ type mqlNutanixHost struct {
 	HasCsr                             plugin.TValue[bool]
 	FailoverClusterFqdn                plugin.TValue[string]
 	FailoverClusterNodeStatus          plugin.TValue[string]
-	DefaultVmContainerUuid             plugin.TValue[string]
+	DefaultVmContainer                 plugin.TValue[*mqlNutanixStorageContainer]
 	DefaultVmLocation                  plugin.TValue[string]
-	DefaultVhdContainerUuid            plugin.TValue[string]
+	DefaultVhdContainer                plugin.TValue[*mqlNutanixStorageContainer]
 	DefaultVhdLocation                 plugin.TValue[string]
 	Cluster                            plugin.TValue[*mqlNutanixCluster]
 	ControllerVm                       plugin.TValue[*mqlNutanixHostControllerVmInfo]
@@ -3772,16 +3772,40 @@ func (c *mqlNutanixHost) GetFailoverClusterNodeStatus() *plugin.TValue[string] {
 	return &c.FailoverClusterNodeStatus
 }
 
-func (c *mqlNutanixHost) GetDefaultVmContainerUuid() *plugin.TValue[string] {
-	return &c.DefaultVmContainerUuid
+func (c *mqlNutanixHost) GetDefaultVmContainer() *plugin.TValue[*mqlNutanixStorageContainer] {
+	return plugin.GetOrCompute[*mqlNutanixStorageContainer](&c.DefaultVmContainer, func() (*mqlNutanixStorageContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.host", c.__id, "defaultVmContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixStorageContainer), nil
+			}
+		}
+
+		return c.defaultVmContainer()
+	})
 }
 
 func (c *mqlNutanixHost) GetDefaultVmLocation() *plugin.TValue[string] {
 	return &c.DefaultVmLocation
 }
 
-func (c *mqlNutanixHost) GetDefaultVhdContainerUuid() *plugin.TValue[string] {
-	return &c.DefaultVhdContainerUuid
+func (c *mqlNutanixHost) GetDefaultVhdContainer() *plugin.TValue[*mqlNutanixStorageContainer] {
+	return plugin.GetOrCompute[*mqlNutanixStorageContainer](&c.DefaultVhdContainer, func() (*mqlNutanixStorageContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.host", c.__id, "defaultVhdContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixStorageContainer), nil
+			}
+		}
+
+		return c.defaultVhdContainer()
+	})
 }
 
 func (c *mqlNutanixHost) GetDefaultVhdLocation() *plugin.TValue[string] {
@@ -4336,13 +4360,13 @@ func (c *mqlNutanixVm) GetGuestTools() *plugin.TValue[*mqlNutanixVmGuestToolsInf
 type mqlNutanixVmDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNutanixVmDiskInternal it will be used here
+	mqlNutanixVmDiskInternal
 	Id                    plugin.TValue[string]
 	BusType               plugin.TValue[string]
 	BusIndex              plugin.TValue[int64]
 	SizeBytes             plugin.TValue[int64]
 	DiskExtId             plugin.TValue[string]
-	StorageContainerId    plugin.TValue[string]
+	StorageContainer      plugin.TValue[*mqlNutanixStorageContainer]
 	IsMigrationInProgress plugin.TValue[bool]
 }
 
@@ -4398,8 +4422,20 @@ func (c *mqlNutanixVmDisk) GetDiskExtId() *plugin.TValue[string] {
 	return &c.DiskExtId
 }
 
-func (c *mqlNutanixVmDisk) GetStorageContainerId() *plugin.TValue[string] {
-	return &c.StorageContainerId
+func (c *mqlNutanixVmDisk) GetStorageContainer() *plugin.TValue[*mqlNutanixStorageContainer] {
+	return plugin.GetOrCompute[*mqlNutanixStorageContainer](&c.StorageContainer, func() (*mqlNutanixStorageContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.vm.disk", c.__id, "storageContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixStorageContainer), nil
+			}
+		}
+
+		return c.storageContainer()
+	})
 }
 
 func (c *mqlNutanixVmDisk) GetIsMigrationInProgress() *plugin.TValue[bool] {
@@ -4410,14 +4446,14 @@ func (c *mqlNutanixVmDisk) GetIsMigrationInProgress() *plugin.TValue[bool] {
 type mqlNutanixVmNic struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNutanixVmNicInternal it will be used here
+	mqlNutanixVmNicInternal
 	Id                 plugin.TValue[string]
 	MacAddress         plugin.TValue[string]
 	Model              plugin.TValue[string]
 	IsConnected        plugin.TValue[bool]
 	NicType            plugin.TValue[string]
 	VlanMode           plugin.TValue[string]
-	SubnetId           plugin.TValue[string]
+	Subnet             plugin.TValue[*mqlNutanixNetworkSubnet]
 	IpAddresses        plugin.TValue[[]any]
 	LearnedIpAddresses plugin.TValue[[]any]
 }
@@ -4478,8 +4514,20 @@ func (c *mqlNutanixVmNic) GetVlanMode() *plugin.TValue[string] {
 	return &c.VlanMode
 }
 
-func (c *mqlNutanixVmNic) GetSubnetId() *plugin.TValue[string] {
-	return &c.SubnetId
+func (c *mqlNutanixVmNic) GetSubnet() *plugin.TValue[*mqlNutanixNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlNutanixNetworkSubnet](&c.Subnet, func() (*mqlNutanixNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.vm.nic", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixNetworkSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 func (c *mqlNutanixVmNic) GetIpAddresses() *plugin.TValue[[]any] {
@@ -4578,13 +4626,13 @@ func (c *mqlNutanixVmGpu) GetGuestDriverVersion() *plugin.TValue[string] {
 type mqlNutanixVmCdrom struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNutanixVmCdromInternal it will be used here
-	Id                 plugin.TValue[string]
-	IsoType            plugin.TValue[string]
-	BusType            plugin.TValue[string]
-	BusIndex           plugin.TValue[int64]
-	SizeBytes          plugin.TValue[int64]
-	StorageContainerId plugin.TValue[string]
+	mqlNutanixVmCdromInternal
+	Id               plugin.TValue[string]
+	IsoType          plugin.TValue[string]
+	BusType          plugin.TValue[string]
+	BusIndex         plugin.TValue[int64]
+	SizeBytes        plugin.TValue[int64]
+	StorageContainer plugin.TValue[*mqlNutanixStorageContainer]
 }
 
 // createNutanixVmCdrom creates a new instance of this resource
@@ -4639,8 +4687,20 @@ func (c *mqlNutanixVmCdrom) GetSizeBytes() *plugin.TValue[int64] {
 	return &c.SizeBytes
 }
 
-func (c *mqlNutanixVmCdrom) GetStorageContainerId() *plugin.TValue[string] {
-	return &c.StorageContainerId
+func (c *mqlNutanixVmCdrom) GetStorageContainer() *plugin.TValue[*mqlNutanixStorageContainer] {
+	return plugin.GetOrCompute[*mqlNutanixStorageContainer](&c.StorageContainer, func() (*mqlNutanixStorageContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.vm.cdrom", c.__id, "storageContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixStorageContainer), nil
+			}
+		}
+
+		return c.storageContainer()
+	})
 }
 
 // mqlNutanixVmGuestToolsInfo for the nutanix.vm.guestToolsInfo resource
@@ -5961,12 +6021,12 @@ func (c *mqlNutanixStorageVolumeGroup) GetDisks() *plugin.TValue[[]any] {
 type mqlNutanixStorageVolumeGroupDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNutanixStorageVolumeGroupDiskInternal it will be used here
-	Id                 plugin.TValue[string]
-	Description        plugin.TValue[string]
-	Index              plugin.TValue[int64]
-	SizeBytes          plugin.TValue[int64]
-	StorageContainerId plugin.TValue[string]
+	mqlNutanixStorageVolumeGroupDiskInternal
+	Id               plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Index            plugin.TValue[int64]
+	SizeBytes        plugin.TValue[int64]
+	StorageContainer plugin.TValue[*mqlNutanixStorageContainer]
 }
 
 // createNutanixStorageVolumeGroupDisk creates a new instance of this resource
@@ -6017,6 +6077,18 @@ func (c *mqlNutanixStorageVolumeGroupDisk) GetSizeBytes() *plugin.TValue[int64] 
 	return &c.SizeBytes
 }
 
-func (c *mqlNutanixStorageVolumeGroupDisk) GetStorageContainerId() *plugin.TValue[string] {
-	return &c.StorageContainerId
+func (c *mqlNutanixStorageVolumeGroupDisk) GetStorageContainer() *plugin.TValue[*mqlNutanixStorageContainer] {
+	return plugin.GetOrCompute[*mqlNutanixStorageContainer](&c.StorageContainer, func() (*mqlNutanixStorageContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.storage.volumeGroupDisk", c.__id, "storageContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixStorageContainer), nil
+			}
+		}
+
+		return c.storageContainer()
+	})
 }

@@ -85,9 +85,9 @@ nutanix.host.cpuFrequencyHz 13.0.0
 nutanix.host.cpuModel 13.0.0
 nutanix.host.cpuSockets 13.0.0
 nutanix.host.cpuThreads 13.0.0
-nutanix.host.defaultVhdContainerUuid 13.0.0
+nutanix.host.defaultVhdContainer 13.0.0
 nutanix.host.defaultVhdLocation 13.0.0
-nutanix.host.defaultVmContainerUuid 13.0.0
+nutanix.host.defaultVmContainer 13.0.0
 nutanix.host.defaultVmLocation 13.0.0
 nutanix.host.disk 13.0.0
 nutanix.host.disk.id 13.0.0
@@ -284,7 +284,7 @@ nutanix.storage.volumeGroupDisk.description 13.0.0
 nutanix.storage.volumeGroupDisk.id 13.0.0
 nutanix.storage.volumeGroupDisk.index 13.0.0
 nutanix.storage.volumeGroupDisk.sizeBytes 13.0.0
-nutanix.storage.volumeGroupDisk.storageContainerId 13.0.0
+nutanix.storage.volumeGroupDisk.storageContainer 13.0.0
 nutanix.storageContainers 13.0.0
 nutanix.subnets 13.0.0
 nutanix.userGroups 13.0.0
@@ -299,7 +299,7 @@ nutanix.vm.cdrom.busType 13.0.0
 nutanix.vm.cdrom.id 13.0.0
 nutanix.vm.cdrom.isoType 13.0.0
 nutanix.vm.cdrom.sizeBytes 13.0.0
-nutanix.vm.cdrom.storageContainerId 13.0.0
+nutanix.vm.cdrom.storageContainer 13.0.0
 nutanix.vm.cluster 13.0.0
 nutanix.vm.createTime 13.0.0
 nutanix.vm.description 13.0.0
@@ -310,7 +310,7 @@ nutanix.vm.disk.diskExtId 13.0.0
 nutanix.vm.disk.id 13.0.0
 nutanix.vm.disk.isMigrationInProgress 13.0.0
 nutanix.vm.disk.sizeBytes 13.0.0
-nutanix.vm.disk.storageContainerId 13.0.0
+nutanix.vm.disk.storageContainer 13.0.0
 nutanix.vm.disks 13.0.0
 nutanix.vm.generationUuid 13.0.0
 nutanix.vm.gpu 13.0.0
@@ -360,7 +360,7 @@ nutanix.vm.nic.learnedIpAddresses 13.0.0
 nutanix.vm.nic.macAddress 13.0.0
 nutanix.vm.nic.model 13.0.0
 nutanix.vm.nic.nicType 13.0.0
-nutanix.vm.nic.subnetId 13.0.0
+nutanix.vm.nic.subnet 13.0.0
 nutanix.vm.nic.vlanMode 13.0.0
 nutanix.vm.nics 13.0.0
 nutanix.vm.numCoresPerSocket 13.0.0

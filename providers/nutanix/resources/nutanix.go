@@ -681,9 +681,7 @@ func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanix
 		"hasCsr":                             llx.BoolData(derefBool(h.HasCsr)),
 		"failoverClusterFqdn":                llx.StringDataPtr(h.FailoverClusterFqdn),
 		"failoverClusterNodeStatus":          llx.StringDataPtr(h.FailoverClusterNodeStatus),
-		"defaultVmContainerUuid":             llx.StringDataPtr(h.DefaultVmContainerUuid),
 		"defaultVmLocation":                  llx.StringDataPtr(h.DefaultVmLocation),
-		"defaultVhdContainerUuid":            llx.StringDataPtr(h.DefaultVhdContainerUuid),
 		"defaultVhdLocation":                 llx.StringDataPtr(h.DefaultVhdLocation),
 	})
 	if err != nil {
@@ -696,6 +694,12 @@ func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanix
 	mqlHost.hostId = ""
 	if h.ExtId != nil {
 		mqlHost.hostId = *h.ExtId
+	}
+	if h.DefaultVmContainerUuid != nil {
+		mqlHost.cacheDefaultVmContainerId = *h.DefaultVmContainerUuid
+	}
+	if h.DefaultVhdContainerUuid != nil {
+		mqlHost.cacheDefaultVhdContainerId = *h.DefaultVhdContainerUuid
 	}
 	mqlHost.cacheControllerVm = h.ControllerVm
 	mqlHost.cacheIpmi = h.Ipmi
@@ -885,13 +889,32 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 			"busIndex":              llx.IntData(busIndex),
 			"sizeBytes":             llx.IntData(sizeBytes),
 			"diskExtId":             llx.StringData(diskExtId),
-			"storageContainerId":    llx.StringData(storageContainerId),
 			"isMigrationInProgress": llx.BoolData(isMigrating),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlDisk.(*mqlNutanixVmDisk).cacheStorageContainerId = storageContainerId
 		res = append(res, mqlDisk)
+	}
+	return res, nil
+}
+
+type mqlNutanixVmDiskInternal struct {
+	cacheStorageContainerId string
+}
+
+func (a *mqlNutanixVmDisk) storageContainer() (*mqlNutanixStorageContainer, error) {
+	if a.cacheStorageContainerId == "" {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := storageContainerByID(a.MqlRuntime, a.cacheStorageContainerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return res, nil
 }
@@ -954,14 +977,33 @@ func (a *mqlNutanixVm) nics() ([]any, error) {
 			"isConnected":        llx.BoolData(isConnected),
 			"nicType":            llx.StringData(nicType),
 			"vlanMode":           llx.StringData(vlanMode),
-			"subnetId":           llx.StringData(subnetId),
 			"ipAddresses":        llx.ArrayData(ipAddresses, types.String),
 			"learnedIpAddresses": llx.ArrayData(learnedIps, types.String),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlNic.(*mqlNutanixVmNic).cacheSubnetId = subnetId
 		res = append(res, mqlNic)
+	}
+	return res, nil
+}
+
+type mqlNutanixVmNicInternal struct {
+	cacheSubnetId string
+}
+
+func (a *mqlNutanixVmNic) subnet() (*mqlNutanixNetworkSubnet, error) {
+	if a.cacheSubnetId == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := subnetByID(a.MqlRuntime, a.cacheSubnetId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return res, nil
 }
@@ -1031,18 +1073,37 @@ func (a *mqlNutanixVm) cdRoms() ([]any, error) {
 			}
 		}
 		mqlCdRom, err := CreateResource(a.MqlRuntime, "nutanix.vm.cdrom", map[string]*llx.RawData{
-			"__id":               llx.StringData(extId),
-			"id":                 llx.StringData(extId),
-			"isoType":            llx.StringData(isoType),
-			"busType":            llx.StringData(busType),
-			"busIndex":           llx.IntData(busIndex),
-			"sizeBytes":          llx.IntData(sizeBytes),
-			"storageContainerId": llx.StringData(storageContainerId),
+			"__id":      llx.StringData(extId),
+			"id":        llx.StringData(extId),
+			"isoType":   llx.StringData(isoType),
+			"busType":   llx.StringData(busType),
+			"busIndex":  llx.IntData(busIndex),
+			"sizeBytes": llx.IntData(sizeBytes),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlCdRom.(*mqlNutanixVmCdrom).cacheStorageContainerId = storageContainerId
 		res = append(res, mqlCdRom)
+	}
+	return res, nil
+}
+
+type mqlNutanixVmCdromInternal struct {
+	cacheStorageContainerId string
+}
+
+func (a *mqlNutanixVmCdrom) storageContainer() (*mqlNutanixStorageContainer, error) {
+	if a.cacheStorageContainerId == "" {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := storageContainerByID(a.MqlRuntime, a.cacheStorageContainerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.StorageContainer.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return res, nil
 }
@@ -1080,11 +1141,43 @@ func (a *mqlNutanixVm) guestTools() (*mqlNutanixVmGuestToolsInfo, error) {
 // ---------------------------------------------------------------------------
 
 type mqlNutanixHostInternal struct {
-	hostId            string
-	clusterUuid       string
-	cacheControllerVm *clustermgmtconfig.ControllerVmReference
-	cacheIpmi         *clustermgmtconfig.IpmiReference
-	cacheDisks        []clustermgmtconfig.DiskReference
+	hostId                     string
+	clusterUuid                string
+	cacheDefaultVmContainerId  string
+	cacheDefaultVhdContainerId string
+	cacheControllerVm          *clustermgmtconfig.ControllerVmReference
+	cacheIpmi                  *clustermgmtconfig.IpmiReference
+	cacheDisks                 []clustermgmtconfig.DiskReference
+}
+
+func (a *mqlNutanixHost) defaultVmContainer() (*mqlNutanixStorageContainer, error) {
+	if a.cacheDefaultVmContainerId == "" {
+		a.DefaultVmContainer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := storageContainerByID(a.MqlRuntime, a.cacheDefaultVmContainerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.DefaultVmContainer.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixHost) defaultVhdContainer() (*mqlNutanixStorageContainer, error) {
+	if a.cacheDefaultVhdContainerId == "" {
+		a.DefaultVhdContainer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := storageContainerByID(a.MqlRuntime, a.cacheDefaultVhdContainerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.DefaultVhdContainer.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixHost) cluster() (*mqlNutanixCluster, error) {
@@ -1092,7 +1185,14 @@ func (a *mqlNutanixHost) cluster() (*mqlNutanixCluster, error) {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return clusterByID(a.MqlRuntime, a.clusterUuid)
+	res, err := clusterByID(a.MqlRuntime, a.clusterUuid)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 type mqlNutanixVmInternal struct {
@@ -1111,7 +1211,14 @@ func (a *mqlNutanixVm) cluster() (*mqlNutanixCluster, error) {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return clusterByID(a.MqlRuntime, a.clusterExtId)
+	res, err := clusterByID(a.MqlRuntime, a.clusterExtId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixVm) host() (*mqlNutanixHost, error) {

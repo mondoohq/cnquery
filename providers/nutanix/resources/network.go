@@ -225,7 +225,14 @@ func (a *mqlNutanixNetworkSubnet) cluster() (*mqlNutanixCluster, error) {
 		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return clusterByID(a.MqlRuntime, a.cacheClusterId)
+	res, err := clusterByID(a.MqlRuntime, a.cacheClusterId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixNetworkSubnet) vpc() (*mqlNutanixNetworkVpc, error) {
@@ -233,7 +240,14 @@ func (a *mqlNutanixNetworkSubnet) vpc() (*mqlNutanixNetworkVpc, error) {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return vpcByID(a.MqlRuntime, a.cacheVpcId)
+	res, err := vpcByID(a.MqlRuntime, a.cacheVpcId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func subnetByID(runtime *plugin.Runtime, subnetID string) (*mqlNutanixNetworkSubnet, error) {
@@ -322,7 +336,14 @@ func (a *mqlNutanixNetworkFloatingIp) vpc() (*mqlNutanixNetworkVpc, error) {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return vpcByID(a.MqlRuntime, a.cacheVpcId)
+	res, err := vpcByID(a.MqlRuntime, a.cacheVpcId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixNetworkFloatingIp) externalSubnet() (*mqlNutanixNetworkSubnet, error) {
@@ -330,5 +351,12 @@ func (a *mqlNutanixNetworkFloatingIp) externalSubnet() (*mqlNutanixNetworkSubnet
 		a.ExternalSubnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return subnetByID(a.MqlRuntime, a.cacheSubnetId)
+	res, err := subnetByID(a.MqlRuntime, a.cacheSubnetId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.ExternalSubnet.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
