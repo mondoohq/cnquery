@@ -13,10 +13,12 @@ terraform.block.nameLabel 9.0.0
 terraform.block.nestedBlocks 13.1.1
 terraform.block.references 13.1.1
 terraform.block.related 9.0.12
+terraform.block.resolved 13.1.1
 terraform.block.resourceName 13.0.15
 terraform.block.resourceType 13.0.15
 terraform.block.snippet 9.0.0
 terraform.block.start 9.0.0
+terraform.block.tree 13.1.1
 terraform.block.type 9.0.0
 terraform.blocks 9.0.0
 terraform.dataResources 13.1.1
@@ -29,6 +31,7 @@ terraform.datasource.provider 13.1.1
 terraform.datasource.providerName 13.1.1
 terraform.datasource.referencedBy 13.1.1
 terraform.datasource.references 13.1.1
+terraform.datasource.resolved 13.1.1
 terraform.datasource.type 13.1.1
 terraform.datasources 9.0.0
 terraform.file 9.0.0
@@ -44,9 +47,13 @@ terraform.managedResources 13.1.1
 terraform.module 9.0.0
 terraform.module.block 9.0.0
 terraform.module.dir 9.0.0
+terraform.module.inputs 13.1.1
 terraform.module.key 9.0.0
+terraform.module.references 13.1.1
 terraform.module.source 9.0.0
+terraform.module.sourceType 13.1.1
 terraform.module.version 9.0.0
+terraform.moduleCalls 13.1.1
 terraform.modules 9.0.0
 terraform.output 13.1.1
 terraform.output.block 13.1.1
@@ -121,7 +128,9 @@ terraform.resource.provider 13.1.1
 terraform.resource.providerName 13.1.1
 terraform.resource.referencedBy 13.1.1
 terraform.resource.references 13.1.1
+terraform.resource.resolved 13.1.1
 terraform.resource.tags 13.1.1
+terraform.resource.tree 13.1.1
 terraform.resource.type 13.1.1
 terraform.resources 11.1.50
 terraform.resources.list 11.1.50

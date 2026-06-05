@@ -203,6 +203,9 @@ func newTerraformProvider(t *mqlTerraform, b *mqlTerraformBlock) (*mqlTerraformP
 
 // labelAt returns the i-th label of a block, or "" when it does not exist.
 func labelAt(b *mqlTerraformBlock, i int) string {
+	if b == nil {
+		return ""
+	}
 	labels := b.Labels.Data
 	if i >= len(labels) {
 		return ""
@@ -216,6 +219,10 @@ func labelAt(b *mqlTerraformBlock, i int) string {
 // --- terraform.resource fields ---
 
 func (c *mqlTerraformResource) block() (*mqlTerraformBlock, error) {
+	if c.tfBlock == nil {
+		c.Block.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return c.tfBlock, nil
 }
 
@@ -228,6 +235,9 @@ func (c *mqlTerraformResource) provider() (*mqlTerraformProvider, error) {
 }
 
 func (c *mqlTerraformResource) arguments() (any, error) {
+	if c.tfBlock == nil {
+		return map[string]any{}, nil
+	}
 	return c.tfBlock.arguments()
 }
 
@@ -254,6 +264,10 @@ func (c *mqlTerraformResource) references() ([]any, error) {
 // --- terraform.datasource fields ---
 
 func (c *mqlTerraformDatasource) block() (*mqlTerraformBlock, error) {
+	if c.tfBlock == nil {
+		c.Block.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	return c.tfBlock, nil
 }
 
@@ -266,6 +280,9 @@ func (c *mqlTerraformDatasource) provider() (*mqlTerraformProvider, error) {
 }
 
 func (c *mqlTerraformDatasource) arguments() (any, error) {
+	if c.tfBlock == nil {
+		return map[string]any{}, nil
+	}
 	return c.tfBlock.arguments()
 }
 
@@ -475,6 +492,9 @@ func blockDependsOn(t *mqlTerraform, b *mqlTerraformBlock) ([]any, error) {
 // blockArgument returns the resolved value of a single top-level argument, or
 // nil when the argument is absent.
 func blockArgument(b *mqlTerraformBlock, name string) (any, error) {
+	if b == nil {
+		return nil, nil
+	}
 	args, err := b.arguments()
 	if err != nil {
 		return nil, err

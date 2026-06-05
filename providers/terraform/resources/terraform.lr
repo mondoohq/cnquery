@@ -60,6 +60,12 @@ terraform {
   // exposing the local provider name, the optional alias, the
   // configuration arguments, and the references they make.
   providerConfigs() []terraform.provider
+  // Module calls declared in the configuration
+  //
+  // Iterate every `module` block as a terraform.module record built from
+  // the source HCL — available without `terraform init` — exposing the
+  // source, version, source type, input values, and references.
+  moduleCalls() []terraform.module
 }
 
 // Terraform resource blocks
@@ -145,6 +151,24 @@ private terraform.block @defaults("type labels") {
   // policy reads `config["policy"]["Statement"]` directly instead of
   // unwrapping with `arguments["policy"].first["Statement"]`.
   config() dict
+  // Effective argument values
+  //
+  // Examine arguments with `var` defaults, `tfvars`, `local` values, and
+  // Terraform functions (such as `merge`, `concat`, `format`, and
+  // `lookup`) evaluated into the value that will actually be deployed —
+  // for example a `var.environment == "prod" ? ... : "t3.micro"` ternary
+  // resolves to its concrete result. Arguments whose value depends on a
+  // data source or another resource (unknown until apply) fall back to
+  // the reference form used by `config`.
+  resolved() dict
+  // Full configuration as nested data
+  //
+  // Examine the block as one walkable document: its arguments plus its
+  // child blocks, with each child-block type appearing as a key whose
+  // value is the list of those blocks' configuration. Lets a policy read
+  // `tree["ingress"][0]["cidr_blocks"]` without hopping through separate
+  // accessors.
+  tree() dict
   // Block snippet
   snippet string
 }
@@ -183,7 +207,10 @@ private terraform.reference @defaults("argument kind target") {
 // for_each meta-arguments, the explicit depends_on targets, the
 // references the arguments make to other objects, and the underlying
 // HCL block.
-private terraform.resource @defaults("type name") {
+terraform.resource @defaults("type name") {
+  // Select a managed resource by its type and / or name, e.g.
+  // `terraform.resource(type: "aws_s3_bucket", name: "data")`.
+  init(type? string, name? string)
   // Underlying HCL block
   block() terraform.block
   // Terraform resource type, e.g. "aws_instance"
@@ -242,6 +269,19 @@ private terraform.resource @defaults("type name") {
   // decoded object rather than wrapped in a single-element list, so a
   // policy reads `config["policy"]["Statement"]` directly.
   config() dict
+  // Effective argument values
+  //
+  // Examine arguments with `var` defaults, `tfvars`, `local` values, and
+  // Terraform functions evaluated into the value that will actually be
+  // deployed. Arguments whose value depends on a data source or another
+  // resource fall back to the reference form used by `config`.
+  resolved() dict
+  // Full configuration as nested data
+  //
+  // Examine the resource as one walkable document: its arguments plus its
+  // child blocks keyed by type, so a policy reads
+  // `tree["ingress"][0]["cidr_blocks"]` directly.
+  tree() dict
   // Whether the lifecycle block sets `prevent_destroy`
   preventDestroy() bool
   // Whether the lifecycle block sets `create_before_destroy`
@@ -259,7 +299,10 @@ private terraform.resource @defaults("type name") {
 // and `name`. Surfaces the owning provider, the configuration
 // arguments, the references the arguments make to other objects, and
 // the underlying HCL block.
-private terraform.datasource @defaults("type name") {
+terraform.datasource @defaults("type name") {
+  // Select a data source by its type and / or name, e.g.
+  // `terraform.datasource(type: "aws_ami", name: "ubuntu")`.
+  init(type? string, name? string)
   // Underlying HCL block
   block() terraform.block
   // Data source type, e.g. "aws_ami"
@@ -295,6 +338,13 @@ private terraform.datasource @defaults("type name") {
   // function results returned as their decoded object rather than
   // wrapped in a single-element list.
   config() dict
+  // Effective argument values
+  //
+  // Examine arguments with `var` defaults, `tfvars`, `local` values, and
+  // Terraform functions evaluated into the value that will actually be
+  // used. Arguments whose value depends on another resource fall back to
+  // the reference form used by `config`.
+  resolved() dict
 }
 
 // Terraform input variable
@@ -382,6 +432,19 @@ terraform.module @defaults("key source") {
   version string
   // Path to the directory where the module is stored
   dir string
+  // Where the module is loaded from
+  //
+  // One of local (a `./` or `../` path), registry (a Terraform registry
+  // address), git (a Git or GitHub source), http (an archive URL), or
+  // empty when the source is not set.
+  sourceType() string
+  // Input values passed to the module
+  //
+  // The module call's arguments excluding the meta-arguments source,
+  // version, count, for_each, depends_on, and providers.
+  inputs() dict
+  // References made by the module's input values
+  references() []terraform.reference
 
   // Block (including the configuration)
   block() terraform.block

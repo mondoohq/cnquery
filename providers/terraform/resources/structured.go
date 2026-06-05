@@ -31,6 +31,9 @@ func (b *mqlTerraformBlock) nestedBlocks() (map[string]any, error) {
 }
 
 func (c *mqlTerraformResource) nestedBlocks() (map[string]any, error) {
+	if c.tfBlock == nil {
+		return map[string]any{}, nil
+	}
 	return c.tfBlock.nestedBlocks()
 }
 
@@ -74,6 +77,9 @@ func hclConfigAttributesToDict(attributes map[string]*hcl.Attribute) map[string]
 // --- lifecycle meta-arguments ---
 
 func (c *mqlTerraformResource) lifecycleBlock() *mqlTerraformBlock {
+	if c.tfBlock == nil {
+		return nil
+	}
 	children, err := c.tfBlock.blocks()
 	if err != nil {
 		return nil
@@ -145,7 +151,7 @@ func (c *mqlTerraformDatasource) referencedBy() ([]any, error) {
 }
 
 func referencedByBlock(t *mqlTerraform, target *mqlTerraformBlock) ([]any, error) {
-	if t == nil {
+	if t == nil || target == nil {
 		return []any{}, nil
 	}
 	idx, err := t.reverseRefIndex()

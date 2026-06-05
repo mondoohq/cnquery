@@ -126,3 +126,20 @@ func TestHclConfigAttributesToDict_UnwrapsJsonencode(t *testing.T) {
 	_, stillList := dict["cidr_blocks"].([]any)
 	assert.True(t, stillList, "a real single-element list must stay a list")
 }
+
+func TestClassifyModuleSource(t *testing.T) {
+	cases := map[string]string{
+		"":                                 "",
+		"./modules/vpc":                    "local",
+		"../shared":                        "local",
+		"terraform-aws-modules/vpc/aws":    "registry",
+		"app.terraform.io/acme/vpc/aws":    "registry",
+		"git::https://example.com/vpc.git": "git",
+		"github.com/acme/vpc":              "git",
+		"git@github.com:acme/vpc.git":      "git",
+		"https://example.com/vpc.zip":      "http",
+	}
+	for src, want := range cases {
+		assert.Equal(t, want, classifyModuleSource(src), "source %q", src)
+	}
+}

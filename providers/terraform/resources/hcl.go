@@ -34,6 +34,8 @@ type mqlTerraformInternal struct {
 	resources       []*mqlTerraformBlock
 	// reverse reference index (target block id -> referencing blocks), lazily built
 	refIndex map[string][]any
+	// HCL evaluation context (var defaults, tfvars, locals, functions), lazily built
+	evalCtx *hcl.EvalContext
 }
 
 func (t *mqlTerraform) files() ([]any, error) {
@@ -846,6 +848,11 @@ func (t *mqlTerraformModule) id() (string, error) {
 }
 
 func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
+	// Module calls built from source HCL carry their block directly.
+	if t.tfBlock != nil {
+		return t.tfBlock, nil
+	}
+
 	key := t.Key.Data
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	files := conn.Parser().Files()
