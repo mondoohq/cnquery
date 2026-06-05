@@ -162,7 +162,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			// AWS caps repositoryNames at ECRDescribeRepositoriesNameLimit per request, so
 			// a larger filter is split into batches and each batch is described separately.
 			// 0 batches means all repositories should be described.
-			batches := conn.Filters.Ecr.PublicRepositoryNameBatches()
+			batches := conn.Filters.Ecr.PrivateRepositoryNameBatches()
 			if len(batches) == 0 {
 				batches = [][]string{{}}
 			}
