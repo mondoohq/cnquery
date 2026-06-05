@@ -16,6 +16,24 @@ nutanix {
   hosts() []nutanix.host
   // Virtual machines across all registered clusters
   vms() []nutanix.vm
+  // IAM users
+  users() []nutanix.iam.user
+  // IAM user groups
+  userGroups() []nutanix.iam.group
+  // IAM roles
+  roles() []nutanix.iam.role
+  // IAM authorization policies (access control policies)
+  authorizationPolicies() []nutanix.iam.authorizationPolicy
+  // Directory services (Active Directory, LDAP)
+  directoryServices() []nutanix.iam.directoryService
+  // SAML identity providers
+  samlIdentityProviders() []nutanix.iam.samlIdentityProvider
+  // Virtual private clouds
+  vpcs() []nutanix.network.vpc
+  // Subnets
+  subnets() []nutanix.network.subnet
+  // Floating IP addresses
+  floatingIps() []nutanix.network.floatingIp
 }
 
 // Nutanix cluster
@@ -565,4 +583,310 @@ private nutanix.vm.guestToolsInfo @defaults("version isEnabled isInstalled") {
   //
   // Each entry is one of SELF_SERVICE_RESTORE or VSS_SNAPSHOT.
   capabilities []string
+}
+
+// Nutanix IAM user
+//
+// Examine a single identity that can authenticate to Prism Central: its type
+// (local, LDAP, SAML, or service account), status, directory linkage, contact
+// details, and login history. The `id` field is the user's external UUID.
+private nutanix.iam.user @defaults("username userType status") {
+  // External UUID of the user
+  id string
+  // Login identifier of the user
+  username string
+  // User type
+  //
+  // One of LOCAL, LDAP, SAML, EXTERNAL, or SERVICE_ACCOUNT.
+  userType string
+  // Account status
+  //
+  // One of ACTIVE or INACTIVE.
+  status string
+  // How the user was created
+  //
+  // One of PREDEFINED, SERVICEDEFINED, or USERDEFINED.
+  creationType string
+  // Display name
+  displayName string
+  // First name
+  firstName string
+  // Last name
+  lastName string
+  // Email address
+  emailId string
+  // Description
+  description string
+  // External UUID of the identity provider this user belongs to
+  idpId string
+  // Default locale
+  locale string
+  // Default region
+  region string
+  // Whether the user must reset the password at next login
+  isForceResetPasswordEnabled bool
+  // Identity that created the user
+  createdBy string
+  // Time the user was created
+  createdTime time
+  // Last successful login time
+  lastLoginTime time
+  // Time the user was last updated
+  lastUpdatedTime time
+}
+
+// Nutanix IAM user group
+//
+// Examine a group of users that can be granted access through authorization
+// policies: its type, directory linkage, and distinguished name. The `id`
+// field is the group's external UUID.
+private nutanix.iam.group @defaults("name groupType") {
+  // External UUID of the group
+  id string
+  // Common name of the group
+  name string
+  // Group type
+  //
+  // One of LDAP or SAML.
+  groupType string
+  // Distinguished name of the group
+  distinguishedName string
+  // External UUID of the identity provider this group belongs to
+  idpId string
+  // Identity that created the group
+  createdBy string
+  // Time the group was created
+  createdTime time
+  // Time the group was last updated
+  lastUpdatedTime time
+}
+
+// Nutanix IAM role
+//
+// Examine a named set of operations (permissions) that can be assigned to
+// users and groups: whether it is system-defined, the operations it grants,
+// the entity types it covers, and how many identities are assigned to it. The
+// `id` field is the role's external UUID.
+private nutanix.iam.role @defaults("displayName isSystemDefined") {
+  // External UUID of the role
+  id string
+  // Display name of the role
+  displayName string
+  // Description of the role
+  description string
+  // Whether the role is system-defined
+  isSystemDefined bool
+  // Operations (permissions) granted by the role
+  operations []string
+  // Entity types the role can act on
+  accessibleEntityTypes []string
+  // Number of users assigned to the role
+  assignedUsersCount int
+  // Number of user groups assigned to the role
+  assignedUserGroupsCount int
+  // Identity that created the role
+  createdBy string
+  // Time the role was created
+  createdTime time
+  // Time the role was last updated
+  lastUpdatedTime time
+}
+
+// Nutanix IAM authorization policy
+//
+// Examine an access control policy that binds identities to a role over a set
+// of entities: its type, the role it grants, whether it is system-defined,
+// and how many identities are assigned. The `id` field is the policy's
+// external UUID; `role` resolves to the granted role.
+private nutanix.iam.authorizationPolicy @defaults("displayName authorizationPolicyType") {
+  // External UUID of the authorization policy
+  id string
+  // Display name of the authorization policy
+  displayName string
+  // Description of the authorization policy
+  description string
+  // Authorization policy type
+  //
+  // One of PREDEFINED_READ_ONLY, PREDEFINED_UPDATE_IDENTITY_ONLY,
+  // SERVICE_DEFINED_READ_ONLY, SERVICE_DEFINED, or USER_DEFINED.
+  authorizationPolicyType string
+  // Whether the policy is system-defined
+  isSystemDefined bool
+  // Number of users assigned to the policy
+  assignedUsersCount int
+  // Number of user groups assigned to the policy
+  assignedUserGroupsCount int
+  // Entity filters the policy qualifies
+  entities []dict
+  // Identity filters the policy applies to
+  identities []dict
+  // Identity that created the policy
+  createdBy string
+  // Time the policy was created
+  createdTime time
+  // Time the policy was last updated
+  lastUpdatedTime time
+  // Role granted by the policy
+  role() nutanix.iam.role
+}
+
+// Nutanix directory service
+//
+// Examine a directory service (Active Directory or LDAP) configured for
+// authentication: its type, domain, server URLs, group-search behavior, the
+// allowlisted groups, and the bind service account. The `id` field is the
+// directory service's external UUID.
+private nutanix.iam.directoryService @defaults("name directoryType domainName") {
+  // External UUID of the directory service
+  id string
+  // Name of the directory service
+  name string
+  // Directory type
+  //
+  // One of ACTIVE_DIRECTORY or OPEN_LDAP.
+  directoryType string
+  // Domain name of the directory service
+  domainName string
+  // Primary server URL
+  url string
+  // Secondary server URLs
+  secondaryUrls []string
+  // Group search behavior
+  //
+  // One of NON_RECURSIVE or RECURSIVE.
+  groupSearchType string
+  // Allowlisted groups for the directory service
+  whiteListedGroups []string
+  // Bind service-account username
+  serviceAccountUsername string
+  // Identity that created the directory service
+  createdBy string
+  // Time the directory service was created
+  createdTime time
+  // Time the directory service was last updated
+  lastUpdatedTime time
+}
+
+// Nutanix SAML identity provider
+//
+// Examine a SAML identity provider configured for single sign-on: its issuer,
+// assertion attribute mappings, metadata source, and whether signed authn
+// requests are enforced. The `id` field is the provider's external UUID.
+private nutanix.iam.samlIdentityProvider @defaults("name entityIssuer") {
+  // External UUID of the identity provider
+  id string
+  // Unique name of the identity provider
+  name string
+  // Issuer used in the SAML authn request
+  entityIssuer string
+  // SAML assertion username attribute element
+  usernameAttribute string
+  // SAML assertion email attribute element
+  emailAttribute string
+  // SAML assertion groups attribute element
+  groupsAttribute string
+  // Metadata URL providing IdP details
+  idpMetadataUrl string
+  // Whether SAML authn requests are signed
+  isSignedAuthnReqEnabled bool
+  // Time the identity provider was created
+  createdTime time
+  // Time the identity provider was last updated
+  lastUpdatedTime time
+}
+
+// Nutanix virtual private cloud
+//
+// Examine a VPC: its type, externally routable prefixes, SNAT addresses, and
+// external routing domain. The `id` field is the VPC's external UUID.
+private nutanix.network.vpc @defaults("name vpcType") {
+  // External UUID of the VPC
+  id string
+  // Name of the VPC
+  name string
+  // Description of the VPC
+  description string
+  // VPC type
+  //
+  // One of REGULAR or TRANSIT.
+  vpcType string
+  // CIDR prefixes that can reach external networks without NAT
+  externallyRoutablePrefixes []string
+  // IP addresses used for source NAT
+  snatIps []string
+  // External routing domain associated with the VPC
+  externalRoutingDomainReference string
+}
+
+// Nutanix subnet
+//
+// Examine a subnet: its type, VLAN ID or overlay VNI, CIDR, gateway behavior,
+// external/NAT flags, and IP usage. The `id` field is the subnet's external
+// UUID; `cluster` and `vpc` resolve to the owning cluster and VPC.
+private nutanix.network.subnet @defaults("name subnetType ipPrefix") {
+  // External UUID of the subnet
+  id string
+  // Name of the subnet
+  name string
+  // Description of the subnet
+  description string
+  // Subnet type
+  //
+  // One of OVERLAY or VLAN.
+  subnetType string
+  // VLAN ID (VLAN subnets) or 24-bit VNI (overlay subnets)
+  networkId int
+  // IP prefix in CIDR format
+  ipPrefix string
+  // Hypervisor type
+  hypervisorType string
+  // Name of the host bridge for the subnet
+  bridgeName string
+  // Whether the subnet is used for external connectivity
+  isExternal bool
+  // Whether NAT is enabled for VPCs attached to the subnet
+  isNatEnabled bool
+  // Whether the subnet uses advanced networking
+  isAdvancedNetworking bool
+  // Number of assigned IP addresses
+  numAssignedIps int
+  // Number of free IP addresses
+  numFreeIps int
+  // IP addresses excluded from allocation
+  reservedIpAddresses []string
+  // Cluster the subnet belongs to
+  cluster() nutanix.cluster
+  // VPC the subnet belongs to (overlay subnets)
+  vpc() nutanix.network.vpc
+}
+
+// Nutanix floating IP address
+//
+// Examine a floating (external) IP address: its value, association status,
+// and the private IP, VM NIC, or load-balancer session it maps to. The `id`
+// field is the floating IP's external UUID; `vpc` and `externalSubnet`
+// resolve to the owning VPC and external subnet.
+private nutanix.network.floatingIp @defaults("name floatingIpValue associationStatus") {
+  // External UUID of the floating IP
+  id string
+  // Name of the floating IP
+  name string
+  // Description of the floating IP
+  description string
+  // Floating IP value
+  floatingIpValue string
+  // Private IP the floating IP is mapped to
+  privateIp string
+  // Association status
+  //
+  // One of UNASSOCIATED or ASSOCIATED.
+  associationStatus string
+  // External UUID of the associated VM NIC
+  vmNicReference string
+  // External UUID of the associated load-balancer session
+  loadBalancerSessionReference string
+  // VPC the floating IP belongs to
+  vpc() nutanix.network.vpc
+  // External subnet the floating IP is allocated from
+  externalSubnet() nutanix.network.subnet
 }

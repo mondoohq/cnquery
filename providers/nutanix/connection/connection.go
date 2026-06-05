@@ -9,6 +9,10 @@ import (
 
 	clustermgmtapi "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/api"
 	clustermgmtclient "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/client"
+	iamapi "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/api"
+	iamclient "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/client"
+	netapi "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/api"
+	netclient "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/client"
 	vmmapi "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/api"
 	vmmclient "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/client"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -27,6 +31,8 @@ type NutanixConnection struct {
 	// SDK clients, one per API namespace
 	cmgClient *clustermgmtclient.ApiClient
 	vmmClient *vmmclient.ApiClient
+	iamClient *iamclient.ApiClient
+	netClient *netclient.ApiClient
 }
 
 func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*NutanixConnection, error) {
@@ -70,33 +76,47 @@ func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 		port:       port,
 	}
 
-	cmgClient := clustermgmtclient.NewApiClient()
-	cmgClient.Host = endpoint
-	cmgClient.Port = port
-	cmgClient.SetVerifySSL(!conf.Insecure)
-	if apiKey != "" {
-		if err := cmgClient.SetApiKey(apiKey); err != nil {
-			return nil, err
-		}
-	} else {
-		cmgClient.Username = user
-		cmgClient.Password = password
-	}
-	conn.cmgClient = cmgClient
+	// Each v4 namespace ships its own ApiClient type with identical configuration
+	// surface; they are configured the same way against the Prism Central endpoint.
+	conn.cmgClient = clustermgmtclient.NewApiClient()
+	conn.cmgClient.Host = endpoint
+	conn.cmgClient.Port = port
+	conn.cmgClient.SetVerifySSL(!conf.Insecure)
 
-	vmmClient := vmmclient.NewApiClient()
-	vmmClient.Host = endpoint
-	vmmClient.Port = port
-	vmmClient.SetVerifySSL(!conf.Insecure)
+	conn.vmmClient = vmmclient.NewApiClient()
+	conn.vmmClient.Host = endpoint
+	conn.vmmClient.Port = port
+	conn.vmmClient.SetVerifySSL(!conf.Insecure)
+
+	conn.iamClient = iamclient.NewApiClient()
+	conn.iamClient.Host = endpoint
+	conn.iamClient.Port = port
+	conn.iamClient.SetVerifySSL(!conf.Insecure)
+
+	conn.netClient = netclient.NewApiClient()
+	conn.netClient.Host = endpoint
+	conn.netClient.Port = port
+	conn.netClient.SetVerifySSL(!conf.Insecure)
+
 	if apiKey != "" {
-		if err := vmmClient.SetApiKey(apiKey); err != nil {
+		if err := conn.cmgClient.SetApiKey(apiKey); err != nil {
+			return nil, err
+		}
+		if err := conn.vmmClient.SetApiKey(apiKey); err != nil {
+			return nil, err
+		}
+		if err := conn.iamClient.SetApiKey(apiKey); err != nil {
+			return nil, err
+		}
+		if err := conn.netClient.SetApiKey(apiKey); err != nil {
 			return nil, err
 		}
 	} else {
-		vmmClient.Username = user
-		vmmClient.Password = password
+		conn.cmgClient.Username, conn.cmgClient.Password = user, password
+		conn.vmmClient.Username, conn.vmmClient.Password = user, password
+		conn.iamClient.Username, conn.iamClient.Password = user, password
+		conn.netClient.Username, conn.netClient.Password = user, password
 	}
-	conn.vmmClient = vmmClient
 
 	return conn, nil
 }
@@ -121,4 +141,49 @@ func (c *NutanixConnection) ClustersApi() *clustermgmtapi.ClustersApi {
 // VmApi returns the VM-management API for virtual machines.
 func (c *NutanixConnection) VmApi() *vmmapi.VmApi {
 	return vmmapi.NewVmApi(c.vmmClient)
+}
+
+// UsersApi returns the IAM users API.
+func (c *NutanixConnection) UsersApi() *iamapi.UsersApi {
+	return iamapi.NewUsersApi(c.iamClient)
+}
+
+// UserGroupsApi returns the IAM user-groups API.
+func (c *NutanixConnection) UserGroupsApi() *iamapi.UserGroupsApi {
+	return iamapi.NewUserGroupsApi(c.iamClient)
+}
+
+// RolesApi returns the IAM roles API.
+func (c *NutanixConnection) RolesApi() *iamapi.RolesApi {
+	return iamapi.NewRolesApi(c.iamClient)
+}
+
+// AuthorizationPoliciesApi returns the IAM authorization-policies API.
+func (c *NutanixConnection) AuthorizationPoliciesApi() *iamapi.AuthorizationPoliciesApi {
+	return iamapi.NewAuthorizationPoliciesApi(c.iamClient)
+}
+
+// DirectoryServicesApi returns the IAM directory-services API.
+func (c *NutanixConnection) DirectoryServicesApi() *iamapi.DirectoryServicesApi {
+	return iamapi.NewDirectoryServicesApi(c.iamClient)
+}
+
+// SamlIdentityProvidersApi returns the IAM SAML identity-providers API.
+func (c *NutanixConnection) SamlIdentityProvidersApi() *iamapi.SAMLIdentityProvidersApi {
+	return iamapi.NewSAMLIdentityProvidersApi(c.iamClient)
+}
+
+// VpcsApi returns the networking VPCs API.
+func (c *NutanixConnection) VpcsApi() *netapi.VpcsApi {
+	return netapi.NewVpcsApi(c.netClient)
+}
+
+// SubnetsApi returns the networking subnets API.
+func (c *NutanixConnection) SubnetsApi() *netapi.SubnetsApi {
+	return netapi.NewSubnetsApi(c.netClient)
+}
+
+// FloatingIpsApi returns the networking floating-IPs API.
+func (c *NutanixConnection) FloatingIpsApi() *netapi.FloatingIpsApi {
+	return netapi.NewFloatingIpsApi(c.netClient)
 }

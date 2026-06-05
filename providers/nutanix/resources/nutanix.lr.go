@@ -31,6 +31,15 @@ const (
 	ResourceNutanixVmGpu                      string = "nutanix.vm.gpu"
 	ResourceNutanixVmCdrom                    string = "nutanix.vm.cdrom"
 	ResourceNutanixVmGuestToolsInfo           string = "nutanix.vm.guestToolsInfo"
+	ResourceNutanixIamUser                    string = "nutanix.iam.user"
+	ResourceNutanixIamGroup                   string = "nutanix.iam.group"
+	ResourceNutanixIamRole                    string = "nutanix.iam.role"
+	ResourceNutanixIamAuthorizationPolicy     string = "nutanix.iam.authorizationPolicy"
+	ResourceNutanixIamDirectoryService        string = "nutanix.iam.directoryService"
+	ResourceNutanixIamSamlIdentityProvider    string = "nutanix.iam.samlIdentityProvider"
+	ResourceNutanixNetworkVpc                 string = "nutanix.network.vpc"
+	ResourceNutanixNetworkSubnet              string = "nutanix.network.subnet"
+	ResourceNutanixNetworkFloatingIp          string = "nutanix.network.floatingIp"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -96,6 +105,42 @@ func init() {
 		"nutanix.vm.guestToolsInfo": {
 			// to override args, implement: initNutanixVmGuestToolsInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNutanixVmGuestToolsInfo,
+		},
+		"nutanix.iam.user": {
+			// to override args, implement: initNutanixIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamUser,
+		},
+		"nutanix.iam.group": {
+			// to override args, implement: initNutanixIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamGroup,
+		},
+		"nutanix.iam.role": {
+			// to override args, implement: initNutanixIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamRole,
+		},
+		"nutanix.iam.authorizationPolicy": {
+			// to override args, implement: initNutanixIamAuthorizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamAuthorizationPolicy,
+		},
+		"nutanix.iam.directoryService": {
+			// to override args, implement: initNutanixIamDirectoryService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamDirectoryService,
+		},
+		"nutanix.iam.samlIdentityProvider": {
+			// to override args, implement: initNutanixIamSamlIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixIamSamlIdentityProvider,
+		},
+		"nutanix.network.vpc": {
+			// to override args, implement: initNutanixNetworkVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixNetworkVpc,
+		},
+		"nutanix.network.subnet": {
+			// to override args, implement: initNutanixNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixNetworkSubnet,
+		},
+		"nutanix.network.floatingIp": {
+			// to override args, implement: initNutanixNetworkFloatingIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixNetworkFloatingIp,
 		},
 	}
 }
@@ -176,6 +221,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nutanix.vms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanix).GetVms()).ToDataRes(types.Array(types.Resource("nutanix.vm")))
+	},
+	"nutanix.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetUsers()).ToDataRes(types.Array(types.Resource("nutanix.iam.user")))
+	},
+	"nutanix.userGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetUserGroups()).ToDataRes(types.Array(types.Resource("nutanix.iam.group")))
+	},
+	"nutanix.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetRoles()).ToDataRes(types.Array(types.Resource("nutanix.iam.role")))
+	},
+	"nutanix.authorizationPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetAuthorizationPolicies()).ToDataRes(types.Array(types.Resource("nutanix.iam.authorizationPolicy")))
+	},
+	"nutanix.directoryServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetDirectoryServices()).ToDataRes(types.Array(types.Resource("nutanix.iam.directoryService")))
+	},
+	"nutanix.samlIdentityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetSamlIdentityProviders()).ToDataRes(types.Array(types.Resource("nutanix.iam.samlIdentityProvider")))
+	},
+	"nutanix.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetVpcs()).ToDataRes(types.Array(types.Resource("nutanix.network.vpc")))
+	},
+	"nutanix.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetSubnets()).ToDataRes(types.Array(types.Resource("nutanix.network.subnet")))
+	},
+	"nutanix.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetFloatingIps()).ToDataRes(types.Array(types.Resource("nutanix.network.floatingIp")))
 	},
 	"nutanix.cluster.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixCluster).GetId()).ToDataRes(types.String)
@@ -729,6 +801,321 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.vm.guestToolsInfo.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixVmGuestToolsInfo).GetCapabilities()).ToDataRes(types.Array(types.String))
 	},
+	"nutanix.iam.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetUsername()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetUserType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetStatus()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.creationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetCreationType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetDisplayName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.firstName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetFirstName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.lastName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetLastName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.emailId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetEmailId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.idpId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetIdpId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.locale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetLocale()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetRegion()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.isForceResetPasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetIsForceResetPasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.iam.user.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"nutanix.iam.user.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.user.lastLoginTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetLastLoginTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.user.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamUser).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.groupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetGroupType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetDistinguishedName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.idpId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetIdpId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"nutanix.iam.group.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.group.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamGroup).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.role.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetDisplayName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.iam.role.isSystemDefined": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetIsSystemDefined()).ToDataRes(types.Bool)
+	},
+	"nutanix.iam.role.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetOperations()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.iam.role.accessibleEntityTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetAccessibleEntityTypes()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.iam.role.assignedUsersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetAssignedUsersCount()).ToDataRes(types.Int)
+	},
+	"nutanix.iam.role.assignedUserGroupsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetAssignedUserGroupsCount()).ToDataRes(types.Int)
+	},
+	"nutanix.iam.role.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"nutanix.iam.role.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.role.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamRole).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.authorizationPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.authorizationPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.authorizationPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.iam.authorizationPolicy.authorizationPolicyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetAuthorizationPolicyType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.authorizationPolicy.isSystemDefined": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetIsSystemDefined()).ToDataRes(types.Bool)
+	},
+	"nutanix.iam.authorizationPolicy.assignedUsersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetAssignedUsersCount()).ToDataRes(types.Int)
+	},
+	"nutanix.iam.authorizationPolicy.assignedUserGroupsCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetAssignedUserGroupsCount()).ToDataRes(types.Int)
+	},
+	"nutanix.iam.authorizationPolicy.entities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetEntities()).ToDataRes(types.Array(types.Dict))
+	},
+	"nutanix.iam.authorizationPolicy.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetIdentities()).ToDataRes(types.Array(types.Dict))
+	},
+	"nutanix.iam.authorizationPolicy.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"nutanix.iam.authorizationPolicy.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.authorizationPolicy.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.authorizationPolicy.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamAuthorizationPolicy).GetRole()).ToDataRes(types.Resource("nutanix.iam.role"))
+	},
+	"nutanix.iam.directoryService.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.directoryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetDirectoryType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetDomainName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetUrl()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.secondaryUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetSecondaryUrls()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.iam.directoryService.groupSearchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetGroupSearchType()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.whiteListedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetWhiteListedGroups()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.iam.directoryService.serviceAccountUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetServiceAccountUsername()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"nutanix.iam.directoryService.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.directoryService.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.samlIdentityProvider.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.entityIssuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetEntityIssuer()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.usernameAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetUsernameAttribute()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.emailAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetEmailAttribute()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.groupsAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetGroupsAttribute()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.idpMetadataUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetIdpMetadataUrl()).ToDataRes(types.String)
+	},
+	"nutanix.iam.samlIdentityProvider.isSignedAuthnReqEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetIsSignedAuthnReqEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.iam.samlIdentityProvider.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.iam.samlIdentityProvider.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamSamlIdentityProvider).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"nutanix.network.vpc.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.network.vpc.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.network.vpc.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.network.vpc.vpcType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetVpcType()).ToDataRes(types.String)
+	},
+	"nutanix.network.vpc.externallyRoutablePrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetExternallyRoutablePrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.network.vpc.snatIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetSnatIps()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.network.vpc.externalRoutingDomainReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkVpc).GetExternalRoutingDomainReference()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.subnetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetSubnetType()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.networkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetNetworkId()).ToDataRes(types.Int)
+	},
+	"nutanix.network.subnet.ipPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetIpPrefix()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.hypervisorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetHypervisorType()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.bridgeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetBridgeName()).ToDataRes(types.String)
+	},
+	"nutanix.network.subnet.isExternal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetIsExternal()).ToDataRes(types.Bool)
+	},
+	"nutanix.network.subnet.isNatEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetIsNatEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.network.subnet.isAdvancedNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetIsAdvancedNetworking()).ToDataRes(types.Bool)
+	},
+	"nutanix.network.subnet.numAssignedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetNumAssignedIps()).ToDataRes(types.Int)
+	},
+	"nutanix.network.subnet.numFreeIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetNumFreeIps()).ToDataRes(types.Int)
+	},
+	"nutanix.network.subnet.reservedIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetReservedIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.network.subnet.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetCluster()).ToDataRes(types.Resource("nutanix.cluster"))
+	},
+	"nutanix.network.subnet.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkSubnet).GetVpc()).ToDataRes(types.Resource("nutanix.network.vpc"))
+	},
+	"nutanix.network.floatingIp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.floatingIpValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetFloatingIpValue()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.privateIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetPrivateIp()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.associationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetAssociationStatus()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.vmNicReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetVmNicReference()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.loadBalancerSessionReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetLoadBalancerSessionReference()).ToDataRes(types.String)
+	},
+	"nutanix.network.floatingIp.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetVpc()).ToDataRes(types.Resource("nutanix.network.vpc"))
+	},
+	"nutanix.network.floatingIp.externalSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixNetworkFloatingIp).GetExternalSubnet()).ToDataRes(types.Resource("nutanix.network.subnet"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -755,6 +1142,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nutanix.vms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNutanix).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.userGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).UserGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.authorizationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).AuthorizationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.directoryServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).DirectoryServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.samlIdentityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).SamlIdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nutanix.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1549,6 +1972,462 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixVmGuestToolsInfo).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"nutanix.iam.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).UserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.creationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).CreationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.firstName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).FirstName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.lastName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).LastName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.emailId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).EmailId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.idpId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).IdpId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.locale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Locale, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.isForceResetPasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).IsForceResetPasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.lastLoginTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).LastLoginTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.user.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamUser).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.groupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).GroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.distinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.idpId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).IdpId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.group.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamGroup).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.isSystemDefined": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).IsSystemDefined, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.accessibleEntityTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).AccessibleEntityTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.assignedUsersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).AssignedUsersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.assignedUserGroupsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).AssignedUserGroupsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.role.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamRole).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.authorizationPolicyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).AuthorizationPolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.isSystemDefined": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).IsSystemDefined, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.assignedUsersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).AssignedUsersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.assignedUserGroupsCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).AssignedUserGroupsCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.entities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).Entities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).Identities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.authorizationPolicy.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamAuthorizationPolicy).Role, ok = plugin.RawToTValue[*mqlNutanixIamRole](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.directoryService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.directoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).DirectoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.secondaryUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).SecondaryUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.groupSearchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).GroupSearchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.whiteListedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).WhiteListedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.serviceAccountUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).ServiceAccountUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.entityIssuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).EntityIssuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.usernameAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).UsernameAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.emailAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).EmailAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.groupsAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).GroupsAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.idpMetadataUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).IdpMetadataUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.isSignedAuthnReqEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).IsSignedAuthnReqEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.samlIdentityProvider.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamSamlIdentityProvider).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.network.vpc.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.vpcType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).VpcType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.externallyRoutablePrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).ExternallyRoutablePrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.snatIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).SnatIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.vpc.externalRoutingDomainReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkVpc).ExternalRoutingDomainReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.network.subnet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.subnetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).SubnetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.networkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).NetworkId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.ipPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).IpPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.hypervisorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).HypervisorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.bridgeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).BridgeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.isExternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).IsExternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.isNatEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).IsNatEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.isAdvancedNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).IsAdvancedNetworking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.numAssignedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).NumAssignedIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.numFreeIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).NumFreeIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.reservedIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).ReservedIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).Cluster, ok = plugin.RawToTValue[*mqlNutanixCluster](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.subnet.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkSubnet).Vpc, ok = plugin.RawToTValue[*mqlNutanixNetworkVpc](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.network.floatingIp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.floatingIpValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).FloatingIpValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.privateIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).PrivateIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.associationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).AssociationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.vmNicReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).VmNicReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.loadBalancerSessionReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).LoadBalancerSessionReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).Vpc, ok = plugin.RawToTValue[*mqlNutanixNetworkVpc](v.Value, v.Error)
+		return
+	},
+	"nutanix.network.floatingIp.externalSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixNetworkFloatingIp).ExternalSubnet, ok = plugin.RawToTValue[*mqlNutanixNetworkSubnet](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1578,9 +2457,18 @@ type mqlNutanix struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNutanixInternal it will be used here
-	Clusters plugin.TValue[[]any]
-	Hosts    plugin.TValue[[]any]
-	Vms      plugin.TValue[[]any]
+	Clusters              plugin.TValue[[]any]
+	Hosts                 plugin.TValue[[]any]
+	Vms                   plugin.TValue[[]any]
+	Users                 plugin.TValue[[]any]
+	UserGroups            plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
+	AuthorizationPolicies plugin.TValue[[]any]
+	DirectoryServices     plugin.TValue[[]any]
+	SamlIdentityProviders plugin.TValue[[]any]
+	Vpcs                  plugin.TValue[[]any]
+	Subnets               plugin.TValue[[]any]
+	FloatingIps           plugin.TValue[[]any]
 }
 
 // createNutanix creates a new instance of this resource
@@ -1660,6 +2548,150 @@ func (c *mqlNutanix) GetVms() *plugin.TValue[[]any] {
 		}
 
 		return c.vms()
+	})
+}
+
+func (c *mqlNutanix) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlNutanix) GetUserGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "userGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userGroups()
+	})
+}
+
+func (c *mqlNutanix) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+func (c *mqlNutanix) GetAuthorizationPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "authorizationPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationPolicies()
+	})
+}
+
+func (c *mqlNutanix) GetDirectoryServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectoryServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "directoryServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directoryServices()
+	})
+}
+
+func (c *mqlNutanix) GetSamlIdentityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SamlIdentityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "samlIdentityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.samlIdentityProviders()
+	})
+}
+
+func (c *mqlNutanix) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "vpcs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcs()
+	})
+}
+
+func (c *mqlNutanix) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlNutanix) GetFloatingIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FloatingIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "floatingIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.floatingIps()
 	})
 }
 
@@ -3307,4 +4339,940 @@ func (c *mqlNutanixVmGuestToolsInfo) GetGuestOsVersion() *plugin.TValue[string] 
 
 func (c *mqlNutanixVmGuestToolsInfo) GetCapabilities() *plugin.TValue[[]any] {
 	return &c.Capabilities
+}
+
+// mqlNutanixIamUser for the nutanix.iam.user resource
+type mqlNutanixIamUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixIamUserInternal it will be used here
+	Id                          plugin.TValue[string]
+	Username                    plugin.TValue[string]
+	UserType                    plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	CreationType                plugin.TValue[string]
+	DisplayName                 plugin.TValue[string]
+	FirstName                   plugin.TValue[string]
+	LastName                    plugin.TValue[string]
+	EmailId                     plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	IdpId                       plugin.TValue[string]
+	Locale                      plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	IsForceResetPasswordEnabled plugin.TValue[bool]
+	CreatedBy                   plugin.TValue[string]
+	CreatedTime                 plugin.TValue[*time.Time]
+	LastLoginTime               plugin.TValue[*time.Time]
+	LastUpdatedTime             plugin.TValue[*time.Time]
+}
+
+// createNutanixIamUser creates a new instance of this resource
+func createNutanixIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamUser) MqlName() string {
+	return "nutanix.iam.user"
+}
+
+func (c *mqlNutanixIamUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamUser) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlNutanixIamUser) GetUserType() *plugin.TValue[string] {
+	return &c.UserType
+}
+
+func (c *mqlNutanixIamUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlNutanixIamUser) GetCreationType() *plugin.TValue[string] {
+	return &c.CreationType
+}
+
+func (c *mqlNutanixIamUser) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlNutanixIamUser) GetFirstName() *plugin.TValue[string] {
+	return &c.FirstName
+}
+
+func (c *mqlNutanixIamUser) GetLastName() *plugin.TValue[string] {
+	return &c.LastName
+}
+
+func (c *mqlNutanixIamUser) GetEmailId() *plugin.TValue[string] {
+	return &c.EmailId
+}
+
+func (c *mqlNutanixIamUser) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixIamUser) GetIdpId() *plugin.TValue[string] {
+	return &c.IdpId
+}
+
+func (c *mqlNutanixIamUser) GetLocale() *plugin.TValue[string] {
+	return &c.Locale
+}
+
+func (c *mqlNutanixIamUser) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlNutanixIamUser) GetIsForceResetPasswordEnabled() *plugin.TValue[bool] {
+	return &c.IsForceResetPasswordEnabled
+}
+
+func (c *mqlNutanixIamUser) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlNutanixIamUser) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamUser) GetLastLoginTime() *plugin.TValue[*time.Time] {
+	return &c.LastLoginTime
+}
+
+func (c *mqlNutanixIamUser) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+// mqlNutanixIamGroup for the nutanix.iam.group resource
+type mqlNutanixIamGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixIamGroupInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	GroupType         plugin.TValue[string]
+	DistinguishedName plugin.TValue[string]
+	IdpId             plugin.TValue[string]
+	CreatedBy         plugin.TValue[string]
+	CreatedTime       plugin.TValue[*time.Time]
+	LastUpdatedTime   plugin.TValue[*time.Time]
+}
+
+// createNutanixIamGroup creates a new instance of this resource
+func createNutanixIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamGroup) MqlName() string {
+	return "nutanix.iam.group"
+}
+
+func (c *mqlNutanixIamGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixIamGroup) GetGroupType() *plugin.TValue[string] {
+	return &c.GroupType
+}
+
+func (c *mqlNutanixIamGroup) GetDistinguishedName() *plugin.TValue[string] {
+	return &c.DistinguishedName
+}
+
+func (c *mqlNutanixIamGroup) GetIdpId() *plugin.TValue[string] {
+	return &c.IdpId
+}
+
+func (c *mqlNutanixIamGroup) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlNutanixIamGroup) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamGroup) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+// mqlNutanixIamRole for the nutanix.iam.role resource
+type mqlNutanixIamRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixIamRoleInternal it will be used here
+	Id                      plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	Description             plugin.TValue[string]
+	IsSystemDefined         plugin.TValue[bool]
+	Operations              plugin.TValue[[]any]
+	AccessibleEntityTypes   plugin.TValue[[]any]
+	AssignedUsersCount      plugin.TValue[int64]
+	AssignedUserGroupsCount plugin.TValue[int64]
+	CreatedBy               plugin.TValue[string]
+	CreatedTime             plugin.TValue[*time.Time]
+	LastUpdatedTime         plugin.TValue[*time.Time]
+}
+
+// createNutanixIamRole creates a new instance of this resource
+func createNutanixIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamRole) MqlName() string {
+	return "nutanix.iam.role"
+}
+
+func (c *mqlNutanixIamRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamRole) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlNutanixIamRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixIamRole) GetIsSystemDefined() *plugin.TValue[bool] {
+	return &c.IsSystemDefined
+}
+
+func (c *mqlNutanixIamRole) GetOperations() *plugin.TValue[[]any] {
+	return &c.Operations
+}
+
+func (c *mqlNutanixIamRole) GetAccessibleEntityTypes() *plugin.TValue[[]any] {
+	return &c.AccessibleEntityTypes
+}
+
+func (c *mqlNutanixIamRole) GetAssignedUsersCount() *plugin.TValue[int64] {
+	return &c.AssignedUsersCount
+}
+
+func (c *mqlNutanixIamRole) GetAssignedUserGroupsCount() *plugin.TValue[int64] {
+	return &c.AssignedUserGroupsCount
+}
+
+func (c *mqlNutanixIamRole) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlNutanixIamRole) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamRole) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+// mqlNutanixIamAuthorizationPolicy for the nutanix.iam.authorizationPolicy resource
+type mqlNutanixIamAuthorizationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNutanixIamAuthorizationPolicyInternal
+	Id                      plugin.TValue[string]
+	DisplayName             plugin.TValue[string]
+	Description             plugin.TValue[string]
+	AuthorizationPolicyType plugin.TValue[string]
+	IsSystemDefined         plugin.TValue[bool]
+	AssignedUsersCount      plugin.TValue[int64]
+	AssignedUserGroupsCount plugin.TValue[int64]
+	Entities                plugin.TValue[[]any]
+	Identities              plugin.TValue[[]any]
+	CreatedBy               plugin.TValue[string]
+	CreatedTime             plugin.TValue[*time.Time]
+	LastUpdatedTime         plugin.TValue[*time.Time]
+	Role                    plugin.TValue[*mqlNutanixIamRole]
+}
+
+// createNutanixIamAuthorizationPolicy creates a new instance of this resource
+func createNutanixIamAuthorizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamAuthorizationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.authorizationPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) MqlName() string {
+	return "nutanix.iam.authorizationPolicy"
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetAuthorizationPolicyType() *plugin.TValue[string] {
+	return &c.AuthorizationPolicyType
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetIsSystemDefined() *plugin.TValue[bool] {
+	return &c.IsSystemDefined
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetAssignedUsersCount() *plugin.TValue[int64] {
+	return &c.AssignedUsersCount
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetAssignedUserGroupsCount() *plugin.TValue[int64] {
+	return &c.AssignedUserGroupsCount
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetEntities() *plugin.TValue[[]any] {
+	return &c.Entities
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetIdentities() *plugin.TValue[[]any] {
+	return &c.Identities
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+func (c *mqlNutanixIamAuthorizationPolicy) GetRole() *plugin.TValue[*mqlNutanixIamRole] {
+	return plugin.GetOrCompute[*mqlNutanixIamRole](&c.Role, func() (*mqlNutanixIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.iam.authorizationPolicy", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixIamRole), nil
+			}
+		}
+
+		return c.role()
+	})
+}
+
+// mqlNutanixIamDirectoryService for the nutanix.iam.directoryService resource
+type mqlNutanixIamDirectoryService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixIamDirectoryServiceInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DirectoryType          plugin.TValue[string]
+	DomainName             plugin.TValue[string]
+	Url                    plugin.TValue[string]
+	SecondaryUrls          plugin.TValue[[]any]
+	GroupSearchType        plugin.TValue[string]
+	WhiteListedGroups      plugin.TValue[[]any]
+	ServiceAccountUsername plugin.TValue[string]
+	CreatedBy              plugin.TValue[string]
+	CreatedTime            plugin.TValue[*time.Time]
+	LastUpdatedTime        plugin.TValue[*time.Time]
+}
+
+// createNutanixIamDirectoryService creates a new instance of this resource
+func createNutanixIamDirectoryService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamDirectoryService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.directoryService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamDirectoryService) MqlName() string {
+	return "nutanix.iam.directoryService"
+}
+
+func (c *mqlNutanixIamDirectoryService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamDirectoryService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamDirectoryService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixIamDirectoryService) GetDirectoryType() *plugin.TValue[string] {
+	return &c.DirectoryType
+}
+
+func (c *mqlNutanixIamDirectoryService) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlNutanixIamDirectoryService) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNutanixIamDirectoryService) GetSecondaryUrls() *plugin.TValue[[]any] {
+	return &c.SecondaryUrls
+}
+
+func (c *mqlNutanixIamDirectoryService) GetGroupSearchType() *plugin.TValue[string] {
+	return &c.GroupSearchType
+}
+
+func (c *mqlNutanixIamDirectoryService) GetWhiteListedGroups() *plugin.TValue[[]any] {
+	return &c.WhiteListedGroups
+}
+
+func (c *mqlNutanixIamDirectoryService) GetServiceAccountUsername() *plugin.TValue[string] {
+	return &c.ServiceAccountUsername
+}
+
+func (c *mqlNutanixIamDirectoryService) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlNutanixIamDirectoryService) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamDirectoryService) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+// mqlNutanixIamSamlIdentityProvider for the nutanix.iam.samlIdentityProvider resource
+type mqlNutanixIamSamlIdentityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixIamSamlIdentityProviderInternal it will be used here
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	EntityIssuer            plugin.TValue[string]
+	UsernameAttribute       plugin.TValue[string]
+	EmailAttribute          plugin.TValue[string]
+	GroupsAttribute         plugin.TValue[string]
+	IdpMetadataUrl          plugin.TValue[string]
+	IsSignedAuthnReqEnabled plugin.TValue[bool]
+	CreatedTime             plugin.TValue[*time.Time]
+	LastUpdatedTime         plugin.TValue[*time.Time]
+}
+
+// createNutanixIamSamlIdentityProvider creates a new instance of this resource
+func createNutanixIamSamlIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixIamSamlIdentityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.iam.samlIdentityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) MqlName() string {
+	return "nutanix.iam.samlIdentityProvider"
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetEntityIssuer() *plugin.TValue[string] {
+	return &c.EntityIssuer
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetUsernameAttribute() *plugin.TValue[string] {
+	return &c.UsernameAttribute
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetEmailAttribute() *plugin.TValue[string] {
+	return &c.EmailAttribute
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetGroupsAttribute() *plugin.TValue[string] {
+	return &c.GroupsAttribute
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetIdpMetadataUrl() *plugin.TValue[string] {
+	return &c.IdpMetadataUrl
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetIsSignedAuthnReqEnabled() *plugin.TValue[bool] {
+	return &c.IsSignedAuthnReqEnabled
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlNutanixIamSamlIdentityProvider) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+// mqlNutanixNetworkVpc for the nutanix.network.vpc resource
+type mqlNutanixNetworkVpc struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixNetworkVpcInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	VpcType                        plugin.TValue[string]
+	ExternallyRoutablePrefixes     plugin.TValue[[]any]
+	SnatIps                        plugin.TValue[[]any]
+	ExternalRoutingDomainReference plugin.TValue[string]
+}
+
+// createNutanixNetworkVpc creates a new instance of this resource
+func createNutanixNetworkVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixNetworkVpc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.network.vpc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixNetworkVpc) MqlName() string {
+	return "nutanix.network.vpc"
+}
+
+func (c *mqlNutanixNetworkVpc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixNetworkVpc) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixNetworkVpc) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixNetworkVpc) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixNetworkVpc) GetVpcType() *plugin.TValue[string] {
+	return &c.VpcType
+}
+
+func (c *mqlNutanixNetworkVpc) GetExternallyRoutablePrefixes() *plugin.TValue[[]any] {
+	return &c.ExternallyRoutablePrefixes
+}
+
+func (c *mqlNutanixNetworkVpc) GetSnatIps() *plugin.TValue[[]any] {
+	return &c.SnatIps
+}
+
+func (c *mqlNutanixNetworkVpc) GetExternalRoutingDomainReference() *plugin.TValue[string] {
+	return &c.ExternalRoutingDomainReference
+}
+
+// mqlNutanixNetworkSubnet for the nutanix.network.subnet resource
+type mqlNutanixNetworkSubnet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNutanixNetworkSubnetInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	SubnetType           plugin.TValue[string]
+	NetworkId            plugin.TValue[int64]
+	IpPrefix             plugin.TValue[string]
+	HypervisorType       plugin.TValue[string]
+	BridgeName           plugin.TValue[string]
+	IsExternal           plugin.TValue[bool]
+	IsNatEnabled         plugin.TValue[bool]
+	IsAdvancedNetworking plugin.TValue[bool]
+	NumAssignedIps       plugin.TValue[int64]
+	NumFreeIps           plugin.TValue[int64]
+	ReservedIpAddresses  plugin.TValue[[]any]
+	Cluster              plugin.TValue[*mqlNutanixCluster]
+	Vpc                  plugin.TValue[*mqlNutanixNetworkVpc]
+}
+
+// createNutanixNetworkSubnet creates a new instance of this resource
+func createNutanixNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixNetworkSubnet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.network.subnet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixNetworkSubnet) MqlName() string {
+	return "nutanix.network.subnet"
+}
+
+func (c *mqlNutanixNetworkSubnet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixNetworkSubnet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixNetworkSubnet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixNetworkSubnet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixNetworkSubnet) GetSubnetType() *plugin.TValue[string] {
+	return &c.SubnetType
+}
+
+func (c *mqlNutanixNetworkSubnet) GetNetworkId() *plugin.TValue[int64] {
+	return &c.NetworkId
+}
+
+func (c *mqlNutanixNetworkSubnet) GetIpPrefix() *plugin.TValue[string] {
+	return &c.IpPrefix
+}
+
+func (c *mqlNutanixNetworkSubnet) GetHypervisorType() *plugin.TValue[string] {
+	return &c.HypervisorType
+}
+
+func (c *mqlNutanixNetworkSubnet) GetBridgeName() *plugin.TValue[string] {
+	return &c.BridgeName
+}
+
+func (c *mqlNutanixNetworkSubnet) GetIsExternal() *plugin.TValue[bool] {
+	return &c.IsExternal
+}
+
+func (c *mqlNutanixNetworkSubnet) GetIsNatEnabled() *plugin.TValue[bool] {
+	return &c.IsNatEnabled
+}
+
+func (c *mqlNutanixNetworkSubnet) GetIsAdvancedNetworking() *plugin.TValue[bool] {
+	return &c.IsAdvancedNetworking
+}
+
+func (c *mqlNutanixNetworkSubnet) GetNumAssignedIps() *plugin.TValue[int64] {
+	return &c.NumAssignedIps
+}
+
+func (c *mqlNutanixNetworkSubnet) GetNumFreeIps() *plugin.TValue[int64] {
+	return &c.NumFreeIps
+}
+
+func (c *mqlNutanixNetworkSubnet) GetReservedIpAddresses() *plugin.TValue[[]any] {
+	return &c.ReservedIpAddresses
+}
+
+func (c *mqlNutanixNetworkSubnet) GetCluster() *plugin.TValue[*mqlNutanixCluster] {
+	return plugin.GetOrCompute[*mqlNutanixCluster](&c.Cluster, func() (*mqlNutanixCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.network.subnet", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlNutanixNetworkSubnet) GetVpc() *plugin.TValue[*mqlNutanixNetworkVpc] {
+	return plugin.GetOrCompute[*mqlNutanixNetworkVpc](&c.Vpc, func() (*mqlNutanixNetworkVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.network.subnet", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixNetworkVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+// mqlNutanixNetworkFloatingIp for the nutanix.network.floatingIp resource
+type mqlNutanixNetworkFloatingIp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNutanixNetworkFloatingIpInternal
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	FloatingIpValue              plugin.TValue[string]
+	PrivateIp                    plugin.TValue[string]
+	AssociationStatus            plugin.TValue[string]
+	VmNicReference               plugin.TValue[string]
+	LoadBalancerSessionReference plugin.TValue[string]
+	Vpc                          plugin.TValue[*mqlNutanixNetworkVpc]
+	ExternalSubnet               plugin.TValue[*mqlNutanixNetworkSubnet]
+}
+
+// createNutanixNetworkFloatingIp creates a new instance of this resource
+func createNutanixNetworkFloatingIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixNetworkFloatingIp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.network.floatingIp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixNetworkFloatingIp) MqlName() string {
+	return "nutanix.network.floatingIp"
+}
+
+func (c *mqlNutanixNetworkFloatingIp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetFloatingIpValue() *plugin.TValue[string] {
+	return &c.FloatingIpValue
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetPrivateIp() *plugin.TValue[string] {
+	return &c.PrivateIp
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetAssociationStatus() *plugin.TValue[string] {
+	return &c.AssociationStatus
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetVmNicReference() *plugin.TValue[string] {
+	return &c.VmNicReference
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetLoadBalancerSessionReference() *plugin.TValue[string] {
+	return &c.LoadBalancerSessionReference
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetVpc() *plugin.TValue[*mqlNutanixNetworkVpc] {
+	return plugin.GetOrCompute[*mqlNutanixNetworkVpc](&c.Vpc, func() (*mqlNutanixNetworkVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.network.floatingIp", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixNetworkVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlNutanixNetworkFloatingIp) GetExternalSubnet() *plugin.TValue[*mqlNutanixNetworkSubnet] {
+	return plugin.GetOrCompute[*mqlNutanixNetworkSubnet](&c.ExternalSubnet, func() (*mqlNutanixNetworkSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.network.floatingIp", c.__id, "externalSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixNetworkSubnet), nil
+			}
+		}
+
+		return c.externalSubnet()
+	})
 }

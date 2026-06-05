@@ -6,6 +6,8 @@ go 1.26.3
 
 require (
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.2
+	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
 	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
 )
