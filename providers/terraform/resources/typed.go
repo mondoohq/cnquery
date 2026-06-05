@@ -22,11 +22,24 @@ import (
 type mqlTerraformResourceInternal struct {
 	tf      *mqlTerraform
 	tfBlock *mqlTerraformBlock
+	// addr and the cached* fields back the source-unified view. For HCL the
+	// block is present and values are resolved lazily; for plan/state the
+	// block is nil and these carry the source data directly.
+	addr           string
+	cachedValues   map[string]any
+	valuesSet      bool
+	cachedProvider string
+	moduleCall     *mqlTerraformBlock
 }
 
 type mqlTerraformDatasourceInternal struct {
-	tf      *mqlTerraform
-	tfBlock *mqlTerraformBlock
+	tf             *mqlTerraform
+	tfBlock        *mqlTerraformBlock
+	addr           string
+	cachedValues   map[string]any
+	valuesSet      bool
+	cachedProvider string
+	moduleCall     *mqlTerraformBlock
 }
 
 type mqlTerraformVariableInternal struct {
@@ -46,36 +59,7 @@ type mqlTerraformProviderInternal struct {
 
 // --- collection accessors on the root terraform resource ---
 
-func (t *mqlTerraform) managedResources() ([]any, error) {
-	if err := t.refreshCache(nil); err != nil {
-		return nil, err
-	}
-	blocks := t.mqlTerraformInternal.resources
-	res := make([]any, 0, len(blocks))
-	for _, b := range blocks {
-		r, err := newTerraformResource(t, b)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, r)
-	}
-	return res, nil
-}
-
-func (t *mqlTerraform) dataResources() ([]any, error) {
-	if err := t.refreshCache(nil); err != nil {
-		return nil, err
-	}
-	res := make([]any, 0, len(t.Datasources.Data))
-	for i := range t.Datasources.Data {
-		r, err := newTerraformDatasource(t, t.Datasources.Data[i].(*mqlTerraformBlock))
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, r)
-	}
-	return res, nil
-}
+// managedResources and dataResources are source-unified: see unified.go.
 
 func (t *mqlTerraform) variableDefinitions() ([]any, error) {
 	if err := t.refreshCache(nil); err != nil {
@@ -137,6 +121,8 @@ func newTerraformResource(t *mqlTerraform, b *mqlTerraformBlock) (*mqlTerraformR
 	res := r.(*mqlTerraformResource)
 	res.tf = t
 	res.tfBlock = b
+	res.moduleCall = blockModuleCall(t, b)
+	res.addr = qualifiedAddress(res.moduleCall, labelAt(b, 0)+"."+labelAt(b, 1))
 	return res, nil
 }
 
@@ -153,6 +139,8 @@ func newTerraformDatasource(t *mqlTerraform, b *mqlTerraformBlock) (*mqlTerrafor
 	res := r.(*mqlTerraformDatasource)
 	res.tf = t
 	res.tfBlock = b
+	res.moduleCall = blockModuleCall(t, b)
+	res.addr = qualifiedAddress(res.moduleCall, "data."+labelAt(b, 0)+"."+labelAt(b, 1))
 	return res, nil
 }
 

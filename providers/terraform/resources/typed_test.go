@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestClassifyReference(t *testing.T) {
@@ -142,4 +143,38 @@ func TestClassifyModuleSource(t *testing.T) {
 	for src, want := range cases {
 		assert.Equal(t, want, classifyModuleSource(src), "source %q", src)
 	}
+}
+
+func TestQualifiedAddress(t *testing.T) {
+	assert.Equal(t, "aws_instance.web", qualifiedAddress(nil, "aws_instance.web"))
+	mc := blockWithLabels("vpc")
+	assert.Equal(t, "module.vpc.aws_subnet.private", qualifiedAddress(mc, "aws_subnet.private"))
+}
+
+func TestBlockAddress(t *testing.T) {
+	mk := func(typ string, labels ...string) *mqlTerraformBlock {
+		b := blockWithLabels(labels...)
+		b.Type = plugin.TValue[string]{Data: typ, State: plugin.StateIsSet}
+		return b
+	}
+	assert.Equal(t, "aws_vpc.main", blockAddress(mk("resource", "aws_vpc", "main")))
+	assert.Equal(t, "data.aws_ami.ubuntu", blockAddress(mk("data", "aws_ami", "ubuntu")))
+	assert.Equal(t, "var.region", blockAddress(mk("variable", "region")))
+	assert.Equal(t, "module.vpc", blockAddress(mk("module", "vpc")))
+	assert.Equal(t, "output.ip", blockAddress(mk("output", "ip")))
+}
+
+func TestMatchModuleEntry(t *testing.T) {
+	call := blockWithLabels("vpc")
+	inner := blockWithLabels("subnet")
+	entries := []fileModuleEntry{
+		{dir: "/root/modules/vpc", call: call},
+		{dir: "/root/modules/vpc/subnet", call: inner},
+	}
+	// root file -> no module
+	assert.Nil(t, matchModuleEntry(entries, "/root/main.tf"))
+	// module file -> its call
+	assert.Equal(t, call, matchModuleEntry(entries, "/root/modules/vpc/main.tf"))
+	// nested file -> innermost (longest match)
+	assert.Equal(t, inner, matchModuleEntry(entries, "/root/modules/vpc/subnet/main.tf"))
 }

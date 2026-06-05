@@ -16,6 +16,8 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceTerraform                         string = "terraform"
+	ResourceTerraformGraph                    string = "terraform.graph"
+	ResourceTerraformGraphEdge                string = "terraform.graph.edge"
 	ResourceTerraformResources                string = "terraform.resources"
 	ResourceTerraformFile                     string = "terraform.file"
 	ResourceTerraformFileposition             string = "terraform.fileposition"
@@ -47,6 +49,14 @@ func init() {
 		"terraform": {
 			// to override args, implement: initTerraform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraform,
+		},
+		"terraform.graph": {
+			// to override args, implement: initTerraformGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformGraph,
+		},
+		"terraform.graph.edge": {
+			// to override args, implement: initTerraformGraphEdge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformGraphEdge,
 		},
 		"terraform.resources": {
 			Init:   initTerraformResources,
@@ -249,6 +259,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.moduleCalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraform).GetModuleCalls()).ToDataRes(types.Array(types.Resource("terraform.module")))
 	},
+	"terraform.graph": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraform).GetGraph()).ToDataRes(types.Resource("terraform.graph"))
+	},
+	"terraform.graph.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraph).GetNodes()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.graph.orphans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraph).GetOrphans()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.graph.edges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraph).GetEdges()).ToDataRes(types.Array(types.Resource("terraform.graph.edge")))
+	},
+	"terraform.graph.edge.from": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraphEdge).GetFrom()).ToDataRes(types.String)
+	},
+	"terraform.graph.edge.to": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraphEdge).GetTo()).ToDataRes(types.String)
+	},
+	"terraform.graph.edge.argument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformGraphEdge).GetArgument()).ToDataRes(types.String)
+	},
 	"terraform.resources.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformResources).GetList()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
@@ -393,6 +424,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.resource.ignoreChanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformResource).GetIgnoreChanges()).ToDataRes(types.Array(types.String))
 	},
+	"terraform.resource.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetAddress()).ToDataRes(types.String)
+	},
+	"terraform.resource.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetMode()).ToDataRes(types.String)
+	},
+	"terraform.resource.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetValues()).ToDataRes(types.Dict)
+	},
+	"terraform.resource.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetModule()).ToDataRes(types.Resource("terraform.module"))
+	},
+	"terraform.resource.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetDependencies()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.resource.dependents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResource).GetDependents()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
 	"terraform.datasource.block": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformDatasource).GetBlock()).ToDataRes(types.Resource("terraform.block"))
 	},
@@ -422,6 +471,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"terraform.datasource.resolved": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformDatasource).GetResolved()).ToDataRes(types.Dict)
+	},
+	"terraform.datasource.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetAddress()).ToDataRes(types.String)
+	},
+	"terraform.datasource.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetMode()).ToDataRes(types.String)
+	},
+	"terraform.datasource.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetValues()).ToDataRes(types.Dict)
+	},
+	"terraform.datasource.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetModule()).ToDataRes(types.Resource("terraform.module"))
+	},
+	"terraform.datasource.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetDependencies()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.datasource.dependents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformDatasource).GetDependents()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
 	"terraform.variable.block": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformVariable).GetBlock()).ToDataRes(types.Resource("terraform.block"))
@@ -747,6 +814,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTerraform).ModuleCalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"terraform.graph": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraform).Graph, ok = plugin.RawToTValue[*mqlTerraformGraph](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraph).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.graph.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraph).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.orphans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraph).Orphans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.edges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraph).Edges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.edge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraphEdge).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.graph.edge.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraphEdge).From, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.edge.to": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraphEdge).To, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.graph.edge.argument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformGraphEdge).Argument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"terraform.resources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformResources).__id, ok = v.Value.(string)
 		return
@@ -963,6 +1066,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTerraformResource).IgnoreChanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"terraform.resource.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Module, ok = plugin.RawToTValue[*mqlTerraformModule](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Dependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.resource.dependents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResource).Dependents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"terraform.datasource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformDatasource).__id, ok = v.Value.(string)
 		return
@@ -1005,6 +1132,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.datasource.resolved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformDatasource).Resolved, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Module, ok = plugin.RawToTValue[*mqlTerraformModule](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Dependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.datasource.dependents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformDatasource).Dependents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"terraform.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1446,6 +1597,7 @@ type mqlTerraform struct {
 	OutputValues        plugin.TValue[[]any]
 	ProviderConfigs     plugin.TValue[[]any]
 	ModuleCalls         plugin.TValue[[]any]
+	Graph               plugin.TValue[*mqlTerraformGraph]
 }
 
 // createTerraform creates a new instance of this resource
@@ -1692,6 +1844,171 @@ func (c *mqlTerraform) GetModuleCalls() *plugin.TValue[[]any] {
 
 		return c.moduleCalls()
 	})
+}
+
+func (c *mqlTerraform) GetGraph() *plugin.TValue[*mqlTerraformGraph] {
+	return plugin.GetOrCompute[*mqlTerraformGraph](&c.Graph, func() (*mqlTerraformGraph, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "graph")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformGraph), nil
+			}
+		}
+
+		return c.graph()
+	})
+}
+
+// mqlTerraformGraph for the terraform.graph resource
+type mqlTerraformGraph struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformGraphInternal
+	Nodes   plugin.TValue[[]any]
+	Orphans plugin.TValue[[]any]
+	Edges   plugin.TValue[[]any]
+}
+
+// createTerraformGraph creates a new instance of this resource
+func createTerraformGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformGraph{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.graph", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformGraph) MqlName() string {
+	return "terraform.graph"
+}
+
+func (c *mqlTerraformGraph) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformGraph) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.graph", c.__id, "nodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodes()
+	})
+}
+
+func (c *mqlTerraformGraph) GetOrphans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Orphans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.graph", c.__id, "orphans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.orphans()
+	})
+}
+
+func (c *mqlTerraformGraph) GetEdges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Edges, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.graph", c.__id, "edges")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.edges()
+	})
+}
+
+// mqlTerraformGraphEdge for the terraform.graph.edge resource
+type mqlTerraformGraphEdge struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTerraformGraphEdgeInternal it will be used here
+	From     plugin.TValue[string]
+	To       plugin.TValue[string]
+	Argument plugin.TValue[string]
+}
+
+// createTerraformGraphEdge creates a new instance of this resource
+func createTerraformGraphEdge(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformGraphEdge{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.graph.edge", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformGraphEdge) MqlName() string {
+	return "terraform.graph.edge"
+}
+
+func (c *mqlTerraformGraphEdge) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformGraphEdge) GetFrom() *plugin.TValue[string] {
+	return &c.From
+}
+
+func (c *mqlTerraformGraphEdge) GetTo() *plugin.TValue[string] {
+	return &c.To
+}
+
+func (c *mqlTerraformGraphEdge) GetArgument() *plugin.TValue[string] {
+	return &c.Argument
 }
 
 // mqlTerraformResources for the terraform.resources resource
@@ -2173,6 +2490,12 @@ type mqlTerraformResource struct {
 	PreventDestroy      plugin.TValue[bool]
 	CreateBeforeDestroy plugin.TValue[bool]
 	IgnoreChanges       plugin.TValue[[]any]
+	Address             plugin.TValue[string]
+	Mode                plugin.TValue[string]
+	Values              plugin.TValue[any]
+	Module              plugin.TValue[*mqlTerraformModule]
+	Dependencies        plugin.TValue[[]any]
+	Dependents          plugin.TValue[[]any]
 }
 
 // createTerraformResource creates a new instance of this resource
@@ -2377,6 +2700,72 @@ func (c *mqlTerraformResource) GetIgnoreChanges() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlTerraformResource) GetAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Address, func() (string, error) {
+		return c.address()
+	})
+}
+
+func (c *mqlTerraformResource) GetMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Mode, func() (string, error) {
+		return c.mode()
+	})
+}
+
+func (c *mqlTerraformResource) GetValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Values, func() (any, error) {
+		return c.values()
+	})
+}
+
+func (c *mqlTerraformResource) GetModule() *plugin.TValue[*mqlTerraformModule] {
+	return plugin.GetOrCompute[*mqlTerraformModule](&c.Module, func() (*mqlTerraformModule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.resource", c.__id, "module")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformModule), nil
+			}
+		}
+
+		return c.module()
+	})
+}
+
+func (c *mqlTerraformResource) GetDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.resource", c.__id, "dependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependencies()
+	})
+}
+
+func (c *mqlTerraformResource) GetDependents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dependents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.resource", c.__id, "dependents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependents()
+	})
+}
+
 // mqlTerraformDatasource for the terraform.datasource resource
 type mqlTerraformDatasource struct {
 	MqlRuntime *plugin.Runtime
@@ -2392,6 +2781,12 @@ type mqlTerraformDatasource struct {
 	ReferencedBy plugin.TValue[[]any]
 	Config       plugin.TValue[any]
 	Resolved     plugin.TValue[any]
+	Address      plugin.TValue[string]
+	Mode         plugin.TValue[string]
+	Values       plugin.TValue[any]
+	Module       plugin.TValue[*mqlTerraformModule]
+	Dependencies plugin.TValue[[]any]
+	Dependents   plugin.TValue[[]any]
 }
 
 // createTerraformDatasource creates a new instance of this resource
@@ -2519,6 +2914,72 @@ func (c *mqlTerraformDatasource) GetConfig() *plugin.TValue[any] {
 func (c *mqlTerraformDatasource) GetResolved() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Resolved, func() (any, error) {
 		return c.resolved()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Address, func() (string, error) {
+		return c.address()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Mode, func() (string, error) {
+		return c.mode()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Values, func() (any, error) {
+		return c.values()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetModule() *plugin.TValue[*mqlTerraformModule] {
+	return plugin.GetOrCompute[*mqlTerraformModule](&c.Module, func() (*mqlTerraformModule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.datasource", c.__id, "module")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformModule), nil
+			}
+		}
+
+		return c.module()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.datasource", c.__id, "dependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependencies()
+	})
+}
+
+func (c *mqlTerraformDatasource) GetDependents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dependents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.datasource", c.__id, "dependents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependents()
 	})
 }
 

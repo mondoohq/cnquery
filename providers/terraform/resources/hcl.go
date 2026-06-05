@@ -34,8 +34,16 @@ type mqlTerraformInternal struct {
 	resources       []*mqlTerraformBlock
 	// reverse reference index (target block id -> referencing blocks), lazily built
 	refIndex map[string][]any
+	// forward reference index (block id -> resolved target blocks), lazily built
+	fwdIndex map[string][]*mqlTerraformBlock
 	// HCL evaluation context (var defaults, tfvars, locals, functions), lazily built
 	evalCtx *hcl.EvalContext
+	// per-module evaluation contexts keyed by module-call block id ("" = root)
+	moduleEvalCtx map[string]*hcl.EvalContext
+	// dedicated lock for building evaluation contexts (avoids reentering lock)
+	evalLock sync.Mutex
+	// directory -> module-call mapping for associating resources with modules
+	fileModules []fileModuleEntry
 }
 
 func (t *mqlTerraform) files() ([]any, error) {

@@ -66,6 +66,43 @@ terraform {
   // the source HCL — available without `terraform init` — exposing the
   // source, version, source type, input values, and references.
   moduleCalls() []terraform.module
+  // Dependency graph of the configuration
+  //
+  // Examine the configuration as a graph of blocks and the references
+  // between them, with helpers to find unreferenced (orphan) resources
+  // and to walk dependencies and dependents transitively.
+  graph() terraform.graph
+}
+
+// Terraform dependency graph
+//
+// Examine the configuration as a graph: every resource and data source
+// is a node, and an argument that references another object is an edge.
+// Use `orphans` to find blocks nothing else references and `edges` to
+// enumerate the reference relationships.
+terraform.graph {
+  // Every managed resource and data source block in the configuration
+  nodes() []terraform.block
+  // Resource and data source blocks that nothing else references
+  //
+  // The blocks with no dependents — candidates for dead configuration,
+  // most usefully data sources whose result is never consumed.
+  orphans() []terraform.block
+  // Reference relationships between blocks
+  //
+  // Each edge records the `from` block address, the `to` block address,
+  // and the `argument` that creates the dependency.
+  edges() []terraform.graph.edge
+}
+
+// Edge in the Terraform dependency graph
+private terraform.graph.edge @defaults("from to argument") {
+  // Address of the block the reference originates from
+  from string
+  // Address of the block the reference points to
+  to string
+  // Argument that creates the dependency
+  argument string
 }
 
 // Terraform resource blocks
@@ -291,6 +328,36 @@ terraform.resource @defaults("type name") {
   // The attributes Terraform will not act on when they drift, or the
   // single entry `all`. Empty when no `ignore_changes` is set.
   ignoreChanges() []string
+  // Absolute resource address
+  //
+  // The fully qualified address including any module path, for example
+  // `aws_instance.web` or `module.vpc.aws_subnet.private`.
+  address() string
+  // Resource mode, always "managed" for this resource
+  mode() string
+  // Effective attribute values from the active source
+  //
+  // The single source-independent view of a resource: the resolved
+  // configuration on an HCL connection, the planned after-values on a
+  // plan, or the recorded values on a state file. A policy written
+  // against `values` runs unchanged across all three.
+  values() dict
+  // Module call this resource belongs to
+  //
+  // The `module` block that introduced this resource, or null when the
+  // resource is declared in the root module.
+  module() terraform.module
+  // Every resource, data source, and module this resource depends on
+  //
+  // The transitive closure of references, following the dependency graph
+  // outward — not just direct references but everything reachable from
+  // them.
+  dependencies() []terraform.block
+  // Every block that transitively depends on this resource
+  //
+  // The transitive closure of `referencedBy`: the blast radius of a
+  // change to this resource.
+  dependents() []terraform.block
 }
 
 // Terraform data source
@@ -345,6 +412,21 @@ terraform.datasource @defaults("type name") {
   // used. Arguments whose value depends on another resource fall back to
   // the reference form used by `config`.
   resolved() dict
+  // Absolute data source address, e.g. `data.aws_ami.ubuntu`
+  address() string
+  // Resource mode, always "data" for this resource
+  mode() string
+  // Effective attribute values from the active source
+  //
+  // The resolved configuration on an HCL connection or the recorded
+  // values on a state file, as one source-independent view.
+  values() dict
+  // Module call this data source belongs to, or null in the root module
+  module() terraform.module
+  // Transitive closure of references this data source depends on
+  dependencies() []terraform.block
+  // Transitive closure of blocks that depend on this data source
+  dependents() []terraform.block
 }
 
 // Terraform input variable

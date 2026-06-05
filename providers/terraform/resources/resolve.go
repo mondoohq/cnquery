@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/terraform/connection"
 )
 
@@ -55,30 +56,63 @@ func terraformFunctions() map[string]function.Function {
 
 // evalContext lazily builds and caches the HCL evaluation context: var
 // defaults overridden by tfvars, resolved locals, and the function set.
-func (t *mqlTerraform) evalContext() (*hcl.EvalContext, error) {
-	// Resolve all blocks before locking; GetBlocks/refreshCache take the lock.
-	blocksRaw := t.GetBlocks()
-	if blocksRaw.Error != nil {
-		return nil, blocksRaw.Error
-	}
-	allBlocks := blocksRaw.Data
-
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	if t.evalCtx != nil {
-		return t.evalCtx, nil
+// evalContextFor returns the cached HCL evaluation context for a module
+// (nil = root). Module contexts use that module's own variable defaults,
+// overridden by the call's inputs resolved in the root context, plus the
+// module's locals — so a resource inside a module resolves to the values the
+// call actually passes, not whatever a same-named root variable holds.
+func (t *mqlTerraform) evalContextFor(moduleCall *mqlTerraformBlock, allBlocks []any, entries []fileModuleEntry) *hcl.EvalContext {
+	key := ""
+	if moduleCall != nil {
+		key, _ = moduleCall.id()
 	}
 
+	t.evalLock.Lock()
+	defer t.evalLock.Unlock()
+	if t.moduleEvalCtx == nil {
+		t.moduleEvalCtx = map[string]*hcl.EvalContext{}
+	}
+	if ctx, ok := t.moduleEvalCtx[key]; ok {
+		return ctx
+	}
+
+	// Root must exist first; module input expressions resolve against it.
+	root, ok := t.moduleEvalCtx[""]
+	if !ok {
+		root = t.buildContext(nil, allBlocks, entries, nil)
+		t.moduleEvalCtx[""] = root
+	}
+	if moduleCall == nil {
+		return root
+	}
+
+	overrides := t.moduleInputOverrides(moduleCall, root)
+	ctx := t.buildContext(moduleCall, allBlocks, entries, overrides)
+	t.moduleEvalCtx[key] = ctx
+	return ctx
+}
+
+// buildContext assembles an evaluation context from the variable defaults and
+// locals that belong to one module (nil = root), with tfvars (root) or call
+// inputs (module) applied as overrides. It does not lock.
+func (t *mqlTerraform) buildContext(moduleCall *mqlTerraformBlock, allBlocks []any, entries []fileModuleEntry, overrides map[string]cty.Value) *hcl.EvalContext {
 	funcs := terraformFunctions()
 	funcOnly := &hcl.EvalContext{Functions: funcs}
 
-	// Variable defaults.
+	moduleKey := ""
+	if moduleCall != nil {
+		moduleKey, _ = moduleCall.id()
+	}
+
 	varVals := map[string]cty.Value{}
-	for i := range t.Variables.Data {
-		vb := t.Variables.Data[i].(*mqlTerraformBlock)
-		name := labelAt(vb, 0)
+	for i := range allBlocks {
+		b := allBlocks[i].(*mqlTerraformBlock)
+		if b.Type.Data != "variable" || blockModuleKey(b, entries) != moduleKey {
+			continue
+		}
+		name := labelAt(b, 0)
 		varVals[name] = cty.UnknownVal(cty.DynamicPseudoType)
-		hb := blockHcl(vb)
+		hb := blockHcl(b)
 		if hb == nil {
 			continue
 		}
@@ -90,16 +124,19 @@ func (t *mqlTerraform) evalContext() (*hcl.EvalContext, error) {
 		}
 	}
 
-	// tfvars override declared defaults.
-	if conn, ok := t.MqlRuntime.Connection.(*connection.Connection); ok {
-		for name, attr := range conn.TfVars() {
-			if val, diags := attr.Expr.Value(funcOnly); !diags.HasErrors() {
-				varVals[name] = val
+	if moduleCall == nil {
+		if conn, ok := t.MqlRuntime.Connection.(*connection.Connection); ok {
+			for name, attr := range conn.TfVars() {
+				if val, diags := attr.Expr.Value(funcOnly); !diags.HasErrors() {
+					varVals[name] = val
+				}
 			}
 		}
 	}
+	for k, v := range overrides {
+		varVals[k] = v
+	}
 
-	// Collect local declarations.
 	type localEntry struct {
 		name string
 		expr hcl.Expression
@@ -107,7 +144,7 @@ func (t *mqlTerraform) evalContext() (*hcl.EvalContext, error) {
 	var locals []localEntry
 	for i := range allBlocks {
 		b := allBlocks[i].(*mqlTerraformBlock)
-		if b.Type.Data != "locals" {
+		if b.Type.Data != "locals" || blockModuleKey(b, entries) != moduleKey {
 			continue
 		}
 		hb := blockHcl(b)
@@ -120,16 +157,11 @@ func (t *mqlTerraform) evalContext() (*hcl.EvalContext, error) {
 		}
 	}
 
-	// Resolve locals to a fixpoint: a local may reference vars and other
-	// locals, so we re-evaluate until no new value resolves.
 	localVals := map[string]cty.Value{}
 	for pass := 0; pass < 8; pass++ {
 		ctx := &hcl.EvalContext{
 			Functions: funcs,
-			Variables: map[string]cty.Value{
-				"var":   cty.ObjectVal(varVals),
-				"local": cty.ObjectVal(localVals),
-			},
+			Variables: map[string]cty.Value{"var": cty.ObjectVal(varVals), "local": cty.ObjectVal(localVals)},
 		}
 		changed := false
 		for _, le := range locals {
@@ -146,28 +178,62 @@ func (t *mqlTerraform) evalContext() (*hcl.EvalContext, error) {
 		}
 	}
 
-	t.evalCtx = &hcl.EvalContext{
+	return &hcl.EvalContext{
 		Functions: funcs,
-		Variables: map[string]cty.Value{
-			"var":   cty.ObjectVal(varVals),
-			"local": cty.ObjectVal(localVals),
-		},
+		Variables: map[string]cty.Value{"var": cty.ObjectVal(varVals), "local": cty.ObjectVal(localVals)},
 	}
-	return t.evalCtx, nil
 }
 
-// resolveBlock evaluates each top-level argument to its effective value,
-// falling back to the config-style reference form when a value is not wholly
-// known (e.g. it depends on a data source or resource).
+// moduleInputOverrides resolves a module call's input arguments in the parent
+// context, producing the variable overrides for the module's own context.
+func (t *mqlTerraform) moduleInputOverrides(moduleCall *mqlTerraformBlock, parent *hcl.EvalContext) map[string]cty.Value {
+	out := map[string]cty.Value{}
+	hb := blockHcl(moduleCall)
+	if hb == nil {
+		return out
+	}
+	attrs, _ := hb.Body.JustAttributes()
+	for name := range attrs {
+		if moduleMetaArguments[name] {
+			continue
+		}
+		if val, diags := attrs[name].Expr.Value(parent); !diags.HasErrors() && val.IsWhollyKnown() {
+			out[name] = val
+		}
+	}
+	return out
+}
+
+// blockModuleKey returns the module-call id a block belongs to ("" = root).
+func blockModuleKey(b *mqlTerraformBlock, entries []fileModuleEntry) string {
+	if b == nil || b.Start.State != plugin.StateIsSet || b.Start.Data == nil {
+		return ""
+	}
+	mc := matchModuleEntry(entries, b.Start.Data.Path.Data)
+	if mc == nil {
+		return ""
+	}
+	id, _ := mc.id()
+	return id
+}
+
+// resolveBlock evaluates each top-level argument to its effective value using
+// the block's module context, falling back to the config-style reference form
+// when a value is not wholly known (e.g. it depends on a data source/resource).
 func (t *mqlTerraform) resolveBlock(b *mqlTerraformBlock) (any, error) {
 	hb := blockHcl(b)
 	if hb == nil {
 		return map[string]any{}, nil
 	}
-	ctx, err := t.evalContext()
-	if err != nil {
-		return nil, err
+
+	// Fetch shared state before building the (separately locked) context.
+	blocksRaw := t.GetBlocks()
+	if blocksRaw.Error != nil {
+		return nil, blocksRaw.Error
 	}
+	entries := t.fileModuleIndex()
+	moduleCall := matchModuleEntry(entries, blockFilePath(b))
+	ctx := t.evalContextFor(moduleCall, blocksRaw.Data, entries)
 
 	fallback := &hcl.EvalContext{Functions: hclFunctions()}
 	attrs, _ := hb.Body.JustAttributes()

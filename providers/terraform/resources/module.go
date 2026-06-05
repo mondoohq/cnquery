@@ -4,11 +4,114 @@
 package resources
 
 import (
+	"path/filepath"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/terraform/connection"
 )
+
+// fileModuleEntry maps a directory holding a module's .tf files to the module
+// call that introduced it.
+type fileModuleEntry struct {
+	dir  string
+	call *mqlTerraformBlock
+}
+
+// moduleForFile returns the module call whose source directory contains the
+// given file, or nil for root-module files. The longest matching directory
+// wins so nested modules resolve to the innermost call.
+func (t *mqlTerraform) moduleForFile(path string) *mqlTerraformBlock {
+	return matchModuleEntry(t.fileModuleIndex(), path)
+}
+
+// matchModuleEntry finds the module call whose source directory contains the
+// file (longest match wins), or nil for root files. It does not lock.
+func matchModuleEntry(entries []fileModuleEntry, path string) *mqlTerraformBlock {
+	if path == "" {
+		return nil
+	}
+	dir := filepath.Dir(path)
+
+	var best *mqlTerraformBlock
+	bestLen := -1
+	for i := range entries {
+		e := entries[i]
+		if dir == e.dir || strings.HasPrefix(dir, e.dir+string(filepath.Separator)) {
+			if len(e.dir) > bestLen {
+				bestLen = len(e.dir)
+				best = e.call
+			}
+		}
+	}
+	return best
+}
+
+// blockFilePath returns the source file a block was parsed from, or "".
+func blockFilePath(b *mqlTerraformBlock) string {
+	if b == nil || b.Start.State != plugin.StateIsSet || b.Start.Data == nil {
+		return ""
+	}
+	return b.Start.Data.Path.Data
+}
+
+// fileModuleIndex builds (once) the directory -> module-call mapping from the
+// `module` blocks, resolving local sources relative to the call's file and
+// initialized sources from the modules manifest.
+func (t *mqlTerraform) fileModuleIndex() []fileModuleEntry {
+	blocksRaw := t.GetBlocks()
+	if blocksRaw.Error != nil {
+		return nil
+	}
+	allBlocks := blocksRaw.Data
+
+	var manifest *connection.ModuleManifest
+	if conn, ok := t.MqlRuntime.Connection.(*connection.Connection); ok {
+		manifest = conn.ModulesManifest()
+	}
+
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if t.fileModules != nil {
+		return t.fileModules
+	}
+
+	entries := []fileModuleEntry{}
+	for i := range allBlocks {
+		b := allBlocks[i].(*mqlTerraformBlock)
+		if b.Type.Data != "module" {
+			continue
+		}
+		source := blockStringArgument(b, "source")
+		if source == "" {
+			continue
+		}
+
+		var dir string
+		if strings.HasPrefix(source, "./") || strings.HasPrefix(source, "../") {
+			if b.Start.State == plugin.StateIsSet && b.Start.Data != nil {
+				callDir := filepath.Dir(b.Start.Data.Path.Data)
+				dir = filepath.Clean(filepath.Join(callDir, source))
+			}
+		} else if manifest != nil {
+			name := labelAt(b, 0)
+			for j := range manifest.Records {
+				if manifest.Records[j].Key == name && manifest.Records[j].Dir != "" {
+					dir = filepath.Clean(manifest.Records[j].Dir)
+					break
+				}
+			}
+		}
+
+		if dir != "" {
+			entries = append(entries, fileModuleEntry{dir: dir, call: b})
+		}
+	}
+
+	t.fileModules = entries
+	return entries
+}
 
 type mqlTerraformModuleInternal struct {
 	tf      *mqlTerraform
@@ -123,6 +226,23 @@ func (m *mqlTerraformModule) references() ([]any, error) {
 		return terraformReferences(m.MqlRuntime, m.tf, b)
 	}
 	return b.references()
+}
+
+// blockModuleCall returns the module call a block belongs to, by file path.
+func blockModuleCall(t *mqlTerraform, b *mqlTerraformBlock) *mqlTerraformBlock {
+	if b == nil || b.Start.State != plugin.StateIsSet || b.Start.Data == nil {
+		return nil
+	}
+	return t.moduleForFile(b.Start.Data.Path.Data)
+}
+
+// qualifiedAddress prefixes an address with its module path, e.g.
+// "module.vpc.aws_subnet.private", or returns it unchanged for root resources.
+func qualifiedAddress(moduleCall *mqlTerraformBlock, base string) string {
+	if moduleCall == nil {
+		return base
+	}
+	return "module." + labelAt(moduleCall, 0) + "." + base
 }
 
 // --- typed selection by type / name ---

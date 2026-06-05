@@ -184,6 +184,7 @@ func (t *mqlTerraform) reverseRefIndex() (map[string][]any, error) {
 	}
 
 	idx := map[string][]any{}
+	fwd := map[string][]*mqlTerraformBlock{}
 	for i := range allBlocks {
 		container := allBlocks[i].(*mqlTerraformBlock)
 		cid, _ := container.id()
@@ -196,10 +197,12 @@ func (t *mqlTerraform) reverseRefIndex() (map[string][]any, error) {
 				continue
 			}
 			idx[tid] = append(idx[tid], container)
+			fwd[cid] = append(fwd[cid], targets[tid])
 		}
 	}
 
 	t.refIndex = idx
+	t.fwdIndex = fwd
 	return idx, nil
 }
 
