@@ -100,3 +100,29 @@ func TestReferenceClassificationFromHCL(t *testing.T) {
 	assert.Equal(t, "module", got["module.network"])
 	assert.Equal(t, "data", got["data.aws_vpc.main"])
 }
+
+func TestToStringList(t *testing.T) {
+	assert.Equal(t, []any{"all"}, toStringList("all"))
+	assert.Equal(t, []any{"tags", "ami"}, toStringList([]any{"tags", "ami"}))
+	assert.Equal(t, []any{}, toStringList(nil))
+	// non-string elements are dropped
+	assert.Equal(t, []any{"keep"}, toStringList([]any{"keep", 3}))
+}
+
+func TestHclConfigAttributesToDict_UnwrapsJsonencode(t *testing.T) {
+	// jsonencode(...) is wrapped in a single-element list by getCtyValue;
+	// the config view unwraps it to the decoded object.
+	attrs := parseAttrs(t, `policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow" }] })`)
+	dict := hclConfigAttributesToDict(attrs)
+	policy, ok := dict["policy"].(map[string]any)
+	require.True(t, ok, "policy should be an object, got %#v", dict["policy"])
+	assert.Equal(t, "2012-10-17", policy["Version"])
+	_, isList := policy["Statement"].([]any)
+	assert.True(t, isList, "Statement should remain a list")
+
+	// a genuine list literal is NOT unwrapped
+	attrs = parseAttrs(t, `cidr_blocks = ["10.0.0.0/16"]`)
+	dict = hclConfigAttributesToDict(attrs)
+	_, stillList := dict["cidr_blocks"].([]any)
+	assert.True(t, stillList, "a real single-element list must stay a list")
+}

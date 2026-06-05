@@ -32,6 +32,8 @@ type mqlTerraformInternal struct {
 	terraformBlocks []*mqlTerraformBlock
 	lock            sync.Mutex
 	resources       []*mqlTerraformBlock
+	// reverse reference index (target block id -> referencing blocks), lazily built
+	refIndex map[string][]any
 }
 
 func (t *mqlTerraform) files() ([]any, error) {

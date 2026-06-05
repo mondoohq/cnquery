@@ -129,6 +129,22 @@ private terraform.block @defaults("type labels") {
   // of object referenced, the referenced address, and a link to the
   // referenced block when it resolves within the parsed configuration.
   references() []terraform.reference
+  // Child blocks grouped by block type
+  //
+  // Examine nested configuration blocks keyed by their type, so a
+  // policy selects a group directly — for example `nestedBlocks["ingress"]`
+  // or `nestedBlocks["server_side_encryption_configuration"]` — instead
+  // of filtering the flat `blocks` list. Each value is the list of child
+  // blocks of that type, since a type may repeat within a block.
+  nestedBlocks() map[string][]terraform.block
+  // Normalized argument values
+  //
+  // Examine the same arguments as `arguments`, but with `jsonencode`
+  // policy documents and similar function results returned as their
+  // decoded object rather than wrapped in a single-element list, so a
+  // policy reads `config["policy"]["Statement"]` directly instead of
+  // unwrapping with `arguments["policy"].first["Statement"]`.
+  config() dict
   // Block snippet
   snippet string
 }
@@ -205,6 +221,36 @@ private terraform.resource @defaults("type name") {
   dependsOn() []terraform.block
   // References made by this resource's arguments
   references() []terraform.reference
+  // Blocks elsewhere in the configuration that reference this resource
+  //
+  // Examine the blocks whose arguments — at any nesting depth — point at
+  // this resource. A resource referenced by nothing is dead
+  // configuration; `referencedBy.length` measures how many blocks
+  // depend on it.
+  referencedBy() []terraform.block
+  // Child blocks grouped by block type
+  //
+  // Examine nested configuration blocks keyed by their type — for
+  // example `nestedBlocks["ingress"]` or `nestedBlocks["lifecycle"]` —
+  // instead of filtering the flat child-block list. Each value is the
+  // list of child blocks of that type.
+  nestedBlocks() map[string][]terraform.block
+  // Normalized argument values
+  //
+  // Examine the same arguments as `arguments`, but with `jsonencode`
+  // policy documents and similar function results returned as their
+  // decoded object rather than wrapped in a single-element list, so a
+  // policy reads `config["policy"]["Statement"]` directly.
+  config() dict
+  // Whether the lifecycle block sets `prevent_destroy`
+  preventDestroy() bool
+  // Whether the lifecycle block sets `create_before_destroy`
+  createBeforeDestroy() bool
+  // Attribute names listed in the lifecycle `ignore_changes` meta-argument
+  //
+  // The attributes Terraform will not act on when they drift, or the
+  // single entry `all`. Empty when no `ignore_changes` is set.
+  ignoreChanges() []string
 }
 
 // Terraform data source
@@ -237,6 +283,18 @@ private terraform.datasource @defaults("type name") {
   arguments() dict
   // References made by this data source's arguments
   references() []terraform.reference
+  // Blocks elsewhere in the configuration that reference this data source
+  //
+  // Examine the blocks whose arguments — at any nesting depth — point at
+  // this data source. A data source referenced by nothing is dead
+  // configuration.
+  referencedBy() []terraform.block
+  // Normalized argument values
+  //
+  // Examine the same arguments as `arguments`, but with `jsonencode`
+  // function results returned as their decoded object rather than
+  // wrapped in a single-element list.
+  config() dict
 }
 
 // Terraform input variable
