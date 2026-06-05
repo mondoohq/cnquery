@@ -64,6 +64,10 @@ terraform.module.childModules 13.1.1
 terraform.module.dataSources 13.1.1
 terraform.module.dir 9.0.0
 terraform.module.files 13.1.1
+terraform.module.input 13.1.1
+terraform.module.input.name 13.1.1
+terraform.module.input.value 13.1.1
+terraform.module.input.variable 13.1.1
 terraform.module.inputs 13.1.1
 terraform.module.key 9.0.0
 terraform.module.outputs 13.1.1

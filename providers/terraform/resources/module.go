@@ -5,8 +5,10 @@ package resources
 
 import (
 	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/hashicorp/hcl/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/terraform/connection"
@@ -199,22 +201,89 @@ func classifyModuleSource(s string) string {
 	}
 }
 
-func (m *mqlTerraformModule) inputs() (any, error) {
-	b := m.moduleBlock()
-	if b == nil {
-		return map[string]any{}, nil
-	}
-	args, err := b.arguments()
+type mqlTerraformModuleInputInternal struct {
+	module        *mqlTerraformModule
+	resolvedValue any
+}
+
+func (m *mqlTerraformModule) inputs() ([]any, error) {
+	tf, err := m.terraformRef()
 	if err != nil {
 		return nil, err
 	}
-	out := map[string]any{}
-	for k := range args {
-		if !moduleMetaArguments[k] {
-			out[k] = args[k]
+	call := m.callBlock(tf)
+	hb := blockHcl(call)
+	if hb == nil {
+		return []any{}, nil
+	}
+
+	// Resolve input expressions in the calling context (the module the call
+	// itself sits in — root for a top-level call).
+	entries := tf.fileModuleIndex()
+	parentCall := matchModuleEntry(entries, blockFilePath(call))
+	blocksRaw := tf.GetBlocks()
+	if blocksRaw.Error != nil {
+		return nil, blocksRaw.Error
+	}
+	parentCtx := tf.evalContextFor(parentCall, blocksRaw.Data, entries)
+	fallback := &hcl.EvalContext{Functions: hclFunctions()}
+
+	attrs, _ := hb.Body.JustAttributes()
+	names := make([]string, 0, len(attrs))
+	for name := range attrs {
+		if !moduleMetaArguments[name] {
+			names = append(names, name)
 		}
 	}
+	sort.Strings(names)
+
+	out := make([]any, 0, len(names))
+	for _, name := range names {
+		expr := attrs[name].Expr
+		var val any
+		if v, diags := expr.Value(parentCtx); !diags.HasErrors() && v.IsWhollyKnown() {
+			val = ctyToGo(v)
+		} else {
+			val = getCtyValue(expr, fallback)
+		}
+
+		r, err := CreateResource(tf.MqlRuntime, "terraform.module.input", map[string]*llx.RawData{
+			"__id": llx.StringData(m.__id + "/input/" + name),
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			return nil, err
+		}
+		in := r.(*mqlTerraformModuleInput)
+		in.module = m
+		in.resolvedValue = val
+		out = append(out, in)
+	}
 	return out, nil
+}
+
+func (i *mqlTerraformModuleInput) value() (any, error) {
+	return i.resolvedValue, nil
+}
+
+// variable links a module input to the variable declaration it sets.
+func (i *mqlTerraformModuleInput) variable() (*mqlTerraformVariable, error) {
+	if i.module == nil {
+		i.Variable.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	vars, err := i.module.variables()
+	if err != nil {
+		return nil, err
+	}
+	for j := range vars {
+		v := vars[j].(*mqlTerraformVariable)
+		if v.Name.Data == i.Name.Data {
+			return v, nil
+		}
+	}
+	i.Variable.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (m *mqlTerraformModule) references() ([]any, error) {

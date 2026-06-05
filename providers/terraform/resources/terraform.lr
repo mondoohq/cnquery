@@ -522,9 +522,11 @@ terraform.module @defaults("key source") {
   sourceType() string
   // Input values passed to the module
   //
-  // The module call's arguments excluding the meta-arguments source,
-  // version, count, for_each, depends_on, and providers.
-  inputs() dict
+  // Each input is the variable name it sets, the value passed (resolved
+  // in the calling context), and the module variable declaration it
+  // binds to. Excludes the meta-arguments source, version, count,
+  // for_each, depends_on, and providers.
+  inputs() []terraform.module.input
   // References made by the module's input values
   references() []terraform.reference
   // Managed resources declared in this module's source
@@ -548,6 +550,21 @@ terraform.module @defaults("key source") {
 
   // Block (including the configuration)
   block() terraform.block
+}
+
+// Value passed to a module input
+//
+// Examine a single module input: the variable `name` it sets, the
+// `value` passed (resolved in the calling context, with var and local
+// interpolations evaluated), and the module `variable` declaration it
+// binds to.
+private terraform.module.input @defaults("name") {
+  // Variable name this input sets
+  name string
+  // Value passed, resolved in the calling context
+  value() dict
+  // Module variable declaration this input binds to, or null if undeclared
+  variable() terraform.variable
 }
 
 // Terraform settings block

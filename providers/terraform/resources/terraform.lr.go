@@ -29,6 +29,7 @@ const (
 	ResourceTerraformOutput                   string = "terraform.output"
 	ResourceTerraformProvider                 string = "terraform.provider"
 	ResourceTerraformModule                   string = "terraform.module"
+	ResourceTerraformModuleInput              string = "terraform.module.input"
 	ResourceTerraformSettings                 string = "terraform.settings"
 	ResourceTerraformSettingsRequiredProvider string = "terraform.settings.requiredProvider"
 	ResourceTerraformState                    string = "terraform.state"
@@ -101,6 +102,10 @@ func init() {
 		"terraform.module": {
 			// to override args, implement: initTerraformModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformModule,
+		},
+		"terraform.module.input": {
+			// to override args, implement: initTerraformModuleInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformModuleInput,
 		},
 		"terraform.settings": {
 			Init:   initTerraformSettings,
@@ -563,7 +568,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlTerraformModule).GetSourceType()).ToDataRes(types.String)
 	},
 	"terraform.module.inputs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTerraformModule).GetInputs()).ToDataRes(types.Dict)
+		return (r.(*mqlTerraformModule).GetInputs()).ToDataRes(types.Array(types.Resource("terraform.module.input")))
 	},
 	"terraform.module.references": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformModule).GetReferences()).ToDataRes(types.Array(types.Resource("terraform.reference")))
@@ -588,6 +593,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"terraform.module.block": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformModule).GetBlock()).ToDataRes(types.Resource("terraform.block"))
+	},
+	"terraform.module.input.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformModuleInput).GetName()).ToDataRes(types.String)
+	},
+	"terraform.module.input.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformModuleInput).GetValue()).ToDataRes(types.Dict)
+	},
+	"terraform.module.input.variable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformModuleInput).GetVariable()).ToDataRes(types.Resource("terraform.variable"))
 	},
 	"terraform.settings.block": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformSettings).GetBlock()).ToDataRes(types.Resource("terraform.block"))
@@ -1289,7 +1303,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"terraform.module.inputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTerraformModule).Inputs, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlTerraformModule).Inputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"terraform.module.references": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1322,6 +1336,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.module.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformModule).Block, ok = plugin.RawToTValue[*mqlTerraformBlock](v.Value, v.Error)
+		return
+	},
+	"terraform.module.input.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformModuleInput).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.module.input.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformModuleInput).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.module.input.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformModuleInput).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.module.input.variable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformModuleInput).Variable, ok = plugin.RawToTValue[*mqlTerraformVariable](v.Value, v.Error)
 		return
 	},
 	"terraform.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3339,7 +3369,7 @@ type mqlTerraformModule struct {
 	Version      plugin.TValue[string]
 	Dir          plugin.TValue[string]
 	SourceType   plugin.TValue[string]
-	Inputs       plugin.TValue[any]
+	Inputs       plugin.TValue[[]any]
 	References   plugin.TValue[[]any]
 	Resources    plugin.TValue[[]any]
 	DataSources  plugin.TValue[[]any]
@@ -3409,8 +3439,18 @@ func (c *mqlTerraformModule) GetSourceType() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlTerraformModule) GetInputs() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.Inputs, func() (any, error) {
+func (c *mqlTerraformModule) GetInputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Inputs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.module", c.__id, "inputs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.inputs()
 	})
 }
@@ -3540,6 +3580,74 @@ func (c *mqlTerraformModule) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
 		}
 
 		return c.block()
+	})
+}
+
+// mqlTerraformModuleInput for the terraform.module.input resource
+type mqlTerraformModuleInput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformModuleInputInternal
+	Name     plugin.TValue[string]
+	Value    plugin.TValue[any]
+	Variable plugin.TValue[*mqlTerraformVariable]
+}
+
+// createTerraformModuleInput creates a new instance of this resource
+func createTerraformModuleInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformModuleInput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.module.input", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformModuleInput) MqlName() string {
+	return "terraform.module.input"
+}
+
+func (c *mqlTerraformModuleInput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformModuleInput) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformModuleInput) GetValue() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Value, func() (any, error) {
+		return c.value()
+	})
+}
+
+func (c *mqlTerraformModuleInput) GetVariable() *plugin.TValue[*mqlTerraformVariable] {
+	return plugin.GetOrCompute[*mqlTerraformVariable](&c.Variable, func() (*mqlTerraformVariable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.module.input", c.__id, "variable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlTerraformVariable), nil
+			}
+		}
+
+		return c.variable()
 	})
 }
 
