@@ -546,6 +546,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"nutanix": {
+		Provider: &plugin.Provider{
+			Name:            "nutanix",
+			ID:              "go.mondoo.com/mql/v13/providers/nutanix",
+			ConnectionTypes: []string{"nutanix"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "nutanix",
+					Use:   "nutanix --endpoint ENDPOINT [flags]",
+					Short: "a Nutanix Prism Central instance",
+				},
+			},
+		},
+	},
+
 	"oci": {
 		Provider: &plugin.Provider{
 			Name:            "oci",

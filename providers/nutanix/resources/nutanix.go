@@ -1,0 +1,1155 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"fmt"
+	"time"
+
+	clustermgmtconfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	clustercommon "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
+	vmcommon "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
+	vmmconfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/nutanix/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+// pageSize is the number of items requested per list page from the v4 APIs.
+const pageSize = 100
+
+func (a *mqlNutanix) conn() *connection.NutanixConnection {
+	return a.MqlRuntime.Connection.(*connection.NutanixConnection)
+}
+
+// ---------------------------------------------------------------------------
+// pointer dereference helpers
+// ---------------------------------------------------------------------------
+
+func derefInt64(v *int64) int64 {
+	if v == nil {
+		return 0
+	}
+	return *v
+}
+
+func derefInt(v *int) int64 {
+	if v == nil {
+		return 0
+	}
+	return int64(*v)
+}
+
+func derefBool(v *bool) bool {
+	if v == nil {
+		return false
+	}
+	return *v
+}
+
+// usecsToTime converts a microsecond Unix timestamp pointer to a *time.Time,
+// returning nil when the source is nil or zero.
+func usecsToTime(usecs *int64) *time.Time {
+	if usecs == nil || *usecs == 0 {
+		return nil
+	}
+	t := time.UnixMicro(*usecs).UTC()
+	return &t
+}
+
+func clusterIPToString(ip *clustercommon.IPAddress) string {
+	if ip == nil {
+		return ""
+	}
+	if ip.Ipv4 != nil && ip.Ipv4.Value != nil {
+		return *ip.Ipv4.Value
+	}
+	if ip.Ipv6 != nil && ip.Ipv6.Value != nil {
+		return *ip.Ipv6.Value
+	}
+	return ""
+}
+
+func vmIPv4ToString(ip *vmcommon.IPv4Address) string {
+	if ip == nil || ip.Value == nil {
+		return ""
+	}
+	return *ip.Value
+}
+
+func clusterIPOrFqdnToString(a *clustercommon.IPAddressOrFQDN) string {
+	if a == nil {
+		return ""
+	}
+	if a.Ipv4 != nil && a.Ipv4.Value != nil {
+		return *a.Ipv4.Value
+	}
+	if a.Ipv6 != nil && a.Ipv6.Value != nil {
+		return *a.Ipv6.Value
+	}
+	if a.Fqdn != nil && a.Fqdn.Value != nil {
+		return *a.Fqdn.Value
+	}
+	return ""
+}
+
+// ---------------------------------------------------------------------------
+// root accessors
+// ---------------------------------------------------------------------------
+
+func (a *mqlNutanix) clusters() ([]any, error) {
+	conn := a.conn()
+	clusters, err := listClusters(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	scopeCluster := conn.ClusterID()
+	res := []any{}
+	for i := range clusters {
+		c := clusters[i]
+		if scopeCluster != "" && (c.ExtId == nil || *c.ExtId != scopeCluster) {
+			continue
+		}
+		mqlCluster, err := newMqlCluster(a.MqlRuntime, &c)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCluster)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanix) hosts() ([]any, error) {
+	conn := a.conn()
+	hosts, err := listHosts(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	scopeNode := conn.NodeID()
+	scopeCluster := conn.ClusterID()
+	res := []any{}
+	for i := range hosts {
+		h := hosts[i]
+		if scopeNode != "" && (h.ExtId == nil || *h.ExtId != scopeNode) {
+			continue
+		}
+		if scopeCluster != "" && (h.Cluster == nil || h.Cluster.Uuid == nil || *h.Cluster.Uuid != scopeCluster) {
+			continue
+		}
+		mqlHost, err := newMqlHost(a.MqlRuntime, &h)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlHost)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanix) vms() ([]any, error) {
+	conn := a.conn()
+	vms, err := listVms(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	scopeNode := conn.NodeID()
+	scopeCluster := conn.ClusterID()
+	res := []any{}
+	for i := range vms {
+		vm := vms[i]
+		if scopeNode != "" && (vm.Host == nil || vm.Host.ExtId == nil || *vm.Host.ExtId != scopeNode) {
+			continue
+		}
+		if scopeCluster != "" && (vm.Cluster == nil || vm.Cluster.ExtId == nil || *vm.Cluster.ExtId != scopeCluster) {
+			continue
+		}
+		mqlVm, err := newMqlVm(a.MqlRuntime, &vm)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVm)
+	}
+	return res, nil
+}
+
+// ---------------------------------------------------------------------------
+// SDK list helpers (paginated)
+// ---------------------------------------------------------------------------
+
+func listClusters(conn *connection.NutanixConnection) ([]clustermgmtconfig.Cluster, error) {
+	api := conn.ClustersApi()
+	limit := pageSize
+	all := []clustermgmtconfig.Cluster{}
+	for page := 0; ; page++ {
+		p := page
+		resp, err := api.ListClusters(&p, &limit, nil, nil, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+		items, ok := data.([]clustermgmtconfig.Cluster)
+		if !ok {
+			break
+		}
+		all = append(all, items...)
+		if len(items) < limit {
+			break
+		}
+	}
+	return all, nil
+}
+
+func listHosts(conn *connection.NutanixConnection) ([]clustermgmtconfig.Host, error) {
+	api := conn.ClustersApi()
+	limit := pageSize
+	all := []clustermgmtconfig.Host{}
+	for page := 0; ; page++ {
+		p := page
+		resp, err := api.ListHosts(&p, &limit, nil, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+		items, ok := data.([]clustermgmtconfig.Host)
+		if !ok {
+			break
+		}
+		all = append(all, items...)
+		if len(items) < limit {
+			break
+		}
+	}
+	return all, nil
+}
+
+func listVms(conn *connection.NutanixConnection) ([]vmmconfig.Vm, error) {
+	api := conn.VmApi()
+	limit := pageSize
+	all := []vmmconfig.Vm{}
+	for page := 0; ; page++ {
+		p := page
+		resp, err := api.ListVms(&p, &limit, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+		items, ok := data.([]vmmconfig.Vm)
+		if !ok {
+			break
+		}
+		all = append(all, items...)
+		if len(items) < limit {
+			break
+		}
+	}
+	return all, nil
+}
+
+// ---------------------------------------------------------------------------
+// resource builders
+// ---------------------------------------------------------------------------
+
+func newMqlCluster(runtime *plugin.Runtime, c *clustermgmtconfig.Cluster) (*mqlNutanixCluster, error) {
+	hypervisorTypes := []any{}
+	functions := []any{}
+	encryptionOptions := []any{}
+	encryptionScopes := []any{}
+	softwareMap := map[string]any{}
+	version := ""
+	fullVersion := ""
+	arch := ""
+	clusterType := ""
+	operationMode := ""
+	encryptionInTransitStatus := ""
+	redundancyFactor := int64(0)
+	incarnationId := int64(0)
+	isLts := false
+	isAvailable := false
+	isPasswordRemoteLoginEnabled := false
+	isRemoteSupportEnabled := false
+	pulseEnabled := false
+	timezone := ""
+
+	if c.Config != nil {
+		cfg := c.Config
+		for _, ht := range cfg.HypervisorTypes {
+			hypervisorTypes = append(hypervisorTypes, ht.GetName())
+		}
+		for _, fn := range cfg.ClusterFunction {
+			functions = append(functions, fn.GetName())
+		}
+		for _, eo := range cfg.EncryptionOption {
+			encryptionOptions = append(encryptionOptions, eo.GetName())
+		}
+		for _, es := range cfg.EncryptionScope {
+			encryptionScopes = append(encryptionScopes, es.GetName())
+		}
+		for _, sw := range cfg.ClusterSoftwareMap {
+			if sw.SoftwareType != nil && sw.Version != nil {
+				softwareMap[sw.SoftwareType.GetName()] = *sw.Version
+			}
+		}
+		if cfg.BuildInfo != nil {
+			if cfg.BuildInfo.Version != nil {
+				version = *cfg.BuildInfo.Version
+			}
+			if cfg.BuildInfo.FullVersion != nil {
+				fullVersion = *cfg.BuildInfo.FullVersion
+			}
+		}
+		if cfg.ClusterArch != nil {
+			arch = cfg.ClusterArch.GetName()
+		}
+		if cfg.ClusterType != nil {
+			clusterType = cfg.ClusterType.GetName()
+		}
+		if cfg.OperationMode != nil {
+			operationMode = cfg.OperationMode.GetName()
+		}
+		if cfg.EncryptionInTransitStatus != nil {
+			encryptionInTransitStatus = cfg.EncryptionInTransitStatus.GetName()
+		}
+		redundancyFactor = derefInt64(cfg.RedundancyFactor)
+		incarnationId = derefInt64(cfg.IncarnationId)
+		if cfg.IsLts != nil {
+			isLts = *cfg.IsLts
+		}
+		if cfg.IsAvailable != nil {
+			isAvailable = *cfg.IsAvailable
+		}
+		if cfg.IsPasswordRemoteLoginEnabled != nil {
+			isPasswordRemoteLoginEnabled = *cfg.IsPasswordRemoteLoginEnabled
+		}
+		if cfg.IsRemoteSupportEnabled != nil {
+			isRemoteSupportEnabled = *cfg.IsRemoteSupportEnabled
+		}
+		if cfg.PulseStatus != nil && cfg.PulseStatus.IsEnabled != nil {
+			pulseEnabled = *cfg.PulseStatus.IsEnabled
+		}
+		if cfg.Timezone != nil {
+			timezone = *cfg.Timezone
+		}
+	}
+
+	nodeCount := int64(0)
+	if c.Nodes != nil {
+		nodeCount = derefInt(c.Nodes.NumberOfNodes)
+	}
+
+	upgradeStatus := ""
+	if c.UpgradeStatus != nil {
+		upgradeStatus = c.UpgradeStatus.GetName()
+	}
+
+	categories := []any{}
+	for _, cat := range c.Categories {
+		categories = append(categories, cat)
+	}
+
+	res, err := CreateResource(runtime, "nutanix.cluster", map[string]*llx.RawData{
+		"__id":                         llx.StringDataPtr(c.ExtId),
+		"id":                           llx.StringDataPtr(c.ExtId),
+		"name":                         llx.StringDataPtr(c.Name),
+		"version":                      llx.StringData(version),
+		"fullVersion":                  llx.StringData(fullVersion),
+		"arch":                         llx.StringData(arch),
+		"clusterType":                  llx.StringData(clusterType),
+		"functions":                    llx.ArrayData(functions, types.String),
+		"hypervisorTypes":              llx.ArrayData(hypervisorTypes, types.String),
+		"nodeCount":                    llx.IntData(nodeCount),
+		"vmCount":                      llx.IntData(derefInt64(c.VmCount)),
+		"inefficientVmCount":           llx.IntData(derefInt64(c.InefficientVmCount)),
+		"redundancyFactor":             llx.IntData(redundancyFactor),
+		"operationMode":                llx.StringData(operationMode),
+		"encryptionInTransitStatus":    llx.StringData(encryptionInTransitStatus),
+		"encryptionOptions":            llx.ArrayData(encryptionOptions, types.String),
+		"encryptionScopes":             llx.ArrayData(encryptionScopes, types.String),
+		"isLts":                        llx.BoolData(isLts),
+		"isAvailable":                  llx.BoolData(isAvailable),
+		"isPasswordRemoteLoginEnabled": llx.BoolData(isPasswordRemoteLoginEnabled),
+		"isRemoteSupportEnabled":       llx.BoolData(isRemoteSupportEnabled),
+		"pulseEnabled":                 llx.BoolData(pulseEnabled),
+		"incarnationId":                llx.IntData(incarnationId),
+		"backupEligibilityScore":       llx.IntData(derefInt64(c.BackupEligibilityScore)),
+		"timezone":                     llx.StringData(timezone),
+		"categories":                   llx.ArrayData(categories, types.String),
+		"softwareMap":                  llx.MapData(softwareMap, types.String),
+		"upgradeStatus":                llx.StringData(upgradeStatus),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlCluster := res.(*mqlNutanixCluster)
+	if c.ExtId != nil {
+		mqlCluster.clusterId = *c.ExtId
+	}
+	mqlCluster.cacheNetwork = c.Network
+	if c.Config != nil {
+		mqlCluster.cacheFaultTolerance = c.Config.FaultToleranceState
+	}
+	if c.Nodes != nil {
+		mqlCluster.cacheNodeList = c.Nodes.NodeList
+	}
+	return mqlCluster, nil
+}
+
+type mqlNutanixClusterInternal struct {
+	clusterId           string
+	cacheNetwork        *clustermgmtconfig.ClusterNetworkReference
+	cacheFaultTolerance *clustermgmtconfig.FaultToleranceState
+	cacheNodeList       []clustermgmtconfig.NodeListItemReference
+}
+
+func (a *mqlNutanixCluster) network() (*mqlNutanixClusterNetworkConfig, error) {
+	n := a.cacheNetwork
+	if n == nil {
+		a.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	nameServers := []any{}
+	for i := range n.NameServerIpList {
+		nameServers = append(nameServers, clusterIPOrFqdnToString(&n.NameServerIpList[i]))
+	}
+	ntpServers := []any{}
+	for i := range n.NtpServerIpList {
+		ntpServers = append(ntpServers, clusterIPOrFqdnToString(&n.NtpServerIpList[i]))
+	}
+	nfs := []any{}
+	for _, s := range n.NfsSubnetWhitelist {
+		nfs = append(nfs, s)
+	}
+
+	httpProxies := []any{}
+	for i := range n.HttpProxyList {
+		p := n.HttpProxyList[i]
+		proxy := map[string]any{
+			"ipAddress": clusterIPToString(p.IpAddress),
+			"port":      derefInt(p.Port),
+		}
+		if p.Name != nil {
+			proxy["name"] = *p.Name
+		}
+		if p.Username != nil {
+			proxy["username"] = *p.Username
+		}
+		proxyTypes := []any{}
+		for _, t := range p.ProxyTypes {
+			proxyTypes = append(proxyTypes, t.GetName())
+		}
+		proxy["proxyTypes"] = proxyTypes
+		httpProxies = append(httpProxies, proxy)
+	}
+
+	fqdn := ""
+	if n.Fqdn != nil {
+		fqdn = *n.Fqdn
+	}
+	externalSubnet := ""
+	if n.ExternalSubnet != nil {
+		externalSubnet = *n.ExternalSubnet
+	}
+	internalSubnet := ""
+	if n.InternalSubnet != nil {
+		internalSubnet = *n.InternalSubnet
+	}
+	kmsType := ""
+	if n.KeyManagementServerType != nil {
+		kmsType = n.KeyManagementServerType.GetName()
+	}
+	smtpEmail := ""
+	smtpType := ""
+	if n.SmtpServer != nil {
+		if n.SmtpServer.EmailAddress != nil {
+			smtpEmail = *n.SmtpServer.EmailAddress
+		}
+		if n.SmtpServer.Type != nil {
+			smtpType = n.SmtpServer.Type.GetName()
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.network", map[string]*llx.RawData{
+		"__id":                    llx.StringData(fmt.Sprintf("%s/network", a.clusterId)),
+		"externalAddress":         llx.StringData(clusterIPToString(n.ExternalAddress)),
+		"externalDataServiceIp":   llx.StringData(clusterIPToString(n.ExternalDataServiceIp)),
+		"externalSubnet":          llx.StringData(externalSubnet),
+		"internalSubnet":          llx.StringData(internalSubnet),
+		"fqdn":                    llx.StringData(fqdn),
+		"masqueradingIp":          llx.StringData(clusterIPToString(n.MasqueradingIp)),
+		"masqueradingPort":        llx.IntData(derefInt(n.MasqueradingPort)),
+		"nameServers":             llx.ArrayData(nameServers, types.String),
+		"ntpServers":              llx.ArrayData(ntpServers, types.String),
+		"nfsSubnetWhitelist":      llx.ArrayData(nfs, types.String),
+		"keyManagementServerType": llx.StringData(kmsType),
+		"smtpEmailAddress":        llx.StringData(smtpEmail),
+		"smtpType":                llx.StringData(smtpType),
+		"httpProxies":             llx.ArrayData(httpProxies, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixClusterNetworkConfig), nil
+}
+
+func (a *mqlNutanixCluster) faultTolerance() (*mqlNutanixClusterFaultToleranceState, error) {
+	ft := a.cacheFaultTolerance
+	if ft == nil {
+		a.FaultTolerance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	current := ""
+	if ft.CurrentClusterFaultTolerance != nil {
+		current = ft.CurrentClusterFaultTolerance.GetName()
+	}
+	desired := ""
+	if ft.DesiredClusterFaultTolerance != nil {
+		desired = ft.DesiredClusterFaultTolerance.GetName()
+	}
+	domain := ""
+	if ft.DomainAwarenessLevel != nil {
+		domain = ft.DomainAwarenessLevel.GetName()
+	}
+	cassandra := false
+	zookeeper := false
+	if ft.RedundancyStatus != nil {
+		if ft.RedundancyStatus.IsCassandraPreparationDone != nil {
+			cassandra = *ft.RedundancyStatus.IsCassandraPreparationDone
+		}
+		if ft.RedundancyStatus.IsZookeeperPreparationDone != nil {
+			zookeeper = *ft.RedundancyStatus.IsZookeeperPreparationDone
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.faultTolerance", map[string]*llx.RawData{
+		"__id":                         llx.StringData(fmt.Sprintf("%s/faultTolerance", a.clusterId)),
+		"currentClusterFaultTolerance": llx.StringData(current),
+		"desiredClusterFaultTolerance": llx.StringData(desired),
+		"currentMaxFaultTolerance":     llx.IntData(derefInt(ft.CurrentMaxFaultTolerance)),
+		"desiredMaxFaultTolerance":     llx.IntData(derefInt(ft.DesiredMaxFaultTolerance)),
+		"domainAwarenessLevel":         llx.StringData(domain),
+		"cassandraPreparationDone":     llx.BoolData(cassandra),
+		"zookeeperPreparationDone":     llx.BoolData(zookeeper),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixClusterFaultToleranceState), nil
+}
+
+func (a *mqlNutanixCluster) nodes() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheNodeList {
+		n := a.cacheNodeList[i]
+		nodeUuid := ""
+		if n.NodeUuid != nil {
+			nodeUuid = *n.NodeUuid
+		}
+		mqlNode, err := CreateResource(a.MqlRuntime, "nutanix.cluster.node", map[string]*llx.RawData{
+			"__id":           llx.StringData(nodeUuid),
+			"id":             llx.StringData(nodeUuid),
+			"hostIp":         llx.StringData(clusterIPToString(n.HostIp)),
+			"controllerVmIp": llx.StringData(clusterIPToString(n.ControllerVmIp)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		node := mqlNode.(*mqlNutanixClusterNode)
+		node.cacheClusterId = a.clusterId
+		node.cacheNodeUuid = nodeUuid
+		res = append(res, node)
+	}
+	return res, nil
+}
+
+type mqlNutanixClusterNodeInternal struct {
+	cacheClusterId string
+	cacheNodeUuid  string
+}
+
+func (a *mqlNutanixClusterNode) host() (*mqlNutanixHost, error) {
+	if a.cacheClusterId == "" || a.cacheNodeUuid == "" {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
+	resp, err := conn.ClustersApi().GetHostById(&a.cacheClusterId, &a.cacheNodeUuid)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.GetData()
+	if data == nil {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	host, ok := data.(clustermgmtconfig.Host)
+	if !ok {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlHost(a.MqlRuntime, &host)
+}
+
+func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanixHost, error) {
+	hypervisorType := ""
+	hypervisorFullName := ""
+	hypervisorState := ""
+	hypervisorAcropolisConnectionState := ""
+	hypervisorExternalAddress := ""
+	hypervisorUserName := ""
+	vmCount := int64(0)
+	if h.Hypervisor != nil {
+		hv := h.Hypervisor
+		if hv.Type != nil {
+			hypervisorType = hv.Type.GetName()
+		}
+		if hv.FullName != nil {
+			hypervisorFullName = *hv.FullName
+		}
+		if hv.State != nil {
+			hypervisorState = hv.State.GetName()
+		}
+		if hv.AcropolisConnectionState != nil {
+			hypervisorAcropolisConnectionState = hv.AcropolisConnectionState.GetName()
+		}
+		hypervisorExternalAddress = clusterIPToString(hv.ExternalAddress)
+		if hv.UserName != nil {
+			hypervisorUserName = *hv.UserName
+		}
+		vmCount = derefInt64(hv.NumberOfVms)
+	}
+
+	hostType := ""
+	if h.HostType != nil {
+		hostType = h.HostType.GetName()
+	}
+	nodeStatus := ""
+	if h.NodeStatus != nil {
+		nodeStatus = h.NodeStatus.GetName()
+	}
+
+	gpus := []any{}
+	for _, g := range h.GpuList {
+		gpus = append(gpus, g)
+	}
+
+	res, err := CreateResource(runtime, "nutanix.host", map[string]*llx.RawData{
+		"__id":                               llx.StringDataPtr(h.ExtId),
+		"id":                                 llx.StringDataPtr(h.ExtId),
+		"name":                               llx.StringDataPtr(h.HostName),
+		"hostType":                           llx.StringData(hostType),
+		"blockModel":                         llx.StringDataPtr(h.BlockModel),
+		"blockSerial":                        llx.StringDataPtr(h.BlockSerial),
+		"rackableUnitUuid":                   llx.StringDataPtr(h.RackableUnitUuid),
+		"nodeSerial":                         llx.StringDataPtr(h.NodeSerial),
+		"cpuModel":                           llx.StringDataPtr(h.CpuModel),
+		"cpuCores":                           llx.IntData(derefInt64(h.NumberOfCpuCores)),
+		"cpuSockets":                         llx.IntData(derefInt64(h.NumberOfCpuSockets)),
+		"cpuThreads":                         llx.IntData(derefInt64(h.NumberOfCpuThreads)),
+		"cpuCapacityHz":                      llx.IntData(derefInt64(h.CpuCapacityHz)),
+		"cpuFrequencyHz":                     llx.IntData(derefInt64(h.CpuFrequencyHz)),
+		"memorySizeBytes":                    llx.IntData(derefInt64(h.MemorySizeBytes)),
+		"gpuDriverVersion":                   llx.StringDataPtr(h.GpuDriverVersion),
+		"gpus":                               llx.ArrayData(gpus, types.String),
+		"hypervisorType":                     llx.StringData(hypervisorType),
+		"hypervisorFullName":                 llx.StringData(hypervisorFullName),
+		"hypervisorState":                    llx.StringData(hypervisorState),
+		"hypervisorAcropolisConnectionState": llx.StringData(hypervisorAcropolisConnectionState),
+		"hypervisorExternalAddress":          llx.StringData(hypervisorExternalAddress),
+		"hypervisorUserName":                 llx.StringData(hypervisorUserName),
+		"vmCount":                            llx.IntData(vmCount),
+		"bootTime":                           llx.TimeDataPtr(usecsToTime(h.BootTimeUsecs)),
+		"nodeStatus":                         llx.StringData(nodeStatus),
+		"maintenanceState":                   llx.StringDataPtr(h.MaintenanceState),
+		"isDegraded":                         llx.BoolData(derefBool(h.IsDegraded)),
+		"isRebootPending":                    llx.BoolData(derefBool(h.IsRebootPending)),
+		"isSecureBooted":                     llx.BoolData(derefBool(h.IsSecureBooted)),
+		"isHardwareVirtualized":              llx.BoolData(derefBool(h.IsHardwareVirtualized)),
+		"hasCsr":                             llx.BoolData(derefBool(h.HasCsr)),
+		"failoverClusterFqdn":                llx.StringDataPtr(h.FailoverClusterFqdn),
+		"failoverClusterNodeStatus":          llx.StringDataPtr(h.FailoverClusterNodeStatus),
+		"defaultVmContainerUuid":             llx.StringDataPtr(h.DefaultVmContainerUuid),
+		"defaultVmLocation":                  llx.StringDataPtr(h.DefaultVmLocation),
+		"defaultVhdContainerUuid":            llx.StringDataPtr(h.DefaultVhdContainerUuid),
+		"defaultVhdLocation":                 llx.StringDataPtr(h.DefaultVhdLocation),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlHost := res.(*mqlNutanixHost)
+	if h.Cluster != nil && h.Cluster.Uuid != nil {
+		mqlHost.clusterUuid = *h.Cluster.Uuid
+	}
+	mqlHost.hostId = ""
+	if h.ExtId != nil {
+		mqlHost.hostId = *h.ExtId
+	}
+	mqlHost.cacheControllerVm = h.ControllerVm
+	mqlHost.cacheIpmi = h.Ipmi
+	mqlHost.cacheDisks = h.Disk
+	return mqlHost, nil
+}
+
+func (a *mqlNutanixHost) controllerVm() (*mqlNutanixHostControllerVmInfo, error) {
+	cvm := a.cacheControllerVm
+	if cvm == nil {
+		a.ControllerVm.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	rdma := []any{}
+	for i := range cvm.RdmaBackplaneAddress {
+		rdma = append(rdma, clusterIPToString(&cvm.RdmaBackplaneAddress[i]))
+	}
+	res, err := CreateResource(a.MqlRuntime, "nutanix.host.controllerVmInfo", map[string]*llx.RawData{
+		"__id":                   llx.StringData(fmt.Sprintf("%s/controllerVm", a.hostId)),
+		"externalAddress":        llx.StringData(clusterIPToString(cvm.ExternalAddress)),
+		"backplaneAddress":       llx.StringData(clusterIPToString(cvm.BackplaneAddress)),
+		"natIp":                  llx.StringData(clusterIPToString(cvm.NatIp)),
+		"natPort":                llx.IntData(derefInt(cvm.NatPort)),
+		"isInMaintenanceMode":    llx.BoolData(derefBool(cvm.IsInMaintenanceMode)),
+		"rdmaBackplaneAddresses": llx.ArrayData(rdma, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixHostControllerVmInfo), nil
+}
+
+func (a *mqlNutanixHost) ipmi() (*mqlNutanixHostIpmiInfo, error) {
+	ipmi := a.cacheIpmi
+	if ipmi == nil {
+		a.Ipmi.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "nutanix.host.ipmiInfo", map[string]*llx.RawData{
+		"__id":     llx.StringData(fmt.Sprintf("%s/ipmi", a.hostId)),
+		"ip":       llx.StringData(clusterIPToString(ipmi.Ip)),
+		"username": llx.StringDataPtr(ipmi.Username),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixHostIpmiInfo), nil
+}
+
+func (a *mqlNutanixHost) disks() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheDisks {
+		d := a.cacheDisks[i]
+		uuid := ""
+		if d.Uuid != nil {
+			uuid = *d.Uuid
+		}
+		storageTier := ""
+		if d.StorageTier != nil {
+			storageTier = d.StorageTier.GetName()
+		}
+		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.host.disk", map[string]*llx.RawData{
+			"__id":        llx.StringData(uuid),
+			"id":          llx.StringData(uuid),
+			"mountPath":   llx.StringDataPtr(d.MountPath),
+			"serialId":    llx.StringDataPtr(d.SerialId),
+			"sizeInBytes": llx.IntData(derefInt64(d.SizeInBytes)),
+			"storageTier": llx.StringData(storageTier),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDisk)
+	}
+	return res, nil
+}
+
+func newMqlVm(runtime *plugin.Runtime, vm *vmmconfig.Vm) (*mqlNutanixVm, error) {
+	powerState := ""
+	if vm.PowerState != nil {
+		powerState = vm.PowerState.GetName()
+	}
+	machineType := ""
+	if vm.MachineType != nil {
+		machineType = vm.MachineType.GetName()
+	}
+	protectionType := ""
+	if vm.ProtectionType != nil {
+		protectionType = vm.ProtectionType.GetName()
+	}
+
+	categories := []any{}
+	for _, cat := range vm.Categories {
+		if cat.ExtId != nil {
+			categories = append(categories, *cat.ExtId)
+		}
+	}
+
+	res, err := CreateResource(runtime, "nutanix.vm", map[string]*llx.RawData{
+		"__id":                              llx.StringDataPtr(vm.ExtId),
+		"id":                                llx.StringDataPtr(vm.ExtId),
+		"name":                              llx.StringDataPtr(vm.Name),
+		"description":                       llx.StringDataPtr(vm.Description),
+		"powerState":                        llx.StringData(powerState),
+		"numSockets":                        llx.IntData(derefInt(vm.NumSockets)),
+		"numCoresPerSocket":                 llx.IntData(derefInt(vm.NumCoresPerSocket)),
+		"numThreadsPerCore":                 llx.IntData(derefInt(vm.NumThreadsPerCore)),
+		"numNumaNodes":                      llx.IntData(derefInt(vm.NumNumaNodes)),
+		"memorySizeBytes":                   llx.IntData(derefInt64(vm.MemorySizeBytes)),
+		"biosUuid":                          llx.StringDataPtr(vm.BiosUuid),
+		"generationUuid":                    llx.StringDataPtr(vm.GenerationUuid),
+		"machineType":                       llx.StringData(machineType),
+		"hardwareClockTimezone":             llx.StringDataPtr(vm.HardwareClockTimezone),
+		"protectionType":                    llx.StringData(protectionType),
+		"categories":                        llx.ArrayData(categories, types.String),
+		"isAgentVm":                         llx.BoolData(derefBool(vm.IsAgentVm)),
+		"isCpuHotplugEnabled":               llx.BoolData(derefBool(vm.IsCpuHotplugEnabled)),
+		"isCpuPassthroughEnabled":           llx.BoolData(derefBool(vm.IsCpuPassthroughEnabled)),
+		"isMemoryOvercommitEnabled":         llx.BoolData(derefBool(vm.IsMemoryOvercommitEnabled)),
+		"isVcpuHardPinningEnabled":          llx.BoolData(derefBool(vm.IsVcpuHardPinningEnabled)),
+		"isGpuConsoleEnabled":               llx.BoolData(derefBool(vm.IsGpuConsoleEnabled)),
+		"isVgaConsoleEnabled":               llx.BoolData(derefBool(vm.IsVgaConsoleEnabled)),
+		"isScsiControllerEnabled":           llx.BoolData(derefBool(vm.IsScsiControllerEnabled)),
+		"isLiveMigrateCapable":              llx.BoolData(derefBool(vm.IsLiveMigrateCapable)),
+		"isCrossClusterMigrationInProgress": llx.BoolData(derefBool(vm.IsCrossClusterMigrationInProgress)),
+		"isBrandingEnabled":                 llx.BoolData(derefBool(vm.IsBrandingEnabled)),
+		"createTime":                        llx.TimeDataPtr(vm.CreateTime),
+		"updateTime":                        llx.TimeDataPtr(vm.UpdateTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlVm := res.(*mqlNutanixVm)
+	if vm.ExtId != nil {
+		mqlVm.vmId = *vm.ExtId
+	}
+	if vm.Cluster != nil && vm.Cluster.ExtId != nil {
+		mqlVm.clusterExtId = *vm.Cluster.ExtId
+	}
+	if vm.Host != nil && vm.Host.ExtId != nil {
+		mqlVm.hostExtId = *vm.Host.ExtId
+	}
+	mqlVm.cacheDisks = vm.Disks
+	mqlVm.cacheNics = vm.Nics
+	mqlVm.cacheGpus = vm.Gpus
+	mqlVm.cacheCdRoms = vm.CdRoms
+	mqlVm.cacheGuestTools = vm.GuestTools
+	return mqlVm, nil
+}
+
+func (a *mqlNutanixVm) disks() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheDisks {
+		d := a.cacheDisks[i]
+		extId := ""
+		if d.ExtId != nil {
+			extId = *d.ExtId
+		}
+		busType := ""
+		busIndex := int64(0)
+		if d.DiskAddress != nil {
+			if d.DiskAddress.BusType != nil {
+				busType = d.DiskAddress.BusType.GetName()
+			}
+			busIndex = derefInt(d.DiskAddress.Index)
+		}
+		sizeBytes := int64(0)
+		diskExtId := ""
+		storageContainerId := ""
+		isMigrating := false
+		if d.BackingInfo != nil {
+			if vd, ok := d.BackingInfo.GetValue().(vmmconfig.VmDisk); ok {
+				sizeBytes = derefInt64(vd.DiskSizeBytes)
+				if vd.DiskExtId != nil {
+					diskExtId = *vd.DiskExtId
+				}
+				if vd.StorageContainer != nil && vd.StorageContainer.ExtId != nil {
+					storageContainerId = *vd.StorageContainer.ExtId
+				}
+				isMigrating = derefBool(vd.IsMigrationInProgress)
+			}
+		}
+		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.vm.disk", map[string]*llx.RawData{
+			"__id":                  llx.StringData(extId),
+			"id":                    llx.StringData(extId),
+			"busType":               llx.StringData(busType),
+			"busIndex":              llx.IntData(busIndex),
+			"sizeBytes":             llx.IntData(sizeBytes),
+			"diskExtId":             llx.StringData(diskExtId),
+			"storageContainerId":    llx.StringData(storageContainerId),
+			"isMigrationInProgress": llx.BoolData(isMigrating),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDisk)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixVm) nics() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheNics {
+		n := a.cacheNics[i]
+		extId := ""
+		if n.ExtId != nil {
+			extId = *n.ExtId
+		}
+		macAddress := ""
+		model := ""
+		isConnected := false
+		if n.BackingInfo != nil {
+			if n.BackingInfo.MacAddress != nil {
+				macAddress = *n.BackingInfo.MacAddress
+			}
+			if n.BackingInfo.Model != nil {
+				model = n.BackingInfo.Model.GetName()
+			}
+			isConnected = derefBool(n.BackingInfo.IsConnected)
+		}
+		nicType := ""
+		vlanMode := ""
+		subnetId := ""
+		ipAddresses := []any{}
+		learnedIps := []any{}
+		if n.NetworkInfo != nil {
+			ni := n.NetworkInfo
+			if ni.NicType != nil {
+				nicType = ni.NicType.GetName()
+			}
+			if ni.VlanMode != nil {
+				vlanMode = ni.VlanMode.GetName()
+			}
+			if ni.Subnet != nil && ni.Subnet.ExtId != nil {
+				subnetId = *ni.Subnet.ExtId
+			}
+			if ni.Ipv4Config != nil {
+				if ni.Ipv4Config.IpAddress != nil {
+					ipAddresses = append(ipAddresses, vmIPv4ToString(ni.Ipv4Config.IpAddress))
+				}
+				for j := range ni.Ipv4Config.SecondaryIpAddressList {
+					ipAddresses = append(ipAddresses, vmIPv4ToString(&ni.Ipv4Config.SecondaryIpAddressList[j]))
+				}
+			}
+			if ni.Ipv4Info != nil {
+				for j := range ni.Ipv4Info.LearnedIpAddresses {
+					learnedIps = append(learnedIps, vmIPv4ToString(&ni.Ipv4Info.LearnedIpAddresses[j]))
+				}
+			}
+		}
+		mqlNic, err := CreateResource(a.MqlRuntime, "nutanix.vm.nic", map[string]*llx.RawData{
+			"__id":               llx.StringData(extId),
+			"id":                 llx.StringData(extId),
+			"macAddress":         llx.StringData(macAddress),
+			"model":              llx.StringData(model),
+			"isConnected":        llx.BoolData(isConnected),
+			"nicType":            llx.StringData(nicType),
+			"vlanMode":           llx.StringData(vlanMode),
+			"subnetId":           llx.StringData(subnetId),
+			"ipAddresses":        llx.ArrayData(ipAddresses, types.String),
+			"learnedIpAddresses": llx.ArrayData(learnedIps, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlNic)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixVm) gpus() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheGpus {
+		g := a.cacheGpus[i]
+		extId := ""
+		if g.ExtId != nil {
+			extId = *g.ExtId
+		}
+		mode := ""
+		if g.Mode != nil {
+			mode = g.Mode.GetName()
+		}
+		vendor := ""
+		if g.Vendor != nil {
+			vendor = g.Vendor.GetName()
+		}
+		mqlGpu, err := CreateResource(a.MqlRuntime, "nutanix.vm.gpu", map[string]*llx.RawData{
+			"__id":                   llx.StringData(extId),
+			"id":                     llx.StringData(extId),
+			"name":                   llx.StringDataPtr(g.Name),
+			"mode":                   llx.StringData(mode),
+			"vendor":                 llx.StringData(vendor),
+			"deviceId":               llx.IntData(derefInt(g.DeviceId)),
+			"fraction":               llx.IntData(derefInt(g.Fraction)),
+			"frameBufferSizeBytes":   llx.IntData(derefInt64(g.FrameBufferSizeBytes)),
+			"numVirtualDisplayHeads": llx.IntData(derefInt(g.NumVirtualDisplayHeads)),
+			"guestDriverVersion":     llx.StringDataPtr(g.GuestDriverVersion),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGpu)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixVm) cdRoms() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheCdRoms {
+		c := a.cacheCdRoms[i]
+		extId := ""
+		if c.ExtId != nil {
+			extId = *c.ExtId
+		}
+		isoType := ""
+		if c.IsoType != nil {
+			isoType = c.IsoType.GetName()
+		}
+		busType := ""
+		busIndex := int64(0)
+		if c.DiskAddress != nil {
+			if c.DiskAddress.BusType != nil {
+				busType = c.DiskAddress.BusType.GetName()
+			}
+			busIndex = derefInt(c.DiskAddress.Index)
+		}
+		sizeBytes := int64(0)
+		storageContainerId := ""
+		if c.BackingInfo != nil {
+			sizeBytes = derefInt64(c.BackingInfo.DiskSizeBytes)
+			if c.BackingInfo.StorageContainer != nil && c.BackingInfo.StorageContainer.ExtId != nil {
+				storageContainerId = *c.BackingInfo.StorageContainer.ExtId
+			}
+		}
+		mqlCdRom, err := CreateResource(a.MqlRuntime, "nutanix.vm.cdrom", map[string]*llx.RawData{
+			"__id":               llx.StringData(extId),
+			"id":                 llx.StringData(extId),
+			"isoType":            llx.StringData(isoType),
+			"busType":            llx.StringData(busType),
+			"busIndex":           llx.IntData(busIndex),
+			"sizeBytes":          llx.IntData(sizeBytes),
+			"storageContainerId": llx.StringData(storageContainerId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCdRom)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanixVm) guestTools() (*mqlNutanixVmGuestToolsInfo, error) {
+	gt := a.cacheGuestTools
+	if gt == nil {
+		a.GuestTools.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	capabilities := []any{}
+	for _, c := range gt.Capabilities {
+		capabilities = append(capabilities, c.GetName())
+	}
+	res, err := CreateResource(a.MqlRuntime, "nutanix.vm.guestToolsInfo", map[string]*llx.RawData{
+		"__id":                 llx.StringData(fmt.Sprintf("%s/guestTools", a.vmId)),
+		"isEnabled":            llx.BoolData(derefBool(gt.IsEnabled)),
+		"isInstalled":          llx.BoolData(derefBool(gt.IsInstalled)),
+		"isReachable":          llx.BoolData(derefBool(gt.IsReachable)),
+		"isIsoInserted":        llx.BoolData(derefBool(gt.IsIsoInserted)),
+		"isVssSnapshotCapable": llx.BoolData(derefBool(gt.IsVssSnapshotCapable)),
+		"version":              llx.StringDataPtr(gt.Version),
+		"availableVersion":     llx.StringDataPtr(gt.AvailableVersion),
+		"guestOsVersion":       llx.StringDataPtr(gt.GuestOsVersion),
+		"capabilities":         llx.ArrayData(capabilities, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixVmGuestToolsInfo), nil
+}
+
+// ---------------------------------------------------------------------------
+// cross-references
+// ---------------------------------------------------------------------------
+
+type mqlNutanixHostInternal struct {
+	hostId            string
+	clusterUuid       string
+	cacheControllerVm *clustermgmtconfig.ControllerVmReference
+	cacheIpmi         *clustermgmtconfig.IpmiReference
+	cacheDisks        []clustermgmtconfig.DiskReference
+}
+
+func (a *mqlNutanixHost) cluster() (*mqlNutanixCluster, error) {
+	if a.clusterUuid == "" {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return clusterByID(a.MqlRuntime, a.clusterUuid)
+}
+
+type mqlNutanixVmInternal struct {
+	vmId            string
+	clusterExtId    string
+	hostExtId       string
+	cacheDisks      []vmmconfig.Disk
+	cacheNics       []vmmconfig.Nic
+	cacheGpus       []vmmconfig.Gpu
+	cacheCdRoms     []vmmconfig.CdRom
+	cacheGuestTools *vmmconfig.GuestTools
+}
+
+func (a *mqlNutanixVm) cluster() (*mqlNutanixCluster, error) {
+	if a.clusterExtId == "" {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return clusterByID(a.MqlRuntime, a.clusterExtId)
+}
+
+func (a *mqlNutanixVm) host() (*mqlNutanixHost, error) {
+	if a.hostExtId == "" || a.clusterExtId == "" {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
+	resp, err := conn.ClustersApi().GetHostById(&a.clusterExtId, &a.hostExtId)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.GetData()
+	if data == nil {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	host, ok := data.(clustermgmtconfig.Host)
+	if !ok {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlHost(a.MqlRuntime, &host)
+}
+
+func clusterByID(runtime *plugin.Runtime, clusterID string) (*mqlNutanixCluster, error) {
+	conn := runtime.Connection.(*connection.NutanixConnection)
+	resp, err := conn.ClustersApi().GetClusterById(&clusterID, nil)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.GetData()
+	if data == nil {
+		return nil, nil
+	}
+	cluster, ok := data.(clustermgmtconfig.Cluster)
+	if !ok {
+		return nil, nil
+	}
+	return newMqlCluster(runtime, &cluster)
+}

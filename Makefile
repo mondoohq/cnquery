@@ -227,6 +227,7 @@ PROVIDERS := \
 	ms365 \
 	network \
 	nmap \
+	nutanix \
 	oci \
 	okta \
 	ollama \

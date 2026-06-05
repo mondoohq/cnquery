@@ -224,6 +224,7 @@ use (
    ./mql/providers/mondoo
    ./mql/providers/ms365
    ./mql/providers/nmap
+   ./mql/providers/nutanix
    ./mql/providers/oci
    ./mql/providers/okta
    ./mql/providers/ollama

@@ -143,6 +143,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Microsoft Azure instances     | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |
 | Microsoft Azure subscriptions | `azure`                    | `mql shell azure --subscription SUBSCRIPTION_ID`                                                                                                |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
+| Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
 | Okta org                      | `okta`                     | `mql shell okta --token TOKEN --organization ORGANIZATION`                                                                                      |
 | Ollama instance               | `ollama`                   | `mql shell ollama` or `mql shell ollama --host HOST --token TOKEN`                                                                              |
 | OpenAI account                | `openai`                   | `mql shell openai --token TOKEN`                                                                                                                |

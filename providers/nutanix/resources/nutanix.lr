@@ -1,0 +1,568 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/v13/providers/nutanix"
+option go_package = "go.mondoo.com/mql/v13/providers/nutanix/resources"
+
+// Nutanix Prism Central
+//
+// Use this namespace to reach the infrastructure managed by a Nutanix Prism
+// Central instance. It hosts the registered clusters, the hypervisor hosts
+// that make up those clusters, and the virtual machines running on them.
+nutanix {
+  // Clusters registered with this Prism Central instance
+  clusters() []nutanix.cluster
+  // Hypervisor hosts across all registered clusters
+  hosts() []nutanix.host
+  // Virtual machines across all registered clusters
+  vms() []nutanix.vm
+}
+
+// Nutanix cluster
+//
+// Examine a single Nutanix cluster: its software version and build, hardware
+// architecture, the hypervisor types it runs, node and VM counts, redundancy
+// and fault-tolerance configuration, encryption posture, network settings,
+// and support status. The `id` field is the cluster's external UUID. Drill
+// into `network` for IP and DNS settings, `faultTolerance` for resiliency
+// state, and `nodes` for cluster membership.
+private nutanix.cluster @defaults("name version nodeCount") {
+  // External UUID of the cluster
+  id string
+  // Cluster name
+  name string
+  // Software version, for example "6.8.1"
+  version string
+  // Full software version string, including build metadata
+  fullVersion string
+  // Hardware architecture
+  //
+  // One of X86_64 or PPC64LE.
+  arch string
+  // Cluster type
+  //
+  // One of PRISM_CENTRAL, AOS, CLOUD_DATA_GATEWAY, or UNKNOWN.
+  clusterType string
+  // Cluster functions
+  //
+  // Each entry is one of AOS, ONE_NODE, TWO_NODE, PRISM_CENTRAL,
+  // CLOUD_DATA_GATEWAY, AFS, WITNESS, or ANALYTICS_PLATFORM.
+  functions []string
+  // Hypervisor types running on the cluster
+  //
+  // Each entry is one of AHV, ESX, HYPERV, XEN, or NATIVEHOST.
+  hypervisorTypes []string
+  // Number of nodes in the cluster
+  nodeCount int
+  // Number of virtual machines on the cluster
+  vmCount int
+  // Number of virtual machines flagged as inefficient
+  inefficientVmCount int
+  // Redundancy factor of the cluster
+  redundancyFactor int
+  // Operation mode
+  //
+  // One of NORMAL, READ_ONLY, STAND_ALONE, SWITCH_TO_TWO_NODE, or OVERRIDE.
+  operationMode string
+  // Encryption-in-transit status
+  //
+  // One of ENABLED or DISABLED.
+  encryptionInTransitStatus string
+  // Data-at-rest encryption options
+  //
+  // Each entry is one of SOFTWARE, HARDWARE, or SED.
+  encryptionOptions []string
+  // Data-at-rest encryption scopes
+  //
+  // Each entry is one of CLUSTER or CONTAINER.
+  encryptionScopes []string
+  // Whether the installed release is a long-term-support release
+  isLts bool
+  // Whether the cluster is reachable from Prism Central
+  isAvailable bool
+  // Whether password SSH login to the cluster is enabled
+  isPasswordRemoteLoginEnabled bool
+  // Whether remote support is enabled
+  isRemoteSupportEnabled bool
+  // Whether Pulse telemetry is enabled
+  pulseEnabled bool
+  // Cluster incarnation ID
+  incarnationId int
+  // Backup eligibility score for domain-manager backups
+  backupEligibilityScore int
+  // IANA time zone configured on the cluster
+  timezone string
+  // Categories associated with the cluster
+  categories []string
+  // Installed software components as a map of software type to version
+  softwareMap map[string]string
+  // Cluster software upgrade status
+  //
+  // One of PENDING, DOWNLOADING, QUEUED, PREUPGRADE, UPGRADING, SUCCEEDED,
+  // FAILED, CANCELLED, or SCHEDULED.
+  upgradeStatus string
+  // Network configuration of the cluster
+  network() nutanix.cluster.networkConfig
+  // Fault-tolerance state of the cluster
+  faultTolerance() nutanix.cluster.faultToleranceState
+  // Nodes that make up the cluster
+  nodes() []nutanix.cluster.node
+}
+
+// Nutanix cluster network configuration
+//
+// Examine the network settings of a cluster: external and internal subnets,
+// virtual and data-service IP addresses, the cluster FQDN, masquerading (NAT)
+// address, name and NTP servers, NFS allowlist, key-management server type,
+// SMTP configuration, and HTTP proxy configuration.
+private nutanix.cluster.networkConfig @defaults("externalAddress fqdn") {
+  // Cluster external (virtual) IP address
+  externalAddress string
+  // Cluster external data services IP address
+  externalDataServiceIp string
+  // External subnet address
+  externalSubnet string
+  // Internal subnet address
+  internalSubnet string
+  // Fully qualified domain name of the cluster
+  fqdn string
+  // Masquerading (NAT) IP address
+  masqueradingIp string
+  // Masquerading (NAT) port
+  masqueradingPort int
+  // Name server addresses (IP or FQDN)
+  nameServers []string
+  // NTP server addresses (IP or FQDN)
+  ntpServers []string
+  // NFS subnet allowlist addresses
+  nfsSubnetWhitelist []string
+  // Key management server type
+  //
+  // One of LOCAL or EXTERNAL.
+  keyManagementServerType string
+  // SMTP server email (from) address
+  smtpEmailAddress string
+  // SMTP security type
+  //
+  // One of PLAIN, STARTTLS, or SSL.
+  smtpType string
+  // HTTP proxy configurations
+  //
+  // Each entry carries name, ipAddress, port, username, and proxyTypes.
+  httpProxies []dict
+}
+
+// Nutanix cluster fault-tolerance state
+//
+// Examine the configured and current fault-tolerance level of a cluster,
+// including the failure-domain awareness level and whether the Cassandra and
+// Zookeeper ensembles are prepared to meet the desired fault tolerance.
+private nutanix.cluster.faultToleranceState @defaults("currentClusterFaultTolerance domainAwarenessLevel") {
+  // Current cluster fault tolerance
+  //
+  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D, or
+  // CFT_2N_AND_2D.
+  currentClusterFaultTolerance string
+  // Desired cluster fault tolerance
+  //
+  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D, or
+  // CFT_2N_AND_2D.
+  desiredClusterFaultTolerance string
+  // Maximum fault tolerance currently supported
+  currentMaxFaultTolerance int
+  // Maximum fault tolerance desired
+  desiredMaxFaultTolerance int
+  // Failure-domain awareness level
+  //
+  // One of DISK, NODE, BLOCK, or RACK.
+  domainAwarenessLevel string
+  // Whether the Cassandra ensemble can meet the desired fault tolerance
+  cassandraPreparationDone bool
+  // Whether the Zookeeper ensemble can meet the desired fault tolerance
+  zookeeperPreparationDone bool
+}
+
+// Node in a Nutanix cluster
+//
+// Examine a node listed in a cluster's membership by its host and
+// controller-VM IP addresses. The `id` field is the node UUID; `host`
+// resolves to the full hypervisor host record.
+private nutanix.cluster.node @defaults("id hostIp") {
+  // Node UUID
+  id string
+  // Host (hypervisor) IP address
+  hostIp string
+  // Controller VM IP address
+  controllerVmIp string
+  // Hypervisor host this node corresponds to
+  host() nutanix.host
+}
+
+// Nutanix host
+//
+// Examine a single hypervisor host (a physical node): its hardware model and
+// serials, CPU and memory capacity, GPU inventory, the hypervisor it runs,
+// boot and maintenance state, secure-boot and virtualization posture, and the
+// cluster it belongs to. The `id` field is the host's external UUID. Drill
+// into `controllerVm` for the CVM addresses, `ipmi` for out-of-band access,
+// and `disks` for attached storage.
+private nutanix.host @defaults("name cpuModel hypervisorType") {
+  // External UUID of the host
+  id string
+  // Host name
+  name string
+  // Host type
+  //
+  // One of HYPER_CONVERGED, COMPUTE_ONLY, or STORAGE_ONLY.
+  hostType string
+  // Rackable unit (block) model name
+  blockModel string
+  // Rackable unit (block) serial number
+  blockSerial string
+  // Rackable unit UUID
+  rackableUnitUuid string
+  // Node serial number
+  nodeSerial string
+  // CPU model name
+  cpuModel string
+  // Number of physical CPU cores
+  cpuCores int
+  // Number of physical CPU sockets
+  cpuSockets int
+  // Number of CPU threads
+  cpuThreads int
+  // Total CPU capacity in hertz
+  cpuCapacityHz int
+  // CPU frequency in hertz
+  cpuFrequencyHz int
+  // Total physical memory in bytes
+  memorySizeBytes int
+  // GPU driver version installed on the host
+  gpuDriverVersion string
+  // GPUs attached to the host
+  gpus []string
+  // Hypervisor type
+  //
+  // One of AHV, ESX, HYPERV, XEN, or NATIVEHOST.
+  hypervisorType string
+  // Full hypervisor name and version
+  hypervisorFullName string
+  // Hypervisor state
+  hypervisorState string
+  // Acropolis-to-hypervisor connection state
+  hypervisorAcropolisConnectionState string
+  // Hypervisor external (management) IP address
+  hypervisorExternalAddress string
+  // Hypervisor administrative username
+  hypervisorUserName string
+  // Number of virtual machines running on the host
+  vmCount int
+  // Boot time of the host
+  bootTime time
+  // Node operational status
+  nodeStatus string
+  // Host maintenance state
+  maintenanceState string
+  // Whether the node is in a degraded state
+  isDegraded bool
+  // Whether a reboot is pending on the host
+  isRebootPending bool
+  // Whether secure boot is enabled
+  isSecureBooted bool
+  // Whether the hardware is virtualized
+  isHardwareVirtualized bool
+  // Whether the host has a certificate signing request
+  hasCsr bool
+  // Failover cluster FQDN (Hyper-V)
+  failoverClusterFqdn string
+  // Failover cluster node status (Hyper-V)
+  failoverClusterNodeStatus string
+  // Default container UUID for virtual machines
+  defaultVmContainerUuid string
+  // Default location for virtual machines
+  defaultVmLocation string
+  // Default container UUID for virtual hard disks
+  defaultVhdContainerUuid string
+  // Default location for virtual hard disks
+  defaultVhdLocation string
+  // Cluster the host belongs to
+  cluster() nutanix.cluster
+  // Controller VM (CVM) running on the host
+  controllerVm() nutanix.host.controllerVmInfo
+  // IPMI out-of-band management configuration
+  ipmi() nutanix.host.ipmiInfo
+  // Physical disks attached to the host
+  disks() []nutanix.host.disk
+}
+
+// Controller VM running on a Nutanix host
+//
+// Examine the Controller VM (CVM) that runs the Nutanix storage stack on a
+// host: its external and backplane IP addresses, NAT configuration, and
+// maintenance-mode status.
+private nutanix.host.controllerVmInfo @defaults("externalAddress") {
+  // External (management) IP address of the CVM
+  externalAddress string
+  // Backplane IP address of the CVM
+  backplaneAddress string
+  // NAT IP address of the CVM
+  natIp string
+  // NAT port of the CVM
+  natPort int
+  // Whether the CVM is in maintenance mode
+  isInMaintenanceMode bool
+  // RDMA backplane IP addresses
+  rdmaBackplaneAddresses []string
+}
+
+// IPMI configuration of a Nutanix host
+//
+// Examine the out-of-band IPMI/BMC management configuration of a host: its IP
+// address and administrative username.
+private nutanix.host.ipmiInfo @defaults("ip username") {
+  // IPMI/BMC IP address
+  ip string
+  // IPMI/BMC username
+  username string
+}
+
+// Physical disk attached to a Nutanix host
+//
+// Examine a single physical disk on a host: its mount path, serial, capacity,
+// and storage tier. The `id` field is the disk UUID.
+private nutanix.host.disk @defaults("id storageTier sizeInBytes") {
+  // Disk UUID
+  id string
+  // Disk mount path
+  mountPath string
+  // Disk serial number
+  serialId string
+  // Disk size in bytes
+  sizeInBytes int
+  // Storage tier
+  //
+  // One of SSD, HDD, or SSD_PCIe.
+  storageTier string
+}
+
+// Nutanix virtual machine
+//
+// Examine a single virtual machine: its power state, vCPU topology, memory
+// size, identifiers, feature flags (CPU passthrough, memory overcommit, live
+// migration, secure devices), protection posture, lifecycle timestamps, and
+// the cluster and host it runs on. The `id` field is the VM's external UUID.
+// Drill into `disks`, `nics`, `gpus`, and `cdRoms` for attached devices and
+// `guestTools` for Nutanix Guest Tools status.
+private nutanix.vm @defaults("name powerState memorySizeBytes") {
+  // External UUID of the virtual machine
+  id string
+  // Virtual machine name
+  name string
+  // Virtual machine description
+  description string
+  // Power state
+  //
+  // One of ON, OFF, PAUSED, UNDETERMINED, or UNKNOWN.
+  powerState string
+  // Number of vCPU sockets
+  numSockets int
+  // Number of cores per socket
+  numCoresPerSocket int
+  // Number of threads per core
+  numThreadsPerCore int
+  // Number of NUMA nodes (0 means NUMA is disabled)
+  numNumaNodes int
+  // Memory size in bytes
+  memorySizeBytes int
+  // BIOS UUID of the virtual machine
+  biosUuid string
+  // Generation UUID of the virtual machine
+  generationUuid string
+  // Machine type
+  //
+  // One of PC, PSERIES, or Q35.
+  machineType string
+  // Hardware clock time zone in IANA TZDB format
+  hardwareClockTimezone string
+  // Protection type
+  //
+  // One of UNPROTECTED, PD_PROTECTED, or RULE_PROTECTED.
+  protectionType string
+  // Categories assigned to the virtual machine
+  categories []string
+  // Whether the virtual machine is an agent VM
+  isAgentVm bool
+  // Whether CPU hotplug is enabled
+  isCpuHotplugEnabled bool
+  // Whether host CPU features are passed through to the guest
+  isCpuPassthroughEnabled bool
+  // Whether memory overcommit is enabled
+  isMemoryOvercommitEnabled bool
+  // Whether vCPUs are hard-pinned to physical CPUs
+  isVcpuHardPinningEnabled bool
+  // Whether the vGPU console is enabled
+  isGpuConsoleEnabled bool
+  // Whether the VGA console is enabled
+  isVgaConsoleEnabled bool
+  // Whether the SCSI controller is enabled
+  isScsiControllerEnabled bool
+  // Whether the virtual machine can live migrate to another host
+  isLiveMigrateCapable bool
+  // Whether a cross-cluster migration is in progress
+  isCrossClusterMigrationInProgress bool
+  // Whether AHV branding is shown in the firmware
+  isBrandingEnabled bool
+  // Time the virtual machine was created
+  createTime time
+  // Time the virtual machine was last updated
+  updateTime time
+  // Cluster the virtual machine runs on
+  cluster() nutanix.cluster
+  // Host the virtual machine runs on
+  host() nutanix.host
+  // Disks attached to the virtual machine
+  disks() []nutanix.vm.disk
+  // NICs attached to the virtual machine
+  nics() []nutanix.vm.nic
+  // GPUs attached to the virtual machine
+  gpus() []nutanix.vm.gpu
+  // CD-ROMs attached to the virtual machine
+  cdRoms() []nutanix.vm.cdrom
+  // Nutanix Guest Tools status
+  guestTools() nutanix.vm.guestToolsInfo
+}
+
+// Disk attached to a Nutanix virtual machine
+//
+// Examine a single virtual disk: its bus placement, size, and backing storage
+// container. The `id` field is the disk's external UUID.
+private nutanix.vm.disk @defaults("id busType sizeBytes") {
+  // External UUID of the disk
+  id string
+  // Bus type
+  //
+  // One of SCSI, IDE, PCI, SATA, or SPAPR.
+  busType string
+  // Device index on the bus
+  busIndex int
+  // Disk size in bytes
+  sizeBytes int
+  // UUID of the backing virtual disk
+  diskExtId string
+  // External UUID of the storage container backing the disk
+  storageContainerId string
+  // Whether the disk is migrating to another container
+  isMigrationInProgress bool
+}
+
+// NIC attached to a Nutanix virtual machine
+//
+// Examine a single virtual network interface: its MAC address, emulation
+// model, connection state, network type, VLAN mode, subnet, and assigned and
+// learned IP addresses. The `id` field is the NIC's external UUID.
+private nutanix.vm.nic @defaults("id macAddress nicType") {
+  // External UUID of the NIC
+  id string
+  // MAC address of the NIC
+  macAddress string
+  // Emulated NIC model
+  //
+  // One of VIRTIO or E1000.
+  model string
+  // Whether the NIC is connected
+  isConnected bool
+  // NIC type
+  //
+  // One of NORMAL_NIC, DIRECT_NIC, NETWORK_FUNCTION_NIC, or SPAN_DESTINATION_NIC.
+  nicType string
+  // VLAN mode
+  //
+  // One of ACCESS or TRUNK.
+  vlanMode string
+  // External UUID of the subnet the NIC is attached to
+  subnetId string
+  // Configured IP addresses
+  ipAddresses []string
+  // IP addresses learned from the guest
+  learnedIpAddresses []string
+}
+
+// GPU attached to a Nutanix virtual machine
+//
+// Examine a single GPU assignment: its mode, vendor, device, frame-buffer
+// size, and guest driver version. The `id` field is the GPU's external UUID.
+private nutanix.vm.gpu @defaults("name mode vendor") {
+  // External UUID of the GPU assignment
+  id string
+  // GPU resource name
+  name string
+  // Assignment mode
+  //
+  // One of PASSTHROUGH_GRAPHICS, PASSTHROUGH_COMPUTE, or VIRTUAL.
+  mode string
+  // GPU vendor
+  //
+  // One of NVIDIA, INTEL, or AMD.
+  vendor string
+  // Device ID of the GPU
+  deviceId int
+  // Fraction of the physical GPU assigned
+  fraction int
+  // Frame-buffer size in bytes
+  frameBufferSizeBytes int
+  // Number of supported virtual display heads
+  numVirtualDisplayHeads int
+  // Guest driver version last reported
+  guestDriverVersion string
+}
+
+// CD-ROM attached to a Nutanix virtual machine
+//
+// Examine a single CD-ROM device: its ISO type, bus placement, and backing
+// storage. The `id` field is the CD-ROM's external UUID.
+private nutanix.vm.cdrom @defaults("id isoType busType") {
+  // External UUID of the CD-ROM
+  id string
+  // ISO type
+  //
+  // One of OTHER, GUEST_TOOLS, or GUEST_CUSTOMIZATION.
+  isoType string
+  // Bus type
+  //
+  // One of IDE or SATA.
+  busType string
+  // Device index on the bus
+  busIndex int
+  // Backing disk size in bytes
+  sizeBytes int
+  // External UUID of the storage container backing the CD-ROM
+  storageContainerId string
+}
+
+// Nutanix Guest Tools status of a virtual machine
+//
+// Examine the Nutanix Guest Tools (NGT) state on a VM: whether it is enabled,
+// installed, reachable, and ISO-inserted, the installed and available
+// versions, VSS snapshot capability, and the enabled capabilities.
+private nutanix.vm.guestToolsInfo @defaults("version isEnabled isInstalled") {
+  // Whether Nutanix Guest Tools is enabled
+  isEnabled bool
+  // Whether Nutanix Guest Tools is installed on the VM
+  isInstalled bool
+  // Whether the VM-to-CVM communication is active
+  isReachable bool
+  // Whether the Nutanix Guest Tools ISO is inserted
+  isIsoInserted bool
+  // Whether the VM can take VSS snapshots through NGT
+  isVssSnapshotCapable bool
+  // Installed Nutanix Guest Tools version
+  version string
+  // Nutanix Guest Tools version available on the cluster
+  availableVersion string
+  // Guest operating system version
+  guestOsVersion string
+  // Enabled Nutanix Guest Tools capabilities
+  //
+  // Each entry is one of SELF_SERVICE_RESTORE or VSS_SNAPSHOT.
+  capabilities []string
+}
