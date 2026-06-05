@@ -29,6 +29,37 @@ terraform {
   variables() []terraform.block
   // Output blocks
   outputs() []terraform.block
+  // Managed resource declarations
+  //
+  // Iterate every `resource` block as a terraform.resource record,
+  // exposing the resource type, name, owning provider, arguments, tags,
+  // count / for_each meta-arguments, explicit dependencies, and the
+  // references each argument makes to other objects.
+  managedResources() []terraform.resource
+  // Data source declarations
+  //
+  // Iterate every `data` block as a terraform.datasource record,
+  // exposing the data source type, name, owning provider, arguments,
+  // and the references each argument makes to other objects.
+  dataResources() []terraform.datasource
+  // Input variable declarations
+  //
+  // Iterate every `variable` block as a terraform.variable record,
+  // exposing the declared name, description, type, default value, and
+  // the sensitive and nullable flags.
+  variableDefinitions() []terraform.variable
+  // Output value declarations
+  //
+  // Iterate every `output` block as a terraform.output record,
+  // exposing the name, description, value, sensitive flag, and the
+  // references the value makes to other objects.
+  outputValues() []terraform.output
+  // Provider configurations
+  //
+  // Iterate every `provider` block as a terraform.provider record,
+  // exposing the local provider name, the optional alias, the
+  // configuration arguments, and the references they make.
+  providerConfigs() []terraform.provider
 }
 
 // Terraform resource blocks
@@ -90,8 +121,191 @@ private terraform.block @defaults("type labels") {
   blocks() []terraform.block
   // Related blocks
   related() []terraform.block
+  // References made by this block's arguments
+  //
+  // Examine every reference an argument in this block makes to another
+  // object — a variable, local, data source, managed resource, module,
+  // or output. Each entry records the argument it came from, the kind
+  // of object referenced, the referenced address, and a link to the
+  // referenced block when it resolves within the parsed configuration.
+  references() []terraform.reference
   // Block snippet
   snippet string
+}
+
+// Reference from a Terraform argument to another object
+//
+// Examine a single dependency edge: the `argument` the reference
+// appears in, the `kind` of object referenced (one of var, local,
+// data, resource, module, output, each, count, self, path, or
+// terraform), the referenced `target` address (for example
+// "aws_vpc.main", "var.region", or "data.aws_ami.ubuntu"), and the
+// referenced `name`. When the target resolves to a block in the parsed
+// configuration, `block` links to it.
+private terraform.reference @defaults("argument kind target") {
+  // Argument in which the reference appears, e.g. "vpc_id"
+  argument string
+  // Kind of object referenced
+  //
+  // One of var, local, data, resource, module, output, provider, each,
+  // count, self, path, or terraform.
+  kind string
+  // Referenced address, e.g. "aws_vpc.main", "var.region", or "data.aws_ami.ubuntu"
+  target string
+  // Referenced object name, e.g. "main", "region", or "ubuntu"
+  name string
+  // Referenced block when the target resolves within the parsed configuration
+  block() terraform.block
+}
+
+// Terraform managed resource
+//
+// Examine a single `resource` block, selected by its Terraform
+// resource `type` and `name` — for example `aws_instance` named `web`
+// in `resource "aws_instance" "web"`. Surfaces the owning provider,
+// the configuration arguments, the resolved tags, the count and
+// for_each meta-arguments, the explicit depends_on targets, the
+// references the arguments make to other objects, and the underlying
+// HCL block.
+private terraform.resource @defaults("type name") {
+  // Underlying HCL block
+  block() terraform.block
+  // Terraform resource type, e.g. "aws_instance"
+  type string
+  // Terraform resource name, e.g. "web"
+  name string
+  // Local name of the owning provider
+  //
+  // The explicit `provider` meta-argument when set, otherwise the
+  // resource type prefix before the first underscore (for example
+  // "aws" for "aws_instance").
+  providerName() string
+  // Provider configuration this resource is bound to
+  //
+  // Resolves the `provider` configuration block matching this
+  // resource's effective provider name and alias. Null when the
+  // configuration relies on an implicit default provider with no
+  // `provider` block.
+  provider() terraform.provider
+  // Configuration arguments
+  arguments() dict
+  // Resolved value of the `tags` argument
+  tags() dict
+  // The `count` meta-argument
+  count() dict
+  // The `for_each` meta-argument
+  forEach() dict
+  // Blocks this resource explicitly depends on via `depends_on`
+  //
+  // Each entry in `depends_on` is an address pointing at another
+  // managed resource, data source, or module in the configuration;
+  // this resolves those addresses to their blocks. Addresses that do
+  // not resolve within the parsed configuration are surfaced through
+  // `references` with the argument `depends_on` instead.
+  dependsOn() []terraform.block
+  // References made by this resource's arguments
+  references() []terraform.reference
+}
+
+// Terraform data source
+//
+// Examine a single `data` block, selected by its data source `type`
+// and `name`. Surfaces the owning provider, the configuration
+// arguments, the references the arguments make to other objects, and
+// the underlying HCL block.
+private terraform.datasource @defaults("type name") {
+  // Underlying HCL block
+  block() terraform.block
+  // Data source type, e.g. "aws_ami"
+  type string
+  // Data source name, e.g. "ubuntu"
+  name string
+  // Local name of the owning provider
+  //
+  // The explicit `provider` meta-argument when set, otherwise the data
+  // source type prefix before the first underscore (for example "aws"
+  // for "aws_ami").
+  providerName() string
+  // Provider configuration this data source is bound to
+  //
+  // Resolves the `provider` configuration block matching this data
+  // source's effective provider name and alias. Null when the
+  // configuration relies on an implicit default provider with no
+  // `provider` block.
+  provider() terraform.provider
+  // Configuration arguments
+  arguments() dict
+  // References made by this data source's arguments
+  references() []terraform.reference
+}
+
+// Terraform input variable
+//
+// Examine a single `variable` block, selected by its `name`. Surfaces
+// the description, the declared type expression, the default value,
+// the sensitive and nullable flags, and the underlying HCL block.
+private terraform.variable @defaults("name") {
+  // Underlying HCL block
+  block() terraform.block
+  // Variable name
+  name string
+  // Variable description
+  description() string
+  // Declared type expression, e.g. "string", "list(string)", "map(any)"
+  type() string
+  // Default value when no value is supplied
+  default() dict
+  // Whether Terraform redacts the value in CLI output
+  sensitive() bool
+  // Whether the variable accepts a null value
+  nullable() bool
+}
+
+// Terraform output value
+//
+// Examine a single `output` block, selected by its `name`. Surfaces
+// the description, the output value, the sensitive flag, the
+// references the value makes to other objects, and the underlying HCL
+// block.
+private terraform.output @defaults("name") {
+  // Underlying HCL block
+  block() terraform.block
+  // Output name
+  name string
+  // Output description
+  description() string
+  // Output value
+  value() dict
+  // Whether Terraform redacts the value in CLI output
+  sensitive() bool
+  // References made by this output's value
+  references() []terraform.reference
+}
+
+// Terraform provider configuration
+//
+// Examine a single `provider` block, selected by its local `name`.
+// Surfaces the optional alias, the configuration arguments, the
+// references the arguments make to other objects, and the underlying
+// HCL block.
+private terraform.provider @defaults("name alias") {
+  // Underlying HCL block
+  block() terraform.block
+  // Local provider name, e.g. "aws"
+  name string
+  // Provider alias when configured, e.g. "west"
+  alias() string
+  // Version requirement declared for this provider
+  //
+  // Resolves the `required_providers` entry in the `terraform` settings
+  // block that matches this provider's local name, carrying its source
+  // address and version constraint. Null when the provider is not
+  // listed under `required_providers`.
+  requirement() terraform.settings.requiredProvider
+  // Configuration arguments
+  arguments() dict
+  // References made by this provider's arguments
+  references() []terraform.reference
 }
 
 // Terraform module reference
