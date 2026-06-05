@@ -177,7 +177,6 @@ tokio
 transitives
 uami
 unifi
-vGPU
 vcpus
 vendored
 venv

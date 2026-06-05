@@ -481,7 +481,7 @@ func (a *mqlNutanixCluster) network() (*mqlNutanixClusterNetworkConfig, error) {
 		}
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.network", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.networkConfig", map[string]*llx.RawData{
 		"__id":                    llx.StringData(fmt.Sprintf("%s/network", a.clusterId)),
 		"externalAddress":         llx.StringData(clusterIPToString(n.ExternalAddress)),
 		"externalDataServiceIp":   llx.StringData(clusterIPToString(n.ExternalDataServiceIp)),
@@ -534,7 +534,7 @@ func (a *mqlNutanixCluster) faultTolerance() (*mqlNutanixClusterFaultToleranceSt
 		}
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.faultTolerance", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, "nutanix.cluster.faultToleranceState", map[string]*llx.RawData{
 		"__id":                         llx.StringData(fmt.Sprintf("%s/faultTolerance", a.clusterId)),
 		"currentClusterFaultTolerance": llx.StringData(current),
 		"desiredClusterFaultTolerance": llx.StringData(desired),
