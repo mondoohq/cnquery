@@ -132,6 +132,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"bicep": {
+		Provider: &plugin.Provider{
+			Name:            "bicep",
+			ID:              "go.mondoo.com/mql/v13/providers/bicep",
+			ConnectionTypes: []string{"bicep"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "bicep",
+					Use:   "bicep PATH",
+					Short: "a Bicep file, directory, or ARM template JSON",
+				},
+			},
+		},
+	},
+
 	"claude": {
 		Provider: &plugin.Provider{
 			Name:            "claude",
@@ -336,6 +351,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"helm": {
+		Provider: &plugin.Provider{
+			Name:            "helm",
+			ID:              "go.mondoo.com/mql/v13/providers/helm",
+			ConnectionTypes: []string{"helm"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "helm",
+					Use:   "helm PATH",
+					Short: "a Helm chart directory or .tgz archive",
+				},
+			},
+		},
+	},
+
 	"hetzner": {
 		Provider: &plugin.Provider{
 			Name:            "hetzner",
@@ -421,6 +451,21 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "k8s",
 					Use:   "k8s (optional MANIFEST path)",
 					Short: "a Kubernetes cluster or local manifest file(s)",
+				},
+			},
+		},
+	},
+
+	"kustomize": {
+		Provider: &plugin.Provider{
+			Name:            "kustomize",
+			ID:              "go.mondoo.com/mql/v13/providers/kustomize",
+			ConnectionTypes: []string{"kustomize"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "kustomize",
+					Use:   "kustomize PATH",
+					Short: "a Kustomize overlay directory",
 				},
 			},
 		},
