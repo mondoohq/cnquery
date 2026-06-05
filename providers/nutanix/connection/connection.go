@@ -15,6 +15,8 @@ import (
 	netclient "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/client"
 	vmmapi "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/api"
 	vmmclient "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/client"
+	volapi "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/api"
+	volclient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/client"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -33,6 +35,7 @@ type NutanixConnection struct {
 	vmmClient *vmmclient.ApiClient
 	iamClient *iamclient.ApiClient
 	netClient *netclient.ApiClient
+	volClient *volclient.ApiClient
 }
 
 func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*NutanixConnection, error) {
@@ -98,6 +101,11 @@ func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	conn.netClient.Port = port
 	conn.netClient.SetVerifySSL(!conf.Insecure)
 
+	conn.volClient = volclient.NewApiClient()
+	conn.volClient.Host = endpoint
+	conn.volClient.Port = port
+	conn.volClient.SetVerifySSL(!conf.Insecure)
+
 	if apiKey != "" {
 		if err := conn.cmgClient.SetApiKey(apiKey); err != nil {
 			return nil, err
@@ -111,11 +119,15 @@ func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 		if err := conn.netClient.SetApiKey(apiKey); err != nil {
 			return nil, err
 		}
+		if err := conn.volClient.SetApiKey(apiKey); err != nil {
+			return nil, err
+		}
 	} else {
 		conn.cmgClient.Username, conn.cmgClient.Password = user, password
 		conn.vmmClient.Username, conn.vmmClient.Password = user, password
 		conn.iamClient.Username, conn.iamClient.Password = user, password
 		conn.netClient.Username, conn.netClient.Password = user, password
+		conn.volClient.Username, conn.volClient.Password = user, password
 	}
 
 	return conn, nil
@@ -186,4 +198,14 @@ func (c *NutanixConnection) SubnetsApi() *netapi.SubnetsApi {
 // FloatingIpsApi returns the networking floating-IPs API.
 func (c *NutanixConnection) FloatingIpsApi() *netapi.FloatingIpsApi {
 	return netapi.NewFloatingIpsApi(c.netClient)
+}
+
+// StorageContainersApi returns the cluster-management storage-containers API.
+func (c *NutanixConnection) StorageContainersApi() *clustermgmtapi.StorageContainersApi {
+	return clustermgmtapi.NewStorageContainersApi(c.cmgClient)
+}
+
+// VolumeGroupsApi returns the volumes volume-groups API.
+func (c *NutanixConnection) VolumeGroupsApi() *volapi.VolumeGroupsApi {
+	return volapi.NewVolumeGroupsApi(c.volClient)
 }

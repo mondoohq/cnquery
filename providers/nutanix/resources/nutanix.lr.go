@@ -40,6 +40,9 @@ const (
 	ResourceNutanixNetworkVpc                 string = "nutanix.network.vpc"
 	ResourceNutanixNetworkSubnet              string = "nutanix.network.subnet"
 	ResourceNutanixNetworkFloatingIp          string = "nutanix.network.floatingIp"
+	ResourceNutanixStorageContainer           string = "nutanix.storage.container"
+	ResourceNutanixStorageVolumeGroup         string = "nutanix.storage.volumeGroup"
+	ResourceNutanixStorageVolumeGroupDisk     string = "nutanix.storage.volumeGroupDisk"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -141,6 +144,18 @@ func init() {
 		"nutanix.network.floatingIp": {
 			// to override args, implement: initNutanixNetworkFloatingIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNutanixNetworkFloatingIp,
+		},
+		"nutanix.storage.container": {
+			// to override args, implement: initNutanixStorageContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixStorageContainer,
+		},
+		"nutanix.storage.volumeGroup": {
+			// to override args, implement: initNutanixStorageVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixStorageVolumeGroup,
+		},
+		"nutanix.storage.volumeGroupDisk": {
+			// to override args, implement: initNutanixStorageVolumeGroupDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNutanixStorageVolumeGroupDisk,
 		},
 	}
 }
@@ -249,6 +264,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.floatingIps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanix).GetFloatingIps()).ToDataRes(types.Array(types.Resource("nutanix.network.floatingIp")))
 	},
+	"nutanix.storageContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetStorageContainers()).ToDataRes(types.Array(types.Resource("nutanix.storage.container")))
+	},
+	"nutanix.volumeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanix).GetVolumeGroups()).ToDataRes(types.Array(types.Resource("nutanix.storage.volumeGroup")))
+	},
 	"nutanix.cluster.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixCluster).GetId()).ToDataRes(types.String)
 	},
@@ -338,6 +359,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nutanix.cluster.nodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixCluster).GetNodes()).ToDataRes(types.Array(types.Resource("nutanix.cluster.node")))
+	},
+	"nutanix.cluster.storageContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixCluster).GetStorageContainers()).ToDataRes(types.Array(types.Resource("nutanix.storage.container")))
 	},
 	"nutanix.cluster.networkConfig.externalAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixClusterNetworkConfig).GetExternalAddress()).ToDataRes(types.String)
@@ -1116,6 +1140,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.network.floatingIp.externalSubnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixNetworkFloatingIp).GetExternalSubnet()).ToDataRes(types.Resource("nutanix.network.subnet"))
 	},
+	"nutanix.storage.container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.maxCapacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetMaxCapacityBytes()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.logicalAdvertisedCapacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetLogicalAdvertisedCapacityBytes()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.logicalExplicitReservedCapacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetLogicalExplicitReservedCapacityBytes()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.logicalImplicitReservedCapacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetLogicalImplicitReservedCapacityBytes()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.isCompressionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsCompressionEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.compressionDelaySecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetCompressionDelaySecs()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.onDiskDedup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetOnDiskDedup()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.cacheDeduplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetCacheDeduplication()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.erasureCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetErasureCode()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.isInlineEcEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsInlineEcEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.replicationFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetReplicationFactor()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.container.isEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsEncrypted()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.isSoftwareEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsSoftwareEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.nfsWhitelistAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetNfsWhitelistAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"nutanix.storage.container.isNfsWhitelistInherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsNfsWhitelistInherited()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.isShared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsShared()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.isInternal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsInternal()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.isMarkedForRemoval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetIsMarkedForRemoval()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.container.storagePoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetStoragePoolId()).ToDataRes(types.String)
+	},
+	"nutanix.storage.container.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageContainer).GetCluster()).ToDataRes(types.Resource("nutanix.cluster"))
+	},
+	"nutanix.storage.volumeGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetName()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.sharingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetSharingStatus()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.usageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetUsageType()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetProtocol()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.attachmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetAttachmentType()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.enabledAuthentications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetEnabledAuthentications()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.targetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetTargetName()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.targetPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetTargetPrefix()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroup.isHidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetIsHidden()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.volumeGroup.shouldLoadBalanceVmAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetShouldLoadBalanceVmAttachments()).ToDataRes(types.Bool)
+	},
+	"nutanix.storage.volumeGroup.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetCluster()).ToDataRes(types.Resource("nutanix.cluster"))
+	},
+	"nutanix.storage.volumeGroup.disks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroup).GetDisks()).ToDataRes(types.Array(types.Resource("nutanix.storage.volumeGroupDisk")))
+	},
+	"nutanix.storage.volumeGroupDisk.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetId()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroupDisk.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetDescription()).ToDataRes(types.String)
+	},
+	"nutanix.storage.volumeGroupDisk.index": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetIndex()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.volumeGroupDisk.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"nutanix.storage.volumeGroupDisk.storageContainerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixStorageVolumeGroupDisk).GetStorageContainerId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1178,6 +1325,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nutanix.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNutanix).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.storageContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).StorageContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.volumeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanix).VolumeGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nutanix.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1302,6 +1457,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nutanix.cluster.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNutanixCluster).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.cluster.storageContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixCluster).StorageContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"nutanix.cluster.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2428,6 +2587,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNutanixNetworkFloatingIp).ExternalSubnet, ok = plugin.RawToTValue[*mqlNutanixNetworkSubnet](v.Value, v.Error)
 		return
 	},
+	"nutanix.storage.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.storage.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.maxCapacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).MaxCapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.logicalAdvertisedCapacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).LogicalAdvertisedCapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.logicalExplicitReservedCapacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).LogicalExplicitReservedCapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.logicalImplicitReservedCapacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).LogicalImplicitReservedCapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isCompressionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsCompressionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.compressionDelaySecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).CompressionDelaySecs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.onDiskDedup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).OnDiskDedup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.cacheDeduplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).CacheDeduplication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.erasureCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).ErasureCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isInlineEcEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsInlineEcEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.replicationFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).ReplicationFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isSoftwareEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsSoftwareEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.nfsWhitelistAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).NfsWhitelistAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isNfsWhitelistInherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsNfsWhitelistInherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isInternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsInternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.isMarkedForRemoval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).IsMarkedForRemoval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.storagePoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).StoragePoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.container.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageContainer).Cluster, ok = plugin.RawToTValue[*mqlNutanixCluster](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.storage.volumeGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.sharingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).SharingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.usageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).UsageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.attachmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).AttachmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.enabledAuthentications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).EnabledAuthentications, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.targetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).TargetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.targetPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).TargetPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.isHidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).IsHidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.shouldLoadBalanceVmAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).ShouldLoadBalanceVmAttachments, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Cluster, ok = plugin.RawToTValue[*mqlNutanixCluster](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroup.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroup).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).__id, ok = v.Value.(string)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.index": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).Index, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nutanix.storage.volumeGroupDisk.storageContainerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixStorageVolumeGroupDisk).StorageContainerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2469,6 +2804,8 @@ type mqlNutanix struct {
 	Vpcs                  plugin.TValue[[]any]
 	Subnets               plugin.TValue[[]any]
 	FloatingIps           plugin.TValue[[]any]
+	StorageContainers     plugin.TValue[[]any]
+	VolumeGroups          plugin.TValue[[]any]
 }
 
 // createNutanix creates a new instance of this resource
@@ -2695,6 +3032,38 @@ func (c *mqlNutanix) GetFloatingIps() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNutanix) GetStorageContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageContainers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "storageContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageContainers()
+	})
+}
+
+func (c *mqlNutanix) GetVolumeGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VolumeGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix", c.__id, "volumeGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumeGroups()
+	})
+}
+
 // mqlNutanixCluster for the nutanix.cluster resource
 type mqlNutanixCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -2730,6 +3099,7 @@ type mqlNutanixCluster struct {
 	Network                      plugin.TValue[*mqlNutanixClusterNetworkConfig]
 	FaultTolerance               plugin.TValue[*mqlNutanixClusterFaultToleranceState]
 	Nodes                        plugin.TValue[[]any]
+	StorageContainers            plugin.TValue[[]any]
 }
 
 // createNutanixCluster creates a new instance of this resource
@@ -2917,6 +3287,22 @@ func (c *mqlNutanixCluster) GetNodes() *plugin.TValue[[]any] {
 		}
 
 		return c.nodes()
+	})
+}
+
+func (c *mqlNutanixCluster) GetStorageContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageContainers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.cluster", c.__id, "storageContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageContainers()
 	})
 }
 
@@ -5275,4 +5661,362 @@ func (c *mqlNutanixNetworkFloatingIp) GetExternalSubnet() *plugin.TValue[*mqlNut
 
 		return c.externalSubnet()
 	})
+}
+
+// mqlNutanixStorageContainer for the nutanix.storage.container resource
+type mqlNutanixStorageContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNutanixStorageContainerInternal
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	MaxCapacityBytes                     plugin.TValue[int64]
+	LogicalAdvertisedCapacityBytes       plugin.TValue[int64]
+	LogicalExplicitReservedCapacityBytes plugin.TValue[int64]
+	LogicalImplicitReservedCapacityBytes plugin.TValue[int64]
+	IsCompressionEnabled                 plugin.TValue[bool]
+	CompressionDelaySecs                 plugin.TValue[int64]
+	OnDiskDedup                          plugin.TValue[string]
+	CacheDeduplication                   plugin.TValue[string]
+	ErasureCode                          plugin.TValue[string]
+	IsInlineEcEnabled                    plugin.TValue[bool]
+	ReplicationFactor                    plugin.TValue[int64]
+	IsEncrypted                          plugin.TValue[bool]
+	IsSoftwareEncryptionEnabled          plugin.TValue[bool]
+	NfsWhitelistAddresses                plugin.TValue[[]any]
+	IsNfsWhitelistInherited              plugin.TValue[bool]
+	IsShared                             plugin.TValue[bool]
+	IsInternal                           plugin.TValue[bool]
+	IsMarkedForRemoval                   plugin.TValue[bool]
+	StoragePoolId                        plugin.TValue[string]
+	Cluster                              plugin.TValue[*mqlNutanixCluster]
+}
+
+// createNutanixStorageContainer creates a new instance of this resource
+func createNutanixStorageContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixStorageContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.storage.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixStorageContainer) MqlName() string {
+	return "nutanix.storage.container"
+}
+
+func (c *mqlNutanixStorageContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixStorageContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixStorageContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixStorageContainer) GetMaxCapacityBytes() *plugin.TValue[int64] {
+	return &c.MaxCapacityBytes
+}
+
+func (c *mqlNutanixStorageContainer) GetLogicalAdvertisedCapacityBytes() *plugin.TValue[int64] {
+	return &c.LogicalAdvertisedCapacityBytes
+}
+
+func (c *mqlNutanixStorageContainer) GetLogicalExplicitReservedCapacityBytes() *plugin.TValue[int64] {
+	return &c.LogicalExplicitReservedCapacityBytes
+}
+
+func (c *mqlNutanixStorageContainer) GetLogicalImplicitReservedCapacityBytes() *plugin.TValue[int64] {
+	return &c.LogicalImplicitReservedCapacityBytes
+}
+
+func (c *mqlNutanixStorageContainer) GetIsCompressionEnabled() *plugin.TValue[bool] {
+	return &c.IsCompressionEnabled
+}
+
+func (c *mqlNutanixStorageContainer) GetCompressionDelaySecs() *plugin.TValue[int64] {
+	return &c.CompressionDelaySecs
+}
+
+func (c *mqlNutanixStorageContainer) GetOnDiskDedup() *plugin.TValue[string] {
+	return &c.OnDiskDedup
+}
+
+func (c *mqlNutanixStorageContainer) GetCacheDeduplication() *plugin.TValue[string] {
+	return &c.CacheDeduplication
+}
+
+func (c *mqlNutanixStorageContainer) GetErasureCode() *plugin.TValue[string] {
+	return &c.ErasureCode
+}
+
+func (c *mqlNutanixStorageContainer) GetIsInlineEcEnabled() *plugin.TValue[bool] {
+	return &c.IsInlineEcEnabled
+}
+
+func (c *mqlNutanixStorageContainer) GetReplicationFactor() *plugin.TValue[int64] {
+	return &c.ReplicationFactor
+}
+
+func (c *mqlNutanixStorageContainer) GetIsEncrypted() *plugin.TValue[bool] {
+	return &c.IsEncrypted
+}
+
+func (c *mqlNutanixStorageContainer) GetIsSoftwareEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.IsSoftwareEncryptionEnabled
+}
+
+func (c *mqlNutanixStorageContainer) GetNfsWhitelistAddresses() *plugin.TValue[[]any] {
+	return &c.NfsWhitelistAddresses
+}
+
+func (c *mqlNutanixStorageContainer) GetIsNfsWhitelistInherited() *plugin.TValue[bool] {
+	return &c.IsNfsWhitelistInherited
+}
+
+func (c *mqlNutanixStorageContainer) GetIsShared() *plugin.TValue[bool] {
+	return &c.IsShared
+}
+
+func (c *mqlNutanixStorageContainer) GetIsInternal() *plugin.TValue[bool] {
+	return &c.IsInternal
+}
+
+func (c *mqlNutanixStorageContainer) GetIsMarkedForRemoval() *plugin.TValue[bool] {
+	return &c.IsMarkedForRemoval
+}
+
+func (c *mqlNutanixStorageContainer) GetStoragePoolId() *plugin.TValue[string] {
+	return &c.StoragePoolId
+}
+
+func (c *mqlNutanixStorageContainer) GetCluster() *plugin.TValue[*mqlNutanixCluster] {
+	return plugin.GetOrCompute[*mqlNutanixCluster](&c.Cluster, func() (*mqlNutanixCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.storage.container", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+// mqlNutanixStorageVolumeGroup for the nutanix.storage.volumeGroup resource
+type mqlNutanixStorageVolumeGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNutanixStorageVolumeGroupInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	SharingStatus                  plugin.TValue[string]
+	UsageType                      plugin.TValue[string]
+	Protocol                       plugin.TValue[string]
+	AttachmentType                 plugin.TValue[string]
+	EnabledAuthentications         plugin.TValue[string]
+	TargetName                     plugin.TValue[string]
+	TargetPrefix                   plugin.TValue[string]
+	IsHidden                       plugin.TValue[bool]
+	ShouldLoadBalanceVmAttachments plugin.TValue[bool]
+	Cluster                        plugin.TValue[*mqlNutanixCluster]
+	Disks                          plugin.TValue[[]any]
+}
+
+// createNutanixStorageVolumeGroup creates a new instance of this resource
+func createNutanixStorageVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixStorageVolumeGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.storage.volumeGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixStorageVolumeGroup) MqlName() string {
+	return "nutanix.storage.volumeGroup"
+}
+
+func (c *mqlNutanixStorageVolumeGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetSharingStatus() *plugin.TValue[string] {
+	return &c.SharingStatus
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetUsageType() *plugin.TValue[string] {
+	return &c.UsageType
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetAttachmentType() *plugin.TValue[string] {
+	return &c.AttachmentType
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetEnabledAuthentications() *plugin.TValue[string] {
+	return &c.EnabledAuthentications
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetTargetName() *plugin.TValue[string] {
+	return &c.TargetName
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetTargetPrefix() *plugin.TValue[string] {
+	return &c.TargetPrefix
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetIsHidden() *plugin.TValue[bool] {
+	return &c.IsHidden
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetShouldLoadBalanceVmAttachments() *plugin.TValue[bool] {
+	return &c.ShouldLoadBalanceVmAttachments
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetCluster() *plugin.TValue[*mqlNutanixCluster] {
+	return plugin.GetOrCompute[*mqlNutanixCluster](&c.Cluster, func() (*mqlNutanixCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.storage.volumeGroup", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNutanixCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlNutanixStorageVolumeGroup) GetDisks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Disks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nutanix.storage.volumeGroup", c.__id, "disks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.disks()
+	})
+}
+
+// mqlNutanixStorageVolumeGroupDisk for the nutanix.storage.volumeGroupDisk resource
+type mqlNutanixStorageVolumeGroupDisk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNutanixStorageVolumeGroupDiskInternal it will be used here
+	Id                 plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Index              plugin.TValue[int64]
+	SizeBytes          plugin.TValue[int64]
+	StorageContainerId plugin.TValue[string]
+}
+
+// createNutanixStorageVolumeGroupDisk creates a new instance of this resource
+func createNutanixStorageVolumeGroupDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNutanixStorageVolumeGroupDisk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nutanix.storage.volumeGroupDisk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) MqlName() string {
+	return "nutanix.storage.volumeGroupDisk"
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) GetIndex() *plugin.TValue[int64] {
+	return &c.Index
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlNutanixStorageVolumeGroupDisk) GetStorageContainerId() *plugin.TValue[string] {
+	return &c.StorageContainerId
 }

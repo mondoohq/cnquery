@@ -34,6 +34,10 @@ nutanix {
   subnets() []nutanix.network.subnet
   // Floating IP addresses
   floatingIps() []nutanix.network.floatingIp
+  // Storage containers
+  storageContainers() []nutanix.storage.container
+  // Volume groups
+  volumeGroups() []nutanix.storage.volumeGroup
 }
 
 // Nutanix cluster
@@ -125,6 +129,8 @@ private nutanix.cluster @defaults("name version nodeCount") {
   faultTolerance() nutanix.cluster.faultToleranceState
   // Nodes that make up the cluster
   nodes() []nutanix.cluster.node
+  // Storage containers on the cluster
+  storageContainers() []nutanix.storage.container
 }
 
 // Nutanix cluster network configuration
@@ -889,4 +895,128 @@ private nutanix.network.floatingIp @defaults("name floatingIpValue associationSt
   vpc() nutanix.network.vpc
   // External subnet the floating IP is allocated from
   externalSubnet() nutanix.network.subnet
+}
+
+// Nutanix storage container
+//
+// Examine a storage container: its capacity and reservations, data-reduction
+// settings (compression, deduplication, erasure coding), resiliency
+// (replication factor), encryption posture, and NFS exposure. The `id` field
+// is the container's external UUID; `cluster` resolves to the owning cluster.
+private nutanix.storage.container @defaults("name replicationFactor isEncrypted") {
+  // External UUID of the storage container
+  id string
+  // Name of the storage container
+  name string
+  // Maximum physical capacity in bytes
+  maxCapacityBytes int
+  // User-defined maximum (advertised) capacity in bytes
+  logicalAdvertisedCapacityBytes int
+  // Admin-set reserved capacity in bytes (includes replication factor)
+  logicalExplicitReservedCapacityBytes int
+  // Sum of reservations across all vDisks in the container, in bytes
+  logicalImplicitReservedCapacityBytes int
+  // Whether compression is enabled
+  isCompressionEnabled bool
+  // Compression delay in seconds
+  compressionDelaySecs int
+  // On-disk deduplication mode
+  //
+  // One of NONE, OFF, or POST_PROCESS.
+  onDiskDedup string
+  // Cache deduplication mode
+  //
+  // One of NONE, OFF, or ON.
+  cacheDeduplication string
+  // Erasure-coding status
+  //
+  // One of NONE, ENABLED, or DISABLED.
+  erasureCode string
+  // Whether inline erasure coding is enabled
+  isInlineEcEnabled bool
+  // Replication factor of the container
+  replicationFactor int
+  // Whether the container is encrypted
+  isEncrypted bool
+  // Whether software encryption is enabled
+  isSoftwareEncryptionEnabled bool
+  // NFS addresses allowlisted for the container
+  nfsWhitelistAddresses []string
+  // Whether the NFS allowlist is inherited from the global configuration
+  isNfsWhitelistInherited bool
+  // Whether the container is shared across registered clusters
+  isShared bool
+  // Whether the container is internal and Nutanix-managed
+  isInternal bool
+  // Whether the container is marked for removal
+  isMarkedForRemoval bool
+  // External UUID of the owning storage pool
+  storagePoolId string
+  // Cluster the container belongs to
+  cluster() nutanix.cluster
+}
+
+// Nutanix volume group
+//
+// Examine a volume group exposed over iSCSI or NVMe-oF: its sharing status,
+// usage type, target naming, client authentication, protocol, and attached
+// disks. The `id` field is the volume group's external UUID; `cluster`
+// resolves to the hosting cluster. Inspect `enabledAuthentications` to find
+// targets exposed without CHAP.
+private nutanix.storage.volumeGroup @defaults("name sharingStatus enabledAuthentications") {
+  // External UUID of the volume group
+  id string
+  // Name of the volume group
+  name string
+  // Description of the volume group
+  description string
+  // Sharing status
+  //
+  // One of SHARED or NOT_SHARED.
+  sharingStatus string
+  // Usage type
+  //
+  // One of USER, INTERNAL, TEMPORARY, or BACKUP_TARGET.
+  usageType string
+  // Access protocol
+  //
+  // One of ISCSI or NVMF.
+  protocol string
+  // Attachment type
+  //
+  // One of DIRECT or FLAT.
+  attachmentType string
+  // Client authentication requirement
+  //
+  // One of CHAP or NONE.
+  enabledAuthentications string
+  // External client target name
+  targetName string
+  // Target prefix for external clients
+  targetPrefix string
+  // Whether the volume group is hidden
+  isHidden bool
+  // Whether VM-attachment load balancing is enabled
+  shouldLoadBalanceVmAttachments bool
+  // Cluster hosting the volume group
+  cluster() nutanix.cluster
+  // Disks belonging to the volume group
+  disks() []nutanix.storage.volumeGroupDisk
+}
+
+// Disk in a Nutanix volume group
+//
+// Examine a single disk attached to a volume group: its index, size, and
+// backing storage container. The `id` field is the disk's external UUID.
+private nutanix.storage.volumeGroupDisk @defaults("id sizeBytes") {
+  // External UUID of the disk
+  id string
+  // Description of the disk
+  description string
+  // Index of the disk in the volume group
+  index int
+  // Size of the disk in bytes
+  sizeBytes int
+  // External UUID of the backing storage container
+  storageContainerId string
 }

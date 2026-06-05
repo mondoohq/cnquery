@@ -1,0 +1,251 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	clustermgmtconfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	volconfig "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/nutanix/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+// ---------------------------------------------------------------------------
+// storage containers
+// ---------------------------------------------------------------------------
+
+func listStorageContainers(conn *connection.NutanixConnection) ([]clustermgmtconfig.StorageContainer, error) {
+	api := conn.StorageContainersApi()
+	limit := pageSize
+	all := []clustermgmtconfig.StorageContainer{}
+	for page := 0; ; page++ {
+		p := page
+		resp, err := api.ListStorageContainers(&p, &limit, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+		items, ok := data.([]clustermgmtconfig.StorageContainer)
+		if !ok {
+			break
+		}
+		all = append(all, items...)
+		if len(items) < limit {
+			break
+		}
+	}
+	return all, nil
+}
+
+func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.StorageContainer) (*mqlNutanixStorageContainer, error) {
+	onDiskDedup := ""
+	if c.OnDiskDedup != nil {
+		onDiskDedup = c.OnDiskDedup.GetName()
+	}
+	cacheDedup := ""
+	if c.CacheDeduplication != nil {
+		cacheDedup = c.CacheDeduplication.GetName()
+	}
+	erasureCode := ""
+	if c.ErasureCode != nil {
+		erasureCode = c.ErasureCode.GetName()
+	}
+	nfsWhitelist := []any{}
+	for i := range c.NfsWhitelistAddress {
+		nfsWhitelist = append(nfsWhitelist, clusterIPOrFqdnToString(&c.NfsWhitelistAddress[i]))
+	}
+
+	res, err := CreateResource(runtime, "nutanix.storage.container", map[string]*llx.RawData{
+		"__id":                                 llx.StringDataPtr(c.ExtId),
+		"id":                                   llx.StringDataPtr(c.ExtId),
+		"name":                                 llx.StringDataPtr(c.Name),
+		"maxCapacityBytes":                     llx.IntData(derefInt64(c.MaxCapacityBytes)),
+		"logicalAdvertisedCapacityBytes":       llx.IntData(derefInt64(c.LogicalAdvertisedCapacityBytes)),
+		"logicalExplicitReservedCapacityBytes": llx.IntData(derefInt64(c.LogicalExplicitReservedCapacityBytes)),
+		"logicalImplicitReservedCapacityBytes": llx.IntData(derefInt64(c.LogicalImplicitReservedCapacityBytes)),
+		"isCompressionEnabled":                 llx.BoolData(derefBool(c.IsCompressionEnabled)),
+		"compressionDelaySecs":                 llx.IntData(derefInt(c.CompressionDelaySecs)),
+		"onDiskDedup":                          llx.StringData(onDiskDedup),
+		"cacheDeduplication":                   llx.StringData(cacheDedup),
+		"erasureCode":                          llx.StringData(erasureCode),
+		"isInlineEcEnabled":                    llx.BoolData(derefBool(c.IsInlineEcEnabled)),
+		"replicationFactor":                    llx.IntData(derefInt(c.ReplicationFactor)),
+		"isEncrypted":                          llx.BoolData(derefBool(c.IsEncrypted)),
+		"isSoftwareEncryptionEnabled":          llx.BoolData(derefBool(c.IsSoftwareEncryptionEnabled)),
+		"nfsWhitelistAddresses":                llx.ArrayData(nfsWhitelist, types.String),
+		"isNfsWhitelistInherited":              llx.BoolData(derefBool(c.IsNfsWhitelistInherited)),
+		"isShared":                             llx.BoolData(derefBool(c.IsShared)),
+		"isInternal":                           llx.BoolData(derefBool(c.IsInternal)),
+		"isMarkedForRemoval":                   llx.BoolData(derefBool(c.IsMarkedForRemoval)),
+		"storagePoolId":                        llx.StringDataPtr(c.StoragePoolExtId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlContainer := res.(*mqlNutanixStorageContainer)
+	if c.ClusterExtId != nil {
+		mqlContainer.cacheClusterId = *c.ClusterExtId
+	}
+	return mqlContainer, nil
+}
+
+func storageContainersForCluster(runtime *plugin.Runtime, conn *connection.NutanixConnection, clusterFilter string) ([]any, error) {
+	containers, err := listStorageContainers(conn)
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for i := range containers {
+		c := containers[i]
+		if clusterFilter != "" && (c.ClusterExtId == nil || *c.ClusterExtId != clusterFilter) {
+			continue
+		}
+		mqlContainer, err := newMqlStorageContainer(runtime, &c)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlContainer)
+	}
+	return res, nil
+}
+
+func (a *mqlNutanix) storageContainers() ([]any, error) {
+	conn := a.conn()
+	return storageContainersForCluster(a.MqlRuntime, conn, conn.ClusterID())
+}
+
+func (a *mqlNutanixCluster) storageContainers() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
+	return storageContainersForCluster(a.MqlRuntime, conn, a.clusterId)
+}
+
+type mqlNutanixStorageContainerInternal struct {
+	cacheClusterId string
+}
+
+func (a *mqlNutanixStorageContainer) cluster() (*mqlNutanixCluster, error) {
+	if a.cacheClusterId == "" {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return clusterByID(a.MqlRuntime, a.cacheClusterId)
+}
+
+// ---------------------------------------------------------------------------
+// volume groups
+// ---------------------------------------------------------------------------
+
+func (a *mqlNutanix) volumeGroups() ([]any, error) {
+	conn := a.conn()
+	api := conn.VolumeGroupsApi()
+	limit := pageSize
+	res := []any{}
+	for page := 0; ; page++ {
+		p := page
+		resp, err := api.ListVolumeGroups(&p, &limit, nil, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+		items, ok := data.([]volconfig.VolumeGroup)
+		if !ok {
+			break
+		}
+		for i := range items {
+			vg := items[i]
+			sharingStatus := ""
+			if vg.SharingStatus != nil {
+				sharingStatus = vg.SharingStatus.GetName()
+			}
+			usageType := ""
+			if vg.UsageType != nil {
+				usageType = vg.UsageType.GetName()
+			}
+			protocol := ""
+			if vg.Protocol != nil {
+				protocol = vg.Protocol.GetName()
+			}
+			attachmentType := ""
+			if vg.AttachmentType != nil {
+				attachmentType = vg.AttachmentType.GetName()
+			}
+			enabledAuth := ""
+			if vg.EnabledAuthentications != nil {
+				enabledAuth = vg.EnabledAuthentications.GetName()
+			}
+			mqlVg, err := CreateResource(a.MqlRuntime, "nutanix.storage.volumeGroup", map[string]*llx.RawData{
+				"__id":                           llx.StringDataPtr(vg.ExtId),
+				"id":                             llx.StringDataPtr(vg.ExtId),
+				"name":                           llx.StringDataPtr(vg.Name),
+				"description":                    llx.StringDataPtr(vg.Description),
+				"sharingStatus":                  llx.StringData(sharingStatus),
+				"usageType":                      llx.StringData(usageType),
+				"protocol":                       llx.StringData(protocol),
+				"attachmentType":                 llx.StringData(attachmentType),
+				"enabledAuthentications":         llx.StringData(enabledAuth),
+				"targetName":                     llx.StringDataPtr(vg.TargetName),
+				"targetPrefix":                   llx.StringDataPtr(vg.TargetPrefix),
+				"isHidden":                       llx.BoolData(derefBool(vg.IsHidden)),
+				"shouldLoadBalanceVmAttachments": llx.BoolData(derefBool(vg.ShouldLoadBalanceVmAttachments)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mv := mqlVg.(*mqlNutanixStorageVolumeGroup)
+			if vg.ClusterReference != nil {
+				mv.cacheClusterId = *vg.ClusterReference
+			}
+			mv.cacheDisks = vg.Disks
+			res = append(res, mv)
+		}
+		if len(items) < limit {
+			break
+		}
+	}
+	return res, nil
+}
+
+type mqlNutanixStorageVolumeGroupInternal struct {
+	cacheClusterId string
+	cacheDisks     []volconfig.VolumeDisk
+}
+
+func (a *mqlNutanixStorageVolumeGroup) cluster() (*mqlNutanixCluster, error) {
+	if a.cacheClusterId == "" {
+		a.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return clusterByID(a.MqlRuntime, a.cacheClusterId)
+}
+
+func (a *mqlNutanixStorageVolumeGroup) disks() ([]any, error) {
+	res := []any{}
+	for i := range a.cacheDisks {
+		d := a.cacheDisks[i]
+		extId := ""
+		if d.ExtId != nil {
+			extId = *d.ExtId
+		}
+		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.storage.volumeGroupDisk", map[string]*llx.RawData{
+			"__id":               llx.StringData(extId),
+			"id":                 llx.StringData(extId),
+			"description":        llx.StringDataPtr(d.Description),
+			"index":              llx.IntData(derefInt(d.Index)),
+			"sizeBytes":          llx.IntData(derefInt64(d.DiskSizeBytes)),
+			"storageContainerId": llx.StringDataPtr(d.StorageContainerId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDisk)
+	}
+	return res, nil
+}

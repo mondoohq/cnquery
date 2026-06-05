@@ -423,6 +423,8 @@ github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1 h1:VWx
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1/go.mod h1:4fUdP3zeL4UFS/UVaii5EdS2v+KlM4gI07KcnS+wDuY=
 github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2 h1:NI3DQoNxD3Ab/MKu0idurECXzmYVINwtAJ0bbTmeu00=
 github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2/go.mod h1:3VY254T7zS8PiRQU0ll5jeRFcnn7zNm3jck5GxYvb7s=
+github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2 h1:nTB0vCaacVRccIbTaEhQkZCTyhT/ciPIVHGTh5XoDfI=
+github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2/go.mod h1:T0+m1JQoMgBv8ybtqVti4T5Y6iRiqzdNI1gwB/TgN1Q=
 github.com/oklog/run v1.2.0 h1:O8x3yXwah4A73hJdlrwo/2X6J62gE5qTMusH0dvz60E=
 github.com/oklog/run v1.2.0/go.mod h1:mgDbKRSwPhJfesJ4PntqFUbKQRZ50NgmZTSPlFA0YFk=
 github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 h1:zrbMGy9YXpIeTnGj4EljqMiZsIcE09mmF8XsD5AYOJc=
