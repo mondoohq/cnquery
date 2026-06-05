@@ -325,6 +325,7 @@ digitalocean.gradientai.batchJobs 13.4.2
 digitalocean.gradientai.customModel 13.4.2
 digitalocean.gradientai.customModel.activeDeployments 13.4.2
 digitalocean.gradientai.customModel.architecture 13.4.2
+digitalocean.gradientai.customModel.configJson 13.5.2
 digitalocean.gradientai.customModel.contextLength 13.4.2
 digitalocean.gradientai.customModel.costEstimatePerMonth 13.4.2
 digitalocean.gradientai.customModel.createdAt 13.4.2
@@ -335,6 +336,7 @@ digitalocean.gradientai.customModel.license 13.4.2
 digitalocean.gradientai.customModel.name 13.4.2
 digitalocean.gradientai.customModel.outputModalities 13.4.2
 digitalocean.gradientai.customModel.parameters 13.4.2
+digitalocean.gradientai.customModel.sourceRef 13.5.2
 digitalocean.gradientai.customModel.sourceType 13.4.2
 digitalocean.gradientai.customModel.status 13.4.2
 digitalocean.gradientai.customModel.storageRegion 13.4.2

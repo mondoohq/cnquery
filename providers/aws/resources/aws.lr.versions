@@ -4265,6 +4265,7 @@ aws.emr.cluster.scaleDownBehavior 13.21.4
 aws.emr.cluster.securityConfig 13.21.4
 aws.emr.cluster.securityConfiguration 13.3.0
 aws.emr.cluster.serviceRole 13.21.4
+aws.emr.cluster.sessionEnabled 13.32.2
 aws.emr.cluster.status 11.15.2
 aws.emr.cluster.step 13.12.1
 aws.emr.cluster.step.actionOnFailure 13.12.1

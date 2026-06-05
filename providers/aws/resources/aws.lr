@@ -7429,6 +7429,8 @@ private aws.emr.cluster @defaults("arn") {
   autoScalingRole() aws.iam.role
   // IAM service role assumed by EMR to access AWS resources
   serviceRole() aws.iam.role
+  // Whether Spark Connect sessions are enabled on the cluster
+  sessionEnabled() bool
 }
 
 // Amazon EMR security configuration

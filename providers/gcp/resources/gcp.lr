@@ -4143,6 +4143,15 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   podIpv4CidrSize int
   // Upgrade settings for the node pool
   upgradeSettings gcp.project.gkeService.cluster.nodepool.upgradeSettings
+  // Node drain behavior applied when nodes are removed
+  //
+  // Controls how nodes are gracefully drained during upgrades, scale-down,
+  // and node pool deletion. Keys: `pdbTimeoutDuration` (how long to wait for
+  // PodDisruptionBudgets to be satisfied before forcing eviction),
+  // `graceTerminationDuration` (the termination grace period granted to pods),
+  // and `respectPdbDuringNodePoolDeletion` (whether PodDisruptionBudgets are
+  // honored when the node pool itself is deleted).
+  nodeDrainConfig dict
   // ETag for optimistic locking
   etag string
 }
@@ -4294,7 +4303,22 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   // Confidential nodes configuration
   confidentialNodes gcp.project.gkeService.cluster.nodepool.config.confidentialNodes
   // GPU Direct configuration
+  //
+  // The `gpuDirectStrategy` key reports the GPU Direct strategy enabled on
+  // the node pool. One of GPU_DIRECT_STRATEGY_UNSPECIFIED or RDMA (GPU Direct
+  // RDMA for high-throughput, low-latency GPU-to-GPU networking).
   gpuDirectConfig dict
+  // containerd runtime configuration
+  //
+  // Surfaces the containerd settings applied to nodes. Keys:
+  // `privateRegistryAccessConfig` (CA-domain configuration for pulling from
+  // private registries, including GCP Secret Manager certificate references),
+  // `writableCgroups`, and `registryHosts` — a list of per-server registry
+  // host configurations (each containerd `hosts.toml`). Every registry host
+  // entry carries a `server`, plus `hosts` with their `capabilities`
+  // (HOST_CAPABILITY_PULL, HOST_CAPABILITY_RESOLVE, HOST_CAPABILITY_PUSH),
+  // headers, CA and client certificates, and dial timeout.
+  containerdConfig dict
 }
 
 // Google Kubernetes Engine (GKE) node pool hardware accelerators configuration
@@ -4362,6 +4386,14 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
   id string
   // The Linux kernel parameters to apply to the nodes and all pods running on them
   sysctls map[string]string
+  // Swap memory configuration for the node pool
+  //
+  // Reports how swap is provisioned on nodes. At most one of the profile keys
+  // is set, selecting where swap is backed: `bootDiskProfile` (swap on the
+  // boot disk, sized by `swapSizeGib` or `swapSizePercent`, optionally
+  // encrypted via `encryptionConfig`), `ephemeralLocalSsdProfile`, or
+  // `dedicatedLocalSsdProfile`. When the config is absent, swap is disabled.
+  swapConfig dict
 }
 
 // Google Kubernetes Engine (GKE) node pool parameters that can be configured on Windows nodes

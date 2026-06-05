@@ -2137,6 +2137,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.gradientai.customModel.storageRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetStorageRegion()).ToDataRes(types.String)
 	},
+	"digitalocean.gradientai.customModel.sourceRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetSourceRef()).ToDataRes(types.Dict)
+	},
+	"digitalocean.gradientai.customModel.configJson": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetConfigJson()).ToDataRes(types.Dict)
+	},
 	"digitalocean.gradientai.customModel.activeDeployments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanGradientaiCustomModel).GetActiveDeployments()).ToDataRes(types.Array(types.Dict))
 	},
@@ -4984,6 +4990,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.gradientai.customModel.storageRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanGradientaiCustomModel).StorageRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).SourceRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.gradientai.customModel.configJson": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanGradientaiCustomModel).ConfigJson, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.gradientai.customModel.activeDeployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11579,6 +11593,8 @@ type mqlDigitaloceanGradientaiCustomModel struct {
 	Parameters           plugin.TValue[string]
 	TeamId               plugin.TValue[string]
 	StorageRegion        plugin.TValue[string]
+	SourceRef            plugin.TValue[any]
+	ConfigJson           plugin.TValue[any]
 	ActiveDeployments    plugin.TValue[[]any]
 	CreatedAt            plugin.TValue[*time.Time]
 	UpdatedAt            plugin.TValue[*time.Time]
@@ -11678,6 +11694,14 @@ func (c *mqlDigitaloceanGradientaiCustomModel) GetTeamId() *plugin.TValue[string
 
 func (c *mqlDigitaloceanGradientaiCustomModel) GetStorageRegion() *plugin.TValue[string] {
 	return &c.StorageRegion
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetSourceRef() *plugin.TValue[any] {
+	return &c.SourceRef
+}
+
+func (c *mqlDigitaloceanGradientaiCustomModel) GetConfigJson() *plugin.TValue[any] {
+	return &c.ConfigJson
 }
 
 func (c *mqlDigitaloceanGradientaiCustomModel) GetActiveDeployments() *plugin.TValue[[]any] {

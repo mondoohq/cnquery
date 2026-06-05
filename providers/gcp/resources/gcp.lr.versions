@@ -3083,6 +3083,7 @@ gcp.project.gkeService.cluster.nodepool.config.bootDiskKmsKey 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.id 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.containerdConfig 13.21.2
 gcp.project.gkeService.cluster.nodepool.config.diskSizeGb 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.diskType 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig 9.0.0
@@ -3105,6 +3106,7 @@ gcp.project.gkeService.cluster.nodepool.config.kubeletConfig.podPidsLimit 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.labels 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.id 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.swapConfig 13.21.2
 gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.sysctls 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.localSsdCount 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.localSsdEncryptionMode 13.19.2
@@ -3150,6 +3152,7 @@ gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig.totalEgressBandwidthTier 9.0.0
 gcp.project.gkeService.cluster.nodepool.networkConfig.podIpv4CidrBlock 9.0.0
 gcp.project.gkeService.cluster.nodepool.networkConfig.podRange 9.0.0
+gcp.project.gkeService.cluster.nodepool.nodeDrainConfig 13.21.2
 gcp.project.gkeService.cluster.nodepool.podIpv4CidrSize 11.6.6
 gcp.project.gkeService.cluster.nodepool.status 9.0.0
 gcp.project.gkeService.cluster.nodepool.statusMessage 11.6.6

@@ -6514,6 +6514,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.nodepool.upgradeSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetUpgradeSettings()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.upgradeSettings"))
 	},
+	"gcp.project.gkeService.cluster.nodepool.nodeDrainConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetNodeDrainConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.gkeService.cluster.nodepool.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetEtag()).ToDataRes(types.String)
 	},
@@ -6673,6 +6676,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetGpuDirectConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.nodepool.config.containerdConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetContainerdConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).GetId()).ToDataRes(types.String)
 	},
@@ -6729,6 +6735,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.sysctls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).GetSysctls()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.swapConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).GetSwapConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.osVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig).GetOsVersion()).ToDataRes(types.String)
@@ -22359,6 +22368,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).UpgradeSettings, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.nodepool.nodeDrainConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).NodeDrainConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -22591,6 +22604,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GpuDirectConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.nodepool.config.containerdConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).ContainerdConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).__id, ok = v.Value.(string)
 		return
@@ -22689,6 +22706,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.sysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).Sysctls, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig.swapConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig).SwapConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50692,6 +50713,7 @@ type mqlGcpProjectGkeServiceClusterNodepool struct {
 	StatusMessage         plugin.TValue[string]
 	PodIpv4CidrSize       plugin.TValue[int64]
 	UpgradeSettings       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings]
+	NodeDrainConfig       plugin.TValue[any]
 	Etag                  plugin.TValue[string]
 }
 
@@ -50810,6 +50832,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetPodIpv4CidrSize() *plugin.TV
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetUpgradeSettings() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings] {
 	return &c.UpgradeSettings
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepool) GetNodeDrainConfig() *plugin.TValue[any] {
+	return &c.NodeDrainConfig
 }
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetEtag() *plugin.TValue[string] {
@@ -51112,6 +51138,7 @@ type mqlGcpProjectGkeServiceClusterNodepoolConfig struct {
 	Spot                      plugin.TValue[bool]
 	ConfidentialNodes         plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes]
 	GpuDirectConfig           plugin.TValue[any]
+	ContainerdConfig          plugin.TValue[any]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfig creates a new instance of this resource
@@ -51305,6 +51332,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetConfidentialNodes() *p
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetGpuDirectConfig() *plugin.TValue[any] {
 	return &c.GpuDirectConfig
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetContainerdConfig() *plugin.TValue[any] {
+	return &c.ContainerdConfig
 }
 
 // mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator for the gcp.project.gkeService.cluster.nodepool.config.accelerator resource
@@ -51617,8 +51648,9 @@ type mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfigInternal it will be used here
-	Id      plugin.TValue[string]
-	Sysctls plugin.TValue[map[string]any]
+	Id         plugin.TValue[string]
+	Sysctls    plugin.TValue[map[string]any]
+	SwapConfig plugin.TValue[any]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig creates a new instance of this resource
@@ -51664,6 +51696,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) GetId() *p
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) GetSysctls() *plugin.TValue[map[string]any] {
 	return &c.Sysctls
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) GetSwapConfig() *plugin.TValue[any] {
+	return &c.SwapConfig
 }
 
 // mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig for the gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig resource

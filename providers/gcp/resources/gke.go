@@ -997,6 +997,11 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		return nil, err
 	}
 
+	var nodeDrainConfig map[string]any
+	if np.NodeDrainConfig != nil {
+		nodeDrainConfig, _ = convert.JsonToDict(np.NodeDrainConfig)
+	}
+
 	res, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool", map[string]*llx.RawData{
 		"id":                llx.StringData(nodePoolId),
 		"name":              llx.StringData(np.Name),
@@ -1014,6 +1019,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"statusMessage":     llx.StringData(np.StatusMessage),
 		"podIpv4CidrSize":   llx.IntData(int64(np.PodIpv4CidrSize)),
 		"upgradeSettings":   llx.ResourceData(mqlUpgradeSettings, "gcp.project.gkeService.cluster.nodepool.upgradeSettings"),
+		"nodeDrainConfig":   llx.DictData(nodeDrainConfig),
 		"etag":              llx.StringData(np.Etag),
 	})
 	if err != nil {
@@ -1089,9 +1095,14 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 
 	var mqlLinuxNodeCfg plugin.Resource
 	if cfg.LinuxNodeConfig != nil {
+		var swapConfig map[string]any
+		if cfg.LinuxNodeConfig.SwapConfig != nil {
+			swapConfig, _ = convert.JsonToDict(cfg.LinuxNodeConfig.SwapConfig)
+		}
 		mqlLinuxNodeCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig", map[string]*llx.RawData{
-			"id":      llx.StringData(fmt.Sprintf("%s/linuxNodeConfig", nodePoolId)),
-			"sysctls": llx.MapData(convert.MapToInterfaceMap(cfg.LinuxNodeConfig.Sysctls), types.String),
+			"id":         llx.StringData(fmt.Sprintf("%s/linuxNodeConfig", nodePoolId)),
+			"sysctls":    llx.MapData(convert.MapToInterfaceMap(cfg.LinuxNodeConfig.Sysctls), types.String),
+			"swapConfig": llx.DictData(swapConfig),
 		})
 		if err != nil {
 			return nil, err
@@ -1175,6 +1186,11 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		}
 	}
 
+	var containerdConfig map[string]any
+	if cfg.ContainerdConfig != nil {
+		containerdConfig, _ = convert.JsonToDict(cfg.ContainerdConfig)
+	}
+
 	workloadMetadataMode := ""
 	if cfg.WorkloadMetadataConfig != nil {
 		workloadMetadataMode = cfg.WorkloadMetadataConfig.Mode.String()
@@ -1213,6 +1229,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		"spot":                    llx.BoolData(cfg.Spot),
 		"confidentialNodes":       llx.ResourceData(mqlConfidentialNodes, "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"),
 		"gpuDirectConfig":         llx.DictData(gpuDirectConfig),
+		"containerdConfig":        llx.DictData(containerdConfig),
 	})
 }
 

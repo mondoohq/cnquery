@@ -12996,6 +12996,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.serviceRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetServiceRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.emr.cluster.sessionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetSessionEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.emr.securityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrSecurityConfiguration).GetName()).ToDataRes(types.String)
 	},
@@ -44425,6 +44428,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.serviceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).ServiceRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.sessionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).SessionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.emr.securityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -104821,6 +104828,7 @@ type mqlAwsEmrCluster struct {
 	VisibleToAllUsers          plugin.TValue[bool]
 	AutoScalingRole            plugin.TValue[*mqlAwsIamRole]
 	ServiceRole                plugin.TValue[*mqlAwsIamRole]
+	SessionEnabled             plugin.TValue[bool]
 }
 
 // createAwsEmrCluster creates a new instance of this resource
@@ -105135,6 +105143,12 @@ func (c *mqlAwsEmrCluster) GetServiceRole() *plugin.TValue[*mqlAwsIamRole] {
 		}
 
 		return c.serviceRole()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetSessionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SessionEnabled, func() (bool, error) {
+		return c.sessionEnabled()
 	})
 }
 

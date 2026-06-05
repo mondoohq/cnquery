@@ -164,6 +164,7 @@ type mqlAwsEmrClusterInternal struct {
 	cacheVisibleToAllUsers          bool
 	cacheAutoScalingRoleArn         string
 	cacheServiceRoleArn             string
+	cacheSessionEnabled             bool
 	autoTerminationFetched          bool
 	autoTerminationLock             sync.Mutex
 	cacheAutoTerminationIdleTimeout int64
@@ -253,6 +254,9 @@ func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
 	}
 	if resp.Cluster.ServiceRole != nil {
 		a.cacheServiceRoleArn = *resp.Cluster.ServiceRole
+	}
+	if resp.Cluster.SessionEnabled != nil {
+		a.cacheSessionEnabled = *resp.Cluster.SessionEnabled
 	}
 
 	a.clusterDetailsFetched = true
@@ -437,6 +441,13 @@ func (a *mqlAwsEmrCluster) serviceRole() (*mqlAwsIamRole, error) {
 		return nil, err
 	}
 	return mqlRole, nil
+}
+
+func (a *mqlAwsEmrCluster) sessionEnabled() (bool, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheSessionEnabled, nil
 }
 
 // iamRoleByArnOrName resolves an iam.role reference where the input string may

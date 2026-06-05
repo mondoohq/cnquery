@@ -642,6 +642,19 @@ func (r *mqlDigitaloceanGradientai) customModels() ([]interface{}, error) {
 					}
 					deployments = append(deployments, convert.ToValue(d))
 				}
+				var sourceRef map[string]interface{}
+				if m.SourceRef != nil {
+					// Surface the source location, but omit the Hugging Face
+					// access token.
+					sourceRef = map[string]interface{}{
+						"repoId":     m.SourceRef.RepoId,
+						"commitSha":  m.SourceRef.CommitSha,
+						"accessType": string(m.SourceRef.AccessType),
+						"bucket":     m.SourceRef.Bucket,
+						"region":     m.SourceRef.Region,
+						"prefix":     m.SourceRef.Prefix,
+					}
+				}
 				res, err := CreateResource(r.MqlRuntime, "digitalocean.gradientai.customModel", map[string]*llx.RawData{
 					"__id":                 llx.StringData(m.Uuid),
 					"uuid":                 llx.StringData(m.Uuid),
@@ -660,6 +673,8 @@ func (r *mqlDigitaloceanGradientai) customModels() ([]interface{}, error) {
 					"parameters":           llx.StringData(m.Parameters),
 					"teamId":               llx.StringData(m.TeamId),
 					"storageRegion":        llx.StringData(m.StorageRegion),
+					"sourceRef":            llx.DictData(sourceRef),
+					"configJson":           llx.DictData(m.ConfigJson),
 					"activeDeployments":    llx.ArrayData(deployments, types.Dict),
 					"createdAt":            llx.TimeDataPtr(gradientaiTime(m.CreatedAt)),
 					"updatedAt":            llx.TimeDataPtr(gradientaiTime(m.UpdatedAt)),

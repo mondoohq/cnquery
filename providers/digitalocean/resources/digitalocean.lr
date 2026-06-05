@@ -1708,6 +1708,15 @@ private digitalocean.gradientai.customModel @defaults("uuid name status") {
   teamId string
   // Region the model is stored in
   storageRegion string
+  // Source location the model was imported from
+  //
+  // Identifies where the model artifacts originate. For a Spaces object
+  // source: `bucket`, `region`, and `prefix`. For a Git/Hugging Face source:
+  // `repoId`, `commitSha`, and `accessType`. The Hugging Face token is
+  // omitted.
+  sourceRef dict
+  // Provider-specific configuration metadata for the model
+  configJson dict
   // Deployments currently serving the model
   activeDeployments []dict
   // Time the model was created
