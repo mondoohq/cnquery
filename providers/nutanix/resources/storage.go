@@ -24,7 +24,9 @@ func listStorageContainers(conn *connection.NutanixConnection) ([]clustermgmtcon
 	all := []clustermgmtconfig.StorageContainer{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListStorageContainers(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.ListStorageContainersApiResponse, error) {
+			return api.ListStorageContainers(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -34,7 +36,7 @@ func listStorageContainers(conn *connection.NutanixConnection) ([]clustermgmtcon
 		}
 		items, ok := data.([]clustermgmtconfig.StorageContainer)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListStorageContainers", data)
 		}
 		all = append(all, items...)
 		if len(items) < limit {
@@ -156,7 +158,9 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListVolumeGroups(&p, &limit, nil, nil, nil, nil)
+		resp, err := guard(conn.VolMu(), func() (*volconfig.ListVolumeGroupsApiResponse, error) {
+			return api.ListVolumeGroups(&p, &limit, nil, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +170,7 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 		}
 		items, ok := data.([]volconfig.VolumeGroup)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListVolumeGroups", data)
 		}
 		for i := range items {
 			vg := items[i]
@@ -291,8 +295,14 @@ func (a *mqlNutanixStorageVolumeGroupDisk) storageContainer() (*mqlNutanixStorag
 }
 
 func storageContainerByID(runtime *plugin.Runtime, containerID string) (*mqlNutanixStorageContainer, error) {
+	if c, ok := cachedResource[*mqlNutanixStorageContainer](runtime, "nutanix.storage.container", containerID); ok {
+		return c, nil
+	}
 	conn := runtime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.StorageContainersApi().GetStorageContainerById(&containerID)
+	id := containerID
+	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetStorageContainerApiResponse, error) {
+		return conn.StorageContainersApi().GetStorageContainerById(&id)
+	})
 	if err != nil {
 		return nil, err
 	}

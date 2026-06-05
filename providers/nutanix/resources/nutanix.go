@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	clustermgmtconfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
@@ -22,6 +23,28 @@ const pageSize = 100
 
 func (a *mqlNutanix) conn() *connection.NutanixConnection {
 	return a.MqlRuntime.Connection.(*connection.NutanixConnection)
+}
+
+// guard serializes a single SDK call on the given namespace mutex. The v4 SDK
+// ApiClient mutates per-request state without locking (see NutanixConnection),
+// so concurrent field resolution would otherwise race on a shared client.
+func guard[T any](mu *sync.Mutex, fn func() (T, error)) (T, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	return fn()
+}
+
+// cachedResource returns an already-resolved resource of the given type by its
+// __id, letting cross-reference accessors skip a redundant per-instance API
+// fetch when the same entity was already created during this scan.
+func cachedResource[T plugin.Resource](runtime *plugin.Runtime, name, id string) (T, bool) {
+	var zero T
+	if r, ok := runtime.Resources.Get(name + "\x00" + id); ok {
+		if typed, ok := r.(T); ok {
+			return typed, true
+		}
+	}
+	return zero, false
 }
 
 // ---------------------------------------------------------------------------
@@ -186,7 +209,9 @@ func listClusters(conn *connection.NutanixConnection) ([]clustermgmtconfig.Clust
 	all := []clustermgmtconfig.Cluster{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListClusters(&p, &limit, nil, nil, nil, nil, nil)
+		resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.ListClustersApiResponse, error) {
+			return api.ListClusters(&p, &limit, nil, nil, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +221,7 @@ func listClusters(conn *connection.NutanixConnection) ([]clustermgmtconfig.Clust
 		}
 		items, ok := data.([]clustermgmtconfig.Cluster)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListClusters", data)
 		}
 		all = append(all, items...)
 		if len(items) < limit {
@@ -212,7 +237,9 @@ func listHosts(conn *connection.NutanixConnection) ([]clustermgmtconfig.Host, er
 	all := []clustermgmtconfig.Host{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListHosts(&p, &limit, nil, nil, nil, nil)
+		resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.ListHostsApiResponse, error) {
+			return api.ListHosts(&p, &limit, nil, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +249,7 @@ func listHosts(conn *connection.NutanixConnection) ([]clustermgmtconfig.Host, er
 		}
 		items, ok := data.([]clustermgmtconfig.Host)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListHosts", data)
 		}
 		all = append(all, items...)
 		if len(items) < limit {
@@ -238,7 +265,9 @@ func listVms(conn *connection.NutanixConnection) ([]vmmconfig.Vm, error) {
 	all := []vmmconfig.Vm{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListVms(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.VmmMu(), func() (*vmmconfig.ListVmsApiResponse, error) {
+			return api.ListVms(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +277,7 @@ func listVms(conn *connection.NutanixConnection) ([]vmmconfig.Vm, error) {
 		}
 		items, ok := data.([]vmmconfig.Vm)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListVms", data)
 		}
 		all = append(all, items...)
 		if len(items) < limit {
@@ -585,8 +614,14 @@ func (a *mqlNutanixClusterNode) host() (*mqlNutanixHost, error) {
 		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if h, ok := cachedResource[*mqlNutanixHost](a.MqlRuntime, "nutanix.host", a.cacheNodeUuid); ok {
+		return h, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.ClustersApi().GetHostById(&a.cacheClusterId, &a.cacheNodeUuid)
+	clusterID, nodeUUID := a.cacheClusterId, a.cacheNodeUuid
+	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetHostApiResponse, error) {
+		return conn.ClustersApi().GetHostById(&clusterID, &nodeUUID)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1226,8 +1261,14 @@ func (a *mqlNutanixVm) host() (*mqlNutanixHost, error) {
 		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if h, ok := cachedResource[*mqlNutanixHost](a.MqlRuntime, "nutanix.host", a.hostExtId); ok {
+		return h, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.ClustersApi().GetHostById(&a.clusterExtId, &a.hostExtId)
+	clusterID, hostID := a.clusterExtId, a.hostExtId
+	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetHostApiResponse, error) {
+		return conn.ClustersApi().GetHostById(&clusterID, &hostID)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1245,8 +1286,14 @@ func (a *mqlNutanixVm) host() (*mqlNutanixHost, error) {
 }
 
 func clusterByID(runtime *plugin.Runtime, clusterID string) (*mqlNutanixCluster, error) {
+	if c, ok := cachedResource[*mqlNutanixCluster](runtime, "nutanix.cluster", clusterID); ok {
+		return c, nil
+	}
 	conn := runtime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.ClustersApi().GetClusterById(&clusterID, nil)
+	id := clusterID
+	resp, err := guard(conn.CmgMu(), func() (*clustermgmtconfig.GetClusterApiResponse, error) {
+		return conn.ClustersApi().GetClusterById(&id, nil)
+	})
 	if err != nil {
 		return nil, err
 	}

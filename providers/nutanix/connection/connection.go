@@ -6,6 +6,7 @@ package connection
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	clustermgmtapi "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/api"
 	clustermgmtclient "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/client"
@@ -36,7 +37,32 @@ type NutanixConnection struct {
 	iamClient *iamclient.ApiClient
 	netClient *netclient.ApiClient
 	volClient *volclient.ApiClient
+	// The v4 SDK ApiClient mutates per-request state (auth header, session
+	// cookie, negotiated API version) on every call without any internal
+	// locking, so a client shared across mql's concurrent field resolution is
+	// not safe for concurrent use. Each namespace client is guarded by its own
+	// mutex; calls in different namespaces still run in parallel.
+	cmgMu sync.Mutex
+	vmmMu sync.Mutex
+	iamMu sync.Mutex
+	netMu sync.Mutex
+	volMu sync.Mutex
 }
+
+// CmgMu guards the cluster-management namespace client.
+func (c *NutanixConnection) CmgMu() *sync.Mutex { return &c.cmgMu }
+
+// VmmMu guards the VM-management namespace client.
+func (c *NutanixConnection) VmmMu() *sync.Mutex { return &c.vmmMu }
+
+// IamMu guards the IAM namespace client.
+func (c *NutanixConnection) IamMu() *sync.Mutex { return &c.iamMu }
+
+// NetMu guards the networking namespace client.
+func (c *NutanixConnection) NetMu() *sync.Mutex { return &c.netMu }
+
+// VolMu guards the volumes namespace client.
+func (c *NutanixConnection) VolMu() *sync.Mutex { return &c.volMu }
 
 func NewNutanixConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*NutanixConnection, error) {
 	endpoint := conf.Host

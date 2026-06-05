@@ -85,7 +85,9 @@ func (a *mqlNutanix) vpcs() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListVpcs(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.NetMu(), func() (*netconfig.ListVpcsApiResponse, error) {
+			return api.ListVpcs(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +97,7 @@ func (a *mqlNutanix) vpcs() ([]any, error) {
 		}
 		items, ok := data.([]netconfig.Vpc)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListVpcs", data)
 		}
 		for i := range items {
 			mqlVpc, err := newMqlVpc(a.MqlRuntime, &items[i])
@@ -112,8 +114,14 @@ func (a *mqlNutanix) vpcs() ([]any, error) {
 }
 
 func vpcByID(runtime *plugin.Runtime, vpcID string) (*mqlNutanixNetworkVpc, error) {
+	if v, ok := cachedResource[*mqlNutanixNetworkVpc](runtime, "nutanix.network.vpc", vpcID); ok {
+		return v, nil
+	}
 	conn := runtime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.VpcsApi().GetVpcById(&vpcID)
+	id := vpcID
+	resp, err := guard(conn.NetMu(), func() (*netconfig.GetVpcApiResponse, error) {
+		return conn.VpcsApi().GetVpcById(&id)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +193,9 @@ func (a *mqlNutanix) subnets() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListSubnets(&p, &limit, nil, nil, nil, nil)
+		resp, err := guard(conn.NetMu(), func() (*netconfig.ListSubnetsApiResponse, error) {
+			return api.ListSubnets(&p, &limit, nil, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +205,7 @@ func (a *mqlNutanix) subnets() ([]any, error) {
 		}
 		items, ok := data.([]netconfig.Subnet)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListSubnets", data)
 		}
 		for i := range items {
 			s := items[i]
@@ -251,8 +261,14 @@ func (a *mqlNutanixNetworkSubnet) vpc() (*mqlNutanixNetworkVpc, error) {
 }
 
 func subnetByID(runtime *plugin.Runtime, subnetID string) (*mqlNutanixNetworkSubnet, error) {
+	if s, ok := cachedResource[*mqlNutanixNetworkSubnet](runtime, "nutanix.network.subnet", subnetID); ok {
+		return s, nil
+	}
 	conn := runtime.Connection.(*connection.NutanixConnection)
-	resp, err := conn.SubnetsApi().GetSubnetById(&subnetID)
+	id := subnetID
+	resp, err := guard(conn.NetMu(), func() (*netconfig.GetSubnetApiResponse, error) {
+		return conn.SubnetsApi().GetSubnetById(&id)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +294,9 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListFloatingIps(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.NetMu(), func() (*netconfig.ListFloatingIpsApiResponse, error) {
+			return api.ListFloatingIps(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +306,7 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 		}
 		items, ok := data.([]netconfig.FloatingIp)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListFloatingIps", data)
 		}
 		for i := range items {
 			f := items[i]

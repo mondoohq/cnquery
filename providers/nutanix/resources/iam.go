@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	authn "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
 	authz "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
 	"go.mondoo.com/mql/v13/llx"
@@ -24,7 +26,9 @@ func (a *mqlNutanix) users() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListUsers(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authn.ListUsersApiResponse, error) {
+			return api.ListUsers(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -34,7 +38,7 @@ func (a *mqlNutanix) users() ([]any, error) {
 		}
 		items, ok := data.([]authn.User)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListUsers", data)
 		}
 		for i := range items {
 			u := items[i]
@@ -94,7 +98,9 @@ func (a *mqlNutanix) userGroups() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListUserGroups(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authn.ListUserGroupsApiResponse, error) {
+			return api.ListUserGroups(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +110,7 @@ func (a *mqlNutanix) userGroups() ([]any, error) {
 		}
 		items, ok := data.([]authn.UserGroup)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListUserGroups", data)
 		}
 		for i := range items {
 			g := items[i]
@@ -175,7 +181,9 @@ func (a *mqlNutanix) roles() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListRoles(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authz.ListRolesApiResponse, error) {
+			return api.ListRoles(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +193,7 @@ func (a *mqlNutanix) roles() ([]any, error) {
 		}
 		items, ok := data.([]authz.Role)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListRoles", data)
 		}
 		for i := range items {
 			mqlRole, err := newMqlRole(a.MqlRuntime, &items[i])
@@ -212,7 +220,9 @@ func (a *mqlNutanix) authorizationPolicies() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListAuthorizationPolicies(&p, &limit, nil, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authz.ListAuthorizationPoliciesApiResponse, error) {
+			return api.ListAuthorizationPolicies(&p, &limit, nil, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +232,7 @@ func (a *mqlNutanix) authorizationPolicies() ([]any, error) {
 		}
 		items, ok := data.([]authz.AuthorizationPolicy)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListAuthorizationPolicies", data)
 		}
 		for i := range items {
 			ap := items[i]
@@ -278,9 +288,14 @@ func (a *mqlNutanixIamAuthorizationPolicy) role() (*mqlNutanixIamRole, error) {
 		a.Role.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	if r, ok := cachedResource[*mqlNutanixIamRole](a.MqlRuntime, "nutanix.iam.role", a.cacheRoleId); ok {
+		return r, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.NutanixConnection)
 	roleId := a.cacheRoleId
-	resp, err := conn.RolesApi().GetRoleById(&roleId)
+	resp, err := guard(conn.IamMu(), func() (*authz.GetRoleApiResponse, error) {
+		return conn.RolesApi().GetRoleById(&roleId)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +323,9 @@ func (a *mqlNutanix) directoryServices() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListDirectoryServices(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authn.ListDirectoryServicesApiResponse, error) {
+			return api.ListDirectoryServices(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -318,7 +335,7 @@ func (a *mqlNutanix) directoryServices() ([]any, error) {
 		}
 		items, ok := data.([]authn.DirectoryService)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListDirectoryServices", data)
 		}
 		for i := range items {
 			ds := items[i]
@@ -380,7 +397,9 @@ func (a *mqlNutanix) samlIdentityProviders() ([]any, error) {
 	res := []any{}
 	for page := 0; ; page++ {
 		p := page
-		resp, err := api.ListSamlIdentityProviders(&p, &limit, nil, nil, nil)
+		resp, err := guard(conn.IamMu(), func() (*authn.ListSamlIdentityProvidersApiResponse, error) {
+			return api.ListSamlIdentityProviders(&p, &limit, nil, nil, nil)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -390,7 +409,7 @@ func (a *mqlNutanix) samlIdentityProviders() ([]any, error) {
 		}
 		items, ok := data.([]authn.SamlIdentityProvider)
 		if !ok {
-			break
+			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListSamlIdentityProviders", data)
 		}
 		for i := range items {
 			idp := items[i]
