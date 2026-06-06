@@ -47,6 +47,11 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		res.Resources[x.Id] = x
 	}
 
+	// Aliases share the same *ResourceInfo under a second key. This is how the
+	// invariant in resources.proto (Schema.resources) gets established: if a
+	// map key in res.Resources differs from its value's `Id`, the entry is an
+	// alias from the key to the resource named by `Id`. We deliberately reuse
+	// the pointer rather than deep-copy so the two entries stay in lockstep.
 	for defName, r := range ast.aliases {
 		x, ok := res.Resources[r.ID]
 		if !ok {

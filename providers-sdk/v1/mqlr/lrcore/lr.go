@@ -54,6 +54,16 @@ func (m *Map) Capture(values []string) error {
 	return nil
 }
 
+// Alias declares that `Definition` is an alternate name for `Type`.
+//
+// Source syntax: `alias <Definition> = <Type>` (e.g. `alias os.unix.sshd = sshd`).
+//
+// The resulting schema contains both keys pointing at the same *ResourceInfo.
+// Downstream consumers can detect aliases by comparing the map key in
+// Schema.resources against the entry's `id`: when they differ, the entry is
+// an alias from the key to `id`. See resources.proto (Schema.resources) for
+// the contract.
+//
 // nolint: govet
 type Alias struct {
 	Definition SimpleType `@@`

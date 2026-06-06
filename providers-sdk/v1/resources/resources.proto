@@ -9,6 +9,17 @@ option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/resources";
 // BASIC DATATYPES
 
 message Schema {
+  // Map of resource name -> resource info.
+  //
+  // Invariant: when the map key differs from the value's `id` field, the entry
+  // is an alias from the key to the resource identified by `id`. The same
+  // ResourceInfo may be referenced under multiple keys (one canonical, plus one
+  // per alias) and consumers must not assume key == value.id. The canonical
+  // name is always `value.id`.
+  //
+  // Example: `alias os.unix.sshd = sshd` produces two entries that point at the
+  // same ResourceInfo, one under "sshd" and one under "os.unix.sshd", both with
+  // `id = "sshd"`.
   map<string, ResourceInfo> resources = 3;
 
   // Resources can depend on resources from another provider,
@@ -37,6 +48,10 @@ message Init {
 }
 
 message ResourceInfo {
+  // Canonical resource id. When a ResourceInfo is reached via an alias entry
+  // in Schema.resources, `id` is the original (aliased-to) resource name, not
+  // the alias key. Consumers that need the lookup key should use the map key
+  // from Schema.resources, not this field.
   string id = 1;
   string name = 2;
   map<string, Field> fields = 3;

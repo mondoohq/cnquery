@@ -25,7 +25,18 @@ const (
 )
 
 type Schema struct {
-	state     protoimpl.MessageState   `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Map of resource name -> resource info.
+	//
+	// Invariant: when the map key differs from the value's `id` field, the entry
+	// is an alias from the key to the resource identified by `id`. The same
+	// ResourceInfo may be referenced under multiple keys (one canonical, plus one
+	// per alias) and consumers must not assume key == value.id. The canonical
+	// name is always `value.id`.
+	//
+	// Example: `alias os.unix.sshd = sshd` produces two entries that point at the
+	// same ResourceInfo, one under "sshd" and one under "os.unix.sshd", both with
+	// `id = "sshd"`.
 	Resources map[string]*ResourceInfo `protobuf:"bytes,3,rep,name=resources,proto3" json:"resources,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Resources can depend on resources from another provider,
 	// this is the list of of providers the schema depends on.
@@ -287,20 +298,24 @@ func (x *Init) GetArgs() []*TypedArg {
 }
 
 type ResourceInfo struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name               string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Fields             map[string]*Field      `protobuf:"bytes,3,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Init               *Init                  `protobuf:"bytes,20,opt,name=init,proto3" json:"init,omitempty"`
-	ListType           string                 `protobuf:"bytes,21,opt,name=list_type,json=listType,proto3" json:"list_type,omitempty"`
-	Title              string                 `protobuf:"bytes,22,opt,name=title,proto3" json:"title,omitempty"`
-	Desc               string                 `protobuf:"bytes,23,opt,name=desc,proto3" json:"desc,omitempty"`
-	Private            bool                   `protobuf:"varint,24,opt,name=private,proto3" json:"private,omitempty"`
-	IsExtension        bool                   `protobuf:"varint,28,opt,name=is_extension,json=isExtension,proto3" json:"is_extension,omitempty"`
-	MinProviderVersion string                 `protobuf:"bytes,31,opt,name=min_provider_version,json=minProviderVersion,proto3" json:"min_provider_version,omitempty"`
-	Defaults           string                 `protobuf:"bytes,26,opt,name=defaults,proto3" json:"defaults,omitempty"`
-	Context            string                 `protobuf:"bytes,30,opt,name=context,proto3" json:"context,omitempty"`
-	Provider           string                 `protobuf:"bytes,27,opt,name=provider,proto3" json:"provider,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Canonical resource id. When a ResourceInfo is reached via an alias entry
+	// in Schema.resources, `id` is the original (aliased-to) resource name, not
+	// the alias key. Consumers that need the lookup key should use the map key
+	// from Schema.resources, not this field.
+	Id                 string            `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name               string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Fields             map[string]*Field `protobuf:"bytes,3,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Init               *Init             `protobuf:"bytes,20,opt,name=init,proto3" json:"init,omitempty"`
+	ListType           string            `protobuf:"bytes,21,opt,name=list_type,json=listType,proto3" json:"list_type,omitempty"`
+	Title              string            `protobuf:"bytes,22,opt,name=title,proto3" json:"title,omitempty"`
+	Desc               string            `protobuf:"bytes,23,opt,name=desc,proto3" json:"desc,omitempty"`
+	Private            bool              `protobuf:"varint,24,opt,name=private,proto3" json:"private,omitempty"`
+	IsExtension        bool              `protobuf:"varint,28,opt,name=is_extension,json=isExtension,proto3" json:"is_extension,omitempty"`
+	MinProviderVersion string            `protobuf:"bytes,31,opt,name=min_provider_version,json=minProviderVersion,proto3" json:"min_provider_version,omitempty"`
+	Defaults           string            `protobuf:"bytes,26,opt,name=defaults,proto3" json:"defaults,omitempty"`
+	Context            string            `protobuf:"bytes,30,opt,name=context,proto3" json:"context,omitempty"`
+	Provider           string            `protobuf:"bytes,27,opt,name=provider,proto3" json:"provider,omitempty"`
 	// This field contains references to other providers with the same
 	// resource/field.
 	// Note: Please do not use this field, it is only temporary and will be
