@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/microsoft/kiota-abstractions-go/serialization"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/mql/v13/llx"
@@ -677,43 +679,53 @@ func initMicrosoftDefaultAppManagementPolicy(runtime *plugin.Runtime, args map[s
 	return nil, policy, nil
 }
 
+// credentialRestrictionConfig captures the getters shared by the password and
+// key credential configuration types, whose only differing getter is the
+// restriction type (its enum type differs between the two).
+type credentialRestrictionConfig interface {
+	GetMaxLifetime() *serialization.ISODuration
+	GetState() *models.AppManagementRestrictionState
+	GetRestrictForAppsCreatedAfterDateTime() *time.Time
+}
+
+func mapCredentialRestrictions[T credentialRestrictionConfig](creds []T, restrictionType func(T) string) []any {
+	restrictions := []any{}
+	for _, c := range creds {
+		d := map[string]any{}
+		if rt := restrictionType(c); rt != "" {
+			d["restrictionType"] = rt
+		}
+		if c.GetMaxLifetime() != nil {
+			d["maxLifetime"] = c.GetMaxLifetime().String()
+		}
+		if c.GetState() != nil {
+			d["state"] = c.GetState().String()
+		}
+		if c.GetRestrictForAppsCreatedAfterDateTime() != nil {
+			d["restrictForAppsCreatedAfterDateTime"] = *c.GetRestrictForAppsCreatedAfterDateTime()
+		}
+		restrictions = append(restrictions, d)
+	}
+	return restrictions
+}
+
 func newAppManagementConfiguration(runtime *plugin.Runtime, config models.AppManagementConfigurationable, id string) (*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration, error) {
 	passwordCredentials := []any{}
 	keyCredentials := []any{}
 
 	if config != nil {
-		for _, c := range config.GetPasswordCredentials() {
-			d := map[string]any{}
+		passwordCredentials = mapCredentialRestrictions(config.GetPasswordCredentials(), func(c models.PasswordCredentialConfigurationable) string {
 			if c.GetRestrictionType() != nil {
-				d["restrictionType"] = c.GetRestrictionType().String()
+				return c.GetRestrictionType().String()
 			}
-			if c.GetMaxLifetime() != nil {
-				d["maxLifetime"] = c.GetMaxLifetime().String()
-			}
-			if c.GetState() != nil {
-				d["state"] = c.GetState().String()
-			}
-			if c.GetRestrictForAppsCreatedAfterDateTime() != nil {
-				d["restrictForAppsCreatedAfterDateTime"] = *c.GetRestrictForAppsCreatedAfterDateTime()
-			}
-			passwordCredentials = append(passwordCredentials, d)
-		}
-		for _, c := range config.GetKeyCredentials() {
-			d := map[string]any{}
+			return ""
+		})
+		keyCredentials = mapCredentialRestrictions(config.GetKeyCredentials(), func(c models.KeyCredentialConfigurationable) string {
 			if c.GetRestrictionType() != nil {
-				d["restrictionType"] = c.GetRestrictionType().String()
+				return c.GetRestrictionType().String()
 			}
-			if c.GetMaxLifetime() != nil {
-				d["maxLifetime"] = c.GetMaxLifetime().String()
-			}
-			if c.GetState() != nil {
-				d["state"] = c.GetState().String()
-			}
-			if c.GetRestrictForAppsCreatedAfterDateTime() != nil {
-				d["restrictForAppsCreatedAfterDateTime"] = *c.GetRestrictForAppsCreatedAfterDateTime()
-			}
-			keyCredentials = append(keyCredentials, d)
-		}
+			return ""
+		})
 	}
 
 	resource, err := CreateResource(runtime, "microsoft.defaultAppManagementPolicy.appManagementConfiguration",
