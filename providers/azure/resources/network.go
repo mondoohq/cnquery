@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -3797,68 +3798,113 @@ func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup)
 }
 
 // flowLog resolves the Network Watcher flow log whose target resource is this
-// NSG. Flow logs are child resources of Network Watchers, so this enumerates
-// the subscription's watchers and matches each watcher's flow logs against the
-// NSG id. Returns null when no flow log targets the NSG.
+// NSG. Flow logs are child resources of Network Watchers, so rather than
+// enumerating every watcher for each NSG (an N+1 problem when querying
+// `securityGroups { flowLog }`), it resolves the per-subscription
+// networkService singleton and reuses its cached watcher→flow-log index.
+// Returns null when no flow log targets the NSG.
 func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) flowLog() (*mqlAzureSubscriptionNetworkServiceWatcherFlowlog, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
 	nsgID := a.Id.Data
 	resourceID, err := ParseResourceID(nsgID)
 	if err != nil {
 		return nil, err
 	}
-	subId := resourceID.SubscriptionID
 
-	watchersClient, err := network.NewWatchersClient(subId, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
+	netRes, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(resourceID.SubscriptionID),
 	})
 	if err != nil {
 		return nil, err
 	}
-	flowLogsClient, err := network.NewFlowLogsClient(subId, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
+	netService := netRes.(*mqlAzureSubscriptionNetworkService)
+
+	index, err := netService.flowLogIndexByTargetResourceId()
 	if err != nil {
 		return nil, err
 	}
-
-	watcherPager := watchersClient.NewListAllPager(&network.WatchersClientListAllOptions{})
-	for watcherPager.More() {
-		page, err := watcherPager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, watcher := range page.Value {
-			if watcher == nil || watcher.ID == nil || watcher.Name == nil {
-				continue
-			}
-			watcherID, err := ParseResourceID(*watcher.ID)
-			if err != nil {
-				return nil, err
-			}
-			flowLogPager := flowLogsClient.NewListPager(watcherID.ResourceGroup, *watcher.Name, &network.FlowLogsClientListOptions{})
-			for flowLogPager.More() {
-				flowLogPage, err := flowLogPager.NextPage(ctx)
-				if err != nil {
-					return nil, err
-				}
-				for _, flowLog := range flowLogPage.Value {
-					if flowLog == nil || flowLog.Properties == nil || flowLog.Properties.TargetResourceID == nil {
-						continue
-					}
-					if strings.EqualFold(*flowLog.Properties.TargetResourceID, nsgID) {
-						return flowLogToMql(a.MqlRuntime, *flowLog)
-					}
-				}
-			}
-		}
+	if flowLog, ok := index[strings.ToLower(nsgID)]; ok {
+		return flowLog, nil
 	}
 
 	// no flow log targets this NSG
 	a.FlowLog.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceInternal struct {
+	flowLogIndexOnce sync.Once
+	flowLogIndex     map[string]*mqlAzureSubscriptionNetworkServiceWatcherFlowlog
+	flowLogIndexErr  error
+}
+
+// flowLogIndexByTargetResourceId lazily builds, once per networkService
+// instance, a map from a (lowercased) target resource id to the Network Watcher
+// flow log that targets it. The subscription's watchers and their flow logs are
+// enumerated a single time so that per-NSG lookups are in-memory.
+func (a *mqlAzureSubscriptionNetworkService) flowLogIndexByTargetResourceId() (map[string]*mqlAzureSubscriptionNetworkServiceWatcherFlowlog, error) {
+	a.flowLogIndexOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		ctx := context.Background()
+		token := conn.Token()
+		subId := a.SubscriptionId.Data
+
+		index := map[string]*mqlAzureSubscriptionNetworkServiceWatcherFlowlog{}
+
+		watchersClient, err := network.NewWatchersClient(subId, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.flowLogIndexErr = err
+			return
+		}
+		flowLogsClient, err := network.NewFlowLogsClient(subId, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.flowLogIndexErr = err
+			return
+		}
+
+		watcherPager := watchersClient.NewListAllPager(&network.WatchersClientListAllOptions{})
+		for watcherPager.More() {
+			page, err := watcherPager.NextPage(ctx)
+			if err != nil {
+				a.flowLogIndexErr = err
+				return
+			}
+			for _, watcher := range page.Value {
+				if watcher == nil || watcher.ID == nil || watcher.Name == nil {
+					continue
+				}
+				watcherID, err := ParseResourceID(*watcher.ID)
+				if err != nil {
+					a.flowLogIndexErr = err
+					return
+				}
+				flowLogPager := flowLogsClient.NewListPager(watcherID.ResourceGroup, *watcher.Name, &network.FlowLogsClientListOptions{})
+				for flowLogPager.More() {
+					flowLogPage, err := flowLogPager.NextPage(ctx)
+					if err != nil {
+						a.flowLogIndexErr = err
+						return
+					}
+					for _, flowLog := range flowLogPage.Value {
+						if flowLog == nil || flowLog.Properties == nil || flowLog.Properties.TargetResourceID == nil {
+							continue
+						}
+						mqlFlowLog, err := flowLogToMql(a.MqlRuntime, *flowLog)
+						if err != nil {
+							a.flowLogIndexErr = err
+							return
+						}
+						index[strings.ToLower(*flowLog.Properties.TargetResourceID)] = mqlFlowLog
+					}
+				}
+			}
+		}
+		a.flowLogIndex = index
+	})
+	return a.flowLogIndex, a.flowLogIndexErr
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) interfaces() ([]any, error) {

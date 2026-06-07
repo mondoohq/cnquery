@@ -36598,7 +36598,7 @@ func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetManagedServicesKeyVe
 type mqlAzureSubscriptionNetworkService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceInternal
 	SubscriptionId              plugin.TValue[string]
 	Interfaces                  plugin.TValue[[]any]
 	SecurityGroups              plugin.TValue[[]any]
