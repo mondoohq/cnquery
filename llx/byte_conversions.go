@@ -6,7 +6,6 @@ package llx
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"math"
 	"time"
 )
@@ -32,7 +31,9 @@ func bytes2int(b []byte) int64 {
 	r := bytes.NewReader(b)
 	res, err := binary.ReadVarint(r)
 	if err != nil {
-		panic("Failed to read bytes into integer: '" + hex.EncodeToString(b) + "'\n")
+		// Fall back to zero on a malformed or truncated varint instead of
+		// panicking; callers decode ints, refs, and indices from this.
+		return 0
 	}
 	return res
 }

@@ -28,3 +28,26 @@ func TestBytes2time(t *testing.T) {
 		}
 	})
 }
+
+func TestBytes2int(t *testing.T) {
+	t.Run("round-trips values encoded by int2bytes", func(t *testing.T) {
+		for _, want := range []int64{0, 1, -1, 42, -42, 1 << 40, -(1 << 40)} {
+			assert.Equal(t, want, bytes2int(int2bytes(want)), "value %d", want)
+		}
+	})
+
+	t.Run("falls back to zero on a malformed or truncated varint", func(t *testing.T) {
+		// An empty buffer and an unterminated varint (all continuation bits
+		// set, no final byte) must not panic; they fall back to zero.
+		cases := [][]byte{
+			{},
+			{0xff},
+			{0xff, 0xff, 0xff},
+		}
+		for _, b := range cases {
+			require.NotPanics(t, func() {
+				assert.Equal(t, int64(0), bytes2int(b), "buffer %v", b)
+			})
+		}
+	})
+}
