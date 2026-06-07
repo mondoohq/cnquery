@@ -245,6 +245,16 @@ microsoft.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderCon
 microsoft.crossTenantAccessPolicyDefault.invitationRedemptionIdentityProviderConfiguration.primaryIdentityProviderPrecedenceOrder 11.1.99
 microsoft.crossTenantAccessPolicyDefault.isServiceDefault 11.1.99
 microsoft.crossTenantAccessPolicyDefault.tenantRestrictions 11.1.99
+microsoft.defaultAppManagementPolicy 13.5.1
+microsoft.defaultAppManagementPolicy.appManagementConfiguration 13.5.1
+microsoft.defaultAppManagementPolicy.appManagementConfiguration.keyCredentials 13.5.1
+microsoft.defaultAppManagementPolicy.appManagementConfiguration.passwordCredentials 13.5.1
+microsoft.defaultAppManagementPolicy.applicationRestrictions 13.5.1
+microsoft.defaultAppManagementPolicy.description 13.5.1
+microsoft.defaultAppManagementPolicy.displayName 13.5.1
+microsoft.defaultAppManagementPolicy.id 13.5.1
+microsoft.defaultAppManagementPolicy.isEnabled 13.5.1
+microsoft.defaultAppManagementPolicy.servicePrincipalRestrictions 13.5.1
 microsoft.device 11.1.21
 microsoft.device.accountEnabled 11.2.1
 microsoft.device.approximateLastSignInDateTime 13.0.12
@@ -843,6 +853,7 @@ microsoft.policies.authenticationMethodsPolicy 11.1.39
 microsoft.policies.authorizationPolicy 9.0.0
 microsoft.policies.consentPolicySettings 9.0.0
 microsoft.policies.crossTenantAccessPolicy 9.0.0
+microsoft.policies.defaultAppManagementPolicy 13.5.1
 microsoft.policies.externalIdentitiesPolicy 11.1.43
 microsoft.policies.identitySecurityDefaultsEnforcementPolicy 9.0.0
 microsoft.policies.permissionGrantPolicies 9.0.0

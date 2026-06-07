@@ -2013,6 +2013,47 @@ microsoft.policies {
   externalIdentitiesPolicy() microsoft.externalIdentitiesPolicy
   // Default configuration of cross-tenant access policy
   crossTenantAccessPolicy() microsoft.crossTenantAccessPolicyDefault
+  // Tenant-wide default app management policy
+  defaultAppManagementPolicy() microsoft.defaultAppManagementPolicy
+}
+
+// Tenant Default App Management Policy
+//
+// Examine the tenant-wide default policy that restricts the secrets and
+// certificates configurable on application registrations and service
+// principals. The `isEnabled` field reports whether the restrictions are
+// enforced, while `applicationRestrictions` and `servicePrincipalRestrictions`
+// expose the password- and key-credential rules — maximum allowed lifetime,
+// the restriction type, and the date after which newly created apps become
+// subject to them. Use these to audit that long-lived or unrestricted app
+// credentials are disallowed across the tenant.
+private microsoft.defaultAppManagementPolicy @defaults("displayName isEnabled") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Denotes whether the policy restrictions are enforced for all applications and service principals in the tenant
+  isEnabled bool
+  // Restrictions that apply to application objects in the tenant
+  applicationRestrictions microsoft.defaultAppManagementPolicy.appManagementConfiguration
+  // Restrictions that apply to service principal objects in the tenant
+  servicePrincipalRestrictions microsoft.defaultAppManagementPolicy.appManagementConfiguration
+}
+
+// App Management Credential Restrictions
+//
+// Examine the password- and key-credential restrictions enforced on
+// applications or service principals. Each entry in `passwordCredentials`
+// and `keyCredentials` carries the restriction type, the maximum allowed
+// credential lifetime, the state (`enabled` or `disabled`), and the date
+// after which apps created later are subject to the restriction.
+private microsoft.defaultAppManagementPolicy.appManagementConfiguration @defaults("passwordCredentials keyCredentials") {
+  // Restrictions on the password (secret) credentials that can be added
+  passwordCredentials []dict
+  // Restrictions on the key (certificate) credentials that can be added
+  keyCredentials []dict
 }
 
 // Tenant-wide policy that controls whether external users can leave a tenant via self-service controls

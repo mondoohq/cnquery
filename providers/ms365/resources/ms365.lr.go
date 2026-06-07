@@ -102,6 +102,8 @@ const (
 	ResourceMicrosoftSecurityInformationProtection                                                       string = "microsoft.security.informationProtection"
 	ResourceMicrosoftSecurityInformationProtectionSensitivityLabel                                       string = "microsoft.security.informationProtection.sensitivityLabel"
 	ResourceMicrosoftPolicies                                                                            string = "microsoft.policies"
+	ResourceMicrosoftDefaultAppManagementPolicy                                                          string = "microsoft.defaultAppManagementPolicy"
+	ResourceMicrosoftDefaultAppManagementPolicyAppManagementConfiguration                                string = "microsoft.defaultAppManagementPolicy.appManagementConfiguration"
 	ResourceMicrosoftExternalIdentitiesPolicy                                                            string = "microsoft.externalIdentitiesPolicy"
 	ResourceMicrosoftPoliciesActivityBasedTimeoutPolicy                                                  string = "microsoft.policies.activityBasedTimeoutPolicy"
 	ResourceMicrosoftAdminConsentRequestPolicy                                                           string = "microsoft.adminConsentRequestPolicy"
@@ -540,6 +542,14 @@ func init() {
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
+		},
+		"microsoft.defaultAppManagementPolicy": {
+			Init:   initMicrosoftDefaultAppManagementPolicy,
+			Create: createMicrosoftDefaultAppManagementPolicy,
+		},
+		"microsoft.defaultAppManagementPolicy.appManagementConfiguration": {
+			// to override args, implement: initMicrosoftDefaultAppManagementPolicyAppManagementConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDefaultAppManagementPolicyAppManagementConfiguration,
 		},
 		"microsoft.externalIdentitiesPolicy": {
 			Init:   initMicrosoftExternalIdentitiesPolicy,
@@ -2998,6 +3008,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.crossTenantAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetCrossTenantAccessPolicy()).ToDataRes(types.Resource("microsoft.crossTenantAccessPolicyDefault"))
+	},
+	"microsoft.policies.defaultAppManagementPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetDefaultAppManagementPolicy()).ToDataRes(types.Resource("microsoft.defaultAppManagementPolicy"))
+	},
+	"microsoft.defaultAppManagementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.defaultAppManagementPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.defaultAppManagementPolicy.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.defaultAppManagementPolicy.applicationRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetApplicationRestrictions()).ToDataRes(types.Resource("microsoft.defaultAppManagementPolicy.appManagementConfiguration"))
+	},
+	"microsoft.defaultAppManagementPolicy.servicePrincipalRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetServicePrincipalRestrictions()).ToDataRes(types.Resource("microsoft.defaultAppManagementPolicy.appManagementConfiguration"))
+	},
+	"microsoft.defaultAppManagementPolicy.appManagementConfiguration.passwordCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration).GetPasswordCredentials()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.defaultAppManagementPolicy.appManagementConfiguration.keyCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration).GetKeyCredentials()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.externalIdentitiesPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftExternalIdentitiesPolicy).GetId()).ToDataRes(types.String)
@@ -8629,6 +8666,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.policies.crossTenantAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).CrossTenantAccessPolicy, ok = plugin.RawToTValue[*mqlMicrosoftCrossTenantAccessPolicyDefault](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.defaultAppManagementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).DefaultAppManagementPolicy, ok = plugin.RawToTValue[*mqlMicrosoftDefaultAppManagementPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.applicationRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).ApplicationRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.servicePrincipalRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicy).ServicePrincipalRestrictions, ok = plugin.RawToTValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.appManagementConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.appManagementConfiguration.passwordCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration).PasswordCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.defaultAppManagementPolicy.appManagementConfiguration.keyCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration).KeyCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.externalIdentitiesPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20160,6 +20241,7 @@ type mqlMicrosoftPolicies struct {
 	ActivityBasedTimeoutPolicies              plugin.TValue[[]any]
 	ExternalIdentitiesPolicy                  plugin.TValue[*mqlMicrosoftExternalIdentitiesPolicy]
 	CrossTenantAccessPolicy                   plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefault]
+	DefaultAppManagementPolicy                plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicy]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -20296,6 +20378,140 @@ func (c *mqlMicrosoftPolicies) GetCrossTenantAccessPolicy() *plugin.TValue[*mqlM
 
 		return c.crossTenantAccessPolicy()
 	})
+}
+
+func (c *mqlMicrosoftPolicies) GetDefaultAppManagementPolicy() *plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftDefaultAppManagementPolicy](&c.DefaultAppManagementPolicy, func() (*mqlMicrosoftDefaultAppManagementPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "defaultAppManagementPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftDefaultAppManagementPolicy), nil
+			}
+		}
+
+		return c.defaultAppManagementPolicy()
+	})
+}
+
+// mqlMicrosoftDefaultAppManagementPolicy for the microsoft.defaultAppManagementPolicy resource
+type mqlMicrosoftDefaultAppManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDefaultAppManagementPolicyInternal it will be used here
+	Id                           plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	IsEnabled                    plugin.TValue[bool]
+	ApplicationRestrictions      plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration]
+	ServicePrincipalRestrictions plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration]
+}
+
+// createMicrosoftDefaultAppManagementPolicy creates a new instance of this resource
+func createMicrosoftDefaultAppManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDefaultAppManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.defaultAppManagementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) MqlName() string {
+	return "microsoft.defaultAppManagementPolicy"
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetApplicationRestrictions() *plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration] {
+	return &c.ApplicationRestrictions
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicy) GetServicePrincipalRestrictions() *plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration] {
+	return &c.ServicePrincipalRestrictions
+}
+
+// mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration for the microsoft.defaultAppManagementPolicy.appManagementConfiguration resource
+type mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDefaultAppManagementPolicyAppManagementConfigurationInternal it will be used here
+	PasswordCredentials plugin.TValue[[]any]
+	KeyCredentials      plugin.TValue[[]any]
+}
+
+// createMicrosoftDefaultAppManagementPolicyAppManagementConfiguration creates a new instance of this resource
+func createMicrosoftDefaultAppManagementPolicyAppManagementConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.defaultAppManagementPolicy.appManagementConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration) MqlName() string {
+	return "microsoft.defaultAppManagementPolicy.appManagementConfiguration"
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration) GetPasswordCredentials() *plugin.TValue[[]any] {
+	return &c.PasswordCredentials
+}
+
+func (c *mqlMicrosoftDefaultAppManagementPolicyAppManagementConfiguration) GetKeyCredentials() *plugin.TValue[[]any] {
+	return &c.KeyCredentials
 }
 
 // mqlMicrosoftExternalIdentitiesPolicy for the microsoft.externalIdentitiesPolicy resource
