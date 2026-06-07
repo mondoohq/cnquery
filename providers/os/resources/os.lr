@@ -3656,6 +3656,59 @@ chrony.conf {
   rtcSync(settings) bool
 }
 
+// Postfix mail transfer agent configuration
+//
+// Examine the effective Postfix configuration. `params` reports parameter
+// values from `postconf` when the binary is available — which includes the
+// built-in defaults for parameters not written to the file — and otherwise
+// falls back to parsing main.cf directly (file values only, with `$name`
+// interpolation and continuation lines). `inetInterfaces` is the parsed
+// `inet_interfaces` list and `services` are the daemon definitions from
+// master.cf. By default the per-distribution config locations are used;
+// select an alternate main.cf with `postfix("/path/to/main.cf")`.
+postfix {
+  init(path? string)
+  // Path to the Postfix main.cf configuration file
+  mainCfPath() string
+  // Path to the Postfix master.cf configuration file
+  masterCfPath() string
+  // Effective Postfix parameters
+  //
+  // Reported by `postconf` when available (so parameters left at their
+  // built-in default still appear); otherwise parsed from main.cf, in which
+  // case only values written to the file are present.
+  params() map[string]string
+  // Interfaces Postfix listens on, parsed from the inet_interfaces parameter
+  inetInterfaces() []string
+  // Service definitions from master.cf
+  services() []postfix.service
+}
+
+// Postfix master.cf service definition
+//
+// Examine a single daemon entry from the Postfix master.cf file: its service
+// name and transport type, the chroot and privilege flags, the wake-up and
+// process limits, and the command it runs. The flag columns carry `y`, `n`,
+// or `-` (use the built-in default). Iterated from `postfix.services`.
+private postfix.service @defaults("service type command") {
+  // Service name (first column; a port number, socket name, or path)
+  service string
+  // Transport type (inet, unix, unix-dgram, fifo, or pass)
+  type string
+  // Whether access is restricted to the mail system (private column: y, n, or -)
+  private string
+  // Whether the service runs unprivileged (unpriv column: y, n, or -)
+  unprivileged string
+  // Whether the service runs chrooted (chroot column: y, n, or -)
+  chroot string
+  // Wake-up interval, or - for none (wakeup column)
+  wakeup string
+  // Maximum number of processes, or - for the default (maxproc column)
+  maxProcesses string
+  // Command, with arguments, that the service runs
+  command string
+}
+
 // rsyslog daemon configuration
 //
 // Examine effective settings across the main file and included fragments.

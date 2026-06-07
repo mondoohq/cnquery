@@ -186,6 +186,8 @@ const (
 	ResourceSecpol                        string = "secpol"
 	ResourceNtpConf                       string = "ntp.conf"
 	ResourceChronyConf                    string = "chrony.conf"
+	ResourcePostfix                       string = "postfix"
+	ResourcePostfixService                string = "postfix.service"
 	ResourceRsyslogConf                   string = "rsyslog.conf"
 	ResourceRsyslogModule                 string = "rsyslog.module"
 	ResourceRsyslogInput                  string = "rsyslog.input"
@@ -1111,6 +1113,14 @@ func init() {
 		"chrony.conf": {
 			Init:   initChronyConf,
 			Create: createChronyConf,
+		},
+		"postfix": {
+			Init:   initPostfix,
+			Create: createPostfix,
+		},
+		"postfix.service": {
+			// to override args, implement: initPostfixService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPostfixService,
 		},
 		"rsyslog.conf": {
 			// to override args, implement: initRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5415,6 +5425,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"chrony.conf.rtcSync": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChronyConf).GetRtcSync()).ToDataRes(types.Bool)
+	},
+	"postfix.mainCfPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfix).GetMainCfPath()).ToDataRes(types.String)
+	},
+	"postfix.masterCfPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfix).GetMasterCfPath()).ToDataRes(types.String)
+	},
+	"postfix.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfix).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"postfix.inetInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfix).GetInetInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"postfix.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfix).GetServices()).ToDataRes(types.Array(types.Resource("postfix.service")))
+	},
+	"postfix.service.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetService()).ToDataRes(types.String)
+	},
+	"postfix.service.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetType()).ToDataRes(types.String)
+	},
+	"postfix.service.private": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetPrivate()).ToDataRes(types.String)
+	},
+	"postfix.service.unprivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetUnprivileged()).ToDataRes(types.String)
+	},
+	"postfix.service.chroot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetChroot()).ToDataRes(types.String)
+	},
+	"postfix.service.wakeup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetWakeup()).ToDataRes(types.String)
+	},
+	"postfix.service.maxProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetMaxProcesses()).ToDataRes(types.String)
+	},
+	"postfix.service.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostfixService).GetCommand()).ToDataRes(types.String)
 	},
 	"rsyslog.conf.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRsyslogConf).GetPath()).ToDataRes(types.String)
@@ -14607,6 +14656,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"chrony.conf.rtcSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChronyConf).RtcSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).__id, ok = v.Value.(string)
+		return
+	},
+	"postfix.mainCfPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).MainCfPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.masterCfPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).MasterCfPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"postfix.inetInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).InetInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postfix.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfix).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postfix.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).__id, ok = v.Value.(string)
+		return
+	},
+	"postfix.service.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.private": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Private, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.unprivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Unprivileged, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.chroot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Chroot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.wakeup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Wakeup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.maxProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).MaxProcesses, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postfix.service.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostfixService).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"rsyslog.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36464,6 +36573,179 @@ func (c *mqlChronyConf) GetRtcSync() *plugin.TValue[bool] {
 
 		return c.rtcSync(vargSettings.Data)
 	})
+}
+
+// mqlPostfix for the postfix resource
+type mqlPostfix struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostfixInternal it will be used here
+	MainCfPath     plugin.TValue[string]
+	MasterCfPath   plugin.TValue[string]
+	Params         plugin.TValue[map[string]any]
+	InetInterfaces plugin.TValue[[]any]
+	Services       plugin.TValue[[]any]
+}
+
+// createPostfix creates a new instance of this resource
+func createPostfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostfix{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postfix", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostfix) MqlName() string {
+	return "postfix"
+}
+
+func (c *mqlPostfix) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostfix) GetMainCfPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MainCfPath, func() (string, error) {
+		return c.mainCfPath()
+	})
+}
+
+func (c *mqlPostfix) GetMasterCfPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MasterCfPath, func() (string, error) {
+		return c.masterCfPath()
+	})
+}
+
+func (c *mqlPostfix) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlPostfix) GetInetInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InetInterfaces, func() ([]any, error) {
+		return c.inetInterfaces()
+	})
+}
+
+func (c *mqlPostfix) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postfix", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+// mqlPostfixService for the postfix.service resource
+type mqlPostfixService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostfixServiceInternal it will be used here
+	Service      plugin.TValue[string]
+	Type         plugin.TValue[string]
+	Private      plugin.TValue[string]
+	Unprivileged plugin.TValue[string]
+	Chroot       plugin.TValue[string]
+	Wakeup       plugin.TValue[string]
+	MaxProcesses plugin.TValue[string]
+	Command      plugin.TValue[string]
+}
+
+// createPostfixService creates a new instance of this resource
+func createPostfixService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostfixService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postfix.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostfixService) MqlName() string {
+	return "postfix.service"
+}
+
+func (c *mqlPostfixService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostfixService) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlPostfixService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlPostfixService) GetPrivate() *plugin.TValue[string] {
+	return &c.Private
+}
+
+func (c *mqlPostfixService) GetUnprivileged() *plugin.TValue[string] {
+	return &c.Unprivileged
+}
+
+func (c *mqlPostfixService) GetChroot() *plugin.TValue[string] {
+	return &c.Chroot
+}
+
+func (c *mqlPostfixService) GetWakeup() *plugin.TValue[string] {
+	return &c.Wakeup
+}
+
+func (c *mqlPostfixService) GetMaxProcesses() *plugin.TValue[string] {
+	return &c.MaxProcesses
+}
+
+func (c *mqlPostfixService) GetCommand() *plugin.TValue[string] {
+	return &c.Command
 }
 
 // mqlRsyslogConf for the rsyslog.conf resource
