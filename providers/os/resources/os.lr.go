@@ -2896,6 +2896,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"pam.conf.serviceEntry.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamConfServiceEntry).GetOptions()).ToDataRes(types.Array(types.String))
 	},
+	"pam.conf.serviceEntry.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"pam.module.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamModule).GetName()).ToDataRes(types.String)
 	},
@@ -10775,6 +10778,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"pam.conf.serviceEntry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConfServiceEntry).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"pam.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25376,6 +25383,7 @@ type mqlPamConfServiceEntry struct {
 	Control    plugin.TValue[string]
 	Module     plugin.TValue[string]
 	Options    plugin.TValue[[]any]
+	Params     plugin.TValue[map[string]any]
 }
 
 // createPamConfServiceEntry creates a new instance of this resource
@@ -25437,6 +25445,17 @@ func (c *mqlPamConfServiceEntry) GetModule() *plugin.TValue[string] {
 
 func (c *mqlPamConfServiceEntry) GetOptions() *plugin.TValue[[]any] {
 	return &c.Options
+}
+
+func (c *mqlPamConfServiceEntry) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargOptions := c.GetOptions()
+		if vargOptions.Error != nil {
+			return nil, vargOptions.Error
+		}
+
+		return c.params(vargOptions.Data)
+	})
 }
 
 // mqlPamModule for the pam.module resource

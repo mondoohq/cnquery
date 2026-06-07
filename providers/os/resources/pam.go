@@ -216,6 +216,12 @@ func aggregatePamParams(optionLists ...[]any) map[string]any {
 	return params
 }
 
+// params parses this entry's raw options into key/value pairs, applying the
+// same rules as the aggregated pam.module.params (see aggregatePamParams).
+func (se *mqlPamConfServiceEntry) params(options []any) (map[string]any, error) {
+	return aggregatePamParams(options), nil
+}
+
 // isPamControlEnabled reports whether a PAM control directive counts as
 // "the module is loaded". Bracketed controls that explicitly route the
 // module to ignore/skip don't count.

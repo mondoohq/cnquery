@@ -1940,6 +1940,7 @@ pam.conf.serviceEntry.lineNumber 9.0.0
 pam.conf.serviceEntry.module 9.0.0
 pam.conf.serviceEntry.options 9.0.0
 pam.conf.serviceEntry.pamType 9.0.0
+pam.conf.serviceEntry.params 13.22.2
 pam.conf.serviceEntry.service 9.0.0
 pam.conf.services 9.0.0
 pam.module 13.16.10

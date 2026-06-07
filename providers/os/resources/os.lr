@@ -983,6 +983,14 @@ private pam.conf.serviceEntry @defaults("service module") {
   module string
   // Configuration options for pam service entry
   options []string
+  // Options parsed into key/value pairs
+  //
+  // `key=value` options become map entries (key lower-cased); bare flags
+  // such as `use_uid` map to an empty string, so `params["use_uid"] != null`
+  // works as an existence check. When the same key appears more than once
+  // the last occurrence wins, matching how PAM evaluates duplicate options.
+  // The raw `options` list is retained unchanged.
+  params(options) map[string]string
 }
 
 // PAM module aggregated view
