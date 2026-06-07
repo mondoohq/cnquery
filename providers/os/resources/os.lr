@@ -3674,6 +3674,14 @@ rsyslog.conf {
   content(files) string
   // List of settings for this rsyslog service
   settings(content) []string
+  // Legacy `$Directive value` settings parsed into key/value pairs
+  //
+  // The leading `$` is stripped from each key and the value is trimmed of
+  // surrounding whitespace, so `params["FileCreateMode"] == "0640"` works
+  // regardless of the spacing used in the file. When the same directive
+  // appears more than once the last occurrence wins. The raw `settings`
+  // list is retained unchanged.
+  params(content) map[string]string
   // Loaded modules (modern module() and legacy $ModLoad)
   modules(files) []rsyslog.module
   // Configured inputs (modern input() and legacy $Input* directives)

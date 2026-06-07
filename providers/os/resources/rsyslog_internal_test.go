@@ -5,6 +5,7 @@ package resources
 
 import (
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,6 +61,31 @@ func TestStripRsyslogComment(t *testing.T) {
 			assert.Equal(t, tt.want, stripRsyslogComment(tt.in))
 		})
 	}
+}
+
+func TestRsyslogConfParams(t *testing.T) {
+	s := &mqlRsyslogConf{}
+
+	content := strings.Join([]string{
+		"# rsyslog configuration",
+		"$FileCreateMode 0640",
+		"$FileOwner   syslog",  // extra spacing is trimmed
+		"$DirCreateMode\t0755", // tab separator
+		"$FileGroup adm # inline comment is stripped",
+		"module(load=\"imuxsock\")", // modern syntax is ignored
+		"*.info /var/log/messages",  // selector lines are ignored
+		"$FileCreateMode 0600",      // duplicate: last occurrence wins
+		"$ActionResumeRetryCount",   // bare directive with no value is skipped
+	}, "\n")
+
+	got, err := s.params(content)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"FileCreateMode": "0600",
+		"FileOwner":      "syslog",
+		"DirCreateMode":  "0755",
+		"FileGroup":      "adm",
+	}, got)
 }
 
 func TestParseRsyslogIncludes(t *testing.T) {

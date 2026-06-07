@@ -5428,6 +5428,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"rsyslog.conf.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRsyslogConf).GetSettings()).ToDataRes(types.Array(types.String))
 	},
+	"rsyslog.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRsyslogConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"rsyslog.conf.modules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRsyslogConf).GetModules()).ToDataRes(types.Array(types.Resource("rsyslog.module")))
 	},
@@ -14627,6 +14630,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"rsyslog.conf.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRsyslogConf).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rsyslog.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRsyslogConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"rsyslog.conf.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36475,6 +36482,7 @@ type mqlRsyslogConf struct {
 	Files    plugin.TValue[[]any]
 	Content  plugin.TValue[string]
 	Settings plugin.TValue[[]any]
+	Params   plugin.TValue[map[string]any]
 	Modules  plugin.TValue[[]any]
 	Inputs   plugin.TValue[[]any]
 	Actions  plugin.TValue[[]any]
@@ -36564,6 +36572,17 @@ func (c *mqlRsyslogConf) GetSettings() *plugin.TValue[[]any] {
 		}
 
 		return c.settings(vargContent.Data)
+	})
+}
+
+func (c *mqlRsyslogConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
 	})
 }
 

@@ -412,6 +412,32 @@ func (s *mqlRsyslogConf) settings(content string) ([]any, error) {
 	return settings, nil
 }
 
+// params parses the legacy `$Directive value` settings across all included
+// config fragments into key/value pairs. The leading `$` is stripped from each
+// key and the value is trimmed of surrounding whitespace; when the same
+// directive appears more than once the last occurrence wins.
+func (s *mqlRsyslogConf) params(content string) (map[string]any, error) {
+	params := map[string]any{}
+	for _, raw := range strings.Split(content, "\n") {
+		line := strings.Trim(stripRsyslogComment(raw), " \t\r")
+		if !strings.HasPrefix(line, "$") {
+			continue
+		}
+
+		directive := line[1:]
+		idx := strings.IndexAny(directive, " \t")
+		if idx < 0 {
+			// a bare `$Directive` with no value — skip rather than record an
+			// empty value, since legacy directives always carry a value
+			continue
+		}
+
+		key := directive[:idx]
+		params[key] = strings.TrimSpace(directive[idx:])
+	}
+	return params, nil
+}
+
 // parsedEntries walks every fragment in `files` and returns the unified
 // list of typed entries from all of them. The result is memoized on the
 // Internal struct so the four typed accessors share one parse pass per
