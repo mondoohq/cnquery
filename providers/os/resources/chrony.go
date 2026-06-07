@@ -119,10 +119,10 @@ func directiveValues(settings []any, directive string) []any {
 	return res
 }
 
-// firstDirectiveValue returns the argument portion of the last occurrence
+// lastDirectiveValue returns the argument portion of the last occurrence
 // of a single-value directive (chrony uses the last setting for these),
 // or "" when the directive is absent.
-func firstDirectiveValue(settings []any, directive string) string {
+func lastDirectiveValue(settings []any, directive string) string {
 	values := directiveValues(settings, directive)
 	if len(values) == 0 {
 		return ""
@@ -155,11 +155,11 @@ func (s *mqlChronyConf) bindCmdAddresses(settings []any) ([]any, error) {
 }
 
 func (s *mqlChronyConf) keyFile(settings []any) (string, error) {
-	return firstDirectiveValue(settings, "keyfile"), nil
+	return lastDirectiveValue(settings, "keyfile"), nil
 }
 
 func (s *mqlChronyConf) makeStep(settings []any) (string, error) {
-	return firstDirectiveValue(settings, "makestep"), nil
+	return lastDirectiveValue(settings, "makestep"), nil
 }
 
 // rtcSync reports whether the bare `rtcsync` directive is present.

@@ -41,14 +41,14 @@ func TestChronyDirectiveValues(t *testing.T) {
 	require.Empty(t, directiveValues(settings, "peer"))
 }
 
-func TestChronyFirstDirectiveValue(t *testing.T) {
+func TestChronyLastDirectiveValue(t *testing.T) {
 	settings := chronySettings(
 		"keyfile /etc/chrony.keys",
 		"makestep 1.0 3",
 		"keyfile /etc/chrony/override.keys", // last wins
 	)
 
-	require.Equal(t, "/etc/chrony/override.keys", firstDirectiveValue(settings, "keyfile"))
-	require.Equal(t, "1.0 3", firstDirectiveValue(settings, "makestep"))
-	require.Equal(t, "", firstDirectiveValue(settings, "leapsectz"))
+	require.Equal(t, "/etc/chrony/override.keys", lastDirectiveValue(settings, "keyfile"))
+	require.Equal(t, "1.0 3", lastDirectiveValue(settings, "makestep"))
+	require.Equal(t, "", lastDirectiveValue(settings, "leapsectz"))
 }
