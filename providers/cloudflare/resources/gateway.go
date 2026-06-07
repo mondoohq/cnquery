@@ -128,17 +128,14 @@ type gatewayLocation struct {
 func (c *mqlCloudflareOne) locations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	var env struct {
-		Result []gatewayLocation `json:"result"`
-	}
-	uri := fmt.Sprintf("accounts/%s/gateway/locations", c.AccountID)
-	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+	records, err := cfGetPaged[gatewayLocation](conn, fmt.Sprintf("accounts/%s/gateway/locations", c.AccountID))
+	if err != nil {
 		return nil, err
 	}
 
 	var result []any
-	for i := range env.Result {
-		rec := env.Result[i]
+	for i := range records {
+		rec := records[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.one.location", map[string]*llx.RawData{
 			"id":                    llx.StringData(rec.ID),
