@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.16.1",
-  "generated_at": "2026-06-07T08:40:15-07:00",
+  "generated_at": "2026-06-07T09:09:05-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -30,7 +30,7 @@
     "Microsoft.Cdn/profiles/origingroups/origins/read",
     "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
-    "Microsoft.Cdn/securityPolicies/read",
+    "Microsoft.Cdn/profiles/securitypolicies/read",
     "Microsoft.CognitiveServices/accounts/connections/read",
     "Microsoft.CognitiveServices/accounts/defenderForAISettings/read",
     "Microsoft.CognitiveServices/accounts/deployments/read",
@@ -388,7 +388,7 @@
       "source_file": "frontdoor.go"
     },
     {
-      "permission": "Microsoft.Cdn/securityPolicies/read",
+      "permission": "Microsoft.Cdn/profiles/securitypolicies/read",
       "service": "Microsoft.Cdn",
       "action": "NewListByProfilePager",
       "source_file": "frontdoor.go"

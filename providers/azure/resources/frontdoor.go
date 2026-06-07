@@ -99,6 +99,8 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) securityPolicies() ([]any,
 						policyType = string(*base.Type)
 					}
 					if waf, ok := params.(*armcdn.SecurityPolicyWebApplicationFirewallParameters); ok && waf != nil {
+						// TODO: expose wafPolicyId as a typed reference (e.g. a frontDoorWebApplicationFirewallPolicy
+						// resource) once a Front Door WAF policy resource is modeled in this provider; ARM ID for now.
 						if waf.WafPolicy != nil && waf.WafPolicy.ID != nil {
 							wafPolicyId = *waf.WafPolicy.ID
 						}

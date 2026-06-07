@@ -1741,6 +1741,7 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Cdn/aFDEndpoints/read":     "Microsoft.Cdn/profiles/afdendpoints/read",
 	"Microsoft.Cdn/aFDOriginGroups/read":  "Microsoft.Cdn/profiles/origingroups/read",
 	"Microsoft.Cdn/aFDOrigins/read":       "Microsoft.Cdn/profiles/origingroups/origins/read",
+	"Microsoft.Cdn/securityPolicies/read": "Microsoft.Cdn/profiles/securitypolicies/read",
 
 	// ContainerRegistry: sub-resources need registries/ parent path
 	"Microsoft.ContainerRegistry/cacheRules/read":          "Microsoft.ContainerRegistry/registries/cacheRules/read",
