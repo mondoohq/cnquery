@@ -97,7 +97,7 @@ budgetType string
 
 ### Step 1.5: Typed-reference gate (do this BEFORE you generate code)
 
-**The single most expensive mistake to fix later is shipping a raw ID/URL string where a typed accessor belonged.** Once a `projectId string` field is released, replacing it with `project() openstack.project` is a *breaking change* requiring a version bump and consumer migration — whereas getting it right the first time costs one extra accessor method. So before running codegen, **scan every new field and ask: does this value identify or point at another resource?**
+**The single most expensive mistake to fix later is shipping a raw ID/URL string where a typed accessor belonged.** Once a `projectId string` field ships, replacing it with `project() openstack.project` is a *breaking change* (version bump + consumer migration) — getting it right first costs one extra accessor. So before codegen, **scan every new field and ask: does this value identify or point at another resource?**
 
 If yes, it MUST be a typed accessor, not a raw string:
 
@@ -340,10 +340,10 @@ version update providers/*/ --increment=patch --commit   # auto-increment and co
 When developing mql alongside cnspec, create a `go.work` in a parent directory with `use (./mql, ./mql/providers/aws, ./cnspec)` etc.
 
 ### Tips
-*   **MCP Tools**: Use the GitHub MCP to check tickets/PRs. Use Notion MCP for internal docs. We're going to be talking about tickets and PRs (so that's github mcp), and there's also notion for company-wide docs (focus on Engineering stuff, infra, dev env, etc)
-*   **Auth**: The environment usually has AWS/Azure CLI tools authenticated (so you can use them when needed). If they're not present or logged in, stop and let me know so I can setup the provider's needs (tools, auth, whatever)
+*   **MCP Tools**: Use the GitHub MCP for tickets/PRs, and the Notion MCP for company-wide internal docs (Engineering, infra, dev env, etc.).
+*   **Auth**: The environment usually has AWS/Azure CLI tools authenticated. If they're not present or logged in, stop and let me know so I can set up the provider's needs (tools, auth, whatever).
 *   **Tickets**: If the ticket body contains queries to run in mql, make use of them during exploration/dev/testing/verification.
-*   **Provider READMEs**: Many providers have detailed README files with authentication methods, prerequisites, usage examples, and troubleshooting. Always check `providers/<provider-name>/README.md` when working with a specific provider.
+*   **Provider READMEs**: Many providers have detailed READMEs (auth methods, prerequisites, usage examples, troubleshooting). Always check `providers/<provider-name>/README.md` when working with a provider.
 
 ## 4. Debugging & Profiling
 
@@ -409,27 +409,13 @@ mql/
 4. `providers.Runtime` manages active providers for each asset
 5. Providers can discover child assets (e.g., K8s discovers pods)
 
-**Resource Data Flow:**
-1. Query compiler requests resource field
-2. Executor calls `provider.GetData(connection, resource, field, args)`
-3. Provider fetches data from backend (cloud API, SSH, etc.)
-4. Data converted to `llx.Primitive` → `llx.RawData`
-5. Result cached in executor for subsequent access
+**Resource Data Flow:** the compiler requests a resource field → executor calls `provider.GetData(connection, resource, field, args)` → provider fetches from the backend (cloud API, SSH, etc.) → data converted to `llx.Primitive` → `llx.RawData` → result cached in the executor for subsequent access.
 
 ### MQL, MQLC, and LLX Relationship
-- **MQL** (`mql/`): High-level query executor API
-- **MQLC** (`mqlc/`): Compiler that parses MQL text and generates bytecode
-- **LLX** (`llx/`): Low-level virtual machine that executes bytecode
-
-Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LLX (runtime VM)
+Think of it as: MQL (`mql/`, high-level executor API; like SQL or better GraphQL) → MQLC (`mqlc/`, compiles MQL text to bytecode) → LLX (`llx/`, the VM that runs the bytecode).
 
 ### Resources and Code Generation
-- Resources are defined in `.lr` files (e.g., `aws.lr`, `k8s.lr`)
-- The `lr` tool generates Go code from these definitions:
-    - Resource structs
-    - Schema definitions
-    - Data accessor methods
-- Generated files: `*.lr.go`, `*.lr.versions`, `*.resources.json`, `*.permissions.json`
+Resources are defined in `.lr` files (e.g., `aws.lr`, `k8s.lr`); the `lr` tool generates Go resource structs, schema definitions, and data accessors from them. Generated files: `*.lr.go`, `*.lr.versions`, `*.resources.json`, `*.permissions.json`.
 
 ### Resource Caching & __id
 **How caching works:**
@@ -459,10 +445,7 @@ mqlConfCompute, err := CreateResource(runtime, "gcp.project.computeService.insta
 
 Reserve a public `id string` field for resources whose id carries user-meaningful information (an ARN, a GCP resource name, a stable cross-system key) — somewhere a user might write `.where(id == "...")`. Sub-resources whose id is `<parent>/<leaf>` synthetic should hide it. See `gcp.project.binaryAuthorizationControl.policy` for an existing example of this pattern.
 
-**Performance notes:**
-- Resource field access is lazy: fields are only fetched when needed
-- Cross-references should leverage caching to avoid redundant API calls
-- Use `init` functions for expensive operations to enable result sharing across queries
+**Performance notes:** Resource field access is lazy (fields fetched only when needed); cross-references should leverage caching to avoid redundant API calls; use `init` functions for expensive operations to enable result sharing across queries.
 
 ### Code Generation Dependencies
 Three codegen steps feed the build: protobuf (`.proto` → `.pb.go`), resources (`.lr` → `.lr.go`), and provider config (`providers.yaml` → `builtin_dev.go`). Run `make mql/generate` after modifying any of these.
@@ -549,15 +532,8 @@ for {
   - `kmsMasterKeyId string` → `kmsMasterKey() aws.kms.key`
   - `topicArn string` → `topic() aws.sns.topic`
   - `streamArn string` → `stream() aws.kinesis.stream`
-  These enable MQL traversal (e.g., `aws.rds.proxy.vpc.cidrBlock`) instead of requiring manual lookups. Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the typed method using `NewResource`.
-- **GCP: Use typed resource references over raw URL strings.** GCP Compute resources often store references as self-link URLs (e.g., `https://www.googleapis.com/compute/v1/projects/.../networks/my-net`). Always add a typed computed method alongside the raw URL field:
-  - `networkUrl string` → `network() gcp.project.computeService.network`
-  - `subnetworkUrl string` → `subnetwork() gcp.project.computeService.subnetwork`
-  - `routerUrl string` → `router() gcp.project.computeService.router`
-  - `sslPolicyUrl string` → `sslPolicy() gcp.project.computeService.sslPolicy`
-  - `securityPolicyUrl string` → `securityPolicy() gcp.project.computeService.securityPolicy`
-  - `interconnectUrl string` → `interconnect() gcp.project.computeService.interconnect`
-  - `vpnGatewayUrl string` → `vpnGateway() gcp.project.computeService.vpnGateway`
+  These enable MQL traversal (e.g., `aws.rds.proxy.vpc.cidrBlock`). Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the typed method using `NewResource`.
+- **GCP: Use typed resource references over raw URL strings.** GCP Compute resources often store references as self-link URLs (e.g., `https://www.googleapis.com/compute/v1/projects/.../networks/my-net`). Always add a typed computed method alongside the raw URL field — e.g. `networkUrl` → `network()`, and likewise `subnetworkUrl` → `subnetwork()`, `routerUrl`, `sslPolicyUrl`, `securityPolicyUrl`, `interconnectUrl`, `vpnGatewayUrl` (all resolving to `gcp.project.computeService.*`).
 - **When to create a sub-resource.** A sub-resource (`aws.foo.bar`) is appropriate only when it meets **one of two bars**:
   1. **Clear ID.** It has a stable unique identifier — an ARN, a name-with-region, or another natural key returned by the API. Synthetic composite IDs like `<parentArn>/leaf` do **not** count.
   2. **Nested typed reference.** It exists to hold typed refs to other modeled resources (e.g. a `computeEnvironmentOrder` sub-resource whose reason to exist is `computeEnvironment() aws.batch.computeEnvironment`).
@@ -577,23 +553,18 @@ for {
   - ✗ `{platformVersion}` single-scalar config — flatten to `fargatePlatformVersion` on parent
   - ✗ `{hostPath, containerPath, permissions}` device / `{containerPath, size, mountOptions}` tmpfs — use `[]dict`
 - Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten.
-  - **Exception — brand-new, unreleased provider:** if the provider is being introduced in this PR (its `config.go` `Version` has not shipped yet), every entry in `.lr.versions` is part of the initial release and should equal that version — not `version + 1`. The "next patch" rule applies only to fields added *after* a version has shipped. For example, a new provider at `13.0.0` has all entries at `13.0.0`; a subsequent PR that adds a field bumps that one entry to `13.0.1`.
+  - **Exception — brand-new, unreleased provider:** if the provider is being introduced in this PR (its `config.go` `Version` hasn't shipped yet), every `.lr.versions` entry is part of the initial release and equals that version — not `version + 1`. The "next patch" rule applies only to fields added *after* a version has shipped (a new provider at `13.0.0` has all entries at `13.0.0`; a later PR adding a field bumps that one to `13.0.1`).
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
 - **Skip deprecated SDK fields and methods.** Check the SDK's `// Deprecated:` comment before exposing a field or calling a method. Deprecated fields often return empty/zero on modern instances because the data moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`) — modeling them adds dead schema. Same for deprecated `Get*`/`List*` methods; pick the replacement. If you genuinely need one for backward-compat, leave a comment explaining why.
-- **Deprecating fields and resources — use `@maturity`.** When a field or resource is being kept for backward-compat but should not be used by new audits, mark it with `@maturity("deprecated")` in the `.lr` schema. The title stays a plain noun phrase (titles starting with "deprecated" are rejected by the parser); the deprecation notice and the replacement go in the description. The description must lead with either `Deprecated in favor of ...` or `Deprecated, please use ...` — `Deprecated.` / `Deprecated:` are rejected. Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
+- **Deprecating fields and resources — use `@maturity`.** When a field or resource is kept for backward-compat but should not be used by new audits, mark it `@maturity("deprecated")` in the `.lr` schema. The title stays a plain noun phrase (titles starting with "deprecated" are rejected); the deprecation notice and replacement go in the description, which must lead with `Deprecated in favor of ...` or `Deprecated, please use ...` (`Deprecated.` / `Deprecated:` are rejected). Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
   ```
   // Legacy endpoint dict
   //
   // Deprecated in favor of endpointAddress, endpointPort, and
   // endpointHostedZoneId.
   endpoint @maturity("deprecated") dict
-
-  // Legacy field replaced in 13.20.0
-  //
-  // Deprecated in favor of aws.foo.bar.newField (since 13.20.0).
-  legacyField @maturity("deprecated") string
 
   // Cloudflare zone plan
   //
