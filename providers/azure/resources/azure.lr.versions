@@ -1877,6 +1877,14 @@ azure.subscription.frontDoorService.profile.originGroup.provisioningState 13.3.3
 azure.subscription.frontDoorService.profile.originGroups 13.3.3
 azure.subscription.frontDoorService.profile.provisioningState 13.3.3
 azure.subscription.frontDoorService.profile.resourceState 13.3.3
+azure.subscription.frontDoorService.profile.securityPolicies 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.associations 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.id 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.name 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.policyType 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.provisioningState 13.16.2
+azure.subscription.frontDoorService.profile.securityPolicy.wafPolicyId 13.16.2
 azure.subscription.frontDoorService.profile.sku 13.3.3
 azure.subscription.frontDoorService.profile.tags 13.3.3
 azure.subscription.frontDoorService.profiles 13.3.3
@@ -1923,6 +1931,7 @@ azure.subscription.iotService 11.3.0
 azure.subscription.iotService.hubs 11.3.0
 azure.subscription.iotService.iotHub 13.5.1
 azure.subscription.iotService.iotHub.allowedFqdnList 13.5.1
+azure.subscription.iotService.iotHub.diagnosticSettings 13.16.2
 azure.subscription.iotService.iotHub.disableDeviceSAS 13.5.1
 azure.subscription.iotService.iotHub.disableLocalAuth 13.5.1
 azure.subscription.iotService.iotHub.disableModuleSAS 13.5.1

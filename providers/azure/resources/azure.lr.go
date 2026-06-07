@@ -344,6 +344,7 @@ const (
 	ResourceAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink                             string = "azure.subscription.dnsService.privateZone.virtualNetworkLink"
 	ResourceAzureSubscriptionFrontDoorService                                                    string = "azure.subscription.frontDoorService"
 	ResourceAzureSubscriptionFrontDoorServiceProfile                                             string = "azure.subscription.frontDoorService.profile"
+	ResourceAzureSubscriptionFrontDoorServiceProfileSecurityPolicy                               string = "azure.subscription.frontDoorService.profile.securityPolicy"
 	ResourceAzureSubscriptionFrontDoorServiceProfileEndpoint                                     string = "azure.subscription.frontDoorService.profile.endpoint"
 	ResourceAzureSubscriptionFrontDoorServiceProfileEndpointRoute                                string = "azure.subscription.frontDoorService.profile.endpoint.route"
 	ResourceAzureSubscriptionFrontDoorServiceProfileCustomDomain                                 string = "azure.subscription.frontDoorService.profile.customDomain"
@@ -1711,6 +1712,10 @@ func init() {
 		"azure.subscription.frontDoorService.profile": {
 			// to override args, implement: initAzureSubscriptionFrontDoorServiceProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionFrontDoorServiceProfile,
+		},
+		"azure.subscription.frontDoorService.profile.securityPolicy": {
+			// to override args, implement: initAzureSubscriptionFrontDoorServiceProfileSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFrontDoorServiceProfileSecurityPolicy,
 		},
 		"azure.subscription.frontDoorService.profile.endpoint": {
 			// to override args, implement: initAzureSubscriptionFrontDoorServiceProfileEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10617,6 +10622,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.iotService.iotHub.networkRuleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetNetworkRuleSet()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.iotService.iotHub.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
 	"azure.subscription.cacheService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -12479,6 +12487,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.frontDoorService.profile.originGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetOriginGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.profile.originGroup")))
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetSecurityPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.frontDoorService.profile.securityPolicy")))
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetWafPolicyId()).ToDataRes(types.String)
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetAssociations()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).GetId()).ToDataRes(types.String)
@@ -26778,6 +26807,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionIotServiceIotHub).NetworkRuleSet, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.iotService.iotHub.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionIotServiceIotHub).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cacheService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheService).__id, ok = v.Value.(string)
 		return
@@ -29556,6 +29589,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.frontDoorService.profile.originGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).OriginGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).SecurityPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.wafPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).WafPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.frontDoorService.profile.securityPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.profile.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61766,6 +61831,7 @@ type mqlAzureSubscriptionIotServiceIotHub struct {
 	AllowedFqdnList               plugin.TValue[[]any]
 	EnableDataResidency           plugin.TValue[bool]
 	NetworkRuleSet                plugin.TValue[any]
+	DiagnosticSettings            plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionIotServiceIotHub creates a new instance of this resource
@@ -61875,6 +61941,22 @@ func (c *mqlAzureSubscriptionIotServiceIotHub) GetEnableDataResidency() *plugin.
 
 func (c *mqlAzureSubscriptionIotServiceIotHub) GetNetworkRuleSet() *plugin.TValue[any] {
 	return &c.NetworkRuleSet
+}
+
+func (c *mqlAzureSubscriptionIotServiceIotHub) GetDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.iotService.iotHub", c.__id, "diagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettings()
+	})
 }
 
 // mqlAzureSubscriptionCacheService for the azure.subscription.cacheService resource
@@ -68979,6 +69061,7 @@ type mqlAzureSubscriptionFrontDoorServiceProfile struct {
 	Endpoints         plugin.TValue[[]any]
 	CustomDomains     plugin.TValue[[]any]
 	OriginGroups      plugin.TValue[[]any]
+	SecurityPolicies  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionFrontDoorServiceProfile creates a new instance of this resource
@@ -69100,6 +69183,96 @@ func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetOriginGroups() *plugin.
 
 		return c.originGroups()
 	})
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetSecurityPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.frontDoorService.profile", c.__id, "securityPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityPolicies()
+	})
+}
+
+// mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy for the azure.subscription.frontDoorService.profile.securityPolicy resource
+type mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicyInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	PolicyType        plugin.TValue[string]
+	WafPolicyId       plugin.TValue[string]
+	Associations      plugin.TValue[[]any]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionFrontDoorServiceProfileSecurityPolicy creates a new instance of this resource
+func createAzureSubscriptionFrontDoorServiceProfileSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.frontDoorService.profile.securityPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) MqlName() string {
+	return "azure.subscription.frontDoorService.profile.securityPolicy"
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetWafPolicyId() *plugin.TValue[string] {
+	return &c.WafPolicyId
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetAssociations() *plugin.TValue[[]any] {
+	return &c.Associations
+}
+
+func (c *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionFrontDoorServiceProfileEndpoint for the azure.subscription.frontDoorService.profile.endpoint resource

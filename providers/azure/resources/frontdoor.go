@@ -53,6 +53,87 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin) id() (str
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfile) securityPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	profileName := a.Name.Data
+
+	client, err := armcdn.NewSecurityPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByProfilePager(resourceID.ResourceGroup, profileName, nil)
+	var res []any
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, sp := range page.Value {
+			if sp == nil {
+				continue
+			}
+
+			var policyType, wafPolicyId, provisioningState string
+			associations := []any{}
+			if props := sp.Properties; props != nil {
+				if props.ProvisioningState != nil {
+					provisioningState = string(*props.ProvisioningState)
+				}
+				if params := props.Parameters; params != nil {
+					if base := params.GetSecurityPolicyPropertiesParameters(); base != nil && base.Type != nil {
+						policyType = string(*base.Type)
+					}
+					if waf, ok := params.(*armcdn.SecurityPolicyWebApplicationFirewallParameters); ok && waf != nil {
+						if waf.WafPolicy != nil && waf.WafPolicy.ID != nil {
+							wafPolicyId = *waf.WafPolicy.ID
+						}
+						for _, assoc := range waf.Associations {
+							if assoc == nil {
+								continue
+							}
+							d, err := convert.JsonToDict(assoc)
+							if err != nil {
+								return nil, err
+							}
+							associations = append(associations, d)
+						}
+					}
+				}
+			}
+
+			mqlSp, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile.securityPolicy", map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(sp.ID),
+				"name":              llx.StringDataPtr(sp.Name),
+				"policyType":        llx.StringData(policyType),
+				"wafPolicyId":       llx.StringData(wafPolicyId),
+				"associations":      llx.ArrayData(associations, types.Dict),
+				"provisioningState": llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSp)
+		}
+	}
+
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

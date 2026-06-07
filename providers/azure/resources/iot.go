@@ -19,6 +19,11 @@ func (a *mqlAzureSubscriptionIotServiceIotHub) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionIotServiceIotHub) diagnosticSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func initAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil

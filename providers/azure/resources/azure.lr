@@ -7504,6 +7504,8 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   enableDataResidency bool
   // Network rule set: defaultAction, applyToBuiltInEventHubEndpoint, ipRules
   networkRuleSet dict
+  // Diagnostic settings configured on the IoT hub (forwarding logs and metrics to Log Analytics, storage, or Event Hub)
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
 // Azure Cache for Redis
@@ -9274,6 +9276,24 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   customDomains() []azure.subscription.frontDoorService.profile.customDomain
   // Origin groups in this profile
   originGroups() []azure.subscription.frontDoorService.profile.originGroup
+  // Security policies (Web Application Firewall associations) attached to this profile
+  securityPolicies() []azure.subscription.frontDoorService.profile.securityPolicy
+}
+
+// Azure Front Door security policy associating a WAF policy with domains
+private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id name policyType wafPolicyId") {
+  // Security policy resource ID
+  id string
+  // Security policy name
+  name string
+  // Security policy type (e.g. "WebApplicationFirewall")
+  policyType string
+  // ARM resource ID of the associated WAF policy (empty if none is associated)
+  wafPolicyId string
+  // Domains and path patterns the WAF policy is associated with
+  associations []dict
+  // Provisioning state
+  provisioningState string
 }
 
 // Azure Front Door / CDN endpoint
