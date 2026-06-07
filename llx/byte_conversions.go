@@ -4,10 +4,11 @@
 package llx
 
 import (
-	"bytes"
 	"encoding/binary"
 	"math"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 func bool2bytes(b bool) []byte {
@@ -28,11 +29,14 @@ func int2bytes(i int64) []byte {
 }
 
 func bytes2int(b []byte) int64 {
-	r := bytes.NewReader(b)
-	res, err := binary.ReadVarint(r)
-	if err != nil {
-		// Fall back to zero on a malformed or truncated varint instead of
-		// panicking; callers decode ints, refs, and indices from this.
+	res, n := binary.Varint(b)
+	if n <= 0 {
+		// Malformed or truncated varint (n == 0: buffer too short, n < 0:
+		// overflow). Callers decode ints, refs, and indices from this, so we
+		// fall back to zero rather than panicking on a corrupt or untrusted
+		// Primitive. Logged at debug so the degraded decode stays observable
+		// instead of silently masking corruption.
+		log.Debug().Int("len", len(b)).Msg("bytes2int: malformed varint, falling back to 0")
 		return 0
 	}
 	return res
