@@ -833,9 +833,12 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
 // Microsoft Entra Conditional Access Country Named Location
 //
 // Examine a country or region-based named location used in conditional access
-// policy conditions. Exposes the `name` and `lookupMethod` that determines
-// how the country is resolved (by IP address or GPS coordinates).
-microsoft.conditionalAccess.countryNamedLocation @defaults("name lookupMethod") {
+// policy conditions. Exposes the `id` used to reference the location in policy
+// include/exclude location lists, the `name`, and the `lookupMethod` that
+// determines how the country is resolved (by IP address or GPS coordinates).
+microsoft.conditionalAccess.countryNamedLocation @defaults("id name lookupMethod") {
+  // Named location ID
+  id string
   // Named location name
   name string
   // Method to determine the country location

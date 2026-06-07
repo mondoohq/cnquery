@@ -130,6 +130,7 @@ microsoft.conditionalAccess.authenticationMethodsPolicy.id 11.1.41
 microsoft.conditionalAccess.authenticationMethodsPolicy.lastModifiedDateTime 11.1.41
 microsoft.conditionalAccess.authenticationMethodsPolicy.policyVersion 11.1.41
 microsoft.conditionalAccess.countryNamedLocation 11.0.46
+microsoft.conditionalAccess.countryNamedLocation.id 13.5.1
 microsoft.conditionalAccess.countryNamedLocation.lookupMethod 11.0.46
 microsoft.conditionalAccess.countryNamedLocation.name 11.0.46
 microsoft.conditionalAccess.ipNamedLocation 11.0.34

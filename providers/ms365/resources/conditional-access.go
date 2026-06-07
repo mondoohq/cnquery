@@ -101,10 +101,6 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, erro
 	return locationDetails, nil
 }
 
-func (m *mqlMicrosoftConditionalAccessCountryNamedLocation) id() (string, error) {
-	return m.Name.Data, nil
-}
-
 func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any, error) {
 	namedLocations, err := a.loadNamedLocations()
 	if err != nil {
@@ -126,6 +122,8 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) countryLocations() ([]any,
 			if displayName != nil && lookupMethodStr != nil {
 				locationInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.countryNamedLocation",
 					map[string]*llx.RawData{
+						"__id":         llx.StringDataPtr(countryLocation.GetId()),
+						"id":           llx.StringDataPtr(countryLocation.GetId()),
 						"name":         llx.StringDataPtr(displayName),
 						"lookupMethod": llx.StringDataPtr(lookupMethodStr),
 					})
