@@ -4,10 +4,14 @@
 package resources
 
 import (
+	"errors"
+	"io"
 	"sync"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
 
 // EFI variable GUID for global Secure Boot variables.
@@ -25,10 +29,18 @@ func (s *mqlMachineSecureboot) id() (string, error) {
 	return "machine.secureboot", nil
 }
 
-// fetchStatus reads the EFI firmware variables once and caches the result.
+// fetchStatus determines the Secure Boot state once and caches the result. On
+// Windows it queries the UEFI firmware via PowerShell; on Linux it reads the
+// EFI firmware variables directly.
 func (s *mqlMachineSecureboot) fetchStatus() error {
 	s.once.Do(func() {
 		conn := s.MqlRuntime.Connection.(shared.Connection)
+
+		if asset := conn.Asset(); asset != nil && asset.Platform != nil && asset.Platform.IsFamily("windows") {
+			s.fetchErr = s.fetchWindowsStatus(conn)
+			return
+		}
+
 		fs := conn.FileSystem()
 
 		// Check if the system is booted in EFI mode by looking for /sys/firmware/efi.
@@ -43,6 +55,30 @@ func (s *mqlMachineSecureboot) fetchStatus() error {
 		s.cacheSetupMode = readEfiVarBool(fs, "SetupMode-"+efiGlobalVariable)
 	})
 	return s.fetchErr
+}
+
+// fetchWindowsStatus queries the UEFI firmware through PowerShell. A non-UEFI
+// (legacy BIOS) host yields efi=false and enabled=false rather than an error,
+// because Confirm-SecureBootUEFI throws on such systems.
+func (s *mqlMachineSecureboot) fetchWindowsStatus(conn shared.Connection) error {
+	executedCmd, err := conn.RunCommand(powershell.Encode(windows.PSConfirmSecureBoot))
+	if err != nil {
+		return err
+	}
+	if executedCmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(executedCmd.Stderr)
+		return errors.New("failed to determine Secure Boot state: " + string(stderr))
+	}
+
+	status, err := windows.ParseSecureBoot(executedCmd.Stdout)
+	if err != nil {
+		return err
+	}
+
+	s.cacheEfi = status.Efi
+	s.cacheEnabled = status.Enabled
+	s.cacheSetupMode = status.SetupMode
+	return nil
 }
 
 // readEfiVarBool reads an EFI variable from /sys/firmware/efi/efivars/ and

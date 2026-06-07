@@ -305,8 +305,10 @@ machine.cpu @defaults("manufacturer model processorCount coreCount") {
 // Examine whether the system booted in EFI/UEFI mode (`efi`), whether
 // Secure Boot is currently enabled (`enabled`), and whether it is in setup
 // mode (`setupMode`, meaning keys can be modified without authentication).
-// Read from EFI variables on Linux. Used to assert that Secure Boot is
-// enforced and that setup mode is not active.
+// Read from the EFI variables on Linux and from the UEFI firmware on
+// Windows; legacy-BIOS systems resolve to `efi` and `enabled` false rather
+// than erroring. Used to assert that Secure Boot is enforced and that setup
+// mode is not active.
 machine.secureboot @defaults("enabled") {
   // Whether the system is booted in EFI/UEFI mode
   efi() bool
