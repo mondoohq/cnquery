@@ -5072,6 +5072,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.transportRuleEntry.comments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetComments()).ToDataRes(types.String)
 	},
+	"ms365.exchangeonline.transportRuleEntry.senderDomainIs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineTransportRuleEntry).GetSenderDomainIs()).ToDataRes(types.Array(types.String))
+	},
 	"ms365.exchangeonline.antiPhishPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
@@ -5113,6 +5116,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.antiPhishPolicyEntry.authenticationFailAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetAuthenticationFailAction()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.dmarcQuarantineAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetDmarcQuarantineAction()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.dmarcRejectAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetDmarcRejectAction()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSimilarDomainsSafetyTips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableSimilarDomainsSafetyTips()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSimilarUsersSafetyTips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableSimilarUsersSafetyTips()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSuspiciousSafetyTip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableSuspiciousSafetyTip()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableUnauthenticatedSender": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableUnauthenticatedSender()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableUnusualCharactersSafetyTips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableUnusualCharactersSafetyTips()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableViaTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetEnableViaTag()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.honorDmarcPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetHonorDmarcPolicy()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.impersonationProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetImpersonationProtectionState()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.mailboxIntelligenceProtectionAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).GetMailboxIntelligenceProtectionAction()).ToDataRes(types.String)
 	},
 	"ms365.exchangeonline.safeLinksPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineSafeLinksPolicyEntry).GetIdentity()).ToDataRes(types.String)
@@ -5165,6 +5201,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.safeAttachmentPolicyEntry.redirectAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetRedirectAddress()).ToDataRes(types.String)
 	},
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.quarantineTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).GetQuarantineTag()).ToDataRes(types.String)
+	},
 	"ms365.exchangeonline.malwareFilterPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetIdentity()).ToDataRes(types.String)
 	},
@@ -5185,6 +5224,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetFileTypes()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.customNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetCustomNotifications()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.externalSenderAdminAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetExternalSenderAdminAddress()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypeAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetFileTypeAction()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.internalSenderAdminAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetInternalSenderAdminAddress()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.quarantineTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).GetQuarantineTag()).ToDataRes(types.String)
 	},
 	"ms365.exchangeonline.hostedContentFilterPolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineHostedContentFilterPolicyEntry).GetIdentity()).ToDataRes(types.String)
@@ -5245,6 +5299,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetNotifyOutboundSpam()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.bccSuspiciousOutboundAdditionalRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetBccSuspiciousOutboundAdditionalRecipients()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpamRecipients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).GetNotifyOutboundSpamRecipients()).ToDataRes(types.Array(types.String))
 	},
 	"ms365.exchangeonline.dkimSigningConfigEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineDkimSigningConfigEntry).GetIdentity()).ToDataRes(types.String)
@@ -5324,6 +5387,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.owaMailboxPolicyEntry.blockedFileTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetBlockedFileTypes()).ToDataRes(types.Array(types.String))
 	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.activeSyncIntegrationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetActiveSyncIntegrationEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allAddressListsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetAllAddressListsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allowCopyContactsToDeviceAddressBook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetAllowCopyContactsToDeviceAddressBook()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.bookingsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetBookingsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.bookingsMailboxCreationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetBookingsMailboxCreationEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.calendarEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetCalendarEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.changePasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetChangePasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.contactsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetContactsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.facebookEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetFacebookEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.groupCreationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetGroupCreationEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.instantMessagingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetInstantMessagingEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.interestingCalendarsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetInterestingCalendarsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.journalEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetJournalEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.linkedInEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetLinkedInEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.localEventsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetLocalEventsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.notesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetNotesEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.offlineEnabledWeb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetOfflineEnabledWeb()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.offlineEnabledWin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetOfflineEnabledWin()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.oneWinNativeOutlookEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetOneWinNativeOutlookEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.placesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetPlacesEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.premiumClientEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetPremiumClientEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.recoverDeletedItemsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetRecoverDeletedItemsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.remindersAndNotificationsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetRemindersAndNotificationsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.signaturesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetSignaturesEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.tasksEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetTasksEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.textMessagingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetTextMessagingEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.themeSelectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetThemeSelectionEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.wssAccessOnPrivateComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetWssAccessOnPrivateComputersEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.wssAccessOnPublicComputersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetWssAccessOnPublicComputersEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.weatherEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetWeatherEnabled()).ToDataRes(types.Bool)
+	},
 	"ms365.exchangeonline.remoteDomainEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetIdentity()).ToDataRes(types.String)
 	},
@@ -5350,6 +5503,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.remoteDomainEntry.isInternal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetIsInternal()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.remoteDomainEntry.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetContentType()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.remoteDomainEntry.meetingForwardNotificationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetMeetingForwardNotificationEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.quarantinePolicyEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineQuarantinePolicyEntry).GetIdentity()).ToDataRes(types.String)
@@ -11536,6 +11695,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineTransportRuleEntry).Comments, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.transportRuleEntry.senderDomainIs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineTransportRuleEntry).SenderDomainIs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.antiPhishPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).__id, ok = v.Value.(string)
 		return
@@ -11594,6 +11757,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.antiPhishPolicyEntry.authenticationFailAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).AuthenticationFailAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.dmarcQuarantineAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).DmarcQuarantineAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.dmarcRejectAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).DmarcRejectAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSimilarDomainsSafetyTips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableSimilarDomainsSafetyTips, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSimilarUsersSafetyTips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableSimilarUsersSafetyTips, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableSuspiciousSafetyTip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableSuspiciousSafetyTip, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableUnauthenticatedSender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableUnauthenticatedSender, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableUnusualCharactersSafetyTips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableUnusualCharactersSafetyTips, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.enableViaTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).EnableViaTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.honorDmarcPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).HonorDmarcPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.impersonationProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).ImpersonationProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.antiPhishPolicyEntry.mailboxIntelligenceProtectionAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineAntiPhishPolicyEntry).MailboxIntelligenceProtectionAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.safeLinksPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11672,6 +11879,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).RedirectAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.safeAttachmentPolicyEntry.quarantineTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineSafeAttachmentPolicyEntry).QuarantineTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.malwareFilterPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).__id, ok = v.Value.(string)
 		return
@@ -11702,6 +11913,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).FileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.customNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).CustomNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.externalSenderAdminAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).ExternalSenderAdminAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.fileTypeAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).FileTypeAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.internalSenderAdminAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).InternalSenderAdminAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.malwareFilterPolicyEntry.quarantineTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineMalwareFilterPolicyEntry).QuarantineTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.hostedContentFilterPolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11790,6 +12021,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).NotifyOutboundSpam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.bccSuspiciousOutboundAdditionalRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).BccSuspiciousOutboundAdditionalRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry.notifyOutboundSpamRecipients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry).NotifyOutboundSpamRecipients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.dkimSigningConfigEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11908,6 +12151,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).BlockedFileTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.activeSyncIntegrationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).ActiveSyncIntegrationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allAddressListsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).AllAddressListsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.allowCopyContactsToDeviceAddressBook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).AllowCopyContactsToDeviceAddressBook, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.bookingsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).BookingsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.bookingsMailboxCreationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).BookingsMailboxCreationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.calendarEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).CalendarEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.changePasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).ChangePasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.contactsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).ContactsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.facebookEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).FacebookEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.groupCreationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GroupCreationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.instantMessagingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).InstantMessagingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.interestingCalendarsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).InterestingCalendarsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.journalEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).JournalEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.linkedInEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).LinkedInEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.localEventsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).LocalEventsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.notesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).NotesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.offlineEnabledWeb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).OfflineEnabledWeb, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.offlineEnabledWin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).OfflineEnabledWin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.oneWinNativeOutlookEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).OneWinNativeOutlookEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.placesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).PlacesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.premiumClientEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).PremiumClientEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.recoverDeletedItemsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).RecoverDeletedItemsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.remindersAndNotificationsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).RemindersAndNotificationsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.signaturesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).SignaturesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.tasksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).TasksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.textMessagingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).TextMessagingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.themeSelectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).ThemeSelectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.wssAccessOnPrivateComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).WssAccessOnPrivateComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.wssAccessOnPublicComputersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).WssAccessOnPublicComputersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.weatherEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).WeatherEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.remoteDomainEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).__id, ok = v.Value.(string)
 		return
@@ -11946,6 +12309,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.remoteDomainEntry.isInternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).IsInternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.remoteDomainEntry.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.remoteDomainEntry.meetingForwardNotificationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineRemoteDomainEntry).MeetingForwardNotificationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.quarantinePolicyEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27508,6 +27879,7 @@ type mqlMs365ExchangeonlineTransportRuleEntry struct {
 	Mode                           plugin.TValue[string]
 	RouteMessageOutboundRequireTls plugin.TValue[bool]
 	Comments                       plugin.TValue[string]
+	SenderDomainIs                 plugin.TValue[[]any]
 }
 
 // createMs365ExchangeonlineTransportRuleEntry creates a new instance of this resource
@@ -27570,6 +27942,10 @@ func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetComments() *plugin.TValue[
 	return &c.Comments
 }
 
+func (c *mqlMs365ExchangeonlineTransportRuleEntry) GetSenderDomainIs() *plugin.TValue[[]any] {
+	return &c.SenderDomainIs
+}
+
 // mqlMs365ExchangeonlineAntiPhishPolicyEntry for the ms365.exchangeonline.antiPhishPolicyEntry resource
 type mqlMs365ExchangeonlineAntiPhishPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
@@ -27589,6 +27965,17 @@ type mqlMs365ExchangeonlineAntiPhishPolicyEntry struct {
 	TargetedUserProtectionAction        plugin.TValue[string]
 	TargetedDomainProtectionAction      plugin.TValue[string]
 	AuthenticationFailAction            plugin.TValue[string]
+	DmarcQuarantineAction               plugin.TValue[string]
+	DmarcRejectAction                   plugin.TValue[string]
+	EnableSimilarDomainsSafetyTips      plugin.TValue[bool]
+	EnableSimilarUsersSafetyTips        plugin.TValue[bool]
+	EnableSuspiciousSafetyTip           plugin.TValue[bool]
+	EnableUnauthenticatedSender         plugin.TValue[bool]
+	EnableUnusualCharactersSafetyTips   plugin.TValue[bool]
+	EnableViaTag                        plugin.TValue[bool]
+	HonorDmarcPolicy                    plugin.TValue[bool]
+	ImpersonationProtectionState        plugin.TValue[string]
+	MailboxIntelligenceProtectionAction plugin.TValue[string]
 }
 
 // createMs365ExchangeonlineAntiPhishPolicyEntry creates a new instance of this resource
@@ -27677,6 +28064,50 @@ func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetTargetedDomainProtection
 
 func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetAuthenticationFailAction() *plugin.TValue[string] {
 	return &c.AuthenticationFailAction
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetDmarcQuarantineAction() *plugin.TValue[string] {
+	return &c.DmarcQuarantineAction
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetDmarcRejectAction() *plugin.TValue[string] {
+	return &c.DmarcRejectAction
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableSimilarDomainsSafetyTips() *plugin.TValue[bool] {
+	return &c.EnableSimilarDomainsSafetyTips
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableSimilarUsersSafetyTips() *plugin.TValue[bool] {
+	return &c.EnableSimilarUsersSafetyTips
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableSuspiciousSafetyTip() *plugin.TValue[bool] {
+	return &c.EnableSuspiciousSafetyTip
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableUnauthenticatedSender() *plugin.TValue[bool] {
+	return &c.EnableUnauthenticatedSender
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableUnusualCharactersSafetyTips() *plugin.TValue[bool] {
+	return &c.EnableUnusualCharactersSafetyTips
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetEnableViaTag() *plugin.TValue[bool] {
+	return &c.EnableViaTag
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetHonorDmarcPolicy() *plugin.TValue[bool] {
+	return &c.HonorDmarcPolicy
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetImpersonationProtectionState() *plugin.TValue[string] {
+	return &c.ImpersonationProtectionState
+}
+
+func (c *mqlMs365ExchangeonlineAntiPhishPolicyEntry) GetMailboxIntelligenceProtectionAction() *plugin.TValue[string] {
+	return &c.MailboxIntelligenceProtectionAction
 }
 
 // mqlMs365ExchangeonlineSafeLinksPolicyEntry for the ms365.exchangeonline.safeLinksPolicyEntry resource
@@ -27784,6 +28215,7 @@ type mqlMs365ExchangeonlineSafeAttachmentPolicyEntry struct {
 	Action          plugin.TValue[string]
 	Redirect        plugin.TValue[bool]
 	RedirectAddress plugin.TValue[string]
+	QuarantineTag   plugin.TValue[string]
 }
 
 // createMs365ExchangeonlineSafeAttachmentPolicyEntry creates a new instance of this resource
@@ -27842,6 +28274,10 @@ func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetRedirectAddress() *
 	return &c.RedirectAddress
 }
 
+func (c *mqlMs365ExchangeonlineSafeAttachmentPolicyEntry) GetQuarantineTag() *plugin.TValue[string] {
+	return &c.QuarantineTag
+}
+
 // mqlMs365ExchangeonlineMalwareFilterPolicyEntry for the ms365.exchangeonline.malwareFilterPolicyEntry resource
 type mqlMs365ExchangeonlineMalwareFilterPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
@@ -27854,6 +28290,11 @@ type mqlMs365ExchangeonlineMalwareFilterPolicyEntry struct {
 	EnableInternalSenderAdminNotifications plugin.TValue[bool]
 	EnableExternalSenderAdminNotifications plugin.TValue[bool]
 	FileTypes                              plugin.TValue[[]any]
+	CustomNotifications                    plugin.TValue[bool]
+	ExternalSenderAdminAddress             plugin.TValue[string]
+	FileTypeAction                         plugin.TValue[string]
+	InternalSenderAdminAddress             plugin.TValue[string]
+	QuarantineTag                          plugin.TValue[string]
 }
 
 // createMs365ExchangeonlineMalwareFilterPolicyEntry creates a new instance of this resource
@@ -27914,6 +28355,26 @@ func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetEnableExternalSender
 
 func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetFileTypes() *plugin.TValue[[]any] {
 	return &c.FileTypes
+}
+
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetCustomNotifications() *plugin.TValue[bool] {
+	return &c.CustomNotifications
+}
+
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetExternalSenderAdminAddress() *plugin.TValue[string] {
+	return &c.ExternalSenderAdminAddress
+}
+
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetFileTypeAction() *plugin.TValue[string] {
+	return &c.FileTypeAction
+}
+
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetInternalSenderAdminAddress() *plugin.TValue[string] {
+	return &c.InternalSenderAdminAddress
+}
+
+func (c *mqlMs365ExchangeonlineMalwareFilterPolicyEntry) GetQuarantineTag() *plugin.TValue[string] {
+	return &c.QuarantineTag
 }
 
 // mqlMs365ExchangeonlineHostedContentFilterPolicyEntry for the ms365.exchangeonline.hostedContentFilterPolicyEntry resource
@@ -28015,15 +28476,18 @@ type mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntryInternal it will be used here
-	Identity                      plugin.TValue[string]
-	Name                          plugin.TValue[string]
-	RecipientLimitExternalPerHour plugin.TValue[int64]
-	RecipientLimitInternalPerHour plugin.TValue[int64]
-	RecipientLimitPerDay          plugin.TValue[int64]
-	ActionWhenThresholdReached    plugin.TValue[string]
-	AutoForwardingMode            plugin.TValue[string]
-	BccSuspiciousOutboundMail     plugin.TValue[bool]
-	NotifyOutboundSpam            plugin.TValue[bool]
+	Identity                                  plugin.TValue[string]
+	Name                                      plugin.TValue[string]
+	RecipientLimitExternalPerHour             plugin.TValue[int64]
+	RecipientLimitInternalPerHour             plugin.TValue[int64]
+	RecipientLimitPerDay                      plugin.TValue[int64]
+	ActionWhenThresholdReached                plugin.TValue[string]
+	AutoForwardingMode                        plugin.TValue[string]
+	BccSuspiciousOutboundMail                 plugin.TValue[bool]
+	NotifyOutboundSpam                        plugin.TValue[bool]
+	Enabled                                   plugin.TValue[bool]
+	BccSuspiciousOutboundAdditionalRecipients plugin.TValue[[]any]
+	NotifyOutboundSpamRecipients              plugin.TValue[[]any]
 }
 
 // createMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry creates a new instance of this resource
@@ -28092,6 +28556,18 @@ func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetBccSuspic
 
 func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetNotifyOutboundSpam() *plugin.TValue[bool] {
 	return &c.NotifyOutboundSpam
+}
+
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetBccSuspiciousOutboundAdditionalRecipients() *plugin.TValue[[]any] {
+	return &c.BccSuspiciousOutboundAdditionalRecipients
+}
+
+func (c *mqlMs365ExchangeonlineHostedOutboundSpamFilterPolicyEntry) GetNotifyOutboundSpamRecipients() *plugin.TValue[[]any] {
+	return &c.NotifyOutboundSpamRecipients
 }
 
 // mqlMs365ExchangeonlineDkimSigningConfigEntry for the ms365.exchangeonline.dkimSigningConfigEntry resource
@@ -28275,6 +28751,36 @@ type mqlMs365ExchangeonlineOwaMailboxPolicyEntry struct {
 	ForceSaveAttachmentFilteringEnabled       plugin.TValue[bool]
 	AllowedFileTypes                          plugin.TValue[[]any]
 	BlockedFileTypes                          plugin.TValue[[]any]
+	ActiveSyncIntegrationEnabled              plugin.TValue[bool]
+	AllAddressListsEnabled                    plugin.TValue[bool]
+	AllowCopyContactsToDeviceAddressBook      plugin.TValue[bool]
+	BookingsEnabled                           plugin.TValue[bool]
+	BookingsMailboxCreationEnabled            plugin.TValue[bool]
+	CalendarEnabled                           plugin.TValue[bool]
+	ChangePasswordEnabled                     plugin.TValue[bool]
+	ContactsEnabled                           plugin.TValue[bool]
+	FacebookEnabled                           plugin.TValue[bool]
+	GroupCreationEnabled                      plugin.TValue[bool]
+	InstantMessagingEnabled                   plugin.TValue[bool]
+	InterestingCalendarsEnabled               plugin.TValue[bool]
+	JournalEnabled                            plugin.TValue[bool]
+	LinkedInEnabled                           plugin.TValue[bool]
+	LocalEventsEnabled                        plugin.TValue[bool]
+	NotesEnabled                              plugin.TValue[bool]
+	OfflineEnabledWeb                         plugin.TValue[bool]
+	OfflineEnabledWin                         plugin.TValue[bool]
+	OneWinNativeOutlookEnabled                plugin.TValue[bool]
+	PlacesEnabled                             plugin.TValue[bool]
+	PremiumClientEnabled                      plugin.TValue[bool]
+	RecoverDeletedItemsEnabled                plugin.TValue[bool]
+	RemindersAndNotificationsEnabled          plugin.TValue[bool]
+	SignaturesEnabled                         plugin.TValue[bool]
+	TasksEnabled                              plugin.TValue[bool]
+	TextMessagingEnabled                      plugin.TValue[bool]
+	ThemeSelectionEnabled                     plugin.TValue[bool]
+	WssAccessOnPrivateComputersEnabled        plugin.TValue[bool]
+	WssAccessOnPublicComputersEnabled         plugin.TValue[bool]
+	WeatherEnabled                            plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineOwaMailboxPolicyEntry creates a new instance of this resource
@@ -28341,20 +28847,142 @@ func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetBlockedFileTypes() *plu
 	return &c.BlockedFileTypes
 }
 
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetActiveSyncIntegrationEnabled() *plugin.TValue[bool] {
+	return &c.ActiveSyncIntegrationEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetAllAddressListsEnabled() *plugin.TValue[bool] {
+	return &c.AllAddressListsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetAllowCopyContactsToDeviceAddressBook() *plugin.TValue[bool] {
+	return &c.AllowCopyContactsToDeviceAddressBook
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetBookingsEnabled() *plugin.TValue[bool] {
+	return &c.BookingsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetBookingsMailboxCreationEnabled() *plugin.TValue[bool] {
+	return &c.BookingsMailboxCreationEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetCalendarEnabled() *plugin.TValue[bool] {
+	return &c.CalendarEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetChangePasswordEnabled() *plugin.TValue[bool] {
+	return &c.ChangePasswordEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetContactsEnabled() *plugin.TValue[bool] {
+	return &c.ContactsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetFacebookEnabled() *plugin.TValue[bool] {
+	return &c.FacebookEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetGroupCreationEnabled() *plugin.TValue[bool] {
+	return &c.GroupCreationEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetInstantMessagingEnabled() *plugin.TValue[bool] {
+	return &c.InstantMessagingEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetInterestingCalendarsEnabled() *plugin.TValue[bool] {
+	return &c.InterestingCalendarsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetJournalEnabled() *plugin.TValue[bool] {
+	return &c.JournalEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetLinkedInEnabled() *plugin.TValue[bool] {
+	return &c.LinkedInEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetLocalEventsEnabled() *plugin.TValue[bool] {
+	return &c.LocalEventsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetNotesEnabled() *plugin.TValue[bool] {
+	return &c.NotesEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetOfflineEnabledWeb() *plugin.TValue[bool] {
+	return &c.OfflineEnabledWeb
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetOfflineEnabledWin() *plugin.TValue[bool] {
+	return &c.OfflineEnabledWin
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetOneWinNativeOutlookEnabled() *plugin.TValue[bool] {
+	return &c.OneWinNativeOutlookEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetPlacesEnabled() *plugin.TValue[bool] {
+	return &c.PlacesEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetPremiumClientEnabled() *plugin.TValue[bool] {
+	return &c.PremiumClientEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetRecoverDeletedItemsEnabled() *plugin.TValue[bool] {
+	return &c.RecoverDeletedItemsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetRemindersAndNotificationsEnabled() *plugin.TValue[bool] {
+	return &c.RemindersAndNotificationsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetSignaturesEnabled() *plugin.TValue[bool] {
+	return &c.SignaturesEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetTasksEnabled() *plugin.TValue[bool] {
+	return &c.TasksEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetTextMessagingEnabled() *plugin.TValue[bool] {
+	return &c.TextMessagingEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetThemeSelectionEnabled() *plugin.TValue[bool] {
+	return &c.ThemeSelectionEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetWssAccessOnPrivateComputersEnabled() *plugin.TValue[bool] {
+	return &c.WssAccessOnPrivateComputersEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetWssAccessOnPublicComputersEnabled() *plugin.TValue[bool] {
+	return &c.WssAccessOnPublicComputersEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetWeatherEnabled() *plugin.TValue[bool] {
+	return &c.WeatherEnabled
+}
+
 // mqlMs365ExchangeonlineRemoteDomainEntry for the ms365.exchangeonline.remoteDomainEntry resource
 type mqlMs365ExchangeonlineRemoteDomainEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMs365ExchangeonlineRemoteDomainEntryInternal it will be used here
-	Identity              plugin.TValue[string]
-	Name                  plugin.TValue[string]
-	DomainName            plugin.TValue[string]
-	AllowedOOFType        plugin.TValue[string]
-	AutoReplyEnabled      plugin.TValue[bool]
-	AutoForwardEnabled    plugin.TValue[bool]
-	DeliveryReportEnabled plugin.TValue[bool]
-	NdrEnabled            plugin.TValue[bool]
-	IsInternal            plugin.TValue[bool]
+	Identity                          plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	DomainName                        plugin.TValue[string]
+	AllowedOOFType                    plugin.TValue[string]
+	AutoReplyEnabled                  plugin.TValue[bool]
+	AutoForwardEnabled                plugin.TValue[bool]
+	DeliveryReportEnabled             plugin.TValue[bool]
+	NdrEnabled                        plugin.TValue[bool]
+	IsInternal                        plugin.TValue[bool]
+	ContentType                       plugin.TValue[string]
+	MeetingForwardNotificationEnabled plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineRemoteDomainEntry creates a new instance of this resource
@@ -28423,6 +29051,14 @@ func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetNdrEnabled() *plugin.TValue
 
 func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetIsInternal() *plugin.TValue[bool] {
 	return &c.IsInternal
+}
+
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlMs365ExchangeonlineRemoteDomainEntry) GetMeetingForwardNotificationEnabled() *plugin.TValue[bool] {
+	return &c.MeetingForwardNotificationEnabled
 }
 
 // mqlMs365ExchangeonlineQuarantinePolicyEntry for the ms365.exchangeonline.quarantinePolicyEntry resource

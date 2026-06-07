@@ -32,13 +32,14 @@ func decodeExchangeList[T any](raw any) ([]*T, error) {
 // --- Transport rules ---
 
 type ExchangeTransportRule struct {
-	Identity                       string `json:"Identity"`
-	Name                           string `json:"Name"`
-	Priority                       int64  `json:"Priority"`
-	State                          string `json:"State"`
-	Mode                           string `json:"Mode"`
-	RouteMessageOutboundRequireTls bool   `json:"RouteMessageOutboundRequireTls"`
-	Comments                       string `json:"Comments"`
+	Identity                       string   `json:"Identity"`
+	Name                           string   `json:"Name"`
+	Priority                       int64    `json:"Priority"`
+	State                          string   `json:"State"`
+	Mode                           string   `json:"Mode"`
+	RouteMessageOutboundRequireTls bool     `json:"RouteMessageOutboundRequireTls"`
+	Comments                       string   `json:"Comments"`
+	SenderDomainIs                 []string `json:"SenderDomainIs"`
 }
 
 func convertTransportRules(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -61,6 +62,7 @@ func convertTransportRules(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 				"mode":                           llx.StringData(t.Mode),
 				"routeMessageOutboundRequireTls": llx.BoolData(t.RouteMessageOutboundRequireTls),
 				"comments":                       llx.StringData(t.Comments),
+				"senderDomainIs":                 llx.ArrayData(llx.TArr2Raw(t.SenderDomainIs), types.String),
 			})
 		if err != nil {
 			return nil, err
@@ -87,6 +89,17 @@ type ExchangeAntiPhishPolicy struct {
 	TargetedUserProtectionAction        string `json:"TargetedUserProtectionAction"`
 	TargetedDomainProtectionAction      string `json:"TargetedDomainProtectionAction"`
 	AuthenticationFailAction            string `json:"AuthenticationFailAction"`
+	DmarcQuarantineAction               string `json:"DmarcQuarantineAction"`
+	DmarcRejectAction                   string `json:"DmarcRejectAction"`
+	EnableSimilarDomainsSafetyTips      bool   `json:"EnableSimilarDomainsSafetyTips"`
+	EnableSimilarUsersSafetyTips        bool   `json:"EnableSimilarUsersSafetyTips"`
+	EnableSuspiciousSafetyTip           bool   `json:"EnableSuspiciousSafetyTip"`
+	EnableUnauthenticatedSender         bool   `json:"EnableUnauthenticatedSender"`
+	EnableUnusualCharactersSafetyTips   bool   `json:"EnableUnusualCharactersSafetyTips"`
+	EnableViaTag                        bool   `json:"EnableViaTag"`
+	HonorDmarcPolicy                    bool   `json:"HonorDmarcPolicy"`
+	ImpersonationProtectionState        string `json:"ImpersonationProtectionState"`
+	MailboxIntelligenceProtectionAction string `json:"MailboxIntelligenceProtectionAction"`
 }
 
 func convertAntiPhishPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -116,6 +129,17 @@ func convertAntiPhishPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error)
 				"targetedUserProtectionAction":        llx.StringData(p.TargetedUserProtectionAction),
 				"targetedDomainProtectionAction":      llx.StringData(p.TargetedDomainProtectionAction),
 				"authenticationFailAction":            llx.StringData(p.AuthenticationFailAction),
+				"dmarcQuarantineAction":               llx.StringData(p.DmarcQuarantineAction),
+				"dmarcRejectAction":                   llx.StringData(p.DmarcRejectAction),
+				"enableSimilarDomainsSafetyTips":      llx.BoolData(p.EnableSimilarDomainsSafetyTips),
+				"enableSimilarUsersSafetyTips":        llx.BoolData(p.EnableSimilarUsersSafetyTips),
+				"enableSuspiciousSafetyTip":           llx.BoolData(p.EnableSuspiciousSafetyTip),
+				"enableUnauthenticatedSender":         llx.BoolData(p.EnableUnauthenticatedSender),
+				"enableUnusualCharactersSafetyTips":   llx.BoolData(p.EnableUnusualCharactersSafetyTips),
+				"enableViaTag":                        llx.BoolData(p.EnableViaTag),
+				"honorDmarcPolicy":                    llx.BoolData(p.HonorDmarcPolicy),
+				"impersonationProtectionState":        llx.StringData(p.ImpersonationProtectionState),
+				"mailboxIntelligenceProtectionAction": llx.StringData(p.MailboxIntelligenceProtectionAction),
 			})
 		if err != nil {
 			return nil, err
@@ -183,6 +207,7 @@ type ExchangeSafeAttachmentPolicy struct {
 	Action          string `json:"Action"`
 	Redirect        bool   `json:"Redirect"`
 	RedirectAddress string `json:"RedirectAddress"`
+	QuarantineTag   string `json:"QuarantineTag"`
 }
 
 func convertSafeAttachmentPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -204,6 +229,7 @@ func convertSafeAttachmentPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, e
 				"action":          llx.StringData(p.Action),
 				"redirect":        llx.BoolData(p.Redirect),
 				"redirectAddress": llx.StringData(p.RedirectAddress),
+				"quarantineTag":   llx.StringData(p.QuarantineTag),
 			})
 		if err != nil {
 			return nil, err
@@ -223,6 +249,11 @@ type ExchangeMalwareFilterPolicy struct {
 	EnableInternalSenderAdminNotifications bool     `json:"EnableInternalSenderAdminNotifications"`
 	EnableExternalSenderAdminNotifications bool     `json:"EnableExternalSenderAdminNotifications"`
 	FileTypes                              []string `json:"FileTypes"`
+	CustomNotifications                    bool     `json:"CustomNotifications"`
+	ExternalSenderAdminAddress             string   `json:"ExternalSenderAdminAddress"`
+	FileTypeAction                         string   `json:"FileTypeAction"`
+	InternalSenderAdminAddress             string   `json:"InternalSenderAdminAddress"`
+	QuarantineTag                          string   `json:"QuarantineTag"`
 }
 
 func convertMalwareFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -245,6 +276,11 @@ func convertMalwareFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, er
 				"enableInternalSenderAdminNotifications": llx.BoolData(p.EnableInternalSenderAdminNotifications),
 				"enableExternalSenderAdminNotifications": llx.BoolData(p.EnableExternalSenderAdminNotifications),
 				"fileTypes":                              llx.ArrayData(llx.TArr2Raw(p.FileTypes), types.String),
+				"customNotifications":                    llx.BoolData(p.CustomNotifications),
+				"externalSenderAdminAddress":             llx.StringData(p.ExternalSenderAdminAddress),
+				"fileTypeAction":                         llx.StringData(p.FileTypeAction),
+				"internalSenderAdminAddress":             llx.StringData(p.InternalSenderAdminAddress),
+				"quarantineTag":                          llx.StringData(p.QuarantineTag),
 			})
 		if err != nil {
 			return nil, err
@@ -306,15 +342,18 @@ func convertHostedContentFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]a
 // --- Hosted outbound spam filter policies ---
 
 type ExchangeHostedOutboundSpamFilterPolicy struct {
-	Identity                      string `json:"Identity"`
-	Name                          string `json:"Name"`
-	RecipientLimitExternalPerHour int64  `json:"RecipientLimitExternalPerHour"`
-	RecipientLimitInternalPerHour int64  `json:"RecipientLimitInternalPerHour"`
-	RecipientLimitPerDay          int64  `json:"RecipientLimitPerDay"`
-	ActionWhenThresholdReached    string `json:"ActionWhenThresholdReached"`
-	AutoForwardingMode            string `json:"AutoForwardingMode"`
-	BccSuspiciousOutboundMail     bool   `json:"BccSuspiciousOutboundMail"`
-	NotifyOutboundSpam            bool   `json:"NotifyOutboundSpam"`
+	Identity                                  string   `json:"Identity"`
+	Name                                      string   `json:"Name"`
+	RecipientLimitExternalPerHour             int64    `json:"RecipientLimitExternalPerHour"`
+	RecipientLimitInternalPerHour             int64    `json:"RecipientLimitInternalPerHour"`
+	RecipientLimitPerDay                      int64    `json:"RecipientLimitPerDay"`
+	ActionWhenThresholdReached                string   `json:"ActionWhenThresholdReached"`
+	AutoForwardingMode                        string   `json:"AutoForwardingMode"`
+	BccSuspiciousOutboundMail                 bool     `json:"BccSuspiciousOutboundMail"`
+	NotifyOutboundSpam                        bool     `json:"NotifyOutboundSpam"`
+	Enabled                                   bool     `json:"Enabled"`
+	BccSuspiciousOutboundAdditionalRecipients []string `json:"BccSuspiciousOutboundAdditionalRecipients"`
+	NotifyOutboundSpamRecipients              []string `json:"NotifyOutboundSpamRecipients"`
 }
 
 func convertHostedOutboundSpamFilterPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -339,6 +378,9 @@ func convertHostedOutboundSpamFilterPolicies(r *mqlMs365Exchangeonline, raw any)
 				"autoForwardingMode":            llx.StringData(p.AutoForwardingMode),
 				"bccSuspiciousOutboundMail":     llx.BoolData(p.BccSuspiciousOutboundMail),
 				"notifyOutboundSpam":            llx.BoolData(p.NotifyOutboundSpam),
+				"enabled":                       llx.BoolData(p.Enabled),
+				"bccSuspiciousOutboundAdditionalRecipients": llx.ArrayData(llx.TArr2Raw(p.BccSuspiciousOutboundAdditionalRecipients), types.String),
+				"notifyOutboundSpamRecipients":              llx.ArrayData(llx.TArr2Raw(p.NotifyOutboundSpamRecipients), types.String),
 			})
 		if err != nil {
 			return nil, err
@@ -449,6 +491,36 @@ type ExchangeOwaMailboxPolicy struct {
 	ForceSaveAttachmentFilteringEnabled       bool     `json:"ForceSaveAttachmentFilteringEnabled"`
 	AllowedFileTypes                          []string `json:"AllowedFileTypes"`
 	BlockedFileTypes                          []string `json:"BlockedFileTypes"`
+	ActiveSyncIntegrationEnabled              bool     `json:"ActiveSyncIntegrationEnabled"`
+	AllAddressListsEnabled                    bool     `json:"AllAddressListsEnabled"`
+	AllowCopyContactsToDeviceAddressBook      bool     `json:"AllowCopyContactsToDeviceAddressBook"`
+	BookingsEnabled                           bool     `json:"BookingsEnabled"`
+	BookingsMailboxCreationEnabled            bool     `json:"BookingsMailboxCreationEnabled"`
+	CalendarEnabled                           bool     `json:"CalendarEnabled"`
+	ChangePasswordEnabled                     bool     `json:"ChangePasswordEnabled"`
+	ContactsEnabled                           bool     `json:"ContactsEnabled"`
+	FacebookEnabled                           bool     `json:"FacebookEnabled"`
+	GroupCreationEnabled                      bool     `json:"GroupCreationEnabled"`
+	InstantMessagingEnabled                   bool     `json:"InstantMessagingEnabled"`
+	InterestingCalendarsEnabled               bool     `json:"InterestingCalendarsEnabled"`
+	JournalEnabled                            bool     `json:"JournalEnabled"`
+	LinkedInEnabled                           bool     `json:"LinkedInEnabled"`
+	LocalEventsEnabled                        bool     `json:"LocalEventsEnabled"`
+	NotesEnabled                              bool     `json:"NotesEnabled"`
+	OfflineEnabledWeb                         bool     `json:"OfflineEnabledWeb"`
+	OfflineEnabledWin                         bool     `json:"OfflineEnabledWin"`
+	OneWinNativeOutlookEnabled                bool     `json:"OneWinNativeOutlookEnabled"`
+	PlacesEnabled                             bool     `json:"PlacesEnabled"`
+	PremiumClientEnabled                      bool     `json:"PremiumClientEnabled"`
+	RecoverDeletedItemsEnabled                bool     `json:"RecoverDeletedItemsEnabled"`
+	RemindersAndNotificationsEnabled          bool     `json:"RemindersAndNotificationsEnabled"`
+	SignaturesEnabled                         bool     `json:"SignaturesEnabled"`
+	TasksEnabled                              bool     `json:"TasksEnabled"`
+	TextMessagingEnabled                      bool     `json:"TextMessagingEnabled"`
+	ThemeSelectionEnabled                     bool     `json:"ThemeSelectionEnabled"`
+	WSSAccessOnPrivateComputersEnabled        bool     `json:"WSSAccessOnPrivateComputersEnabled"`
+	WSSAccessOnPublicComputersEnabled         bool     `json:"WSSAccessOnPublicComputersEnabled"`
+	WeatherEnabled                            bool     `json:"WeatherEnabled"`
 }
 
 func convertOwaMailboxPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -472,6 +544,36 @@ func convertOwaMailboxPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error
 				"forceSaveAttachmentFilteringEnabled":       llx.BoolData(p.ForceSaveAttachmentFilteringEnabled),
 				"allowedFileTypes":                          llx.ArrayData(llx.TArr2Raw(p.AllowedFileTypes), types.String),
 				"blockedFileTypes":                          llx.ArrayData(llx.TArr2Raw(p.BlockedFileTypes), types.String),
+				"activeSyncIntegrationEnabled":              llx.BoolData(p.ActiveSyncIntegrationEnabled),
+				"allAddressListsEnabled":                    llx.BoolData(p.AllAddressListsEnabled),
+				"allowCopyContactsToDeviceAddressBook":      llx.BoolData(p.AllowCopyContactsToDeviceAddressBook),
+				"bookingsEnabled":                           llx.BoolData(p.BookingsEnabled),
+				"bookingsMailboxCreationEnabled":            llx.BoolData(p.BookingsMailboxCreationEnabled),
+				"calendarEnabled":                           llx.BoolData(p.CalendarEnabled),
+				"changePasswordEnabled":                     llx.BoolData(p.ChangePasswordEnabled),
+				"contactsEnabled":                           llx.BoolData(p.ContactsEnabled),
+				"facebookEnabled":                           llx.BoolData(p.FacebookEnabled),
+				"groupCreationEnabled":                      llx.BoolData(p.GroupCreationEnabled),
+				"instantMessagingEnabled":                   llx.BoolData(p.InstantMessagingEnabled),
+				"interestingCalendarsEnabled":               llx.BoolData(p.InterestingCalendarsEnabled),
+				"journalEnabled":                            llx.BoolData(p.JournalEnabled),
+				"linkedInEnabled":                           llx.BoolData(p.LinkedInEnabled),
+				"localEventsEnabled":                        llx.BoolData(p.LocalEventsEnabled),
+				"notesEnabled":                              llx.BoolData(p.NotesEnabled),
+				"offlineEnabledWeb":                         llx.BoolData(p.OfflineEnabledWeb),
+				"offlineEnabledWin":                         llx.BoolData(p.OfflineEnabledWin),
+				"oneWinNativeOutlookEnabled":                llx.BoolData(p.OneWinNativeOutlookEnabled),
+				"placesEnabled":                             llx.BoolData(p.PlacesEnabled),
+				"premiumClientEnabled":                      llx.BoolData(p.PremiumClientEnabled),
+				"recoverDeletedItemsEnabled":                llx.BoolData(p.RecoverDeletedItemsEnabled),
+				"remindersAndNotificationsEnabled":          llx.BoolData(p.RemindersAndNotificationsEnabled),
+				"signaturesEnabled":                         llx.BoolData(p.SignaturesEnabled),
+				"tasksEnabled":                              llx.BoolData(p.TasksEnabled),
+				"textMessagingEnabled":                      llx.BoolData(p.TextMessagingEnabled),
+				"themeSelectionEnabled":                     llx.BoolData(p.ThemeSelectionEnabled),
+				"wssAccessOnPrivateComputersEnabled":        llx.BoolData(p.WSSAccessOnPrivateComputersEnabled),
+				"wssAccessOnPublicComputersEnabled":         llx.BoolData(p.WSSAccessOnPublicComputersEnabled),
+				"weatherEnabled":                            llx.BoolData(p.WeatherEnabled),
 			})
 		if err != nil {
 			return nil, err
@@ -493,6 +595,9 @@ type ExchangeRemoteDomain struct {
 	DeliveryReportEnabled bool   `json:"DeliveryReportEnabled"`
 	NDREnabled            bool   `json:"NDREnabled"`
 	IsInternal            bool   `json:"IsInternal"`
+	ContentType           string `json:"ContentType"`
+
+	MeetingForwardNotificationEnabled bool `json:"MeetingForwardNotificationEnabled"`
 }
 
 func convertRemoteDomains(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -507,16 +612,18 @@ func convertRemoteDomains(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.remoteDomainEntry",
 			map[string]*llx.RawData{
-				"__id":                  llx.StringData("remoteDomain-" + d.Identity),
-				"identity":              llx.StringData(d.Identity),
-				"name":                  llx.StringData(d.Name),
-				"domainName":            llx.StringData(d.DomainName),
-				"allowedOOFType":        llx.StringData(d.AllowedOOFType),
-				"autoReplyEnabled":      llx.BoolData(d.AutoReplyEnabled),
-				"autoForwardEnabled":    llx.BoolData(d.AutoForwardEnabled),
-				"deliveryReportEnabled": llx.BoolData(d.DeliveryReportEnabled),
-				"ndrEnabled":            llx.BoolData(d.NDREnabled),
-				"isInternal":            llx.BoolData(d.IsInternal),
+				"__id":                              llx.StringData("remoteDomain-" + d.Identity),
+				"identity":                          llx.StringData(d.Identity),
+				"name":                              llx.StringData(d.Name),
+				"domainName":                        llx.StringData(d.DomainName),
+				"allowedOOFType":                    llx.StringData(d.AllowedOOFType),
+				"autoReplyEnabled":                  llx.BoolData(d.AutoReplyEnabled),
+				"autoForwardEnabled":                llx.BoolData(d.AutoForwardEnabled),
+				"deliveryReportEnabled":             llx.BoolData(d.DeliveryReportEnabled),
+				"ndrEnabled":                        llx.BoolData(d.NDREnabled),
+				"isInternal":                        llx.BoolData(d.IsInternal),
+				"contentType":                       llx.StringData(d.ContentType),
+				"meetingForwardNotificationEnabled": llx.BoolData(d.MeetingForwardNotificationEnabled),
 			})
 		if err != nil {
 			return nil, err

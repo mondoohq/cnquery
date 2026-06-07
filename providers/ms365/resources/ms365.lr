@@ -4138,6 +4138,8 @@ private ms365.exchangeonline.transportRuleEntry @defaults("name state priority")
   routeMessageOutboundRequireTls bool
   // Administrator comments on the rule
   comments string
+  // Sender domains the rule matches on
+  senderDomainIs []string
 }
 
 // Exchange Online anti-phishing policy
@@ -4177,6 +4179,28 @@ private ms365.exchangeonline.antiPhishPolicyEntry @defaults("name enabled phishT
   targetedDomainProtectionAction string
   // Action when sender authentication (SPF/DKIM/DMARC) fails
   authenticationFailAction string
+  // Action applied when the sender's DMARC policy is quarantine
+  dmarcQuarantineAction string
+  // Action applied when the sender's DMARC policy is reject
+  dmarcRejectAction string
+  // Whether similar-domains safety tips are shown
+  enableSimilarDomainsSafetyTips bool
+  // Whether similar-users safety tips are shown
+  enableSimilarUsersSafetyTips bool
+  // Whether the suspicious safety tip is shown
+  enableSuspiciousSafetyTip bool
+  // Whether unauthenticated-sender indicators are shown in Outlook
+  enableUnauthenticatedSender bool
+  // Whether unusual-characters safety tips are shown
+  enableUnusualCharactersSafetyTips bool
+  // Whether the "via" tag is shown when the sending domain differs from the From domain
+  enableViaTag bool
+  // Whether the sender's published DMARC policy is honored
+  honorDmarcPolicy bool
+  // Impersonation protection mode (for example Automatic, Manual, or Off)
+  impersonationProtectionState string
+  // Action for messages flagged by mailbox intelligence impersonation protection
+  mailboxIntelligenceProtectionAction string
 }
 
 // Exchange Online Safe Links policy
@@ -4231,6 +4255,8 @@ private ms365.exchangeonline.safeAttachmentPolicyEntry @defaults("name enable ac
   redirect bool
   // Address detected messages are redirected to
   redirectAddress string
+  // Quarantine policy applied to detected attachments
+  quarantineTag string
 }
 
 // Exchange Online malware filter policy
@@ -4255,6 +4281,16 @@ private ms365.exchangeonline.malwareFilterPolicyEntry @defaults("name enableFile
   enableExternalSenderAdminNotifications bool
   // File extensions blocked by the common attachment filter
   fileTypes []string
+  // Whether custom administrator notification text is used
+  customNotifications bool
+  // Address external-sender admin notifications are sent to
+  externalSenderAdminAddress string
+  // Action taken on messages matching the common attachment filter
+  fileTypeAction string
+  // Address internal-sender admin notifications are sent to
+  internalSenderAdminAddress string
+  // Quarantine policy applied to detected malware
+  quarantineTag string
 }
 
 // Exchange Online hosted content (anti-spam) filter policy
@@ -4316,6 +4352,12 @@ private ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry @defaults("name
   bccSuspiciousOutboundMail bool
   // Whether notifications are sent for outbound spam
   notifyOutboundSpam bool
+  // Whether the policy is enabled
+  enabled bool
+  // Additional recipients blind-copied on suspicious outbound mail
+  bccSuspiciousOutboundAdditionalRecipients []string
+  // Recipients notified when outbound spam is detected
+  notifyOutboundSpamRecipients []string
 }
 
 // Exchange Online DKIM signing configuration
@@ -4398,6 +4440,66 @@ private ms365.exchangeonline.owaMailboxPolicyEntry @defaults("name additionalSto
   allowedFileTypes []string
   // File types users are blocked from opening or saving
   blockedFileTypes []string
+  // Whether Exchange ActiveSync integration is enabled in Outlook on the web
+  activeSyncIntegrationEnabled bool
+  // Whether all address lists are available
+  allAddressListsEnabled bool
+  // Whether copying contacts to a device address book is allowed
+  allowCopyContactsToDeviceAddressBook bool
+  // Whether Bookings is enabled
+  bookingsEnabled bool
+  // Whether users can create Bookings mailboxes
+  bookingsMailboxCreationEnabled bool
+  // Whether the calendar is enabled
+  calendarEnabled bool
+  // Whether users can change their password
+  changePasswordEnabled bool
+  // Whether contacts are enabled
+  contactsEnabled bool
+  // Whether Facebook integration is enabled
+  facebookEnabled bool
+  // Whether users can create Microsoft 365 groups
+  groupCreationEnabled bool
+  // Whether instant messaging is enabled
+  instantMessagingEnabled bool
+  // Whether interesting calendars are enabled
+  interestingCalendarsEnabled bool
+  // Whether the journal is enabled
+  journalEnabled bool
+  // Whether LinkedIn integration is enabled
+  linkedInEnabled bool
+  // Whether local events are enabled
+  localEventsEnabled bool
+  // Whether notes are enabled
+  notesEnabled bool
+  // Whether offline mode is enabled in the web client
+  offlineEnabledWeb bool
+  // Whether offline mode is enabled in the Windows client
+  offlineEnabledWin bool
+  // Whether the new Outlook for Windows native client is enabled
+  oneWinNativeOutlookEnabled bool
+  // Whether Places is enabled
+  placesEnabled bool
+  // Whether the premium (full-featured) client is enabled
+  premiumClientEnabled bool
+  // Whether users can recover deleted items
+  recoverDeletedItemsEnabled bool
+  // Whether reminders and notifications are enabled
+  remindersAndNotificationsEnabled bool
+  // Whether email signatures are enabled
+  signaturesEnabled bool
+  // Whether tasks are enabled
+  tasksEnabled bool
+  // Whether text messaging is enabled
+  textMessagingEnabled bool
+  // Whether users can select a theme
+  themeSelectionEnabled bool
+  // Whether SharePoint/WSS document access is allowed on private computers
+  wssAccessOnPrivateComputersEnabled bool
+  // Whether SharePoint/WSS document access is allowed on public computers
+  wssAccessOnPublicComputersEnabled bool
+  // Whether weather is enabled
+  weatherEnabled bool
 }
 
 // Exchange Online remote domain configuration
@@ -4426,6 +4528,10 @@ private ms365.exchangeonline.remoteDomainEntry @defaults("name domainName autoFo
   ndrEnabled bool
   // Whether the domain is treated as internal
   isInternal bool
+  // Message content type allowed to the domain (for example MimeHtmlText, MimeText, or MimeHtml)
+  contentType string
+  // Whether meeting forward notifications are sent to the domain
+  meetingForwardNotificationEnabled bool
 }
 
 // Exchange Online quarantine policy
