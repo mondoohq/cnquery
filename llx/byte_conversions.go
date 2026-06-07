@@ -48,7 +48,13 @@ func bytes2float(b []byte) float64 {
 }
 
 func bytes2time(b []byte) time.Time {
+	// A valid encoding is 12 bytes: 8 for seconds, 4 for nanoseconds.
+	// Fall back to the zero time on a short buffer instead of slicing
+	// out of range, matching ptime2raw's handling of an empty value.
+	if len(b) < 12 {
+		return time.Unix(0, 0)
+	}
 	secs := int64(binary.LittleEndian.Uint64(b[0:8]))
-	nanos := int64(binary.LittleEndian.Uint32(b[8:]))
+	nanos := int64(binary.LittleEndian.Uint32(b[8:12]))
 	return time.Unix(secs, nanos)
 }
