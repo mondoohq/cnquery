@@ -895,13 +895,22 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 		return nil, err
 	}
 
+	var enabled *bool
+	var unauthenticatedClientAction *string
+	if configuration.Properties != nil {
+		enabled = configuration.Properties.Enabled
+		unauthenticatedClientAction = (*string)(configuration.Properties.UnauthenticatedClientAction)
+	}
+
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteauthsettings,
 		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(configuration.ID),
-			"name":       llx.StringDataPtr(configuration.Name),
-			"kind":       llx.StringDataPtr(configuration.Kind),
-			"type":       llx.StringDataPtr(configuration.Type),
-			"properties": llx.DictData(properties),
+			"id":                          llx.StringDataPtr(configuration.ID),
+			"name":                        llx.StringDataPtr(configuration.Name),
+			"kind":                        llx.StringDataPtr(configuration.Kind),
+			"type":                        llx.StringDataPtr(configuration.Type),
+			"properties":                  llx.DictData(properties),
+			"enabled":                     llx.BoolDataPtr(enabled),
+			"unauthenticatedClientAction": llx.StringDataPtr(unauthenticatedClientAction),
 		})
 	if err != nil {
 		return nil, err
@@ -1212,21 +1221,27 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) authenticationSettings() (*mqlAz
 	}
 
 	properties := map[string]any{}
+	var enabled *bool
+	var unauthenticatedClientAction *string
 	if configuration.Properties != nil {
 		props, err := convert.JsonToDict(configuration.Properties)
 		if err != nil {
 			return nil, err
 		}
 		properties = props
+		enabled = configuration.Properties.Enabled
+		unauthenticatedClientAction = (*string)(configuration.Properties.UnauthenticatedClientAction)
 	}
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteauthsettings,
 		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(configuration.ID),
-			"name":       llx.StringDataPtr(configuration.Name),
-			"kind":       llx.StringDataPtr(configuration.Kind),
-			"type":       llx.StringDataPtr(configuration.Type),
-			"properties": llx.DictData(properties),
+			"id":                          llx.StringDataPtr(configuration.ID),
+			"name":                        llx.StringDataPtr(configuration.Name),
+			"kind":                        llx.StringDataPtr(configuration.Kind),
+			"type":                        llx.StringDataPtr(configuration.Type),
+			"properties":                  llx.DictData(properties),
+			"enabled":                     llx.BoolDataPtr(enabled),
+			"unauthenticatedClientAction": llx.StringDataPtr(unauthenticatedClientAction),
 		})
 	if err != nil {
 		return nil, err

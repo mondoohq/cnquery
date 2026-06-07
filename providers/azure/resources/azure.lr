@@ -277,6 +277,14 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   omsInstalled() bool
   // Whether the Dependency Agent extension (used by VM Insights for service-map data) is installed on the VM
   dependencyAgentInstalled() bool
+  // Whether the Azure Disk Encryption (ADE) extension is installed on the VM
+  //
+  // ADE encrypts the OS and data disks from inside the guest using BitLocker
+  // (Windows) or dm-crypt (Linux). A true result indicates the encryption
+  // extension is present; it is distinct from `encryptionAtHost` (platform-side
+  // encryption of the VM host) and from server-side disk encryption set on the
+  // managed disk itself.
+  adeInstalled() bool
   // VM compute disk
   osDisk() azure.subscription.computeService.disk
   // VM compute data disk
@@ -510,6 +518,13 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   diskEncryptionSetId string
   // Disk encryption set used for customer-managed key encryption
   diskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
+  // Whether Azure Disk Encryption (ADE) is enabled on the disk
+  //
+  // True when guest-based encryption settings (BitLocker / dm-crypt, keyed
+  // through Key Vault) are configured on the disk. This is independent of
+  // `encryptionType`, which describes server-side encryption at rest with a
+  // platform or customer-managed key.
+  encryptionSettingsEnabled bool
   // Data access authentication mode (AzureActiveDirectory, None)
   dataAccessAuthMode string
   // Current state of the disk (Unattached, Attached, Reserved, ActiveSAS, ReadyToUpload, ActiveUpload, ActiveSASFrozen)
@@ -2250,6 +2265,13 @@ private azure.subscription.networkService.securityGroup @defaults("id name locat
   securityRules() []azure.subscription.networkService.securityrule
   // Security group default security rules
   defaultSecurityRules() []azure.subscription.networkService.securityrule
+  // Network Watcher flow log that targets this security group
+  //
+  // Resolves the flow log whose target resource is this network security group,
+  // exposing whether flow logging is enabled and its retention policy. Null when
+  // no flow log targets the NSG. Use this to verify NSG flow logs are enabled
+  // with adequate retention without traversing every Network Watcher.
+  flowLog() azure.subscription.networkService.watcher.flowlog
 }
 
 // Azure network security rule
@@ -4124,6 +4146,14 @@ private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
   type string
   // Auth settings properties
   properties dict
+  // Whether App Service Authentication / Authorization (Easy Auth) is enabled
+  enabled bool
+  // Action taken when an unauthenticated client requests the app
+  //
+  // Possible values: AllowAnonymous, RedirectToLoginPage, Show401, Show403.
+  // Anything other than AllowAnonymous means unauthenticated requests are blocked
+  // or redirected to a login provider.
+  unauthenticatedClientAction string
 }
 
 // Azure AppSite config

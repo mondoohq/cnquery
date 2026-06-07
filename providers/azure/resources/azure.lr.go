@@ -2298,6 +2298,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.dependencyAgentInstalled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetDependencyAgentInstalled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.computeService.vm.adeInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetAdeInstalled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.computeService.vm.osDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetOsDisk()).ToDataRes(types.Resource("azure.subscription.computeService.disk"))
 	},
@@ -2582,6 +2585,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.disk.diskEncryptionSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskEncryptionSet()).ToDataRes(types.Resource("azure.subscription.computeService.diskEncryptionSet"))
+	},
+	"azure.subscription.computeService.disk.encryptionSettingsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetEncryptionSettingsEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDataAccessAuthMode()).ToDataRes(types.String)
@@ -4508,6 +4514,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.securityGroup.defaultSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetDefaultSecurityRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
+	},
+	"azure.subscription.networkService.securityGroup.flowLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetFlowLog()).ToDataRes(types.Resource("azure.subscription.networkService.watcher.flowlog"))
 	},
 	"azure.subscription.networkService.securityrule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetId()).ToDataRes(types.String)
@@ -6560,6 +6569,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsiteauthsettings.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appsiteauthsettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetUnauthenticatedClientAction()).ToDataRes(types.String)
 	},
 	"azure.subscription.webService.appsiteconfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetId()).ToDataRes(types.String)
@@ -14698,6 +14713,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).DependencyAgentInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.adeInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).AdeInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.osDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).OsDisk, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDisk](v.Value, v.Error)
 		return
@@ -15092,6 +15111,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.disk.diskEncryptionSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskEncryptionSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.encryptionSettingsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).EncryptionSettingsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17880,6 +17903,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.securityGroup.defaultSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).DefaultSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityGroup.flowLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).FlowLog, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceWatcherFlowlog](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.securityrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20860,6 +20887,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsiteauthsettings.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).UnauthenticatedClientAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33455,6 +33490,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	AmaInstalled                  plugin.TValue[bool]
 	OmsInstalled                  plugin.TValue[bool]
 	DependencyAgentInstalled      plugin.TValue[bool]
+	AdeInstalled                  plugin.TValue[bool]
 	OsDisk                        plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
 	DataDisks                     plugin.TValue[[]any]
 	NetworkInterfaces             plugin.TValue[[]any]
@@ -33605,6 +33641,12 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetOmsInstalled() *plugin.TValue[
 func (c *mqlAzureSubscriptionComputeServiceVm) GetDependencyAgentInstalled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DependencyAgentInstalled, func() (bool, error) {
 		return c.dependencyAgentInstalled()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetAdeInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AdeInstalled, func() (bool, error) {
+		return c.adeInstalled()
 	})
 }
 
@@ -34184,39 +34226,40 @@ type mqlAzureSubscriptionComputeServiceDisk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionComputeServiceDiskInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Location            plugin.TValue[string]
-	Tags                plugin.TValue[map[string]any]
-	Type                plugin.TValue[string]
-	ManagedBy           plugin.TValue[string]
-	ManagedByExtended   plugin.TValue[[]any]
-	Zones               plugin.TValue[[]any]
-	Sku                 plugin.TValue[any]
-	Properties          plugin.TValue[any]
-	NetworkAccessPolicy plugin.TValue[string]
-	PublicNetworkAccess plugin.TValue[string]
-	EncryptionType      plugin.TValue[string]
-	DiskEncryptionSetId plugin.TValue[string]
-	DiskEncryptionSet   plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
-	DataAccessAuthMode  plugin.TValue[string]
-	DiskState           plugin.TValue[string]
-	ProvisioningState   plugin.TValue[string]
-	TimeCreated         plugin.TValue[*time.Time]
-	UniqueId            plugin.TValue[string]
-	BurstingEnabled     plugin.TValue[bool]
-	DiskSizeBytes       plugin.TValue[int64]
-	DiskIopsReadWrite   plugin.TValue[int64]
-	DiskMbpsReadWrite   plugin.TValue[int64]
-	DiskIopsReadOnly    plugin.TValue[int64]
-	DiskMbpsReadOnly    plugin.TValue[int64]
-	MaxShares           plugin.TValue[int64]
-	HyperVGeneration    plugin.TValue[string]
-	Tier                plugin.TValue[string]
-	SupportsHibernation plugin.TValue[bool]
-	DiskAccessId        plugin.TValue[string]
-	AvailabilityPolicy  plugin.TValue[any]
-	SystemData          plugin.TValue[any]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+	Type                      plugin.TValue[string]
+	ManagedBy                 plugin.TValue[string]
+	ManagedByExtended         plugin.TValue[[]any]
+	Zones                     plugin.TValue[[]any]
+	Sku                       plugin.TValue[any]
+	Properties                plugin.TValue[any]
+	NetworkAccessPolicy       plugin.TValue[string]
+	PublicNetworkAccess       plugin.TValue[string]
+	EncryptionType            plugin.TValue[string]
+	DiskEncryptionSetId       plugin.TValue[string]
+	DiskEncryptionSet         plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
+	EncryptionSettingsEnabled plugin.TValue[bool]
+	DataAccessAuthMode        plugin.TValue[string]
+	DiskState                 plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	TimeCreated               plugin.TValue[*time.Time]
+	UniqueId                  plugin.TValue[string]
+	BurstingEnabled           plugin.TValue[bool]
+	DiskSizeBytes             plugin.TValue[int64]
+	DiskIopsReadWrite         plugin.TValue[int64]
+	DiskMbpsReadWrite         plugin.TValue[int64]
+	DiskIopsReadOnly          plugin.TValue[int64]
+	DiskMbpsReadOnly          plugin.TValue[int64]
+	MaxShares                 plugin.TValue[int64]
+	HyperVGeneration          plugin.TValue[string]
+	Tier                      plugin.TValue[string]
+	SupportsHibernation       plugin.TValue[bool]
+	DiskAccessId              plugin.TValue[string]
+	AvailabilityPolicy        plugin.TValue[any]
+	SystemData                plugin.TValue[any]
 }
 
 // createAzureSubscriptionComputeServiceDisk creates a new instance of this resource
@@ -34326,6 +34369,10 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskEncryptionSet() *plugin.
 
 		return c.diskEncryptionSet()
 	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetEncryptionSettingsEnabled() *plugin.TValue[bool] {
+	return &c.EncryptionSettingsEnabled
 }
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDataAccessAuthMode() *plugin.TValue[string] {
@@ -40771,6 +40818,7 @@ type mqlAzureSubscriptionNetworkServiceSecurityGroup struct {
 	Subnets              plugin.TValue[[]any]
 	SecurityRules        plugin.TValue[[]any]
 	DefaultSecurityRules plugin.TValue[[]any]
+	FlowLog              plugin.TValue[*mqlAzureSubscriptionNetworkServiceWatcherFlowlog]
 }
 
 // createAzureSubscriptionNetworkServiceSecurityGroup creates a new instance of this resource
@@ -40899,6 +40947,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetDefaultSecurityRule
 		}
 
 		return c.defaultSecurityRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetFlowLog() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceWatcherFlowlog] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceWatcherFlowlog](&c.FlowLog, func() (*mqlAzureSubscriptionNetworkServiceWatcherFlowlog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityGroup", c.__id, "flowLog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceWatcherFlowlog), nil
+			}
+		}
+
+		return c.flowLog()
 	})
 }
 
@@ -47684,11 +47748,13 @@ type mqlAzureSubscriptionWebServiceAppsiteauthsettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteauthsettingsInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Kind       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Kind                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	Enabled                     plugin.TValue[bool]
+	UnauthenticatedClientAction plugin.TValue[string]
 }
 
 // createAzureSubscriptionWebServiceAppsiteauthsettings creates a new instance of this resource
@@ -47746,6 +47812,14 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetType() *plugin.TV
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetUnauthenticatedClientAction() *plugin.TValue[string] {
+	return &c.UnauthenticatedClientAction
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteconfig for the azure.subscription.webService.appsiteconfig resource

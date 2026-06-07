@@ -422,6 +422,9 @@ var (
 	dependencyAgentExtensionMatches = map[string][]string{
 		"microsoft.azure.monitoring.dependencyagent": {"DependencyAgentLinux", "DependencyAgentWindows"},
 	}
+	adeExtensionMatches = map[string][]string{
+		"microsoft.azure.security": {"AzureDiskEncryption", "AzureDiskEncryptionForLinux"},
+	}
 )
 
 func (a *mqlAzureSubscriptionComputeServiceVm) mdeInstalled() (bool, error) {
@@ -438,6 +441,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) omsInstalled() (bool, error) {
 
 func (a *mqlAzureSubscriptionComputeServiceVm) dependencyAgentInstalled() (bool, error) {
 	return a.extensionInstalled(dependencyAgentExtensionMatches)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) adeInstalled() (bool, error) {
+	return a.extensionInstalled(adeExtensionMatches)
 }
 
 func (a *mqlAzureSubscriptionComputeService) disks() ([]any, error) {
@@ -531,6 +538,11 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		}
 		args["encryptionType"] = llx.StringDataPtr(stringEnumPtr(encryptionType))
 		args["diskEncryptionSetId"] = llx.StringDataPtr(desID)
+		var encryptionSettingsEnabled *bool
+		if esc := disk.Properties.EncryptionSettingsCollection; esc != nil {
+			encryptionSettingsEnabled = esc.Enabled
+		}
+		args["encryptionSettingsEnabled"] = llx.BoolDataPtr(encryptionSettingsEnabled)
 		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DataAccessAuthMode))
 		args["diskState"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DiskState))
 		args["provisioningState"] = llx.StringDataPtr(disk.Properties.ProvisioningState)

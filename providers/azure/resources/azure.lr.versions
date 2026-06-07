@@ -818,6 +818,7 @@ azure.subscription.computeService.disk.diskMbpsReadOnly 11.6.2
 azure.subscription.computeService.disk.diskMbpsReadWrite 11.6.2
 azure.subscription.computeService.disk.diskSizeBytes 11.6.2
 azure.subscription.computeService.disk.diskState 11.6.2
+azure.subscription.computeService.disk.encryptionSettingsEnabled 13.16.2
 azure.subscription.computeService.disk.encryptionType 11.6.1
 azure.subscription.computeService.disk.hyperVGeneration 11.6.2
 azure.subscription.computeService.disk.id 9.0.1
@@ -1020,6 +1021,7 @@ azure.subscription.computeService.snapshot.uniqueId 13.7.1
 azure.subscription.computeService.snapshots 13.7.1
 azure.subscription.computeService.subscriptionId 9.0.1
 azure.subscription.computeService.vm 9.0.1
+azure.subscription.computeService.vm.adeInstalled 13.16.2
 azure.subscription.computeService.vm.adminUsername 11.6.1
 azure.subscription.computeService.vm.amaInstalled 13.12.2
 azure.subscription.computeService.vm.bootDiagnosticsEnabled 13.12.2
@@ -2850,6 +2852,7 @@ azure.subscription.networkService.routeTables 11.4.28
 azure.subscription.networkService.securityGroup 9.0.1
 azure.subscription.networkService.securityGroup.defaultSecurityRules 9.0.1
 azure.subscription.networkService.securityGroup.etag 9.0.1
+azure.subscription.networkService.securityGroup.flowLog 13.16.2
 azure.subscription.networkService.securityGroup.id 9.0.1
 azure.subscription.networkService.securityGroup.interfaces 9.0.1
 azure.subscription.networkService.securityGroup.location 9.0.1
@@ -4275,11 +4278,13 @@ azure.subscription.webService.appsite.virtualNetworkConnections 11.4.32
 azure.subscription.webService.appsite.virtualNetworkSubnet 13.12.2
 azure.subscription.webService.appsite.virtualNetworkSubnetId 13.12.2
 azure.subscription.webService.appsiteauthsettings 9.0.1
+azure.subscription.webService.appsiteauthsettings.enabled 13.16.2
 azure.subscription.webService.appsiteauthsettings.id 9.0.1
 azure.subscription.webService.appsiteauthsettings.kind 9.0.1
 azure.subscription.webService.appsiteauthsettings.name 9.0.1
 azure.subscription.webService.appsiteauthsettings.properties 9.0.1
 azure.subscription.webService.appsiteauthsettings.type 9.0.1
+azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction 13.16.2
 azure.subscription.webService.appsiteconfig 9.0.1
 azure.subscription.webService.appsiteconfig.alwaysOn 11.4.28
 azure.subscription.webService.appsiteconfig.autoHealEnabled 13.12.2
