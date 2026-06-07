@@ -199,13 +199,20 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 	for name, listener := range o.cacheListeners {
 		var sslProtocols []any
 		var sslCipherSuiteName string
-		var sslVerifyPeerCert bool
+		var sslVerifyPeerCert, hasSessionResumption bool
+		var certificateName string
+		var certificateIds, trustedCaIds []any
 		if listener.SslConfiguration != nil {
-			for _, p := range listener.SslConfiguration.Protocols {
+			ssl := listener.SslConfiguration
+			for _, p := range ssl.Protocols {
 				sslProtocols = append(sslProtocols, p)
 			}
-			sslCipherSuiteName = stringValue(listener.SslConfiguration.CipherSuiteName)
-			sslVerifyPeerCert = boolValue(listener.SslConfiguration.VerifyPeerCertificate)
+			sslCipherSuiteName = stringValue(ssl.CipherSuiteName)
+			sslVerifyPeerCert = boolValue(ssl.VerifyPeerCertificate)
+			hasSessionResumption = boolValue(ssl.HasSessionResumption)
+			certificateName = stringValue(ssl.CertificateName)
+			certificateIds = convert.SliceAnyToInterface(ssl.CertificateIds)
+			trustedCaIds = convert.SliceAnyToInterface(ssl.TrustedCertificateAuthorityIds)
 		}
 
 		lbId := o.Id.Data
@@ -219,13 +226,35 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 			"sslProtocols":             llx.ArrayData(sslProtocols, types.String),
 			"sslCipherSuiteName":       llx.StringData(sslCipherSuiteName),
 			"sslVerifyPeerCertificate": llx.BoolData(sslVerifyPeerCert),
+			"hasSessionResumption":     llx.BoolData(hasSessionResumption),
+			"certificateName":          llx.StringData(certificateName),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlListener := mqlInstance.(*mqlOciLoadBalancerListener)
+		mqlListener.cacheCertificateIds = certificateIds
+		mqlListener.cacheTrustedCaIds = trustedCaIds
 		res = append(res, mqlInstance)
 	}
 	return res, nil
+}
+
+type mqlOciLoadBalancerListenerInternal struct {
+	cacheCertificateIds []any
+	cacheTrustedCaIds   []any
+}
+
+func (o *mqlOciLoadBalancerListener) certificates() ([]any, error) {
+	return resolveOciCertificates(o.MqlRuntime, o.cacheCertificateIds)
+}
+
+func (o *mqlOciLoadBalancerListener) trustedCertificateAuthorities() ([]any, error) {
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIds, "certificateauthority", "oci.certificates.certificateAuthority")
+}
+
+func (o *mqlOciLoadBalancerListener) trustedCaBundles() ([]any, error) {
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIds, "cabundle", "oci.certificates.caBundle")
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {

@@ -556,7 +556,7 @@ func init() {
 			Create: createOciCertificates,
 		},
 		"oci.certificates.certificate": {
-			// to override args, implement: initOciCertificatesCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciCertificatesCertificate,
 			Create: createOciCertificatesCertificate,
 		},
 		"oci.certificates.certificateAuthority": {
@@ -564,7 +564,7 @@ func init() {
 			Create: createOciCertificatesCertificateAuthority,
 		},
 		"oci.certificates.caBundle": {
-			// to override args, implement: initOciCertificatesCaBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciCertificatesCaBundle,
 			Create: createOciCertificatesCaBundle,
 		},
 		"oci.redis": {
@@ -1346,6 +1346,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.instance.instanceOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetInstanceOptions()).ToDataRes(types.Dict)
+	},
+	"oci.compute.instance.legacyImdsEndpointsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetLegacyImdsEndpointsDisabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.instance.monitoringDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetMonitoringDisabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.instance.managementDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetManagementDisabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.instance.allPluginsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetAllPluginsDisabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.instance.agentPlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetAgentPlugins()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"oci.compute.instance.shapeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetShapeConfig()).ToDataRes(types.Dict)
@@ -2601,6 +2616,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.listener.sslVerifyPeerCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetSslVerifyPeerCertificate()).ToDataRes(types.Bool)
 	},
+	"oci.loadBalancer.listener.hasSessionResumption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetHasSessionResumption()).ToDataRes(types.Bool)
+	},
+	"oci.loadBalancer.listener.certificateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetCertificateName()).ToDataRes(types.String)
+	},
+	"oci.loadBalancer.listener.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetCertificates()).ToDataRes(types.Array(types.Resource("oci.certificates.certificate")))
+	},
+	"oci.loadBalancer.listener.trustedCertificateAuthorities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetTrustedCertificateAuthorities()).ToDataRes(types.Array(types.Resource("oci.certificates.certificateAuthority")))
+	},
+	"oci.loadBalancer.listener.trustedCaBundles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetTrustedCaBundles()).ToDataRes(types.Array(types.Resource("oci.certificates.caBundle")))
+	},
 	"oci.loadBalancer.backendSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetName()).ToDataRes(types.String)
 	},
@@ -3180,6 +3210,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.dbSystem.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetDomain()).ToDataRes(types.String)
 	},
+	"oci.database.dbSystem.listenerPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseDbSystem).GetListenerPort()).ToDataRes(types.Int)
+	},
+	"oci.database.dbSystem.scanDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseDbSystem).GetScanDnsName()).ToDataRes(types.String)
+	},
 	"oci.database.dbSystem.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetVersion()).ToDataRes(types.String)
 	},
@@ -3267,11 +3303,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.autonomousDatabase.whitelistedIps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetWhitelistedIps()).ToDataRes(types.Array(types.String))
 	},
+	"oci.database.autonomousDatabase.standbyWhitelistedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetStandbyWhitelistedIps()).ToDataRes(types.Array(types.String))
+	},
 	"oci.database.autonomousDatabase.isAutoScalingEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsAutoScalingEnabled()).ToDataRes(types.Bool)
 	},
 	"oci.database.autonomousDatabase.isLocalDataGuardEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsLocalDataGuardEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.autonomousDatabase.isRemoteDataGuardEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsRemoteDataGuardEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.autonomousDatabase.isDataGuardEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsDataGuardEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.autonomousDatabase.backupRetentionPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetBackupRetentionPeriodInDays()).ToDataRes(types.Int)
+	},
+	"oci.database.autonomousDatabase.isBackupRetentionLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsBackupRetentionLocked()).ToDataRes(types.Bool)
 	},
 	"oci.database.autonomousDatabase.dataSafeStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetDataSafeStatus()).ToDataRes(types.String)
@@ -6235,6 +6286,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).InstanceOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"oci.compute.instance.legacyImdsEndpointsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).LegacyImdsEndpointsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.monitoringDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).MonitoringDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.managementDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).ManagementDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.allPluginsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).AllPluginsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.agentPlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).AgentPlugins, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"oci.compute.instance.shapeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).ShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -8099,6 +8170,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerListener).SslVerifyPeerCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"oci.loadBalancer.listener.hasSessionResumption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).HasSessionResumption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.listener.certificateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).CertificateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.listener.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.listener.trustedCertificateAuthorities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).TrustedCertificateAuthorities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.listener.trustedCaBundles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).TrustedCaBundles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.loadBalancer.backendSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerBackendSet).__id, ok = v.Value.(string)
 		return
@@ -8951,6 +9042,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseDbSystem).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.database.dbSystem.listenerPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseDbSystem).ListenerPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.database.dbSystem.scanDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseDbSystem).ScanDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"oci.database.dbSystem.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseDbSystem).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9071,12 +9170,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseAutonomousDatabase).WhitelistedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.database.autonomousDatabase.standbyWhitelistedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).StandbyWhitelistedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.database.autonomousDatabase.isAutoScalingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).IsAutoScalingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.isLocalDataGuardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).IsLocalDataGuardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.isRemoteDataGuardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).IsRemoteDataGuardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.isDataGuardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).IsDataGuardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.backupRetentionPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).BackupRetentionPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.isBackupRetentionLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).IsBackupRetentionLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.dataSafeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14213,6 +14332,11 @@ type mqlOciComputeInstance struct {
 	PlatformConfig               plugin.TValue[any]
 	LaunchOptions                plugin.TValue[any]
 	InstanceOptions              plugin.TValue[any]
+	LegacyImdsEndpointsDisabled  plugin.TValue[bool]
+	MonitoringDisabled           plugin.TValue[bool]
+	ManagementDisabled           plugin.TValue[bool]
+	AllPluginsDisabled           plugin.TValue[bool]
+	AgentPlugins                 plugin.TValue[map[string]any]
 	ShapeConfig                  plugin.TValue[any]
 	SourceDetails                plugin.TValue[any]
 	Metadata                     plugin.TValue[map[string]any]
@@ -14333,6 +14457,26 @@ func (c *mqlOciComputeInstance) GetLaunchOptions() *plugin.TValue[any] {
 
 func (c *mqlOciComputeInstance) GetInstanceOptions() *plugin.TValue[any] {
 	return &c.InstanceOptions
+}
+
+func (c *mqlOciComputeInstance) GetLegacyImdsEndpointsDisabled() *plugin.TValue[bool] {
+	return &c.LegacyImdsEndpointsDisabled
+}
+
+func (c *mqlOciComputeInstance) GetMonitoringDisabled() *plugin.TValue[bool] {
+	return &c.MonitoringDisabled
+}
+
+func (c *mqlOciComputeInstance) GetManagementDisabled() *plugin.TValue[bool] {
+	return &c.ManagementDisabled
+}
+
+func (c *mqlOciComputeInstance) GetAllPluginsDisabled() *plugin.TValue[bool] {
+	return &c.AllPluginsDisabled
+}
+
+func (c *mqlOciComputeInstance) GetAgentPlugins() *plugin.TValue[map[string]any] {
+	return &c.AgentPlugins
 }
 
 func (c *mqlOciComputeInstance) GetShapeConfig() *plugin.TValue[any] {
@@ -19429,14 +19573,19 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetDefinedTags() *plugin.TValue[map[str
 type mqlOciLoadBalancerListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciLoadBalancerListenerInternal it will be used here
-	Name                     plugin.TValue[string]
-	Port                     plugin.TValue[int64]
-	Protocol                 plugin.TValue[string]
-	DefaultBackendSetName    plugin.TValue[string]
-	SslProtocols             plugin.TValue[[]any]
-	SslCipherSuiteName       plugin.TValue[string]
-	SslVerifyPeerCertificate plugin.TValue[bool]
+	mqlOciLoadBalancerListenerInternal
+	Name                          plugin.TValue[string]
+	Port                          plugin.TValue[int64]
+	Protocol                      plugin.TValue[string]
+	DefaultBackendSetName         plugin.TValue[string]
+	SslProtocols                  plugin.TValue[[]any]
+	SslCipherSuiteName            plugin.TValue[string]
+	SslVerifyPeerCertificate      plugin.TValue[bool]
+	HasSessionResumption          plugin.TValue[bool]
+	CertificateName               plugin.TValue[string]
+	Certificates                  plugin.TValue[[]any]
+	TrustedCertificateAuthorities plugin.TValue[[]any]
+	TrustedCaBundles              plugin.TValue[[]any]
 }
 
 // createOciLoadBalancerListener creates a new instance of this resource
@@ -19502,6 +19651,62 @@ func (c *mqlOciLoadBalancerListener) GetSslCipherSuiteName() *plugin.TValue[stri
 
 func (c *mqlOciLoadBalancerListener) GetSslVerifyPeerCertificate() *plugin.TValue[bool] {
 	return &c.SslVerifyPeerCertificate
+}
+
+func (c *mqlOciLoadBalancerListener) GetHasSessionResumption() *plugin.TValue[bool] {
+	return &c.HasSessionResumption
+}
+
+func (c *mqlOciLoadBalancerListener) GetCertificateName() *plugin.TValue[string] {
+	return &c.CertificateName
+}
+
+func (c *mqlOciLoadBalancerListener) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
+}
+
+func (c *mqlOciLoadBalancerListener) GetTrustedCertificateAuthorities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedCertificateAuthorities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "trustedCertificateAuthorities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trustedCertificateAuthorities()
+	})
+}
+
+func (c *mqlOciLoadBalancerListener) GetTrustedCaBundles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedCaBundles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "trustedCaBundles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trustedCaBundles()
+	})
 }
 
 // mqlOciLoadBalancerBackendSet for the oci.loadBalancer.backendSet resource
@@ -21634,6 +21839,8 @@ type mqlOciDatabaseDbSystem struct {
 	DiskRedundancy       plugin.TValue[string]
 	Hostname             plugin.TValue[string]
 	Domain               plugin.TValue[string]
+	ListenerPort         plugin.TValue[int64]
+	ScanDnsName          plugin.TValue[string]
 	Version              plugin.TValue[string]
 	CpuCoreCount         plugin.TValue[int64]
 	NodeCount            plugin.TValue[int64]
@@ -21722,6 +21929,14 @@ func (c *mqlOciDatabaseDbSystem) GetHostname() *plugin.TValue[string] {
 
 func (c *mqlOciDatabaseDbSystem) GetDomain() *plugin.TValue[string] {
 	return &c.Domain
+}
+
+func (c *mqlOciDatabaseDbSystem) GetListenerPort() *plugin.TValue[int64] {
+	return &c.ListenerPort
+}
+
+func (c *mqlOciDatabaseDbSystem) GetScanDnsName() *plugin.TValue[string] {
+	return &c.ScanDnsName
 }
 
 func (c *mqlOciDatabaseDbSystem) GetVersion() *plugin.TValue[string] {
@@ -21837,40 +22052,45 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciDatabaseAutonomousDatabaseInternal
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	CompartmentID            plugin.TValue[string]
-	Compartment              plugin.TValue[*mqlOciCompartment]
-	DbName                   plugin.TValue[string]
-	DbVersion                plugin.TValue[string]
-	DbWorkload               plugin.TValue[string]
-	IsDedicated              plugin.TValue[bool]
-	IsFreeTier               plugin.TValue[bool]
-	CpuCoreCount             plugin.TValue[int64]
-	DataStorageSizeInTBs     plugin.TValue[int64]
-	IsMtlsConnectionRequired plugin.TValue[bool]
-	IsAccessControlEnabled   plugin.TValue[bool]
-	WhitelistedIps           plugin.TValue[[]any]
-	IsAutoScalingEnabled     plugin.TValue[bool]
-	IsLocalDataGuardEnabled  plugin.TValue[bool]
-	DataSafeStatus           plugin.TValue[string]
-	OpenMode                 plugin.TValue[string]
-	PermissionLevel          plugin.TValue[string]
-	LicenseModel             plugin.TValue[string]
-	KmsKey                   plugin.TValue[*mqlOciKmsKey]
-	KmsVault                 plugin.TValue[*mqlOciKmsVault]
-	Subnet                   plugin.TValue[*mqlOciNetworkSubnet]
-	NsgIds                   plugin.TValue[[]any]
-	SecurityGroups           plugin.TValue[[]any]
-	PrivateEndpointIp        plugin.TValue[string]
-	PrivateEndpointLabel     plugin.TValue[string]
-	ConnectionUrls           plugin.TValue[any]
-	PublicConnectionUrls     plugin.TValue[any]
-	State                    plugin.TValue[string]
-	Created                  plugin.TValue[*time.Time]
-	FreeformTags             plugin.TValue[map[string]any]
-	DefinedTags              plugin.TValue[map[string]any]
-	Backups                  plugin.TValue[[]any]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	CompartmentID               plugin.TValue[string]
+	Compartment                 plugin.TValue[*mqlOciCompartment]
+	DbName                      plugin.TValue[string]
+	DbVersion                   plugin.TValue[string]
+	DbWorkload                  plugin.TValue[string]
+	IsDedicated                 plugin.TValue[bool]
+	IsFreeTier                  plugin.TValue[bool]
+	CpuCoreCount                plugin.TValue[int64]
+	DataStorageSizeInTBs        plugin.TValue[int64]
+	IsMtlsConnectionRequired    plugin.TValue[bool]
+	IsAccessControlEnabled      plugin.TValue[bool]
+	WhitelistedIps              plugin.TValue[[]any]
+	StandbyWhitelistedIps       plugin.TValue[[]any]
+	IsAutoScalingEnabled        plugin.TValue[bool]
+	IsLocalDataGuardEnabled     plugin.TValue[bool]
+	IsRemoteDataGuardEnabled    plugin.TValue[bool]
+	IsDataGuardEnabled          plugin.TValue[bool]
+	BackupRetentionPeriodInDays plugin.TValue[int64]
+	IsBackupRetentionLocked     plugin.TValue[bool]
+	DataSafeStatus              plugin.TValue[string]
+	OpenMode                    plugin.TValue[string]
+	PermissionLevel             plugin.TValue[string]
+	LicenseModel                plugin.TValue[string]
+	KmsKey                      plugin.TValue[*mqlOciKmsKey]
+	KmsVault                    plugin.TValue[*mqlOciKmsVault]
+	Subnet                      plugin.TValue[*mqlOciNetworkSubnet]
+	NsgIds                      plugin.TValue[[]any]
+	SecurityGroups              plugin.TValue[[]any]
+	PrivateEndpointIp           plugin.TValue[string]
+	PrivateEndpointLabel        plugin.TValue[string]
+	ConnectionUrls              plugin.TValue[any]
+	PublicConnectionUrls        plugin.TValue[any]
+	State                       plugin.TValue[string]
+	Created                     plugin.TValue[*time.Time]
+	FreeformTags                plugin.TValue[map[string]any]
+	DefinedTags                 plugin.TValue[map[string]any]
+	Backups                     plugin.TValue[[]any]
 }
 
 // createOciDatabaseAutonomousDatabase creates a new instance of this resource
@@ -21978,12 +22198,32 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetWhitelistedIps() *plugin.TValue[[]
 	return &c.WhitelistedIps
 }
 
+func (c *mqlOciDatabaseAutonomousDatabase) GetStandbyWhitelistedIps() *plugin.TValue[[]any] {
+	return &c.StandbyWhitelistedIps
+}
+
 func (c *mqlOciDatabaseAutonomousDatabase) GetIsAutoScalingEnabled() *plugin.TValue[bool] {
 	return &c.IsAutoScalingEnabled
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetIsLocalDataGuardEnabled() *plugin.TValue[bool] {
 	return &c.IsLocalDataGuardEnabled
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetIsRemoteDataGuardEnabled() *plugin.TValue[bool] {
+	return &c.IsRemoteDataGuardEnabled
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetIsDataGuardEnabled() *plugin.TValue[bool] {
+	return &c.IsDataGuardEnabled
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetBackupRetentionPeriodInDays() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriodInDays
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetIsBackupRetentionLocked() *plugin.TValue[bool] {
+	return &c.IsBackupRetentionLocked
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetDataSafeStatus() *plugin.TValue[string] {

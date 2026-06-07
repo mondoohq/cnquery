@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -50,6 +52,51 @@ func resolveOciSecurityGroups(runtime *plugin.Runtime, ids []any) ([]any, error)
 			continue
 		}
 		res, err := NewResource(runtime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// resolveOciCertificates resolves a list of typed OCI Certificates service
+// certificate resources from a list of certificate OCIDs. Empty entries are
+// skipped. Empty list returns ([], nil).
+func resolveOciCertificates(runtime *plugin.Runtime, ids []any) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		res, err := NewResource(runtime, "oci.certificates.certificate", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// resolveOciCertRefsByType resolves typed resources of a single kind from a
+// mixed list of OCIDs, keeping only the OCIDs whose type segment matches
+// ocidType (e.g. "cabundle" or "certificateauthority"). OCIDs of other types
+// are skipped, so callers can split one heterogeneous ID list across several
+// typed accessors.
+func resolveOciCertRefsByType(runtime *plugin.Runtime, ids []any, ocidType, resourceName string) ([]any, error) {
+	prefix := "ocid1." + ocidType + "."
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || !strings.HasPrefix(id, prefix) {
+			continue
+		}
+		res, err := NewResource(runtime, resourceName, map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})
 		if err != nil {

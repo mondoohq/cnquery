@@ -156,6 +156,23 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					timeMaintenanceRebootDue = &instance.TimeMaintenanceRebootDue.Time
 				}
 
+				var legacyImdsDisabled *bool
+				if instance.InstanceOptions != nil {
+					legacyImdsDisabled = instance.InstanceOptions.AreLegacyImdsEndpointsDisabled
+				}
+
+				var monitoringDisabled, managementDisabled, allPluginsDisabled *bool
+				var agentPlugins map[string]any
+				if instance.AgentConfig != nil {
+					monitoringDisabled = instance.AgentConfig.IsMonitoringDisabled
+					managementDisabled = instance.AgentConfig.IsManagementDisabled
+					allPluginsDisabled = instance.AgentConfig.AreAllPluginsDisabled
+					agentPlugins = make(map[string]any, len(instance.AgentConfig.PluginsConfig))
+					for _, p := range instance.AgentConfig.PluginsConfig {
+						agentPlugins[stringValue(p.Name)] = string(p.DesiredState)
+					}
+				}
+
 				// Create compartment resource reference
 				compartment, err := CreateResource(o.MqlRuntime, "oci.compartment", map[string]*llx.RawData{
 					"id": llx.StringDataPtr(instance.CompartmentId),
@@ -165,26 +182,31 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.instance", map[string]*llx.RawData{
-					"id":                       llx.StringDataPtr(instance.Id),
-					"name":                     llx.StringDataPtr(instance.DisplayName),
-					"region":                   llx.ResourceData(regionResource, "oci.region"),
-					"created":                  llx.TimeDataPtr(created),
-					"state":                    llx.StringData(string(instance.LifecycleState)),
-					"shape":                    llx.StringDataPtr(instance.Shape),
-					"availabilityDomain":       llx.StringDataPtr(instance.AvailabilityDomain),
-					"compartment":              llx.ResourceData(compartment, "oci.compartment"),
-					"faultDomain":              llx.StringDataPtr(instance.FaultDomain),
-					"imageId":                  llx.StringDataPtr(instance.ImageId),
-					"dedicatedVmHostId":        llx.StringDataPtr(instance.DedicatedVmHostId),
-					"platformConfig":           llx.DictData(platformConfig),
-					"launchOptions":            llx.DictData(launchOptions),
-					"instanceOptions":          llx.DictData(instanceOptions),
-					"shapeConfig":              llx.DictData(shapeConfig),
-					"sourceDetails":            llx.DictData(sourceDetails),
-					"metadata":                 llx.MapData(metadata, types.String),
-					"timeMaintenanceRebootDue": llx.TimeDataPtr(timeMaintenanceRebootDue),
-					"freeformTags":             llx.MapData(freeformTags, types.String),
-					"definedTags":              llx.MapData(definedTags, types.Any),
+					"id":                          llx.StringDataPtr(instance.Id),
+					"name":                        llx.StringDataPtr(instance.DisplayName),
+					"region":                      llx.ResourceData(regionResource, "oci.region"),
+					"created":                     llx.TimeDataPtr(created),
+					"state":                       llx.StringData(string(instance.LifecycleState)),
+					"shape":                       llx.StringDataPtr(instance.Shape),
+					"availabilityDomain":          llx.StringDataPtr(instance.AvailabilityDomain),
+					"compartment":                 llx.ResourceData(compartment, "oci.compartment"),
+					"faultDomain":                 llx.StringDataPtr(instance.FaultDomain),
+					"imageId":                     llx.StringDataPtr(instance.ImageId),
+					"dedicatedVmHostId":           llx.StringDataPtr(instance.DedicatedVmHostId),
+					"platformConfig":              llx.DictData(platformConfig),
+					"launchOptions":               llx.DictData(launchOptions),
+					"instanceOptions":             llx.DictData(instanceOptions),
+					"legacyImdsEndpointsDisabled": llx.BoolDataPtr(legacyImdsDisabled),
+					"monitoringDisabled":          llx.BoolDataPtr(monitoringDisabled),
+					"managementDisabled":          llx.BoolDataPtr(managementDisabled),
+					"allPluginsDisabled":          llx.BoolDataPtr(allPluginsDisabled),
+					"agentPlugins":                llx.MapData(agentPlugins, types.String),
+					"shapeConfig":                 llx.DictData(shapeConfig),
+					"sourceDetails":               llx.DictData(sourceDetails),
+					"metadata":                    llx.MapData(metadata, types.String),
+					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
+					"freeformTags":                llx.MapData(freeformTags, types.String),
+					"definedTags":                 llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err

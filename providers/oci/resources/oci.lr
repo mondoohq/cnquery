@@ -449,6 +449,30 @@ private oci.compute.instance @defaults("name") {
   launchOptions dict
   // Instance runtime options (legacy IMDS endpoint configuration)
   instanceOptions dict
+  // Whether legacy instance metadata service (IMDSv1) endpoints are disabled
+  //
+  // When true, only the more secure IMDSv2 (/v2) endpoints are reachable.
+  // Defaults to false, meaning the legacy /v1 endpoints remain accessible and
+  // any credentials they expose can be read without a signed request.
+  legacyImdsEndpointsDisabled bool
+  // Whether the Oracle Cloud Agent monitoring plugins are disabled
+  //
+  // When true, all monitoring plugins (Compute Instance Monitoring, Custom
+  // Logs Monitoring) are off regardless of per-plugin configuration.
+  monitoringDisabled bool
+  // Whether the Oracle Cloud Agent management plugins are disabled
+  //
+  // When true, all management plugins (OS Management Service Agent, Compute
+  // Instance Run Command) are off regardless of per-plugin configuration.
+  managementDisabled bool
+  // Whether all Oracle Cloud Agent plugins are disabled
+  allPluginsDisabled bool
+  // Oracle Cloud Agent plugin desired states keyed by plugin name
+  //
+  // Each value is the plugin's desired state, ENABLED or DISABLED — for
+  // example "Vulnerability Scanning", "Bastion", or "OS Management Service
+  // Agent". Use it to confirm required security agents are enabled.
+  agentPlugins map[string]string
   // Shape configuration details (OCPUs, memory, GPUs)
   shapeConfig dict
   // Boot volume or image source details
@@ -1647,6 +1671,34 @@ private oci.loadBalancer.listener @defaults("name") {
   sslCipherSuiteName string
   // Whether peer certificate verification is enabled
   sslVerifyPeerCertificate bool
+  // Whether TLS session resumption is enabled
+  //
+  // Session resumption reuses the cryptographic parameters of a previous TLS
+  // session to skip a full handshake. It improves performance but lowers
+  // security, so audits that require forward secrecy expect it disabled.
+  hasSessionResumption bool
+  // Name of the inline certificate bundle configured on the listener
+  //
+  // Set when the listener serves a certificate bundle managed directly on the
+  // load balancer; empty when the listener uses OCI Certificates service
+  // certificates exposed through certificates instead.
+  certificateName string
+  // Certificates served by the listener from the OCI Certificates service
+  //
+  // The managed certificates exposing the validity window, key algorithm, and
+  // signature algorithm needed for expiry and weak-algorithm audits. Empty
+  // when the listener serves an inline certificate bundle (certificateName).
+  certificates() []oci.certificates.certificate
+  // Certificate authorities the listener trusts to verify peer certificates
+  //
+  // The OCI Certificates service CAs trusted when sslVerifyPeerCertificate is
+  // enabled. Trusted CA bundles are exposed separately as trustedCaBundles.
+  trustedCertificateAuthorities() []oci.certificates.certificateAuthority
+  // CA bundles the listener trusts to verify peer certificates
+  //
+  // The OCI Certificates service CA bundles trusted when
+  // sslVerifyPeerCertificate is enabled.
+  trustedCaBundles() []oci.certificates.caBundle
 }
 
 // Oracle Cloud Infrastructure (OCI) load balancer backend set
@@ -2165,6 +2217,10 @@ private oci.database.dbSystem @defaults("name") {
   hostname string
   // DNS domain name configured on the database system
   domain string
+  // Database listener port (e.g., 1521)
+  listenerPort int
+  // Single Client Access Name (SCAN) DNS name for the database system
+  scanDnsName string
   // Oracle Database version
   version string
   // Number of CPU cores
@@ -2235,10 +2291,28 @@ private oci.database.autonomousDatabase @defaults("name") {
   isAccessControlEnabled bool
   // Allowed client IP addresses (ACL)
   whitelistedIps []string
+  // Allowed client IP addresses for the Data Guard standby (ACL)
+  //
+  // The standby's own access control list. When it diverges from
+  // whitelistedIps the standby may be reachable from networks the primary
+  // blocks, so compare the two when auditing disaster-recovery exposure.
+  standbyWhitelistedIps []string
   // Whether auto-scaling is enabled
   isAutoScalingEnabled bool
   // Whether local Data Guard is enabled
   isLocalDataGuardEnabled bool
+  // Whether cross-region (remote) Autonomous Data Guard is enabled
+  isRemoteDataGuardEnabled bool
+  // Whether Autonomous Data Guard is enabled for the database
+  isDataGuardEnabled bool
+  // Retention period in days for long-term backups
+  backupRetentionPeriodInDays int
+  // Whether backup retention is locked
+  //
+  // When true, backups cannot be deleted before their retention period
+  // elapses, protecting recovery points against tampering or premature
+  // deletion.
+  isBackupRetentionLocked bool
   // Oracle Data Safe status (REGISTERED, NOT_REGISTERED, DEREGISTERING, FAILED)
   dataSafeStatus string
   // Open mode (READ_ONLY, READ_WRITE)

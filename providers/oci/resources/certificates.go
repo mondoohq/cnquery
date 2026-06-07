@@ -169,6 +169,37 @@ func (o *mqlOciCertificatesCertificate) id() (string, error) {
 	return "oci.certificates.certificate/" + o.Id.Data, nil
 }
 
+func initOciCertificatesCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	idArg := args["id"]
+	if idArg == nil {
+		return nil, nil, errors.New("id required to fetch oci.certificates.certificate")
+	}
+	idVal, ok := idArg.Value.(string)
+	if !ok || idVal == "" {
+		return nil, nil, errors.New("id must be a non-empty string to fetch oci.certificates.certificate")
+	}
+
+	obj, err := CreateResource(runtime, "oci.certificates", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	certs := obj.(*mqlOciCertificates)
+	rawCerts := certs.GetCertificates()
+	if rawCerts.Error != nil {
+		return nil, nil, rawCerts.Error
+	}
+	for _, raw := range rawCerts.Data {
+		c := raw.(*mqlOciCertificatesCertificate)
+		if c.Id.Data == idVal {
+			return args, c, nil
+		}
+	}
+	return nil, nil, errors.New("oci.certificates.certificate not found: " + idVal)
+}
+
 func (o *mqlOciCertificatesCertificate) issuerCertificateAuthority() (*mqlOciCertificatesCertificateAuthority, error) {
 	if o.cacheIssuerCaId == "" || !isOcid(o.cacheIssuerCaId) {
 		o.IssuerCertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
@@ -377,6 +408,37 @@ func (o *mqlOciCertificatesCertificateAuthority) kmsKey() (*mqlOciKmsKey, error)
 }
 
 // CA Bundles
+
+func initOciCertificatesCaBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	idArg := args["id"]
+	if idArg == nil {
+		return nil, nil, errors.New("id required to fetch oci.certificates.caBundle")
+	}
+	idVal, ok := idArg.Value.(string)
+	if !ok || idVal == "" {
+		return nil, nil, errors.New("id must be a non-empty string to fetch oci.certificates.caBundle")
+	}
+
+	obj, err := CreateResource(runtime, "oci.certificates", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	certs := obj.(*mqlOciCertificates)
+	rawBundles := certs.GetCaBundles()
+	if rawBundles.Error != nil {
+		return nil, nil, rawBundles.Error
+	}
+	for _, raw := range rawBundles.Data {
+		b := raw.(*mqlOciCertificatesCaBundle)
+		if b.Id.Data == idVal {
+			return args, b, nil
+		}
+	}
+	return nil, nil, errors.New("oci.certificates.caBundle not found: " + idVal)
+}
 
 func (o *mqlOciCertificates) caBundles() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
