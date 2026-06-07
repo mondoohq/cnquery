@@ -318,6 +318,7 @@ const (
 	ResourceWindowsServerFeature          string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
 	ResourceWindowsRdp                    string = "windows.rdp"
+	ResourceWindowsTpm                    string = "windows.tpm"
 	ResourceWindowsFirewall               string = "windows.firewall"
 	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
 	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
@@ -1637,6 +1638,10 @@ func init() {
 		"windows.rdp": {
 			// to override args, implement: initWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsRdp,
+		},
+		"windows.tpm": {
+			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsTpm,
 		},
 		"windows.firewall": {
 			// to override args, implement: initWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7667,6 +7672,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetMaxDisconnectionTimeMs()).ToDataRes(types.Int)
+	},
+	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
+	},
+	"windows.tpm.ready": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetReady()).ToDataRes(types.Bool)
+	},
+	"windows.tpm.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.tpm.activated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetActivated()).ToDataRes(types.Bool)
+	},
+	"windows.tpm.specVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetSpecVersion()).ToDataRes(types.String)
+	},
+	"windows.tpm.manufacturerVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetManufacturerVersion()).ToDataRes(types.String)
 	},
 	"windows.firewall.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewall).GetSettings()).ToDataRes(types.Dict)
@@ -18105,6 +18128,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).MaxDisconnectionTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.tpm.present": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).Present, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.ready": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).Ready, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.activated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).Activated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.specVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).SpecVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.manufacturerVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).ManufacturerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48231,6 +48282,92 @@ func (c *mqlWindowsRdp) GetMaxIdleTimeMs() *plugin.TValue[int64] {
 func (c *mqlWindowsRdp) GetMaxDisconnectionTimeMs() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.MaxDisconnectionTimeMs, func() (int64, error) {
 		return c.maxDisconnectionTimeMs()
+	})
+}
+
+// mqlWindowsTpm for the windows.tpm resource
+type mqlWindowsTpm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsTpmInternal
+	Present             plugin.TValue[bool]
+	Ready               plugin.TValue[bool]
+	Enabled             plugin.TValue[bool]
+	Activated           plugin.TValue[bool]
+	SpecVersion         plugin.TValue[string]
+	ManufacturerVersion plugin.TValue[string]
+}
+
+// createWindowsTpm creates a new instance of this resource
+func createWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsTpm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.tpm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsTpm) MqlName() string {
+	return "windows.tpm"
+}
+
+func (c *mqlWindowsTpm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsTpm) GetPresent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Present, func() (bool, error) {
+		return c.present()
+	})
+}
+
+func (c *mqlWindowsTpm) GetReady() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Ready, func() (bool, error) {
+		return c.ready()
+	})
+}
+
+func (c *mqlWindowsTpm) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlWindowsTpm) GetActivated() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Activated, func() (bool, error) {
+		return c.activated()
+	})
+}
+
+func (c *mqlWindowsTpm) GetSpecVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SpecVersion, func() (string, error) {
+		return c.specVersion()
+	})
+}
+
+func (c *mqlWindowsTpm) GetManufacturerVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManufacturerVersion, func() (string, error) {
+		return c.manufacturerVersion()
 	})
 }
 

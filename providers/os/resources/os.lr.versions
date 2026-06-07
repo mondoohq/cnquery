@@ -2718,6 +2718,13 @@ windows.serverFeature.installed 11.2.6
 windows.serverFeature.name 11.2.6
 windows.serverFeature.path 11.2.6
 windows.serverFeatures 11.2.6
+windows.tpm 13.22.2
+windows.tpm.activated 13.22.2
+windows.tpm.enabled 13.22.2
+windows.tpm.manufacturerVersion 13.22.2
+windows.tpm.present 13.22.2
+windows.tpm.ready 13.22.2
+windows.tpm.specVersion 13.22.2
 windows.update 13.20.1
 windows.update.available 13.20.1
 windows.update.config 13.20.1

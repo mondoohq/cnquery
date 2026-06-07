@@ -6333,6 +6333,29 @@ windows.rdp {
   maxDisconnectionTimeMs() int
 }
 
+// Windows Trusted Platform Module (TPM)
+//
+// Examine the Trusted Platform Module state: whether a TPM is present,
+// ready for use, enabled, and activated, along with its major specification
+// version and manufacturer version string. Presence and a 2.0 specification
+// version are prerequisites for Windows 11 readiness and several BitLocker
+// and device-health controls. On a system without a TPM the fields resolve
+// cleanly — present is false — rather than erroring.
+windows.tpm {
+  // Whether a TPM is present on the system
+  present() bool
+  // Whether the TPM is ready for use
+  ready() bool
+  // Whether the TPM is enabled
+  enabled() bool
+  // Whether the TPM is activated
+  activated() bool
+  // Major TPM specification version, for example "2.0"
+  specVersion() string
+  // TPM manufacturer version string
+  manufacturerVersion() string
+}
+
 // Windows Firewall (Advanced Security)
 //
 // Examine global settings, per-profile defaults, and individual firewall rules
