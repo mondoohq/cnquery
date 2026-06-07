@@ -157,6 +157,12 @@ const (
 	ResourceMicrosoftDevicemanagementRoleDefinition                                                      string = "microsoft.devicemanagement.roleDefinition"
 	ResourceMicrosoftDevicemanagementRoleAssignment                                                      string = "microsoft.devicemanagement.roleAssignment"
 	ResourceMicrosoftDevicemanagementRoleScopeTag                                                        string = "microsoft.devicemanagement.roleScopeTag"
+	ResourceMicrosoftPowerbi                                                                             string = "microsoft.powerbi"
+	ResourceMicrosoftPowerbiTenantSetting                                                                string = "microsoft.powerbi.tenantSetting"
+	ResourceMicrosoftPowerbiWorkspace                                                                    string = "microsoft.powerbi.workspace"
+	ResourceMicrosoftPowerbiWorkspaceUser                                                                string = "microsoft.powerbi.workspace.user"
+	ResourceMicrosoftPowerbiCapacity                                                                     string = "microsoft.powerbi.capacity"
+	ResourceMicrosoftPowerbiArtifactAccess                                                               string = "microsoft.powerbi.artifactAccess"
 	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
 	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
@@ -764,6 +770,30 @@ func init() {
 		"microsoft.devicemanagement.roleScopeTag": {
 			// to override args, implement: initMicrosoftDevicemanagementRoleScopeTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagementRoleScopeTag,
+		},
+		"microsoft.powerbi": {
+			// to override args, implement: initMicrosoftPowerbi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbi,
+		},
+		"microsoft.powerbi.tenantSetting": {
+			// to override args, implement: initMicrosoftPowerbiTenantSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbiTenantSetting,
+		},
+		"microsoft.powerbi.workspace": {
+			// to override args, implement: initMicrosoftPowerbiWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbiWorkspace,
+		},
+		"microsoft.powerbi.workspace.user": {
+			// to override args, implement: initMicrosoftPowerbiWorkspaceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbiWorkspaceUser,
+		},
+		"microsoft.powerbi.capacity": {
+			// to override args, implement: initMicrosoftPowerbiCapacity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbiCapacity,
+		},
+		"microsoft.powerbi.artifactAccess": {
+			// to override args, implement: initMicrosoftPowerbiArtifactAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftPowerbiArtifactAccess,
 		},
 		"ms365.exchangeonline": {
 			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4389,6 +4419,123 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.roleScopeTag.isBuiltIn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementRoleScopeTag).GetIsBuiltIn()).ToDataRes(types.Bool)
+	},
+	"microsoft.powerbi.tenantSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbi).GetTenantSettings()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.tenantSetting")))
+	},
+	"microsoft.powerbi.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbi).GetWorkspaces()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.workspace")))
+	},
+	"microsoft.powerbi.capacities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbi).GetCapacities()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.capacity")))
+	},
+	"microsoft.powerbi.publishedToWeb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbi).GetPublishedToWeb()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.artifactAccess")))
+	},
+	"microsoft.powerbi.sharedToWholeOrganization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbi).GetSharedToWholeOrganization()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.artifactAccess")))
+	},
+	"microsoft.powerbi.tenantSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.tenantSetting.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetTitle()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.tenantSetting.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.powerbi.tenantSetting.canSpecifySecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetCanSpecifySecurityGroups()).ToDataRes(types.Bool)
+	},
+	"microsoft.powerbi.tenantSetting.tenantSettingGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetTenantSettingGroup()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.tenantSetting.enabledSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiTenantSetting).GetEnabledSecurityGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.powerbi.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.isOnDedicatedCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetIsOnDedicatedCapacity()).ToDataRes(types.Bool)
+	},
+	"microsoft.powerbi.workspace.isReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetIsReadOnly()).ToDataRes(types.Bool)
+	},
+	"microsoft.powerbi.workspace.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetCapacity()).ToDataRes(types.Resource("microsoft.powerbi.capacity"))
+	},
+	"microsoft.powerbi.workspace.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspace).GetUsers()).ToDataRes(types.Array(types.Resource("microsoft.powerbi.workspace.user")))
+	},
+	"microsoft.powerbi.workspace.user.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.user.emailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetEmailAddress()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.user.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetIdentifier()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.user.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.user.accessRight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetAccessRight()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.workspace.user.graphId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiWorkspaceUser).GetGraphId()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetSku()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetRegion()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.capacity.admins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiCapacity).GetAdmins()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.powerbi.artifactAccess.artifactId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetArtifactId()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.artifactType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetArtifactType()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.accessRight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetAccessRight()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.shareType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetShareType()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.sharerEmailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetSharerEmailAddress()).ToDataRes(types.String)
+	},
+	"microsoft.powerbi.artifactAccess.sharerDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPowerbiArtifactAccess).GetSharerDisplayName()).ToDataRes(types.String)
 	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -10769,6 +10916,186 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.roleScopeTag.isBuiltIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).IsBuiltIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.tenantSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).TenantSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).Capacities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.publishedToWeb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).PublishedToWeb, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.sharedToWholeOrganization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbi).SharedToWholeOrganization, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.canSpecifySecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).CanSpecifySecurityGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.tenantSettingGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).TenantSettingGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.tenantSetting.enabledSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiTenantSetting).EnabledSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.isOnDedicatedCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).IsOnDedicatedCapacity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.isReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).IsReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Capacity, ok = plugin.RawToTValue[*mqlMicrosoftPowerbiCapacity](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspace).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.workspace.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.emailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).EmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.accessRight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).AccessRight, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.workspace.user.graphId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiWorkspaceUser).GraphId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.capacity.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).Sku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.capacity.admins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiCapacity).Admins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.artifactId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).ArtifactId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.artifactType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).ArtifactType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.accessRight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).AccessRight, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.shareType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).ShareType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.sharerEmailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).SharerEmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.powerbi.artifactAccess.sharerDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPowerbiArtifactAccess).SharerDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25681,6 +26008,519 @@ func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetDescription() *plugin.TVal
 
 func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetIsBuiltIn() *plugin.TValue[bool] {
 	return &c.IsBuiltIn
+}
+
+// mqlMicrosoftPowerbi for the microsoft.powerbi resource
+type mqlMicrosoftPowerbi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMicrosoftPowerbiInternal
+	TenantSettings            plugin.TValue[[]any]
+	Workspaces                plugin.TValue[[]any]
+	Capacities                plugin.TValue[[]any]
+	PublishedToWeb            plugin.TValue[[]any]
+	SharedToWholeOrganization plugin.TValue[[]any]
+}
+
+// createMicrosoftPowerbi creates a new instance of this resource
+func createMicrosoftPowerbi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbi) MqlName() string {
+	return "microsoft.powerbi"
+}
+
+func (c *mqlMicrosoftPowerbi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbi) GetTenantSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TenantSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi", c.__id, "tenantSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tenantSettings()
+	})
+}
+
+func (c *mqlMicrosoftPowerbi) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+func (c *mqlMicrosoftPowerbi) GetCapacities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Capacities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi", c.__id, "capacities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capacities()
+	})
+}
+
+func (c *mqlMicrosoftPowerbi) GetPublishedToWeb() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublishedToWeb, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi", c.__id, "publishedToWeb")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publishedToWeb()
+	})
+}
+
+func (c *mqlMicrosoftPowerbi) GetSharedToWholeOrganization() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedToWholeOrganization, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi", c.__id, "sharedToWholeOrganization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sharedToWholeOrganization()
+	})
+}
+
+// mqlMicrosoftPowerbiTenantSetting for the microsoft.powerbi.tenantSetting resource
+type mqlMicrosoftPowerbiTenantSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPowerbiTenantSettingInternal it will be used here
+	Name                     plugin.TValue[string]
+	Title                    plugin.TValue[string]
+	Enabled                  plugin.TValue[bool]
+	CanSpecifySecurityGroups plugin.TValue[bool]
+	TenantSettingGroup       plugin.TValue[string]
+	EnabledSecurityGroups    plugin.TValue[[]any]
+}
+
+// createMicrosoftPowerbiTenantSetting creates a new instance of this resource
+func createMicrosoftPowerbiTenantSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbiTenantSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi.tenantSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) MqlName() string {
+	return "microsoft.powerbi.tenantSetting"
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetCanSpecifySecurityGroups() *plugin.TValue[bool] {
+	return &c.CanSpecifySecurityGroups
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetTenantSettingGroup() *plugin.TValue[string] {
+	return &c.TenantSettingGroup
+}
+
+func (c *mqlMicrosoftPowerbiTenantSetting) GetEnabledSecurityGroups() *plugin.TValue[[]any] {
+	return &c.EnabledSecurityGroups
+}
+
+// mqlMicrosoftPowerbiWorkspace for the microsoft.powerbi.workspace resource
+type mqlMicrosoftPowerbiWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMicrosoftPowerbiWorkspaceInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	State                 plugin.TValue[string]
+	IsOnDedicatedCapacity plugin.TValue[bool]
+	IsReadOnly            plugin.TValue[bool]
+	Description           plugin.TValue[string]
+	Capacity              plugin.TValue[*mqlMicrosoftPowerbiCapacity]
+	Users                 plugin.TValue[[]any]
+}
+
+// createMicrosoftPowerbiWorkspace creates a new instance of this resource
+func createMicrosoftPowerbiWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbiWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) MqlName() string {
+	return "microsoft.powerbi.workspace"
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetIsOnDedicatedCapacity() *plugin.TValue[bool] {
+	return &c.IsOnDedicatedCapacity
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetIsReadOnly() *plugin.TValue[bool] {
+	return &c.IsReadOnly
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetCapacity() *plugin.TValue[*mqlMicrosoftPowerbiCapacity] {
+	return plugin.GetOrCompute[*mqlMicrosoftPowerbiCapacity](&c.Capacity, func() (*mqlMicrosoftPowerbiCapacity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi.workspace", c.__id, "capacity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftPowerbiCapacity), nil
+			}
+		}
+
+		return c.capacity()
+	})
+}
+
+func (c *mqlMicrosoftPowerbiWorkspace) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.powerbi.workspace", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlMicrosoftPowerbiWorkspaceUser for the microsoft.powerbi.workspace.user resource
+type mqlMicrosoftPowerbiWorkspaceUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPowerbiWorkspaceUserInternal it will be used here
+	DisplayName   plugin.TValue[string]
+	EmailAddress  plugin.TValue[string]
+	Identifier    plugin.TValue[string]
+	PrincipalType plugin.TValue[string]
+	AccessRight   plugin.TValue[string]
+	GraphId       plugin.TValue[string]
+}
+
+// createMicrosoftPowerbiWorkspaceUser creates a new instance of this resource
+func createMicrosoftPowerbiWorkspaceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbiWorkspaceUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi.workspace.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) MqlName() string {
+	return "microsoft.powerbi.workspace.user"
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetEmailAddress() *plugin.TValue[string] {
+	return &c.EmailAddress
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetAccessRight() *plugin.TValue[string] {
+	return &c.AccessRight
+}
+
+func (c *mqlMicrosoftPowerbiWorkspaceUser) GetGraphId() *plugin.TValue[string] {
+	return &c.GraphId
+}
+
+// mqlMicrosoftPowerbiCapacity for the microsoft.powerbi.capacity resource
+type mqlMicrosoftPowerbiCapacity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPowerbiCapacityInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Sku         plugin.TValue[string]
+	State       plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Admins      plugin.TValue[[]any]
+}
+
+// createMicrosoftPowerbiCapacity creates a new instance of this resource
+func createMicrosoftPowerbiCapacity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbiCapacity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi.capacity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) MqlName() string {
+	return "microsoft.powerbi.capacity"
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetSku() *plugin.TValue[string] {
+	return &c.Sku
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlMicrosoftPowerbiCapacity) GetAdmins() *plugin.TValue[[]any] {
+	return &c.Admins
+}
+
+// mqlMicrosoftPowerbiArtifactAccess for the microsoft.powerbi.artifactAccess resource
+type mqlMicrosoftPowerbiArtifactAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftPowerbiArtifactAccessInternal it will be used here
+	ArtifactId         plugin.TValue[string]
+	DisplayName        plugin.TValue[string]
+	ArtifactType       plugin.TValue[string]
+	AccessRight        plugin.TValue[string]
+	ShareType          plugin.TValue[string]
+	SharerEmailAddress plugin.TValue[string]
+	SharerDisplayName  plugin.TValue[string]
+}
+
+// createMicrosoftPowerbiArtifactAccess creates a new instance of this resource
+func createMicrosoftPowerbiArtifactAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftPowerbiArtifactAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.powerbi.artifactAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) MqlName() string {
+	return "microsoft.powerbi.artifactAccess"
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetArtifactId() *plugin.TValue[string] {
+	return &c.ArtifactId
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetArtifactType() *plugin.TValue[string] {
+	return &c.ArtifactType
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetAccessRight() *plugin.TValue[string] {
+	return &c.AccessRight
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetShareType() *plugin.TValue[string] {
+	return &c.ShareType
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetSharerEmailAddress() *plugin.TValue[string] {
+	return &c.SharerEmailAddress
+}
+
+func (c *mqlMicrosoftPowerbiArtifactAccess) GetSharerDisplayName() *plugin.TValue[string] {
+	return &c.SharerDisplayName
 }
 
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource

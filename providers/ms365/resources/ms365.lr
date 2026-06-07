@@ -3905,6 +3905,155 @@ private microsoft.devicemanagement.roleScopeTag @defaults("id displayName isBuil
   isBuiltIn bool
 }
 
+// Microsoft Power BI
+//
+// Use this namespace to examine tenant-wide Power BI (Microsoft Fabric)
+// governance posture. Exposes the tenant feature switches that control
+// sharing and export (`tenantSettings`), the `workspaces` provisioned in the
+// tenant and who has access to them, the `capacities` backing those
+// workspaces, and the reports and dashboards that have broad exposure —
+// either `publishedToWeb` or `sharedToWholeOrganization`. Data is collected
+// through the Power BI admin REST APIs, which require the service principal to
+// be granted read-only admin API access in the Power BI tenant settings.
+microsoft.powerbi {
+  // Tenant-wide Power BI feature switches
+  tenantSettings() []microsoft.powerbi.tenantSetting
+  // Workspaces provisioned in the tenant
+  workspaces() []microsoft.powerbi.workspace
+  // Premium and Fabric capacities
+  capacities() []microsoft.powerbi.capacity
+  // Reports and dashboards published to the public web
+  publishedToWeb() []microsoft.powerbi.artifactAccess
+  // Reports and dashboards shared with the entire organization
+  sharedToWholeOrganization() []microsoft.powerbi.artifactAccess
+}
+
+// Power BI tenant feature switch
+//
+// Examine a single tenant-level Power BI governance setting — for example
+// whether publishing reports to the web is allowed, whether users can export
+// data, or whether service principals may call Power BI APIs. The `name`
+// field is the API setting name (for example `PublishToWeb`) and selects the
+// setting; `enabled` reports whether the feature is turned on; and when a
+// setting is scoped to specific security groups, `enabledSecurityGroups`
+// lists them.
+private microsoft.powerbi.tenantSetting @defaults("name title enabled") {
+  // API name of the setting, for example PublishToWeb
+  name string
+  // Human-readable title of the setting
+  title string
+  // Whether the feature is enabled
+  enabled bool
+  // Whether the setting can be scoped to specific security groups
+  canSpecifySecurityGroups bool
+  // Grouping the setting belongs to in the admin portal
+  tenantSettingGroup string
+  // Security groups the setting applies to when scoped, each with graphId and name
+  enabledSecurityGroups []dict
+}
+
+// Power BI workspace
+//
+// Examine a Power BI workspace (also called a group) provisioned in the
+// tenant. Select a workspace by its `id`. Each workspace reports its `name`,
+// `type` (Workspace, PersonalGroup, or Group), `state` (Active, Deleted, or
+// Orphaned), whether it runs on a dedicated capacity, the `capacity` backing
+// it, and the `users` granted access along with their roles.
+private microsoft.powerbi.workspace @defaults("id name type state") {
+  // Workspace ID
+  id string
+  // Workspace name
+  name string
+  // Workspace type
+  //
+  // One of Workspace, PersonalGroup, or Group.
+  type string
+  // Workspace state
+  //
+  // One of Active, Deleted, Orphaned, or Removing.
+  state string
+  // Whether the workspace is assigned to a dedicated (Premium or Fabric) capacity
+  isOnDedicatedCapacity bool
+  // Whether the workspace is read-only
+  isReadOnly bool
+  // Workspace description
+  description string
+  // Capacity backing the workspace, when assigned to a dedicated capacity
+  capacity() microsoft.powerbi.capacity
+  // Users and groups granted access to the workspace
+  users() []microsoft.powerbi.workspace.user
+}
+
+// Power BI workspace access grant
+//
+// Examine a single user, group, or service principal granted access to a
+// Power BI workspace, including the `accessRight` (Admin, Member, Contributor,
+// or Viewer) and the `principalType` of the grantee.
+private microsoft.powerbi.workspace.user @defaults("emailAddress accessRight principalType") {
+  // Display name of the grantee
+  displayName string
+  // Email address of the grantee, when the grantee is a user
+  emailAddress string
+  // Identifier of the grantee
+  identifier string
+  // Type of grantee
+  //
+  // One of User, Group, or App.
+  principalType string
+  // Access right granted
+  //
+  // One of Admin, Member, Contributor, or Viewer.
+  accessRight string
+  // Microsoft Graph object ID of the grantee
+  graphId string
+}
+
+// Power BI capacity
+//
+// Examine a Premium or Fabric capacity provisioned in the tenant. Select a
+// capacity by its `id`. Each capacity reports its `displayName`, `sku`,
+// `state`, `region`, and the `admins` who manage it.
+private microsoft.powerbi.capacity @defaults("id displayName sku state") {
+  // Capacity ID
+  id string
+  // Capacity display name
+  displayName string
+  // Capacity SKU, for example P1 or F64
+  sku string
+  // Capacity state, for example Active
+  state string
+  // Region the capacity is provisioned in
+  region string
+  // Email addresses of the capacity administrators
+  admins []string
+}
+
+// Power BI broadly shared artifact
+//
+// Examine a Power BI report, dashboard, dataset, or other artifact that has
+// broad sharing in effect — either published to the public web or shared with
+// the entire organization. Each entry reports the artifact's `displayName` and
+// `artifactType`, the `accessRight` granted, the `shareType`, and who shared
+// it.
+private microsoft.powerbi.artifactAccess @defaults("artifactId displayName artifactType shareType") {
+  // Artifact ID
+  artifactId string
+  // Artifact display name
+  displayName string
+  // Artifact type
+  //
+  // One of Report, Dashboard, Dataset, Dataflow, or similar.
+  artifactType string
+  // Access right granted, for example View
+  accessRight string
+  // Share type, for example Published or Shared
+  shareType string
+  // Email address of the user who shared the artifact
+  sharerEmailAddress string
+  // Display name of the user who shared the artifact
+  sharerDisplayName string
+}
+
 // Microsoft 365 Exchange Online
 //
 // Exchange Online configuration and security settings for the tenant,
