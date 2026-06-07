@@ -317,6 +317,7 @@ const (
 	ResourceWindowsUpdateConfig           string = "windows.update.config"
 	ResourceWindowsServerFeature          string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
+	ResourceWindowsRdp                    string = "windows.rdp"
 	ResourceWindowsFirewall               string = "windows.firewall"
 	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
 	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
@@ -1632,6 +1633,10 @@ func init() {
 		"windows.optionalFeature": {
 			Init:   initWindowsOptionalFeature,
 			Create: createWindowsOptionalFeature,
+		},
+		"windows.rdp": {
+			// to override args, implement: initWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsRdp,
 		},
 		"windows.firewall": {
 			// to override args, implement: initWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7623,6 +7628,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.optionalFeature.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsOptionalFeature).GetState()).ToDataRes(types.Int)
+	},
+	"windows.rdp.networkLevelAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetNetworkLevelAuthentication()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.alwaysPromptForPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetAlwaysPromptForPassword()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.driveRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetDriveRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.comPortRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetComPortRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.lptPortRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetLptPortRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.pnpDeviceRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetPnpDeviceRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.passwordSavingDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetPasswordSavingDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.deleteTempDirsOnExit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetDeleteTempDirsOnExit()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.secureRpcRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSecureRpcRequired()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.securityLayer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSecurityLayer()).ToDataRes(types.Int)
+	},
+	"windows.rdp.minEncryptionLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetMinEncryptionLevel()).ToDataRes(types.Int)
+	},
+	"windows.rdp.maxIdleTimeMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetMaxIdleTimeMs()).ToDataRes(types.Int)
+	},
+	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetMaxDisconnectionTimeMs()).ToDataRes(types.Int)
 	},
 	"windows.firewall.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewall).GetSettings()).ToDataRes(types.Dict)
@@ -18005,6 +18049,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.optionalFeature.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsOptionalFeature).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.rdp.networkLevelAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).NetworkLevelAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.alwaysPromptForPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).AlwaysPromptForPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.driveRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).DriveRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.comPortRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).ComPortRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.lptPortRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).LptPortRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.pnpDeviceRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).PnpDeviceRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.passwordSavingDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).PasswordSavingDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.deleteTempDirsOnExit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).DeleteTempDirsOnExit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.secureRpcRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SecureRpcRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.securityLayer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SecurityLayer, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.minEncryptionLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).MinEncryptionLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.maxIdleTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).MaxIdleTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).MaxDisconnectionTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47997,6 +48097,141 @@ func (c *mqlWindowsOptionalFeature) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlWindowsOptionalFeature) GetState() *plugin.TValue[int64] {
 	return &c.State
+}
+
+// mqlWindowsRdp for the windows.rdp resource
+type mqlWindowsRdp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsRdpInternal
+	NetworkLevelAuthentication   plugin.TValue[bool]
+	AlwaysPromptForPassword      plugin.TValue[bool]
+	DriveRedirectionDisabled     plugin.TValue[bool]
+	ComPortRedirectionDisabled   plugin.TValue[bool]
+	LptPortRedirectionDisabled   plugin.TValue[bool]
+	PnpDeviceRedirectionDisabled plugin.TValue[bool]
+	PasswordSavingDisabled       plugin.TValue[bool]
+	DeleteTempDirsOnExit         plugin.TValue[bool]
+	SecureRpcRequired            plugin.TValue[bool]
+	SecurityLayer                plugin.TValue[int64]
+	MinEncryptionLevel           plugin.TValue[int64]
+	MaxIdleTimeMs                plugin.TValue[int64]
+	MaxDisconnectionTimeMs       plugin.TValue[int64]
+}
+
+// createWindowsRdp creates a new instance of this resource
+func createWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsRdp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.rdp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsRdp) MqlName() string {
+	return "windows.rdp"
+}
+
+func (c *mqlWindowsRdp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsRdp) GetNetworkLevelAuthentication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NetworkLevelAuthentication, func() (bool, error) {
+		return c.networkLevelAuthentication()
+	})
+}
+
+func (c *mqlWindowsRdp) GetAlwaysPromptForPassword() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AlwaysPromptForPassword, func() (bool, error) {
+		return c.alwaysPromptForPassword()
+	})
+}
+
+func (c *mqlWindowsRdp) GetDriveRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DriveRedirectionDisabled, func() (bool, error) {
+		return c.driveRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetComPortRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ComPortRedirectionDisabled, func() (bool, error) {
+		return c.comPortRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetLptPortRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LptPortRedirectionDisabled, func() (bool, error) {
+		return c.lptPortRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetPnpDeviceRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PnpDeviceRedirectionDisabled, func() (bool, error) {
+		return c.pnpDeviceRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetPasswordSavingDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordSavingDisabled, func() (bool, error) {
+		return c.passwordSavingDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetDeleteTempDirsOnExit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeleteTempDirsOnExit, func() (bool, error) {
+		return c.deleteTempDirsOnExit()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSecureRpcRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SecureRpcRequired, func() (bool, error) {
+		return c.secureRpcRequired()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSecurityLayer() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SecurityLayer, func() (int64, error) {
+		return c.securityLayer()
+	})
+}
+
+func (c *mqlWindowsRdp) GetMinEncryptionLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinEncryptionLevel, func() (int64, error) {
+		return c.minEncryptionLevel()
+	})
+}
+
+func (c *mqlWindowsRdp) GetMaxIdleTimeMs() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxIdleTimeMs, func() (int64, error) {
+		return c.maxIdleTimeMs()
+	})
+}
+
+func (c *mqlWindowsRdp) GetMaxDisconnectionTimeMs() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxDisconnectionTimeMs, func() (int64, error) {
+		return c.maxDisconnectionTimeMs()
+	})
 }
 
 // mqlWindowsFirewall for the windows.firewall resource

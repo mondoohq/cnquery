@@ -6289,6 +6289,50 @@ private windows.optionalFeature @defaults("name") {
   state int
 }
 
+// Windows Remote Desktop / Terminal Services configuration
+//
+// Examine the effective Remote Desktop (Terminal Services) policy posture:
+// whether Network Level Authentication is required, the negotiated security
+// layer and minimum client encryption level, device and resource redirection
+// toggles, credential handling, and session idle / disconnection time limits.
+// Each field resolves the Group Policy value (HKLM\SOFTWARE\Policies\Microsoft
+// \Windows NT\Terminal Services) first, then the per-listener configuration
+// (HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp),
+// and finally the documented Windows default when neither is set — so audits
+// can assert the effective state without handling missing registry values.
+windows.rdp {
+  // Whether Network Level Authentication is required (UserAuthentication)
+  networkLevelAuthentication() bool
+  // Whether the user is always prompted for a password on connection (fPromptForPassword)
+  alwaysPromptForPassword() bool
+  // Whether client drive redirection is disabled (fDisableCdm)
+  driveRedirectionDisabled() bool
+  // Whether client COM port redirection is disabled (fDisableCcm)
+  comPortRedirectionDisabled() bool
+  // Whether client LPT port redirection is disabled (fDisableLPT)
+  lptPortRedirectionDisabled() bool
+  // Whether supported Plug and Play device redirection is disabled (fDisablePNPRedir)
+  pnpDeviceRedirectionDisabled() bool
+  // Whether saving of Remote Desktop passwords is disabled (DisablePasswordSaving)
+  passwordSavingDisabled() bool
+  // Whether temporary folders are deleted when the session exits (DeleteTempDirsOnExit)
+  deleteTempDirsOnExit() bool
+  // Whether secure RPC communication is required (fEncryptRPCTraffic)
+  secureRpcRequired() bool
+  // RDP security layer (SecurityLayer)
+  //
+  // One of 0 (native RDP), 1 (Negotiate), or 2 (SSL/TLS).
+  securityLayer() int
+  // Minimum client connection encryption level (MinEncryptionLevel)
+  //
+  // One of 1 (Low), 2 (Client Compatible), 3 (High), or 4 (FIPS Compliant).
+  minEncryptionLevel() int
+  // Time limit in milliseconds for active but idle sessions, 0 for no limit (MaxIdleTime)
+  maxIdleTimeMs() int
+  // Time limit in milliseconds for disconnected sessions, 0 to never end them (MaxDisconnectionTime)
+  maxDisconnectionTimeMs() int
+}
+
 // Windows Firewall (Advanced Security)
 //
 // Examine global settings, per-profile defaults, and individual firewall rules
