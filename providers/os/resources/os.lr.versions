@@ -2624,6 +2624,11 @@ windows.bitlocker.volume.protectionStatus 9.0.1
 windows.bitlocker.volume.version 9.0.1
 windows.bitlocker.volumes 9.0.1
 windows.computerInfo 9.0.1
+windows.eventlog 13.22.2
+windows.eventlog.maxSizeKB 13.22.2
+windows.eventlog.name 13.22.2
+windows.eventlog.overwriteAsNeeded 13.22.2
+windows.eventlog.retention 13.22.2
 windows.firewall 9.0.1
 windows.firewall.profile 9.0.1
 windows.firewall.profile.allowInboundRules 9.0.1

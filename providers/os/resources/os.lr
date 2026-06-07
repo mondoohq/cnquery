@@ -6289,6 +6289,32 @@ private windows.optionalFeature @defaults("name") {
   state int
 }
 
+// Windows Event Log channel configuration
+//
+// Examine the size and retention policy of a single Windows Event Log
+// channel. The `name` field selects the channel as it appears under the
+// EventLog registry tree — for example `windows.eventlog(name: "Security")`
+// or `windows.eventlog(name: "Application")`. `maxSizeKB` reports the
+// maximum log file size in KB and `retention` decodes how the channel
+// behaves when that size is reached. Each field resolves the Group Policy
+// value first, then the effective channel configuration, and finally the
+// documented Windows default when neither is set.
+windows.eventlog @defaults("name") {
+  init(name string)
+  // Event Log channel name (for example Application, Security, Setup, or System)
+  name string
+  // Maximum log file size in KB (MaxSize)
+  maxSizeKB() int
+  // Retention behavior when the log reaches its maximum size
+  //
+  // One of "overwrite_as_needed" (Retention 0), "overwrite_by_days" (a
+  // positive retention period in seconds), or "never_overwrite" (Retention
+  // 4294967295 or -1).
+  retention() string
+  // Whether the channel overwrites events as needed when full (Retention 0)
+  overwriteAsNeeded() bool
+}
+
 // Windows Remote Desktop / Terminal Services configuration
 //
 // Examine the effective Remote Desktop (Terminal Services) policy posture:

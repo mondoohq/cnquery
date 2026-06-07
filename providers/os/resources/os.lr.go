@@ -317,6 +317,7 @@ const (
 	ResourceWindowsUpdateConfig           string = "windows.update.config"
 	ResourceWindowsServerFeature          string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
+	ResourceWindowsEventlog               string = "windows.eventlog"
 	ResourceWindowsRdp                    string = "windows.rdp"
 	ResourceWindowsFirewall               string = "windows.firewall"
 	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
@@ -1633,6 +1634,10 @@ func init() {
 		"windows.optionalFeature": {
 			Init:   initWindowsOptionalFeature,
 			Create: createWindowsOptionalFeature,
+		},
+		"windows.eventlog": {
+			Init:   initWindowsEventlog,
+			Create: createWindowsEventlog,
 		},
 		"windows.rdp": {
 			// to override args, implement: initWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7628,6 +7633,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.optionalFeature.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsOptionalFeature).GetState()).ToDataRes(types.Int)
+	},
+	"windows.eventlog.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetName()).ToDataRes(types.String)
+	},
+	"windows.eventlog.maxSizeKB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetMaxSizeKB()).ToDataRes(types.Int)
+	},
+	"windows.eventlog.retention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetRetention()).ToDataRes(types.String)
+	},
+	"windows.eventlog.overwriteAsNeeded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetOverwriteAsNeeded()).ToDataRes(types.Bool)
 	},
 	"windows.rdp.networkLevelAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetNetworkLevelAuthentication()).ToDataRes(types.Bool)
@@ -18049,6 +18066,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.optionalFeature.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsOptionalFeature).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.eventlog.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.maxSizeKB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).MaxSizeKB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.retention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).Retention, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.overwriteAsNeeded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).OverwriteAsNeeded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.rdp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48097,6 +48134,76 @@ func (c *mqlWindowsOptionalFeature) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlWindowsOptionalFeature) GetState() *plugin.TValue[int64] {
 	return &c.State
+}
+
+// mqlWindowsEventlog for the windows.eventlog resource
+type mqlWindowsEventlog struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsEventlogInternal
+	Name              plugin.TValue[string]
+	MaxSizeKB         plugin.TValue[int64]
+	Retention         plugin.TValue[string]
+	OverwriteAsNeeded plugin.TValue[bool]
+}
+
+// createWindowsEventlog creates a new instance of this resource
+func createWindowsEventlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsEventlog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.eventlog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsEventlog) MqlName() string {
+	return "windows.eventlog"
+}
+
+func (c *mqlWindowsEventlog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsEventlog) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsEventlog) GetMaxSizeKB() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxSizeKB, func() (int64, error) {
+		return c.maxSizeKB()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetRetention() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Retention, func() (string, error) {
+		return c.retention()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetOverwriteAsNeeded() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OverwriteAsNeeded, func() (bool, error) {
+		return c.overwriteAsNeeded()
+	})
 }
 
 // mqlWindowsRdp for the windows.rdp resource
