@@ -120,11 +120,11 @@ private microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleS
 // Iterate over all Microsoft Entra ID (formerly Azure AD) groups in the tenant.
 // Each entry is a `microsoft.group` exposing `displayName`, `securityEnabled`,
 // `mailEnabled`, `groupTypes`, membership rules, expiration settings, and
-// on-premises sync status. Use `length` to count the total number of groups.
+// on-premises sync status. Use `count` to get the total number of groups.
 microsoft.groups {
   []microsoft.group
   // Total number of Microsoft groups
-  length() int
+  count() int
 }
 
 // Microsoft 365 Group Setting
@@ -159,12 +159,12 @@ microsoft.settingValue  @defaults("name value") {
 // Iterate over all application registrations in the tenant. Each entry is a
 // `microsoft.application` exposing identity details (`id`, `appId`, `name`),
 // credential health (`hasExpiredCredentials`, `secrets`, `certificates`),
-// sign-in audience, and linked service principal. Use `length` to count
+// sign-in audience, and linked service principal. Use `count` to get
 // the total number of registered applications.
 microsoft.applications {
   []microsoft.application
   // Total number of application registrations
-  length() int
+  count() int
 }
 
 // Microsoft Entra Tenant

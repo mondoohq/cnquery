@@ -330,7 +330,7 @@ func (a *mqlMicrosoftGroupOwner) servicePrincipal() (*mqlMicrosoftServiceprincip
 	return spResource.(*mqlMicrosoftServiceprincipal), nil
 }
 
-func (a *mqlMicrosoftGroups) length() (int64, error) {
+func (a *mqlMicrosoftGroups) count() (int64, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -339,14 +339,14 @@ func (a *mqlMicrosoftGroups) length() (int64, error) {
 
 	opts := &groups.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
 	opts.Headers.Add("ConsistencyLevel", "eventual")
-	length, err := graphClient.Groups().Count().Get(context.Background(), opts)
+	count, err := graphClient.Groups().Count().Get(context.Background(), opts)
 	if err != nil {
 		return 0, err
 	}
-	if length == nil {
+	if count == nil {
 		// This should never happen, but we better check
 		return 0, errors.New("unable to count groups, counter parameter API returned nil")
 	}
 
-	return int64(*length), nil
+	return int64(*count), nil
 }

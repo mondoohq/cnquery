@@ -1076,8 +1076,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleSettings.recurrence": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviewDefinitionAccessReviewScheduleSettings).GetRecurrence()).ToDataRes(types.Dict)
 	},
-	"microsoft.groups.length": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftGroups).GetLength()).ToDataRes(types.Int)
+	"microsoft.groups.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroups).GetCount()).ToDataRes(types.Int)
 	},
 	"microsoft.groups.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroups).GetList()).ToDataRes(types.Array(types.Resource("microsoft.group")))
@@ -1097,8 +1097,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.settingValue.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSettingValue).GetValue()).ToDataRes(types.String)
 	},
-	"microsoft.applications.length": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftApplications).GetLength()).ToDataRes(types.Int)
+	"microsoft.applications.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplications).GetCount()).ToDataRes(types.Int)
 	},
 	"microsoft.applications.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplications).GetList()).ToDataRes(types.Array(types.Resource("microsoft.application")))
@@ -5588,8 +5588,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftGroups).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.groups.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftGroups).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"microsoft.groups.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroups).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.groups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5628,8 +5628,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftApplications).__id, ok = v.Value.(string)
 		return
 	},
-	"microsoft.applications.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftApplications).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"microsoft.applications.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplications).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"microsoft.applications.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12616,8 +12616,8 @@ type mqlMicrosoftGroups struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftGroupsInternal it will be used here
-	Length plugin.TValue[int64]
-	List   plugin.TValue[[]any]
+	Count plugin.TValue[int64]
+	List  plugin.TValue[[]any]
 }
 
 // createMicrosoftGroups creates a new instance of this resource
@@ -12652,9 +12652,9 @@ func (c *mqlMicrosoftGroups) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftGroups) GetLength() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
-		return c.length()
+func (c *mqlMicrosoftGroups) GetCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Count, func() (int64, error) {
+		return c.count()
 	})
 }
 
@@ -12782,8 +12782,8 @@ type mqlMicrosoftApplications struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftApplicationsInternal it will be used here
-	Length plugin.TValue[int64]
-	List   plugin.TValue[[]any]
+	Count plugin.TValue[int64]
+	List  plugin.TValue[[]any]
 }
 
 // createMicrosoftApplications creates a new instance of this resource
@@ -12818,9 +12818,9 @@ func (c *mqlMicrosoftApplications) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlMicrosoftApplications) GetLength() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
-		return c.length()
+func (c *mqlMicrosoftApplications) GetCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Count, func() (int64, error) {
+		return c.count()
 	})
 }
 

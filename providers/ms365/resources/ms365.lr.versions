@@ -64,7 +64,7 @@ microsoft.application.tags 9.0.0
 microsoft.application.tokenEncryptionKeyId 9.0.0
 microsoft.application.web 9.0.0
 microsoft.applications 11.1.19
-microsoft.applications.length 11.1.19
+microsoft.applications.count 13.5.1
 microsoft.applications.list 11.1.19
 microsoft.authenticationMethodConfiguration 11.1.99
 microsoft.authenticationMethodConfiguration.excludeTargets 11.1.99
@@ -711,7 +711,7 @@ microsoft.groupLifecyclePolicy.id 11.1.42
 microsoft.groupLifecyclePolicy.managedGroupTypes 11.1.42
 microsoft.groupSettings 9.0.0
 microsoft.groups 11.1.19
-microsoft.groups.length 11.1.19
+microsoft.groups.count 13.5.1
 microsoft.groups.list 11.1.19
 microsoft.identityAndAccess 11.1.40
 microsoft.identityAndAccess.accessReviewDefinition 11.1.46

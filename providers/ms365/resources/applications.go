@@ -65,7 +65,7 @@ func (a *mqlMicrosoftApplications) list() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlMicrosoftApplications) length() (int64, error) {
+func (a *mqlMicrosoftApplications) count() (int64, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -74,16 +74,16 @@ func (a *mqlMicrosoftApplications) length() (int64, error) {
 
 	opts := &applications.CountRequestBuilderGetRequestConfiguration{Headers: abstractions.NewRequestHeaders()}
 	opts.Headers.Add("ConsistencyLevel", "eventual")
-	length, err := graphClient.Applications().Count().Get(context.Background(), opts)
+	count, err := graphClient.Applications().Count().Get(context.Background(), opts)
 	if err != nil {
 		return 0, err
 	}
-	if length == nil {
+	if count == nil {
 		// This should never happen, but we better check
 		return 0, errors.New("unable to count applications, counter parameter API returned nil")
 	}
 
-	return int64(*length), nil
+	return int64(*count), nil
 }
 
 // newMqlMicrosoftApplication creates a new mqlMicrosoftApplication resource
