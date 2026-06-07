@@ -34,9 +34,9 @@ func bytes2int(b []byte) int64 {
 		// Malformed or truncated varint (n == 0: buffer too short, n < 0:
 		// overflow). Callers decode ints, refs, and indices from this, so we
 		// fall back to zero rather than panicking on a corrupt or untrusted
-		// Primitive. Logged at debug so the degraded decode stays observable
+		// Primitive. Logged at warning so the degraded decode stays observable
 		// instead of silently masking corruption.
-		log.Debug().Int("len", len(b)).Msg("bytes2int: malformed varint, falling back to 0")
+		log.Warn().Int("len", len(b)).Msg("bytes2int: malformed varint, falling back to 0")
 		return 0
 	}
 	return res
