@@ -1272,9 +1272,11 @@ ms365.exchangeonline.dkimSigningConfigEntry.status 13.3.1
 ms365.exchangeonline.dkimSigningConfigs 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy.comment 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.copilot 13.5.1
 ms365.exchangeonline.dlpCompliancePolicy.createdBy 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy.distributionStatus 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy.enabled 13.3.1
+ms365.exchangeonline.dlpCompliancePolicy.enforcementPlanes 13.5.1
 ms365.exchangeonline.dlpCompliancePolicy.guid 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy.isValid 13.3.1
 ms365.exchangeonline.dlpCompliancePolicy.mode 13.3.1

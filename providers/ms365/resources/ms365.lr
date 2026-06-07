@@ -3616,6 +3616,18 @@ private ms365.exchangeonline.dlpCompliancePolicy @defaults("name mode enabled wo
   whenCreated time
   // Date and time the policy was last changed
   whenChanged time
+  // Enforcement planes
+  //
+  // Layers where the policy's actions run. Values include Browser (unmanaged
+  // cloud apps in Microsoft Edge for Business), CopilotExperiences (Microsoft
+  // 365 Copilot interactions), Application (Entra-registered enterprise
+  // applications), and Network.
+  enforcementPlanes []string
+  // Microsoft 365 Copilot location scope
+  //
+  // Inclusion and exclusion scoping for the Microsoft 365 Copilot location the
+  // policy covers, or null when the policy doesn't apply to Copilot.
+  copilot dict
 }
 
 // Teams Protection Policy configuration

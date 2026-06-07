@@ -4541,6 +4541,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.dlpCompliancePolicy.whenChanged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetWhenChanged()).ToDataRes(types.Time)
 	},
+	"ms365.exchangeonline.dlpCompliancePolicy.enforcementPlanes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetEnforcementPlanes()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.copilot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).GetCopilot()).ToDataRes(types.Dict)
+	},
 	"ms365.exchangeonline.teamsProtectionPolicy.zapEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineTeamsProtectionPolicy).GetZapEnabled()).ToDataRes(types.Bool)
 	},
@@ -10909,6 +10915,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.dlpCompliancePolicy.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.enforcementPlanes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).EnforcementPlanes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.dlpCompliancePolicy.copilot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineDlpCompliancePolicy).Copilot, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.teamsProtectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26056,6 +26070,8 @@ type mqlMs365ExchangeonlineDlpCompliancePolicy struct {
 	DistributionStatus plugin.TValue[string]
 	WhenCreated        plugin.TValue[*time.Time]
 	WhenChanged        plugin.TValue[*time.Time]
+	EnforcementPlanes  plugin.TValue[[]any]
+	Copilot            plugin.TValue[any]
 }
 
 // createMs365ExchangeonlineDlpCompliancePolicy creates a new instance of this resource
@@ -26136,6 +26152,14 @@ func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetWhenCreated() *plugin.TVa
 
 func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetWhenChanged() *plugin.TValue[*time.Time] {
 	return &c.WhenChanged
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetEnforcementPlanes() *plugin.TValue[[]any] {
+	return &c.EnforcementPlanes
+}
+
+func (c *mqlMs365ExchangeonlineDlpCompliancePolicy) GetCopilot() *plugin.TValue[any] {
+	return &c.Copilot
 }
 
 // mqlMs365ExchangeonlineTeamsProtectionPolicy for the ms365.exchangeonline.teamsProtectionPolicy resource

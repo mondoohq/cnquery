@@ -10,6 +10,8 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // dlpPolicies returns the Data Loss Prevention compliance policies as typed
@@ -38,6 +40,11 @@ func convertDlpCompliancePolicies(runtime *plugin.Runtime, raw []any) ([]any, er
 			id = dlpString(m, "Name")
 		}
 
+		copilot, err := convert.JsonToDict(m["Copilot"])
+		if err != nil {
+			return nil, err
+		}
+
 		mql, err := CreateResource(runtime, "ms365.exchangeonline.dlpCompliancePolicy",
 			map[string]*llx.RawData{
 				"__id":               llx.StringData("dlpCompliancePolicy-" + id),
@@ -53,6 +60,8 @@ func convertDlpCompliancePolicies(runtime *plugin.Runtime, raw []any) ([]any, er
 				"distributionStatus": llx.StringData(dlpString(m, "DistributionStatus")),
 				"whenCreated":        llx.TimeDataPtr(dlpTime(m, "WhenCreated")),
 				"whenChanged":        llx.TimeDataPtr(dlpTime(m, "WhenChanged")),
+				"enforcementPlanes":  llx.ArrayData(dlpStringSlice(m, "EnforcementPlanes"), types.String),
+				"copilot":            llx.DictData(copilot),
 			})
 		if err != nil {
 			return nil, err
