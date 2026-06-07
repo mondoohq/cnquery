@@ -56,3 +56,32 @@ func (p *mqlAuditpol) list() ([]any, error) {
 func (p *mqlAuditpolEntry) id() (string, error) {
 	return p.Subcategoryguid.Data, nil
 }
+
+// auditpolInclusionAudits reports whether an auditpol inclusion setting audits
+// the given event kind ("success" or "failure"). The setting is one of
+// "Success", "Failure", "Success and Failure", or "No Auditing".
+func auditpolInclusionAudits(inclusionSetting, kind string) bool {
+	return strings.Contains(strings.ToLower(inclusionSetting), kind)
+}
+
+// success reports whether the inclusion setting audits success events. It is
+// true for "Success" and "Success and Failure", false for "Failure" and
+// "No Auditing".
+func (p *mqlAuditpolEntry) success() (bool, error) {
+	setting := p.GetInclusionsetting()
+	if setting.Error != nil {
+		return false, setting.Error
+	}
+	return auditpolInclusionAudits(setting.Data, "success"), nil
+}
+
+// failure reports whether the inclusion setting audits failure events. It is
+// true for "Failure" and "Success and Failure", false for "Success" and
+// "No Auditing".
+func (p *mqlAuditpolEntry) failure() (bool, error) {
+	setting := p.GetInclusionsetting()
+	if setting.Error != nil {
+		return false, setting.Error
+	}
+	return auditpolInclusionAudits(setting.Data, "failure"), nil
+}

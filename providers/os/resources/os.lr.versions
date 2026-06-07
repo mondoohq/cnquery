@@ -157,11 +157,13 @@ auditd.rules.syscalls 11.4.21
 auditpol 9.0.1
 auditpol.entry 9.0.1
 auditpol.entry.exclusionsetting 9.0.1
+auditpol.entry.failure 13.22.2
 auditpol.entry.inclusionsetting 9.0.1
 auditpol.entry.machinename 9.0.1
 auditpol.entry.policytarget 9.0.1
 auditpol.entry.subcategory 9.0.1
 auditpol.entry.subcategoryguid 9.0.1
+auditpol.entry.success 13.22.2
 auditpol.list 9.0.1
 augment 13.13.1
 augment.configPath 13.13.1

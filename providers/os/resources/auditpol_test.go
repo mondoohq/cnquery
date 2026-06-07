@@ -44,4 +44,30 @@ func TestResource_Auditpol(t *testing.T) {
 		assert.False(t, r)
 		assert.True(t, found)
 	})
+
+	// success / failure booleans derived from inclusionsetting, exercised
+	// through the resource methods rather than the pure helper.
+	successFailureCases := []struct {
+		subcategory string // its inclusionsetting in the recording
+		success     bool
+		failure     bool
+	}{
+		{"System Integrity", true, true},            // "Success and Failure"
+		{"Security State Change", true, false},      // "Success"
+		{"Security System Extension", false, false}, // "No Auditing"
+	}
+	for _, tc := range successFailureCases {
+		t.Run("success for "+tc.subcategory, func(t *testing.T) {
+			res := testWindowsQuery(t, "auditpol.where(subcategory == '"+tc.subcategory+"')[0].success")
+			assert.NotEmpty(t, res)
+			assert.Empty(t, res[0].Result().Error)
+			assert.Equal(t, tc.success, res[0].Data.Value)
+		})
+		t.Run("failure for "+tc.subcategory, func(t *testing.T) {
+			res := testWindowsQuery(t, "auditpol.where(subcategory == '"+tc.subcategory+"')[0].failure")
+			assert.NotEmpty(t, res)
+			assert.Empty(t, res[0].Result().Error)
+			assert.Equal(t, tc.failure, res[0].Data.Value)
+		})
+	}
 }

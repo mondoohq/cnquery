@@ -3551,8 +3551,10 @@ auditpol {
 //
 // Examine a single Windows audit-policy entry: the machine name, policy
 // target, subcategory name and GUID, inclusion setting, and exclusion
-// setting. Iterated from `auditpol` to assert that specific subcategories
-// (e.g., Logon, Account Management) have the expected audit settings.
+// setting, plus the `success` and `failure` booleans derived from the
+// inclusion setting. Iterated from `auditpol` to assert that specific
+// subcategories (e.g., Logon, Account Management) have the expected audit
+// settings.
 auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
   // Machine name
   machinename string
@@ -3566,6 +3568,14 @@ auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
   inclusionsetting string
   // Exclusive settings
   exclusionsetting string
+  // Whether the inclusion setting audits success events
+  //
+  // True for "Success" and "Success and Failure".
+  success() bool
+  // Whether the inclusion setting audits failure events
+  //
+  // True for "Failure" and "Success and Failure".
+  failure() bool
 }
 
 // Windows local security policy
