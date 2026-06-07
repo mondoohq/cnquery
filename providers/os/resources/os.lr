@@ -3601,6 +3601,49 @@ ntp.conf {
   fudge(settings) []string
 }
 
+// Chrony NTP daemon configuration
+//
+// Examine the configuration of chrony, the default NTP implementation on
+// modern RHEL, Fedora, SUSE, and Debian/Ubuntu systems. The typed
+// accessors parse the configuration into structured form so audits can
+// assert on individual directives without regex over the raw text:
+// `servers`, `pools`, and `peers` enumerate the configured time sources;
+// `allow` and `deny` expose the NTP-server access control lists that
+// decide which clients this host serves time to (an empty `allow` means
+// the daemon does not answer client requests); `bindCmdAddresses` reports
+// where the control socket listens; and `keyFile`, `makeStep`, and
+// `rtcSync` cover the authentication key file, clock-stepping policy, and
+// real-time-clock synchronization. Select an alternate file with
+// `chrony.conf(path: "...")`; the default resolves to `/etc/chrony.conf`
+// (RHEL family) or `/etc/chrony/chrony.conf` (Debian family).
+chrony.conf {
+  init(path string)
+  // File backing the chrony configuration
+  file() file
+  // Raw contents of the chrony configuration
+  content(file) string
+  // Effective settings with comments and blank lines removed
+  settings(content) []string
+  // Time sources from `server` directives (host plus any options)
+  servers(settings) []string
+  // Time-source pools from `pool` directives (host plus any options)
+  pools(settings) []string
+  // Symmetric peers from `peer` directives
+  peers(settings) []string
+  // Hosts permitted to use this system as a time server (`allow` directives)
+  allow(settings) []string
+  // Hosts denied use of this system as a time server (`deny` directives)
+  deny(settings) []string
+  // Addresses the command/monitoring socket binds to (`bindcmdaddress`)
+  bindCmdAddresses(settings) []string
+  // Path to the NTP authentication key file (`keyfile`), empty when unset
+  keyFile(settings) string
+  // Clock-stepping policy from the `makestep` directive, empty when unset
+  makeStep(settings) string
+  // Whether the real-time clock is kept in sync (`rtcsync` directive present)
+  rtcSync(settings) bool
+}
+
 // rsyslog daemon configuration
 //
 // Examine effective settings across the main file and included fragments.
@@ -4421,6 +4464,80 @@ yum.repo {
   mirrors string
   // Whether the repository is used as package source
   enabled() bool
+}
+
+// Yum/DNF global configuration
+//
+// Examine the system-wide package manager configuration — the `[main]`
+// section of `/etc/yum.conf`, or `/etc/dnf/dnf.conf` on dnf-based
+// systems. Use `gpgcheck` and `localPkgGpgcheck` to assert that package
+// signature verification is enforced for every repository and for
+// locally installed packages, a core CIS supply-chain control;
+// `repoGpgcheck` extends that to repository metadata. The bool accessors
+// reflect the explicit directive and are `false` when the directive is
+// absent. `params` exposes every `[main]` directive as a raw string map
+// for settings without a typed accessor. Select an alternate file with
+// `yum.config(path: "...")`.
+yum.config {
+  init(path string)
+  // File backing the [main] configuration section
+  file() file
+  // Raw contents of the configuration file
+  content(file) string
+  // Every [main] section directive as key/value strings
+  params(content) map[string]string
+  // Whether package signature checking is enforced globally (gpgcheck)
+  gpgcheck(params) bool
+  // Whether signature checking is enforced for local packages (localpkg_gpgcheck)
+  localPkgGpgcheck(params) bool
+  // Whether repository metadata signature checking is enforced (repo_gpgcheck)
+  repoGpgcheck(params) bool
+  // Whether dependencies are removed along with packages (clean_requirements_on_remove)
+  cleanRequirementsOnRemove(params) bool
+}
+
+// Advanced Package Tool (APT) configuration
+//
+// Use this as the entry point to the Debian/Ubuntu package management
+// configuration. `repos` enumerates every configured APT repository
+// across `/etc/apt/sources.list` and the `/etc/apt/sources.list.d/`
+// directory, parsing both the classic one-line format and the deb822
+// `.sources` format. Audit repository trust from there — each `apt.repo`
+// reports whether it is marked `trusted` (signature checks bypassed) and
+// the `signedBy` keyring that pins which key may sign it.
+apt {
+  // All configured APT repositories
+  repos() []apt.repo
+}
+
+// APT software repository
+//
+// Examine a single configured APT repository parsed from a sources list:
+// its package `type` (`deb` for binary or `deb-src` for source), the
+// `url` it fetches from, the `distribution` (suite) and `components` it
+// pulls, and the `file` that declares it. The security-relevant fields
+// are `trusted` — true when the entry carries `[trusted=yes]`, which
+// disables signature verification — and `signedBy`, the keyring path
+// pinning which key may sign the repository. `enabled` is false for
+// entries commented out in a one-line sources file or marked
+// `Enabled: no` in a deb822 file.
+private apt.repo @defaults("type url distribution") {
+  // Package type: `deb` (binary) or `deb-src` (source)
+  type string
+  // Repository URI packages are fetched from
+  url string
+  // Distribution / suite (e.g., `bookworm`, `noble-security`)
+  distribution string
+  // Components enabled for this repository (e.g., `main`, `contrib`)
+  components []string
+  // Whether signature verification is bypassed (`[trusted=yes]`)
+  trusted bool
+  // Keyring path pinning the signing key (`signed-by`), empty when unset
+  signedBy string
+  // Whether the repository entry is active
+  enabled bool
+  // Source list file that declares this repository
+  file file
 }
 
 // Windows registry key

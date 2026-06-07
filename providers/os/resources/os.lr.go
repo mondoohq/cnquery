@@ -185,6 +185,7 @@ const (
 	ResourceAuditpolEntry                 string = "auditpol.entry"
 	ResourceSecpol                        string = "secpol"
 	ResourceNtpConf                       string = "ntp.conf"
+	ResourceChronyConf                    string = "chrony.conf"
 	ResourceRsyslogConf                   string = "rsyslog.conf"
 	ResourceRsyslogModule                 string = "rsyslog.module"
 	ResourceRsyslogInput                  string = "rsyslog.input"
@@ -229,6 +230,9 @@ const (
 	ResourceShadowEntry                   string = "shadow.entry"
 	ResourceYum                           string = "yum"
 	ResourceYumRepo                       string = "yum.repo"
+	ResourceYumConfig                     string = "yum.config"
+	ResourceApt                           string = "apt"
+	ResourceAptRepo                       string = "apt.repo"
 	ResourceRegistrykey                   string = "registrykey"
 	ResourceRegistrykeyProperty           string = "registrykey.property"
 	ResourceContainerImage                string = "container.image"
@@ -1101,6 +1105,10 @@ func init() {
 			Init:   initNtpConf,
 			Create: createNtpConf,
 		},
+		"chrony.conf": {
+			Init:   initChronyConf,
+			Create: createChronyConf,
+		},
 		"rsyslog.conf": {
 			// to override args, implement: initRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRsyslogConf,
@@ -1276,6 +1284,18 @@ func init() {
 		"yum.repo": {
 			Init:   initYumRepo,
 			Create: createYumRepo,
+		},
+		"yum.config": {
+			Init:   initYumConfig,
+			Create: createYumConfig,
+		},
+		"apt": {
+			// to override args, implement: initApt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApt,
+		},
+		"apt.repo": {
+			// to override args, implement: initAptRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAptRepo,
 		},
 		"registrykey": {
 			// to override args, implement: initRegistrykey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5339,6 +5359,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ntp.conf.fudge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNtpConf).GetFudge()).ToDataRes(types.Array(types.String))
 	},
+	"chrony.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"chrony.conf.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetContent()).ToDataRes(types.String)
+	},
+	"chrony.conf.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetSettings()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetServers()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.pools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetPools()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.peers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetPeers()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetAllow()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.deny": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetDeny()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.bindCmdAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetBindCmdAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"chrony.conf.keyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetKeyFile()).ToDataRes(types.String)
+	},
+	"chrony.conf.makeStep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetMakeStep()).ToDataRes(types.String)
+	},
+	"chrony.conf.rtcSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChronyConf).GetRtcSync()).ToDataRes(types.Bool)
+	},
 	"rsyslog.conf.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRsyslogConf).GetPath()).ToDataRes(types.String)
 	},
@@ -6019,6 +6075,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"yum.repo.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"yum.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"yum.config.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetContent()).ToDataRes(types.String)
+	},
+	"yum.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"yum.config.gpgcheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetGpgcheck()).ToDataRes(types.Bool)
+	},
+	"yum.config.localPkgGpgcheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetLocalPkgGpgcheck()).ToDataRes(types.Bool)
+	},
+	"yum.config.repoGpgcheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetRepoGpgcheck()).ToDataRes(types.Bool)
+	},
+	"yum.config.cleanRequirementsOnRemove": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumConfig).GetCleanRequirementsOnRemove()).ToDataRes(types.Bool)
+	},
+	"apt.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApt).GetRepos()).ToDataRes(types.Array(types.Resource("apt.repo")))
+	},
+	"apt.repo.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetType()).ToDataRes(types.String)
+	},
+	"apt.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"apt.repo.distribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetDistribution()).ToDataRes(types.String)
+	},
+	"apt.repo.components": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetComponents()).ToDataRes(types.Array(types.String))
+	},
+	"apt.repo.trusted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetTrusted()).ToDataRes(types.Bool)
+	},
+	"apt.repo.signedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetSignedBy()).ToDataRes(types.String)
+	},
+	"apt.repo.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"apt.repo.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAptRepo).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"registrykey.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetPath()).ToDataRes(types.String)
@@ -14355,6 +14459,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNtpConf).Fudge, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"chrony.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).__id, ok = v.Value.(string)
+		return
+	},
+	"chrony.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.pools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.peers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Peers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Allow, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.deny": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).Deny, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.bindCmdAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).BindCmdAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.keyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).KeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.makeStep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).MakeStep, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrony.conf.rtcSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChronyConf).RtcSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"rsyslog.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRsyslogConf).__id, ok = v.Value.(string)
 		return
@@ -15437,6 +15593,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"yum.repo.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYumRepo).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"yum.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"yum.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"yum.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"yum.config.gpgcheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).Gpgcheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"yum.config.localPkgGpgcheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).LocalPkgGpgcheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"yum.config.repoGpgcheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).RepoGpgcheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"yum.config.cleanRequirementsOnRemove": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumConfig).CleanRequirementsOnRemove, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApt).__id, ok = v.Value.(string)
+		return
+	},
+	"apt.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApt).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apt.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"apt.repo.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apt.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apt.repo.distribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Distribution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apt.repo.components": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Components, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apt.repo.trusted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Trusted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apt.repo.signedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).SignedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apt.repo.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apt.repo.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAptRepo).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
 	},
 	"registrykey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35825,6 +36057,199 @@ func (c *mqlNtpConf) GetFudge() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlChronyConf for the chrony.conf resource
+type mqlChronyConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChronyConfInternal it will be used here
+	File             plugin.TValue[*mqlFile]
+	Content          plugin.TValue[string]
+	Settings         plugin.TValue[[]any]
+	Servers          plugin.TValue[[]any]
+	Pools            plugin.TValue[[]any]
+	Peers            plugin.TValue[[]any]
+	Allow            plugin.TValue[[]any]
+	Deny             plugin.TValue[[]any]
+	BindCmdAddresses plugin.TValue[[]any]
+	KeyFile          plugin.TValue[string]
+	MakeStep         plugin.TValue[string]
+	RtcSync          plugin.TValue[bool]
+}
+
+// createChronyConf creates a new instance of this resource
+func createChronyConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChronyConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chrony.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChronyConf) MqlName() string {
+	return "chrony.conf"
+}
+
+func (c *mqlChronyConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChronyConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("chrony.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlChronyConf) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Settings, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.settings(vargContent.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.servers(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pools, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.pools(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetPeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Peers, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.peers(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetAllow() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Allow, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.allow(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetDeny() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deny, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.deny(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetBindCmdAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BindCmdAddresses, func() ([]any, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.bindCmdAddresses(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KeyFile, func() (string, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return "", vargSettings.Error
+		}
+
+		return c.keyFile(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetMakeStep() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MakeStep, func() (string, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return "", vargSettings.Error
+		}
+
+		return c.makeStep(vargSettings.Data)
+	})
+}
+
+func (c *mqlChronyConf) GetRtcSync() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RtcSync, func() (bool, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return false, vargSettings.Error
+		}
+
+		return c.rtcSync(vargSettings.Data)
+	})
+}
+
 // mqlRsyslogConf for the rsyslog.conf resource
 type mqlRsyslogConf struct {
 	MqlRuntime *plugin.Runtime
@@ -39528,6 +39953,279 @@ func (c *mqlYumRepo) GetEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
 		return c.enabled()
 	})
+}
+
+// mqlYumConfig for the yum.config resource
+type mqlYumConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlYumConfigInternal it will be used here
+	File                      plugin.TValue[*mqlFile]
+	Content                   plugin.TValue[string]
+	Params                    plugin.TValue[map[string]any]
+	Gpgcheck                  plugin.TValue[bool]
+	LocalPkgGpgcheck          plugin.TValue[bool]
+	RepoGpgcheck              plugin.TValue[bool]
+	CleanRequirementsOnRemove plugin.TValue[bool]
+}
+
+// createYumConfig creates a new instance of this resource
+func createYumConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlYumConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("yum.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlYumConfig) MqlName() string {
+	return "yum.config"
+}
+
+func (c *mqlYumConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlYumConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("yum.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlYumConfig) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlYumConfig) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+func (c *mqlYumConfig) GetGpgcheck() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Gpgcheck, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.gpgcheck(vargParams.Data)
+	})
+}
+
+func (c *mqlYumConfig) GetLocalPkgGpgcheck() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalPkgGpgcheck, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.localPkgGpgcheck(vargParams.Data)
+	})
+}
+
+func (c *mqlYumConfig) GetRepoGpgcheck() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RepoGpgcheck, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.repoGpgcheck(vargParams.Data)
+	})
+}
+
+func (c *mqlYumConfig) GetCleanRequirementsOnRemove() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CleanRequirementsOnRemove, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.cleanRequirementsOnRemove(vargParams.Data)
+	})
+}
+
+// mqlApt for the apt resource
+type mqlApt struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAptInternal it will be used here
+	Repos plugin.TValue[[]any]
+}
+
+// createApt creates a new instance of this resource
+func createApt(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApt{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apt", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApt) MqlName() string {
+	return "apt"
+}
+
+func (c *mqlApt) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApt) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apt", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlAptRepo for the apt.repo resource
+type mqlAptRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAptRepoInternal it will be used here
+	Type         plugin.TValue[string]
+	Url          plugin.TValue[string]
+	Distribution plugin.TValue[string]
+	Components   plugin.TValue[[]any]
+	Trusted      plugin.TValue[bool]
+	SignedBy     plugin.TValue[string]
+	Enabled      plugin.TValue[bool]
+	File         plugin.TValue[*mqlFile]
+}
+
+// createAptRepo creates a new instance of this resource
+func createAptRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAptRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apt.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAptRepo) MqlName() string {
+	return "apt.repo"
+}
+
+func (c *mqlAptRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAptRepo) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAptRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAptRepo) GetDistribution() *plugin.TValue[string] {
+	return &c.Distribution
+}
+
+func (c *mqlAptRepo) GetComponents() *plugin.TValue[[]any] {
+	return &c.Components
+}
+
+func (c *mqlAptRepo) GetTrusted() *plugin.TValue[bool] {
+	return &c.Trusted
+}
+
+func (c *mqlAptRepo) GetSignedBy() *plugin.TValue[string] {
+	return &c.SignedBy
+}
+
+func (c *mqlAptRepo) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAptRepo) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
 }
 
 // mqlRegistrykey for the registrykey resource
