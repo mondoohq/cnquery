@@ -132,16 +132,20 @@ func (s *Schema) LookupField(resource string, field string) (*ResourceInfo, *Fie
 		return res, nil
 	}
 
-	// If the fields don't exist in the current resource, check the other instances of it
-	if res.Fields == nil {
-		for _, o := range res.Others {
-			if o.Fields != nil && o.Fields[field] != nil {
-				res = o
-				break
-			}
+	// The field may live on the primary resource or, when several providers
+	// extend the same resource, on one of its "other" instances. Search the
+	// primary first, then fall back to the others. (Map iteration during
+	// aggregation makes which provider becomes the primary non-deterministic,
+	// so we must not assume the field sits on the primary.)
+	if f := res.Fields[field]; f != nil {
+		return res, f
+	}
+	for _, o := range res.Others {
+		if f := o.Fields[field]; f != nil {
+			return o, f
 		}
 	}
-	return res, res.Fields[field]
+	return res, nil
 }
 
 type FieldPath []string
