@@ -681,8 +681,19 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	log.Debug().Str("path", tmpdir).Msg("unpacking providers")
 	files := map[string]struct{}{}
 	err = walkTarXz(reader, func(reader *tar.Reader, header *tar.Header) error {
-		files[header.Name] = struct{}{}
 		dst := filepath.Join(tmpdir, header.Name)
+
+		// Keep every entry within tmpdir. filepath.Join cleans the path, so an
+		// entry whose name contains ".." segments would otherwise resolve to a
+		// location outside the unpack directory; reject those instead. This
+		// also keeps the names recorded in `files` safe for the rename loop
+		// below, which joins them onto conf.Dst.
+		rel, err := filepath.Rel(tmpdir, dst)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+			return errors.New("invalid path in provider archive: " + header.Name)
+		}
+
+		files[header.Name] = struct{}{}
 		log.Debug().Str("name", header.Name).Str("dest", dst).Msg("unpacking file")
 		writer, err := os.Create(dst)
 		if err != nil {
