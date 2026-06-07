@@ -3717,6 +3717,27 @@ private postfix.service @defaults("service type command") {
   command string
 }
 
+// Exim mail transfer agent configuration
+//
+// Examine the Exim configuration. `params` holds the macros and main-section
+// options parsed from the active config file — both the Debian
+// `update-exim4.conf.conf` key/value form and the monolithic `exim.conf`
+// main section (options before the first `begin` block). `localInterfaces`
+// normalizes the local interface list, handling the Debian
+// `dc_local_interfaces` `' ; '`-separated form and the Exim `local_interfaces`
+// list, so policies can compare it directly. By default the per-distribution
+// config location is used; select an alternate file with
+// `exim("/path/to/exim.conf")`.
+exim {
+  init(path? string)
+  // Path to the active Exim configuration file
+  configPath() string
+  // Parsed macros and main-section options
+  params() map[string]string
+  // Local interfaces parsed and normalized into a list
+  localInterfaces() []string
+}
+
 // rsyslog daemon configuration
 //
 // Examine effective settings across the main file and included fragments.

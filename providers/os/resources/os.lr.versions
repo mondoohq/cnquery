@@ -589,6 +589,10 @@ erlang.packages 13.13.1
 erlang.packages.files 13.13.1
 erlang.packages.list 13.13.1
 erlang.packages.path 13.13.1
+exim 13.23.1
+exim.configPath 13.23.1
+exim.localInterfaces 13.23.1
+exim.params 13.23.1
 file 9.0.0
 file.basename 9.0.0
 file.content 9.0.0

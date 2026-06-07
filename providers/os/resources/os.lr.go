@@ -188,6 +188,7 @@ const (
 	ResourceChronyConf                    string = "chrony.conf"
 	ResourcePostfix                       string = "postfix"
 	ResourcePostfixService                string = "postfix.service"
+	ResourceExim                          string = "exim"
 	ResourceRsyslogConf                   string = "rsyslog.conf"
 	ResourceRsyslogModule                 string = "rsyslog.module"
 	ResourceRsyslogInput                  string = "rsyslog.input"
@@ -1121,6 +1122,10 @@ func init() {
 		"postfix.service": {
 			// to override args, implement: initPostfixService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPostfixService,
+		},
+		"exim": {
+			Init:   initExim,
+			Create: createExim,
 		},
 		"rsyslog.conf": {
 			// to override args, implement: initRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5467,6 +5472,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"postfix.service.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPostfixService).GetCommand()).ToDataRes(types.String)
+	},
+	"exim.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlExim).GetConfigPath()).ToDataRes(types.String)
+	},
+	"exim.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlExim).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"exim.localInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlExim).GetLocalInterfaces()).ToDataRes(types.Array(types.String))
 	},
 	"rsyslog.conf.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRsyslogConf).GetPath()).ToDataRes(types.String)
@@ -14726,6 +14740,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"postfix.service.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPostfixService).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"exim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlExim).__id, ok = v.Value.(string)
+		return
+	},
+	"exim.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlExim).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"exim.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlExim).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"exim.localInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlExim).LocalInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"rsyslog.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36772,6 +36802,71 @@ func (c *mqlPostfixService) GetMaxProcesses() *plugin.TValue[string] {
 
 func (c *mqlPostfixService) GetCommand() *plugin.TValue[string] {
 	return &c.Command
+}
+
+// mqlExim for the exim resource
+type mqlExim struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEximInternal it will be used here
+	ConfigPath      plugin.TValue[string]
+	Params          plugin.TValue[map[string]any]
+	LocalInterfaces plugin.TValue[[]any]
+}
+
+// createExim creates a new instance of this resource
+func createExim(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlExim{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("exim", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlExim) MqlName() string {
+	return "exim"
+}
+
+func (c *mqlExim) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlExim) GetConfigPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigPath, func() (string, error) {
+		return c.configPath()
+	})
+}
+
+func (c *mqlExim) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlExim) GetLocalInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LocalInterfaces, func() ([]any, error) {
+		return c.localInterfaces()
+	})
 }
 
 // mqlRsyslogConf for the rsyslog.conf resource
