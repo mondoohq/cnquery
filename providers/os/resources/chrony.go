@@ -51,7 +51,6 @@ func (s *mqlChronyConf) id() (string, error) {
 }
 
 func (s *mqlChronyConf) file() (*mqlFile, error) {
-	path := chronyConfPaths[0]
 	for _, candidate := range chronyConfPaths {
 		f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
 			"path": llx.StringData(candidate),
@@ -68,7 +67,7 @@ func (s *mqlChronyConf) file() (*mqlFile, error) {
 	// none of the candidates exist; return the primary path so callers can
 	// still inspect the (missing) file rather than erroring out
 	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(path),
+		"path": llx.StringData(chronyConfPaths[0]),
 	})
 	if err != nil {
 		return nil, err
