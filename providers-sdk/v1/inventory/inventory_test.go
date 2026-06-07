@@ -243,6 +243,65 @@ func TestPreprocess(t *testing.T) {
 		assert.Equal(t, vault.CredentialType_password, v1inventory.Spec.Credentials[secretid].Type)
 		assert.Equal(t, secret, string(v1inventory.Spec.Credentials[secretid].Secret))
 	})
+
+	t.Run("relative private key path resolves within the inventory directory", func(t *testing.T) {
+		v1inventory := &Inventory{
+			Metadata: &ObjectMeta{
+				Labels: map[string]string{InventoryFilePath: "./testdata/inventory.yaml"},
+			},
+			Spec: &InventorySpec{
+				Assets: []*Asset{
+					{
+						Name: "test",
+						Connections: []*Config{
+							{
+								Type: "ssh",
+								Credentials: []*vault.Credential{
+									{
+										Type:           vault.CredentialType_private_key,
+										PrivateKeyPath: "private_key_01",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
+		assert.NotEmpty(t, v1inventory.Spec.Credentials[secretid].Secret)
+	})
+
+	t.Run("relative private key path may not escape the inventory directory", func(t *testing.T) {
+		v1inventory := &Inventory{
+			Metadata: &ObjectMeta{
+				Labels: map[string]string{InventoryFilePath: "./testdata/inventory.yaml"},
+			},
+			Spec: &InventorySpec{
+				Assets: []*Asset{
+					{
+						Name: "test",
+						Connections: []*Config{
+							{
+								Type: "ssh",
+								Credentials: []*vault.Credential{
+									{
+										Type:           vault.CredentialType_private_key,
+										PrivateKeyPath: "../../etc/hostname",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "outside the inventory directory")
+	})
 }
 
 func TestParseGCPInventory(t *testing.T) {

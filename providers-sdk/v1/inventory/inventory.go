@@ -196,7 +196,16 @@ func (p *Inventory) PreProcess() error {
 				// we handle credentials relative to the inventory file
 				fileLoc, ok := p.Metadata.Labels[InventoryFilePath]
 				if ok {
-					path = filepath.Join(filepath.Dir(fileLoc), path)
+					baseDir := filepath.Dir(fileLoc)
+					resolved := filepath.Join(baseDir, path)
+					// a relative key path is meant to sit alongside the
+					// inventory; keep it within that directory rather than
+					// letting ".." segments resolve elsewhere on disk
+					rel, err := filepath.Rel(baseDir, resolved)
+					if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+						return errors.New("private key path is outside the inventory directory: " + cred.PrivateKeyPath)
+					}
+					path = resolved
 				} else {
 					absPath, err := filepath.Abs(path)
 					if err != nil {
