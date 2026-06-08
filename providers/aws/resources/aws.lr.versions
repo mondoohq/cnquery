@@ -964,6 +964,7 @@ aws.batch.jobDefinition.eksPodProperties.metadata 13.14.1
 aws.batch.jobDefinition.eksPodProperties.serviceAccountName 13.14.1
 aws.batch.jobDefinition.eksPodProperties.shareProcessNamespace 13.14.1
 aws.batch.jobDefinition.eksPodProperties.volumes 13.14.1
+aws.batch.jobDefinition.images 13.33.2
 aws.batch.jobDefinition.jobTimeout 13.12.1
 aws.batch.jobDefinition.name 13.1.1
 aws.batch.jobDefinition.nodeMainNode 13.14.1
@@ -5954,6 +5955,14 @@ aws.lightsail.instance.bundleId 13.1.1
 aws.lightsail.instance.cpuCount 13.1.1
 aws.lightsail.instance.createdAt 13.1.1
 aws.lightsail.instance.firewallRules 13.1.1
+aws.lightsail.instance.inboundRule 13.33.2
+aws.lightsail.instance.inboundRule.cidrs 13.33.2
+aws.lightsail.instance.inboundRule.fromPort 13.33.2
+aws.lightsail.instance.inboundRule.ipv6Cidrs 13.33.2
+aws.lightsail.instance.inboundRule.protocol 13.33.2
+aws.lightsail.instance.inboundRule.publicAccess 13.33.2
+aws.lightsail.instance.inboundRule.toPort 13.33.2
+aws.lightsail.instance.inboundRules 13.33.2
 aws.lightsail.instance.ipAddressType 13.21.4
 aws.lightsail.instance.ipv6Addresses 13.1.1
 aws.lightsail.instance.isStaticIp 13.1.1

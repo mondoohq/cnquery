@@ -802,6 +802,119 @@ func (a *mqlAwsBatchJobDefinition) ecs() (any, error) {
 	return convert.JsonToDict(a.cacheEcs)
 }
 
+// images flattens every container image referenced anywhere in the job
+// definition — single-node container properties, multi-node node-range
+// containers, ECS task containers, and EKS pod containers and init containers
+// — and parses each reference into its registry, repository, tag, and digest.
+// Duplicate references are collapsed so the result is the set of distinct
+// images the definition pulls.
+func (a *mqlAwsBatchJobDefinition) images() ([]any, error) {
+	var refs []string
+	refs = appendBatchContainerImage(refs, a.cacheContainerProperties)
+	refs = appendBatchEcsImages(refs, a.cacheEcs)
+	refs = appendBatchEksImages(refs, a.cacheEks)
+	if a.cacheNodeProperties != nil {
+		for i := range a.cacheNodeProperties.NodeRangeProperties {
+			nrp := a.cacheNodeProperties.NodeRangeProperties[i]
+			refs = appendBatchContainerImage(refs, nrp.Container)
+			refs = appendBatchEcsImages(refs, nrp.EcsProperties)
+			refs = appendBatchEksImages(refs, nrp.EksProperties)
+		}
+	}
+
+	res := make([]any, 0, len(refs))
+	seen := make(map[string]struct{}, len(refs))
+	for _, ref := range refs {
+		if ref == "" {
+			continue
+		}
+		if _, ok := seen[ref]; ok {
+			continue
+		}
+		seen[ref] = struct{}{}
+		registry, repository, tag, digest := parseImageReference(ref)
+		res = append(res, map[string]any{
+			"image":      ref,
+			"registry":   registry,
+			"repository": repository,
+			"tag":        tag,
+			"digest":     digest,
+		})
+	}
+	return res, nil
+}
+
+func appendBatchContainerImage(refs []string, cp *batch_types.ContainerProperties) []string {
+	if cp != nil && cp.Image != nil {
+		refs = append(refs, *cp.Image)
+	}
+	return refs
+}
+
+func appendBatchEcsImages(refs []string, ecs *batch_types.EcsProperties) []string {
+	if ecs == nil {
+		return refs
+	}
+	for _, tp := range ecs.TaskProperties {
+		for _, c := range tp.Containers {
+			if c.Image != nil {
+				refs = append(refs, *c.Image)
+			}
+		}
+	}
+	return refs
+}
+
+func appendBatchEksImages(refs []string, eks *batch_types.EksProperties) []string {
+	if eks == nil || eks.PodProperties == nil {
+		return refs
+	}
+	for _, c := range eks.PodProperties.Containers {
+		if c.Image != nil {
+			refs = append(refs, *c.Image)
+		}
+	}
+	for _, c := range eks.PodProperties.InitContainers {
+		if c.Image != nil {
+			refs = append(refs, *c.Image)
+		}
+	}
+	return refs
+}
+
+// parseImageReference splits a container image reference into its registry
+// host, repository, tag, and digest following Docker reference grammar. A
+// reference with no registry host — a bare name like "nginx" or a
+// single-segment path like "library/nginx" — normalizes to the "docker.io"
+// registry, matching how container runtimes resolve it. The tag and digest are
+// empty when the reference omits them.
+func parseImageReference(ref string) (registry, repository, tag, digest string) {
+	remainder := ref
+	if i := strings.Index(remainder, "@"); i >= 0 {
+		digest = remainder[i+1:]
+		remainder = remainder[:i]
+	}
+
+	name := remainder
+	if i := strings.IndexByte(remainder, '/'); i >= 0 {
+		if first := remainder[:i]; strings.ContainsAny(first, ".:") || first == "localhost" {
+			registry = first
+			name = remainder[i+1:]
+		}
+	}
+	if registry == "" {
+		registry = "docker.io"
+	}
+
+	if i := strings.LastIndexByte(name, ':'); i >= 0 {
+		tag = name[i+1:]
+		repository = name[:i]
+	} else {
+		repository = name
+	}
+	return registry, repository, tag, digest
+}
+
 func (a *mqlAwsBatchJobDefinition) containerProperties() (any, error) {
 	if a.cacheContainerProperties == nil {
 		return nil, nil

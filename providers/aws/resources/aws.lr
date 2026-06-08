@@ -21128,6 +21128,16 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   eks() aws.batch.jobDefinition.eksPodProperties
   // Explicit ECS task properties (populated when running on ECS with explicit shape)
   ecs() dict
+  // Container images referenced by the job definition
+  //
+  // Examine every container image used anywhere in the job definition:
+  // single-node container properties, each multi-node node-range container,
+  // ECS task containers, and EKS pod containers and init containers. Each
+  // entry parses the image reference into `image` (the raw reference),
+  // `registry` (the registry host, with bare names and single-segment
+  // repositories normalized to `docker.io`), `repository`, `tag`, and
+  // `digest`. The `tag` and `digest` are empty when the reference omits them.
+  images() []dict
   // Typed retry strategy
   retry() aws.batch.jobDefinition.retryStrategy
   // Raw retry strategy dict
@@ -21532,14 +21542,48 @@ private aws.lightsail.instance @defaults("name arn state") {
   createdAt time
   // Tags for the instance
   tags map[string]string
-  // Firewall rules (open ports, CIDRs, protocols)
-  firewallRules() []dict
+  // Raw inbound firewall rule dicts
+  //
+  // Deprecated in favor of `inboundRules`, which resolves each rule to a typed
+  // aws.lightsail.instance.inboundRule exposing fromPort, toPort, protocol,
+  // cidrs, ipv6Cidrs, and a publicAccess predicate.
+  firewallRules() @maturity("deprecated") []dict
+  // Inbound firewall rules
+  //
+  // Examine the inbound firewall governing the instance. Each rule exposes the
+  // port range it opens (`fromPort` to `toPort`), the `protocol`, the source
+  // ranges (`cidrs`, `ipv6Cidrs`), and a `publicAccess` predicate that is true
+  // when the rule admits any address (`0.0.0.0/0` or `::/0`) — marking the
+  // port range as reachable from the public internet.
+  inboundRules() []aws.lightsail.instance.inboundRule
   // Open ports on the instance with access policies
   //
   // Each entry has fromPort, toPort, protocol, accessFrom, accessType, commonName, accessDirection, cidrs, ipv6Cidrs, and cidrListAliases.
   ports() []dict
   // Add-ons enabled on the instance (name, status, snapshotTimeOfDay, nextSnapshotTimeOfDay, threshold, duration)
   addOns() []dict
+}
+
+// Inbound firewall rule for a Lightsail instance
+//
+// Examine a single inbound networking rule on the instance — the port range it
+// opens (`fromPort` to `toPort`), the `protocol` (tcp, udp, icmp, icmpv6, or
+// all), and the source ranges (`cidrs`, `ipv6Cidrs`). The `publicAccess`
+// predicate is true when the rule admits any source address (`0.0.0.0/0` or
+// `::/0`), marking the port range as reachable from the public internet.
+private aws.lightsail.instance.inboundRule @defaults("fromPort toPort protocol publicAccess") {
+  // Lowest port in the range the rule opens
+  fromPort int
+  // Highest port in the range the rule opens
+  toPort int
+  // Network protocol the rule applies to: tcp, udp, icmp, icmpv6, or all
+  protocol string
+  // IPv4 source ranges the rule admits, in CIDR notation
+  cidrs []string
+  // IPv6 source ranges the rule admits, in CIDR notation
+  ipv6Cidrs []string
+  // Whether the rule admits any source address (0.0.0.0/0 or ::/0)
+  publicAccess bool
 }
 
 // Amazon Lightsail relational database

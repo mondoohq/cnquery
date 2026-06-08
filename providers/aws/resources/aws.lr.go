@@ -791,6 +791,7 @@ const (
 	ResourceAwsLightsail                                                        string = "aws.lightsail"
 	ResourceAwsLightsailDistribution                                            string = "aws.lightsail.distribution"
 	ResourceAwsLightsailInstance                                                string = "aws.lightsail.instance"
+	ResourceAwsLightsailInstanceInboundRule                                     string = "aws.lightsail.instance.inboundRule"
 	ResourceAwsLightsailDatabase                                                string = "aws.lightsail.database"
 	ResourceAwsLightsailLoadBalancer                                            string = "aws.lightsail.loadBalancer"
 	ResourceAwsLightsailDisk                                                    string = "aws.lightsail.disk"
@@ -4012,6 +4013,10 @@ func init() {
 		"aws.lightsail.instance": {
 			// to override args, implement: initAwsLightsailInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLightsailInstance,
+		},
+		"aws.lightsail.instance.inboundRule": {
+			// to override args, implement: initAwsLightsailInstanceInboundRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLightsailInstanceInboundRule,
 		},
 		"aws.lightsail.database": {
 			// to override args, implement: initAwsLightsailDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -28170,6 +28175,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinition.ecs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetEcs()).ToDataRes(types.Dict)
 	},
+	"aws.batch.jobDefinition.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetImages()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.batch.jobDefinition.retry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetRetry()).ToDataRes(types.Resource("aws.batch.jobDefinition.retryStrategy"))
 	},
@@ -28626,11 +28634,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.instance.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetFirewallRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.lightsail.instance.inboundRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetInboundRules()).ToDataRes(types.Array(types.Resource("aws.lightsail.instance.inboundRule")))
+	},
 	"aws.lightsail.instance.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetPorts()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.lightsail.instance.addOns": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetAddOns()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lightsail.instance.inboundRule.fromPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetFromPort()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.instance.inboundRule.toPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetToPort()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.instance.inboundRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"aws.lightsail.instance.inboundRule.cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lightsail.instance.inboundRule.ipv6Cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetIpv6Cidrs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lightsail.instance.inboundRule.publicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstanceInboundRule).GetPublicAccess()).ToDataRes(types.Bool)
 	},
 	"aws.lightsail.database.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetName()).ToDataRes(types.String)
@@ -66697,6 +66726,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobDefinition).Ecs, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.retry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinition).Retry, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionRetryStrategy](v.Value, v.Error)
 		return
@@ -67361,12 +67394,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailInstance).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.instance.inboundRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).InboundRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.instance.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.instance.addOns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).AddOns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.fromPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).FromPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.toPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).ToPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).Cidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.ipv6Cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).Ipv6Cidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.inboundRule.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstanceInboundRule).PublicAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -161656,6 +161721,7 @@ type mqlAwsBatchJobDefinition struct {
 	NodeRangeProperties  plugin.TValue[[]any]
 	Eks                  plugin.TValue[*mqlAwsBatchJobDefinitionEksPodProperties]
 	Ecs                  plugin.TValue[any]
+	Images               plugin.TValue[[]any]
 	Retry                plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy]
 	RetryStrategy        plugin.TValue[any]
 	JobTimeout           plugin.TValue[*mqlAwsBatchJobDefinitionTimeout]
@@ -161818,6 +161884,12 @@ func (c *mqlAwsBatchJobDefinition) GetEks() *plugin.TValue[*mqlAwsBatchJobDefini
 func (c *mqlAwsBatchJobDefinition) GetEcs() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Ecs, func() (any, error) {
 		return c.ecs()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		return c.images()
 	})
 }
 
@@ -163346,6 +163418,7 @@ type mqlAwsLightsailInstance struct {
 	CreatedAt                          plugin.TValue[*time.Time]
 	Tags                               plugin.TValue[map[string]any]
 	FirewallRules                      plugin.TValue[[]any]
+	InboundRules                       plugin.TValue[[]any]
 	Ports                              plugin.TValue[[]any]
 	AddOns                             plugin.TValue[[]any]
 }
@@ -163480,6 +163553,22 @@ func (c *mqlAwsLightsailInstance) GetFirewallRules() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsLightsailInstance) GetInboundRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InboundRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lightsail.instance", c.__id, "inboundRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inboundRules()
+	})
+}
+
 func (c *mqlAwsLightsailInstance) GetPorts() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
 		return c.ports()
@@ -163490,6 +163579,75 @@ func (c *mqlAwsLightsailInstance) GetAddOns() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AddOns, func() ([]any, error) {
 		return c.addOns()
 	})
+}
+
+// mqlAwsLightsailInstanceInboundRule for the aws.lightsail.instance.inboundRule resource
+type mqlAwsLightsailInstanceInboundRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLightsailInstanceInboundRuleInternal it will be used here
+	FromPort     plugin.TValue[int64]
+	ToPort       plugin.TValue[int64]
+	Protocol     plugin.TValue[string]
+	Cidrs        plugin.TValue[[]any]
+	Ipv6Cidrs    plugin.TValue[[]any]
+	PublicAccess plugin.TValue[bool]
+}
+
+// createAwsLightsailInstanceInboundRule creates a new instance of this resource
+func createAwsLightsailInstanceInboundRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLightsailInstanceInboundRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lightsail.instance.inboundRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) MqlName() string {
+	return "aws.lightsail.instance.inboundRule"
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetFromPort() *plugin.TValue[int64] {
+	return &c.FromPort
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetToPort() *plugin.TValue[int64] {
+	return &c.ToPort
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetCidrs() *plugin.TValue[[]any] {
+	return &c.Cidrs
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetIpv6Cidrs() *plugin.TValue[[]any] {
+	return &c.Ipv6Cidrs
+}
+
+func (c *mqlAwsLightsailInstanceInboundRule) GetPublicAccess() *plugin.TValue[bool] {
+	return &c.PublicAccess
 }
 
 // mqlAwsLightsailDatabase for the aws.lightsail.database resource
