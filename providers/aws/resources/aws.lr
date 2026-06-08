@@ -1440,7 +1440,11 @@ private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
   // Associated file system ID
   fileSystemId string
   // Subnet ID where mount target resides
-  subnetId string
+  //
+  // Deprecated in favor of `subnet`.
+  subnetId @maturity("deprecated") string
+  // Subnet where the mount target resides
+  subnet() aws.vpc.subnet
   // Availability zone
   availabilityZone string
   // IP address of mount target
@@ -5468,7 +5472,9 @@ private aws.codepipeline.pipeline @defaults("arn name pipelineType region") {
   // Execution mode: QUEUED, SUPERSEDED, or PARALLEL
   executionMode string
   // ARN of the IAM service role CodePipeline uses to execute actions
-  roleArn string
+  //
+  // Deprecated in favor of `role`.
+  roleArn @maturity("deprecated") string
   // IAM service role CodePipeline uses to execute actions
   role() aws.iam.role
   // Single-region artifact store
@@ -8003,7 +8009,9 @@ private aws.eventbridge.endpoint @defaults("arn name state") {
   // with permission to put events on the secondary bus is required.
   replicationConfig dict
   // ARN of the IAM role used to replicate events to the secondary Region
-  roleArn string
+  //
+  // Deprecated in favor of `iamRole`.
+  roleArn @maturity("deprecated") string
   // IAM role used to replicate events to the secondary Region
   iamRole() aws.iam.role
   // Time the endpoint was created
@@ -8540,8 +8548,12 @@ private aws.eventbridge.schedule.flexibleTimeWindow @defaults("mode maximumWindo
 private aws.eventbridge.schedule.target @defaults("targetType arn") {
   // Raw target ARN
   arn string
-  // IAM role assumed when invoking the target (raw ARN; parent schedule also exposes typed iamRole())
-  roleArn string
+  // IAM role assumed when invoking the target
+  //
+  // Deprecated in favor of `iamRole`.
+  roleArn @maturity("deprecated") string
+  // IAM role assumed when invoking the target
+  iamRole() aws.iam.role
   // Target.Input payload sent to the target. WARNING: may contain sensitive data — audit carefully for credentials, tokens, or PII.
   input string
   // Target type discriminator: lambda, sqs, sns, stepFunction, kinesis, firehose, ecs, eventBridge, sagemakerPipeline, codebuild, universal, unknown
@@ -8583,11 +8595,15 @@ private aws.eventbridge.schedule.target.ecsParameters @defaults("launchType task
   // Reference ID for tracking
   referenceId string
   // Subnet IDs the task ENI is placed in
-  subnetIds []string
+  //
+  // Deprecated in favor of `subnets`.
+  subnetIds @maturity("deprecated") []string
   // Subnets the task ENI is placed in
   subnets() []aws.vpc.subnet
   // Security group IDs attached to the task ENI
-  securityGroupIds []string
+  //
+  // Deprecated in favor of `securityGroups`.
+  securityGroupIds @maturity("deprecated") []string
   // Security groups attached to the task ENI
   securityGroups() []aws.ec2.securitygroup
   // Whether the task ENI is assigned a public IP: ENABLED or DISABLED. Audit signal.
@@ -11495,7 +11511,9 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
 // IAM role associated with an RDS DB instance for accessing other AWS services
 private aws.rds.dbinstance.associatedRole @defaults("featureName status") {
   // ARN of the IAM role
-  roleArn string
+  //
+  // Deprecated in favor of `iamRole`.
+  roleArn @maturity("deprecated") string
   // IAM role attached to the DB instance
   iamRole() aws.iam.role
   // Feature the role is associated with (e.g., s3Import, s3Export, Lambda)
@@ -12622,7 +12640,9 @@ private aws.route53.resolver.ruleAssociation @defaults("id name status") {
   // Associated resolver rule
   resolverRule() aws.route53.resolver.rule
   // VPC ID the rule is associated with
-  vpcId string
+  //
+  // Deprecated in favor of `vpc`.
+  vpcId @maturity("deprecated") string
   // Associated VPC
   vpc() aws.vpc
   // Status of the association
@@ -12847,7 +12867,9 @@ private aws.route53.resolver.firewallRuleGroupAssociation @defaults("id name sta
   // Associated rule group
   firewallRuleGroup() aws.route53.resolver.firewallRuleGroup
   // VPC ID the rule group is associated with
-  vpcId string
+  //
+  // Deprecated in favor of `vpc`.
+  vpcId @maturity("deprecated") string
   // Associated VPC
   vpc() aws.vpc
   // Evaluation priority among rule groups bound to the same VPC
@@ -14493,7 +14515,9 @@ private aws.vpc.peeringConnection.peeringVpc {
   // VPC associated with the peering connection (populated if it's in the same account)
   vpc() aws.vpc
   // ID of the VPC associated with the peering connection
-  vpcId string
+  //
+  // Deprecated in favor of `vpc`.
+  vpcId @maturity("deprecated") string
 }
 
 // Amazon EC2 network ACL
@@ -18540,7 +18564,11 @@ private aws.workspaces.directory @defaults("directoryId directoryName state regi
   // IAM role identifier
   iamRoleId string
   // Subnet identifiers
-  subnetIds []string
+  //
+  // Deprecated in favor of `subnets`.
+  subnetIds @maturity("deprecated") []string
+  // Subnets the directory uses
+  subnets() []aws.vpc.subnet
   // Resource tags
   tags() map[string]string
   // AWS region
@@ -18714,7 +18742,11 @@ private aws.workspaces.workspace @defaults("workspaceId userName state region") 
   // Bundle ID used to create the workspace
   bundleId string
   // Subnet ID
-  subnetId string
+  //
+  // Deprecated in favor of `subnet`.
+  subnetId @maturity("deprecated") string
+  // Subnet the WorkSpace resides in
+  subnet() aws.vpc.subnet
   // State: PENDING, AVAILABLE, IMPAIRED, UNHEALTHY, REBOOTING, etc.
   state string
   // Whether the root volume is encrypted
@@ -20577,9 +20609,13 @@ private aws.msk.cluster.serverlessConfig @defaults("iamEnabled networkType") {
 // VPC configuration entry for a serverless MSK cluster
 private aws.msk.cluster.serverlessConfig.vpcConfig @defaults("subnetIds") {
   // Subnet IDs the serverless cluster is attached to
-  subnetIds []string
+  //
+  // Deprecated in favor of `subnets`.
+  subnetIds @maturity("deprecated") []string
   // Security group IDs attached to the serverless cluster
-  securityGroupIds []string
+  //
+  // Deprecated in favor of `securityGroups`.
+  securityGroupIds @maturity("deprecated") []string
   // Subnets the serverless cluster is attached to
   subnets() []aws.vpc.subnet
   // Security groups attached to the serverless cluster
@@ -20651,9 +20687,13 @@ private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskCl
   // Alias used to prefix names of replicated topics
   kafkaClusterAlias string
   // Subnet IDs the replicator attaches ENIs to in the client VPC
-  subnetIds []string
+  //
+  // Deprecated in favor of `subnets`.
+  subnetIds @maturity("deprecated") []string
   // Security group IDs attached to the replicator ENIs
-  securityGroupIds []string
+  //
+  // Deprecated in favor of `securityGroups`.
+  securityGroupIds @maturity("deprecated") []string
   // MSK cluster resource (tolerates cross-account ARNs)
   cluster() aws.msk.cluster
   // Subnets the replicator attaches ENIs to
@@ -21716,7 +21756,9 @@ private aws.cloudformation.stack @defaults("name status") {
   // Drift detection status: DRIFTED, IN_SYNC, NOT_CHECKED, UNKNOWN
   driftStatus string
   // ARN of the IAM role used to create or update the stack
-  roleArn string
+  //
+  // Deprecated in favor of `iamRole`.
+  roleArn @maturity("deprecated") string
   // IAM role used to create/update the stack
   iamRole() aws.iam.role
   // Stack parameters
@@ -24330,7 +24372,9 @@ private aws.bedrock.batchInferenceJob @defaults("jobName modelId status") {
   // IAM service role used by the batch inference job
   iamRole() aws.iam.role
   // ARN of the IAM service role used by the batch inference job
-  roleArn string
+  //
+  // Deprecated in favor of `iamRole`.
+  roleArn @maturity("deprecated") string
   // Time the batch inference job was submitted
   submitTime time
   // Time the batch inference job was last modified

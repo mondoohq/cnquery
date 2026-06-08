@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -675,4 +676,42 @@ func newMqlAwsWorkspacesIpGroup(runtime *plugin.Runtime, region string, group wo
 
 func (a *mqlAwsWorkspacesIpGroup) id() (string, error) {
 	return "aws.workspaces.ipGroup/" + a.Region.Data + "/" + a.GroupId.Data, nil
+}
+
+func (a *mqlAwsWorkspacesDirectory) subnets() ([]any, error) {
+	subnetIds := a.SubnetIds.Data
+	if len(subnetIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, idAny := range subnetIds {
+		id, ok := idAny.(string)
+		if !ok || id == "" {
+			continue
+		}
+		subnetArn := fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), id)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) subnet() (*mqlAwsVpcSubnet, error) {
+	subnetId := a.SubnetId.Data
+	if subnetId == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	subnetArn := fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), subnetId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
 }

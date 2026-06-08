@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
@@ -552,4 +553,19 @@ func (a *mqlAwsEfsMountTarget) securityGroups() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsEfsMountTarget) subnet() (*mqlAwsVpcSubnet, error) {
+	subnetId := a.SubnetId.Data
+	if subnetId == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	subnetArn := fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), subnetId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
 }

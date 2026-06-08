@@ -780,6 +780,20 @@ func (a *mqlAwsEventbridgeSchedule) iamRole() (*mqlAwsIamRole, error) {
 	return res.(*mqlAwsIamRole), nil
 }
 
+func (a *mqlAwsEventbridgeScheduleTarget) iamRole() (*mqlAwsIamRole, error) {
+	roleArn := a.RoleArn.Data
+	if roleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(roleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (a *mqlAwsEventbridgeSchedule) kmsKey() (*mqlAwsKmsKey, error) {
 	if err := a.fetchDetails(); err != nil {
 		return nil, err

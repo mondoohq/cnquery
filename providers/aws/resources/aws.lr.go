@@ -6054,6 +6054,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.mountTarget.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetSubnetId()).ToDataRes(types.String)
 	},
+	"aws.efs.mountTarget.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
 	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetAvailabilityZone()).ToDataRes(types.String)
 	},
@@ -14168,6 +14171,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.schedule.target.roleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleTarget).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.eventbridge.schedule.target.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleTarget).GetInput()).ToDataRes(types.String)
@@ -25260,6 +25266,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.directory.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetSubnetIds()).ToDataRes(types.Array(types.String))
 	},
+	"aws.workspaces.directory.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
 	"aws.workspaces.directory.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -25451,6 +25460,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workspaces.workspace.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetSubnetId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
 	},
 	"aws.workspaces.workspace.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetState()).ToDataRes(types.String)
@@ -34411,6 +34423,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.mountTarget.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsMountTarget).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
 		return
 	},
 	"aws.efs.mountTarget.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46323,6 +46339,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.schedule.target.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeScheduleTarget).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.schedule.target.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62445,6 +62465,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesDirectory).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.workspaces.directory.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.directory.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesDirectory).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -62723,6 +62747,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspaces.workspace.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
 		return
 	},
 	"aws.workspaces.workspace.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78754,6 +78782,7 @@ type mqlAwsEfsMountTarget struct {
 	MountTargetId      plugin.TValue[string]
 	FileSystemId       plugin.TValue[string]
 	SubnetId           plugin.TValue[string]
+	Subnet             plugin.TValue[*mqlAwsVpcSubnet]
 	AvailabilityZone   plugin.TValue[string]
 	IpAddress          plugin.TValue[string]
 	SecurityGroups     plugin.TValue[[]any]
@@ -78804,6 +78833,22 @@ func (c *mqlAwsEfsMountTarget) GetFileSystemId() *plugin.TValue[string] {
 
 func (c *mqlAwsEfsMountTarget) GetSubnetId() *plugin.TValue[string] {
 	return &c.SubnetId
+}
+
+func (c *mqlAwsEfsMountTarget) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.mountTarget", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 func (c *mqlAwsEfsMountTarget) GetAvailabilityZone() *plugin.TValue[string] {
@@ -110583,6 +110628,7 @@ type mqlAwsEventbridgeScheduleTarget struct {
 	mqlAwsEventbridgeScheduleTargetInternal
 	Arn                   plugin.TValue[string]
 	RoleArn               plugin.TValue[string]
+	IamRole               plugin.TValue[*mqlAwsIamRole]
 	Input                 plugin.TValue[string]
 	TargetType            plugin.TValue[string]
 	EcsParameters         plugin.TValue[*mqlAwsEventbridgeScheduleTargetEcsParameters]
@@ -110631,6 +110677,22 @@ func (c *mqlAwsEventbridgeScheduleTarget) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEventbridgeScheduleTarget) GetRoleArn() *plugin.TValue[string] {
 	return &c.RoleArn
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
 }
 
 func (c *mqlAwsEventbridgeScheduleTarget) GetInput() *plugin.TValue[string] {
@@ -150806,6 +150868,7 @@ type mqlAwsWorkspacesDirectory struct {
 	SelfservicePermissions         plugin.TValue[any]
 	IamRoleId                      plugin.TValue[string]
 	SubnetIds                      plugin.TValue[[]any]
+	Subnets                        plugin.TValue[[]any]
 	Tags                           plugin.TValue[map[string]any]
 	Region                         plugin.TValue[string]
 }
@@ -150901,6 +150964,22 @@ func (c *mqlAwsWorkspacesDirectory) GetIamRoleId() *plugin.TValue[string] {
 
 func (c *mqlAwsWorkspacesDirectory) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces.directory", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
 }
 
 func (c *mqlAwsWorkspacesDirectory) GetTags() *plugin.TValue[map[string]any] {
@@ -151610,6 +151689,7 @@ type mqlAwsWorkspacesWorkspace struct {
 	ComputerName                     plugin.TValue[string]
 	BundleId                         plugin.TValue[string]
 	SubnetId                         plugin.TValue[string]
+	Subnet                           plugin.TValue[*mqlAwsVpcSubnet]
 	State                            plugin.TValue[string]
 	RootVolumeEncryptionEnabled      plugin.TValue[bool]
 	UserVolumeEncryptionEnabled      plugin.TValue[bool]
@@ -151687,6 +151767,22 @@ func (c *mqlAwsWorkspacesWorkspace) GetBundleId() *plugin.TValue[string] {
 
 func (c *mqlAwsWorkspacesWorkspace) GetSubnetId() *plugin.TValue[string] {
 	return &c.SubnetId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces.workspace", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 func (c *mqlAwsWorkspacesWorkspace) GetState() *plugin.TValue[string] {

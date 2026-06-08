@@ -3787,6 +3787,7 @@ aws.efs.mountTarget.mountTargetId 11.15.2
 aws.efs.mountTarget.networkInterfaceId 11.15.2
 aws.efs.mountTarget.region 11.15.2
 aws.efs.mountTarget.securityGroups 11.15.2
+aws.efs.mountTarget.subnet 13.32.2
 aws.efs.mountTarget.subnetId 11.15.2
 aws.eks 11.15.2
 aws.eks.accessEntry 13.6.3
@@ -4715,6 +4716,7 @@ aws.eventbridge.schedule.target.ecsParameters.taskDefinitionArn 13.19.2
 aws.eventbridge.schedule.target.eventBridgeParameters 13.19.2
 aws.eventbridge.schedule.target.eventBridgeParameters.detailType 13.19.2
 aws.eventbridge.schedule.target.eventBridgeParameters.source 13.19.2
+aws.eventbridge.schedule.target.iamRole 13.32.2
 aws.eventbridge.schedule.target.input 13.19.2
 aws.eventbridge.schedule.target.kinesisParameters 13.19.2
 aws.eventbridge.schedule.target.kinesisParameters.partitionKey 13.19.2
@@ -9866,6 +9868,7 @@ aws.workspaces.directory.region 11.16.1
 aws.workspaces.directory.selfservicePermissions 11.16.1
 aws.workspaces.directory.state 11.16.1
 aws.workspaces.directory.subnetIds 11.16.1
+aws.workspaces.directory.subnets 13.32.2
 aws.workspaces.directory.tags 11.16.1
 aws.workspaces.directory.workspaceAccessProperties 11.16.1
 aws.workspaces.image 11.16.1
@@ -9900,6 +9903,7 @@ aws.workspaces.workspace.region 11.16.1
 aws.workspaces.workspace.rootVolumeEncryptionEnabled 11.16.1
 aws.workspaces.workspace.securityGroups 11.16.1
 aws.workspaces.workspace.state 11.16.1
+aws.workspaces.workspace.subnet 13.32.2
 aws.workspaces.workspace.subnetId 11.16.1
 aws.workspaces.workspace.tags 11.16.1
 aws.workspaces.workspace.userName 11.16.1
