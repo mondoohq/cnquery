@@ -7107,7 +7107,7 @@ private azure.subscription.authorizationService.roleDefinition.permission @defau
 }
 
 // Azure role assignment
-private azure.subscription.authorizationService.roleAssignment  @defaults("principalId type role.name") {
+private azure.subscription.authorizationService.roleAssignment  @defaults("principalId principalType role.name") {
   id string
   description string
   // Principal type of the assignment

@@ -198,15 +198,16 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal struct {
 }
 
 func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization.RoleAssignment) (*mqlAzureSubscriptionAuthorizationServiceRoleAssignment, error) {
+	principalType := string(convert.ToValue(roleAssignment.Properties.PrincipalType))
 	r, err := CreateResource(runtime, "azure.subscription.authorizationService.roleAssignment",
 		map[string]*llx.RawData{
 			"__id":          llx.StringDataPtr(roleAssignment.ID),
 			"id":            llx.StringDataPtr(roleAssignment.Name), // name is the id :-)
 			"description":   llx.StringDataPtr(roleAssignment.Properties.Description),
 			"scope":         llx.StringDataPtr(roleAssignment.Properties.Scope),
-			"type":          llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
-			"principalId":   llx.StringData(*roleAssignment.Properties.PrincipalID),
-			"principalType": llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
+			"type":          llx.StringData(principalType),
+			"principalId":   llx.StringDataPtr(roleAssignment.Properties.PrincipalID),
+			"principalType": llx.StringData(principalType),
 			"condition":     llx.StringDataPtr(roleAssignment.Properties.Condition),
 			"createdAt":     llx.TimeDataPtr(roleAssignment.Properties.CreatedOn),
 			"updatedAt":     llx.TimeDataPtr(roleAssignment.Properties.UpdatedOn),
