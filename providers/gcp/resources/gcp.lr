@@ -321,10 +321,11 @@ private gcp.project.redisService.instance @defaults("name") {
   memorySizeGb int
   // The full name of the Google Compute Engine network
   //
-  // The [VPC network](https://cloud.google.com/vpc/docs/vpc) to which
-  // the instance is connected. If left unspecified, the `default`
-  // network will be used.
-  AuthorizedNetwork string
+  // Deprecated in favor of `network`, which resolves the VPC network
+  // resource. The [VPC network](https://cloud.google.com/vpc/docs/vpc) to
+  // which the instance is connected; if left unspecified, the `default`
+  // network is used.
+  AuthorizedNetwork @maturity("deprecated") string
   // VPC network the instance is attached to (resolved from AuthorizedNetwork)
   network() gcp.project.computeService.network
   // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
@@ -2675,7 +2676,9 @@ private gcp.project.sqlService.instance @defaults("name") {
   // Whether a built-in 'root' user exists (the most common SQL hardening finding)
   localRootEnabled() bool
   // Service account email address
-  serviceAccountEmailAddress string
+  //
+  // Deprecated in favor of `serviceAccount`, which resolves the service account resource (the email is its `email`).
+  serviceAccountEmailAddress @maturity("deprecated") string
   // Service account identity the instance uses (resolved from serviceAccountEmailAddress)
   serviceAccount() gcp.project.iamService.serviceAccount
   // Instance state
@@ -3030,7 +3033,9 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
   // Resource link for the VPC network from which the private IPs can access the Cloud SQL instance
-  privateNetwork string
+  //
+  // Deprecated in favor of `network`, which resolves the VPC network resource.
+  privateNetwork @maturity("deprecated") string
   // VPC network from which private IPs can reach the instance (resolved from privateNetwork)
   network() gcp.project.computeService.network
   // Whether SSL connections over IP are enforced
@@ -3566,7 +3571,9 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   // IPv4 addresses of the name servers this private zone forwards outbound queries to (empty when forwarding is not configured)
   forwardingTargets []string
   // Fully qualified URL of the VPC network this private zone peers with for DNS resolution (empty when peering is not configured)
-  peeringNetwork string
+  //
+  // Deprecated in favor of `peeringNetworkRef`, which resolves the VPC network resource.
+  peeringNetwork @maturity("deprecated") string
   // VPC network this private zone peers with for DNS resolution (resolved from peeringNetwork)
   peeringNetworkRef() gcp.project.computeService.network
   // Cloud DNS record set in the zone
@@ -5592,7 +5599,9 @@ private gcp.project.cloudFunction @defaults("name") {
   // Build environment variables that are available during build time
   buildEnvVars map[string]string
   // VPC network that this cloud function can connect to
-  network string
+  //
+  // Deprecated in favor of `networkRef`, which resolves the VPC network resource.
+  network @maturity("deprecated") string
   // VPC network this function can connect to (resolved from network)
   networkRef() gcp.project.computeService.network
   // Maximum number of function instances that may coexist at a given time
@@ -5689,7 +5698,9 @@ private gcp.project.cloudFunctionV2.buildConfig @defaults("runtime entryPoint") 
   // User-managed repository in Artifact Registry for storing built images
   dockerRepository string
   // Service account to use for the build
-  serviceAccount string
+  //
+  // Deprecated in favor of `serviceAccountRef`, which resolves the service account resource.
+  serviceAccount @maturity("deprecated") string
   // Service account identity used for the build (resolved from serviceAccount)
   serviceAccountRef() gcp.project.iamService.serviceAccount
 }
@@ -5809,7 +5820,9 @@ private gcp.project.dataplexService.lake @defaults("name state location") {
   // User-provided labels
   labels map[string]string
   // Service account associated with the lake, used to access managed resources
-  serviceAccount string
+  //
+  // Deprecated in favor of `serviceAccountRef`, which resolves the service account resource.
+  serviceAccount @maturity("deprecated") string
   // Service account identity associated with the lake (resolved from serviceAccount)
   serviceAccountRef() gcp.project.iamService.serviceAccount
   // Resource name of the attached Dataproc Metastore service, if any
@@ -6128,7 +6141,9 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   // Compute Engine metadata entries
   metadata map[string]string
   // Compute Engine network to be used for machine communications
-  networkUri string
+  //
+  // Deprecated in favor of `network`, which resolves the VPC network resource.
+  networkUri @maturity("deprecated") string
   // Compute Engine network used for machine communications (resolved from networkUri)
   network() gcp.project.computeService.network
   // Node group affinity for sole-tenant clusters
@@ -6146,7 +6161,9 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   // Shielded instance config for clusters using Compute Engine Shielded VMs
   shieldedInstanceConfig gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig
   // Compute Engine subnetwork to use for machine communications
-  subnetworkUri string
+  //
+  // Deprecated in favor of `subnetwork`, which resolves the subnetwork resource.
+  subnetworkUri @maturity("deprecated") string
   // Compute Engine subnetwork used for machine communications (resolved from subnetworkUri)
   subnetwork() gcp.project.computeService.subnetwork
   // Compute Engine tags
@@ -9129,11 +9146,15 @@ private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
   // Target type: "httpTarget", "pubsubTarget", or "appEngineHttpTarget"
   targetType string
   // Service account email used to mint the OIDC token for HTTP target authentication (empty if not configured)
-  oidcServiceAccountEmail string
+  //
+  // Deprecated in favor of `oidcServiceAccount`, which resolves the service account resource.
+  oidcServiceAccountEmail @maturity("deprecated") string
   // Service account identity used to mint the OIDC token (resolved from oidcServiceAccountEmail)
   oidcServiceAccount() gcp.project.iamService.serviceAccount
   // Service account email used to mint the OAuth token for HTTP target authentication (empty if not configured)
-  oauthServiceAccountEmail string
+  //
+  // Deprecated in favor of `oauthServiceAccount`, which resolves the service account resource.
+  oauthServiceAccountEmail @maturity("deprecated") string
   // Service account identity used to mint the OAuth token (resolved from oauthServiceAccountEmail)
   oauthServiceAccount() gcp.project.iamService.serviceAccount
 }
@@ -9325,7 +9346,9 @@ private gcp.project.apiGatewayService.apiConfig @defaults("name state") {
   // ID of the associated service config
   serviceConfigId string
   // IAM service account that gateways serving this config use to authenticate to other services
-  gatewayServiceAccount string
+  //
+  // Deprecated in favor of `serviceAccount`, which resolves the service account resource.
+  gatewayServiceAccount @maturity("deprecated") string
   // Service account identity gateways serving this config authenticate as (resolved from gatewayServiceAccount)
   serviceAccount() gcp.project.iamService.serviceAccount
   // The time the API config was created
@@ -11079,7 +11102,9 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Network for private endpoints
-  network string
+  //
+  // Deprecated in favor of `networkRef`, which resolves the VPC network resource.
+  network @maturity("deprecated") string
   // VPC network used for private endpoints (resolved from network)
   networkRef() gcp.project.computeService.network
   // Whether private service connect is enabled
@@ -11155,7 +11180,9 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   // Service account identity the pipeline job runs as
   serviceAccountRef() gcp.project.iamService.serviceAccount
   // VPC network the resource is attached to
-  network string
+  //
+  // Deprecated in favor of `networkRef`, which resolves the VPC network resource.
+  network @maturity("deprecated") string
   // VPC network the resource is attached to (resolved from network)
   networkRef() gcp.project.computeService.network
   // Encryption spec
@@ -11361,7 +11388,9 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   // Deployed indexes
   deployedIndexes []dict
   // Network for private endpoints
-  network string
+  //
+  // Deprecated in favor of `networkRef`, which resolves the VPC network resource.
+  network @maturity("deprecated") string
   // VPC network used for private endpoints (resolved from network)
   networkRef() gcp.project.computeService.network
   // Whether public endpoint is enabled
@@ -13671,7 +13700,9 @@ private gcp.project.cloudBuildService.workerPool.networkConfig @defaults("egress
   // Internal ID
   id string
   // Peered VPC network name
-  peeredNetwork string
+  //
+  // Deprecated in favor of `peeredNetworkRef`, which resolves the VPC network resource.
+  peeredNetwork @maturity("deprecated") string
   // Peered VPC network the worker pool connects through (resolved from peeredNetwork)
   peeredNetworkRef() gcp.project.computeService.network
   // Peered network IP range
