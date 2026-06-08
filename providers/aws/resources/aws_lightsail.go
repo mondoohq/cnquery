@@ -199,11 +199,14 @@ func (a *mqlAwsLightsailInstance) inboundRules() ([]any, error) {
 		return []any{}, nil
 	}
 	res := make([]any, 0, len(a.cacheNetworking.Ports))
-	for i, p := range a.cacheNetworking.Ports {
+	for _, p := range a.cacheNetworking.Ports {
 		publicAccess := slices.Contains(p.Cidrs, "0.0.0.0/0") || slices.Contains(p.Ipv6Cidrs, "::/0")
+		// Lightsail returns one rule per protocol + port range, so that triple is
+		// a stable natural key — preferable to a list index, which would shift the
+		// cached identity if the API ever reorders the rules.
 		rule, err := CreateResource(a.MqlRuntime, "aws.lightsail.instance.inboundRule",
 			map[string]*llx.RawData{
-				"__id":         llx.StringData(fmt.Sprintf("%s/inboundRule/%d", a.Arn.Data, i)),
+				"__id":         llx.StringData(fmt.Sprintf("%s/inboundRule/%s/%d-%d", a.Arn.Data, string(p.Protocol), p.FromPort, p.ToPort)),
 				"fromPort":     llx.IntData(int64(p.FromPort)),
 				"toPort":       llx.IntData(int64(p.ToPort)),
 				"protocol":     llx.StringData(string(p.Protocol)),
