@@ -1148,6 +1148,39 @@ private inetd.config.entry @defaults("name protocol server") @context("file.cont
   arguments string
 }
 
+// Net-SNMP daemon (snmpd) namespace
+//
+// Use snmpd.config to examine the effective SNMP daemon configuration.
+snmpd {}
+
+// Net-SNMP daemon (snmpd) configuration
+//
+// Examine the snmpd.conf settings that govern SNMP access — community
+// strings, VACM users, and listen addresses. The configuration is assembled
+// from the main snmpd.conf together with any drop-in files under
+// snmpd.conf.d and files pulled in by includeFile and includeDir directives.
+// A missing configuration yields empty accessors, so audits such as
+// rwCommunities == [] hold trivially on hosts that don't run snmpd.
+snmpd.config {
+  init(path? string)
+  // Primary snmpd configuration file
+  file() file
+  // All files making up the SNMP daemon configuration (main file, drop-ins, and includes)
+  files(file) []file
+  // Merged contents of all configuration files
+  content(files) string
+  // Read-only community strings, from rocommunity and rocommunity6 directives
+  roCommunities(content) []string
+  // Read-write community strings, from rwcommunity and rwcommunity6 directives
+  rwCommunities(content) []string
+  // Read-only VACM users, from rouser directives
+  roUsers(content) []string
+  // Read-write VACM users, from rwuser directives
+  rwUsers(content) []string
+  // Addresses snmpd listens on, from agentAddress directives
+  agentAddresses(content) []string
+}
+
 // auditd (Linux Audit Daemon) global configuration
 //
 // Examine /etc/audit/auditd.conf parameters

@@ -2276,6 +2276,16 @@ shadow.entry.reserved 9.0.1
 shadow.entry.user 9.0.1
 shadow.entry.warndays 9.0.1
 shadow.list 9.0.1
+snmpd 13.24.1
+snmpd.config 13.24.1
+snmpd.config.agentAddresses 13.24.1
+snmpd.config.content 13.24.1
+snmpd.config.file 13.24.1
+snmpd.config.files 13.24.1
+snmpd.config.roCommunities 13.24.1
+snmpd.config.roUsers 13.24.1
+snmpd.config.rwCommunities 13.24.1
+snmpd.config.rwUsers 13.24.1
 snowflake.cortex 13.13.1
 snowflake.cortex.configPath 13.13.1
 snowflake.cortex.skill 13.13.1

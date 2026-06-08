@@ -75,6 +75,8 @@ const (
 	ResourceInetd                         string = "inetd"
 	ResourceInetdConfig                   string = "inetd.config"
 	ResourceInetdConfigEntry              string = "inetd.config.entry"
+	ResourceSnmpd                         string = "snmpd"
+	ResourceSnmpdConfig                   string = "snmpd.config"
 	ResourceAuditdConfig                  string = "auditd.config"
 	ResourceAuditdRules                   string = "auditd.rules"
 	ResourceAuditdRule                    string = "auditd.rule"
@@ -673,6 +675,14 @@ func init() {
 		"inetd.config.entry": {
 			// to override args, implement: initInetdConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createInetdConfigEntry,
+		},
+		"snmpd": {
+			// to override args, implement: initSnmpd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnmpd,
+		},
+		"snmpd.config": {
+			Init:   initSnmpdConfig,
+			Create: createSnmpdConfig,
 		},
 		"auditd.config": {
 			Init:   initAuditdConfig,
@@ -3045,6 +3055,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"inetd.config.entry.context": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlInetdConfigEntry).GetContext()).ToDataRes(types.Resource("file.context"))
+	},
+	"snmpd.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"snmpd.config.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"snmpd.config.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetContent()).ToDataRes(types.String)
+	},
+	"snmpd.config.roCommunities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetRoCommunities()).ToDataRes(types.Array(types.String))
+	},
+	"snmpd.config.rwCommunities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetRwCommunities()).ToDataRes(types.Array(types.String))
+	},
+	"snmpd.config.roUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetRoUsers()).ToDataRes(types.Array(types.String))
+	},
+	"snmpd.config.rwUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetRwUsers()).ToDataRes(types.Array(types.String))
+	},
+	"snmpd.config.agentAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnmpdConfig).GetAgentAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"auditd.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -11086,6 +11120,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"inetd.config.entry.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlInetdConfigEntry).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
+		return
+	},
+	"snmpd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpd).__id, ok = v.Value.(string)
+		return
+	},
+	"snmpd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"snmpd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.roCommunities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).RoCommunities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.rwCommunities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).RwCommunities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.roUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).RoUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.rwUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).RwUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snmpd.config.agentAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnmpdConfig).AgentAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"auditd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26429,6 +26503,200 @@ func (c *mqlInetdConfigEntry) GetContext() *plugin.TValue[*mqlFileContext] {
 		}
 
 		return c.context()
+	})
+}
+
+// mqlSnmpd for the snmpd resource
+type mqlSnmpd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnmpdInternal it will be used here
+}
+
+// createSnmpd creates a new instance of this resource
+func createSnmpd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnmpd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snmpd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnmpd) MqlName() string {
+	return "snmpd"
+}
+
+func (c *mqlSnmpd) MqlID() string {
+	return c.__id
+}
+
+// mqlSnmpdConfig for the snmpd.config resource
+type mqlSnmpdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnmpdConfigInternal it will be used here
+	File           plugin.TValue[*mqlFile]
+	Files          plugin.TValue[[]any]
+	Content        plugin.TValue[string]
+	RoCommunities  plugin.TValue[[]any]
+	RwCommunities  plugin.TValue[[]any]
+	RoUsers        plugin.TValue[[]any]
+	RwUsers        plugin.TValue[[]any]
+	AgentAddresses plugin.TValue[[]any]
+}
+
+// createSnmpdConfig creates a new instance of this resource
+func createSnmpdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnmpdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snmpd.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnmpdConfig) MqlName() string {
+	return "snmpd.config"
+}
+
+func (c *mqlSnmpdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnmpdConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snmpd.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlSnmpdConfig) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snmpd.config", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetRoCommunities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoCommunities, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.roCommunities(vargContent.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetRwCommunities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RwCommunities, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.rwCommunities(vargContent.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetRoUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoUsers, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.roUsers(vargContent.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetRwUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RwUsers, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.rwUsers(vargContent.Data)
+	})
+}
+
+func (c *mqlSnmpdConfig) GetAgentAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AgentAddresses, func() ([]any, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.agentAddresses(vargContent.Data)
 	})
 }
 
