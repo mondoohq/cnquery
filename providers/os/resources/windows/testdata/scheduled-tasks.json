@@ -1,0 +1,142 @@
+[
+  {
+    "Name": "GoogleUpdateTaskMachineCore",
+    "Path": "\\",
+    "URI": "\\GoogleUpdateTaskMachineCore",
+    "State": "Ready",
+    "Description": "Keeps your Google software up to date.",
+    "Author": "Google LLC",
+    "Documentation": null,
+    "SecurityDescriptor": "D:P(A;;FA;;;BA)",
+    "Source": null,
+    "Date": "2023-05-01T12:00:00",
+    "Principal": {
+      "UserId": "S-1-5-18",
+      "GroupId": null,
+      "DisplayName": null,
+      "LogonType": "ServiceAccount",
+      "RunLevel": "Highest"
+    },
+    "Actions": [
+      {
+        "Execute": "C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
+        "Arguments": "/c",
+        "WorkingDirectory": null
+      }
+    ],
+    "Triggers": [
+      {
+        "Type": "MSFT_TaskDailyTrigger",
+        "Enabled": true,
+        "StartBoundary": "2023-05-01T07:00:00",
+        "EndBoundary": null,
+        "ExecutionTimeLimit": "PT72H",
+        "RepetitionInterval": "PT1H",
+        "RepetitionDuration": "P1D",
+        "RepetitionStopAtDurationEnd": false,
+        "Delay": null,
+        "RandomDelay": "PT1H",
+        "DaysInterval": 1,
+        "WeeksInterval": null,
+        "DaysOfWeek": null,
+        "UserId": null
+      }
+    ],
+    "Settings": {
+      "Enabled": true,
+      "Hidden": false,
+      "AllowDemandStart": true,
+      "AllowHardTerminate": true,
+      "StartWhenAvailable": true,
+      "RunOnlyIfNetworkAvailable": false,
+      "RunOnlyIfIdle": false,
+      "WakeToRun": false,
+      "DisallowStartIfOnBatteries": false,
+      "StopIfGoingOnBatteries": false,
+      "DisallowStartOnRemoteAppSession": false,
+      "RestartCount": 0,
+      "RestartInterval": null,
+      "ExecutionTimeLimit": "PT72H",
+      "MultipleInstances": "IgnoreNew",
+      "Priority": 7,
+      "DeleteExpiredTaskAfter": null,
+      "Compatibility": "Win8",
+      "IdleDuration": "PT10M",
+      "IdleWaitTimeout": "PT1H",
+      "IdleStopOnIdleEnd": true,
+      "IdleRestartOnIdle": false,
+      "NetworkId": null,
+      "NetworkName": null
+    }
+  },
+  {
+    "Name": "RebootScan",
+    "Path": "\\Custom\\",
+    "URI": "\\Custom\\RebootScan",
+    "State": "Disabled",
+    "Description": null,
+    "Author": "ADMIN\\\\daisy",
+    "Documentation": null,
+    "SecurityDescriptor": null,
+    "Source": null,
+    "Date": null,
+    "Principal": {
+      "UserId": "ADMIN\\\\daisy",
+      "GroupId": null,
+      "DisplayName": null,
+      "LogonType": "Password",
+      "RunLevel": "Limited"
+    },
+    "Actions": [
+      {
+        "Execute": "powershell.exe",
+        "Arguments": "-File C:\\scan.ps1",
+        "WorkingDirectory": "C:\\"
+      }
+    ],
+    "Triggers": [
+      {
+        "Type": "MSFT_TaskBootTrigger",
+        "Enabled": false,
+        "StartBoundary": null,
+        "EndBoundary": null,
+        "ExecutionTimeLimit": null,
+        "RepetitionInterval": null,
+        "RepetitionDuration": null,
+        "RepetitionStopAtDurationEnd": null,
+        "Delay": "PT5M",
+        "RandomDelay": null,
+        "DaysInterval": null,
+        "WeeksInterval": null,
+        "DaysOfWeek": null,
+        "UserId": null
+      }
+    ],
+    "Settings": {
+      "Enabled": false,
+      "Hidden": true,
+      "AllowDemandStart": true,
+      "AllowHardTerminate": true,
+      "StartWhenAvailable": false,
+      "RunOnlyIfNetworkAvailable": false,
+      "RunOnlyIfIdle": false,
+      "WakeToRun": false,
+      "DisallowStartIfOnBatteries": true,
+      "StopIfGoingOnBatteries": true,
+      "DisallowStartOnRemoteAppSession": false,
+      "RestartCount": 3,
+      "RestartInterval": "PT1M",
+      "ExecutionTimeLimit": "PT0S",
+      "MultipleInstances": "Queue",
+      "Priority": 5,
+      "DeleteExpiredTaskAfter": null,
+      "Compatibility": "Win8",
+      "IdleDuration": null,
+      "IdleWaitTimeout": null,
+      "IdleStopOnIdleEnd": false,
+      "IdleRestartOnIdle": false,
+      "NetworkId": null,
+      "NetworkName": null
+    }
+  }
+]

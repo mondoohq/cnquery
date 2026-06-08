@@ -1,0 +1,50 @@
+{
+  "Name": "OneShot",
+  "Path": "\\",
+  "URI": "\\OneShot",
+  "State": "Ready",
+  "Description": "Single task emitted as a bare object by ConvertTo-Json.",
+  "Author": "ADMIN\\\\daisy",
+  "Documentation": null,
+  "SecurityDescriptor": null,
+  "Source": null,
+  "Date": "2024-02-02T08:30:00",
+  "Principal": {
+    "UserId": "S-1-5-18",
+    "GroupId": null,
+    "DisplayName": null,
+    "LogonType": "ServiceAccount",
+    "RunLevel": "Highest"
+  },
+  "Actions": [
+    {
+      "Execute": "cmd.exe",
+      "Arguments": "/c echo hi",
+      "WorkingDirectory": null
+    }
+  ],
+  "Triggers": [
+    {
+      "Type": "MSFT_TaskWeeklyTrigger",
+      "Enabled": true,
+      "StartBoundary": "2024-02-02T08:30:00",
+      "EndBoundary": null,
+      "ExecutionTimeLimit": null,
+      "RepetitionInterval": null,
+      "RepetitionDuration": null,
+      "RepetitionStopAtDurationEnd": null,
+      "Delay": null,
+      "RandomDelay": null,
+      "DaysInterval": null,
+      "WeeksInterval": 2,
+      "DaysOfWeek": 62,
+      "UserId": null
+    }
+  ],
+  "Settings": {
+    "Enabled": true,
+    "Hidden": false,
+    "Priority": 7,
+    "MultipleInstances": "Parallel"
+  }
+}

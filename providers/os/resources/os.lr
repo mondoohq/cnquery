@@ -6197,6 +6197,205 @@ windows {
 
   // Information about optional features in a Windows image.
   optionalFeatures() []windows.optionalFeature
+
+  // Registered Windows Task Scheduler tasks
+  scheduledTasks() []windows.scheduledTask
+}
+
+// Windows Task Scheduler task
+//
+// Examine a registered task from the Windows Task Scheduler: its identity
+// (`name`, `path`, `uri`), run `state`, whether it is `enabled`, descriptive
+// metadata (`description`, `author`), and the security context it runs under
+// via `principal`. The `actions` it executes, the `triggers` that launch it,
+// and its full `settings` are exposed as nested resources, while `lastRunTime`,
+// `nextRunTime`, `lastTaskResult`, and `missedRuns` report the most recent
+// run-time information. Iterated from `windows.scheduledTasks` to audit
+// which tasks run, as whom, and on what schedule — for example
+// `windows.scheduledTasks.where(enabled).where(principal.runLevel == "Highest")`.
+private windows.scheduledTask @defaults("path name state enabled") {
+  // Task name (the leaf identifier within its folder)
+  name string
+  // Folder path the task is registered under (for example "\Microsoft\Windows\Defrag\")
+  path string
+  // Fully qualified task identifier combining path and name
+  uri string
+  // Run state
+  //
+  // One of "Unknown", "Disabled", "Queued", "Ready", or "Running".
+  state string
+  // Whether the task is enabled to run
+  enabled bool
+  // Human-readable description of the task
+  description string
+  // Author of the task
+  author string
+  // Documentation or notes associated with the task
+  documentation string
+  // Security descriptor (SDDL) controlling who can read or run the task
+  securityDescriptor string
+  // Source the task was registered from
+  source string
+  // Date the task was registered
+  date time
+  // Security context the task runs under
+  principal() windows.scheduledTask.principal
+  // Actions the task executes when it runs
+  actions() []windows.scheduledTask.action
+  // Conditions that launch the task
+  triggers() []windows.scheduledTask.trigger
+  // Conditions and behavior that govern how the task runs
+  settings() windows.scheduledTask.settings
+  // Time the task last ran
+  lastRunTime() time
+  // Time the task is next scheduled to run
+  nextRunTime() time
+  // Exit/result code from the most recent run
+  lastTaskResult() int
+  // Number of times the task was scheduled to run but did not
+  missedRuns() int
+}
+
+// Security context of a Windows scheduled task
+//
+// Examine the account a task runs as: the `userId` or `groupId` it is
+// associated with, the `logonType` used to obtain credentials, and the
+// `runLevel` that determines whether it runs with the highest available
+// privileges.
+private windows.scheduledTask.principal @defaults("userId logonType runLevel") {
+  // User account the task runs as
+  userId string
+  // Group the task is associated with, when run for a group rather than a user
+  groupId string
+  // Friendly name of the principal
+  displayName string
+  // How credentials are obtained
+  //
+  // One of "None", "Password", "S4U", "Interactive", "Group",
+  // "ServiceAccount", or "InteractiveOrPassword".
+  logonType string
+  // Privilege level the task runs with
+  //
+  // One of "Limited" or "Highest".
+  runLevel string
+}
+
+// Action performed by a Windows scheduled task
+//
+// Examine a single executable action a task performs: the program it runs
+// (`execute`), the command-line `arguments` passed to it, and the
+// `workingDirectory` it runs in.
+private windows.scheduledTask.action @defaults("execute arguments") {
+  // Program or command the action runs
+  execute string
+  // Command-line arguments passed to the program
+  arguments string
+  // Working directory the program runs in
+  workingDirectory string
+}
+
+// Trigger that launches a Windows scheduled task
+//
+// Examine a single condition that starts a task. The `type` discriminates
+// the kind of trigger ("daily", "weekly", "monthly", "monthlyDOW", "boot",
+// "logon", "registration", "time", "event", "idle", or "sessionStateChange")
+// and determines which of the schedule fields apply — `daysInterval` and
+// `randomDelay` for daily, `weeksInterval`/`daysOfWeek` for weekly, `delay`
+// for boot/logon/event triggers, and so on. Common fields cover whether the
+// trigger is `enabled`, its active window (`startBoundary`, `endBoundary`),
+// the `executionTimeLimit`, and any repetition pattern.
+private windows.scheduledTask.trigger @defaults("type enabled startBoundary") {
+  // Kind of trigger
+  //
+  // One of "daily", "weekly", "monthly", "monthlyDOW", "boot", "logon",
+  // "registration", "time", "event", "idle", or "sessionStateChange".
+  type string
+  // Whether the trigger is enabled
+  enabled bool
+  // Earliest time the trigger is active
+  startBoundary time
+  // Latest time the trigger is active
+  endBoundary time
+  // Maximum time the task may run when started by this trigger, as an ISO 8601 duration
+  executionTimeLimit string
+  // Interval between repeated runs while the trigger is active, as an ISO 8601 duration
+  repetitionInterval string
+  // How long the task keeps repeating after the trigger fires, as an ISO 8601 duration
+  repetitionDuration string
+  // Whether a running instance is stopped when the repetition duration ends
+  repetitionStopAtDurationEnd bool
+  // Delay after the triggering event before the task starts, as an ISO 8601 duration
+  delay string
+  // Random delay added before starting, as an ISO 8601 duration
+  randomDelay string
+  // Number of days between runs, for daily triggers
+  daysInterval int
+  // Number of weeks between runs, for weekly triggers
+  weeksInterval int
+  // Bitmask of days the task runs, for weekly and monthly-day-of-week triggers
+  daysOfWeek int
+  // User the logon trigger is scoped to, when restricted to a specific user
+  userId string
+}
+
+// Conditions and behavior governing a Windows scheduled task
+//
+// Examine the settings that control how a task runs: whether it is `enabled`
+// or `hidden`, how it behaves on battery power (`disallowStartIfOnBatteries`,
+// `stopIfGoingOnBatteries`), what happens when an instance is already running
+// (`multipleInstances`), restart-on-failure behavior (`restartCount`,
+// `restartInterval`), idle conditions, and execution limits.
+private windows.scheduledTask.settings @defaults("enabled hidden priority") {
+  // Whether the task is enabled
+  enabled bool
+  // Whether the task is hidden from the default Task Scheduler view
+  hidden bool
+  // Whether the task can be started on demand
+  allowDemandStart bool
+  // Whether the task can be terminated with end-task requests
+  allowHardTerminate bool
+  // Whether the task starts as soon as possible after a missed scheduled start
+  startWhenAvailable bool
+  // Whether the task runs only when a network connection is available
+  runOnlyIfNetworkAvailable bool
+  // Whether the task runs only when the computer is idle
+  runOnlyIfIdle bool
+  // Whether the task wakes the computer to run
+  wakeToRun bool
+  // Whether the task is prevented from starting while on battery power
+  disallowStartIfOnBatteries bool
+  // Whether a running task is stopped when the computer switches to battery power
+  stopIfGoingOnBatteries bool
+  // Whether the task is prevented from starting on a remote application session
+  disallowStartOnRemoteAppSession bool
+  // Number of times the task is restarted after a failure
+  restartCount int
+  // Time to wait between restart attempts, as an ISO 8601 duration
+  restartInterval string
+  // Maximum time the task may run, as an ISO 8601 duration
+  executionTimeLimit string
+  // Behavior when an instance of the task is already running
+  //
+  // One of "IgnoreNew", "Parallel", "Queue", or "StopExisting".
+  multipleInstances string
+  // Scheduling priority, from 0 (highest) to 10 (lowest)
+  priority int
+  // Time the task is kept after it expires, as an ISO 8601 duration
+  deleteExpiredTaskAfter string
+  // Lowest Task Scheduler version the task is compatible with
+  compatibility string
+  // How long the computer must be idle before the task runs, as an ISO 8601 duration
+  idleDuration string
+  // How long to wait for an idle condition, as an ISO 8601 duration
+  idleWaitTimeout string
+  // Whether the task stops when the computer is no longer idle
+  idleStopOnIdleEnd bool
+  // Whether the task restarts when the computer becomes idle again
+  idleRestartOnIdle bool
+  // Identifier of the network profile the task is tied to
+  networkId string
+  // Name of the network profile the task is tied to
+  networkName string
 }
 
 // macOS system extension

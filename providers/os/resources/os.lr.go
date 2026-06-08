@@ -314,6 +314,11 @@ const (
 	ResourceMacosSystemsetup              string = "macos.systemsetup"
 	ResourceOpenBSMAudit                  string = "openBSMAudit"
 	ResourceWindows                       string = "windows"
+	ResourceWindowsScheduledTask          string = "windows.scheduledTask"
+	ResourceWindowsScheduledTaskPrincipal string = "windows.scheduledTask.principal"
+	ResourceWindowsScheduledTaskAction    string = "windows.scheduledTask.action"
+	ResourceWindowsScheduledTaskTrigger   string = "windows.scheduledTask.trigger"
+	ResourceWindowsScheduledTaskSettings  string = "windows.scheduledTask.settings"
 	ResourceMacosSystemExtension          string = "macos.systemExtension"
 	ResourceSafari                        string = "safari"
 	ResourceSafariExtension               string = "safari.extension"
@@ -1631,6 +1636,26 @@ func init() {
 		"windows": {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindows,
+		},
+		"windows.scheduledTask": {
+			// to override args, implement: initWindowsScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsScheduledTask,
+		},
+		"windows.scheduledTask.principal": {
+			// to override args, implement: initWindowsScheduledTaskPrincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsScheduledTaskPrincipal,
+		},
+		"windows.scheduledTask.action": {
+			// to override args, implement: initWindowsScheduledTaskAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsScheduledTaskAction,
+		},
+		"windows.scheduledTask.trigger": {
+			// to override args, implement: initWindowsScheduledTaskTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsScheduledTaskTrigger,
+		},
+		"windows.scheduledTask.settings": {
+			// to override args, implement: initWindowsScheduledTaskSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsScheduledTaskSettings,
 		},
 		"macos.systemExtension": {
 			// to override args, implement: initMacosSystemExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7537,6 +7562,204 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.optionalFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetOptionalFeatures()).ToDataRes(types.Array(types.Resource("windows.optionalFeature")))
+	},
+	"windows.scheduledTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetScheduledTasks()).ToDataRes(types.Array(types.Resource("windows.scheduledTask")))
+	},
+	"windows.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetName()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetPath()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetUri()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetState()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetAuthor()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.documentation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetDocumentation()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.securityDescriptor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetSecurityDescriptor()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetSource()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetDate()).ToDataRes(types.Time)
+	},
+	"windows.scheduledTask.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetPrincipal()).ToDataRes(types.Resource("windows.scheduledTask.principal"))
+	},
+	"windows.scheduledTask.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetActions()).ToDataRes(types.Array(types.Resource("windows.scheduledTask.action")))
+	},
+	"windows.scheduledTask.triggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetTriggers()).ToDataRes(types.Array(types.Resource("windows.scheduledTask.trigger")))
+	},
+	"windows.scheduledTask.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetSettings()).ToDataRes(types.Resource("windows.scheduledTask.settings"))
+	},
+	"windows.scheduledTask.lastRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetLastRunTime()).ToDataRes(types.Time)
+	},
+	"windows.scheduledTask.nextRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetNextRunTime()).ToDataRes(types.Time)
+	},
+	"windows.scheduledTask.lastTaskResult": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetLastTaskResult()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.missedRuns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTask).GetMissedRuns()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.principal.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskPrincipal).GetUserId()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.principal.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskPrincipal).GetGroupId()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.principal.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskPrincipal).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.principal.logonType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskPrincipal).GetLogonType()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.principal.runLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskPrincipal).GetRunLevel()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.action.execute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskAction).GetExecute()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.action.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskAction).GetArguments()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.action.workingDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskAction).GetWorkingDirectory()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetType()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.trigger.startBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetStartBoundary()).ToDataRes(types.Time)
+	},
+	"windows.scheduledTask.trigger.endBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetEndBoundary()).ToDataRes(types.Time)
+	},
+	"windows.scheduledTask.trigger.executionTimeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetExecutionTimeLimit()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.repetitionInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetRepetitionInterval()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.repetitionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetRepetitionDuration()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.repetitionStopAtDurationEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetRepetitionStopAtDurationEnd()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.trigger.delay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetDelay()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.randomDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetRandomDelay()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.trigger.daysInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetDaysInterval()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.trigger.weeksInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetWeeksInterval()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.trigger.daysOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetDaysOfWeek()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.trigger.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskTrigger).GetUserId()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetHidden()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.allowDemandStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetAllowDemandStart()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.allowHardTerminate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetAllowHardTerminate()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.startWhenAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetStartWhenAvailable()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.runOnlyIfNetworkAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetRunOnlyIfNetworkAvailable()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.runOnlyIfIdle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetRunOnlyIfIdle()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.wakeToRun": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetWakeToRun()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.disallowStartIfOnBatteries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetDisallowStartIfOnBatteries()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.stopIfGoingOnBatteries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetStopIfGoingOnBatteries()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.disallowStartOnRemoteAppSession": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetDisallowStartOnRemoteAppSession()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.restartCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetRestartCount()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.settings.restartInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetRestartInterval()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.executionTimeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetExecutionTimeLimit()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.multipleInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetMultipleInstances()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetPriority()).ToDataRes(types.Int)
+	},
+	"windows.scheduledTask.settings.deleteExpiredTaskAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetDeleteExpiredTaskAfter()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.compatibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetCompatibility()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.idleDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetIdleDuration()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.idleWaitTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetIdleWaitTimeout()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.idleStopOnIdleEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetIdleStopOnIdleEnd()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.idleRestartOnIdle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetIdleRestartOnIdle()).ToDataRes(types.Bool)
+	},
+	"windows.scheduledTask.settings.networkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetNetworkId()).ToDataRes(types.String)
+	},
+	"windows.scheduledTask.settings.networkName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsScheduledTaskSettings).GetNetworkName()).ToDataRes(types.String)
 	},
 	"macos.systemExtension.identifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosSystemExtension).GetIdentifier()).ToDataRes(types.String)
@@ -18052,6 +18275,290 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.optionalFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).OptionalFeatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).ScheduledTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.scheduledTask.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.documentation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Documentation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.securityDescriptor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).SecurityDescriptor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Principal, ok = plugin.RawToTValue[*mqlWindowsScheduledTaskPrincipal](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.triggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Triggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).Settings, ok = plugin.RawToTValue[*mqlWindowsScheduledTaskSettings](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.lastRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).LastRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.nextRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).NextRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.lastTaskResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).LastTaskResult, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.missedRuns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTask).MissedRuns, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.scheduledTask.principal.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal.logonType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).LogonType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.principal.runLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskPrincipal).RunLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskAction).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.scheduledTask.action.execute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskAction).Execute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.action.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskAction).Arguments, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.action.workingDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskAction).WorkingDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.scheduledTask.trigger.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.startBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).StartBoundary, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.endBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).EndBoundary, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.executionTimeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).ExecutionTimeLimit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.repetitionInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).RepetitionInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.repetitionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).RepetitionDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.repetitionStopAtDurationEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).RepetitionStopAtDurationEnd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.delay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).Delay, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.randomDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).RandomDelay, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.daysInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).DaysInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.weeksInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).WeeksInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.daysOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).DaysOfWeek, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.trigger.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskTrigger).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.scheduledTask.settings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.allowDemandStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).AllowDemandStart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.allowHardTerminate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).AllowHardTerminate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.startWhenAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).StartWhenAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.runOnlyIfNetworkAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).RunOnlyIfNetworkAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.runOnlyIfIdle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).RunOnlyIfIdle, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.wakeToRun": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).WakeToRun, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.disallowStartIfOnBatteries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).DisallowStartIfOnBatteries, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.stopIfGoingOnBatteries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).StopIfGoingOnBatteries, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.disallowStartOnRemoteAppSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).DisallowStartOnRemoteAppSession, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.restartCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).RestartCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.restartInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).RestartInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.executionTimeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).ExecutionTimeLimit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.multipleInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).MultipleInstances, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.deleteExpiredTaskAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).DeleteExpiredTaskAfter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.compatibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).Compatibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.idleDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).IdleDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.idleWaitTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).IdleWaitTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.idleStopOnIdleEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).IdleStopOnIdleEnd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.idleRestartOnIdle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).IdleRestartOnIdle, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.networkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).NetworkId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.scheduledTask.settings.networkName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsScheduledTaskSettings).NetworkName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.systemExtension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48202,6 +48709,7 @@ type mqlWindows struct {
 	Hotfixes         plugin.TValue[[]any]
 	ServerFeatures   plugin.TValue[[]any]
 	OptionalFeatures plugin.TValue[[]any]
+	ScheduledTasks   plugin.TValue[[]any]
 }
 
 // createWindows creates a new instance of this resource
@@ -48288,6 +48796,598 @@ func (c *mqlWindows) GetOptionalFeatures() *plugin.TValue[[]any] {
 
 		return c.optionalFeatures()
 	})
+}
+
+func (c *mqlWindows) GetScheduledTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScheduledTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "scheduledTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scheduledTasks()
+	})
+}
+
+// mqlWindowsScheduledTask for the windows.scheduledTask resource
+type mqlWindowsScheduledTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsScheduledTaskInternal
+	Name               plugin.TValue[string]
+	Path               plugin.TValue[string]
+	Uri                plugin.TValue[string]
+	State              plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Description        plugin.TValue[string]
+	Author             plugin.TValue[string]
+	Documentation      plugin.TValue[string]
+	SecurityDescriptor plugin.TValue[string]
+	Source             plugin.TValue[string]
+	Date               plugin.TValue[*time.Time]
+	Principal          plugin.TValue[*mqlWindowsScheduledTaskPrincipal]
+	Actions            plugin.TValue[[]any]
+	Triggers           plugin.TValue[[]any]
+	Settings           plugin.TValue[*mqlWindowsScheduledTaskSettings]
+	LastRunTime        plugin.TValue[*time.Time]
+	NextRunTime        plugin.TValue[*time.Time]
+	LastTaskResult     plugin.TValue[int64]
+	MissedRuns         plugin.TValue[int64]
+}
+
+// createWindowsScheduledTask creates a new instance of this resource
+func createWindowsScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsScheduledTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.scheduledTask", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsScheduledTask) MqlName() string {
+	return "windows.scheduledTask"
+}
+
+func (c *mqlWindowsScheduledTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsScheduledTask) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsScheduledTask) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsScheduledTask) GetUri() *plugin.TValue[string] {
+	return &c.Uri
+}
+
+func (c *mqlWindowsScheduledTask) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlWindowsScheduledTask) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsScheduledTask) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsScheduledTask) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlWindowsScheduledTask) GetDocumentation() *plugin.TValue[string] {
+	return &c.Documentation
+}
+
+func (c *mqlWindowsScheduledTask) GetSecurityDescriptor() *plugin.TValue[string] {
+	return &c.SecurityDescriptor
+}
+
+func (c *mqlWindowsScheduledTask) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlWindowsScheduledTask) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
+}
+
+func (c *mqlWindowsScheduledTask) GetPrincipal() *plugin.TValue[*mqlWindowsScheduledTaskPrincipal] {
+	return plugin.GetOrCompute[*mqlWindowsScheduledTaskPrincipal](&c.Principal, func() (*mqlWindowsScheduledTaskPrincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.scheduledTask", c.__id, "principal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsScheduledTaskPrincipal), nil
+			}
+		}
+
+		return c.principal()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Actions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.scheduledTask", c.__id, "actions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actions()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetTriggers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Triggers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.scheduledTask", c.__id, "triggers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.triggers()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetSettings() *plugin.TValue[*mqlWindowsScheduledTaskSettings] {
+	return plugin.GetOrCompute[*mqlWindowsScheduledTaskSettings](&c.Settings, func() (*mqlWindowsScheduledTaskSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.scheduledTask", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsScheduledTaskSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetLastRunTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastRunTime, func() (*time.Time, error) {
+		return c.lastRunTime()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetNextRunTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.NextRunTime, func() (*time.Time, error) {
+		return c.nextRunTime()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetLastTaskResult() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LastTaskResult, func() (int64, error) {
+		return c.lastTaskResult()
+	})
+}
+
+func (c *mqlWindowsScheduledTask) GetMissedRuns() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MissedRuns, func() (int64, error) {
+		return c.missedRuns()
+	})
+}
+
+// mqlWindowsScheduledTaskPrincipal for the windows.scheduledTask.principal resource
+type mqlWindowsScheduledTaskPrincipal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsScheduledTaskPrincipalInternal it will be used here
+	UserId      plugin.TValue[string]
+	GroupId     plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	LogonType   plugin.TValue[string]
+	RunLevel    plugin.TValue[string]
+}
+
+// createWindowsScheduledTaskPrincipal creates a new instance of this resource
+func createWindowsScheduledTaskPrincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsScheduledTaskPrincipal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.scheduledTask.principal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) MqlName() string {
+	return "windows.scheduledTask.principal"
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) GetLogonType() *plugin.TValue[string] {
+	return &c.LogonType
+}
+
+func (c *mqlWindowsScheduledTaskPrincipal) GetRunLevel() *plugin.TValue[string] {
+	return &c.RunLevel
+}
+
+// mqlWindowsScheduledTaskAction for the windows.scheduledTask.action resource
+type mqlWindowsScheduledTaskAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsScheduledTaskActionInternal it will be used here
+	Execute          plugin.TValue[string]
+	Arguments        plugin.TValue[string]
+	WorkingDirectory plugin.TValue[string]
+}
+
+// createWindowsScheduledTaskAction creates a new instance of this resource
+func createWindowsScheduledTaskAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsScheduledTaskAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.scheduledTask.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsScheduledTaskAction) MqlName() string {
+	return "windows.scheduledTask.action"
+}
+
+func (c *mqlWindowsScheduledTaskAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsScheduledTaskAction) GetExecute() *plugin.TValue[string] {
+	return &c.Execute
+}
+
+func (c *mqlWindowsScheduledTaskAction) GetArguments() *plugin.TValue[string] {
+	return &c.Arguments
+}
+
+func (c *mqlWindowsScheduledTaskAction) GetWorkingDirectory() *plugin.TValue[string] {
+	return &c.WorkingDirectory
+}
+
+// mqlWindowsScheduledTaskTrigger for the windows.scheduledTask.trigger resource
+type mqlWindowsScheduledTaskTrigger struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsScheduledTaskTriggerInternal it will be used here
+	Type                        plugin.TValue[string]
+	Enabled                     plugin.TValue[bool]
+	StartBoundary               plugin.TValue[*time.Time]
+	EndBoundary                 plugin.TValue[*time.Time]
+	ExecutionTimeLimit          plugin.TValue[string]
+	RepetitionInterval          plugin.TValue[string]
+	RepetitionDuration          plugin.TValue[string]
+	RepetitionStopAtDurationEnd plugin.TValue[bool]
+	Delay                       plugin.TValue[string]
+	RandomDelay                 plugin.TValue[string]
+	DaysInterval                plugin.TValue[int64]
+	WeeksInterval               plugin.TValue[int64]
+	DaysOfWeek                  plugin.TValue[int64]
+	UserId                      plugin.TValue[string]
+}
+
+// createWindowsScheduledTaskTrigger creates a new instance of this resource
+func createWindowsScheduledTaskTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsScheduledTaskTrigger{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.scheduledTask.trigger", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) MqlName() string {
+	return "windows.scheduledTask.trigger"
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetStartBoundary() *plugin.TValue[*time.Time] {
+	return &c.StartBoundary
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetEndBoundary() *plugin.TValue[*time.Time] {
+	return &c.EndBoundary
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetExecutionTimeLimit() *plugin.TValue[string] {
+	return &c.ExecutionTimeLimit
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetRepetitionInterval() *plugin.TValue[string] {
+	return &c.RepetitionInterval
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetRepetitionDuration() *plugin.TValue[string] {
+	return &c.RepetitionDuration
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetRepetitionStopAtDurationEnd() *plugin.TValue[bool] {
+	return &c.RepetitionStopAtDurationEnd
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetDelay() *plugin.TValue[string] {
+	return &c.Delay
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetRandomDelay() *plugin.TValue[string] {
+	return &c.RandomDelay
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetDaysInterval() *plugin.TValue[int64] {
+	return &c.DaysInterval
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetWeeksInterval() *plugin.TValue[int64] {
+	return &c.WeeksInterval
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetDaysOfWeek() *plugin.TValue[int64] {
+	return &c.DaysOfWeek
+}
+
+func (c *mqlWindowsScheduledTaskTrigger) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+// mqlWindowsScheduledTaskSettings for the windows.scheduledTask.settings resource
+type mqlWindowsScheduledTaskSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsScheduledTaskSettingsInternal it will be used here
+	Enabled                         plugin.TValue[bool]
+	Hidden                          plugin.TValue[bool]
+	AllowDemandStart                plugin.TValue[bool]
+	AllowHardTerminate              plugin.TValue[bool]
+	StartWhenAvailable              plugin.TValue[bool]
+	RunOnlyIfNetworkAvailable       plugin.TValue[bool]
+	RunOnlyIfIdle                   plugin.TValue[bool]
+	WakeToRun                       plugin.TValue[bool]
+	DisallowStartIfOnBatteries      plugin.TValue[bool]
+	StopIfGoingOnBatteries          plugin.TValue[bool]
+	DisallowStartOnRemoteAppSession plugin.TValue[bool]
+	RestartCount                    plugin.TValue[int64]
+	RestartInterval                 plugin.TValue[string]
+	ExecutionTimeLimit              plugin.TValue[string]
+	MultipleInstances               plugin.TValue[string]
+	Priority                        plugin.TValue[int64]
+	DeleteExpiredTaskAfter          plugin.TValue[string]
+	Compatibility                   plugin.TValue[string]
+	IdleDuration                    plugin.TValue[string]
+	IdleWaitTimeout                 plugin.TValue[string]
+	IdleStopOnIdleEnd               plugin.TValue[bool]
+	IdleRestartOnIdle               plugin.TValue[bool]
+	NetworkId                       plugin.TValue[string]
+	NetworkName                     plugin.TValue[string]
+}
+
+// createWindowsScheduledTaskSettings creates a new instance of this resource
+func createWindowsScheduledTaskSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsScheduledTaskSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.scheduledTask.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsScheduledTaskSettings) MqlName() string {
+	return "windows.scheduledTask.settings"
+}
+
+func (c *mqlWindowsScheduledTaskSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetAllowDemandStart() *plugin.TValue[bool] {
+	return &c.AllowDemandStart
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetAllowHardTerminate() *plugin.TValue[bool] {
+	return &c.AllowHardTerminate
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetStartWhenAvailable() *plugin.TValue[bool] {
+	return &c.StartWhenAvailable
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetRunOnlyIfNetworkAvailable() *plugin.TValue[bool] {
+	return &c.RunOnlyIfNetworkAvailable
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetRunOnlyIfIdle() *plugin.TValue[bool] {
+	return &c.RunOnlyIfIdle
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetWakeToRun() *plugin.TValue[bool] {
+	return &c.WakeToRun
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetDisallowStartIfOnBatteries() *plugin.TValue[bool] {
+	return &c.DisallowStartIfOnBatteries
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetStopIfGoingOnBatteries() *plugin.TValue[bool] {
+	return &c.StopIfGoingOnBatteries
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetDisallowStartOnRemoteAppSession() *plugin.TValue[bool] {
+	return &c.DisallowStartOnRemoteAppSession
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetRestartCount() *plugin.TValue[int64] {
+	return &c.RestartCount
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetRestartInterval() *plugin.TValue[string] {
+	return &c.RestartInterval
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetExecutionTimeLimit() *plugin.TValue[string] {
+	return &c.ExecutionTimeLimit
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetMultipleInstances() *plugin.TValue[string] {
+	return &c.MultipleInstances
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetDeleteExpiredTaskAfter() *plugin.TValue[string] {
+	return &c.DeleteExpiredTaskAfter
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetCompatibility() *plugin.TValue[string] {
+	return &c.Compatibility
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetIdleDuration() *plugin.TValue[string] {
+	return &c.IdleDuration
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetIdleWaitTimeout() *plugin.TValue[string] {
+	return &c.IdleWaitTimeout
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetIdleStopOnIdleEnd() *plugin.TValue[bool] {
+	return &c.IdleStopOnIdleEnd
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetIdleRestartOnIdle() *plugin.TValue[bool] {
+	return &c.IdleRestartOnIdle
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetNetworkId() *plugin.TValue[string] {
+	return &c.NetworkId
+}
+
+func (c *mqlWindowsScheduledTaskSettings) GetNetworkName() *plugin.TValue[string] {
+	return &c.NetworkName
 }
 
 // mqlMacosSystemExtension for the macos.systemExtension resource
