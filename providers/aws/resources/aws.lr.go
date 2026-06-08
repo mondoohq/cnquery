@@ -81407,7 +81407,7 @@ func (c *mqlAwsIamPolicy) GetAttachedGroups() *plugin.TValue[[]any] {
 type mqlAwsIamPolicyversion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamPolicyversionInternal it will be used here
+	mqlAwsIamPolicyversionInternal
 	Arn              plugin.TValue[string]
 	VersionId        plugin.TValue[string]
 	IsDefaultVersion plugin.TValue[bool]

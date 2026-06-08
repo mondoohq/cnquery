@@ -940,6 +940,8 @@ func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
 		for i := range keysResp.AccessKeyMetadata {
 			key := keysResp.AccessKeyMetadata[i]
 
+			// One GetAccessKeyLastUsed call per key. IAM caps users at 2 access
+			// keys, so this loop makes at most 2 calls and is not an N+1 risk.
 			// AWS returns "N/A" for region and service and a nil date when the
 			// key has never been used.
 			lastUsedRegion := ""
@@ -1387,29 +1389,42 @@ func (a *mqlAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
+type mqlAwsIamPolicyversionInternal struct {
+	rawDocOnce sync.Once
+	rawDoc     string
+	rawDocErr  error
+}
+
 // rawDocument fetches the policy version document as it is returned by the IAM
-// API: a URL-encoded JSON string. Callers decode and parse it as needed.
+// API: a URL-encoded JSON string. Callers decode and parse it as needed. The
+// result is cached so that document() and statements(), which both rely on it,
+// share a single GetPolicyVersion call.
 func (a *mqlAwsIamPolicyversion) rawDocument() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	a.rawDocOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Iam("")
-	ctx := context.Background()
+		svc := conn.Iam("")
+		ctx := context.Background()
 
-	arn := a.Arn.Data
-	versionid := a.VersionId.Data
+		arn := a.Arn.Data
+		versionid := a.VersionId.Data
 
-	policyVersion, err := svc.GetPolicyVersion(ctx, &iam.GetPolicyVersionInput{
-		PolicyArn: &arn,
-		VersionId: &versionid,
+		policyVersion, err := svc.GetPolicyVersion(ctx, &iam.GetPolicyVersionInput{
+			PolicyArn: &arn,
+			VersionId: &versionid,
+		})
+		if err != nil {
+			a.rawDocErr = err
+			return
+		}
+
+		if policyVersion.PolicyVersion.Document == nil {
+			a.rawDocErr = errors.New("could not retrieve the policy document")
+			return
+		}
+		a.rawDoc = *policyVersion.PolicyVersion.Document
 	})
-	if err != nil {
-		return "", err
-	}
-
-	if policyVersion.PolicyVersion.Document == nil {
-		return "", errors.New("could not retrieve the policy document")
-	}
-	return *policyVersion.PolicyVersion.Document, nil
+	return a.rawDoc, a.rawDocErr
 }
 
 func (a *mqlAwsIamPolicyversion) document() (any, error) {
