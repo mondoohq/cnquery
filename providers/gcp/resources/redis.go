@@ -138,6 +138,20 @@ func (g *mqlGcpProjectRedisService) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/redisService", g.ProjectId.Data), nil
 }
 
+func (g *mqlGcpProjectRedisServiceInstance) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.AuthorizedNetwork.Error != nil {
+		return nil, g.AuthorizedNetwork.Error
+	}
+	n, err := getNetworkByUrl(g.AuthorizedNetwork.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func (g *mqlGcpProjectRedisServiceInstance) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

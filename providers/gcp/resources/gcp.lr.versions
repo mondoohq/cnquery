@@ -318,6 +318,7 @@ gcp.project.apiGatewayService.apiConfig.labels 13.15.1
 gcp.project.apiGatewayService.apiConfig.name 13.15.1
 gcp.project.apiGatewayService.apiConfig.openapiDocuments 13.15.1
 gcp.project.apiGatewayService.apiConfig.projectId 13.15.1
+gcp.project.apiGatewayService.apiConfig.serviceAccount 13.21.2
 gcp.project.apiGatewayService.apiConfig.serviceConfigId 13.15.1
 gcp.project.apiGatewayService.apiConfig.state 13.15.1
 gcp.project.apiGatewayService.apiConfig.updateTime 13.15.1
@@ -955,6 +956,7 @@ gcp.project.cloudBuildService.workerPool.networkConfig.egressOption 13.7.2
 gcp.project.cloudBuildService.workerPool.networkConfig.id 13.7.2
 gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetwork 13.7.2
 gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkIpRange 13.7.2
+gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkRef 13.21.2
 gcp.project.cloudBuildService.workerPool.projectId 13.7.2
 gcp.project.cloudBuildService.workerPool.state 13.7.2
 gcp.project.cloudBuildService.workerPool.updateTime 13.7.2
@@ -1060,6 +1062,7 @@ gcp.project.cloudFunction.maxInstances 9.0.0
 gcp.project.cloudFunction.minInstances 9.0.0
 gcp.project.cloudFunction.name 9.0.0
 gcp.project.cloudFunction.network 9.0.0
+gcp.project.cloudFunction.networkRef 13.21.2
 gcp.project.cloudFunction.projectId 9.0.0
 gcp.project.cloudFunction.runtime 9.0.0
 gcp.project.cloudFunction.secretEnvVars 9.0.0
@@ -1084,6 +1087,7 @@ gcp.project.cloudFunctionV2.buildConfig.environmentVariables 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.id 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.runtime 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.serviceAccount 13.7.2
+gcp.project.cloudFunctionV2.buildConfig.serviceAccountRef 13.21.2
 gcp.project.cloudFunctionV2.buildConfig.source 13.7.2
 gcp.project.cloudFunctionV2.createTime 13.7.2
 gcp.project.cloudFunctionV2.description 13.7.2
@@ -1278,7 +1282,9 @@ gcp.project.cloudSchedulerService.job 11.6.6
 gcp.project.cloudSchedulerService.job.description 11.6.6
 gcp.project.cloudSchedulerService.job.lastAttemptTime 11.6.6
 gcp.project.cloudSchedulerService.job.name 11.6.6
+gcp.project.cloudSchedulerService.job.oauthServiceAccount 13.21.2
 gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail 13.18.1
+gcp.project.cloudSchedulerService.job.oidcServiceAccount 13.21.2
 gcp.project.cloudSchedulerService.job.oidcServiceAccountEmail 13.18.1
 gcp.project.cloudSchedulerService.job.projectId 11.6.6
 gcp.project.cloudSchedulerService.job.retryConfig 11.6.6
@@ -2390,6 +2396,7 @@ gcp.project.dataplexService.lake.name 13.18.1
 gcp.project.dataplexService.lake.projectId 13.18.1
 gcp.project.dataplexService.lake.securityPolicyApplyingAssets 13.18.1
 gcp.project.dataplexService.lake.serviceAccount 13.18.1
+gcp.project.dataplexService.lake.serviceAccountRef 13.21.2
 gcp.project.dataplexService.lake.state 13.18.1
 gcp.project.dataplexService.lake.uid 13.18.1
 gcp.project.dataplexService.lake.updated 13.18.1
@@ -2454,6 +2461,7 @@ gcp.project.dataprocService.cluster.config.gceCluster.confidentialInstance 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.id 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.internalIpOnly 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.metadata 9.0.0
+gcp.project.dataprocService.cluster.config.gceCluster.network 13.21.2
 gcp.project.dataprocService.cluster.config.gceCluster.networkUri 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.nodeGroupAffinity 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.privateIpv6GoogleAccess 9.0.0
@@ -2471,6 +2479,7 @@ gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.ena
 gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.enableSecureBoot 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.enableVtpm 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig.id 9.0.0
+gcp.project.dataprocService.cluster.config.gceCluster.subnetwork 13.21.2
 gcp.project.dataprocService.cluster.config.gceCluster.subnetworkUri 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.tags 9.0.0
 gcp.project.dataprocService.cluster.config.gceCluster.zoneUri 9.0.0
@@ -2806,6 +2815,7 @@ gcp.project.dnsService.managedzone.name 9.0.0
 gcp.project.dnsService.managedzone.nameServerSet 9.0.0
 gcp.project.dnsService.managedzone.nameServers 9.0.0
 gcp.project.dnsService.managedzone.peeringNetwork 13.18.1
+gcp.project.dnsService.managedzone.peeringNetworkRef 13.21.2
 gcp.project.dnsService.managedzone.privateVisibilityConfig 13.9.1
 gcp.project.dnsService.managedzone.projectId 9.0.0
 gcp.project.dnsService.managedzone.recordSets 9.0.0
@@ -4097,6 +4107,7 @@ gcp.project.redisService.instance.maintenanceSchedule 11.0.79
 gcp.project.redisService.instance.maintenanceVersion 11.0.79
 gcp.project.redisService.instance.memorySizeGb 11.0.79
 gcp.project.redisService.instance.name 11.0.79
+gcp.project.redisService.instance.network 13.21.2
 gcp.project.redisService.instance.nodeInfo 11.0.79
 gcp.project.redisService.instance.nodeInfo.id 11.0.79
 gcp.project.redisService.instance.nodeInfo.projectId 11.0.79
@@ -4373,6 +4384,7 @@ gcp.project.sqlService.instance.satisfiesPzs 11.6.6
 gcp.project.sqlService.instance.scheduledMaintenance 13.16.3
 gcp.project.sqlService.instance.secondaryZone 11.6.6
 gcp.project.sqlService.instance.serverCaCertExpiration 13.18.1
+gcp.project.sqlService.instance.serviceAccount 13.21.2
 gcp.project.sqlService.instance.serviceAccountEmailAddress 9.0.0
 gcp.project.sqlService.instance.settings 9.0.0
 gcp.project.sqlService.instance.settings.activationPolicy 9.0.0
@@ -4425,6 +4437,7 @@ gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoo
 gcp.project.sqlService.instance.settings.ipConfiguration.hasOpenAuthorizedNetworks 13.12.2
 gcp.project.sqlService.instance.settings.ipConfiguration.id 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.ipv4Enabled 9.0.0
+gcp.project.sqlService.instance.settings.ipConfiguration.network 13.21.2
 gcp.project.sqlService.instance.settings.ipConfiguration.privateNetwork 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig 13.10.1
 gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.allowedConsumerProjects 13.10.1
@@ -4657,6 +4670,7 @@ gcp.project.vertexaiService.endpoint.kmsKey 13.19.2
 gcp.project.vertexaiService.endpoint.labels 13.1.2
 gcp.project.vertexaiService.endpoint.name 13.1.2
 gcp.project.vertexaiService.endpoint.network 13.1.2
+gcp.project.vertexaiService.endpoint.networkRef 13.21.2
 gcp.project.vertexaiService.endpoint.trafficSplit 13.1.2
 gcp.project.vertexaiService.endpoint.updatedAt 13.1.2
 gcp.project.vertexaiService.endpoints 13.1.2
@@ -4725,6 +4739,7 @@ gcp.project.vertexaiService.indexEndpoint.kmsKey 13.19.2
 gcp.project.vertexaiService.indexEndpoint.labels 13.6.1
 gcp.project.vertexaiService.indexEndpoint.name 13.6.1
 gcp.project.vertexaiService.indexEndpoint.network 13.6.1
+gcp.project.vertexaiService.indexEndpoint.networkRef 13.21.2
 gcp.project.vertexaiService.indexEndpoint.publicEndpointDomainName 13.6.1
 gcp.project.vertexaiService.indexEndpoint.publicEndpointEnabled 13.6.1
 gcp.project.vertexaiService.indexEndpoint.updated 13.6.1
@@ -4858,6 +4873,7 @@ gcp.project.vertexaiService.pipelineJob.kmsKey 13.19.2
 gcp.project.vertexaiService.pipelineJob.labels 13.1.2
 gcp.project.vertexaiService.pipelineJob.name 13.1.2
 gcp.project.vertexaiService.pipelineJob.network 13.1.2
+gcp.project.vertexaiService.pipelineJob.networkRef 13.21.2
 gcp.project.vertexaiService.pipelineJob.pipelineSpec 13.1.2
 gcp.project.vertexaiService.pipelineJob.runtimeConfig 13.1.2
 gcp.project.vertexaiService.pipelineJob.serviceAccount 13.1.2

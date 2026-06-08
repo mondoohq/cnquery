@@ -156,6 +156,20 @@ func dataplexLocation(name string) string {
 	return ""
 }
 
+func (g *mqlGcpProjectDataplexServiceLake) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccount.Error != nil {
+		return nil, g.ServiceAccount.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccount.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
 func (g *mqlGcpProjectDataplexServiceLake) zones() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error

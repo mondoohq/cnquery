@@ -318,6 +318,20 @@ func (g *mqlGcpProjectCloudFunction) serviceAccount() (*mqlGcpProjectIamServiceS
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
+func (g *mqlGcpProjectCloudFunction) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.Network.Error != nil {
+		return nil, g.Network.Error
+	}
+	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

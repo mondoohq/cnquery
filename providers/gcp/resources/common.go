@@ -72,6 +72,35 @@ func projectFromResourceName(name string) string {
 	return ""
 }
 
+// resolveServiceAccountRef resolves a service account reference to the typed
+// gcp.project.iamService.serviceAccount resource. The raw value may be a bare
+// email or a full "projects/{project}/serviceAccounts/{email}" path; for a bare
+// email the fallbackProjectId is used. Returns nil when the reference is empty
+// or cannot be resolved to a project + email.
+func resolveServiceAccountRef(runtime *plugin.Runtime, raw, fallbackProjectId string) (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if raw == "" {
+		return nil, nil
+	}
+	projectId, email := fallbackProjectId, raw
+	if idx := strings.Index(raw, "/serviceAccounts/"); idx != -1 {
+		email = raw[idx+len("/serviceAccounts/"):]
+		if p := projectFromResourceName(raw); p != "" {
+			projectId = p
+		}
+	}
+	if projectId == "" || email == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
 // Returns nil for nil input, including typed nil interface values.
 func protoToDict(msg proto.Message) (map[string]any, error) {

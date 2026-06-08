@@ -131,6 +131,34 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectCloudSchedulerServiceJob) oidcServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.OidcServiceAccountEmail.Error != nil {
+		return nil, g.OidcServiceAccountEmail.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.OidcServiceAccountEmail.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.OidcServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
+func (g *mqlGcpProjectCloudSchedulerServiceJob) oauthServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.OauthServiceAccountEmail.Error != nil {
+		return nil, g.OauthServiceAccountEmail.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.OauthServiceAccountEmail.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.OauthServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
 func (g *mqlGcpProjectCloudSchedulerServiceJob) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

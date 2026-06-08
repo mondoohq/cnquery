@@ -757,6 +757,34 @@ func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyr
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectSqlServiceInstance) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccountEmailAddress.Error != nil {
+		return nil, g.ServiceAccountEmailAddress.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccountEmailAddress.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.PrivateNetwork.Error != nil {
+		return nil, g.PrivateNetwork.Error
+	}
+	n, err := getNetworkByUrl(g.PrivateNetwork.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

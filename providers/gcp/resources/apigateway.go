@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -207,6 +208,20 @@ func (g *mqlGcpProjectApiGatewayServiceApi) configs() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (g *mqlGcpProjectApiGatewayServiceApiConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.GatewayServiceAccount.Error != nil {
+		return nil, g.GatewayServiceAccount.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.GatewayServiceAccount.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
 }
 
 func (g *mqlGcpProjectApiGatewayServiceApiConfig) id() (string, error) {

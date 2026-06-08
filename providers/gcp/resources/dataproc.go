@@ -664,6 +664,34 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 	return mqlClusters, nil
 }
 
+func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkUri.Error != nil {
+		return nil, g.NetworkUri.Error
+	}
+	n, err := getNetworkByUrl(g.NetworkUri.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
+func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	if g.SubnetworkUri.Error != nil {
+		return nil, g.SubnetworkUri.Error
+	}
+	s, err := getSubnetworkByUrl(g.SubnetworkUri.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if s == nil {
+		g.Subnetwork.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return s, nil
+}
+
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

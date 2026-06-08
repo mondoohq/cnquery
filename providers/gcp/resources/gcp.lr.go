@@ -2582,6 +2582,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.instance.AuthorizedNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetAuthorizedNetwork()).ToDataRes(types.String)
 	},
+	"gcp.project.redisService.instance.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.redisService.instance.persistenceIamIdentity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetPersistenceIamIdentity()).ToDataRes(types.String)
 	},
@@ -5078,6 +5081,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.serviceAccountEmailAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetServiceAccountEmailAddress()).ToDataRes(types.String)
 	},
+	"gcp.project.sqlService.instance.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
 	"gcp.project.sqlService.instance.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetState()).ToDataRes(types.String)
 	},
@@ -5464,6 +5470,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.privateNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetPrivateNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetRequireSsl()).ToDataRes(types.Bool)
@@ -5992,6 +6001,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dnsService.managedzone.peeringNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPeeringNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.dnsService.managedzone.peeringNetworkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPeeringNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetRecordSets()).ToDataRes(types.Array(types.Resource("gcp.project.dnsService.recordset")))
@@ -7829,6 +7841,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetNetwork()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunction.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.cloudFunction.maxInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetMaxInstances()).ToDataRes(types.Int)
 	},
@@ -7948,6 +7963,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunctionV2.buildConfig.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.serviceAccountRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.cloudFunctionV2.serviceConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetId()).ToDataRes(types.String)
@@ -8074,6 +8092,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataplexService.lake.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataplexServiceLake).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.dataplexService.lake.serviceAccountRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataplexServiceLake).GetServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.dataplexService.lake.metastoreService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataplexServiceLake).GetMetastoreService()).ToDataRes(types.String)
@@ -8390,6 +8411,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.cluster.config.gceCluster.networkUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetNetworkUri()).ToDataRes(types.String)
 	},
+	"gcp.project.dataprocService.cluster.config.gceCluster.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.nodeGroupAffinity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetNodeGroupAffinity()).ToDataRes(types.Dict)
 	},
@@ -8413,6 +8437,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.subnetworkUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetSubnetworkUri()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.cluster.config.gceCluster.subnetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetSubnetwork()).ToDataRes(types.Resource("gcp.project.computeService.subnetwork"))
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).GetTags()).ToDataRes(types.Array(types.String))
@@ -11435,8 +11462,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudSchedulerService.job.oidcServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOidcServiceAccountEmail()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudSchedulerService.job.oidcServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOidcServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
 	"gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOauthServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudSchedulerService.job.oauthServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudSchedulerServiceJob).GetOauthServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.appEngineService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineService).GetProjectId()).ToDataRes(types.String)
@@ -11611,6 +11644,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.apiGatewayService.apiConfig.gatewayServiceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiGatewayServiceApiConfig).GetGatewayServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.apiGatewayService.apiConfig.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiGatewayServiceApiConfig).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.apiGatewayService.apiConfig.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiGatewayServiceApiConfig).GetCreateTime()).ToDataRes(types.Time)
@@ -13421,6 +13457,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.endpoint.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetNetwork()).ToDataRes(types.String)
 	},
+	"gcp.project.vertexaiService.endpoint.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetEnablePrivateServiceConnect()).ToDataRes(types.Bool)
 	},
@@ -13489,6 +13528,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.pipelineJob.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.pipelineJob.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
 	"gcp.project.vertexaiService.pipelineJob.encryptionSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetEncryptionSpec()).ToDataRes(types.Dict)
@@ -13705,6 +13747,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.indexEndpoint.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
 	"gcp.project.vertexaiService.indexEndpoint.publicEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).GetPublicEndpointEnabled()).ToDataRes(types.Bool)
@@ -15857,6 +15902,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetPeeredNetwork()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetPeeredNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkIpRange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetPeeredNetworkIpRange()).ToDataRes(types.String)
 	},
@@ -16965,6 +17013,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.instance.AuthorizedNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstance).AuthorizedNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.instance.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.redisService.instance.persistenceIamIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20499,6 +20551,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).ServiceAccountEmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -21053,6 +21109,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.privateNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).PrivateNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21817,6 +21877,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.managedzone.peeringNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).PeeringNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.peeringNetworkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).PeeringNetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24539,6 +24603,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunction.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunction.maxInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).MaxInstances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -24705,6 +24773,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunctionV2.buildConfig.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.serviceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).ServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunctionV2.serviceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24889,6 +24961,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataplexService.lake.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataplexServiceLake).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataplexService.lake.serviceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataplexServiceLake).ServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataplexService.lake.metastoreService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25343,6 +25419,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).NetworkUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.cluster.config.gceCluster.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.nodeGroupAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).NodeGroupAffinity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -25373,6 +25453,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.subnetworkUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).SubnetworkUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.config.gceCluster.subnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfigGceCluster).Subnetwork, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSubnetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.gceCluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29795,8 +29879,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudSchedulerServiceJob).OidcServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudSchedulerService.job.oidcServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudSchedulerServiceJob).OidcServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudSchedulerService.job.oauthServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudSchedulerServiceJob).OauthServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudSchedulerService.job.oauthServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudSchedulerServiceJob).OauthServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.appEngineService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30061,6 +30153,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.apiGatewayService.apiConfig.gatewayServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiGatewayServiceApiConfig).GatewayServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiGatewayService.apiConfig.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiGatewayServiceApiConfig).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiGatewayService.apiConfig.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32699,6 +32795,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.endpoint.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.endpoint.enablePrivateServiceConnect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceEndpoint).EnablePrivateServiceConnect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -32797,6 +32897,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.pipelineJob.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServicePipelineJob).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.pipelineJob.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.pipelineJob.encryptionSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33109,6 +33213,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.indexEndpoint.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.indexEndpoint.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceIndexEndpoint).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.indexEndpoint.publicEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36287,6 +36395,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).PeeredNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).PeeredNetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkIpRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).PeeredNetworkIpRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -38405,6 +38517,7 @@ type mqlGcpProjectRedisServiceInstance struct {
 	RedisConfigs                 plugin.TValue[map[string]any]
 	MemorySizeGb                 plugin.TValue[int64]
 	AuthorizedNetwork            plugin.TValue[string]
+	Network                      plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	PersistenceIamIdentity       plugin.TValue[string]
 	ConnectMode                  plugin.TValue[string]
 	AuthEnabled                  plugin.TValue[bool]
@@ -38530,6 +38643,22 @@ func (c *mqlGcpProjectRedisServiceInstance) GetMemorySizeGb() *plugin.TValue[int
 
 func (c *mqlGcpProjectRedisServiceInstance) GetAuthorizedNetwork() *plugin.TValue[string] {
 	return &c.AuthorizedNetwork
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService.instance", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
 }
 
 func (c *mqlGcpProjectRedisServiceInstance) GetPersistenceIamIdentity() *plugin.TValue[string] {
@@ -46723,6 +46852,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	HasBuiltInUsers                            plugin.TValue[bool]
 	LocalRootEnabled                           plugin.TValue[bool]
 	ServiceAccountEmailAddress                 plugin.TValue[string]
+	ServiceAccount                             plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	State                                      plugin.TValue[string]
 	Databases                                  plugin.TValue[[]any]
 	Users                                      plugin.TValue[[]any]
@@ -46935,6 +47065,22 @@ func (c *mqlGcpProjectSqlServiceInstance) GetLocalRootEnabled() *plugin.TValue[b
 
 func (c *mqlGcpProjectSqlServiceInstance) GetServiceAccountEmailAddress() *plugin.TValue[string] {
 	return &c.ServiceAccountEmailAddress
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectSqlServiceInstance) GetState() *plugin.TValue[string] {
@@ -47991,6 +48137,7 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	HasOpenAuthorizedNetworks               plugin.TValue[bool]
 	Ipv4Enabled                             plugin.TValue[bool]
 	PrivateNetwork                          plugin.TValue[string]
+	Network                                 plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	RequireSsl                              plugin.TValue[bool]
 	SslMode                                 plugin.TValue[string]
 	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
@@ -48062,6 +48209,22 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetIpv4Enabled(
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetPrivateNetwork() *plugin.TValue[string] {
 	return &c.PrivateNetwork
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance.settings.ipConfiguration", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
 }
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetRequireSsl() *plugin.TValue[bool] {
@@ -49664,6 +49827,7 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	PrivateVisibilityConfig    plugin.TValue[any]
 	ForwardingTargets          plugin.TValue[[]any]
 	PeeringNetwork             plugin.TValue[string]
+	PeeringNetworkRef          plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	RecordSets                 plugin.TValue[[]any]
 	IamPolicy                  plugin.TValue[[]any]
 }
@@ -49777,6 +49941,22 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetForwardingTargets() *plugin.TVal
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetPeeringNetwork() *plugin.TValue[string] {
 	return &c.PeeringNetwork
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetPeeringNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.PeeringNetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dnsService.managedzone", c.__id, "peeringNetworkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.peeringNetworkRef()
+	})
 }
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() *plugin.TValue[[]any] {
@@ -56305,6 +56485,7 @@ type mqlGcpProjectCloudFunction struct {
 	EnvVars               plugin.TValue[map[string]any]
 	BuildEnvVars          plugin.TValue[map[string]any]
 	Network               plugin.TValue[string]
+	NetworkRef            plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	MaxInstances          plugin.TValue[int64]
 	MinInstances          plugin.TValue[int64]
 	VpcConnector          plugin.TValue[string]
@@ -56458,6 +56639,22 @@ func (c *mqlGcpProjectCloudFunction) GetBuildEnvVars() *plugin.TValue[map[string
 
 func (c *mqlGcpProjectCloudFunction) GetNetwork() *plugin.TValue[string] {
 	return &c.Network
+}
+
+func (c *mqlGcpProjectCloudFunction) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
 }
 
 func (c *mqlGcpProjectCloudFunction) GetMaxInstances() *plugin.TValue[int64] {
@@ -56713,6 +56910,7 @@ type mqlGcpProjectCloudFunctionV2BuildConfig struct {
 	EnvironmentVariables plugin.TValue[map[string]any]
 	DockerRepository     plugin.TValue[string]
 	ServiceAccount       plugin.TValue[string]
+	ServiceAccountRef    plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 }
 
 // createGcpProjectCloudFunctionV2BuildConfig creates a new instance of this resource
@@ -56782,6 +56980,22 @@ func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetDockerRepository() *plugin.
 
 func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetServiceAccount() *plugin.TValue[string] {
 	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunctionV2.buildConfig", c.__id, "serviceAccountRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccountRef()
+	})
 }
 
 // mqlGcpProjectCloudFunctionV2ServiceConfig for the gcp.project.cloudFunctionV2.serviceConfig resource
@@ -57131,6 +57345,7 @@ type mqlGcpProjectDataplexServiceLake struct {
 	Updated                      plugin.TValue[*time.Time]
 	Labels                       plugin.TValue[map[string]any]
 	ServiceAccount               plugin.TValue[string]
+	ServiceAccountRef            plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	MetastoreService             plugin.TValue[string]
 	ActiveAssets                 plugin.TValue[int64]
 	SecurityPolicyApplyingAssets plugin.TValue[int64]
@@ -57215,6 +57430,22 @@ func (c *mqlGcpProjectDataplexServiceLake) GetLabels() *plugin.TValue[map[string
 
 func (c *mqlGcpProjectDataplexServiceLake) GetServiceAccount() *plugin.TValue[string] {
 	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectDataplexServiceLake) GetServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataplexService.lake", c.__id, "serviceAccountRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccountRef()
+	})
 }
 
 func (c *mqlGcpProjectDataplexServiceLake) GetMetastoreService() *plugin.TValue[string] {
@@ -58122,6 +58353,7 @@ type mqlGcpProjectDataprocServiceClusterConfigGceCluster struct {
 	InternalIpOnly          plugin.TValue[bool]
 	Metadata                plugin.TValue[map[string]any]
 	NetworkUri              plugin.TValue[string]
+	Network                 plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	NodeGroupAffinity       plugin.TValue[any]
 	PrivateIpv6GoogleAccess plugin.TValue[string]
 	ReservationAffinity     plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity]
@@ -58130,6 +58362,7 @@ type mqlGcpProjectDataprocServiceClusterConfigGceCluster struct {
 	ServiceAccountScopes    plugin.TValue[[]any]
 	ShieldedInstanceConfig  plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig]
 	SubnetworkUri           plugin.TValue[string]
+	Subnetwork              plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
 	Tags                    plugin.TValue[[]any]
 	ZoneUri                 plugin.TValue[string]
 }
@@ -58195,6 +58428,22 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetNetworkUri() *p
 	return &c.NetworkUri
 }
 
+func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config.gceCluster", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
 func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetNodeGroupAffinity() *plugin.TValue[any] {
 	return &c.NodeGroupAffinity
 }
@@ -58237,6 +58486,22 @@ func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetShieldedInstanc
 
 func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetSubnetworkUri() *plugin.TValue[string] {
 	return &c.SubnetworkUri
+}
+
+func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetSubnetwork() *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSubnetwork](&c.Subnetwork, func() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config.gceCluster", c.__id, "subnetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceSubnetwork), nil
+			}
+		}
+
+		return c.subnetwork()
+	})
 }
 
 func (c *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetTags() *plugin.TValue[[]any] {
@@ -68482,7 +68747,9 @@ type mqlGcpProjectCloudSchedulerServiceJob struct {
 	RetryConfig              plugin.TValue[*mqlGcpRetryConfig]
 	TargetType               plugin.TValue[string]
 	OidcServiceAccountEmail  plugin.TValue[string]
+	OidcServiceAccount       plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	OauthServiceAccountEmail plugin.TValue[string]
+	OauthServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 }
 
 // createGcpProjectCloudSchedulerServiceJob creates a new instance of this resource
@@ -68570,8 +68837,40 @@ func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOidcServiceAccountEmail() *pl
 	return &c.OidcServiceAccountEmail
 }
 
+func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOidcServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.OidcServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudSchedulerService.job", c.__id, "oidcServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.oidcServiceAccount()
+	})
+}
+
 func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOauthServiceAccountEmail() *plugin.TValue[string] {
 	return &c.OauthServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudSchedulerServiceJob) GetOauthServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.OauthServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudSchedulerService.job", c.__id, "oauthServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.oauthServiceAccount()
+	})
 }
 
 // mqlGcpProjectAppEngineService for the gcp.project.appEngineService resource
@@ -69232,6 +69531,7 @@ type mqlGcpProjectApiGatewayServiceApiConfig struct {
 	State                 plugin.TValue[string]
 	ServiceConfigId       plugin.TValue[string]
 	GatewayServiceAccount plugin.TValue[string]
+	ServiceAccount        plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	CreateTime            plugin.TValue[*time.Time]
 	UpdateTime            plugin.TValue[*time.Time]
 	Labels                plugin.TValue[map[string]any]
@@ -69297,6 +69597,22 @@ func (c *mqlGcpProjectApiGatewayServiceApiConfig) GetServiceConfigId() *plugin.T
 
 func (c *mqlGcpProjectApiGatewayServiceApiConfig) GetGatewayServiceAccount() *plugin.TValue[string] {
 	return &c.GatewayServiceAccount
+}
+
+func (c *mqlGcpProjectApiGatewayServiceApiConfig) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.apiGatewayService.apiConfig", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectApiGatewayServiceApiConfig) GetCreateTime() *plugin.TValue[*time.Time] {
@@ -75581,6 +75897,7 @@ type mqlGcpProjectVertexaiServiceEndpoint struct {
 	EncryptionSpec              plugin.TValue[any]
 	KmsKey                      plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Network                     plugin.TValue[string]
+	NetworkRef                  plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	EnablePrivateServiceConnect plugin.TValue[bool]
 	TrafficSplit                plugin.TValue[map[string]any]
 	Labels                      plugin.TValue[map[string]any]
@@ -75668,6 +75985,22 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetKmsKey() *plugin.TValue[*mqlGc
 
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetNetwork() *plugin.TValue[string] {
 	return &c.Network
+}
+
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.endpoint", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceEndpoint) GetEnablePrivateServiceConnect() *plugin.TValue[bool] {
@@ -75815,6 +76148,7 @@ type mqlGcpProjectVertexaiServicePipelineJob struct {
 	ServiceAccount    plugin.TValue[string]
 	ServiceAccountRef plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	Network           plugin.TValue[string]
+	NetworkRef        plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	EncryptionSpec    plugin.TValue[any]
 	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	TemplateUri       plugin.TValue[string]
@@ -75905,6 +76239,22 @@ func (c *mqlGcpProjectVertexaiServicePipelineJob) GetServiceAccountRef() *plugin
 
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetNetwork() *plugin.TValue[string] {
 	return &c.Network
+}
+
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.pipelineJob", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetEncryptionSpec() *plugin.TValue[any] {
@@ -76535,6 +76885,7 @@ type mqlGcpProjectVertexaiServiceIndexEndpoint struct {
 	Description              plugin.TValue[string]
 	DeployedIndexes          plugin.TValue[[]any]
 	Network                  plugin.TValue[string]
+	NetworkRef               plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	PublicEndpointEnabled    plugin.TValue[bool]
 	PublicEndpointDomainName plugin.TValue[string]
 	Labels                   plugin.TValue[map[string]any]
@@ -76599,6 +76950,22 @@ func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetDeployedIndexes() *plugin
 
 func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetNetwork() *plugin.TValue[string] {
 	return &c.Network
+}
+
+func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.indexEndpoint", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceIndexEndpoint) GetPublicEndpointEnabled() *plugin.TValue[bool] {
@@ -84384,6 +84751,7 @@ type mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig struct {
 	// optional: if you define mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfigInternal it will be used here
 	Id                   plugin.TValue[string]
 	PeeredNetwork        plugin.TValue[string]
+	PeeredNetworkRef     plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	PeeredNetworkIpRange plugin.TValue[string]
 	EgressOption         plugin.TValue[string]
 }
@@ -84431,6 +84799,22 @@ func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetId() *plugin.
 
 func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetwork() *plugin.TValue[string] {
 	return &c.PeeredNetwork
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.PeeredNetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.workerPool.networkConfig", c.__id, "peeredNetworkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.peeredNetworkRef()
+	})
 }
 
 func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetworkIpRange() *plugin.TValue[string] {

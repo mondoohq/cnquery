@@ -325,6 +325,8 @@ private gcp.project.redisService.instance @defaults("name") {
   // the instance is connected. If left unspecified, the `default`
   // network will be used.
   AuthorizedNetwork string
+  // VPC network the instance is attached to (resolved from AuthorizedNetwork)
+  network() gcp.project.computeService.network
   // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
   persistenceIamIdentity string
   // The network connect mode of the Redis instance
@@ -2674,6 +2676,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   localRootEnabled() bool
   // Service account email address
   serviceAccountEmailAddress string
+  // Service account identity the instance uses (resolved from serviceAccountEmailAddress)
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Instance state
   state string
   // List of the databases in the current SQL instance
@@ -3027,6 +3031,8 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   ipv4Enabled bool
   // Resource link for the VPC network from which the private IPs can access the Cloud SQL instance
   privateNetwork string
+  // VPC network from which private IPs can reach the instance (resolved from privateNetwork)
+  network() gcp.project.computeService.network
   // Whether SSL connections over IP are enforced
   requireSsl bool
   // Specifies how SSL/TLS is enforced in database connections.
@@ -3561,6 +3567,8 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   forwardingTargets []string
   // Fully qualified URL of the VPC network this private zone peers with for DNS resolution (empty when peering is not configured)
   peeringNetwork string
+  // VPC network this private zone peers with for DNS resolution (resolved from peeringNetwork)
+  peeringNetworkRef() gcp.project.computeService.network
   // Cloud DNS record set in the zone
   recordSets() []gcp.project.dnsService.recordset
   // IAM policy bindings for this managed zone
@@ -5585,6 +5593,8 @@ private gcp.project.cloudFunction @defaults("name") {
   buildEnvVars map[string]string
   // VPC network that this cloud function can connect to
   network string
+  // VPC network this function can connect to (resolved from network)
+  networkRef() gcp.project.computeService.network
   // Maximum number of function instances that may coexist at a given time
   maxInstances int
   // Lower bound for the number of function instances that may coexist at a given time
@@ -5680,6 +5690,8 @@ private gcp.project.cloudFunctionV2.buildConfig @defaults("runtime entryPoint") 
   dockerRepository string
   // Service account to use for the build
   serviceAccount string
+  // Service account identity used for the build (resolved from serviceAccount)
+  serviceAccountRef() gcp.project.iamService.serviceAccount
 }
 
 // Google Cloud (GCP) Cloud Function v2 service (Cloud Run) configuration
@@ -5798,6 +5810,8 @@ private gcp.project.dataplexService.lake @defaults("name state location") {
   labels map[string]string
   // Service account associated with the lake, used to access managed resources
   serviceAccount string
+  // Service account identity associated with the lake (resolved from serviceAccount)
+  serviceAccountRef() gcp.project.iamService.serviceAccount
   // Resource name of the attached Dataproc Metastore service, if any
   metastoreService string
   // Number of active assets in the lake
@@ -6115,6 +6129,8 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   metadata map[string]string
   // Compute Engine network to be used for machine communications
   networkUri string
+  // Compute Engine network used for machine communications (resolved from networkUri)
+  network() gcp.project.computeService.network
   // Node group affinity for sole-tenant clusters
   nodeGroupAffinity dict
   // Type of IPv6 access for the cluster
@@ -6131,6 +6147,8 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   shieldedInstanceConfig gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig
   // Compute Engine subnetwork to use for machine communications
   subnetworkUri string
+  // Compute Engine subnetwork used for machine communications (resolved from subnetworkUri)
+  subnetwork() gcp.project.computeService.subnetwork
   // Compute Engine tags
   tags []string
   // Zone where the Compute Engine cluster is located
@@ -9112,8 +9130,12 @@ private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
   targetType string
   // Service account email used to mint the OIDC token for HTTP target authentication (empty if not configured)
   oidcServiceAccountEmail string
+  // Service account identity used to mint the OIDC token (resolved from oidcServiceAccountEmail)
+  oidcServiceAccount() gcp.project.iamService.serviceAccount
   // Service account email used to mint the OAuth token for HTTP target authentication (empty if not configured)
   oauthServiceAccountEmail string
+  // Service account identity used to mint the OAuth token (resolved from oauthServiceAccountEmail)
+  oauthServiceAccount() gcp.project.iamService.serviceAccount
 }
 
 // Google Cloud (GCP) App Engine
@@ -9304,6 +9326,8 @@ private gcp.project.apiGatewayService.apiConfig @defaults("name state") {
   serviceConfigId string
   // IAM service account that gateways serving this config use to authenticate to other services
   gatewayServiceAccount string
+  // Service account identity gateways serving this config authenticate as (resolved from gatewayServiceAccount)
+  serviceAccount() gcp.project.iamService.serviceAccount
   // The time the API config was created
   createTime time
   // The time the API config was last updated
@@ -11056,6 +11080,8 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Network for private endpoints
   network string
+  // VPC network used for private endpoints (resolved from network)
+  networkRef() gcp.project.computeService.network
   // Whether private service connect is enabled
   enablePrivateServiceConnect bool
   // Traffic split (model ID to traffic percentage)
@@ -11130,6 +11156,8 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   serviceAccountRef() gcp.project.iamService.serviceAccount
   // VPC network the resource is attached to
   network string
+  // VPC network the resource is attached to (resolved from network)
+  networkRef() gcp.project.computeService.network
   // Encryption spec
   encryptionSpec dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
@@ -11334,6 +11362,8 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   deployedIndexes []dict
   // Network for private endpoints
   network string
+  // VPC network used for private endpoints (resolved from network)
+  networkRef() gcp.project.computeService.network
   // Whether public endpoint is enabled
   publicEndpointEnabled bool
   // Public endpoint domain name
@@ -13486,7 +13516,10 @@ private gcp.project.cloudBuildService.trigger @defaults("name description disabl
   // Variable substitutions (key-value pairs)
   substitutions map[string]string
   // Service account resource name used for builds from this trigger
-  serviceAccount string
+  //
+  // Deprecated in favor of `iamServiceAccount`, which resolves the identity to
+  // the service account resource (the resource name is its `name`).
+  serviceAccount @maturity("deprecated") string
   // IAM service account used for builds from this trigger
   iamServiceAccount() gcp.project.iamService.serviceAccount
   // GitHub event configuration
@@ -13639,6 +13672,8 @@ private gcp.project.cloudBuildService.workerPool.networkConfig @defaults("egress
   id string
   // Peered VPC network name
   peeredNetwork string
+  // Peered VPC network the worker pool connects through (resolved from peeredNetwork)
+  peeredNetworkRef() gcp.project.computeService.network
   // Peered network IP range
   peeredNetworkIpRange string
   // Egress option (NO_PUBLIC_EGRESS, PUBLIC_EGRESS)

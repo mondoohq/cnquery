@@ -461,6 +461,20 @@ func (g *mqlGcpProjectVertexaiServiceEndpoint) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectVertexaiServiceEndpoint) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.Network.Error != nil {
+		return nil, g.Network.Error
+	}
+	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 type mqlGcpProjectVertexaiServiceEndpointDeploymentInternal struct {
 	cacheModelName string
 	cacheProjectId string
@@ -664,6 +678,34 @@ func (g *mqlGcpProjectVertexaiServicePipelineJob) serviceAccountRef() (*mqlGcpPr
 		return nil, err
 	}
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
+func (g *mqlGcpProjectVertexaiServicePipelineJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.Network.Error != nil {
+		return nil, g.Network.Error
+	}
+	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
+func (g *mqlGcpProjectVertexaiServiceIndexEndpoint) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.Network.Error != nil {
+		return nil, g.Network.Error
+	}
+	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
 }
 
 func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {

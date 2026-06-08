@@ -525,6 +525,20 @@ func buildWorkerPoolNetworkConfig(runtime *plugin.Runtime, parentName string, cf
 	return res.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig), nil
 }
 
+func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) peeredNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.PeeredNetwork.Error != nil {
+		return nil, g.PeeredNetwork.Error
+	}
+	n, err := getNetworkByUrl(g.PeeredNetwork.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.PeeredNetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error

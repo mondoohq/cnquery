@@ -123,6 +123,20 @@ func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
+func (g *mqlGcpProjectDnsServiceManagedzone) peeringNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.PeeringNetwork.Error != nil {
+		return nil, g.PeeringNetwork.Error
+	}
+	n, err := getNetworkByUrl(g.PeeringNetwork.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.PeeringNetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

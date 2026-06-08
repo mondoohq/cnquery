@@ -235,6 +235,22 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 	return res.(*mqlGcpProjectCloudFunctionV2BuildConfig), nil
 }
 
+func (g *mqlGcpProjectCloudFunctionV2BuildConfig) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccount.Error != nil {
+		return nil, g.ServiceAccount.Error
+	}
+	// buildConfig.serviceAccount is a full "projects/{p}/serviceAccounts/{email}"
+	// path, so resolveServiceAccountRef derives the project — no fallback needed.
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccount.Data, "")
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
 func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
