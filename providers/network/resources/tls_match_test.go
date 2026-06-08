@@ -105,16 +105,16 @@ func TestCertMatchesDomain(t *testing.T) {
 			want:       false,
 		},
 		{
-			name:     "ip SAN match",
-			ips:      []net.IP{net.ParseIP("10.0.0.1")},
-			domain:   "10.0.0.1",
-			want:     true,
+			name:   "ip SAN match",
+			ips:    []net.IP{net.ParseIP("10.0.0.1")},
+			domain: "10.0.0.1",
+			want:   true,
 		},
 		{
-			name:     "ip SAN mismatch",
-			ips:      []net.IP{net.ParseIP("10.0.0.1")},
-			domain:   "10.0.0.2",
-			want:     false,
+			name:   "ip SAN mismatch",
+			ips:    []net.IP{net.ParseIP("10.0.0.1")},
+			domain: "10.0.0.2",
+			want:   false,
 		},
 	}
 
