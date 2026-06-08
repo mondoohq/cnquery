@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -156,7 +157,10 @@ func (s *mqlInetdConfig) entries(files []any) ([]any, error) {
 			}
 
 			obj, err := CreateResource(s.MqlRuntime, "inetd.config.entry", map[string]*llx.RawData{
-				"__id":       llx.StringData(file.Path.Data + "/" + e.Name + "/" + e.Protocol),
+				// The line number keeps the id unique when a file repeats the
+				// same service+protocol across multiple lines; without it the
+				// later entry would silently shadow the earlier one.
+				"__id":       llx.StringData(fmt.Sprintf("%s/%d/%s/%s", file.Path.Data, e.Line, e.Name, e.Protocol)),
 				"name":       llx.StringData(e.Name),
 				"socketType": llx.StringData(e.SocketType),
 				"protocol":   llx.StringData(e.Protocol),
