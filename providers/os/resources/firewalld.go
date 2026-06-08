@@ -101,8 +101,9 @@ func (f *mqlFirewalld) fetchStatus() error {
 		return nil
 	}
 	cmd := o.(*mqlCommand)
-	state := strings.TrimSpace(cmd.Stdout.Data)
-	if cmd.GetExitcode().Data != 0 || state != "running" {
+	exitcode := cmd.GetExitcode().Data
+	state := strings.TrimSpace(cmd.GetStdout().Data)
+	if exitcode != 0 || state != "running" {
 		f.cacheStatus = "not running"
 		f.fetched = true
 		return nil
