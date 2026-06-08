@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.16.1",
-  "generated_at": "2026-06-07T21:00:33-07:00",
+  "generated_at": "2026-06-07T21:40:40-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -747,7 +747,7 @@
     {
       "permission": "Microsoft.DocumentDB/databaseAccounts/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "cosmosdb.go"
     },
     {

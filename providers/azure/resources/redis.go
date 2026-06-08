@@ -66,29 +66,43 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	res, err := NewResource(runtime, "azure.subscription.cacheService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(conn.SubId()),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	cacheSvc := res.(*mqlAzureSubscriptionCacheService)
-	redisList := cacheSvc.GetRedis()
-	if redisList.Error != nil {
-		return nil, nil, redisList.Error
-	}
 	id, ok := args["id"].Value.(string)
 	if !ok {
 		return nil, nil, errors.New("id must be a non-nil string value")
 	}
-	for _, entry := range redisList.Data {
-		instance := entry.(*mqlAzureSubscriptionCacheServiceRedisInstance)
-		if instance.Id.Data == id {
-			return args, instance, nil
-		}
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	cacheName, err := resourceID.Component("Redis")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return nil, nil, errors.New("azure cache redis instance does not exist")
+	clientFactory, err := armredis.NewClientFactory(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := clientFactory.NewClient().Get(context.Background(), resourceID.ResourceGroup, cacheName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rawData, err := createRedisInstanceRawData(runtime, &resp.ResourceInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance", rawData)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlRedis := res.(*mqlAzureSubscriptionCacheServiceRedisInstance)
+	if resp.Properties != nil {
+		mqlRedis.cachePrivateEndpointConnections = resp.Properties.PrivateEndpointConnections
+	}
+	return args, mqlRedis, nil
 }
 
 func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {

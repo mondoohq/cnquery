@@ -55,29 +55,34 @@ func initAzureSubscriptionCosmosDbServiceAccount(runtime *plugin.Runtime, args m
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
-	res, err := NewResource(runtime, "azure.subscription.cosmosDbService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringData(conn.SubId()),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	cosmosDbSvc := res.(*mqlAzureSubscriptionCosmosDbService)
-	accountList := cosmosDbSvc.GetAccounts()
-	if accountList.Error != nil {
-		return nil, nil, accountList.Error
-	}
 	id, ok := args["id"].Value.(string)
 	if !ok {
 		return nil, nil, errors.New("id must be a non-nil string value")
 	}
-	for _, entry := range accountList.Data {
-		account := entry.(*mqlAzureSubscriptionCosmosDbServiceAccount)
-		if account.Id.Data == id {
-			return args, account, nil
-		}
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	accountName, err := resourceID.Component("databaseAccounts")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return nil, nil, errors.New("azure cosmosdb account does not exist")
+	client, err := cosmosdb.NewDatabaseAccountsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, accountName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlAccount, err := cosmosAccountToMql(runtime, &resp.DatabaseAccountGetResults)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlAccount, nil
 }
 
 func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]any, error) {
@@ -131,124 +136,132 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			if account == nil || account.ID == nil {
 				continue
 			}
-			properties, err := convert.JsonToDict(account.Properties)
+			mqlCosmosDbAccount, err := cosmosAccountToMql(runtime, account)
 			if err != nil {
 				return nil, err
-			}
-
-			var publicNetworkAccess *string
-			var disableLocalAuth *bool
-			var isVirtualNetworkFilterEnabled *bool
-			var disableKeyBasedMetadataWriteAccess *bool
-			var enableAutomaticFailover *bool
-			var enableMultipleWriteLocations *bool
-			var minimalTlsVersion *string
-			var defaultIdentity *string
-			if account.Properties != nil {
-				publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
-				disableLocalAuth = account.Properties.DisableLocalAuth
-				isVirtualNetworkFilterEnabled = account.Properties.IsVirtualNetworkFilterEnabled
-				disableKeyBasedMetadataWriteAccess = account.Properties.DisableKeyBasedMetadataWriteAccess
-				enableAutomaticFailover = account.Properties.EnableAutomaticFailover
-				enableMultipleWriteLocations = account.Properties.EnableMultipleWriteLocations
-				minimalTlsVersion = (*string)(account.Properties.MinimalTLSVersion)
-				defaultIdentity = account.Properties.DefaultIdentity
-			}
-
-			ipRangeFilter := []any{}
-			if account.Properties != nil && account.Properties.IPRules != nil {
-				for _, rule := range account.Properties.IPRules {
-					if rule != nil && rule.IPAddressOrRange != nil {
-						ipRangeFilter = append(ipRangeFilter, *rule.IPAddressOrRange)
-					}
-				}
-			}
-
-			var backupType string
-			var backupIntervalMinutes, backupRetentionHours int64
-			var backupRedundancy string
-			if account.Properties != nil && account.Properties.BackupPolicy != nil {
-				bp := account.Properties.BackupPolicy
-				if bp.GetBackupPolicy().Type != nil {
-					backupType = string(*bp.GetBackupPolicy().Type)
-				}
-				if periodic, ok := bp.(*cosmosdb.PeriodicModeBackupPolicy); ok && periodic.PeriodicModeProperties != nil {
-					if periodic.PeriodicModeProperties.BackupIntervalInMinutes != nil {
-						backupIntervalMinutes = int64(*periodic.PeriodicModeProperties.BackupIntervalInMinutes)
-					}
-					if periodic.PeriodicModeProperties.BackupRetentionIntervalInHours != nil {
-						backupRetentionHours = int64(*periodic.PeriodicModeProperties.BackupRetentionIntervalInHours)
-					}
-					if periodic.PeriodicModeProperties.BackupStorageRedundancy != nil {
-						backupRedundancy = string(*periodic.PeriodicModeProperties.BackupStorageRedundancy)
-					}
-				}
-			}
-
-			virtualNetworkRules := []any{}
-			if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
-				for _, rule := range account.Properties.VirtualNetworkRules {
-					if rule == nil {
-						continue
-					}
-					var subnetId string
-					var ignoreMissing bool
-					if rule.ID != nil {
-						subnetId = *rule.ID
-					}
-					if rule.IgnoreMissingVNetServiceEndpoint != nil {
-						ignoreMissing = *rule.IgnoreMissingVNetServiceEndpoint
-					}
-					ruleId := *account.ID + "/virtualNetworkRules/" + subnetId
-					mqlRule, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.virtualNetworkRule",
-						map[string]*llx.RawData{
-							"id":                               llx.StringData(ruleId),
-							"subnetId":                         llx.StringData(subnetId),
-							"ignoreMissingVNetServiceEndpoint": llx.BoolData(ignoreMissing),
-						})
-					if err != nil {
-						return nil, err
-					}
-					virtualNetworkRules = append(virtualNetworkRules, mqlRule)
-				}
-			}
-
-			mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
-				map[string]*llx.RawData{
-					"__id":                               llx.StringDataPtr(account.ID),
-					"id":                                 llx.StringDataPtr(account.ID),
-					"name":                               llx.StringDataPtr(account.Name),
-					"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":                           llx.StringDataPtr(account.Location),
-					"kind":                               llx.StringDataPtr((*string)(account.Kind)),
-					"type":                               llx.StringDataPtr(account.Type),
-					"properties":                         llx.DictData(properties),
-					"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
-					"disableLocalAuth":                   llx.BoolDataPtr(disableLocalAuth),
-					"isVirtualNetworkFilterEnabled":      llx.BoolDataPtr(isVirtualNetworkFilterEnabled),
-					"disableKeyBasedMetadataWriteAccess": llx.BoolDataPtr(disableKeyBasedMetadataWriteAccess),
-					"enableAutomaticFailover":            llx.BoolDataPtr(enableAutomaticFailover),
-					"enableMultipleWriteLocations":       llx.BoolDataPtr(enableMultipleWriteLocations),
-					"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
-					"minimalTlsVersion":                  llx.StringDataPtr(minimalTlsVersion),
-					"defaultIdentity":                    llx.StringDataPtr(defaultIdentity),
-					"backupType":                         llx.StringData(backupType),
-					"backupIntervalInMinutes":            llx.IntData(backupIntervalMinutes),
-					"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
-					"backupStorageRedundancy":            llx.StringData(backupRedundancy),
-					"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
-				})
-			if err != nil {
-				return nil, err
-			}
-			mqlAccount := mqlCosmosDbAccount.(*mqlAzureSubscriptionCosmosDbServiceAccount)
-			if account.Properties != nil && account.Properties.KeyVaultKeyURI != nil {
-				mqlAccount.cacheKeyVaultKeyUri = *account.Properties.KeyVaultKeyURI
 			}
 			res = append(res, mqlCosmosDbAccount)
 		}
 	}
 	return res, nil
+}
+
+func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccountGetResults) (plugin.Resource, error) {
+	properties, err := convert.JsonToDict(account.Properties)
+	if err != nil {
+		return nil, err
+	}
+
+	var publicNetworkAccess *string
+	var disableLocalAuth *bool
+	var isVirtualNetworkFilterEnabled *bool
+	var disableKeyBasedMetadataWriteAccess *bool
+	var enableAutomaticFailover *bool
+	var enableMultipleWriteLocations *bool
+	var minimalTlsVersion *string
+	var defaultIdentity *string
+	if account.Properties != nil {
+		publicNetworkAccess = (*string)(account.Properties.PublicNetworkAccess)
+		disableLocalAuth = account.Properties.DisableLocalAuth
+		isVirtualNetworkFilterEnabled = account.Properties.IsVirtualNetworkFilterEnabled
+		disableKeyBasedMetadataWriteAccess = account.Properties.DisableKeyBasedMetadataWriteAccess
+		enableAutomaticFailover = account.Properties.EnableAutomaticFailover
+		enableMultipleWriteLocations = account.Properties.EnableMultipleWriteLocations
+		minimalTlsVersion = (*string)(account.Properties.MinimalTLSVersion)
+		defaultIdentity = account.Properties.DefaultIdentity
+	}
+
+	ipRangeFilter := []any{}
+	if account.Properties != nil && account.Properties.IPRules != nil {
+		for _, rule := range account.Properties.IPRules {
+			if rule != nil && rule.IPAddressOrRange != nil {
+				ipRangeFilter = append(ipRangeFilter, *rule.IPAddressOrRange)
+			}
+		}
+	}
+
+	var backupType string
+	var backupIntervalMinutes, backupRetentionHours int64
+	var backupRedundancy string
+	if account.Properties != nil && account.Properties.BackupPolicy != nil {
+		bp := account.Properties.BackupPolicy
+		if bp.GetBackupPolicy().Type != nil {
+			backupType = string(*bp.GetBackupPolicy().Type)
+		}
+		if periodic, ok := bp.(*cosmosdb.PeriodicModeBackupPolicy); ok && periodic.PeriodicModeProperties != nil {
+			if periodic.PeriodicModeProperties.BackupIntervalInMinutes != nil {
+				backupIntervalMinutes = int64(*periodic.PeriodicModeProperties.BackupIntervalInMinutes)
+			}
+			if periodic.PeriodicModeProperties.BackupRetentionIntervalInHours != nil {
+				backupRetentionHours = int64(*periodic.PeriodicModeProperties.BackupRetentionIntervalInHours)
+			}
+			if periodic.PeriodicModeProperties.BackupStorageRedundancy != nil {
+				backupRedundancy = string(*periodic.PeriodicModeProperties.BackupStorageRedundancy)
+			}
+		}
+	}
+
+	virtualNetworkRules := []any{}
+	if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
+		for _, rule := range account.Properties.VirtualNetworkRules {
+			if rule == nil {
+				continue
+			}
+			var subnetId string
+			var ignoreMissing bool
+			if rule.ID != nil {
+				subnetId = *rule.ID
+			}
+			if rule.IgnoreMissingVNetServiceEndpoint != nil {
+				ignoreMissing = *rule.IgnoreMissingVNetServiceEndpoint
+			}
+			ruleId := *account.ID + "/virtualNetworkRules/" + subnetId
+			mqlRule, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.virtualNetworkRule",
+				map[string]*llx.RawData{
+					"id":                               llx.StringData(ruleId),
+					"subnetId":                         llx.StringData(subnetId),
+					"ignoreMissingVNetServiceEndpoint": llx.BoolData(ignoreMissing),
+				})
+			if err != nil {
+				return nil, err
+			}
+			virtualNetworkRules = append(virtualNetworkRules, mqlRule)
+		}
+	}
+
+	mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
+		map[string]*llx.RawData{
+			"__id":                               llx.StringDataPtr(account.ID),
+			"id":                                 llx.StringDataPtr(account.ID),
+			"name":                               llx.StringDataPtr(account.Name),
+			"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+			"location":                           llx.StringDataPtr(account.Location),
+			"kind":                               llx.StringDataPtr((*string)(account.Kind)),
+			"type":                               llx.StringDataPtr(account.Type),
+			"properties":                         llx.DictData(properties),
+			"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
+			"disableLocalAuth":                   llx.BoolDataPtr(disableLocalAuth),
+			"isVirtualNetworkFilterEnabled":      llx.BoolDataPtr(isVirtualNetworkFilterEnabled),
+			"disableKeyBasedMetadataWriteAccess": llx.BoolDataPtr(disableKeyBasedMetadataWriteAccess),
+			"enableAutomaticFailover":            llx.BoolDataPtr(enableAutomaticFailover),
+			"enableMultipleWriteLocations":       llx.BoolDataPtr(enableMultipleWriteLocations),
+			"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
+			"minimalTlsVersion":                  llx.StringDataPtr(minimalTlsVersion),
+			"defaultIdentity":                    llx.StringDataPtr(defaultIdentity),
+			"backupType":                         llx.StringData(backupType),
+			"backupIntervalInMinutes":            llx.IntData(backupIntervalMinutes),
+			"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
+			"backupStorageRedundancy":            llx.StringData(backupRedundancy),
+			"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount := mqlCosmosDbAccount.(*mqlAzureSubscriptionCosmosDbServiceAccount)
+	if account.Properties != nil && account.Properties.KeyVaultKeyURI != nil {
+		mqlAccount.cacheKeyVaultKeyUri = *account.Properties.KeyVaultKeyURI
+	}
+	return mqlCosmosDbAccount, nil
 }
 
 // cosmosEnumStrPtr converts a pointer to a string-based SDK enum into a *string,
