@@ -1764,7 +1764,10 @@ azure.subscription.desktopVirtualizationService.hostPool.maxSessionLimit 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.name 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.personalDesktopAssignmentType 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.preferredAppGroupType 13.16.2
+azure.subscription.desktopVirtualizationService.hostPool.privateEndpointConnectionCount 13.16.2
+azure.subscription.desktopVirtualizationService.hostPool.publicNetworkAccess 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.ring 13.16.2
+azure.subscription.desktopVirtualizationService.hostPool.ssoSecretType 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.ssoadfsAuthority 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.startVMOnConnect 13.16.2
 azure.subscription.desktopVirtualizationService.hostPool.tags 13.16.2

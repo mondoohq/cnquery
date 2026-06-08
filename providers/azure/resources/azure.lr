@@ -11580,4 +11580,10 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   ssoadfsAuthority string
   // Update ring the host pool belongs to
   ring int
+  // Whether the host pool is reachable from the public internet ("Enabled", "Disabled", "EnabledForSessionHostsOnly", or "EnabledForClientsOnly")
+  publicNetworkAccess string
+  // How the single-sign-on secret is stored ("SharedKey", "Certificate", "SharedKeyInKeyVault", or "CertificateInKeyVault")
+  ssoSecretType string
+  // Number of approved private endpoint connections to the host pool
+  privateEndpointConnectionCount int
 }

@@ -126,8 +126,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks v
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks v1.1.0/go.mod h1:4jtknLqzaPtwIz8Y9NBp2rXxeA7BbSICWBD0FDzG2VM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v10 v10.0.0 h1:mc2mGr+5wY9v7V0F7O7jXkzB4ByKUWiTU0KTiIWOZeM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v10 v10.0.0/go.mod h1:YhXXTpZ5TanA7EoL74rWIoTZJEwN4CzFc3vJn6b6hTs=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization v1.0.0 h1:E404espBxzBWw7BlZa7TONlqMEH7P3P8XCe686PSmZQ=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization v1.0.0/go.mod h1:XM/9J9tLtumXaGIJwbsbm7WlsZwxOtKB34HwmFW9qyU=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization/v2 v2.3.0 h1:58Pq8MyJ4hT2rkkSaZ7gS25+Q1YdsNn+3nuAt+Sg0Yc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization/v2 v2.3.0/go.mod h1:awlKdgQzRV48H2/m3VEhHQrHwqRpLqDEVkz4LvSgTEc=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns v1.2.0 h1:lpOxwrQ919lCZoNCd69rVt8u1eLZuMORrGXqy8sNf3c=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns v1.2.0/go.mod h1:fSvRkb8d26z9dbL40Uf/OO6Vo9iExtZK3D0ulRV+8M0=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventgrid/armeventgrid/v2 v2.3.0 h1:8JkRfARpQbzTzD+HGQAf67VIqQg3qXLIcAqtPYr/V0Q=

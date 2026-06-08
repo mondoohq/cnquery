@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/desktopvirtualization/armdesktopvirtualization/v2"
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -86,9 +86,10 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 	}
 
 	var hostPoolType, loadBalancerType, preferredAppGroupType, customRdpProperty string
-	var personalDesktopAssignmentType, ssoadfsAuthority string
+	var personalDesktopAssignmentType, ssoadfsAuthority, publicNetworkAccess, ssoSecretType string
 	var startVMOnConnect, validationEnvironment bool
 	var maxSessionLimit, ring *int64
+	privateEndpointConnectionCount := int64(0)
 	if p := hp.Properties; p != nil {
 		hostPoolType = string(convert.ToValue(p.HostPoolType))
 		loadBalancerType = string(convert.ToValue(p.LoadBalancerType))
@@ -98,6 +99,9 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 		ssoadfsAuthority = convert.ToValue(p.SsoadfsAuthority)
 		startVMOnConnect = convert.ToValue(p.StartVMOnConnect)
 		validationEnvironment = convert.ToValue(p.ValidationEnvironment)
+		publicNetworkAccess = string(convert.ToValue(p.PublicNetworkAccess))
+		ssoSecretType = string(convert.ToValue(p.SsoSecretType))
+		privateEndpointConnectionCount = int64(len(p.PrivateEndpointConnections))
 		if p.MaxSessionLimit != nil {
 			v := int64(*p.MaxSessionLimit)
 			maxSessionLimit = &v
@@ -110,21 +114,24 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 
 	res, err := CreateResource(runtime, "azure.subscription.desktopVirtualizationService.hostPool",
 		map[string]*llx.RawData{
-			"id":                            llx.StringDataPtr(hp.ID),
-			"name":                          llx.StringDataPtr(hp.Name),
-			"location":                      llx.StringDataPtr(hp.Location),
-			"tags":                          llx.MapData(convert.PtrMapStrToInterface(hp.Tags), types.String),
-			"identity":                      llx.DictData(identity),
-			"hostPoolType":                  llx.StringData(hostPoolType),
-			"loadBalancerType":              llx.StringData(loadBalancerType),
-			"preferredAppGroupType":         llx.StringData(preferredAppGroupType),
-			"customRdpProperty":             llx.StringData(customRdpProperty),
-			"maxSessionLimit":               llx.IntDataPtr(maxSessionLimit),
-			"personalDesktopAssignmentType": llx.StringData(personalDesktopAssignmentType),
-			"startVMOnConnect":              llx.BoolData(startVMOnConnect),
-			"validationEnvironment":         llx.BoolData(validationEnvironment),
-			"ssoadfsAuthority":              llx.StringData(ssoadfsAuthority),
-			"ring":                          llx.IntDataPtr(ring),
+			"id":                             llx.StringDataPtr(hp.ID),
+			"name":                           llx.StringDataPtr(hp.Name),
+			"location":                       llx.StringDataPtr(hp.Location),
+			"tags":                           llx.MapData(convert.PtrMapStrToInterface(hp.Tags), types.String),
+			"identity":                       llx.DictData(identity),
+			"hostPoolType":                   llx.StringData(hostPoolType),
+			"loadBalancerType":               llx.StringData(loadBalancerType),
+			"preferredAppGroupType":          llx.StringData(preferredAppGroupType),
+			"customRdpProperty":              llx.StringData(customRdpProperty),
+			"maxSessionLimit":                llx.IntDataPtr(maxSessionLimit),
+			"personalDesktopAssignmentType":  llx.StringData(personalDesktopAssignmentType),
+			"startVMOnConnect":               llx.BoolData(startVMOnConnect),
+			"validationEnvironment":          llx.BoolData(validationEnvironment),
+			"ssoadfsAuthority":               llx.StringData(ssoadfsAuthority),
+			"ring":                           llx.IntDataPtr(ring),
+			"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
+			"ssoSecretType":                  llx.StringData(ssoSecretType),
+			"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
 		})
 	if err != nil {
 		return nil, err

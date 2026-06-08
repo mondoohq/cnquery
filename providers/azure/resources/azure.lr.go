@@ -14911,6 +14911,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.desktopVirtualizationService.hostPool.ring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetRing()).ToDataRes(types.Int)
 	},
+	"azure.subscription.desktopVirtualizationService.hostPool.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.desktopVirtualizationService.hostPool.ssoSecretType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetSsoSecretType()).ToDataRes(types.String)
+	},
+	"azure.subscription.desktopVirtualizationService.hostPool.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -33633,6 +33642,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.desktopVirtualizationService.hostPool.ring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).Ring, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.desktopVirtualizationService.hostPool.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.desktopVirtualizationService.hostPool.ssoSecretType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).SsoSecretType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.desktopVirtualizationService.hostPool.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 }
@@ -78026,21 +78047,24 @@ type mqlAzureSubscriptionDesktopVirtualizationServiceHostPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionDesktopVirtualizationServiceHostPoolInternal it will be used here
-	Id                            plugin.TValue[string]
-	Name                          plugin.TValue[string]
-	Location                      plugin.TValue[string]
-	Tags                          plugin.TValue[map[string]any]
-	Identity                      plugin.TValue[any]
-	HostPoolType                  plugin.TValue[string]
-	LoadBalancerType              plugin.TValue[string]
-	PreferredAppGroupType         plugin.TValue[string]
-	CustomRdpProperty             plugin.TValue[string]
-	MaxSessionLimit               plugin.TValue[int64]
-	PersonalDesktopAssignmentType plugin.TValue[string]
-	StartVMOnConnect              plugin.TValue[bool]
-	ValidationEnvironment         plugin.TValue[bool]
-	SsoadfsAuthority              plugin.TValue[string]
-	Ring                          plugin.TValue[int64]
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	Identity                       plugin.TValue[any]
+	HostPoolType                   plugin.TValue[string]
+	LoadBalancerType               plugin.TValue[string]
+	PreferredAppGroupType          plugin.TValue[string]
+	CustomRdpProperty              plugin.TValue[string]
+	MaxSessionLimit                plugin.TValue[int64]
+	PersonalDesktopAssignmentType  plugin.TValue[string]
+	StartVMOnConnect               plugin.TValue[bool]
+	ValidationEnvironment          plugin.TValue[bool]
+	SsoadfsAuthority               plugin.TValue[string]
+	Ring                           plugin.TValue[int64]
+	PublicNetworkAccess            plugin.TValue[string]
+	SsoSecretType                  plugin.TValue[string]
+	PrivateEndpointConnectionCount plugin.TValue[int64]
 }
 
 // createAzureSubscriptionDesktopVirtualizationServiceHostPool creates a new instance of this resource
@@ -78138,4 +78162,16 @@ func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetSsoadfsAut
 
 func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetRing() *plugin.TValue[int64] {
 	return &c.Ring
+}
+
+func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetSsoSecretType() *plugin.TValue[string] {
+	return &c.SsoSecretType
+}
+
+func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
 }
