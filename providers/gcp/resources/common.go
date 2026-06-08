@@ -38,7 +38,9 @@ func certExpired(expireTime plugin.TValue[*time.Time]) (bool, error) {
 }
 
 // certDaysUntilExpiry returns the whole number of days until an expiry
-// timestamp, negative when already expired. A nil timestamp returns 0.
+// timestamp, rounded down toward expiry: a value of 0 means the certificate
+// expires within the next 24 hours, and the result goes negative once the
+// certificate has expired. A nil timestamp returns 0.
 func certDaysUntilExpiry(expireTime plugin.TValue[*time.Time]) (int64, error) {
 	if expireTime.Error != nil {
 		return 0, expireTime.Error
@@ -46,7 +48,15 @@ func certDaysUntilExpiry(expireTime plugin.TValue[*time.Time]) (int64, error) {
 	if expireTime.Data == nil {
 		return 0, nil
 	}
-	return int64(time.Until(*expireTime.Data).Hours() / 24), nil
+	const day = 24 * time.Hour
+	remaining := time.Until(*expireTime.Data)
+	days := remaining / day
+	// Integer division truncates toward zero; floor negative durations so an
+	// already-expired certificate consistently reports a negative day count.
+	if remaining < 0 && remaining%day != 0 {
+		days--
+	}
+	return int64(days), nil
 }
 
 // projectFromResourceName extracts the project id from a GCP resource name of

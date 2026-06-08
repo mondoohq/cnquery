@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -338,11 +339,14 @@ func resolveSslCertificatesByUrl(urls plugin.TValue[[]any], runtime *plugin.Runt
 	}
 
 	firstURL, _ := urls.Data[0].(string)
-	parts := strings.Split(trimComputeURL(firstURL), "/")
-	if len(parts) < 2 {
+	// Derive the project from the certificate self-link. projectFromResourceName
+	// searches for the "projects" segment, so it is robust to the API host and
+	// version prefix (v1/beta) rather than relying on a fixed path offset.
+	projectId := projectFromResourceName(firstURL)
+	if projectId == "" {
+		log.Warn().Str("url", firstURL).Msg("could not determine project from ssl certificate url")
 		return []any{}, nil
 	}
-	projectId := parts[1]
 
 	res, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

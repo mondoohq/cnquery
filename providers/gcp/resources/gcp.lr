@@ -8307,7 +8307,7 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
   expireTime time
   // Whether the certificate authority's certificate has already expired
   expired() bool
-  // Whole days until the certificate authority's certificate expires (negative if already expired)
+  // Whole days until the certificate authority's certificate expires, rounded down (0 means within the next 24 hours; negative once expired)
   daysUntilExpiry() int
 }
 
@@ -8417,7 +8417,7 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   expireTime time
   // Whether the certificate has already expired
   expired() bool
-  // Whole days until the certificate expires (negative if already expired)
+  // Whole days until the certificate expires, rounded down (0 means within the next 24 hours; negative once expired)
   daysUntilExpiry() int
   // Subject Alternative Name dnsName entries on the issued cert (or requested domains for a not-yet-provisioned managed cert)
   sanDnsnames []string
@@ -11097,6 +11097,9 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   //
   // Deprecated in favor of `serviceAccountRef`, which resolves the identity
   // to the service account resource (the email is available as its `email`).
+  // Note that `serviceAccountRef` is null when the service account has been
+  // deleted or lives in another project, whereas this field still holds the
+  // raw email.
   serviceAccount @maturity("deprecated") string
   // Service account identity the pipeline job runs as
   serviceAccountRef() gcp.project.iamService.serviceAccount
@@ -12327,6 +12330,9 @@ private gcp.project.eventarcService.trigger @defaults("name") {
   //
   // Deprecated in favor of `serviceAccountRef`, which resolves the identity
   // to the service account resource (the email is available as its `email`).
+  // Note that `serviceAccountRef` is null when the service account has been
+  // deleted or lives in another project, whereas this field still holds the
+  // raw email.
   serviceAccount @maturity("deprecated") string
   // Service account identity the trigger runs as
   serviceAccountRef() gcp.project.iamService.serviceAccount
