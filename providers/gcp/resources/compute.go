@@ -473,6 +473,9 @@ func (g *mqlGcpProjectComputeService) machineTypeByZoneAndName(zone, name string
 	g.machineTypeIndexOnce.Do(func() {
 		machineTypes := g.GetMachineTypes()
 		if machineTypes.Error != nil {
+			// Logged once here (sync.Once) so the degradation to per-instance
+			// Gets is observable rather than a silent error swallow.
+			log.Warn().Err(machineTypes.Error).Msg("could not list machine types; instance.machineType() will fall back to per-instance Get")
 			g.machineTypeIndexErr = machineTypes.Error
 			return
 		}
@@ -522,13 +525,17 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	if err != nil {
 		return nil, err
 	}
-	if m, err := svcObj.(*mqlGcpProjectComputeService).machineTypeByZoneAndName(zoneName.Data, machineTypeValue); err == nil && m != nil {
+	if m, _ := svcObj.(*mqlGcpProjectComputeService).machineTypeByZoneAndName(zoneName.Data, machineTypeValue); m != nil {
 		return m, nil
 	}
 
-	// Fall back to a direct Get for machine types absent from the aggregated
-	// list (custom machine types are synthesized and never listed) or if the
-	// list could not be fetched.
+	// Fall back to a direct Get for two cases: the machine type is absent from
+	// the aggregated list (custom machine types are synthesized and never
+	// listed), or the list could not be fetched (logged once in
+	// machineTypeByZoneAndName). The error is intentionally not propagated —
+	// the direct Get is the path machineType() used before this optimization,
+	// so a transient list failure degrades to the prior behavior rather than
+	// introducing a new failure mode.
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
