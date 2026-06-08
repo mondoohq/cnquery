@@ -72,6 +72,9 @@ const (
 	ResourceSshd                          string = "sshd"
 	ResourceSshdConfig                    string = "sshd.config"
 	ResourceSshdConfigMatchBlock          string = "sshd.config.matchBlock"
+	ResourceInetd                         string = "inetd"
+	ResourceInetdConfig                   string = "inetd.config"
+	ResourceInetdConfigEntry              string = "inetd.config.entry"
 	ResourceAuditdConfig                  string = "auditd.config"
 	ResourceAuditdRules                   string = "auditd.rules"
 	ResourceAuditdRule                    string = "auditd.rule"
@@ -658,6 +661,18 @@ func init() {
 		"sshd.config.matchBlock": {
 			// to override args, implement: initSshdConfigMatchBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSshdConfigMatchBlock,
+		},
+		"inetd": {
+			// to override args, implement: initInetd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createInetd,
+		},
+		"inetd.config": {
+			Init:   initInetdConfig,
+			Create: createInetdConfig,
+		},
+		"inetd.config.entry": {
+			// to override args, implement: initInetdConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createInetdConfigEntry,
 		},
 		"auditd.config": {
 			Init:   initAuditdConfig,
@@ -2991,6 +3006,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfigMatchBlock).GetContext()).ToDataRes(types.Resource("file.context"))
+	},
+	"inetd.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"inetd.config.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"inetd.config.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfig).GetContent()).ToDataRes(types.String)
+	},
+	"inetd.config.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfig).GetEntries()).ToDataRes(types.Array(types.Resource("inetd.config.entry")))
+	},
+	"inetd.config.serviceNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfig).GetServiceNames()).ToDataRes(types.Array(types.String))
+	},
+	"inetd.config.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetName()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.socketType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetSocketType()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetProtocol()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.wait": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetWait()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetUser()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetServer()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.arguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetArguments()).ToDataRes(types.String)
+	},
+	"inetd.config.entry.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlInetdConfigEntry).GetContext()).ToDataRes(types.Resource("file.context"))
 	},
 	"auditd.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -10968,6 +11022,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sshd.config.matchBlock.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfigMatchBlock).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
+		return
+	},
+	"inetd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetd).__id, ok = v.Value.(string)
+		return
+	},
+	"inetd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"inetd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"inetd.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"inetd.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"inetd.config.serviceNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfig).ServiceNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"inetd.config.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.socketType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).SocketType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.wait": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Wait, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Arguments, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"inetd.config.entry.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlInetdConfigEntry).Context, ok = plugin.RawToTValue[*mqlFileContext](v.Value, v.Error)
 		return
 	},
 	"auditd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26043,6 +26161,265 @@ func (c *mqlSshdConfigMatchBlock) GetContext() *plugin.TValue[*mqlFileContext] {
 	return plugin.GetOrCompute[*mqlFileContext](&c.Context, func() (*mqlFileContext, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config.matchBlock", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFileContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
+// mqlInetd for the inetd resource
+type mqlInetd struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlInetdInternal it will be used here
+}
+
+// createInetd creates a new instance of this resource
+func createInetd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlInetd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("inetd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlInetd) MqlName() string {
+	return "inetd"
+}
+
+func (c *mqlInetd) MqlID() string {
+	return c.__id
+}
+
+// mqlInetdConfig for the inetd.config resource
+type mqlInetdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlInetdConfigInternal it will be used here
+	File         plugin.TValue[*mqlFile]
+	Files        plugin.TValue[[]any]
+	Content      plugin.TValue[string]
+	Entries      plugin.TValue[[]any]
+	ServiceNames plugin.TValue[[]any]
+}
+
+// createInetdConfig creates a new instance of this resource
+func createInetdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlInetdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("inetd.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlInetdConfig) MqlName() string {
+	return "inetd.config"
+}
+
+func (c *mqlInetdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlInetdConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("inetd.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlInetdConfig) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("inetd.config", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlInetdConfig) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlInetdConfig) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("inetd.config", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.entries(vargFiles.Data)
+	})
+}
+
+func (c *mqlInetdConfig) GetServiceNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceNames, func() ([]any, error) {
+		vargEntries := c.GetEntries()
+		if vargEntries.Error != nil {
+			return nil, vargEntries.Error
+		}
+
+		return c.serviceNames(vargEntries.Data)
+	})
+}
+
+// mqlInetdConfigEntry for the inetd.config.entry resource
+type mqlInetdConfigEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlInetdConfigEntryInternal it will be used here
+	Name       plugin.TValue[string]
+	SocketType plugin.TValue[string]
+	Protocol   plugin.TValue[string]
+	Wait       plugin.TValue[string]
+	User       plugin.TValue[string]
+	Server     plugin.TValue[string]
+	Arguments  plugin.TValue[string]
+	Context    plugin.TValue[*mqlFileContext]
+}
+
+// createInetdConfigEntry creates a new instance of this resource
+func createInetdConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlInetdConfigEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("inetd.config.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlInetdConfigEntry) MqlName() string {
+	return "inetd.config.entry"
+}
+
+func (c *mqlInetdConfigEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlInetdConfigEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlInetdConfigEntry) GetSocketType() *plugin.TValue[string] {
+	return &c.SocketType
+}
+
+func (c *mqlInetdConfigEntry) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlInetdConfigEntry) GetWait() *plugin.TValue[string] {
+	return &c.Wait
+}
+
+func (c *mqlInetdConfigEntry) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlInetdConfigEntry) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlInetdConfigEntry) GetArguments() *plugin.TValue[string] {
+	return &c.Arguments
+}
+
+func (c *mqlInetdConfigEntry) GetContext() *plugin.TValue[*mqlFileContext] {
+	return plugin.GetOrCompute[*mqlFileContext](&c.Context, func() (*mqlFileContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("inetd.config.entry", c.__id, "context")
 			if err != nil {
 				return nil, err
 			}

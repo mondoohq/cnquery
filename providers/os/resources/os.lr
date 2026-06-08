@@ -1095,6 +1095,59 @@ private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   permitRootLogin(params) []string
 }
 
+// inetd super-server namespace
+//
+// Use inetd.config to examine which network services the inetd super-server
+// launches on demand.
+inetd {}
+
+// inetd super-server configuration
+//
+// Examine the services the inetd (or compatible) super-server is configured
+// to launch on demand. Each active entry pairs a service with its socket
+// type, protocol, wait mode, run-as user, and server program. The
+// configuration is assembled from /etc/inetd.conf together with any drop-in
+// files under /etc/inetd.d. A missing configuration yields no entries, so
+// audits such as serviceNames.none("ftp") hold trivially on systems that
+// don't run inetd.
+inetd.config {
+  init(path? string)
+  // Primary inetd configuration file
+  file() file
+  // All files making up the inetd configuration (main file and drop-ins)
+  files(file) []file
+  // Merged contents of all configuration files
+  content(files) string
+  // Active service entries
+  entries(files) []inetd.config.entry
+  // Names of the active services
+  serviceNames(entries) []string
+}
+
+// inetd service entry
+//
+// Examine a single active inetd service line: the service it exposes and how
+// inetd launches it. The name field selects the service as it appears in the
+// first column of inetd.conf — for example
+// inetd.config.entries.where(name == "ftp"). Entries that are commented out
+// with a leading # are disabled and excluded.
+private inetd.config.entry @defaults("name protocol server") @context("file.context") {
+  // Service name or port (first column)
+  name string
+  // Socket type, such as stream, dgram, or raw
+  socketType string
+  // Transport protocol, such as tcp, udp, tcp6, or udp6
+  protocol string
+  // Wait mode, either wait or nowait, with an optional max-connections suffix
+  wait string
+  // User the server runs as, with an optional group suffix
+  user string
+  // Server program path, or "internal" for built-in services
+  server string
+  // Arguments passed to the server program
+  arguments string
+}
+
 // auditd (Linux Audit Daemon) global configuration
 //
 // Examine /etc/audit/auditd.conf parameters
