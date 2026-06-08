@@ -154,6 +154,29 @@ func (a *mqlAzureSubscriptionCloudDefenderService) getSimpleDefenderPricing(azur
 	return CreateResource(a.MqlRuntime, mqlResourceName, args)
 }
 
+type mqlAzureSubscriptionCloudDefenderServiceInternal struct {
+	policyAssignmentsOnce sync.Once
+	policyAssignments     PolicyAssignments
+	policyAssignmentsErr  error
+}
+
+// cachedPolicyAssignments fetches the subscription's policy assignments once and
+// caches the result. Both the forServers and forContainers Defender plans read
+// the same policy-assignments list to derive their enabled/extension state, so
+// without this a scan that touches both plans issues the list call twice.
+func (a *mqlAzureSubscriptionCloudDefenderService) cachedPolicyAssignments(ctx context.Context) (PolicyAssignments, error) {
+	a.policyAssignmentsOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		armConn, err := getArmSecurityConnection(ctx, conn, a.SubscriptionId.Data)
+		if err != nil {
+			a.policyAssignmentsErr = err
+			return
+		}
+		a.policyAssignments, a.policyAssignmentsErr = getPolicyAssignments(ctx, armConn)
+	})
+	return a.policyAssignments, a.policyAssignmentsErr
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (any, error) {
 	typed := a.GetForServers()
 	if typed.Error != nil {
@@ -183,7 +206,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 	if err != nil {
 		return nil, err
 	}
-	list, err := getPolicyAssignments(ctx, armConn)
+	list, err := a.cachedPolicyAssignments(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -478,7 +501,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forContainers() (*mqlAzureSub
 		return nil, err
 	}
 
-	pas, err := getPolicyAssignments(ctx, armConn)
+	pas, err := a.cachedPolicyAssignments(ctx)
 	if err != nil {
 		return nil, err
 	}

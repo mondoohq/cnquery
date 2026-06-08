@@ -58355,7 +58355,7 @@ func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetMetrics() *plug
 type mqlAzureSubscriptionCloudDefenderService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceInternal it will be used here
+	mqlAzureSubscriptionCloudDefenderServiceInternal
 	SubscriptionId                  plugin.TValue[string]
 	MonitoringAgentAutoProvision    plugin.TValue[bool]
 	DefenderForServers              plugin.TValue[any]
