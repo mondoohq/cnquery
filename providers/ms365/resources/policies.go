@@ -650,7 +650,6 @@ func (a *mqlMicrosoftPolicies) defaultAppManagementPolicy() (*mqlMicrosoftDefaul
 	resource, err := CreateResource(a.MqlRuntime, "microsoft.defaultAppManagementPolicy",
 		map[string]*llx.RawData{
 			"__id":                         llx.StringData(policyId),
-			"id":                           llx.StringDataPtr(policy.GetId()),
 			"displayName":                  llx.StringDataPtr(policy.GetDisplayName()),
 			"description":                  llx.StringDataPtr(policy.GetDescription()),
 			"isEnabled":                    llx.BoolDataPtr(policy.GetIsEnabled()),

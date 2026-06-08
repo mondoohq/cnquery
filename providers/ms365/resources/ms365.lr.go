@@ -3012,9 +3012,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.policies.defaultAppManagementPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetDefaultAppManagementPolicy()).ToDataRes(types.Resource("microsoft.defaultAppManagementPolicy"))
 	},
-	"microsoft.defaultAppManagementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetId()).ToDataRes(types.String)
-	},
 	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetDisplayName()).ToDataRes(types.String)
 	},
@@ -8674,10 +8671,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.defaultAppManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDefaultAppManagementPolicy).__id, ok = v.Value.(string)
-		return
-	},
-	"microsoft.defaultAppManagementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDefaultAppManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20401,7 +20394,6 @@ type mqlMicrosoftDefaultAppManagementPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDefaultAppManagementPolicyInternal it will be used here
-	Id                           plugin.TValue[string]
 	DisplayName                  plugin.TValue[string]
 	Description                  plugin.TValue[string]
 	IsEnabled                    plugin.TValue[bool]
@@ -20439,10 +20431,6 @@ func (c *mqlMicrosoftDefaultAppManagementPolicy) MqlName() string {
 
 func (c *mqlMicrosoftDefaultAppManagementPolicy) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlMicrosoftDefaultAppManagementPolicy) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlMicrosoftDefaultAppManagementPolicy) GetDisplayName() *plugin.TValue[string] {

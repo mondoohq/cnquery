@@ -252,7 +252,6 @@ microsoft.defaultAppManagementPolicy.appManagementConfiguration.passwordCredenti
 microsoft.defaultAppManagementPolicy.applicationRestrictions 13.5.1
 microsoft.defaultAppManagementPolicy.description 13.5.1
 microsoft.defaultAppManagementPolicy.displayName 13.5.1
-microsoft.defaultAppManagementPolicy.id 13.5.1
 microsoft.defaultAppManagementPolicy.isEnabled 13.5.1
 microsoft.defaultAppManagementPolicy.servicePrincipalRestrictions 13.5.1
 microsoft.device 11.1.21
