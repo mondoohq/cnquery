@@ -444,6 +444,13 @@ dns @defaults("fqdn") {
   mx(params) []dns.mxRecord
   // DKIM TXT records
   dkim(params) []dns.dkimRecord
+  // Reverse DNS (PTR) records for the domain's resolved addresses
+  //
+  // Resolves the domain's A and AAAA addresses, then looks up the PTR
+  // record for each — the forward-confirmed reverse DNS round trip. Use
+  // it to confirm an address resolves back to the expected hostname
+  // without hand-building `in-addr.arpa` names.
+  reverse(params) []dns.record
 }
 
 // DNS record

@@ -62,6 +62,7 @@ dns.record.rdata 9.0.1
 dns.record.ttl 9.0.1
 dns.record.type 9.0.1
 dns.records 9.0.1
+dns.reverse 13.0.8
 domainName 9.0.1
 domainName.effectiveTLDPlusOne 9.0.1
 domainName.fqdn 9.0.1

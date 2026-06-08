@@ -293,3 +293,83 @@ func (d *mqlDnsDkimRecord) valid() (bool, error) {
 	ok, _, _ := d.dkim.Valid()
 	return ok, nil
 }
+
+// addressesFromParams extracts the resolved IPv4 (A) and IPv6 (AAAA) addresses
+// from a dns params dict.
+func addressesFromParams(params any) ([]string, error) {
+	paramsM, ok := params.(map[string]any)
+	if !ok {
+		return nil, errors.New("incorrect structure of params received")
+	}
+
+	addrs := []string{}
+	for _, key := range []string{"A", "AAAA"} {
+		entry, ok := paramsM[key].(map[string]any)
+		if !ok {
+			continue
+		}
+		rdata, ok := entry["rData"].([]any)
+		if !ok {
+			continue
+		}
+		for _, v := range rdata {
+			if s, ok := v.(string); ok && s != "" {
+				addrs = append(addrs, s)
+			}
+		}
+	}
+	return addrs, nil
+}
+
+func (d *mqlDns) reverse(params any) ([]any, error) {
+	addrs, err := addressesFromParams(params)
+	if err != nil {
+		return nil, err
+	}
+
+	resultMap := make(map[string]*mqlDnsRecord)
+	for _, addr := range addrs {
+		// dns.ReverseAddr builds the in-addr.arpa (IPv4) or ip6.arpa (IPv6)
+		// name; it returns an error for malformed addresses, which we skip.
+		arpa, err := dns.ReverseAddr(addr)
+		if err != nil {
+			continue
+		}
+
+		shaker, err := dnsshake.New(arpa)
+		if err != nil {
+			return nil, err
+		}
+
+		records, err := shaker.Query("PTR")
+		if err != nil {
+			return nil, err
+		}
+
+		ptr, ok := records["PTR"]
+		if !ok || ptr.RCode != dns.RcodeToString[dns.RcodeSuccess] {
+			continue
+		}
+
+		o, err := CreateResource(d.MqlRuntime, "dns.record", map[string]*llx.RawData{
+			"name":  llx.StringData(ptr.Name),
+			"ttl":   llx.IntData(ptr.TTL),
+			"class": llx.StringData(ptr.Class),
+			"type":  llx.StringData(ptr.Type),
+			"rdata": llx.ArrayData(llx.TArr2Raw(ptr.RData), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		record := o.(*mqlDnsRecord)
+		resultMap[record.__id] = record
+	}
+
+	keys := sortx.Keys(resultMap)
+	res := []any{}
+	for i := range keys {
+		res = append(res, resultMap[keys[i]])
+	}
+	return res, nil
+}

@@ -641,6 +641,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.dkim": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetDkim()).ToDataRes(types.Array(types.Resource("dns.dkimRecord")))
 	},
+	"dns.reverse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetReverse()).ToDataRes(types.Array(types.Resource("dns.record")))
+	},
 	"dns.record.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsRecord).GetName()).ToDataRes(types.String)
 	},
@@ -1357,6 +1360,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dns.dkim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Dkim, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.reverse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Reverse, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3411,6 +3418,7 @@ type mqlDns struct {
 	Records plugin.TValue[[]any]
 	Mx      plugin.TValue[[]any]
 	Dkim    plugin.TValue[[]any]
+	Reverse plugin.TValue[[]any]
 }
 
 // createDns creates a new instance of this resource
@@ -3525,6 +3533,27 @@ func (c *mqlDns) GetDkim() *plugin.TValue[[]any] {
 		}
 
 		return c.dkim(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetReverse() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Reverse, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "reverse")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.reverse(vargParams.Data)
 	})
 }
 
