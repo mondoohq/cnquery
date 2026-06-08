@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/smithy-go/ptr"
@@ -457,6 +458,40 @@ func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	return "gcp.project.computeService.instance/" + projectId + "/" + id, nil
 }
 
+type mqlGcpProjectComputeServiceInternal struct {
+	machineTypeIndexOnce sync.Once
+	machineTypeIndex     map[string]*mqlGcpProjectComputeServiceMachineType
+	machineTypeIndexErr  error
+}
+
+// machineTypeByZoneAndName resolves a machine type from the project's
+// machineTypes() aggregated list, building a zone+name index once on first use
+// so each lookup is O(1) rather than a linear scan per instance. Returns
+// (nil, nil) when the machine type is not in the list (e.g. a custom machine
+// type), so callers fall back to a direct Get.
+func (g *mqlGcpProjectComputeService) machineTypeByZoneAndName(zone, name string) (*mqlGcpProjectComputeServiceMachineType, error) {
+	g.machineTypeIndexOnce.Do(func() {
+		machineTypes := g.GetMachineTypes()
+		if machineTypes.Error != nil {
+			g.machineTypeIndexErr = machineTypes.Error
+			return
+		}
+		index := make(map[string]*mqlGcpProjectComputeServiceMachineType, len(machineTypes.Data))
+		for _, mt := range machineTypes.Data {
+			m, ok := mt.(*mqlGcpProjectComputeServiceMachineType)
+			if !ok || m.Name.Error != nil || m.Zone.Error != nil || m.Zone.Data == nil || m.Zone.Data.Name.Error != nil {
+				continue
+			}
+			index[m.Zone.Data.Name.Data+"/"+m.Name.Data] = m
+		}
+		g.machineTypeIndex = index
+	})
+	if g.machineTypeIndexErr != nil {
+		return nil, g.machineTypeIndexErr
+	}
+	return g.machineTypeIndex[zone+"/"+name], nil
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectComputeServiceMachineType, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -478,26 +513,17 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	machineTypeValue := values[len(values)-1]
 
 	// Resolve through the project's machineTypes() aggregated list, which is
-	// fetched once and shared across every instance, rather than issuing a
-	// MachineTypes.Get per instance. For hundreds of VMs this turns N Gets into
-	// a single AggregatedList plus in-memory lookups.
+	// fetched once and indexed, rather than issuing a MachineTypes.Get per
+	// instance. For hundreds of VMs this turns N Gets into a single
+	// AggregatedList plus O(1) lookups.
 	svcObj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 	})
 	if err != nil {
 		return nil, err
 	}
-	machineTypes := svcObj.(*mqlGcpProjectComputeService).GetMachineTypes()
-	if machineTypes.Error == nil {
-		for _, mt := range machineTypes.Data {
-			m, ok := mt.(*mqlGcpProjectComputeServiceMachineType)
-			if !ok || m.Name.Data != machineTypeValue || m.Zone.Data == nil {
-				continue
-			}
-			if m.Zone.Data.Name.Data == zoneName.Data {
-				return m, nil
-			}
-		}
+	if m, err := svcObj.(*mqlGcpProjectComputeService).machineTypeByZoneAndName(zoneName.Data, machineTypeValue); err == nil && m != nil {
+		return m, nil
 	}
 
 	// Fall back to a direct Get for machine types absent from the aggregated

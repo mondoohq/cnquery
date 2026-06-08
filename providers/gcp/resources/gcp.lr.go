@@ -41711,7 +41711,7 @@ func (c *mqlGcpResourcemanagerBinding) GetGrantsImpersonation() *plugin.TValue[b
 type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
+	mqlGcpProjectComputeServiceInternal
 	ProjectId                  plugin.TValue[string]
 	Enabled                    plugin.TValue[bool]
 	Instances                  plugin.TValue[[]any]
