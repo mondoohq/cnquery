@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.16.1",
-  "generated_at": "2026-06-07T21:40:40-07:00",
+  "version": "13.17.0",
+  "generated_at": "2026-06-08T13:12:39-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -106,7 +106,13 @@
     "Microsoft.Insights/logProfiles/read",
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
+    "Microsoft.Kusto/clusterPrincipalAssignments/read",
     "Microsoft.Kusto/clusters/read",
+    "Microsoft.Kusto/dataConnections/read",
+    "Microsoft.Kusto/databasePrincipalAssignments/read",
+    "Microsoft.Kusto/databases/read",
+    "Microsoft.Kusto/managedPrivateEndpoints/read",
+    "Microsoft.Kusto/privateEndpointConnections/read",
     "Microsoft.Logic/workflows/read",
     "Microsoft.MachineLearningServices/workspaces/computes/read",
     "Microsoft.MachineLearningServices/workspaces/models/read",
@@ -853,7 +859,43 @@
       "source_file": "keyvault.go"
     },
     {
+      "permission": "Microsoft.Kusto/clusterPrincipalAssignments/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListPager",
+      "source_file": "kusto.go"
+    },
+    {
       "permission": "Microsoft.Kusto/clusters/read",
+      "service": "Microsoft.Kusto",
+      "action": "Get",
+      "source_file": "kusto.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/dataConnections/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListByDatabasePager",
+      "source_file": "kusto.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/databasePrincipalAssignments/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListPager",
+      "source_file": "kusto.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/databases/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListByClusterPager",
+      "source_file": "kusto.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/managedPrivateEndpoints/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListPager",
+      "source_file": "kusto.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/privateEndpointConnections/read",
       "service": "Microsoft.Kusto",
       "action": "NewListPager",
       "source_file": "kusto.go"

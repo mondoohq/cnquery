@@ -401,6 +401,13 @@ const (
 	ResourceAzureSubscriptionWebPubSubServiceWebPubSub                                           string = "azure.subscription.webPubSubService.webPubSub"
 	ResourceAzureSubscriptionKustoService                                                        string = "azure.subscription.kustoService"
 	ResourceAzureSubscriptionKustoServiceCluster                                                 string = "azure.subscription.kustoService.cluster"
+	ResourceAzureSubscriptionKustoServiceClusterDatabase                                         string = "azure.subscription.kustoService.cluster.database"
+	ResourceAzureSubscriptionKustoServiceClusterPrincipalAssignment                              string = "azure.subscription.kustoService.cluster.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment                      string = "azure.subscription.kustoService.cluster.database.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterCalloutPolicy                                    string = "azure.subscription.kustoService.cluster.calloutPolicy"
+	ResourceAzureSubscriptionKustoServiceClusterPrivateEndpointConnection                        string = "azure.subscription.kustoService.cluster.privateEndpointConnection"
+	ResourceAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint                           string = "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
+	ResourceAzureSubscriptionKustoServiceClusterDatabaseDataConnection                           string = "azure.subscription.kustoService.cluster.database.dataConnection"
 	ResourceAzureSubscriptionAutomationService                                                   string = "azure.subscription.automationService"
 	ResourceAzureSubscriptionAutomationServiceAccount                                            string = "azure.subscription.automationService.account"
 	ResourceAzureSubscriptionAutomationServiceAccountVariable                                    string = "azure.subscription.automationService.account.variable"
@@ -1951,8 +1958,36 @@ func init() {
 			Create: createAzureSubscriptionKustoService,
 		},
 		"azure.subscription.kustoService.cluster": {
-			// to override args, implement: initAzureSubscriptionKustoServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionKustoServiceCluster,
 			Create: createAzureSubscriptionKustoServiceCluster,
+		},
+		"azure.subscription.kustoService.cluster.database": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterDatabase,
+		},
+		"azure.subscription.kustoService.cluster.principalAssignment": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterPrincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterPrincipalAssignment,
+		},
+		"azure.subscription.kustoService.cluster.database.principalAssignment": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment,
+		},
+		"azure.subscription.kustoService.cluster.calloutPolicy": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterCalloutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterCalloutPolicy,
+		},
+		"azure.subscription.kustoService.cluster.privateEndpointConnection": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterPrivateEndpointConnection,
+		},
+		"azure.subscription.kustoService.cluster.managedPrivateEndpoint": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint,
+		},
+		"azure.subscription.kustoService.cluster.database.dataConnection": {
+			// to override args, implement: initAzureSubscriptionKustoServiceClusterDatabaseDataConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKustoServiceClusterDatabaseDataConnection,
 		},
 		"azure.subscription.automationService": {
 			Init:   initAzureSubscriptionAutomationService,
@@ -14745,6 +14780,204 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.kustoService.cluster.cmkKeyVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetCmkKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.database")))
+	},
+	"azure.subscription.kustoService.cluster.principalAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetPrincipalAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.principalAssignment")))
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetCalloutPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.calloutPolicy")))
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.privateEndpointConnection")))
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetManagedPrivateEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.managedPrivateEndpoint")))
+	},
+	"azure.subscription.kustoService.cluster.database.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.hotCachePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetHotCachePeriod()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.softDeletePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetSoftDeletePeriod()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetCmkKeyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyVaultUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetCmkKeyVaultUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetCmkKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.leaderClusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetLeaderClusterResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.originalDatabaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetOriginalDatabaseName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.leaderCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetLeaderCluster()).ToDataRes(types.Resource("azure.subscription.kustoService.cluster"))
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetPrincipalAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.database.principalAssignment")))
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).GetDataConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.kustoService.cluster.database.dataConnection")))
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetPrincipalName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetRole()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetPrincipalName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetRole()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).GetCalloutId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).GetCalloutType()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutUriRegex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).GetCalloutUriRegex()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.outboundAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).GetOutboundAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.statusDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetStatusDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.privateEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetPrivateEndpoint()).ToDataRes(types.Resource("azure.subscription.networkService.privateEndpoint"))
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.privateLinkResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetPrivateLinkResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.privateLinkResourceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetPrivateLinkResourceRegion()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.requestMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetRequestMessage()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.tableName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetTableName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.dataFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetDataFormat()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.mappingRuleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetMappingRuleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.consumerGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetConsumerGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.databaseRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetDatabaseRouting()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.sourceResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetSourceResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.managedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetManagedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.automationService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAutomationService).GetSubscriptionId()).ToDataRes(types.String)
@@ -33394,6 +33627,298 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.kustoService.cluster.cmkKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKustoServiceCluster).CmkKeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).PrincipalAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).CalloutPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).ManagedPrivateEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.hotCachePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).HotCachePeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.softDeletePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).SoftDeletePeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).CmkKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyVaultUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).CmkKeyVaultUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.cmkKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).CmkKeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.leaderClusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).LeaderClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.originalDatabaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).OriginalDatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.leaderCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).LeaderCluster, ok = plugin.RawToTValue[*mqlAzureSubscriptionKustoServiceCluster](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).PrincipalAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabase).DataConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.principalAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.principalAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).CalloutId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).CalloutType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.calloutUriRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).CalloutUriRegex, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.calloutPolicy.outboundAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterCalloutPolicy).OutboundAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.statusDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).StatusDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.privateEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).PrivateEndpoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.privateLinkResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).PrivateLinkResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.privateLinkResourceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).PrivateLinkResourceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.requestMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).RequestMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.managedPrivateEndpoint.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.tableName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).TableName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.dataFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).DataFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.mappingRuleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).MappingRuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.consumerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).ConsumerGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.databaseRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).DatabaseRouting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.sourceResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).SourceResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.managedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).ManagedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.kustoService.cluster.database.dataConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.automationService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77387,6 +77912,11 @@ type mqlAzureSubscriptionKustoServiceCluster struct {
 	CmkKeyName                    plugin.TValue[string]
 	CmkKeyVaultUri                plugin.TValue[string]
 	CmkKeyVersion                 plugin.TValue[string]
+	Databases                     plugin.TValue[[]any]
+	PrincipalAssignments          plugin.TValue[[]any]
+	CalloutPolicies               plugin.TValue[[]any]
+	PrivateEndpointConnections    plugin.TValue[[]any]
+	ManagedPrivateEndpoints       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKustoServiceCluster creates a new instance of this resource
@@ -77516,6 +78046,754 @@ func (c *mqlAzureSubscriptionKustoServiceCluster) GetCmkKeyVaultUri() *plugin.TV
 
 func (c *mqlAzureSubscriptionKustoServiceCluster) GetCmkKeyVersion() *plugin.TValue[string] {
 	return &c.CmkKeyVersion
+}
+
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetPrincipalAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrincipalAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster", c.__id, "principalAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.principalAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetCalloutPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CalloutPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster", c.__id, "calloutPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.calloutPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetManagedPrivateEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedPrivateEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster", c.__id, "managedPrivateEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedPrivateEndpoints()
+	})
+}
+
+// mqlAzureSubscriptionKustoServiceClusterDatabase for the azure.subscription.kustoService.cluster.database resource
+type mqlAzureSubscriptionKustoServiceClusterDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKustoServiceClusterDatabaseInternal it will be used here
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Location                plugin.TValue[string]
+	Kind                    plugin.TValue[string]
+	HotCachePeriod          plugin.TValue[string]
+	SoftDeletePeriod        plugin.TValue[string]
+	ProvisioningState       plugin.TValue[string]
+	CmkKeyName              plugin.TValue[string]
+	CmkKeyVaultUri          plugin.TValue[string]
+	CmkKeyVersion           plugin.TValue[string]
+	LeaderClusterResourceId plugin.TValue[string]
+	OriginalDatabaseName    plugin.TValue[string]
+	LeaderCluster           plugin.TValue[*mqlAzureSubscriptionKustoServiceCluster]
+	PrincipalAssignments    plugin.TValue[[]any]
+	DataConnections         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionKustoServiceClusterDatabase creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) MqlName() string {
+	return "azure.subscription.kustoService.cluster.database"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetHotCachePeriod() *plugin.TValue[string] {
+	return &c.HotCachePeriod
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetSoftDeletePeriod() *plugin.TValue[string] {
+	return &c.SoftDeletePeriod
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetCmkKeyName() *plugin.TValue[string] {
+	return &c.CmkKeyName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetCmkKeyVaultUri() *plugin.TValue[string] {
+	return &c.CmkKeyVaultUri
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetCmkKeyVersion() *plugin.TValue[string] {
+	return &c.CmkKeyVersion
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetLeaderClusterResourceId() *plugin.TValue[string] {
+	return &c.LeaderClusterResourceId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetOriginalDatabaseName() *plugin.TValue[string] {
+	return &c.OriginalDatabaseName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetLeaderCluster() *plugin.TValue[*mqlAzureSubscriptionKustoServiceCluster] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKustoServiceCluster](&c.LeaderCluster, func() (*mqlAzureSubscriptionKustoServiceCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster.database", c.__id, "leaderCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKustoServiceCluster), nil
+			}
+		}
+
+		return c.leaderCluster()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetPrincipalAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrincipalAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster.database", c.__id, "principalAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.principalAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabase) GetDataConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster.database", c.__id, "dataConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataConnections()
+	})
+}
+
+// mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment for the azure.subscription.kustoService.cluster.principalAssignment resource
+type mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKustoServiceClusterPrincipalAssignmentInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	PrincipalName     plugin.TValue[string]
+	PrincipalType     plugin.TValue[string]
+	Role              plugin.TValue[string]
+	TenantId          plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterPrincipalAssignment creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterPrincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.principalAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) MqlName() string {
+	return "azure.subscription.kustoService.cluster.principalAssignment"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrincipalAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment for the azure.subscription.kustoService.cluster.database.principalAssignment resource
+type mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignmentInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	PrincipalId       plugin.TValue[string]
+	PrincipalName     plugin.TValue[string]
+	PrincipalType     plugin.TValue[string]
+	Role              plugin.TValue[string]
+	TenantId          plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.database.principalAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) MqlName() string {
+	return "azure.subscription.kustoService.cluster.database.principalAssignment"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionKustoServiceClusterCalloutPolicy for the azure.subscription.kustoService.cluster.calloutPolicy resource
+type mqlAzureSubscriptionKustoServiceClusterCalloutPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKustoServiceClusterCalloutPolicyInternal it will be used here
+	CalloutId       plugin.TValue[string]
+	CalloutType     plugin.TValue[string]
+	CalloutUriRegex plugin.TValue[string]
+	OutboundAccess  plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterCalloutPolicy creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterCalloutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterCalloutPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.calloutPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) MqlName() string {
+	return "azure.subscription.kustoService.cluster.calloutPolicy"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) GetCalloutId() *plugin.TValue[string] {
+	return &c.CalloutId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) GetCalloutType() *plugin.TValue[string] {
+	return &c.CalloutType
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) GetCalloutUriRegex() *plugin.TValue[string] {
+	return &c.CalloutUriRegex
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterCalloutPolicy) GetOutboundAccess() *plugin.TValue[string] {
+	return &c.OutboundAccess
+}
+
+// mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection for the azure.subscription.kustoService.cluster.privateEndpointConnection resource
+type mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnectionInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	GroupId           plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusDescription plugin.TValue[string]
+	PrivateEndpoint   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterPrivateEndpointConnection creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.privateEndpointConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) MqlName() string {
+	return "azure.subscription.kustoService.cluster.privateEndpointConnection"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetStatusDescription() *plugin.TValue[string] {
+	return &c.StatusDescription
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetPrivateEndpoint() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](&c.PrivateEndpoint, func() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster.privateEndpointConnection", c.__id, "privateEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+			}
+		}
+
+		return c.privateEndpoint()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint for the azure.subscription.kustoService.cluster.managedPrivateEndpoint resource
+type mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpointInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	GroupId                   plugin.TValue[string]
+	PrivateLinkResourceId     plugin.TValue[string]
+	PrivateLinkResourceRegion plugin.TValue[string]
+	RequestMessage            plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.managedPrivateEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) MqlName() string {
+	return "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetPrivateLinkResourceId() *plugin.TValue[string] {
+	return &c.PrivateLinkResourceId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetPrivateLinkResourceRegion() *plugin.TValue[string] {
+	return &c.PrivateLinkResourceRegion
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetRequestMessage() *plugin.TValue[string] {
+	return &c.RequestMessage
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection for the azure.subscription.kustoService.cluster.database.dataConnection resource
+type mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnectionInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	TableName         plugin.TValue[string]
+	DataFormat        plugin.TValue[string]
+	MappingRuleName   plugin.TValue[string]
+	ConsumerGroup     plugin.TValue[string]
+	DatabaseRouting   plugin.TValue[string]
+	SourceResourceId  plugin.TValue[string]
+	ManagedIdentity   plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionKustoServiceClusterDatabaseDataConnection creates a new instance of this resource
+func createAzureSubscriptionKustoServiceClusterDatabaseDataConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.kustoService.cluster.database.dataConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) MqlName() string {
+	return "azure.subscription.kustoService.cluster.database.dataConnection"
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetTableName() *plugin.TValue[string] {
+	return &c.TableName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetDataFormat() *plugin.TValue[string] {
+	return &c.DataFormat
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetMappingRuleName() *plugin.TValue[string] {
+	return &c.MappingRuleName
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetConsumerGroup() *plugin.TValue[string] {
+	return &c.ConsumerGroup
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetDatabaseRouting() *plugin.TValue[string] {
+	return &c.DatabaseRouting
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetSourceResourceId() *plugin.TValue[string] {
+	return &c.SourceResourceId
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetManagedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.ManagedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.kustoService.cluster.database.dataConnection", c.__id, "managedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.managedIdentity()
+	})
+}
+
+func (c *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionAutomationService for the azure.subscription.automationService resource

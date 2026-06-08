@@ -11420,6 +11420,218 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   cmkKeyVaultUri string
   // Version of the customer-managed encryption key; empty means the latest version is used
   cmkKeyVersion string
+  // Databases hosted on the cluster
+  databases() []azure.subscription.kustoService.cluster.database
+  // Microsoft Entra principals granted cluster-wide access
+  principalAssignments() []azure.subscription.kustoService.cluster.principalAssignment
+  // Outbound callout policies governing which external endpoints the cluster may reach
+  calloutPolicies() []azure.subscription.kustoService.cluster.calloutPolicy
+  // Private endpoint connections terminating on the cluster
+  privateEndpointConnections() []azure.subscription.kustoService.cluster.privateEndpointConnection
+  // Managed private endpoints created by the cluster toward other Azure services
+  managedPrivateEndpoints() []azure.subscription.kustoService.cluster.managedPrivateEndpoint
+}
+
+// Azure Data Explorer database
+//
+// Examine a single database hosted on an Azure Data Explorer cluster. Use
+// `kind` to distinguish a read-write database from a read-only follower,
+// `hotCachePeriod` and `softDeletePeriod` for the cache and retention
+// windows, `cmkKeyName`/`cmkKeyVaultUri` for a database-scoped
+// customer-managed encryption key, and `leaderClusterResourceId` with
+// `originalDatabaseName` to trace a follower back to its source. Iterate
+// `principalAssignments` to audit who can read or administer the database
+// and `dataConnections` to see which external sources feed ingestion.
+azure.subscription.kustoService.cluster.database @defaults("name kind hotCachePeriod softDeletePeriod") {
+  // Database resource ID
+  id string
+  // Database name
+  name string
+  // Database location
+  location string
+  // Database kind, either "ReadWrite" or "ReadOnlyFollowing"
+  kind string
+  // Hot-cache retention window as an ISO 8601 duration; data within it stays on local SSD for fast queries
+  hotCachePeriod string
+  // Soft-delete retention window as an ISO 8601 duration for which data remains queryable and recoverable
+  softDeletePeriod string
+  // Provisioning state
+  provisioningState string
+  // Name of the customer-managed Key Vault key encrypting the database; empty for cluster- or platform-managed keys
+  cmkKeyName string
+  // Key Vault URI holding the database's customer-managed encryption key
+  cmkKeyVaultUri string
+  // Version of the database's customer-managed encryption key; empty means the latest version is used
+  cmkKeyVersion string
+  // For a read-only following database, the resource ID of the leader cluster sharing the data
+  leaderClusterResourceId string
+  // For a read-only following database, the database name as it exists on the leader cluster
+  originalDatabaseName string
+  // For a read-only following database, the leader cluster sharing the data
+  leaderCluster() azure.subscription.kustoService.cluster
+  // Microsoft Entra principals granted access to the database
+  principalAssignments() []azure.subscription.kustoService.cluster.database.principalAssignment
+  // Ingestion data connections feeding the database
+  dataConnections() []azure.subscription.kustoService.cluster.database.dataConnection
+}
+
+// Azure Data Explorer cluster principal assignment
+//
+// Examine a Microsoft Entra principal granted cluster-wide access to an
+// Azure Data Explorer cluster. Use `role` to see the level of access
+// (`AllDatabasesAdmin`, `AllDatabasesViewer`, or `AllDatabasesMonitor`),
+// `principalType` for whether the principal is an `App`, `Group`, or
+// `User`, and `principalId`/`principalName` to identify it.
+private azure.subscription.kustoService.cluster.principalAssignment @defaults("principalName role principalType") {
+  // Assignment resource ID
+  id string
+  // Assignment name
+  name string
+  // Microsoft Entra object ID of the assigned principal
+  principalId string
+  // Display name of the assigned principal
+  principalName string
+  // Principal category, one of "App", "Group", or "User"
+  principalType string
+  // Cluster-wide role granted, one of "AllDatabasesAdmin", "AllDatabasesViewer", or "AllDatabasesMonitor"
+  role string
+  // Microsoft Entra tenant ID of the principal
+  tenantId string
+  // Provisioning state of the assignment
+  provisioningState string
+}
+
+// Azure Data Explorer database principal assignment
+//
+// Examine a Microsoft Entra principal granted access to a single Azure
+// Data Explorer database. Use `role` for the database-scoped permission
+// (`Admin`, `Ingestor`, `Monitor`, `UnrestrictedViewer`, `User`, or
+// `Viewer`), `principalType` for whether the principal is an `App`,
+// `Group`, or `User`, and `principalId`/`principalName` to identify it.
+private azure.subscription.kustoService.cluster.database.principalAssignment @defaults("principalName role principalType") {
+  // Assignment resource ID
+  id string
+  // Assignment name
+  name string
+  // Microsoft Entra object ID of the assigned principal
+  principalId string
+  // Display name of the assigned principal
+  principalName string
+  // Principal category, one of "App", "Group", or "User"
+  principalType string
+  // Database-scoped role granted, one of "Admin", "Ingestor", "Monitor", "UnrestrictedViewer", "User", or "Viewer"
+  role string
+  // Microsoft Entra tenant ID of the principal
+  tenantId string
+  // Provisioning state of the assignment
+  provisioningState string
+}
+
+// Azure Data Explorer cluster callout policy
+//
+// Examine an outbound callout policy that governs which external endpoints
+// an Azure Data Explorer cluster may reach from queries and plugins. Use
+// `calloutType` for the external service category (for example `kusto`,
+// `sql`, `cosmosdb`, `azure_openai`, `webapi`, or `external_data`),
+// `calloutUriRegex` for the destination pattern the policy matches, and
+// `outboundAccess` for whether matching calls are allowed or denied —
+// the key control for limiting data exfiltration paths.
+private azure.subscription.kustoService.cluster.calloutPolicy @defaults("calloutType outboundAccess calloutUriRegex") {
+  // Identifier of the callout policy
+  calloutId string
+  // External service category the policy governs
+  //
+  // One of "kusto", "sql", "cosmosdb", "azure_openai", "external_data",
+  // "genevametrics", "mysql", "postgresql", "sandbox_artifacts",
+  // "azure_digital_twins", or "webapi".
+  calloutType string
+  // Regular expression matched against the destination URI the policy applies to
+  calloutUriRegex string
+  // Whether matching outbound calls are allowed, one of "Allow" or "Deny"
+  outboundAccess string
+}
+
+// Azure Data Explorer cluster private endpoint connection
+//
+// Examine a private endpoint connection terminating on an Azure Data
+// Explorer cluster. Use `status` for the approval state (`Approved`,
+// `Pending`, or `Rejected`), `groupId` for the targeted sub-resource, and
+// `privateEndpointId` for the resource ID of the connecting private
+// endpoint.
+private azure.subscription.kustoService.cluster.privateEndpointConnection @defaults("name status groupId") {
+  // Connection resource ID
+  id string
+  // Connection name
+  name string
+  // Sub-resource (group ID) the private endpoint targets on the cluster
+  groupId string
+  // Connection approval status, one of "Approved", "Pending", or "Rejected"
+  status string
+  // Description accompanying the connection status
+  statusDescription string
+  // The connecting private endpoint
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Data Explorer cluster managed private endpoint
+//
+// Examine a managed private endpoint created by an Azure Data Explorer
+// cluster to reach another Azure resource over a private link. Use
+// `privateLinkResourceId` for the target resource, `groupId` for the
+// sub-resource it connects to, and `requestMessage` for the approval
+// message sent to the resource owner.
+private azure.subscription.kustoService.cluster.managedPrivateEndpoint @defaults("name groupId provisioningState") {
+  // Managed private endpoint resource ID
+  id string
+  // Managed private endpoint name
+  name string
+  // Sub-resource (group ID) targeted on the linked resource
+  groupId string
+  // Resource ID of the Azure resource the endpoint connects to
+  privateLinkResourceId string
+  // Region of the linked private-link resource
+  privateLinkResourceRegion string
+  // Request message sent to the resource owner for approval
+  requestMessage string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Data Explorer database data connection
+//
+// Examine an ingestion data connection feeding an Azure Data Explorer
+// database. Use `kind` for the source type (`EventHub`, `EventGrid`,
+// `IotHub`, or `CosmosDb`), `sourceResourceId` for the Azure resource
+// supplying the data, `tableName`/`dataFormat`/`mappingRuleName` for the
+// ingestion target and shape, and `managedIdentityResourceId` for the
+// identity used to authenticate to the source.
+private azure.subscription.kustoService.cluster.database.dataConnection @defaults("name kind tableName") {
+  // Data connection resource ID
+  id string
+  // Data connection name
+  name string
+  // Data connection location
+  location string
+  // Source kind, one of "EventHub", "EventGrid", "IotHub", or "CosmosDb"
+  kind string
+  // Target table the connection ingests into
+  tableName string
+  // Ingestion data format, for example "JSON", "MULTIJSON", "CSV", or "AVRO"
+  dataFormat string
+  // Name of the ingestion mapping rule applied to incoming data
+  mappingRuleName string
+  // Event consumer group, for Event Hub, IoT Hub, and Event Grid sources
+  consumerGroup string
+  // How ingestion routes across databases, one of "Single" or "Multi"
+  databaseRouting string
+  // Resource ID of the source feeding ingestion — the Event Hub, IoT Hub, Event Grid topic, or Cosmos DB account, depending on kind
+  sourceResourceId string
+  // Managed identity used to authenticate to the source, if any
+  managedIdentity() azure.subscription.managedIdentity
+  // Provisioning state
+  provisioningState string
 }
 
 // Azure Automation
