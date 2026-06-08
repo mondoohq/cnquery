@@ -20,6 +20,8 @@ const (
 	ResourceDigitaloceanAccount                                         string = "digitalocean.account"
 	ResourceDigitaloceanDroplet                                         string = "digitalocean.droplet"
 	ResourceDigitaloceanFirewall                                        string = "digitalocean.firewall"
+	ResourceDigitaloceanFirewallIngressRule                             string = "digitalocean.firewall.ingressRule"
+	ResourceDigitaloceanFirewallEgressRule                              string = "digitalocean.firewall.egressRule"
 	ResourceDigitaloceanDatabase                                        string = "digitalocean.database"
 	ResourceDigitaloceanDatabaseBackup                                  string = "digitalocean.database.backup"
 	ResourceDigitaloceanDatabaseUser                                    string = "digitalocean.database.user"
@@ -99,6 +101,14 @@ func init() {
 		"digitalocean.firewall": {
 			// to override args, implement: initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanFirewall,
+		},
+		"digitalocean.firewall.ingressRule": {
+			// to override args, implement: initDigitaloceanFirewallIngressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanFirewallIngressRule,
+		},
+		"digitalocean.firewall.egressRule": {
+			// to override args, implement: initDigitaloceanFirewallEgressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanFirewallEgressRule,
 		},
 		"digitalocean.database": {
 			// to override args, implement: initDigitaloceanDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -616,6 +626,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.firewall.outboundRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewall).GetOutboundRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.firewall.ingressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewall).GetIngressRules()).ToDataRes(types.Array(types.Resource("digitalocean.firewall.ingressRule")))
+	},
+	"digitalocean.firewall.egressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewall).GetEgressRules()).ToDataRes(types.Array(types.Resource("digitalocean.firewall.egressRule")))
+	},
 	"digitalocean.firewall.dropletIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewall).GetDropletIds()).ToDataRes(types.Array(types.Int))
 	},
@@ -624,6 +640,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.firewall.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewall).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.firewall.ingressRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"digitalocean.firewall.ingressRule.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetPorts()).ToDataRes(types.String)
+	},
+	"digitalocean.firewall.ingressRule.openToInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetOpenToInternet()).ToDataRes(types.Bool)
+	},
+	"digitalocean.firewall.ingressRule.sourceAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.firewall.ingressRule.sourceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.firewall.ingressRule.sourceDroplets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceDroplets()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
+	},
+	"digitalocean.firewall.ingressRule.sourceLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceLoadBalancers()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer")))
+	},
+	"digitalocean.firewall.ingressRule.sourceKubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
+	},
+	"digitalocean.firewall.egressRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"digitalocean.firewall.egressRule.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetPorts()).ToDataRes(types.String)
+	},
+	"digitalocean.firewall.egressRule.openToInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetOpenToInternet()).ToDataRes(types.Bool)
+	},
+	"digitalocean.firewall.egressRule.destinationAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetDestinationAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.firewall.egressRule.destinationTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetDestinationTags()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.firewall.egressRule.destinationDroplets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetDestinationDroplets()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
+	},
+	"digitalocean.firewall.egressRule.destinationLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetDestinationLoadBalancers()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer")))
+	},
+	"digitalocean.firewall.egressRule.destinationKubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFirewallEgressRule).GetDestinationKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
 	},
 	"digitalocean.database.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetId()).ToDataRes(types.String)
@@ -2776,6 +2840,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanFirewall).OutboundRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.firewall.ingressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewall).IngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewall).EgressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.firewall.dropletIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanFirewall).DropletIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2786,6 +2858,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.firewall.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanFirewall).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.firewall.ingressRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).Ports, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.openToInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).OpenToInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.sourceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).SourceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.sourceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).SourceTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.sourceDroplets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).SourceDroplets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.sourceLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).SourceLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.ingressRule.sourceKubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallIngressRule).SourceKubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.firewall.egressRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).Ports, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.openToInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).OpenToInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.destinationAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).DestinationAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.destinationTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).DestinationTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.destinationDroplets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).DestinationDroplets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.destinationLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).DestinationLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.firewall.egressRule.destinationKubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFirewallEgressRule).DestinationKubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6386,6 +6530,8 @@ type mqlDigitaloceanFirewall struct {
 	CreatedAt     plugin.TValue[*time.Time]
 	InboundRules  plugin.TValue[[]any]
 	OutboundRules plugin.TValue[[]any]
+	IngressRules  plugin.TValue[[]any]
+	EgressRules   plugin.TValue[[]any]
 	DropletIds    plugin.TValue[[]any]
 	Droplets      plugin.TValue[[]any]
 	Tags          plugin.TValue[[]any]
@@ -6452,6 +6598,38 @@ func (c *mqlDigitaloceanFirewall) GetOutboundRules() *plugin.TValue[[]any] {
 	return &c.OutboundRules
 }
 
+func (c *mqlDigitaloceanFirewall) GetIngressRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IngressRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall", c.__id, "ingressRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ingressRules()
+	})
+}
+
+func (c *mqlDigitaloceanFirewall) GetEgressRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EgressRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall", c.__id, "egressRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.egressRules()
+	})
+}
+
 func (c *mqlDigitaloceanFirewall) GetDropletIds() *plugin.TValue[[]any] {
 	return &c.DropletIds
 }
@@ -6474,6 +6652,236 @@ func (c *mqlDigitaloceanFirewall) GetDroplets() *plugin.TValue[[]any] {
 
 func (c *mqlDigitaloceanFirewall) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+// mqlDigitaloceanFirewallIngressRule for the digitalocean.firewall.ingressRule resource
+type mqlDigitaloceanFirewallIngressRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanFirewallIngressRuleInternal
+	Protocol                 plugin.TValue[string]
+	Ports                    plugin.TValue[string]
+	OpenToInternet           plugin.TValue[bool]
+	SourceAddresses          plugin.TValue[[]any]
+	SourceTags               plugin.TValue[[]any]
+	SourceDroplets           plugin.TValue[[]any]
+	SourceLoadBalancers      plugin.TValue[[]any]
+	SourceKubernetesClusters plugin.TValue[[]any]
+}
+
+// createDigitaloceanFirewallIngressRule creates a new instance of this resource
+func createDigitaloceanFirewallIngressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanFirewallIngressRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.firewall.ingressRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) MqlName() string {
+	return "digitalocean.firewall.ingressRule"
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetPorts() *plugin.TValue[string] {
+	return &c.Ports
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetOpenToInternet() *plugin.TValue[bool] {
+	return &c.OpenToInternet
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetSourceAddresses() *plugin.TValue[[]any] {
+	return &c.SourceAddresses
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetSourceTags() *plugin.TValue[[]any] {
+	return &c.SourceTags
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetSourceDroplets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceDroplets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.ingressRule", c.__id, "sourceDroplets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceDroplets()
+	})
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetSourceLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceLoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.ingressRule", c.__id, "sourceLoadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceLoadBalancers()
+	})
+}
+
+func (c *mqlDigitaloceanFirewallIngressRule) GetSourceKubernetesClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceKubernetesClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.ingressRule", c.__id, "sourceKubernetesClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceKubernetesClusters()
+	})
+}
+
+// mqlDigitaloceanFirewallEgressRule for the digitalocean.firewall.egressRule resource
+type mqlDigitaloceanFirewallEgressRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDigitaloceanFirewallEgressRuleInternal
+	Protocol                      plugin.TValue[string]
+	Ports                         plugin.TValue[string]
+	OpenToInternet                plugin.TValue[bool]
+	DestinationAddresses          plugin.TValue[[]any]
+	DestinationTags               plugin.TValue[[]any]
+	DestinationDroplets           plugin.TValue[[]any]
+	DestinationLoadBalancers      plugin.TValue[[]any]
+	DestinationKubernetesClusters plugin.TValue[[]any]
+}
+
+// createDigitaloceanFirewallEgressRule creates a new instance of this resource
+func createDigitaloceanFirewallEgressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanFirewallEgressRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.firewall.egressRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) MqlName() string {
+	return "digitalocean.firewall.egressRule"
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetPorts() *plugin.TValue[string] {
+	return &c.Ports
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetOpenToInternet() *plugin.TValue[bool] {
+	return &c.OpenToInternet
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetDestinationAddresses() *plugin.TValue[[]any] {
+	return &c.DestinationAddresses
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetDestinationTags() *plugin.TValue[[]any] {
+	return &c.DestinationTags
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetDestinationDroplets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DestinationDroplets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.egressRule", c.__id, "destinationDroplets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinationDroplets()
+	})
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetDestinationLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DestinationLoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.egressRule", c.__id, "destinationLoadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinationLoadBalancers()
+	})
+}
+
+func (c *mqlDigitaloceanFirewallEgressRule) GetDestinationKubernetesClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DestinationKubernetesClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.firewall.egressRule", c.__id, "destinationKubernetesClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinationKubernetesClusters()
+	})
 }
 
 // mqlDigitaloceanDatabase for the digitalocean.database resource

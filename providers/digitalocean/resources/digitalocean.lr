@@ -182,11 +182,14 @@ digitalocean.droplet @defaults("id name status") {
 // DigitalOcean firewall
 //
 // Examine a DigitalOcean cloud-firewall rule set. Surfaces the firewall
-// status (waiting, succeeded, failed), the `inboundRules` and
-// `outboundRules` (each a dict describing protocol, ports, sources,
-// and destinations), the tags used to target droplets, and the
-// resolved `droplets()` covered by the firewall (by direct ID or
-// matching tag).
+// status (waiting, succeeded, failed), the `ingressRules` and
+// `egressRules` controlling incoming and outgoing traffic — each rule
+// exposing protocol, ports, the `openToInternet` predicate that flags
+// rules reachable from any address (0.0.0.0/0 or ::/0), and typed
+// references to the droplets, load balancers, and Kubernetes clusters
+// it targets. Also surfaces the tags used to select protected droplets
+// and the resolved `droplets()` covered by the firewall (by direct ID
+// or matching tag).
 digitalocean.firewall @defaults("id name status") {
   // Firewall ID
   id string
@@ -197,9 +200,17 @@ digitalocean.firewall @defaults("id name status") {
   // Time the resource was created
   createdAt time
   // Rules controlling incoming traffic to protected droplets
-  inboundRules []dict
+  //
+  // Deprecated in favor of `ingressRules`.
+  inboundRules @maturity("deprecated") []dict
   // Rules controlling outgoing traffic from protected droplets
-  outboundRules []dict
+  //
+  // Deprecated in favor of `egressRules`.
+  outboundRules @maturity("deprecated") []dict
+  // Ingress rules controlling incoming traffic to protected droplets
+  ingressRules() []digitalocean.firewall.ingressRule
+  // Egress rules controlling outgoing traffic from protected droplets
+  egressRules() []digitalocean.firewall.egressRule
   // Droplet IDs protected by this firewall
   //
   // Deprecated in favor of `droplets()`.
@@ -208,6 +219,73 @@ digitalocean.firewall @defaults("id name status") {
   droplets() []digitalocean.droplet
   // Tags used to target droplets
   tags []string
+}
+
+// Ingress rule of a DigitalOcean cloud firewall
+//
+// Examine a single ingress (inbound) rule controlling traffic that reaches
+// the droplets a firewall protects. `protocol` is tcp, udp, or icmp and
+// `ports` is the affected port or range (a single port like "3306", a
+// range like "8000-9000", or "0"/"all" for every port). `openToInternet`
+// is true when the rule admits traffic from any address — that is, when
+// `sourceAddresses` contains 0.0.0.0/0 or ::/0 — which makes auditing
+// publicly reachable ports a single predicate. The source is otherwise
+// described by `sourceAddresses` (CIDRs), `sourceTags`, and the typed
+// `sourceDroplets`, `sourceLoadBalancers`, and `sourceKubernetesClusters`
+// the rule trusts.
+private digitalocean.firewall.ingressRule @defaults("protocol ports openToInternet") {
+  // Network protocol (tcp, udp, or icmp)
+  protocol string
+  // Affected port or range
+  //
+  // A single port ("3306"), a range ("8000-9000"), or "0"/"all" for
+  // every port.
+  ports string
+  // Whether the rule admits traffic from any address (0.0.0.0/0 or ::/0)
+  openToInternet bool
+  // Source address CIDRs trusted by this rule
+  sourceAddresses []string
+  // Source droplet tags trusted by this rule
+  sourceTags []string
+  // Droplets trusted as a traffic source by this rule
+  sourceDroplets() []digitalocean.droplet
+  // Load balancers trusted as a traffic source by this rule
+  sourceLoadBalancers() []digitalocean.loadBalancer
+  // Kubernetes clusters trusted as a traffic source by this rule
+  sourceKubernetesClusters() []digitalocean.kubernetes.cluster
+}
+
+// Egress rule of a DigitalOcean cloud firewall
+//
+// Examine a single egress (outbound) rule controlling traffic that leaves
+// the droplets a firewall protects. `protocol` is tcp, udp, or icmp and
+// `ports` is the affected port or range (a single port like "3306", a
+// range like "8000-9000", or "0"/"all" for every port). `openToInternet`
+// is true when the rule permits traffic to any address — that is, when
+// `destinationAddresses` contains 0.0.0.0/0 or ::/0. The destination is
+// otherwise described by `destinationAddresses` (CIDRs), `destinationTags`,
+// and the typed `destinationDroplets`, `destinationLoadBalancers`, and
+// `destinationKubernetesClusters` the rule allows.
+private digitalocean.firewall.egressRule @defaults("protocol ports openToInternet") {
+  // Network protocol (tcp, udp, or icmp)
+  protocol string
+  // Affected port or range
+  //
+  // A single port ("3306"), a range ("8000-9000"), or "0"/"all" for
+  // every port.
+  ports string
+  // Whether the rule permits traffic to any address (0.0.0.0/0 or ::/0)
+  openToInternet bool
+  // Destination address CIDRs allowed by this rule
+  destinationAddresses []string
+  // Destination droplet tags allowed by this rule
+  destinationTags []string
+  // Droplets allowed as a traffic destination by this rule
+  destinationDroplets() []digitalocean.droplet
+  // Load balancers allowed as a traffic destination by this rule
+  destinationLoadBalancers() []digitalocean.loadBalancer
+  // Kubernetes clusters allowed as a traffic destination by this rule
+  destinationKubernetesClusters() []digitalocean.kubernetes.cluster
 }
 
 // DigitalOcean managed database cluster
