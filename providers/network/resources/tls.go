@@ -481,6 +481,48 @@ func (s *mqlTls) nonSniCertificates(socket *mqlSocket, domainName string) ([]any
 	return nil, s.populateCertificates(socket, domainName)
 }
 
+// certificateMatchesDomain reports whether the served leaf certificate covers
+// the connection's domain name, applying RFC 6125 SAN matching (including
+// wildcards). It isolates hostname coverage from chain trust and expiry. When
+// there is no domain name to match (e.g. connecting directly to an IP), the
+// field is null.
+func (s *mqlTls) certificateMatchesDomain() (bool, error) {
+	domainName := s.GetDomainName()
+	if domainName.Error != nil {
+		return false, domainName.Error
+	}
+	if domainName.Data == "" {
+		s.CertificateMatchesDomain.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
+	certs := s.GetCertificates()
+	if certs.Error != nil {
+		return false, certs.Error
+	}
+	if len(certs.Data) == 0 {
+		s.CertificateMatchesDomain.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
+	leaf, ok := certs.Data[0].(*mqlCertificate)
+	if !ok || leaf.cert.Data == nil {
+		s.CertificateMatchesDomain.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
+	return certMatchesDomain(leaf.cert.Data, domainName.Data), nil
+}
+
+// certMatchesDomain reports whether the certificate is valid for the given
+// domain name. It applies RFC 6125 matching against the certificate's Subject
+// Alternative Name DNS entries, including wildcards (`*.example.com` covers
+// `api.example.com`). Following modern client behavior, the Subject Common
+// Name is not consulted.
+func certMatchesDomain(cert *x509.Certificate, domainName string) bool {
+	return cert.VerifyHostname(domainName) == nil
+}
+
 // getConnectionState performs a single Go stdlib TLS connection and caches the result.
 // All three negotiated* fields share this connection — only one dial is made.
 func (s *mqlTls) getConnectionState(socket *mqlSocket, domainName string) (*tls.ConnectionState, error) {

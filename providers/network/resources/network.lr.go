@@ -368,6 +368,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tls.nonSniCertificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetNonSniCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
+	"tls.certificateMatchesDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTls).GetCertificateMatchesDomain()).ToDataRes(types.Bool)
+	},
 	"certificates.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCertificates).GetPem()).ToDataRes(types.String)
 	},
@@ -945,6 +948,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tls.nonSniCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTls).NonSniCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tls.certificateMatchesDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTls).CertificateMatchesDomain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2134,17 +2141,18 @@ type mqlTls struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlTlsInternal
-	Socket             plugin.TValue[*mqlSocket]
-	DomainName         plugin.TValue[string]
-	Params             plugin.TValue[any]
-	Versions           plugin.TValue[[]any]
-	Ciphers            plugin.TValue[[]any]
-	Extensions         plugin.TValue[[]any]
-	NegotiatedGroup    plugin.TValue[string]
-	NegotiatedVersion  plugin.TValue[string]
-	NegotiatedCipher   plugin.TValue[string]
-	Certificates       plugin.TValue[[]any]
-	NonSniCertificates plugin.TValue[[]any]
+	Socket                   plugin.TValue[*mqlSocket]
+	DomainName               plugin.TValue[string]
+	Params                   plugin.TValue[any]
+	Versions                 plugin.TValue[[]any]
+	Ciphers                  plugin.TValue[[]any]
+	Extensions               plugin.TValue[[]any]
+	NegotiatedGroup          plugin.TValue[string]
+	NegotiatedVersion        plugin.TValue[string]
+	NegotiatedCipher         plugin.TValue[string]
+	Certificates             plugin.TValue[[]any]
+	NonSniCertificates       plugin.TValue[[]any]
+	CertificateMatchesDomain plugin.TValue[bool]
 }
 
 // createTls creates a new instance of this resource
@@ -2338,6 +2346,12 @@ func (c *mqlTls) GetNonSniCertificates() *plugin.TValue[[]any] {
 		}
 
 		return c.nonSniCertificates(vargSocket.Data, vargDomainName.Data)
+	})
+}
+
+func (c *mqlTls) GetCertificateMatchesDomain() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CertificateMatchesDomain, func() (bool, error) {
+		return c.certificateMatchesDomain()
 	})
 }
 

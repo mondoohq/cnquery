@@ -181,6 +181,16 @@ tls @defaults("socket domainName") {
   certificates(socket, domainName) []certificate
   // Certificates provided without server name indication (SNI)
   nonSniCertificates(socket, domainName) []certificate
+  // Whether the served leaf certificate covers the connection hostname
+  //
+  // Matches the connection's domain name against the leaf certificate's
+  // Subject Alternative Name DNS entries using RFC 6125 wildcard rules,
+  // so `*.example.com` covers `api.example.com`. Unlike chain
+  // verification, this isolates hostname coverage — it is true when the
+  // certificate vouches for the host you connected to, independent of
+  // chain trust or expiry. Null when the connection has no domain name
+  // to match, such as when connecting directly to an IP address.
+  certificateMatchesDomain() bool
 }
 
 // X.509 certificate bundle

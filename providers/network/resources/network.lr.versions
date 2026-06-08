@@ -160,6 +160,7 @@ socket.address 9.0.0
 socket.port 9.0.0
 socket.protocol 9.0.0
 tls 9.0.0
+tls.certificateMatchesDomain 13.0.8
 tls.certificates 9.0.0
 tls.ciphers 9.0.0
 tls.domainName 9.0.0
