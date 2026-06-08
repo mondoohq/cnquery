@@ -200,15 +200,16 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal struct {
 func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization.RoleAssignment) (*mqlAzureSubscriptionAuthorizationServiceRoleAssignment, error) {
 	r, err := CreateResource(runtime, "azure.subscription.authorizationService.roleAssignment",
 		map[string]*llx.RawData{
-			"__id":        llx.StringDataPtr(roleAssignment.ID),
-			"id":          llx.StringDataPtr(roleAssignment.Name), // name is the id :-)
-			"description": llx.StringDataPtr(roleAssignment.Properties.Description),
-			"scope":       llx.StringDataPtr(roleAssignment.Properties.Scope),
-			"type":        llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
-			"principalId": llx.StringData(*roleAssignment.Properties.PrincipalID),
-			"condition":   llx.StringDataPtr(roleAssignment.Properties.Condition),
-			"createdAt":   llx.TimeDataPtr(roleAssignment.Properties.CreatedOn),
-			"updatedAt":   llx.TimeDataPtr(roleAssignment.Properties.UpdatedOn),
+			"__id":          llx.StringDataPtr(roleAssignment.ID),
+			"id":            llx.StringDataPtr(roleAssignment.Name), // name is the id :-)
+			"description":   llx.StringDataPtr(roleAssignment.Properties.Description),
+			"scope":         llx.StringDataPtr(roleAssignment.Properties.Scope),
+			"type":          llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
+			"principalId":   llx.StringData(*roleAssignment.Properties.PrincipalID),
+			"principalType": llx.StringData(string(*roleAssignment.Properties.PrincipalType)),
+			"condition":     llx.StringDataPtr(roleAssignment.Properties.Condition),
+			"createdAt":     llx.TimeDataPtr(roleAssignment.Properties.CreatedOn),
+			"updatedAt":     llx.TimeDataPtr(roleAssignment.Properties.UpdatedOn),
 		})
 	if err != nil {
 		return nil, err
@@ -359,15 +360,15 @@ func initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[stri
 		return args, nil, nil
 	}
 
-	args["name"] = llx.StringDataPtr(identity.Name)
-	if identity.Properties != nil {
-		args["clientId"] = llx.StringDataPtr(identity.Properties.ClientID)
-		args["principalId"] = llx.StringDataPtr(identity.Properties.PrincipalID)
-		if identity.Properties.TenantID != nil {
-			args["tenantId"] = llx.StringData(string(*identity.Properties.TenantID))
-		}
+	mqlIdentity, err := newMqlManagedIdentity(runtime, &identity.Identity)
+	if err != nil {
+		return nil, nil, err
 	}
-	return args, nil, nil
+	return args, mqlIdentity, nil
+}
+
+type mqlAzureSubscriptionManagedIdentityInternal struct {
+	cacheResourceID string
 }
 
 func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
@@ -384,12 +385,66 @@ func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Iden
 	}
 
 	mqlManagedIdentity := r.(*mqlAzureSubscriptionManagedIdentity)
+	mqlManagedIdentity.cacheResourceID = convert.ToValue(managedIdentity.ID)
 	return mqlManagedIdentity, nil
 }
 
 func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]any, error) {
 	// NOTE: this should never be called since we assign roles during the managed identities query
 	return nil, errors.New("could not fetch role assignments for managed identities")
+}
+
+func (a *mqlAzureSubscriptionManagedIdentity) federatedIdentityCredentials() ([]any, error) {
+	if a.cacheResourceID == "" {
+		return []any{}, nil
+	}
+	resourceID, err := ParseResourceID(a.cacheResourceID)
+	if err != nil {
+		return nil, err
+	}
+	name, err := resourceID.Component("userAssignedIdentities")
+	if err != nil {
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	client, err := armmsi.NewFederatedIdentityCredentialsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListPager(resourceID.ResourceGroup, name, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, fic := range page.Value {
+			if fic == nil {
+				continue
+			}
+			entry := map[string]any{
+				"name": convert.ToValue(fic.Name),
+			}
+			if p := fic.Properties; p != nil {
+				entry["issuer"] = convert.ToValue(p.Issuer)
+				entry["subject"] = convert.ToValue(p.Subject)
+				audiences := []any{}
+				for _, aud := range p.Audiences {
+					if aud != nil {
+						audiences = append(audiences, *aud)
+					}
+				}
+				entry["audiences"] = audiences
+			}
+			res = append(res, entry)
+		}
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionAuthorizationServiceDenyAssignment) id() (string, error) {

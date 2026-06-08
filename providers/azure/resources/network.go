@@ -221,15 +221,54 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			var skuName string
+			if bh.SKU != nil && bh.SKU.Name != nil {
+				skuName = string(*bh.SKU.Name)
+			}
+			var disableCopyPaste, enableFileCopy, enableIPConnect, enableKerberos, enablePrivateOnlyBastion, enableSessionRecording, enableShareableLink, enableTunneling *bool
+			var scaleUnits *int64
+			allowedIPRules := []any{}
+			if p := bh.Properties; p != nil {
+				disableCopyPaste = p.DisableCopyPaste
+				enableFileCopy = p.EnableFileCopy
+				enableIPConnect = p.EnableIPConnect
+				enableKerberos = p.EnableKerberos
+				enablePrivateOnlyBastion = p.EnablePrivateOnlyBastion
+				enableSessionRecording = p.EnableSessionRecording
+				enableShareableLink = p.EnableShareableLink
+				enableTunneling = p.EnableTunneling
+				if p.ScaleUnits != nil {
+					su := int64(*p.ScaleUnits)
+					scaleUnits = &su
+				}
+				if p.NetworkACLs != nil {
+					for _, rule := range p.NetworkACLs.IPRules {
+						if rule != nil && rule.AddressPrefix != nil {
+							allowedIPRules = append(allowedIPRules, *rule.AddressPrefix)
+						}
+					}
+				}
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bastionHost",
 				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(bh.ID),
-					"name":       llx.StringDataPtr(bh.Name),
-					"location":   llx.StringDataPtr(bh.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(bh.Tags), types.String),
-					"type":       llx.StringDataPtr(bh.Type),
-					"properties": llx.DictData(properties),
-					"sku":        llx.DictData(sku),
+					"id":                       llx.StringDataPtr(bh.ID),
+					"name":                     llx.StringDataPtr(bh.Name),
+					"location":                 llx.StringDataPtr(bh.Location),
+					"tags":                     llx.MapData(convert.PtrMapStrToInterface(bh.Tags), types.String),
+					"type":                     llx.StringDataPtr(bh.Type),
+					"properties":               llx.DictData(properties),
+					"sku":                      llx.DictData(sku),
+					"skuName":                  llx.StringData(skuName),
+					"disableCopyPaste":         llx.BoolDataPtr(disableCopyPaste),
+					"enableFileCopy":           llx.BoolDataPtr(enableFileCopy),
+					"enableIpConnect":          llx.BoolDataPtr(enableIPConnect),
+					"enableKerberos":           llx.BoolDataPtr(enableKerberos),
+					"enablePrivateOnlyBastion": llx.BoolDataPtr(enablePrivateOnlyBastion),
+					"enableSessionRecording":   llx.BoolDataPtr(enableSessionRecording),
+					"enableShareableLink":      llx.BoolDataPtr(enableShareableLink),
+					"enableTunneling":          llx.BoolDataPtr(enableTunneling),
+					"scaleUnits":               llx.IntDataPtr(scaleUnits),
+					"allowedIpRules":           llx.ArrayData(allowedIPRules, types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -483,6 +522,8 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 			formatVersion = f.Version
 		}
 		args["retentionPolicy"] = llx.DictData(retentionPolicyDict)
+		args["retentionEnabled"] = llx.BoolData(retentionPolicy.Enabled)
+		args["retentionDays"] = llx.IntData(int64(retentionPolicy.RetentionDays))
 		args["format"] = llx.StringDataPtr(formatType)
 		args["version"] = llx.IntDataDefault(formatVersion, 0)
 		args["enabled"] = llx.BoolDataPtr(props.Enabled)
@@ -491,6 +532,9 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 		args["targetResourceGuid"] = llx.StringDataPtr(props.TargetResourceGUID)
 		args["provisioningState"] = llx.StringDataPtr((*string)(props.ProvisioningState))
 		args["analytics"] = llx.DictData(flowLogAnalyticsDict)
+		args["trafficAnalyticsEnabled"] = llx.BoolData(flowLogAnalytics.Enabled)
+		args["trafficAnalyticsInterval"] = llx.IntData(int64(flowLogAnalytics.AnalyticsInterval))
+		args["trafficAnalyticsWorkspaceId"] = llx.StringData(flowLogAnalytics.WorkspaceResourceId)
 	}
 
 	mqlFlowLog, err := CreateResource(runtime, "azure.subscription.networkService.watcher.flowlog", args)
@@ -1352,15 +1396,42 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 				} else {
 					args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
 				}
-				if vng.Properties.VPNClientConfiguration != nil {
-					vpnClientDict, err := convert.JsonToDict(vng.Properties.VPNClientConfiguration)
+				vpnClientAuthTypes := []any{}
+				vpnClientAddressPool := []any{}
+				var aadTenant, aadAudience, aadIssuer string
+				radiusConfigured := false
+				if vc := vng.Properties.VPNClientConfiguration; vc != nil {
+					// Scrub the RADIUS shared secret before serializing the raw
+					// configuration so it is never exposed through the dict.
+					scrubbed := *vc
+					scrubbed.RadiusServerSecret = nil
+					vpnClientDict, err := convert.JsonToDict(&scrubbed)
 					if err != nil {
 						return nil, err
 					}
 					args["vpnClientConfiguration"] = llx.DictData(vpnClientDict)
+
+					for _, at := range vc.VPNAuthenticationTypes {
+						if at != nil {
+							vpnClientAuthTypes = append(vpnClientAuthTypes, string(*at))
+						}
+					}
+					if vc.VPNClientAddressPool != nil {
+						vpnClientAddressPool = convert.SliceStrPtrToInterface(vc.VPNClientAddressPool.AddressPrefixes)
+					}
+					aadTenant = convert.ToValue(vc.AADTenant)
+					aadAudience = convert.ToValue(vc.AADAudience)
+					aadIssuer = convert.ToValue(vc.AADIssuer)
+					radiusConfigured = (vc.RadiusServerAddress != nil && *vc.RadiusServerAddress != "") || len(vc.RadiusServers) > 0
 				} else {
 					args["vpnClientConfiguration"] = llx.NilData
 				}
+				args["vpnClientAuthenticationTypes"] = llx.ArrayData(vpnClientAuthTypes, types.String)
+				args["vpnClientAddressPool"] = llx.ArrayData(vpnClientAddressPool, types.String)
+				args["aadTenant"] = llx.StringData(aadTenant)
+				args["aadAudience"] = llx.StringData(aadAudience)
+				args["aadIssuer"] = llx.StringData(aadIssuer)
+				args["radiusAuthenticationConfigured"] = llx.BoolData(radiusConfigured)
 				mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway", args)
 				if err != nil {
 					return nil, err
@@ -2927,14 +2998,61 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 	if err != nil {
 		return nil, err
 	}
+	var mode, enabledState string
+	var requestBodyCheck *bool
+	var maxRequestBodySizeInKb, fileUploadLimitInMb *int64
+	customRulesCount := int64(0)
+	managedRuleSets := []any{}
+	if p := waf.Properties; p != nil {
+		if ps := p.PolicySettings; ps != nil {
+			if ps.Mode != nil {
+				mode = string(*ps.Mode)
+			}
+			if ps.State != nil {
+				enabledState = string(*ps.State)
+			}
+			requestBodyCheck = ps.RequestBodyCheck
+			if ps.MaxRequestBodySizeInKb != nil {
+				v := int64(*ps.MaxRequestBodySizeInKb)
+				maxRequestBodySizeInKb = &v
+			}
+			if ps.FileUploadLimitInMb != nil {
+				v := int64(*ps.FileUploadLimitInMb)
+				fileUploadLimitInMb = &v
+			}
+		}
+		customRulesCount = int64(len(p.CustomRules))
+		if p.ManagedRules != nil {
+			for _, rs := range p.ManagedRules.ManagedRuleSets {
+				if rs == nil {
+					continue
+				}
+				entry := map[string]any{}
+				if rs.RuleSetType != nil {
+					entry["ruleSetType"] = *rs.RuleSetType
+				}
+				if rs.RuleSetVersion != nil {
+					entry["ruleSetVersion"] = *rs.RuleSetVersion
+				}
+				managedRuleSets = append(managedRuleSets, entry)
+			}
+		}
+	}
 	args := map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(waf.ID),
-		"name":       llx.StringDataPtr(waf.Name),
-		"type":       llx.StringDataPtr(waf.Type),
-		"location":   llx.StringDataPtr(waf.Location),
-		"tags":       llx.MapData(convert.PtrMapStrToInterface(waf.Tags), types.String),
-		"etag":       llx.StringDataPtr(waf.Etag),
-		"properties": llx.DictData(props),
+		"id":                     llx.StringDataPtr(waf.ID),
+		"name":                   llx.StringDataPtr(waf.Name),
+		"type":                   llx.StringDataPtr(waf.Type),
+		"location":               llx.StringDataPtr(waf.Location),
+		"tags":                   llx.MapData(convert.PtrMapStrToInterface(waf.Tags), types.String),
+		"etag":                   llx.StringDataPtr(waf.Etag),
+		"properties":             llx.DictData(props),
+		"mode":                   llx.StringData(mode),
+		"enabledState":           llx.StringData(enabledState),
+		"requestBodyCheck":       llx.BoolDataPtr(requestBodyCheck),
+		"maxRequestBodySizeInKb": llx.IntDataPtr(maxRequestBodySizeInKb),
+		"fileUploadLimitInMb":    llx.IntDataPtr(fileUploadLimitInMb),
+		"customRulesCount":       llx.IntData(customRulesCount),
+		"managedRuleSets":        llx.ArrayData(managedRuleSets, types.Dict),
 	}
 
 	mqlWaf, err := CreateResource(runtime, "azure.subscription.networkService.applicationFirewallPolicy", args)
@@ -3251,12 +3369,31 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) natRules() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		var action string
+		var priority *int64
+		rules := []any{}
+		if p := natRule.Properties; p != nil {
+			if p.Action != nil && p.Action.Type != nil {
+				action = string(*p.Action.Type)
+			}
+			if p.Priority != nil {
+				v := int64(*p.Priority)
+				priority = &v
+			}
+			rules, err = convert.JsonToDictSlice(p.Rules)
+			if err != nil {
+				return nil, err
+			}
+		}
 		mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.natRule",
 			map[string]*llx.RawData{
 				"id":         llx.StringDataPtr(natRule.ID),
 				"name":       llx.StringDataPtr(natRule.Name),
 				"etag":       llx.StringDataPtr(natRule.Etag),
 				"properties": llx.DictData(props),
+				"action":     llx.StringData(action),
+				"priority":   llx.IntDataPtr(priority),
+				"rules":      llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -3276,12 +3413,31 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) networkRules() ([]any, erro
 		if err != nil {
 			return nil, err
 		}
+		var action string
+		var priority *int64
+		rules := []any{}
+		if p := networkRule.Properties; p != nil {
+			if p.Action != nil && p.Action.Type != nil {
+				action = string(*p.Action.Type)
+			}
+			if p.Priority != nil {
+				v := int64(*p.Priority)
+				priority = &v
+			}
+			rules, err = convert.JsonToDictSlice(p.Rules)
+			if err != nil {
+				return nil, err
+			}
+		}
 		mqlNetworkRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.networkRule",
 			map[string]*llx.RawData{
 				"id":         llx.StringDataPtr(networkRule.ID),
 				"name":       llx.StringDataPtr(networkRule.Name),
 				"etag":       llx.StringDataPtr(networkRule.Etag),
 				"properties": llx.DictData(props),
+				"action":     llx.StringData(action),
+				"priority":   llx.IntDataPtr(priority),
+				"rules":      llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -3301,12 +3457,31 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) applicationRules() ([]any, 
 		if err != nil {
 			return nil, err
 		}
+		var action string
+		var priority *int64
+		rules := []any{}
+		if p := appRule.Properties; p != nil {
+			if p.Action != nil && p.Action.Type != nil {
+				action = string(*p.Action.Type)
+			}
+			if p.Priority != nil {
+				v := int64(*p.Priority)
+				priority = &v
+			}
+			rules, err = convert.JsonToDictSlice(p.Rules)
+			if err != nil {
+				return nil, err
+			}
+		}
 		mqlAppRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.applicationRule",
 			map[string]*llx.RawData{
 				"id":         llx.StringDataPtr(appRule.ID),
 				"name":       llx.StringDataPtr(appRule.Name),
 				"etag":       llx.StringDataPtr(appRule.Etag),
 				"properties": llx.DictData(props),
+				"action":     llx.StringData(action),
+				"priority":   llx.IntDataPtr(priority),
+				"rules":      llx.ArrayData(rules, types.Dict),
 			})
 		if err != nil {
 			return nil, err
@@ -3345,7 +3520,7 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 }
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
-	var ipAllocationMethod, ipVersion, ddosProtectionMode string
+	var ipAllocationMethod, ipVersion, ddosProtectionMode, associatedResourceId string
 	var ipAddr *string
 	if ip.Properties != nil {
 		ipAddr = ip.Properties.IPAddress
@@ -3358,6 +3533,9 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 		if ip.Properties.DdosSettings != nil && ip.Properties.DdosSettings.ProtectionMode != nil {
 			ddosProtectionMode = string(*ip.Properties.DdosSettings.ProtectionMode)
 		}
+		if ip.Properties.IPConfiguration != nil && ip.Properties.IPConfiguration.ID != nil {
+			associatedResourceId = *ip.Properties.IPConfiguration.ID
+		}
 	}
 	zones := []any{}
 	for _, z := range ip.Zones {
@@ -3367,16 +3545,17 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 	}
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.ipAddress",
 		map[string]*llx.RawData{
-			"id":                 llx.StringDataPtr(ip.ID),
-			"name":               llx.StringDataPtr(ip.Name),
-			"location":           llx.StringDataPtr(ip.Location),
-			"tags":               llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
-			"type":               llx.StringDataPtr(ip.Type),
-			"ipAddress":          llx.StringDataPtr(ipAddr),
-			"ipAllocationMethod": llx.StringData(ipAllocationMethod),
-			"ipVersion":          llx.StringData(ipVersion),
-			"zones":              llx.ArrayData(zones, types.String),
-			"ddosProtectionMode": llx.StringData(ddosProtectionMode),
+			"id":                   llx.StringDataPtr(ip.ID),
+			"name":                 llx.StringDataPtr(ip.Name),
+			"location":             llx.StringDataPtr(ip.Location),
+			"tags":                 llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
+			"type":                 llx.StringDataPtr(ip.Type),
+			"ipAddress":            llx.StringDataPtr(ipAddr),
+			"ipAllocationMethod":   llx.StringData(ipAllocationMethod),
+			"ipVersion":            llx.StringData(ipVersion),
+			"zones":                llx.ArrayData(zones, types.String),
+			"ddosProtectionMode":   llx.StringData(ddosProtectionMode),
+			"associatedResourceId": llx.StringData(associatedResourceId),
 		})
 	if err != nil {
 		return nil, err

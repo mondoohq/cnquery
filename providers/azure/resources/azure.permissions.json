@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.16.1",
-  "generated_at": "2026-06-07T09:09:05-07:00",
+  "generated_at": "2026-06-07T13:33:02-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -108,6 +108,7 @@
     "Microsoft.MachineLearningServices/workspaces/onlineEndpoints/read",
     "Microsoft.MachineLearningServices/workspaces/read",
     "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/read",
+    "Microsoft.ManagedIdentity/federatedIdentityCredentials/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/applicationGateways/read",
@@ -854,6 +855,12 @@
       "service": "Microsoft.MachineLearningServices",
       "action": "NewListPager",
       "source_file": "machinelearning.go"
+    },
+    {
+      "permission": "Microsoft.ManagedIdentity/federatedIdentityCredentials/read",
+      "service": "Microsoft.ManagedIdentity",
+      "action": "NewListPager",
+      "source_file": "iam.go"
     },
     {
       "permission": "Microsoft.ManagedIdentity/userAssignedIdentities/read",

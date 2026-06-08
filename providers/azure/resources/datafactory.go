@@ -80,6 +80,7 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			var version string
 			var repoConfig any
 			var encryption any
+			var cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, cmkUserAssignedIdentity string
 			var created *llx.RawData
 
 			if factory.Properties != nil {
@@ -103,6 +104,18 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					if err != nil {
 						return nil, err
 					}
+					if factory.Properties.Encryption.KeyName != nil {
+						cmkKeyName = *factory.Properties.Encryption.KeyName
+					}
+					if factory.Properties.Encryption.VaultBaseURL != nil {
+						cmkKeyVaultUri = *factory.Properties.Encryption.VaultBaseURL
+					}
+					if factory.Properties.Encryption.KeyVersion != nil {
+						cmkKeyVersion = *factory.Properties.Encryption.KeyVersion
+					}
+					if factory.Properties.Encryption.Identity != nil && factory.Properties.Encryption.Identity.UserAssignedIdentity != nil {
+						cmkUserAssignedIdentity = *factory.Properties.Encryption.Identity.UserAssignedIdentity
+					}
 				}
 				created = llx.TimeDataPtr(factory.Properties.CreateTime)
 			}
@@ -112,20 +125,24 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 
 			mqlFactory, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionDataFactoryServiceFactory,
 				map[string]*llx.RawData{
-					"__id":                llx.StringDataPtr(factory.ID),
-					"id":                  llx.StringDataPtr(factory.ID),
-					"name":                llx.StringDataPtr(factory.Name),
-					"location":            llx.StringDataPtr(factory.Location),
-					"tags":                llx.MapData(convert.PtrMapStrToInterface(factory.Tags), types.String),
-					"type":                llx.StringDataPtr(factory.Type),
-					"properties":          llx.DictData(properties),
-					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
-					"identity":            llx.DictData(identity),
-					"provisioningState":   llx.StringData(provisioningState),
-					"version":             llx.StringData(version),
-					"repoConfiguration":   llx.DictData(repoConfig),
-					"encryption":          llx.DictData(encryption),
-					"created":             created,
+					"__id":                    llx.StringDataPtr(factory.ID),
+					"id":                      llx.StringDataPtr(factory.ID),
+					"name":                    llx.StringDataPtr(factory.Name),
+					"location":                llx.StringDataPtr(factory.Location),
+					"tags":                    llx.MapData(convert.PtrMapStrToInterface(factory.Tags), types.String),
+					"type":                    llx.StringDataPtr(factory.Type),
+					"properties":              llx.DictData(properties),
+					"publicNetworkAccess":     llx.StringData(publicNetworkAccess),
+					"identity":                llx.DictData(identity),
+					"provisioningState":       llx.StringData(provisioningState),
+					"version":                 llx.StringData(version),
+					"repoConfiguration":       llx.DictData(repoConfig),
+					"encryption":              llx.DictData(encryption),
+					"cmkKeyName":              llx.StringData(cmkKeyName),
+					"cmkKeyVaultUri":          llx.StringData(cmkKeyVaultUri),
+					"cmkKeyVersion":           llx.StringData(cmkKeyVersion),
+					"cmkUserAssignedIdentity": llx.StringData(cmkUserAssignedIdentity),
+					"created":                 created,
 				})
 			if err != nil {
 				return nil, err

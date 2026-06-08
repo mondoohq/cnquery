@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry/v3"
@@ -838,6 +839,7 @@ func createTokenResource(runtime *plugin.Runtime, tk *armcontainerregistry.Token
 	var status, provisioningState, resType, scopeMapID string
 	var creationDate *llx.RawData
 	var certificates []any
+	var passwords []any
 
 	if tk.Properties != nil {
 		if tk.Properties.Status != nil {
@@ -863,6 +865,23 @@ func createTokenResource(runtime *plugin.Runtime, tk *armcontainerregistry.Token
 				}
 				certificates = append(certificates, certDict)
 			}
+			for _, pw := range tk.Properties.Credentials.Passwords {
+				if pw == nil {
+					continue
+				}
+				// Deliberately exclude the secret Value field; only expose metadata.
+				pwData := map[string]any{}
+				if pw.Name != nil {
+					pwData["name"] = string(*pw.Name)
+				}
+				if pw.CreationTime != nil {
+					pwData["creationTime"] = pw.CreationTime.Format(time.RFC3339)
+				}
+				if pw.Expiry != nil {
+					pwData["expiry"] = pw.Expiry.Format(time.RFC3339)
+				}
+				passwords = append(passwords, pwData)
+			}
 		}
 	}
 	if creationDate == nil {
@@ -881,6 +900,7 @@ func createTokenResource(runtime *plugin.Runtime, tk *armcontainerregistry.Token
 			"creationDate":      creationDate,
 			"provisioningState": llx.StringData(provisioningState),
 			"certificates":      llx.ArrayData(certificates, types.Dict),
+			"passwords":         llx.ArrayData(passwords, types.Dict),
 		})
 	if err != nil {
 		return nil, err

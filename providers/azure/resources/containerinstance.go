@@ -338,12 +338,40 @@ func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.C
 			readiness = d
 		}
 		secCtx := map[string]any{}
-		if c.Properties.SecurityContext != nil {
-			d, err := convert.JsonToDict(c.Properties.SecurityContext)
+		var privileged, allowPrivilegeEscalation *bool
+		var runAsUser, runAsGroup *int64
+		var seccompProfile *string
+		addedCapabilities := []any{}
+		droppedCapabilities := []any{}
+		if sc := c.Properties.SecurityContext; sc != nil {
+			d, err := convert.JsonToDict(sc)
 			if err != nil {
 				return nil, err
 			}
 			secCtx = d
+			privileged = sc.Privileged
+			allowPrivilegeEscalation = sc.AllowPrivilegeEscalation
+			seccompProfile = sc.SeccompProfile
+			if sc.RunAsUser != nil {
+				v := int64(*sc.RunAsUser)
+				runAsUser = &v
+			}
+			if sc.RunAsGroup != nil {
+				v := int64(*sc.RunAsGroup)
+				runAsGroup = &v
+			}
+			if sc.Capabilities != nil {
+				for _, capName := range sc.Capabilities.Add {
+					if capName != nil {
+						addedCapabilities = append(addedCapabilities, *capName)
+					}
+				}
+				for _, capName := range sc.Capabilities.Drop {
+					if capName != nil {
+						droppedCapabilities = append(droppedCapabilities, *capName)
+					}
+				}
+			}
 		}
 		currentState := map[string]any{}
 		var restartCount *int32
@@ -360,23 +388,30 @@ func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.C
 
 		mqlContainer, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup.container",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(parentId + "/" + segment + "/" + name),
-				"name":            llx.StringData(name),
-				"image":           llx.StringData(image),
-				"imagePinned":     llx.BoolData(imagePinnedByDigest(c.Properties.Image)),
-				"command":         llx.ArrayData(command, types.String),
-				"env":             llx.ArrayData(env, types.Dict),
-				"cpuCores":        llx.FloatData(convert.ToValue(cpu)),
-				"memoryGB":        llx.FloatData(convert.ToValue(memoryGB)),
-				"gpuCount":        llx.IntDataDefault(gpuCount, 0),
-				"gpuSku":          llx.StringData(gpuSku),
-				"ports":           llx.ArrayData(ports, types.Dict),
-				"volumeMounts":    llx.ArrayData(mounts, types.Dict),
-				"livenessProbe":   llx.DictData(liveness),
-				"readinessProbe":  llx.DictData(readiness),
-				"securityContext": llx.DictData(secCtx),
-				"currentState":    llx.DictData(currentState),
-				"restartCount":    llx.IntDataDefault(restartCount, 0),
+				"id":                       llx.StringData(parentId + "/" + segment + "/" + name),
+				"name":                     llx.StringData(name),
+				"image":                    llx.StringData(image),
+				"imagePinned":              llx.BoolData(imagePinnedByDigest(c.Properties.Image)),
+				"command":                  llx.ArrayData(command, types.String),
+				"env":                      llx.ArrayData(env, types.Dict),
+				"cpuCores":                 llx.FloatData(convert.ToValue(cpu)),
+				"memoryGB":                 llx.FloatData(convert.ToValue(memoryGB)),
+				"gpuCount":                 llx.IntDataDefault(gpuCount, 0),
+				"gpuSku":                   llx.StringData(gpuSku),
+				"ports":                    llx.ArrayData(ports, types.Dict),
+				"volumeMounts":             llx.ArrayData(mounts, types.Dict),
+				"livenessProbe":            llx.DictData(liveness),
+				"readinessProbe":           llx.DictData(readiness),
+				"securityContext":          llx.DictData(secCtx),
+				"privileged":               llx.BoolDataPtr(privileged),
+				"allowPrivilegeEscalation": llx.BoolDataPtr(allowPrivilegeEscalation),
+				"runAsUser":                llx.IntDataPtr(runAsUser),
+				"runAsGroup":               llx.IntDataPtr(runAsGroup),
+				"seccompProfile":           llx.StringDataPtr(seccompProfile),
+				"addedCapabilities":        llx.ArrayData(addedCapabilities, types.String),
+				"droppedCapabilities":      llx.ArrayData(droppedCapabilities, types.String),
+				"currentState":             llx.DictData(currentState),
+				"restartCount":             llx.IntDataDefault(restartCount, 0),
 			})
 		if err != nil {
 			return nil, err

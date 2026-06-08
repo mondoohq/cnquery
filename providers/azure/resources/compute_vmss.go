@@ -188,13 +188,27 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		}
 		args["skuProfile"] = llx.DictData(skuProfile)
 		var securityPosture map[string]any
+		var encryptionAtHost, secureBootEnabled, vtpmEnabled *bool
+		var securityType *string
 		if props.VirtualMachineProfile != nil {
 			securityPosture, err = convert.JsonToDict(props.VirtualMachineProfile.SecurityPostureReference)
 			if err != nil {
 				return nil, err
 			}
+			if sp := props.VirtualMachineProfile.SecurityProfile; sp != nil {
+				encryptionAtHost = sp.EncryptionAtHost
+				securityType = (*string)(sp.SecurityType)
+				if sp.UefiSettings != nil {
+					secureBootEnabled = sp.UefiSettings.SecureBootEnabled
+					vtpmEnabled = sp.UefiSettings.VTpmEnabled
+				}
+			}
 		}
 		args["securityPostureReference"] = llx.DictData(securityPosture)
+		args["encryptionAtHost"] = llx.BoolDataPtr(encryptionAtHost)
+		args["securityType"] = llx.StringDataPtr(securityType)
+		args["secureBootEnabled"] = llx.BoolDataPtr(secureBootEnabled)
+		args["vtpmEnabled"] = llx.BoolDataPtr(vtpmEnabled)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.vmScaleSet", args)

@@ -98,6 +98,7 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	var cmkKeySource, cmkKeyName, cmkKeyVaultUri string
 	var endpoint, provisioningState string
 	var disableLocalAuth, restrictOutboundNetworkAccess, storedCompletionsDisabled bool
+	var networkAclsDefaultAction, networkAclsBypass string
 	networkAcls := llx.NilData
 
 	if p := account.Properties; p != nil {
@@ -119,6 +120,12 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 				return nil, err
 			}
 			networkAcls = llx.DictData(d)
+			if p.NetworkACLs.DefaultAction != nil {
+				networkAclsDefaultAction = string(*p.NetworkACLs.DefaultAction)
+			}
+			if p.NetworkACLs.Bypass != nil {
+				networkAclsBypass = string(*p.NetworkACLs.Bypass)
+			}
 		}
 		if enc := p.Encryption; enc != nil {
 			if enc.KeySource != nil {
@@ -157,6 +164,8 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"restrictOutboundNetworkAccess": llx.BoolData(restrictOutboundNetworkAccess),
 		"customSubDomainName":           llx.StringData(customSubDomainName),
 		"networkAcls":                   networkAcls,
+		"networkAclsDefaultAction":      llx.StringData(networkAclsDefaultAction),
+		"networkAclsBypass":             llx.StringData(networkAclsBypass),
 		"cmkKeySource":                  llx.StringData(cmkKeySource),
 		"cmkKeyName":                    llx.StringData(cmkKeyName),
 		"cmkKeyVaultUri":                llx.StringData(cmkKeyVaultUri),

@@ -407,6 +407,35 @@ type diagnosticSettingsResource struct {
 	Properties map[string]any `json:"properties"`
 }
 
+// diagnosticCategorySettings normalizes a diagnostic-setting logs/metrics array
+// (each entry is a {category|categoryGroup, enabled, retentionPolicy} object)
+// into the raw dict slice plus the list of categories that are enabled.
+func diagnosticCategorySettings(raw any) ([]any, []any) {
+	entries := []any{}
+	enabled := []any{}
+	list, ok := raw.([]any)
+	if !ok {
+		return entries, enabled
+	}
+	for _, item := range list {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		entries = append(entries, m)
+		isEnabled, _ := m["enabled"].(bool)
+		if !isEnabled {
+			continue
+		}
+		if category, ok := m["category"].(string); ok && category != "" {
+			enabled = append(enabled, category)
+		} else if group, ok := m["categoryGroup"].(string); ok && group != "" {
+			enabled = append(enabled, group)
+		}
+	}
+	return entries, enabled
+}
+
 func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
 	ctx := context.Background()
 	client, err := arm.NewClient("azure.subscription.monitorService.diagnosticSettings", "v1.0.0", conn.Token(), &arm.ClientOptions{
@@ -460,13 +489,34 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 			storageAccountId = &v
 		}
 
+		strProp := func(key string) string {
+			if v, ok := properties[key].(string); ok {
+				return v
+			}
+			return ""
+		}
+
+		// logs / metrics are arrays of per-category settings. Surface the raw
+		// entries as dicts and also derive the set of enabled categories, which
+		// is what most logging-coverage audits actually check.
+		logs, enabledLogCategories := diagnosticCategorySettings(properties["logs"])
+		metrics, enabledMetricCategories := diagnosticCategorySettings(properties["metrics"])
+
 		mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
 			map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(entry.ID),
-				"name":             llx.StringDataPtr(entry.Name),
-				"type":             llx.StringDataPtr(entry.Type),
-				"properties":       llx.DictData(properties),
-				"storageAccountId": llx.StringDataPtr(storageAccountId),
+				"id":                          llx.StringDataPtr(entry.ID),
+				"name":                        llx.StringDataPtr(entry.Name),
+				"type":                        llx.StringDataPtr(entry.Type),
+				"properties":                  llx.DictData(properties),
+				"storageAccountId":            llx.StringDataPtr(storageAccountId),
+				"workspaceId":                 llx.StringData(strProp("workspaceId")),
+				"eventHubName":                llx.StringData(strProp("eventHubName")),
+				"eventHubAuthorizationRuleId": llx.StringData(strProp("eventHubAuthorizationRuleId")),
+				"logAnalyticsDestinationType": llx.StringData(strProp("logAnalyticsDestinationType")),
+				"enabledLogCategories":        llx.ArrayData(enabledLogCategories, types.String),
+				"enabledMetricCategories":     llx.ArrayData(enabledMetricCategories, types.String),
+				"logs":                        llx.ArrayData(logs, types.Dict),
+				"metrics":                     llx.ArrayData(metrics, types.Dict),
 			})
 		if err != nil {
 			return nil, err
