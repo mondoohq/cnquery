@@ -18838,7 +18838,7 @@ private aws.workspaces.ipGroup @defaults("groupId groupName region") {
 }
 
 // Amazon WorkSpaces Web user access logging setting
-private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingSettingsArn kinesisStreamArn region") {
+private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingSettingsArn region") {
   // Settings ARN
   userAccessLoggingSettingsArn string
   // Kinesis data stream for logging
