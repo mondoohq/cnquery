@@ -1138,6 +1138,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"iap": {
 		// IAP brands are accessed via project settings, not a dedicated brands permission
 		"ListBrands": "iap.projects.getSettings",
+		// GetIamPolicy is called on the project-wide iap_web resource; the real
+		// permission is iap.web.getIamPolicy, not the auto-derived "iap.iamPolicy.get".
+		"GetIamPolicy": "iap.web.getIamPolicy",
 	},
 	"monitoring": {
 		// SLOs use the short permission name, not the full resource name

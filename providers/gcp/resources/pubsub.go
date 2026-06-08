@@ -569,6 +569,20 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		}
 	}
 
+	var bigqueryConfigDict, cloudStorageConfigDict map[string]any
+	if bq := cfg.GetBigqueryConfig(); bq != nil {
+		bigqueryConfigDict, err = protoToDict(bq)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if cs := cfg.GetCloudStorageConfig(); cs != nil {
+		cloudStorageConfigDict, err = protoToDict(cs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config", map[string]*llx.RawData{
 		"projectId":                     llx.StringData(projectId),
 		"subscriptionName":              llx.StringData(name),
@@ -587,6 +601,8 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"topicMessageRetentionDuration": llx.TimeData(pbDurationToTime(cfg.TopicMessageRetentionDuration)),
 		"deadLetterPolicy":              llx.DictData(deadLetterDict),
 		"retryPolicy":                   llx.DictData(retryDict),
+		"bigqueryConfig":                llx.DictData(bigqueryConfigDict),
+		"cloudStorageConfig":            llx.DictData(cloudStorageConfigDict),
 	})
 	if err != nil {
 		return nil, err

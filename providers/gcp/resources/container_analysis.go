@@ -77,6 +77,93 @@ func (g *mqlGcpProjectContainerAnalysisServiceOccurrence) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectContainerAnalysisServiceNote) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectContainerAnalysisService) notes() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(containeranalysis.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := containeranalysis.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	grafeasClient := client.GetGrafeasClient()
+
+	it := grafeasClient.ListNotes(ctx, &grafeaspb.ListNotesRequest{
+		Parent:   fmt.Sprintf("projects/%s", projectId),
+		PageSize: 1000,
+	})
+
+	var res []any
+	for {
+		note, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Container Analysis notes")
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		attestationAuthority, err := protoToDict(note.GetAttestation())
+		if err != nil {
+			return nil, err
+		}
+		vulnerability, err := protoToDict(note.GetVulnerability())
+		if err != nil {
+			return nil, err
+		}
+		build, err := protoToDict(note.GetBuild())
+		if err != nil {
+			return nil, err
+		}
+
+		relatedNoteNames := make([]any, len(note.RelatedNoteNames))
+		for i, n := range note.RelatedNoteNames {
+			relatedNoteNames[i] = n
+		}
+
+		mqlNote, err := CreateResource(g.MqlRuntime, "gcp.project.containerAnalysisService.note", map[string]*llx.RawData{
+			"name":                 llx.StringData(note.Name),
+			"shortDescription":     llx.StringData(note.ShortDescription),
+			"longDescription":      llx.StringData(note.LongDescription),
+			"kind":                 llx.StringData(note.Kind.String()),
+			"attestationAuthority": llx.DictData(attestationAuthority),
+			"vulnerability":        llx.DictData(vulnerability),
+			"build":                llx.DictData(build),
+			"relatedNoteNames":     llx.ArrayData(relatedNoteNames, types.String),
+			"created":              llx.TimeDataPtr(timestampAsTimePtr(note.CreateTime)),
+			"updated":              llx.TimeDataPtr(timestampAsTimePtr(note.UpdateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlNote)
+	}
+
+	return res, nil
+}
+
 func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 	if !g.serviceEnabled {
 		return nil, nil

@@ -222,6 +222,7 @@ var validatedGCPPermissions = []string{
 	"iam.workloadIdentityPools.list",
 	"iap.projects.getSettings",
 	"iap.tunnelDestGroups.list",
+	"iap.web.getIamPolicy",
 	"ids.endpoints.list",
 	"logging.buckets.list",
 	"logging.exclusions.list",

@@ -420,6 +420,7 @@ const (
 	ResourceGcpProjectGkeBackupServiceRestorePlan                                      string = "gcp.project.gkeBackupService.restorePlan"
 	ResourceGcpProjectContainerAnalysisService                                         string = "gcp.project.containerAnalysisService"
 	ResourceGcpProjectContainerAnalysisServiceOccurrence                               string = "gcp.project.containerAnalysisService.occurrence"
+	ResourceGcpProjectContainerAnalysisServiceNote                                     string = "gcp.project.containerAnalysisService.note"
 	ResourceGcpProjectCloudBuildService                                                string = "gcp.project.cloudBuildService"
 	ResourceGcpProjectCloudBuildServiceTrigger                                         string = "gcp.project.cloudBuildService.trigger"
 	ResourceGcpProjectCloudBuildServiceTriggerGithubEventsConfig                       string = "gcp.project.cloudBuildService.trigger.githubEventsConfig"
@@ -2077,6 +2078,10 @@ func init() {
 		"gcp.project.containerAnalysisService.occurrence": {
 			// to override args, implement: initGcpProjectContainerAnalysisServiceOccurrence(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectContainerAnalysisServiceOccurrence,
+		},
+		"gcp.project.containerAnalysisService.note": {
+			// to override args, implement: initGcpProjectContainerAnalysisServiceNote(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectContainerAnalysisServiceNote,
 		},
 		"gcp.project.cloudBuildService": {
 			// to override args, implement: initGcpProjectCloudBuildService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5689,6 +5694,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.table.dlpDataProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceTable).GetDlpDataProfile()).ToDataRes(types.Resource("gcp.project.dlpService.tableDataProfile"))
 	},
+	"gcp.project.bigqueryService.table.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceTable).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.bigqueryService.table.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceTable).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.bigqueryService.model.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceModel).GetId()).ToDataRes(types.String)
 	},
@@ -6937,6 +6948,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.subscription.config.retryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetRetryPolicy()).ToDataRes(types.Dict)
 	},
+	"gcp.project.pubsubService.subscription.config.bigqueryConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetBigqueryConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.pubsubService.subscription.config.cloudStorageConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetCloudStorageConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.configId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetConfigId()).ToDataRes(types.String)
 	},
@@ -7419,6 +7436,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.loggingservice.metric.filtersFirewallChanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersFirewallChanges()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.metric.filtersSqlInstanceChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersSqlInstanceChanges()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.metric.filtersStorageIamChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersStorageIamChanges()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.metric.filtersProjectOwnershipChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersProjectOwnershipChanges()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.metric.filtersCustomRoleChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersCustomRoleChanges()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.metric.filtersVpcNetworkChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceMetric).GetFiltersVpcNetworkChanges()).ToDataRes(types.Bool)
 	},
 	"gcp.project.loggingservice.metric.alertPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceMetric).GetAlertPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.monitoringService.alertPolicy")))
@@ -10921,6 +10953,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.orgPolicy.dryRunOnly": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicy).GetDryRunOnly()).ToDataRes(types.Bool)
 	},
+	"gcp.orgPolicy.enforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetEnforced()).ToDataRes(types.Bool)
+	},
+	"gcp.orgPolicy.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetAllowedValues()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.orgPolicy.deniedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetDeniedValues()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.orgPolicy.allowAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetAllowAll()).ToDataRes(types.Bool)
+	},
+	"gcp.orgPolicy.denyAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetDenyAll()).ToDataRes(types.Bool)
+	},
+	"gcp.orgPolicy.inheritFromParent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetInheritFromParent()).ToDataRes(types.Bool)
+	},
 	"gcp.orgPolicy.constraint.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicyConstraint).GetName()).ToDataRes(types.String)
 	},
@@ -12846,6 +12896,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.artifactRegistryService.repository.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.artifactRegistryService.repository.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetPublic()).ToDataRes(types.Bool)
 	},
 	"gcp.project.artifactRegistryService.repository.vulnScanConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetId()).ToDataRes(types.String)
@@ -15439,6 +15492,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.containerAnalysisService.occurrences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisService).GetOccurrences()).ToDataRes(types.Array(types.Resource("gcp.project.containerAnalysisService.occurrence")))
 	},
+	"gcp.project.containerAnalysisService.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisService).GetNotes()).ToDataRes(types.Array(types.Resource("gcp.project.containerAnalysisService.note")))
+	},
 	"gcp.project.containerAnalysisService.occurrence.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetName()).ToDataRes(types.String)
 	},
@@ -15501,6 +15557,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.containerAnalysisService.occurrence.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.containerAnalysisService.note.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.note.shortDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetShortDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.note.longDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetLongDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.note.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetKind()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.note.attestationAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetAttestationAuthority()).ToDataRes(types.Dict)
+	},
+	"gcp.project.containerAnalysisService.note.vulnerability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetVulnerability()).ToDataRes(types.Dict)
+	},
+	"gcp.project.containerAnalysisService.note.build": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetBuild()).ToDataRes(types.Dict)
+	},
+	"gcp.project.containerAnalysisService.note.relatedNoteNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetRelatedNoteNames()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.containerAnalysisService.note.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.containerAnalysisService.note.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceNote).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.project.cloudBuildService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildService).GetProjectId()).ToDataRes(types.String)
@@ -15678,6 +15764,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iapService.tunnelDestGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIapService).GetTunnelDestGroups()).ToDataRes(types.Array(types.Resource("gcp.project.iapService.tunnelDestGroup")))
+	},
+	"gcp.project.iapService.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapService).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.iapService.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapService).GetPublic()).ToDataRes(types.Bool)
 	},
 	"gcp.project.iapService.brand.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIapServiceBrand).GetProjectId()).ToDataRes(types.String)
@@ -21184,6 +21276,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryServiceTable).DlpDataProfile, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceTableDataProfile](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigqueryService.table.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceTable).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.table.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceTable).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigqueryService.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceModel).__id, ok = v.Value.(string)
 		return
@@ -23028,6 +23128,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).RetryPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.subscription.config.bigqueryConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).BigqueryConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.config.cloudStorageConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).CloudStorageConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).__id, ok = v.Value.(string)
 		return
@@ -23754,6 +23862,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.metric.filtersFirewallChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceMetric).FiltersFirewallChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.metric.filtersSqlInstanceChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).FiltersSqlInstanceChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.metric.filtersStorageIamChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).FiltersStorageIamChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.metric.filtersProjectOwnershipChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).FiltersProjectOwnershipChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.metric.filtersCustomRoleChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).FiltersCustomRoleChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.metric.filtersVpcNetworkChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceMetric).FiltersVpcNetworkChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.metric.alertPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28852,6 +28980,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrgPolicy).DryRunOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.orgPolicy.enforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).Enforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).AllowedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.deniedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).DeniedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.allowAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).AllowAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.denyAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).DenyAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.inheritFromParent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).InheritFromParent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.orgPolicy.constraint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrgPolicyConstraint).__id, ok = v.Value.(string)
 		return
@@ -31670,6 +31822,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.artifactRegistryService.repository.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectArtifactRegistryServiceRepository).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.artifactRegistryService.repository.vulnScanConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35488,6 +35644,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectContainerAnalysisService).Occurrences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.containerAnalysisService.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisService).Notes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.containerAnalysisService.occurrence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).__id, ok = v.Value.(string)
 		return
@@ -35574,6 +35734,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.containerAnalysisService.occurrence.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.shortDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).ShortDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.longDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).LongDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.attestationAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).AttestationAuthority, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.vulnerability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Vulnerability, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.build": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Build, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.relatedNoteNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).RelatedNoteNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.note.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceNote).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudBuildService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35850,6 +36054,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iapService.tunnelDestGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIapService).TunnelDestGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iapService.brand.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48172,6 +48384,8 @@ type mqlGcpProjectBigqueryServiceTable struct {
 	TimePartitioning       plugin.TValue[any]
 	Schema                 plugin.TValue[[]any]
 	DlpDataProfile         plugin.TValue[*mqlGcpProjectDlpServiceTableDataProfile]
+	IamPolicy              plugin.TValue[[]any]
+	Public                 plugin.TValue[bool]
 }
 
 // createGcpProjectBigqueryServiceTable creates a new instance of this resource
@@ -48340,6 +48554,28 @@ func (c *mqlGcpProjectBigqueryServiceTable) GetDlpDataProfile() *plugin.TValue[*
 		}
 
 		return c.dlpDataProfile()
+	})
+}
+
+func (c *mqlGcpProjectBigqueryServiceTable) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService.table", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectBigqueryServiceTable) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -52616,6 +52852,8 @@ type mqlGcpProjectPubsubServiceSubscriptionConfig struct {
 	TopicMessageRetentionDuration plugin.TValue[*time.Time]
 	DeadLetterPolicy              plugin.TValue[any]
 	RetryPolicy                   plugin.TValue[any]
+	BigqueryConfig                plugin.TValue[any]
+	CloudStorageConfig            plugin.TValue[any]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfig creates a new instance of this resource
@@ -52721,6 +52959,14 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetDeadLetterPolicy() *pl
 
 func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetRetryPolicy() *plugin.TValue[any] {
 	return &c.RetryPolicy
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetBigqueryConfig() *plugin.TValue[any] {
+	return &c.BigqueryConfig
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetCloudStorageConfig() *plugin.TValue[any] {
+	return &c.CloudStorageConfig
 }
 
 // mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig for the gcp.project.pubsubService.subscription.config.pushconfig resource
@@ -54555,15 +54801,20 @@ type mqlGcpProjectLoggingserviceMetric struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectLoggingserviceMetricInternal it will be used here
-	Id                        plugin.TValue[string]
-	ProjectId                 plugin.TValue[string]
-	Description               plugin.TValue[string]
-	Filter                    plugin.TValue[string]
-	FiltersIamChanges         plugin.TValue[bool]
-	FiltersAuditConfigChanges plugin.TValue[bool]
-	FiltersRouteChanges       plugin.TValue[bool]
-	FiltersFirewallChanges    plugin.TValue[bool]
-	AlertPolicies             plugin.TValue[[]any]
+	Id                             plugin.TValue[string]
+	ProjectId                      plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	Filter                         plugin.TValue[string]
+	FiltersIamChanges              plugin.TValue[bool]
+	FiltersAuditConfigChanges      plugin.TValue[bool]
+	FiltersRouteChanges            plugin.TValue[bool]
+	FiltersFirewallChanges         plugin.TValue[bool]
+	FiltersSqlInstanceChanges      plugin.TValue[bool]
+	FiltersStorageIamChanges       plugin.TValue[bool]
+	FiltersProjectOwnershipChanges plugin.TValue[bool]
+	FiltersCustomRoleChanges       plugin.TValue[bool]
+	FiltersVpcNetworkChanges       plugin.TValue[bool]
+	AlertPolicies                  plugin.TValue[[]any]
 }
 
 // createGcpProjectLoggingserviceMetric creates a new instance of this resource
@@ -54640,6 +54891,36 @@ func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersRouteChanges() *plugin.TVa
 func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersFirewallChanges() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.FiltersFirewallChanges, func() (bool, error) {
 		return c.filtersFirewallChanges()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersSqlInstanceChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FiltersSqlInstanceChanges, func() (bool, error) {
+		return c.filtersSqlInstanceChanges()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersStorageIamChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FiltersStorageIamChanges, func() (bool, error) {
+		return c.filtersStorageIamChanges()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersProjectOwnershipChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FiltersProjectOwnershipChanges, func() (bool, error) {
+		return c.filtersProjectOwnershipChanges()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersCustomRoleChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FiltersCustomRoleChanges, func() (bool, error) {
+		return c.filtersCustomRoleChanges()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceMetric) GetFiltersVpcNetworkChanges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FiltersVpcNetworkChanges, func() (bool, error) {
+		return c.filtersVpcNetworkChanges()
 	})
 }
 
@@ -66273,14 +66554,20 @@ type mqlGcpOrgPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpOrgPolicyInternal it will be used here
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	ConstraintName plugin.TValue[string]
-	Spec           plugin.TValue[any]
-	DryRunSpec     plugin.TValue[any]
-	Etag           plugin.TValue[string]
-	UpdatedAt      plugin.TValue[*time.Time]
-	DryRunOnly     plugin.TValue[bool]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	ConstraintName    plugin.TValue[string]
+	Spec              plugin.TValue[any]
+	DryRunSpec        plugin.TValue[any]
+	Etag              plugin.TValue[string]
+	UpdatedAt         plugin.TValue[*time.Time]
+	DryRunOnly        plugin.TValue[bool]
+	Enforced          plugin.TValue[bool]
+	AllowedValues     plugin.TValue[[]any]
+	DeniedValues      plugin.TValue[[]any]
+	AllowAll          plugin.TValue[bool]
+	DenyAll           plugin.TValue[bool]
+	InheritFromParent plugin.TValue[bool]
 }
 
 // createGcpOrgPolicy creates a new instance of this resource
@@ -66352,6 +66639,30 @@ func (c *mqlGcpOrgPolicy) GetDryRunOnly() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DryRunOnly, func() (bool, error) {
 		return c.dryRunOnly()
 	})
+}
+
+func (c *mqlGcpOrgPolicy) GetEnforced() *plugin.TValue[bool] {
+	return &c.Enforced
+}
+
+func (c *mqlGcpOrgPolicy) GetAllowedValues() *plugin.TValue[[]any] {
+	return &c.AllowedValues
+}
+
+func (c *mqlGcpOrgPolicy) GetDeniedValues() *plugin.TValue[[]any] {
+	return &c.DeniedValues
+}
+
+func (c *mqlGcpOrgPolicy) GetAllowAll() *plugin.TValue[bool] {
+	return &c.AllowAll
+}
+
+func (c *mqlGcpOrgPolicy) GetDenyAll() *plugin.TValue[bool] {
+	return &c.DenyAll
+}
+
+func (c *mqlGcpOrgPolicy) GetInheritFromParent() *plugin.TValue[bool] {
+	return &c.InheritFromParent
 }
 
 // mqlGcpOrgPolicyConstraint for the gcp.orgPolicy.constraint resource
@@ -72876,6 +73187,7 @@ type mqlGcpProjectArtifactRegistryServiceRepository struct {
 	FormatConfig                plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryFormatConfig]
 	ModeConfig                  plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig]
 	IamPolicy                   plugin.TValue[[]any]
+	Public                      plugin.TValue[bool]
 }
 
 // createGcpProjectArtifactRegistryServiceRepository creates a new instance of this resource
@@ -73024,6 +73336,12 @@ func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetIamPolicy() *plugin.
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -82515,6 +82833,7 @@ type mqlGcpProjectContainerAnalysisService struct {
 	mqlGcpProjectContainerAnalysisServiceInternal
 	ProjectId   plugin.TValue[string]
 	Occurrences plugin.TValue[[]any]
+	Notes       plugin.TValue[[]any]
 }
 
 // createGcpProjectContainerAnalysisService creates a new instance of this resource
@@ -82571,6 +82890,22 @@ func (c *mqlGcpProjectContainerAnalysisService) GetOccurrences() *plugin.TValue[
 		}
 
 		return c.occurrences()
+	})
+}
+
+func (c *mqlGcpProjectContainerAnalysisService) GetNotes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Notes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.containerAnalysisService", c.__id, "notes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.notes()
 	})
 }
 
@@ -82720,6 +83055,100 @@ func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetCreated() *plugin.T
 }
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectContainerAnalysisServiceNote for the gcp.project.containerAnalysisService.note resource
+type mqlGcpProjectContainerAnalysisServiceNote struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectContainerAnalysisServiceNoteInternal it will be used here
+	Name                 plugin.TValue[string]
+	ShortDescription     plugin.TValue[string]
+	LongDescription      plugin.TValue[string]
+	Kind                 plugin.TValue[string]
+	AttestationAuthority plugin.TValue[any]
+	Vulnerability        plugin.TValue[any]
+	Build                plugin.TValue[any]
+	RelatedNoteNames     plugin.TValue[[]any]
+	Created              plugin.TValue[*time.Time]
+	Updated              plugin.TValue[*time.Time]
+}
+
+// createGcpProjectContainerAnalysisServiceNote creates a new instance of this resource
+func createGcpProjectContainerAnalysisServiceNote(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectContainerAnalysisServiceNote{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.containerAnalysisService.note", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) MqlName() string {
+	return "gcp.project.containerAnalysisService.note"
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetShortDescription() *plugin.TValue[string] {
+	return &c.ShortDescription
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetLongDescription() *plugin.TValue[string] {
+	return &c.LongDescription
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetAttestationAuthority() *plugin.TValue[any] {
+	return &c.AttestationAuthority
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetVulnerability() *plugin.TValue[any] {
+	return &c.Vulnerability
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetBuild() *plugin.TValue[any] {
+	return &c.Build
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetRelatedNoteNames() *plugin.TValue[[]any] {
+	return &c.RelatedNoteNames
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceNote) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
 }
 
@@ -83467,6 +83896,8 @@ type mqlGcpProjectIapService struct {
 	ProjectId        plugin.TValue[string]
 	Brands           plugin.TValue[[]any]
 	TunnelDestGroups plugin.TValue[[]any]
+	IamPolicy        plugin.TValue[[]any]
+	Public           plugin.TValue[bool]
 }
 
 // createGcpProjectIapService creates a new instance of this resource
@@ -83539,6 +83970,28 @@ func (c *mqlGcpProjectIapService) GetTunnelDestGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.tunnelDestGroups()
+	})
+}
+
+func (c *mqlGcpProjectIapService) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iapService", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectIapService) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 

@@ -453,6 +453,45 @@ func (g *mqlGcpProjectLoggingserviceMetric) filtersFirewallChanges() (bool, erro
 	return strings.Contains(g.Filter.Data, "compute.firewalls."), nil
 }
 
+func (g *mqlGcpProjectLoggingserviceMetric) filtersSqlInstanceChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "cloudsql.instances."), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersStorageIamChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "storage.setIamPermissions"), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersProjectOwnershipChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "roles/owner"), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersCustomRoleChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	f := g.Filter.Data
+	return strings.Contains(f, "iam_role") ||
+		strings.Contains(f, "google.iam.admin.v1.CreateRole") ||
+		strings.Contains(f, "google.iam.admin.v1.DeleteRole") ||
+		strings.Contains(f, "google.iam.admin.v1.UpdateRole"), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersVpcNetworkChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "compute.networks."), nil
+}
+
 func (g *mqlGcpProjectLoggingserviceMetric) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

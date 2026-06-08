@@ -3253,6 +3253,10 @@ private gcp.project.bigqueryService.table @defaults("id") {
   schema []dict
   // Cloud DLP table data profile for this table — sensitivity score, risk level, and predicted infoTypes. Null when discovery has not profiled this table
   dlpDataProfile() gcp.project.dlpService.tableDataProfile
+  // IAM policy bindings that grant access to this table or view
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the table's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google BigQuery ML model
@@ -4633,6 +4637,24 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   deadLetterPolicy dict
   // Message retry backoff configuration (minimumBackoff, maximumBackoff)
   retryPolicy dict
+  // BigQuery delivery sink
+  //
+  // When the subscription writes messages directly to a BigQuery table this
+  // dict holds the destination `table`, the `useTopicSchema` /
+  // `useTableSchema` / `writeMetadata` / `dropUnknownFields` flags, and the
+  // delivery `state`. Null for subscriptions that do not deliver to BigQuery.
+  // A populated value is an egress path that moves topic data into a
+  // queryable store, so it widens the data's exposure surface.
+  bigqueryConfig dict
+  // Cloud Storage delivery sink
+  //
+  // When the subscription writes messages to a Cloud Storage bucket this
+  // dict holds the destination `bucket`, `filenamePrefix` / `filenameSuffix`,
+  // batching limits (`maxDuration`, `maxBytes`, `maxMessages`), the output
+  // format (text or Avro), and the delivery `state`. Null for subscriptions
+  // that do not deliver to Cloud Storage. A populated value persists topic
+  // data into object storage, so it widens the data's exposure surface.
+  cloudStorageConfig dict
 }
 
 // Google Cloud (GCP) Pub/Sub configuration for subscriptions that operate in push mode
@@ -5163,6 +5185,16 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   filtersRouteChanges() bool
   // Whether the filter matches compute firewall mutations (compute.firewalls.{insert,patch,delete})
   filtersFirewallChanges() bool
+  // Whether the filter matches Cloud SQL instance mutations (cloudsql.instances.{create,update,delete})
+  filtersSqlInstanceChanges() bool
+  // Whether the filter matches Cloud Storage IAM permission mutations (storage.setIamPermissions)
+  filtersStorageIamChanges() bool
+  // Whether the filter matches project ownership assignments or revocations (bindings on roles/owner)
+  filtersProjectOwnershipChanges() bool
+  // Whether the filter matches custom IAM role mutations (CreateRole, DeleteRole, UpdateRole on iam_role)
+  filtersCustomRoleChanges() bool
+  // Whether the filter matches VPC network mutations (compute.networks.{insert,patch,delete,removePeering,addPeering})
+  filtersVpcNetworkChanges() bool
   // Alert policies for this metric
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
@@ -8608,6 +8640,24 @@ private gcp.orgPolicy @defaults("constraintName") {
   updatedAt time
   // Whether the policy only has a dry-run spec and no enforced live spec, meaning it is evaluated for testing but does not actually enforce
   dryRunOnly() bool
+  // Whether a boolean constraint is enforced
+  //
+  // True when the live spec contains an unconditional rule with
+  // `enforce: true` — the form used by boolean constraints such as
+  // `iam.disableServiceAccountKeyCreation`, `compute.requireOsLogin`, and
+  // `storage.uniformBucketLevelAccess`. Reflects only the directly-set live
+  // spec on this resource, not policy inherited from a parent.
+  enforced bool
+  // Values explicitly allowed by the live spec's unconditional list-constraint rules
+  allowedValues []string
+  // Values explicitly denied by the live spec's unconditional list-constraint rules
+  deniedValues []string
+  // Whether the live spec allows all values for a list constraint via an unconditional allowAll rule
+  allowAll bool
+  // Whether the live spec denies all values for a list constraint via an unconditional denyAll rule
+  denyAll bool
+  // Whether the live spec inherits and merges policy from the parent resource
+  inheritFromParent bool
 }
 
 // Google Cloud (GCP) Organization policy constraint
@@ -10531,6 +10581,8 @@ private gcp.project.artifactRegistryService.repository @defaults("name format lo
   modeConfig gcp.project.artifactRegistryService.repository.modeConfig
   // IAM policy bindings for this repository
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the repository's IAM policy grants any role to allUsers or allAuthenticatedUsers, making its artifacts anonymously pullable
+  public() bool
 }
 
 // Google Cloud (GCP) Artifact Registry repository vulnerability scanning configuration
@@ -13198,6 +13250,8 @@ private gcp.project.containerAnalysisService {
   projectId string
   // Vulnerability occurrences
   occurrences() []gcp.project.containerAnalysisService.occurrence
+  // Notes — the metadata definitions (vulnerability, attestation authority, build provenance, ...) that occurrences reference
+  notes() []gcp.project.containerAnalysisService.note
 }
 
 // Google Cloud (GCP) Container Analysis occurrence
@@ -13252,6 +13306,39 @@ private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
   discovery dict
   // Attestation details (if kind is ATTESTATION)
   attestation dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Container Analysis note
+//
+// Examine a Container Analysis note — a metadata definition that
+// occurrences reference, identified by `name`. `kind` selects the note type
+// (VULNERABILITY, BUILD, IMAGE, PACKAGE, DEPLOYMENT, DISCOVERY, ATTESTATION,
+// UPGRADE, COMPLIANCE, SBOM_REFERENCE) and the matching detail field holds
+// the type-specific definition. For ATTESTATION notes `attestationAuthority`
+// holds the authority that underpins Binary Authorization trust, so notes
+// expose the supply-chain trust roots that the occurrence findings alone do
+// not.
+private gcp.project.containerAnalysisService.note @defaults("name kind") {
+  // Full resource name
+  name string
+  // One-sentence description of the note
+  shortDescription string
+  // Detailed description of the note
+  longDescription string
+  // Note kind (VULNERABILITY, BUILD, IMAGE, PACKAGE, DEPLOYMENT, DISCOVERY, ATTESTATION, UPGRADE, COMPLIANCE, SBOM_REFERENCE)
+  kind string
+  // Attestation authority definition (when kind is ATTESTATION)
+  attestationAuthority dict
+  // Vulnerability definition with severity and affected packages (when kind is VULNERABILITY)
+  vulnerability dict
+  // Build provenance definition (when kind is BUILD)
+  build dict
+  // Names of other notes related to this note
+  relatedNoteNames []string
   // Creation time
   created time
   // Last update time
@@ -13479,6 +13566,10 @@ private gcp.project.iapService {
   brands() []gcp.project.iapService.brand
   // List of IAP tunnel destination groups
   tunnelDestGroups() []gcp.project.iapService.tunnelDestGroup
+  // IAM policy bindings that govern who can reach IAP-protected web resources in this project
+  iamPolicy() []gcp.resourcemanager.binding
+  // Whether the IAP access policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) IAP OAuth brand

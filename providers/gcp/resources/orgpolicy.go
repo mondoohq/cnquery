@@ -35,6 +35,43 @@ func (g *mqlGcpOrgPolicy) dryRunOnly() (bool, error) {
 	return g.DryRunSpec.Data != nil && g.Spec.Data == nil, nil
 }
 
+// interpretPolicySpec decodes an org policy's live spec into the scalar
+// predicates exposed on gcp.orgPolicy. Only unconditional rules are
+// considered, since a rule gated by a condition does not represent the
+// policy's always-applied effect. The result reflects only this resource's
+// directly-set spec, not policy inherited from a parent.
+func interpretPolicySpec(spec *orgpolicypb.PolicySpec) (enforced, allowAll, denyAll, inheritFromParent bool, allowedValues, deniedValues []any) {
+	allowedValues = []any{}
+	deniedValues = []any{}
+	if spec == nil {
+		return
+	}
+	inheritFromParent = spec.GetInheritFromParent()
+	for _, rule := range spec.GetRules() {
+		if rule.GetCondition() != nil {
+			continue
+		}
+		if rule.GetEnforce() {
+			enforced = true
+		}
+		if rule.GetAllowAll() {
+			allowAll = true
+		}
+		if rule.GetDenyAll() {
+			denyAll = true
+		}
+		if vals := rule.GetValues(); vals != nil {
+			for _, v := range vals.GetAllowedValues() {
+				allowedValues = append(allowedValues, v)
+			}
+			for _, v := range vals.GetDeniedValues() {
+				deniedValues = append(deniedValues, v)
+			}
+		}
+	}
+	return
+}
+
 // listOrgPolicies fetches org policies for a given parent resource.
 // parentResourceName should be "organizations/{id}" or "projects/{id}".
 func listOrgPolicies(runtime *plugin.Runtime, conn *connection.GcpConnection, parentResourceName string) ([]any, error) {
@@ -82,14 +119,22 @@ func listOrgPolicies(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			updatedAt = llx.NilData
 		}
 
+		enforced, allowAll, denyAll, inheritFromParent, allowedValues, deniedValues := interpretPolicySpec(policy.Spec)
+
 		mqlPolicy, err := CreateResource(runtime, "gcp.orgPolicy", map[string]*llx.RawData{
-			"id":             llx.StringData(policy.Name),
-			"name":           llx.StringData(policy.Name),
-			"constraintName": llx.StringData(constraintName),
-			"spec":           llx.DictData(spec),
-			"dryRunSpec":     llx.DictData(dryRunSpec),
-			"etag":           llx.StringData(policy.Etag),
-			"updatedAt":      updatedAt,
+			"id":                llx.StringData(policy.Name),
+			"name":              llx.StringData(policy.Name),
+			"constraintName":    llx.StringData(constraintName),
+			"spec":              llx.DictData(spec),
+			"dryRunSpec":        llx.DictData(dryRunSpec),
+			"etag":              llx.StringData(policy.Etag),
+			"updatedAt":         updatedAt,
+			"enforced":          llx.BoolData(enforced),
+			"allowedValues":     llx.ArrayData(allowedValues, types.String),
+			"deniedValues":      llx.ArrayData(deniedValues, types.String),
+			"allowAll":          llx.BoolData(allowAll),
+			"denyAll":           llx.BoolData(denyAll),
+			"inheritFromParent": llx.BoolData(inheritFromParent),
 		})
 		if err != nil {
 			return nil, err

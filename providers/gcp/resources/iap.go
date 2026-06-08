@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
 	iap "cloud.google.com/go/iap/apiv1"
 	"cloud.google.com/go/iap/apiv1/iappb"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
@@ -34,6 +36,60 @@ func (g *mqlGcpProjectIapService) id() (string, error) {
 		return "", g.ProjectId.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/iapService", g.ProjectId.Data), nil
+}
+
+// iamPolicy returns the IAM bindings on the project-wide IAP web resource,
+// which governs who is allowed to pass through Identity-Aware Proxy to the
+// project's IAP-secured web resources.
+func (g *mqlGcpProjectIapService) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(iap.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	resource := fmt.Sprintf("projects/%s/iap_web", projectId)
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resource})
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(policy.Bindings))
+	for _, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":                   llx.StringData(resource + "/" + b.Role),
+			"role":                 llx.StringData(b.Role),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+			"conditionTitle":       llx.StringData(b.GetCondition().GetTitle()),
+			"conditionExpression":  llx.StringData(b.GetCondition().GetExpression()),
+			"conditionDescription": llx.StringData(b.GetCondition().GetDescription()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectIapService) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
 }
 
 func (g *mqlGcpProjectIapService) brands() ([]any, error) {

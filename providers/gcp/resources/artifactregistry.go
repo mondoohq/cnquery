@@ -281,6 +281,14 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) iamPolicy() ([]any, err
 	return res, nil
 }
 
+func (g *mqlGcpProjectArtifactRegistryServiceRepository) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 // Sub-resource id() methods
 
 func (g *mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig) id() (string, error) {

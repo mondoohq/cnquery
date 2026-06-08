@@ -257,6 +257,63 @@ func (g *mqlGcpProjectBigqueryServiceTable) kmsKey() (*mqlGcpProjectKmsServiceKe
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectBigqueryServiceTable) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.DatasetId.Error != nil {
+		return nil, g.DatasetId.Error
+	}
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.ProjectId.Data
+	datasetId := g.DatasetId.Data
+	tableId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	httpClient, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := bigquery.NewClient(ctx, projectId, option.WithHTTPClient(httpClient))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.DatasetInProject(projectId, datasetId).Table(tableId).IAM().Policy(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0)
+	for _, role := range policy.Roles() {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":                   llx.StringData(fmt.Sprintf("%s/%s/%s/%s", projectId, datasetId, tableId, role)),
+			"role":                 llx.StringData(string(role)),
+			"members":              llx.ArrayData(convert.SliceAnyToInterface(policy.Members(role)), types.String),
+			"conditionTitle":       llx.StringData(""),
+			"conditionExpression":  llx.StringData(""),
+			"conditionDescription": llx.StringData(""),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceTable) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 func (g *mqlGcpProjectBigqueryServiceDataset) getClient() (*bigquery.Client, error) {
 	g.clientOnce.Do(func() {
 		conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
