@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.16.1",
-  "generated_at": "2026-06-07T13:33:02-07:00",
+  "generated_at": "2026-06-07T21:00:33-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -20,6 +20,10 @@
     "Microsoft.Authorization/denyAssignments/read",
     "Microsoft.Authorization/roleAssignments/read",
     "Microsoft.Authorization/roleDefinitions/read",
+    "Microsoft.Automation/account/read",
+    "Microsoft.Automation/certificate/read",
+    "Microsoft.Automation/credential/read",
+    "Microsoft.Automation/variable/read",
     "Microsoft.Batch/batchAccounts/pools/read",
     "Microsoft.Batch/batchAccounts/read",
     "Microsoft.Cache/redis/firewallRules/read",
@@ -82,6 +86,7 @@
     "Microsoft.DataFactory/factories/managedvirtualnetworks/read",
     "Microsoft.DataFactory/factories/read",
     "Microsoft.Databricks/workspaces/read",
+    "Microsoft.DesktopVirtualization/hostPools/read",
     "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
@@ -101,6 +106,7 @@
     "Microsoft.Insights/logProfiles/read",
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
+    "Microsoft.Kusto/clusters/read",
     "Microsoft.Logic/workflows/read",
     "Microsoft.MachineLearningServices/workspaces/computes/read",
     "Microsoft.MachineLearningServices/workspaces/models/read",
@@ -173,6 +179,7 @@
     "Microsoft.ServiceBus/namespaces/read",
     "Microsoft.ServiceBus/namespaces/topics/read",
     "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
+    "Microsoft.Signalr/signalr/read",
     "Microsoft.Sql/managedInstances/databases/read",
     "Microsoft.Sql/managedInstances/read",
     "Microsoft.Sql/servers/administrators/read",
@@ -223,7 +230,8 @@
     "Microsoft.Web/hostingEnvironments/read",
     "Microsoft.Web/serverfarms/read",
     "Microsoft.Web/sites/read",
-    "Microsoft.Web/staticSites/read"
+    "Microsoft.Web/staticSites/read",
+    "Microsoft.Webpubsub/webpubsub/read"
   ],
   "details": [
     {
@@ -327,6 +335,30 @@
       "service": "Microsoft.Authorization",
       "action": "NewListPager",
       "source_file": "iam.go"
+    },
+    {
+      "permission": "Microsoft.Automation/account/read",
+      "service": "Microsoft.Automation",
+      "action": "NewListPager",
+      "source_file": "automation.go"
+    },
+    {
+      "permission": "Microsoft.Automation/certificate/read",
+      "service": "Microsoft.Automation",
+      "action": "NewListByAutomationAccountPager",
+      "source_file": "automation.go"
+    },
+    {
+      "permission": "Microsoft.Automation/credential/read",
+      "service": "Microsoft.Automation",
+      "action": "NewListByAutomationAccountPager",
+      "source_file": "automation.go"
+    },
+    {
+      "permission": "Microsoft.Automation/variable/read",
+      "service": "Microsoft.Automation",
+      "action": "NewListByAutomationAccountPager",
+      "source_file": "automation.go"
     },
     {
       "permission": "Microsoft.Batch/batchAccounts/pools/read",
@@ -701,6 +733,12 @@
       "source_file": "databricks.go"
     },
     {
+      "permission": "Microsoft.DesktopVirtualization/hostPools/read",
+      "service": "Microsoft.DesktopVirtualization",
+      "action": "NewListPager",
+      "source_file": "desktopvirtualization.go"
+    },
+    {
       "permission": "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
       "service": "Microsoft.DocumentDB",
       "action": "NewListByDatabaseAccountPager",
@@ -813,6 +851,12 @@
       "service": "Microsoft.KeyVault",
       "action": "Get",
       "source_file": "keyvault.go"
+    },
+    {
+      "permission": "Microsoft.Kusto/clusters/read",
+      "service": "Microsoft.Kusto",
+      "action": "NewListPager",
+      "source_file": "kusto.go"
     },
     {
       "permission": "Microsoft.Logic/workflows/read",
@@ -1283,6 +1327,12 @@
       "source_file": "servicebus.go"
     },
     {
+      "permission": "Microsoft.Signalr/signalr/read",
+      "service": "Microsoft.Signalr",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "signalr.go"
+    },
+    {
       "permission": "Microsoft.Sql/managedInstances/databases/read",
       "service": "Microsoft.Sql",
       "action": "NewListByInstancePager",
@@ -1593,6 +1643,12 @@
       "service": "Microsoft.Web",
       "action": "NewListPager",
       "source_file": "web_staticsites.go"
+    },
+    {
+      "permission": "Microsoft.Webpubsub/webpubsub/read",
+      "service": "Microsoft.Webpubsub",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "signalr.go"
     }
   ]
 }

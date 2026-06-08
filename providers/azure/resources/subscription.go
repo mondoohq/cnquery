@@ -426,6 +426,56 @@ func (a *mqlAzureSubscription) search() (*mqlAzureSubscriptionSearchService, err
 	return svc.(*mqlAzureSubscriptionSearchService), nil
 }
 
+func (a *mqlAzureSubscription) signalR() (*mqlAzureSubscriptionSignalRService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.signalRService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionSignalRService), nil
+}
+
+func (a *mqlAzureSubscription) webPubSub() (*mqlAzureSubscriptionWebPubSubService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.webPubSubService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionWebPubSubService), nil
+}
+
+func (a *mqlAzureSubscription) desktopVirtualization() (*mqlAzureSubscriptionDesktopVirtualizationService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.desktopVirtualizationService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionDesktopVirtualizationService), nil
+}
+
+func (a *mqlAzureSubscription) automation() (*mqlAzureSubscriptionAutomationService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.automationService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionAutomationService), nil
+}
+
+func (a *mqlAzureSubscription) kusto() (*mqlAzureSubscriptionKustoService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.kustoService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionKustoService), nil
+}
+
 func (a *mqlAzureSubscription) appConfiguration() (*mqlAzureSubscriptionAppConfigurationService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.appConfigurationService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

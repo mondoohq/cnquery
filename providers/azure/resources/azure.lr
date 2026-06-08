@@ -135,6 +135,16 @@ azure.subscription @defaults ("name") {
   sentinel() azure.subscription.sentinelService
   // Azure Machine Learning resources in the subscription
   machineLearning() azure.subscription.machineLearningService
+  // Azure SignalR Service resources in the subscription
+  signalR() azure.subscription.signalRService
+  // Azure Web PubSub Service resources in the subscription
+  webPubSub() azure.subscription.webPubSubService
+  // Azure Data Explorer (Kusto) resources in the subscription
+  kusto() azure.subscription.kustoService
+  // Azure Automation accounts in the subscription
+  automation() azure.subscription.automationService
+  // Azure Virtual Desktop resources in the subscription
+  desktopVirtualization() azure.subscription.desktopVirtualizationService
 }
 
 // Azure function
@@ -11226,4 +11236,348 @@ private azure.subscription.sentinelService.alertRule @defaults("name kind enable
   description string
   // Kind-specific properties (e.g., for Scheduled rules: query, queryFrequency, queryPeriod, triggerThreshold)
   properties dict
+}
+
+// Azure SignalR Service
+//
+// Use this namespace to iterate the Azure SignalR Service instances in
+// the subscription. SignalR provides real-time messaging (WebSockets)
+// for applications; each instance is reached through `instances()`.
+private azure.subscription.signalRService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure SignalR Service instances in the subscription
+  instances() []azure.subscription.signalRService.signalR
+}
+
+// Azure SignalR Service instance
+//
+// Examine a single Azure SignalR Service instance. Use
+// `publicNetworkAccess` to confirm whether the instance is reachable
+// from the public internet, `disableLocalAuth` and `disableAadAuth` for
+// the enabled authentication methods, `clientCertEnabled` for whether
+// mutual TLS client certificates are required, and
+// `networkAclsDefaultAction` for the default network rule applied when
+// no ACL matches.
+azure.subscription.signalRService.signalR @defaults("id name location publicNetworkAccess") {
+  // SignalR resource ID
+  id string
+  // SignalR resource name
+  name string
+  // SignalR resource location
+  location string
+  // SignalR resource tags
+  tags map[string]string
+  // Service mode kind ("SignalR" or "RawWebSockets")
+  kind string
+  // SKU details (name, tier, capacity)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Public hostname clients connect to
+  hostName string
+  // External IP of the instance
+  externalIp string
+  // Service software version
+  version string
+  // Whether the instance is reachable from the public internet ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Whether access-key (local) authentication is disabled
+  disableLocalAuth bool
+  // Whether Microsoft Entra ID (AAD) authentication is disabled
+  disableAadAuth bool
+  // Whether mutual TLS client certificate authentication is required
+  clientCertEnabled bool
+  // Default action applied when no network ACL matches ("Allow" or "Deny")
+  networkAclsDefaultAction string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Web PubSub Service
+//
+// Use this namespace to iterate the Azure Web PubSub Service instances
+// in the subscription. Web PubSub provides real-time publish/subscribe
+// messaging over WebSockets; each instance is reached through
+// `instances()`.
+private azure.subscription.webPubSubService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Web PubSub Service instances in the subscription
+  instances() []azure.subscription.webPubSubService.webPubSub
+}
+
+// Azure Web PubSub Service instance
+//
+// Examine a single Azure Web PubSub Service instance. Use
+// `publicNetworkAccess` to confirm whether the instance is reachable
+// from the public internet, `disableLocalAuth` and `disableAadAuth` for
+// the enabled authentication methods, `clientCertEnabled` for whether
+// mutual TLS client certificates are required, and
+// `networkAclsDefaultAction` for the default network rule applied when
+// no ACL matches.
+azure.subscription.webPubSubService.webPubSub @defaults("id name location publicNetworkAccess") {
+  // Web PubSub resource ID
+  id string
+  // Web PubSub resource name
+  name string
+  // Web PubSub resource location
+  location string
+  // Web PubSub resource tags
+  tags map[string]string
+  // Service kind ("WebPubSub" or "SocketIO")
+  kind string
+  // SKU details (name, tier, capacity)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Public hostname clients connect to
+  hostName string
+  // External IP of the instance
+  externalIp string
+  // Service software version
+  version string
+  // Whether the instance is reachable from the public internet ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Whether access-key (local) authentication is disabled
+  disableLocalAuth bool
+  // Whether Microsoft Entra ID (AAD) authentication is disabled
+  disableAadAuth bool
+  // Whether mutual TLS client certificate authentication is required
+  clientCertEnabled bool
+  // Default action applied when no network ACL matches ("Allow" or "Deny")
+  networkAclsDefaultAction string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Data Explorer (Kusto)
+//
+// Use this namespace to iterate the Azure Data Explorer clusters in the
+// subscription. Each cluster is reached through `clusters()`.
+private azure.subscription.kustoService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Data Explorer clusters in the subscription
+  clusters() []azure.subscription.kustoService.cluster
+}
+
+// Azure Data Explorer cluster
+//
+// Examine a single Azure Data Explorer (Kusto) cluster. Use
+// `publicNetworkAccess` and `publicIpType` to confirm internet exposure,
+// `restrictOutboundNetworkAccess` for data-exfiltration control,
+// `allowedIpRangeList`/`allowedFqdnList` for the inbound/outbound
+// allow-lists, `enableDiskEncryption` and `enableDoubleEncryption` for
+// encryption at rest, `cmkKeyName`/`cmkKeyVaultUri` for the
+// customer-managed key, `trustedExternalTenants` for which external
+// Microsoft Entra tenants may authenticate, and `enablePurge` for
+// whether hard-delete is allowed.
+azure.subscription.kustoService.cluster @defaults("id name location publicNetworkAccess state") {
+  // Cluster resource ID
+  id string
+  // Cluster name
+  name string
+  // Cluster location
+  location string
+  // Cluster tags
+  tags map[string]string
+  // SKU details (name, tier, capacity)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Cluster query endpoint URI
+  uri string
+  // Cluster data ingestion URI
+  dataIngestionUri string
+  // Cluster lifecycle state (e.g., "Running", "Stopped", "Starting")
+  state string
+  // Provisioning state
+  provisioningState string
+  // Whether the cluster is reachable from the public internet ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Public IP exposure type ("IPv4" or "DualStack")
+  publicIpType string
+  // Whether outbound network access is restricted ("Enabled" or "Disabled")
+  restrictOutboundNetworkAccess string
+  // Whether disk encryption is enabled on the cluster
+  enableDiskEncryption bool
+  // Whether infrastructure (double) encryption is enabled
+  enableDoubleEncryption bool
+  // Whether streaming ingestion is enabled
+  enableStreamingIngest bool
+  // Whether hard-delete (purge) of data is permitted
+  enablePurge bool
+  // Inbound IP/CIDR allow-list applied to the cluster
+  allowedIpRangeList []string
+  // Outbound FQDN allow-list applied to the cluster
+  allowedFqdnList []string
+  // External Microsoft Entra tenant IDs trusted to authenticate to the cluster
+  trustedExternalTenants []string
+  // Name of the customer-managed Key Vault key encrypting the cluster; empty for platform-managed keys
+  cmkKeyName string
+  // Key Vault URI holding the customer-managed encryption key
+  cmkKeyVaultUri string
+  // Version of the customer-managed encryption key; empty means the latest version is used
+  cmkKeyVersion string
+}
+
+// Azure Automation
+//
+// Use this namespace to iterate the Azure Automation accounts in the
+// subscription. Each account is reached through `accounts()`.
+private azure.subscription.automationService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Automation accounts in the subscription
+  accounts() []azure.subscription.automationService.account
+}
+
+// Azure Automation account
+//
+// Examine a single Azure Automation account. Use `publicNetworkAccess`
+// to confirm internet exposure, `disableLocalAuth` for whether key-based
+// authentication is disabled in favor of Microsoft Entra ID,
+// `cmkKeySource`/`cmkKeyName` for customer-managed-key encryption, and
+// iterate `variables`, `credentials`, and `certificates` to audit the
+// secrets the account stores (for example unencrypted variables, or
+// expiring or exportable certificates).
+azure.subscription.automationService.account @defaults("id name location publicNetworkAccess") {
+  // Account resource ID
+  id string
+  // Account name
+  name string
+  // Account location
+  location string
+  // Account tags
+  tags map[string]string
+  // SKU details (name)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Account lifecycle state ("Ok", "Unavailable", "Suspended")
+  state string
+  // Whether the account is reachable from the public internet
+  publicNetworkAccess bool
+  // Whether key-based (local) authentication is disabled
+  disableLocalAuth bool
+  // Encryption key source ("Microsoft.Keyvault" for customer-managed keys; "Microsoft.Automation" for platform-managed)
+  cmkKeySource string
+  // Name of the customer-managed Key Vault key encrypting the account; empty for platform-managed keys
+  cmkKeyName string
+  // Key Vault URI holding the customer-managed encryption key
+  cmkKeyVaultUri string
+  // When the account was created
+  creationTime time
+  // When the account was last modified
+  lastModifiedTime time
+  // Variables stored in the account
+  variables() []azure.subscription.automationService.account.variable
+  // Credentials stored in the account
+  credentials() []azure.subscription.automationService.account.credential
+  // Certificates stored in the account
+  certificates() []azure.subscription.automationService.account.certificate
+}
+
+// Azure Automation account variable
+private azure.subscription.automationService.account.variable @defaults("name isEncrypted") {
+  // Variable resource ID
+  id string
+  // Variable name
+  name string
+  // Whether the variable value is stored encrypted; a false result means the value is readable in plaintext
+  isEncrypted bool
+  // Variable description
+  description string
+  // When the variable was created
+  creationTime time
+  // When the variable was last modified
+  lastModifiedTime time
+}
+
+// Azure Automation account credential
+private azure.subscription.automationService.account.credential @defaults("name userName") {
+  // Credential resource ID
+  id string
+  // Credential name
+  name string
+  // User name stored by the credential
+  userName string
+  // Credential description
+  description string
+  // When the credential was created
+  creationTime time
+  // When the credential was last modified
+  lastModifiedTime time
+}
+
+// Azure Automation account certificate
+private azure.subscription.automationService.account.certificate @defaults("name expiryTime isExportable") {
+  // Certificate resource ID
+  id string
+  // Certificate name
+  name string
+  // Certificate thumbprint
+  thumbprint string
+  // When the certificate expires
+  expiryTime time
+  // Whether the certificate's private key can be exported
+  isExportable bool
+  // Certificate description
+  description string
+  // When the certificate was created
+  creationTime time
+}
+
+// Azure Virtual Desktop
+//
+// Use this namespace to iterate the Azure Virtual Desktop host pools in
+// the subscription. Each host pool is reached through `hostPools()`.
+private azure.subscription.desktopVirtualizationService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Virtual Desktop host pools in the subscription
+  hostPools() []azure.subscription.desktopVirtualizationService.hostPool
+}
+
+// Azure Virtual Desktop host pool
+//
+// Examine a single Azure Virtual Desktop host pool. Use
+// `customRdpProperty` to audit the RDP session settings (clipboard,
+// drive, and device redirection), `validationEnvironment` for whether
+// the pool receives pre-release agent updates, `startVMOnConnect` and
+// `maxSessionLimit` for session behavior, `loadBalancerType` and
+// `hostPoolType` for the pool model, and `ssoadfsAuthority` for the
+// single-sign-on configuration.
+azure.subscription.desktopVirtualizationService.hostPool @defaults("id name location hostPoolType") {
+  // Host pool resource ID
+  id string
+  // Host pool name
+  name string
+  // Host pool location
+  location string
+  // Host pool tags
+  tags map[string]string
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Host pool type ("Personal", "Pooled", or "BYODesktop")
+  hostPoolType string
+  // Load-balancing algorithm ("BreadthFirst", "DepthFirst", or "Persistent")
+  loadBalancerType string
+  // Preferred application group type ("Desktop", "RailApplications", or "None")
+  preferredAppGroupType string
+  // Raw custom RDP property string applied to sessions (redirection and device-access settings)
+  customRdpProperty string
+  // Maximum number of concurrent sessions allowed per session host
+  maxSessionLimit int
+  // Assignment model for personal host pools ("Automatic" or "Direct")
+  personalDesktopAssignmentType string
+  // Whether session-host VMs are started automatically when a user connects
+  startVMOnConnect bool
+  // Whether the host pool is a validation environment receiving pre-release agent updates
+  validationEnvironment bool
+  // AD FS authority URL used for single sign-on, if configured
+  ssoadfsAuthority string
+  // Update ring the host pool belongs to
+  ring int
 }
