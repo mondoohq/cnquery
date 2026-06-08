@@ -282,6 +282,10 @@ func (g *mqlGcpProjectStorageServiceBucket) defaultKmsKey() (*mqlGcpProjectKmsSe
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectStorageServiceBucket) defaultEncryptionEnabled() (bool, error) {
+	return g.cacheDefaultKmsKeyName != "", nil
+}
+
 func storageLifecycleRulesToArrayInterface(runtime *plugin.Runtime, bucketId string, lifecycle *storage.BucketLifecycle) (list []any) {
 	if lifecycle == nil {
 		return

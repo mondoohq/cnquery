@@ -175,6 +175,14 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificate) id() (string, error)
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectCertificateManagerServiceCertificate) expired() (bool, error) {
+	return certExpired(g.ExpireTime)
+}
+
+func (g *mqlGcpProjectCertificateManagerServiceCertificate) daysUntilExpiry() (int64, error) {
+	return certDaysUntilExpiry(g.ExpireTime)
+}
+
 func (g *mqlGcpProjectCertificateManagerService) certificateMaps() ([]any, error) {
 	if !g.serviceEnabled {
 		return nil, nil

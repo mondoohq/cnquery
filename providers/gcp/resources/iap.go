@@ -92,6 +92,37 @@ func (g *mqlGcpProjectIapService) public() (bool, error) {
 	return iamPolicyHasPublicMember(bindings.Data)
 }
 
+// settings returns the access and application settings for the project-wide
+// iap_web resource, including the reauth policy used to audit whether
+// IAP-fronted apps require periodic re-authentication.
+func (g *mqlGcpProjectIapService) settings() (any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(iap.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	settings, err := client.GetIapSettings(ctx, &iappb.GetIapSettingsRequest{
+		Name: fmt.Sprintf("projects/%s/iap_web", projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return protoToDict(settings)
+}
+
 func (g *mqlGcpProjectIapService) brands() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -145,6 +176,57 @@ func (g *mqlGcpProjectIapServiceBrand) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/iapService.brand/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectIapServiceIdentityAwareProxyClient) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+// clients lists the OAuth clients registered under this brand. The client
+// secret is intentionally not exposed; only the identity (name, displayName)
+// is surfaced for credential-hygiene audits.
+func (g *mqlGcpProjectIapServiceBrand) clients() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	brandName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(iap.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := iap.NewIdentityAwareProxyOAuthClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListIdentityAwareProxyClients(ctx, &iappb.ListIdentityAwareProxyClientsRequest{
+		Parent: brandName,
+	})
+
+	var res []any
+	for {
+		c, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		mqlClient, err := CreateResource(g.MqlRuntime, "gcp.project.iapService.identityAwareProxyClient", map[string]*llx.RawData{
+			"name":        llx.StringData(c.GetName()),
+			"displayName": llx.StringData(c.GetDisplayName()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlClient)
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectIapService) tunnelDestGroups() ([]any, error) {

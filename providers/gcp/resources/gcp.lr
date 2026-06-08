@@ -2400,6 +2400,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   encryption dict
   // Default Cloud KMS encryption key for new objects in this bucket
   defaultKmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Whether a customer-managed (CMEK) default encryption key is configured for new objects
+  defaultEncryptionEnabled() bool
   // Lifecycle configuration
   lifecycle []gcp.project.storageService.bucket.lifecycleRule
   // Whether a default event-based hold is enabled for newly created objects
@@ -2650,6 +2652,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   settings gcp.project.sqlService.instance.settings
   // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
   publicIpEnabled() bool
+  // Whether IAM database authentication is enabled — true when the cloudsql.iam_authentication database flag is on
+  iamAuthenticationEnabled() bool
   // Whether automated backups are enabled — flat hoist of settings.backupConfiguration.enabled
   backupConfigurationEnabled() bool
   // Whether point-in-time recovery is enabled — flat hoist of settings.backupConfiguration.pointInTimeRecoveryEnabled
@@ -3687,6 +3691,15 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
+  // Whether Autopilot workloads may request the NET_ADMIN capability, relaxing the default privileged-container guardrail
+  autopilotWorkloadPolicyAllowNetAdmin bool
+  // Resource usage export configuration
+  //
+  // Holds `enableNetworkEgressMetering`, `enableResourceConsumptionMetering`,
+  // and the `bigqueryDestination` dataset that cluster usage is exported to.
+  // Null when usage export is not configured. The BigQuery destination is a
+  // data-egress surface worth reviewing.
+  resourceUsageExportConfig dict
   // Name of the Google Compute Engine zone/region in which the cluster exists
   location string
   // The IP address of the cluster's master endpoint
@@ -6039,6 +6052,10 @@ private gcp.project.dataprocService.cluster.config {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Port/endpoint configuration
   endpoint dict
+  // Whether the HTTP component gateway is enabled, exposing cluster web UIs — flat hoist of endpoint.enableHttpPortAccess
+  componentGatewayEnabled bool
+  // Whether Kerberos secure-mode authentication is enabled on the cluster — flat hoist of security.kerberosConfig.enableKerberos
+  kerberosEnabled bool
   // Shared Compute Engine configuration
   gceCluster gcp.project.dataprocService.cluster.config.gceCluster
   // Kubernetes Engine config for Dataproc clusters deployed to Kubernetes
@@ -7039,6 +7056,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   customerManagedEncryption @maturity("deprecated") []string
   // Customer-managed KMS keys protecting this secret across all replication locations (empty when Google-managed)
   kmsKeys() []gcp.project.kmsService.keyring.cryptokey
+  // Whether customer-managed (CMEK) encryption is configured for this secret
+  customerManagedEncryptionEnabled() bool
   // Resource manager tags used to organize and group resources, and to control policy evaluation
   tags map[string]string
   // List of secret versions
@@ -8286,6 +8305,10 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
   deletedAt time
   // Expiry time
   expireTime time
+  // Whether the certificate authority's certificate has already expired
+  expired() bool
+  // Whole days until the certificate authority's certificate expires (negative if already expired)
+  daysUntilExpiry() int
 }
 
 // Google Cloud (GCP) Certificate Authority Service certificate
@@ -8392,6 +8415,10 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   updateTime time
   // Time the certificate expires
   expireTime time
+  // Whether the certificate has already expired
+  expired() bool
+  // Whole days until the certificate expires (negative if already expired)
+  daysUntilExpiry() int
   // Subject Alternative Name dnsName entries on the issued cert (or requested domains for a not-yet-provisioned managed cert)
   sanDnsnames []string
   // Output-only PEM-encoded certificate chain
@@ -9735,6 +9762,8 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   urlMap() gcp.project.computeService.urlMap
   // SSL certificate URLs
   sslCertificateUrls []string
+  // SSL certificate resources presented by this proxy
+  sslCertificates() []gcp.project.computeService.sslCertificate
   // Raw SSL policy self-link URL
   //
   // Deprecated in favor of `sslPolicy`.
@@ -10169,6 +10198,8 @@ private gcp.project.computeService.targetSslProxy @defaults("name") {
   serviceUrl string
   // SSL certificate URLs
   sslCertificateUrls []string
+  // SSL certificate resources presented by this proxy
+  sslCertificates() []gcp.project.computeService.sslCertificate
   // Raw SSL policy self-link URL
   //
   // Deprecated in favor of `sslPolicy`.
@@ -11063,7 +11094,12 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   // Runtime config
   runtimeConfig dict
   // Service account email used by the resource
-  serviceAccount string
+  //
+  // Deprecated in favor of `serviceAccountRef`, which resolves the identity
+  // to the service account resource (the email is available as its `email`).
+  serviceAccount @maturity("deprecated") string
+  // Service account identity the pipeline job runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
   // VPC network the resource is attached to
   network string
   // Encryption spec
@@ -11923,6 +11959,18 @@ private gcp.scc.finding @defaults("name category severity") {
   severity string
   // Mute state (MUTED, UNMUTED, UNDEFINED)
   mute string
+  // Email address of the principal that last muted the finding
+  muteInitiator string
+  // Time the finding's mute state was last updated
+  muteUpdateTime time
+  // Compliance standards the finding maps to
+  //
+  // Each entry has `standard` (for example "cis", "pci-dss"), `version`, and
+  // `ids` — the specific control identifiers the finding relates to. Use this
+  // to roll findings up to benchmark controls.
+  compliances []dict
+  // Vulnerability details, including the CVE and its CVSS scores, when the finding describes a known vulnerability
+  vulnerability dict
   // Finding class (THREAT, VULNERABILITY, MISCONFIGURATION, etc.)
   findingClass string
   // State (ACTIVE, INACTIVE)
@@ -12276,7 +12324,12 @@ private gcp.project.eventarcService.trigger @defaults("name") {
   // Event filters
   eventFilters []gcp.project.eventarcService.trigger.eventFilter
   // Service account email used by the trigger
-  serviceAccount string
+  //
+  // Deprecated in favor of `serviceAccountRef`, which resolves the identity
+  // to the service account resource (the email is available as its `email`).
+  serviceAccount @maturity("deprecated") string
+  // Service account identity the trigger runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
   // Destination configuration
   destination dict
   // Transport configuration
@@ -13570,6 +13623,15 @@ private gcp.project.iapService {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the IAP access policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Access and application settings for the project-wide IAP web resource
+  //
+  // Holds `accessSettings` (allowed domains, OAuth, GCIP, CORS, and the
+  // reauth policy with its `method`, `maxAge`, and `policyType`) and
+  // `applicationSettings` (CSM, cookie domain, access-denied page, and
+  // attribute propagation). Null when no IAP settings are configured. Use the
+  // reauth policy to audit whether IAP-fronted apps require periodic
+  // re-authentication.
+  settings() dict
 }
 
 // Google Cloud (GCP) IAP OAuth brand
@@ -13590,6 +13652,23 @@ private gcp.project.iapService.brand @defaults("name applicationTitle") {
   supportEmail string
   // Whether the brand is only for internal organization use
   orgInternalOnly bool
+  // OAuth clients registered under this brand for IAP-secured access
+  clients() []gcp.project.iapService.identityAwareProxyClient
+}
+
+// Google Cloud (GCP) IAP OAuth client
+//
+// Examine an Identity-Aware Proxy OAuth client registered under a brand,
+// identified by `name`. These clients authorize IAP-secured access to the
+// project's web resources. Surfaces `displayName` for the human-readable
+// client name; review the set of clients for stale or unused entries as part
+// of credential-hygiene audits. The client secret is intentionally not
+// exposed.
+private gcp.project.iapService.identityAwareProxyClient @defaults("name displayName") {
+  // Full resource name, including the OAuth client ID
+  name string
+  // Human-readable name of the client
+  displayName string
 }
 
 // Google Cloud (GCP) IAP tunnel destination group

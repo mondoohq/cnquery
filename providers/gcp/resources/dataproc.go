@@ -475,24 +475,28 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 							log.Error().Err(err).Send()
 						}
 
+						componentGatewayEnabled := c.Config.EndpointConfig != nil && c.Config.EndpointConfig.EnableHttpPortAccess
+						kerberosEnabled := c.Config.SecurityConfig != nil && c.Config.SecurityConfig.KerberosConfig != nil && c.Config.SecurityConfig.KerberosConfig.EnableKerberos
 						mqlConfig, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config", map[string]*llx.RawData{
-							"parentResourcePath":    llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
-							"autoscaling":           llx.DictData(mqlAutoscalingCfg),
-							"configBucket":          llx.StringData(c.Config.ConfigBucket),
-							"metrics":               llx.DictData(mqlMetricsCfg),
-							"encryption":            llx.DictData(mqlEncryptionCfg),
-							"endpoint":              llx.DictData(mqlEndpointCfg),
-							"gceCluster":            llx.ResourceData(mqlGceClusterCfg, "gcp.project.dataprocService.cluster.config.gceCluster"),
-							"gkeCluster":            llx.ResourceData(mqlGkeClusterCfg, "gcp.project.dataprocService.cluster.config.gkeCluster"),
-							"initializationActions": llx.ArrayData(dictInitActions, types.Dict),
-							"lifecycle":             llx.ResourceData(mqlLifecycleCfg, "gcp.project.dataprocService.cluster.config.lifecycle"),
-							"master":                llx.ResourceData(mqlMasterCfg, "gcp.project.dataprocService.cluster.config.instance"),
-							"metastore":             llx.DictData(mqlMetastoreCfg),
-							"secondaryWorker":       llx.ResourceData(mqlSecondaryWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
-							"security":              llx.DictData(mqlSecurityCfg),
-							"software":              llx.DictData(mqlSoftwareCfg),
-							"tempBucket":            llx.StringData(c.Config.TempBucket),
-							"worker":                llx.ResourceData(mqlWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
+							"parentResourcePath":      llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
+							"componentGatewayEnabled": llx.BoolData(componentGatewayEnabled),
+							"kerberosEnabled":         llx.BoolData(kerberosEnabled),
+							"autoscaling":             llx.DictData(mqlAutoscalingCfg),
+							"configBucket":            llx.StringData(c.Config.ConfigBucket),
+							"metrics":                 llx.DictData(mqlMetricsCfg),
+							"encryption":              llx.DictData(mqlEncryptionCfg),
+							"endpoint":                llx.DictData(mqlEndpointCfg),
+							"gceCluster":              llx.ResourceData(mqlGceClusterCfg, "gcp.project.dataprocService.cluster.config.gceCluster"),
+							"gkeCluster":              llx.ResourceData(mqlGkeClusterCfg, "gcp.project.dataprocService.cluster.config.gkeCluster"),
+							"initializationActions":   llx.ArrayData(dictInitActions, types.Dict),
+							"lifecycle":               llx.ResourceData(mqlLifecycleCfg, "gcp.project.dataprocService.cluster.config.lifecycle"),
+							"master":                  llx.ResourceData(mqlMasterCfg, "gcp.project.dataprocService.cluster.config.instance"),
+							"metastore":               llx.DictData(mqlMetastoreCfg),
+							"secondaryWorker":         llx.ResourceData(mqlSecondaryWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
+							"security":                llx.DictData(mqlSecurityCfg),
+							"software":                llx.DictData(mqlSoftwareCfg),
+							"tempBucket":              llx.StringData(c.Config.TempBucket),
+							"worker":                  llx.ResourceData(mqlWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
 						})
 						if err != nil {
 							log.Error().Err(err).Send()

@@ -82,6 +82,30 @@ func (g *mqlGcpProjectEventarcServiceTrigger) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectEventarcServiceTrigger) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccount.Error != nil {
+		return nil, g.ServiceAccount.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	email := g.ServiceAccount.Data
+	projectId := projectFromResourceName(g.Name.Data)
+	if email == "" || projectId == "" {
+		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 // eventFilterID returns a cache-stable identifier for an Eventarc trigger
 // event filter. A trigger can declare multiple filters that share an
 // attribute key but match different values, so both must participate in

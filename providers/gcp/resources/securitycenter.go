@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
@@ -124,6 +125,20 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			}
 		}
 
+		compliances := make([]any, 0, len(f.GetCompliances()))
+		for _, c := range f.GetCompliances() {
+			d, err := protoToDict(c)
+			if err != nil {
+				return nil, err
+			}
+			compliances = append(compliances, d)
+		}
+
+		vulnerability, err := protoToDict(f.GetVulnerability())
+		if err != nil {
+			return nil, err
+		}
+
 		mqlFinding, err := CreateResource(runtime, "gcp.scc.finding", map[string]*llx.RawData{
 			"name":             llx.StringData(f.Name),
 			"parent":           llx.StringData(f.Parent),
@@ -135,6 +150,10 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			"createTime":       llx.TimeDataPtr(timestampAsTimePtr(f.CreateTime)),
 			"severity":         llx.StringData(f.Severity.String()),
 			"mute":             llx.StringData(f.Mute.String()),
+			"muteInitiator":    llx.StringData(f.GetMuteInitiator()),
+			"muteUpdateTime":   llx.TimeDataPtr(timestampAsTimePtr(f.GetMuteUpdateTime())),
+			"compliances":      llx.ArrayData(compliances, types.Dict),
+			"vulnerability":    llx.DictData(vulnerability),
 			"findingClass":     llx.StringData(f.FindingClass.String()),
 			"state":            llx.StringData(f.State.String()),
 			"resourceName":     llx.StringData(f.ResourceName),

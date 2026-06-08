@@ -318,6 +318,60 @@ func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslPolicy() (*mqlGcpProjec
 	return getSslPolicyByUrl(url, g.MqlRuntime)
 }
 
+func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslCertificates() ([]any, error) {
+	return resolveSslCertificatesByUrl(g.SslCertificateUrls, g.MqlRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceTargetSslProxy) sslCertificates() ([]any, error) {
+	return resolveSslCertificatesByUrl(g.SslCertificateUrls, g.MqlRuntime)
+}
+
+// resolveSslCertificatesByUrl resolves a proxy's SSL certificate self-link URLs
+// to typed sslCertificate resources by matching them against the project's
+// certificates, which are listed once.
+func resolveSslCertificatesByUrl(urls plugin.TValue[[]any], runtime *plugin.Runtime) ([]any, error) {
+	if urls.Error != nil {
+		return nil, urls.Error
+	}
+	if len(urls.Data) == 0 {
+		return []any{}, nil
+	}
+
+	firstURL, _ := urls.Data[0].(string)
+	parts := strings.Split(trimComputeURL(firstURL), "/")
+	if len(parts) < 2 {
+		return []any{}, nil
+	}
+	projectId := parts[1]
+
+	res, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	certs := res.(*mqlGcpProjectComputeService).GetSslCertificates()
+	if certs.Error != nil {
+		return nil, certs.Error
+	}
+
+	bySelfLink := make(map[string]*mqlGcpProjectComputeServiceSslCertificate, len(certs.Data))
+	for _, c := range certs.Data {
+		cert := c.(*mqlGcpProjectComputeServiceSslCertificate)
+		bySelfLink[cert.SelfLink.Data] = cert
+	}
+
+	out := make([]any, 0, len(urls.Data))
+	for _, u := range urls.Data {
+		if urlStr, ok := u.(string); ok {
+			if cert, found := bySelfLink[urlStr]; found {
+				out = append(out, cert)
+			}
+		}
+	}
+	return out, nil
+}
+
 // Helper to resolve URL map references
 
 func getUrlMapByUrl(urlMapUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceUrlMap, error) {

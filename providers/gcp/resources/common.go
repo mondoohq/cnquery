@@ -24,6 +24,44 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// certExpired reports whether an expiry timestamp is in the past. A nil
+// timestamp (for example a not-yet-provisioned managed certificate) reports
+// false.
+func certExpired(expireTime plugin.TValue[*time.Time]) (bool, error) {
+	if expireTime.Error != nil {
+		return false, expireTime.Error
+	}
+	if expireTime.Data == nil {
+		return false, nil
+	}
+	return expireTime.Data.Before(time.Now()), nil
+}
+
+// certDaysUntilExpiry returns the whole number of days until an expiry
+// timestamp, negative when already expired. A nil timestamp returns 0.
+func certDaysUntilExpiry(expireTime plugin.TValue[*time.Time]) (int64, error) {
+	if expireTime.Error != nil {
+		return 0, expireTime.Error
+	}
+	if expireTime.Data == nil {
+		return 0, nil
+	}
+	return int64(time.Until(*expireTime.Data).Hours() / 24), nil
+}
+
+// projectFromResourceName extracts the project id from a GCP resource name of
+// the form "projects/{project}/...". Returns "" when no project segment is
+// present.
+func projectFromResourceName(name string) string {
+	parts := strings.Split(name, "/")
+	for i := 0; i+1 < len(parts); i++ {
+		if parts[i] == "projects" {
+			return parts[i+1]
+		}
+	}
+	return ""
+}
+
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
 // Returns nil for nil input, including typed nil interface values.
 func protoToDict(msg proto.Message) (map[string]any, error) {

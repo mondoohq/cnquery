@@ -368,6 +368,13 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectSecretmanagerServiceSecret) customerManagedEncryptionEnabled() (bool, error) {
+	if g.CustomerManagedEncryption.Error != nil {
+		return false, g.CustomerManagedEncryption.Error
+	}
+	return len(g.CustomerManagedEncryption.Data) > 0, nil
+}
+
 func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error

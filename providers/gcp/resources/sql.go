@@ -1181,6 +1181,26 @@ func (g *mqlGcpProjectSqlServiceInstance) publicIpEnabled() (bool, error) {
 	return enabled.Data, nil
 }
 
+func (g *mqlGcpProjectSqlServiceInstance) iamAuthenticationEnabled() (bool, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return false, settings.Error
+	}
+	if settings.Data == nil {
+		return false, nil
+	}
+	flags := settings.Data.GetDatabaseFlags()
+	if flags.Error != nil {
+		return false, flags.Error
+	}
+	v, ok := flags.Data["cloudsql.iam_authentication"]
+	if !ok {
+		return false, nil
+	}
+	s, _ := v.(string)
+	return s == "on", nil
+}
+
 func (g *mqlGcpProjectSqlServiceInstance) backupConfigurationEnabled() (bool, error) {
 	settings := g.GetSettings()
 	if settings.Error != nil {

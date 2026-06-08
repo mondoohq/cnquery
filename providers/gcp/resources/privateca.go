@@ -282,6 +282,14 @@ func (g *mqlGcpProjectCertificateAuthorityServiceCertificateAuthority) id() (str
 	return g.ResourcePath.Data, nil
 }
 
+func (g *mqlGcpProjectCertificateAuthorityServiceCertificateAuthority) expired() (bool, error) {
+	return certExpired(g.ExpireTime)
+}
+
+func (g *mqlGcpProjectCertificateAuthorityServiceCertificateAuthority) daysUntilExpiry() (int64, error) {
+	return certDaysUntilExpiry(g.ExpireTime)
+}
+
 func (g *mqlGcpProjectCertificateAuthorityServiceCaPool) certificates() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

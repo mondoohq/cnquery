@@ -642,6 +642,30 @@ func (g *mqlGcpProjectVertexaiServicePipelineJob) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectVertexaiServicePipelineJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccount.Error != nil {
+		return nil, g.ServiceAccount.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	email := g.ServiceAccount.Data
+	projectId := projectFromResourceName(g.Name.Data)
+	if email == "" || projectId == "" {
+		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

@@ -792,8 +792,10 @@ gcp.project.certificateAuthorityService.certificateAuthority.accessUrls 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.caPool 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.config 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.createdAt 11.5.1
+gcp.project.certificateAuthorityService.certificateAuthority.daysUntilExpiry 13.21.2
 gcp.project.certificateAuthorityService.certificateAuthority.deletedAt 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.expireTime 11.5.1
+gcp.project.certificateAuthorityService.certificateAuthority.expired 13.21.2
 gcp.project.certificateAuthorityService.certificateAuthority.gcsBucket 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.keySpec 11.5.1
 gcp.project.certificateAuthorityService.certificateAuthority.labels 11.5.1
@@ -812,8 +814,10 @@ gcp.project.certificateManager 13.13.4
 gcp.project.certificateManagerService 13.13.4
 gcp.project.certificateManagerService.certificate 13.13.4
 gcp.project.certificateManagerService.certificate.createTime 13.13.4
+gcp.project.certificateManagerService.certificate.daysUntilExpiry 13.21.2
 gcp.project.certificateManagerService.certificate.description 13.13.4
 gcp.project.certificateManagerService.certificate.expireTime 13.13.4
+gcp.project.certificateManagerService.certificate.expired 13.21.2
 gcp.project.certificateManagerService.certificate.labels 13.13.4
 gcp.project.certificateManagerService.certificate.location 13.13.4
 gcp.project.certificateManagerService.certificate.managedAuthorizationAttemptInfo 13.13.4
@@ -2197,6 +2201,7 @@ gcp.project.computeService.targetHttpsProxy.region 13.16.3
 gcp.project.computeService.targetHttpsProxy.regionUrl 11.6.6
 gcp.project.computeService.targetHttpsProxy.selfLink 11.6.6
 gcp.project.computeService.targetHttpsProxy.sslCertificateUrls 11.6.6
+gcp.project.computeService.targetHttpsProxy.sslCertificates 13.21.2
 gcp.project.computeService.targetHttpsProxy.sslPolicy 11.6.6
 gcp.project.computeService.targetHttpsProxy.sslPolicyUrl 11.6.6
 gcp.project.computeService.targetHttpsProxy.urlMap 11.6.6
@@ -2227,6 +2232,7 @@ gcp.project.computeService.targetSslProxy.proxyHeader 13.6.1
 gcp.project.computeService.targetSslProxy.selfLink 13.6.1
 gcp.project.computeService.targetSslProxy.serviceUrl 13.6.1
 gcp.project.computeService.targetSslProxy.sslCertificateUrls 13.6.1
+gcp.project.computeService.targetSslProxy.sslCertificates 13.21.2
 gcp.project.computeService.targetSslProxy.sslPolicy 13.6.1
 gcp.project.computeService.targetSslProxy.sslPolicyUrl 13.6.1
 gcp.project.computeService.targetTcpProxies 13.6.1
@@ -2433,6 +2439,7 @@ gcp.project.dataprocService.autoscalingPolicy.workerConfig 13.7.2
 gcp.project.dataprocService.cluster 9.0.0
 gcp.project.dataprocService.cluster.config 9.0.0
 gcp.project.dataprocService.cluster.config.autoscaling 9.0.0
+gcp.project.dataprocService.cluster.config.componentGatewayEnabled 13.21.2
 gcp.project.dataprocService.cluster.config.configBucket 9.0.0
 gcp.project.dataprocService.cluster.config.encryption 9.0.0
 gcp.project.dataprocService.cluster.config.endpoint 9.0.0
@@ -2484,6 +2491,7 @@ gcp.project.dataprocService.cluster.config.instance.managedGroupConfig 9.0.0
 gcp.project.dataprocService.cluster.config.instance.minCpuPlatform 9.0.0
 gcp.project.dataprocService.cluster.config.instance.numInstances 9.0.0
 gcp.project.dataprocService.cluster.config.instance.preemptibility 9.0.0
+gcp.project.dataprocService.cluster.config.kerberosEnabled 13.21.2
 gcp.project.dataprocService.cluster.config.kmsKey 13.19.2
 gcp.project.dataprocService.cluster.config.lifecycle 9.0.0
 gcp.project.dataprocService.cluster.config.lifecycle.autoDeleteTime 9.0.0
@@ -2854,6 +2862,7 @@ gcp.project.eventarcService.trigger.eventFilters 13.6.1
 gcp.project.eventarcService.trigger.labels 13.6.1
 gcp.project.eventarcService.trigger.name 13.6.1
 gcp.project.eventarcService.trigger.serviceAccount 13.6.1
+gcp.project.eventarcService.trigger.serviceAccountRef 13.21.2
 gcp.project.eventarcService.trigger.transport 13.6.1
 gcp.project.eventarcService.trigger.uid 13.6.1
 gcp.project.eventarcService.trigger.updated 13.6.1
@@ -2979,6 +2988,7 @@ gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig 9.0.0
 gcp.project.gkeService.cluster.anonymousAuthenticationConfig 13.16.3
 gcp.project.gkeService.cluster.autopilotEnabled 9.0.0
+gcp.project.gkeService.cluster.autopilotWorkloadPolicyAllowNetAdmin 13.21.2
 gcp.project.gkeService.cluster.basicAuthEnabled 13.18.1
 gcp.project.gkeService.cluster.binaryAuthorization 9.0.0
 gcp.project.gkeService.cluster.binaryAuthorizationEnabled 13.12.2
@@ -3198,6 +3208,7 @@ gcp.project.gkeService.cluster.rbacBindingConfig 13.16.3
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
 gcp.project.gkeService.cluster.releaseChannelManaged 13.12.2
 gcp.project.gkeService.cluster.resourceLabels 9.0.0
+gcp.project.gkeService.cluster.resourceUsageExportConfig 13.21.2
 gcp.project.gkeService.cluster.satisfiesPzi 13.16.3
 gcp.project.gkeService.cluster.satisfiesPzs 13.16.3
 gcp.project.gkeService.cluster.secretManagerConfig 13.16.3
@@ -3337,14 +3348,19 @@ gcp.project.iap 13.7.2
 gcp.project.iapService 13.7.2
 gcp.project.iapService.brand 13.7.2
 gcp.project.iapService.brand.applicationTitle 13.7.2
+gcp.project.iapService.brand.clients 13.21.2
 gcp.project.iapService.brand.name 13.7.2
 gcp.project.iapService.brand.orgInternalOnly 13.7.2
 gcp.project.iapService.brand.projectId 13.7.2
 gcp.project.iapService.brand.supportEmail 13.7.2
 gcp.project.iapService.brands 13.7.2
 gcp.project.iapService.iamPolicy 13.21.2
+gcp.project.iapService.identityAwareProxyClient 13.21.2
+gcp.project.iapService.identityAwareProxyClient.displayName 13.21.2
+gcp.project.iapService.identityAwareProxyClient.name 13.21.2
 gcp.project.iapService.projectId 13.7.2
 gcp.project.iapService.public 13.21.2
+gcp.project.iapService.settings 13.21.2
 gcp.project.iapService.tunnelDestGroup 13.7.2
 gcp.project.iapService.tunnelDestGroup.cidrs 13.7.2
 gcp.project.iapService.tunnelDestGroup.fqdns 13.7.2
@@ -4110,6 +4126,7 @@ gcp.project.secretmanagerService.secret 11.1.0
 gcp.project.secretmanagerService.secret.annotations 11.1.0
 gcp.project.secretmanagerService.secret.createTime 11.1.0
 gcp.project.secretmanagerService.secret.customerManagedEncryption 11.1.0
+gcp.project.secretmanagerService.secret.customerManagedEncryptionEnabled 13.21.2
 gcp.project.secretmanagerService.secret.etag 11.1.0
 gcp.project.secretmanagerService.secret.expireTime 11.1.0
 gcp.project.secretmanagerService.secret.iamPolicy 11.1.0
@@ -4317,6 +4334,7 @@ gcp.project.sqlService.instance.etag 13.1.2
 gcp.project.sqlService.instance.failoverReplica 9.0.0
 gcp.project.sqlService.instance.gceZone 9.0.0
 gcp.project.sqlService.instance.hasBuiltInUsers 13.12.2
+gcp.project.sqlService.instance.iamAuthenticationEnabled 13.21.2
 gcp.project.sqlService.instance.instanceType 9.0.0
 gcp.project.sqlService.instance.ipAddresses 9.0.0
 gcp.project.sqlService.instance.ipMapping 9.0.0
@@ -4471,6 +4489,7 @@ gcp.project.storageService.bucket.billing 13.16.3
 gcp.project.storageService.bucket.cors 13.16.3
 gcp.project.storageService.bucket.created 9.0.0
 gcp.project.storageService.bucket.customPlacementConfig 13.16.3
+gcp.project.storageService.bucket.defaultEncryptionEnabled 13.21.2
 gcp.project.storageService.bucket.defaultEventBasedHold 11.6.6
 gcp.project.storageService.bucket.defaultKmsKey 13.2.3
 gcp.project.storageService.bucket.defaultObjectAcl 13.12.2
@@ -4831,6 +4850,7 @@ gcp.project.vertexaiService.pipelineJob.network 13.1.2
 gcp.project.vertexaiService.pipelineJob.pipelineSpec 13.1.2
 gcp.project.vertexaiService.pipelineJob.runtimeConfig 13.1.2
 gcp.project.vertexaiService.pipelineJob.serviceAccount 13.1.2
+gcp.project.vertexaiService.pipelineJob.serviceAccountRef 13.21.2
 gcp.project.vertexaiService.pipelineJob.startTime 13.1.2
 gcp.project.vertexaiService.pipelineJob.state 13.1.2
 gcp.project.vertexaiService.pipelineJob.templateMetadata 13.1.2
@@ -5042,12 +5062,15 @@ gcp.scc.bigQueryExport.updateTime 13.3.4
 gcp.scc.finding 13.3.4
 gcp.scc.finding.category 13.3.4
 gcp.scc.finding.chokepoint 13.3.5
+gcp.scc.finding.compliances 13.21.2
 gcp.scc.finding.createTime 13.3.4
 gcp.scc.finding.eventTime 13.3.4
 gcp.scc.finding.externalExposure 13.3.5
 gcp.scc.finding.externalUri 13.3.4
 gcp.scc.finding.findingClass 13.3.4
 gcp.scc.finding.mute 13.3.4
+gcp.scc.finding.muteInitiator 13.21.2
+gcp.scc.finding.muteUpdateTime 13.21.2
 gcp.scc.finding.name 13.3.4
 gcp.scc.finding.parent 13.3.4
 gcp.scc.finding.resourceName 13.3.4
@@ -5056,6 +5079,7 @@ gcp.scc.finding.severity 13.3.4
 gcp.scc.finding.sourceProperties 13.3.4
 gcp.scc.finding.state 13.3.4
 gcp.scc.finding.toxicCombination 13.6.1
+gcp.scc.finding.vulnerability 13.21.2
 gcp.scc.muteConfig 13.3.4
 gcp.scc.muteConfig.createTime 13.3.4
 gcp.scc.muteConfig.description 13.3.4
