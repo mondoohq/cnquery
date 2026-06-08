@@ -3148,7 +3148,7 @@ func (g *mqlGcpProjectComputeServiceSslCertificate) expired() (bool, error) {
 	}
 	t, err := time.Parse(time.RFC3339, g.ExpireTime.Data)
 	if err != nil {
-		return false, nil
+		return false, fmt.Errorf("parsing ssl certificate expireTime %q: %w", g.ExpireTime.Data, err)
 	}
 	return t.Before(time.Now()), nil
 }

@@ -88,17 +88,24 @@ func (g *mqlGcpOrganization) essentialContacts() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
-	// Id is already in "organizations/{id}" form (see initGcpOrganization).
+	// Id is normally "organizations/{id}" (set from org.Name); guard against a
+	// bare id so the parent path is never double-prefixed.
+	parent := g.Id.Data
+	if !strings.HasPrefix(parent, "organizations/") {
+		parent = "organizations/" + parent
+	}
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return essentialContactsForParent(g.MqlRuntime, conn, g.Id.Data)
+	return essentialContactsForParent(g.MqlRuntime, conn, parent)
 }
 
 func (g *mqlGcpFolder) essentialContacts() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
+	// Folder Id is "folders/{id}" when discovered via listing but bare "{id}"
+	// when resolved directly; folderResourceName normalizes both.
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return essentialContactsForParent(g.MqlRuntime, conn, "folders/"+g.Id.Data)
+	return essentialContactsForParent(g.MqlRuntime, conn, folderResourceName(g.Id.Data))
 }
 
 func (g *mqlGcpEssentialContact) id() (string, error) {
